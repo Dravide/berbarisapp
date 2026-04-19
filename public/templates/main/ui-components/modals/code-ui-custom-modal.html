@@ -1,0 +1,107 @@
+<div class="button-group">
+  <!-- Signup modal content -->
+  <div id="signup-modal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+        <div class="modal-body">
+          <div class="text-center mt-2 mb-4">
+            <a href="../../../main/index.html" class="text-success">
+              <span>
+                <img src="../../../assets/images/logos/favicon.png" class="me-3 img-fluid" alt="modernize-img" />
+              </span>
+            </a>
+          </div>
+
+          <form class="ps-3 pr-3" action="#">
+            <div class="mb-3">
+              <label for="username">Name</label>
+              <input class="form-control" type="email" id="username" required="" placeholder="Michael Zenaty" />
+            </div>
+
+            <div class="mb-3">
+              <label for="emailaddress">Email address</label>
+              <input class="form-control" type="email" id="emailaddress" required="" placeholder="john@deo.com" />
+            </div>
+
+            <div class="mb-3">
+              <label for="password">Password</label>
+              <input class="form-control" type="password" required="" id="password" placeholder="Enter your password" />
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="customCheck1" />
+                <label class="form-check-label" for="customCheck1">I accept
+                  <a href="javascript:void(0)">Terms and Conditions</a>
+                </label>
+              </div>
+            </div>
+
+            <div class="mb-3 text-center">
+              <button class="btn bg-info-subtle text-info " type="submit">
+                Sign Up Free
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+  </div>
+  <!-- /.modal -->
+  <!-- Custom width modal -->
+  <button type="button" class="btn mb-1 bg-primary-subtle text-primary px-4 fs-4 " data-bs-toggle="modal" data-bs-target="#signup-modal">
+    <i class="ti ti-lock fs-5 text-center d-block"></i>
+    Sign Up Modal
+  </button>
+  <!-- SignIn modal content -->
+  <div id="login-modal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+        <div class="modal-body">
+          <div class="text-center mt-2 mb-4">
+            <a href="../../../main/index.html" class="text-success">
+              <span>
+                <img src="../../../assets/images/logos/favicon.png" class="me-3 img-fluid" alt="modernize-img" />
+              </span>
+            </a>
+          </div>
+
+          <form action="#" class="ps-3 pr-3">
+            <div class="mb-3">
+              <label for="emailaddress1">Email address</label>
+              <input class="form-control" type="email" id="emailaddress1" required="" placeholder="john@deo.com" />
+            </div>
+
+            <div class="mb-3">
+              <label for="password1">Password</label>
+              <input class="form-control" type="password" required="" id="password1" placeholder="Enter your password" />
+            </div>
+
+            <div class="mb-3">
+              <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="customCheck2" />
+                <label class="form-check-label" for="customCheck2">Remember me</label>
+              </div>
+            </div>
+
+            <div class="mb-3 text-center">
+              <button class="btn btn-rounded bg-info-subtle text-info " type="submit">
+                Sign In
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+  </div>
+  <!-- /.modal -->
+  <!-- Full width modal -->
+  <button type="button" class="btn bg-warning-subtle text-warning px-4 fs-4 " data-bs-toggle="modal" data-bs-target="#login-modal">
+    <i class="ti ti-login fs-5 text-center d-block"></i>
+    Log in Modal
+  </button>
+</div>

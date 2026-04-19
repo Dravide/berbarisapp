@@ -1,0 +1,45 @@
+<div class="button-group">
+  <button type="button" class="btn mb-1 px-4 fs-4  bg-primary-subtle text-primary" data-bs-toggle="modal" data-bs-target="#samedata-modal" data-bs-whatever="@mdo">
+    Open modal for @mdo
+  </button>
+
+  <button type="button" class="btn mb-1 px-4 fs-4  bg-success-subtle text-success" data-bs-toggle="modal" data-bs-target="#samedata-modal" data-bs-whatever="@fat">
+    Open modal for @fat
+  </button>
+
+  <button type="button" class="btn mb-1 px-4 fs-4  bg-warning-subtle text-warning" data-bs-toggle="modal" data-bs-target="#samedata-modal" data-bs-whatever="@getbootstrap">
+    Open modal for @getbootstrap
+  </button>
+</div>
+<div class="modal fade" id="samedata-modal" tabindex="-1" aria-labelledby="exampleModalLabel1">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header d-flex align-items-center">
+        <h4 class="modal-title" id="exampleModalLabel1">
+          New message
+        </h4>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label for="recipient-name" class="">Recipient:</label>
+            <input type="text" class="form-control" id="recipient-name1" />
+          </div>
+          <div class="mb-3">
+            <label for="message-text" class="">Message:</label>
+            <textarea class="form-control" id="message-text1"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn bg-danger-subtle text-danger " data-bs-dismiss="modal">
+          Close
+        </button>
+        <button type="button" class="btn btn-success">
+          Send message
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
