@@ -20,6 +20,7 @@ class Eventner extends Model
         'technical_meeting',
         'tingkat_perlombaan',
         'logo_event',
+        'poster',
         'link_instagram',
         'link_tiktok',
         'link_whatsapp',

@@ -39,6 +39,9 @@ class Profile extends Component
     public $logo;
     public $newLogo;
 
+    public $poster;
+    public $newPoster;
+
     public function mount()
     {
         $eventner = Auth::user()->eventner;
@@ -66,6 +69,7 @@ class Profile extends Component
         $this->drawing_code = $eventner->drawing_code;
 
         $this->logo = $eventner->logo_event;
+        $this->poster = $eventner->poster;
     }
 
     public function save()
@@ -84,10 +88,11 @@ class Profile extends Component
             'longitude' => 'nullable|numeric',
             'link_instagram' => 'nullable|url|max:255',
             'link_tiktok' => 'nullable|url|max:255',
-            'link_whatsapp' => 'nullable|string|max:255', // WA might be a generic string like a phone number or short link
+            'link_whatsapp' => 'nullable|string|max:255',
             'link_livestreaming' => 'nullable|url|max:255',
             'drawing_code' => 'nullable|string|max:255',
-            'newLogo' => 'nullable|image|max:2048', // max 2MB
+            'newLogo' => 'nullable|image|max:2048', 
+            'newPoster' => 'nullable|image|max:3072', // allow up to 3MB for poster
         ]);
 
         $eventner = Eventner::findOrFail($this->eventnerId);
@@ -102,6 +107,18 @@ class Profile extends Component
             $path = $this->newLogo->store('logos', 'public');
             $eventner->logo_event = $path;
             $this->logo = $path;
+        }
+
+        if ($this->newPoster) {
+            // Delete old poster if exists
+            if ($eventner->poster && Storage::disk('public')->exists($eventner->poster)) {
+                Storage::disk('public')->delete($eventner->poster);
+            }
+            
+            // Save new poster
+            $path = $this->newPoster->store('posters', 'public');
+            $eventner->poster = $path;
+            $this->poster = $path;
         }
 
         $eventner->update([
@@ -122,9 +139,11 @@ class Profile extends Component
             'link_livestreaming' => $this->link_livestreaming,
             'drawing_code' => $this->drawing_code,
             'logo_event' => $eventner->logo_event,
+            'poster' => $eventner->poster,
         ]);
 
-        $this->newLogo = null; // reset file input
+        $this->newLogo = null; 
+        $this->newPoster = null; 
 
         session()->flash('success', 'Profil Event berhasil diperbarui!');
     }

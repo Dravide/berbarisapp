@@ -30,34 +30,60 @@
             <form wire:submit="save">
                 <div class="row">
                     <div class="col-md-4 mb-4 text-center">
-                        <h6 class="fw-semibold mb-3">Logo Event</h6>
-                        
-                        <div class="mb-3">
-                            @if ($newLogo)
-                                <img src="{{ $newLogo->temporaryUrl() }}" class="img-fluid rounded border p-1" style="max-height: 200px; object-fit: contain;">
-                            @elseif ($logo)
-                                <img src="{{ asset('storage/' . $logo) }}" class="img-fluid rounded border p-1" style="max-height: 200px; object-fit: contain;">
-                            @else
-                                <div class="bg-light rounded border d-flex align-items-center justify-content-center p-4 mx-auto" style="height: 200px; width: 200px;">
-                                    <div class="text-muted text-center">
-                                        <i class="ti ti-photo fs-8 d-block mb-2"></i>
-                                        Belum ada logo
+                        <div class="mb-4">
+                            <h6 class="fw-semibold mb-3">Logo Event</h6>
+                            <div class="mb-3">
+                                @if ($newLogo)
+                                    <img src="{{ $newLogo->temporaryUrl() }}" class="img-fluid rounded border p-1" style="max-height: 150px; object-fit: contain;">
+                                @elseif ($logo)
+                                    <img src="{{ asset('storage/' . $logo) }}" class="img-fluid rounded border p-1" style="max-height: 150px; object-fit: contain;">
+                                @else
+                                    <div class="bg-light rounded border d-flex align-items-center justify-content-center p-4 mx-auto" style="height: 150px; width: 150px;">
+                                        <div class="text-muted text-center">
+                                            <i class="ti ti-photo fs-8 d-block mb-2"></i>
+                                            Belum ada logo
+                                        </div>
                                     </div>
-                                </div>
-                            @endif
+                                @endif
+                            </div>
+                            <div class="mb-3">
+                                <label for="newLogo" class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="ti ti-upload me-1"></i> Pilih Gambar Logo
+                                </label>
+                                <input type="file" id="newLogo" wire:model="newLogo" class="d-none" accept="image/jpeg, image/png, image/jpg">
+                                @error('newLogo') <span class="text-danger fs-2 d-block mt-1">{{ $message }}</span> @enderror
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="newLogo" class="btn btn-outline-primary btn-sm w-100">
-                                <i class="ti ti-upload me-1"></i> Pilih Gambar Logo
-                            </label>
-                            <input type="file" id="newLogo" wire:model="newLogo" class="d-none" accept="image/jpeg, image/png, image/jpg">
-                            @error('newLogo') <span class="text-danger fs-2 d-block mt-1">{{ $message }}</span> @enderror
-                            
-                            <div wire:loading wire:target="newLogo" class="text-primary fs-2 mt-2">
-                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Mengunggah...
+                        <hr>
+
+                        <div class="mt-4">
+                            <h6 class="fw-semibold mb-3">Poster Event</h6>
+                            <div class="mb-3">
+                                @if ($newPoster)
+                                    <img src="{{ $newPoster->temporaryUrl() }}" class="img-fluid rounded border p-1" style="max-height: 300px; object-fit: contain;">
+                                @elseif ($poster)
+                                    <img src="{{ asset('storage/' . $poster) }}" class="img-fluid rounded border p-1" style="max-height: 300px; object-fit: contain;">
+                                @else
+                                    <div class="bg-light rounded border d-flex align-items-center justify-content-center p-4 mx-auto" style="height: 200px; width: 100%;">
+                                        <div class="text-muted text-center">
+                                            <i class="ti ti-camera fs-8 d-block mb-2"></i>
+                                            Belum ada poster
+                                        </div>
+                                    </div>
+                                @endif
                             </div>
-                            <small class="d-block text-muted mt-2">Format: JPG/PNG. Maks: 2MB.</small>
+                            <div class="mb-3">
+                                <label for="newPoster" class="btn btn-outline-info btn-sm w-100">
+                                    <i class="ti ti-photo me-1"></i> Pilih Gambar Poster
+                                </label>
+                                <input type="file" id="newPoster" wire:model="newPoster" class="d-none" accept="image/jpeg, image/png, image/jpg">
+                                @error('newPoster') <span class="text-danger fs-2 d-block mt-1">{{ $message }}</span> @enderror
+                                <div wire:loading wire:target="newPoster" class="text-info fs-2 mt-2">
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Mengunggah...
+                                </div>
+                                <small class="d-block text-muted mt-2">Format: JPG/PNG. Maks: 3MB.</small>
+                            </div>
                         </div>
                     </div>
 

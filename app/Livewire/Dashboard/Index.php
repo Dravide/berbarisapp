@@ -10,6 +10,19 @@ use Livewire\Attributes\Title;
 #[Title('Dashboard - BARIS APP')]
 class Index extends Component
 {
+    public function mount()
+    {
+        $role = auth()->user()->role;
+
+        if ($role === 'Admin') {
+            return redirect()->route('admin.eventner.index');
+        }
+
+        if ($role === 'Eventner') {
+            return redirect()->route('eventner.dashboard');
+        }
+    }
+
     public function render()
     {
         return view('livewire.dashboard.index');
