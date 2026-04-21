@@ -15,7 +15,7 @@ class Index extends Component
         $role = auth()->user()->role;
 
         if ($role === 'Admin') {
-            return redirect()->route('admin.eventner.index');
+            return redirect()->route('admin.dashboard');
         }
 
         if ($role === 'Eventner') {
