@@ -48,8 +48,7 @@
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
             "@php artisan key:generate",
             "@php artisan migrate --force",
-            "npm install --ignore-scripts",
-            "npm run build"
+            "bash -c 'command -v npm >/dev/null 2>&1 && npm install --ignore-scripts && npm run build || echo \"⚠ npm not found, skipping build steps (pre-built assets required)\"'"
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
