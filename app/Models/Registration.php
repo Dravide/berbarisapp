@@ -17,8 +17,10 @@ class Registration extends Model
         'npsn',
         'nama_pelatih',
         'no_hp',
+        'school_email',
         'foto_pelatih',
         'magic_token',
+        'password',
         'logo_sekolah',
         'surat_tugas',
         'danton_nama',
@@ -30,6 +32,8 @@ class Registration extends Model
         'urutan_tampil',
     ];
 
+    protected $hidden = ['password'];
+
     protected static function boot()
     {
         parent::boot();
@@ -37,6 +41,9 @@ class Registration extends Model
         static::creating(function ($model) {
             if (!$model->magic_token) {
                 $model->magic_token = \Illuminate\Support\Str::random(16);
+            }
+            if (!$model->status_berkas) {
+                $model->status_berkas = 'booking';
             }
         });
     }
@@ -59,6 +66,21 @@ class Registration extends Model
     public function voteTransactions()
     {
         return $this->hasMany(VoteTransaction::class);
+    }
+
+    public function isBooking(): bool
+    {
+        return $this->status_berkas === 'booking';
+    }
+
+    public function isConfirmed(): bool
+    {
+        return $this->status_berkas === 'confirmed';
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->status_berkas === 'Terverifikasi';
     }
 
     public function getActivitylogOptions(): LogOptions

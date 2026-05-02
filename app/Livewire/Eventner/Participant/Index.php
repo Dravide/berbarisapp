@@ -100,6 +100,7 @@ class Index extends Component
                 'nama_pelatih' => strip_tags($this->nama_pelatih),
                 'no_hp' => strip_tags($this->no_hp),
                 'competition_category_id' => $this->competition_category_id,
+                'status_berkas' => 'Menunggu',
             ]);
             session()->flash('success', 'Sekolah pendaftar berhasil ditambahkan & Magic Link telah dibuat.');
         }

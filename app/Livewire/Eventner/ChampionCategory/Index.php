@@ -5,6 +5,7 @@ namespace App\Livewire\Eventner\ChampionCategory;
 use App\Models\AssessmentCategory;
 use App\Models\AssessmentScore;
 use App\Models\ChampionCategory;
+use App\Models\ChampionRankTitle;
 use App\Models\CompetitionCategory;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -22,6 +23,14 @@ class Index extends Component
     public $selectedCompetitionCategoryId;
     public $expandedChampionId = null;
 
+    // Rank title management
+    public $rankTitleChampionId = null;
+    public $rankTitle = '';
+    public $rankStart = '';
+    public $rankEnd = '';
+    public $showRankTitleForm = false;
+    public $editingRankTitleId = null;
+
     public function mount()
     {
         $this->eventner = Auth::user()->eventner;
@@ -30,7 +39,6 @@ class Index extends Component
             abort(403, 'Anda belum memiliki data Event terdaftar.');
         }
 
-        // Default to first competition category
         $first = $this->eventner->competitionCategories->first();
         if ($first) {
             $this->selectedCompetitionCategoryId = $first->id;
@@ -116,9 +124,91 @@ class Index extends Component
         $this->showForm = false;
     }
 
+    // ===== Rank Title Management =====
+
+    public function showAddRankTitle($championId)
+    {
+        $this->rankTitleChampionId = $championId;
+        $this->resetRankTitleForm();
+        $this->showRankTitleForm = true;
+    }
+
+    public function editRankTitle($id)
+    {
+        $rankTitle = ChampionRankTitle::whereHas('championCategory', fn($q) =>
+            $q->where('eventner_id', $this->eventner->id)
+        )->findOrFail($id);
+
+        $this->editingRankTitleId = $id;
+        $this->rankTitleChampionId = $rankTitle->champion_category_id;
+        $this->rankTitle = $rankTitle->title;
+        $this->rankStart = $rankTitle->rank_start;
+        $this->rankEnd = $rankTitle->rank_end;
+        $this->showRankTitleForm = true;
+    }
+
+    public function saveRankTitle()
+    {
+        $this->validate([
+            'rankTitle' => 'required|string|max:255',
+            'rankStart' => 'required|integer|min:1',
+            'rankEnd' => 'required|integer|min:1|gte:rankStart',
+        ], [
+            'rankTitle.required' => 'Nama gelar wajib diisi.',
+            'rankStart.required' => 'Rank awal wajib diisi.',
+            'rankEnd.required' => 'Rank akhir wajib diisi.',
+            'rankEnd.gte' => 'Rank akhir harus >= rank awal.',
+        ]);
+
+        // Verify ownership
+        ChampionCategory::where('eventner_id', $this->eventner->id)
+            ->findOrFail($this->rankTitleChampionId);
+
+        $maxSort = ChampionRankTitle::where('champion_category_id', $this->rankTitleChampionId)
+            ->max('sort_order') ?? 0;
+
+        if ($this->editingRankTitleId) {
+            $rankTitle = ChampionRankTitle::findOrFail($this->editingRankTitleId);
+            $rankTitle->update([
+                'title' => strip_tags($this->rankTitle),
+                'rank_start' => $this->rankStart,
+                'rank_end' => $this->rankEnd,
+            ]);
+        } else {
+            ChampionRankTitle::create([
+                'champion_category_id' => $this->rankTitleChampionId,
+                'title' => strip_tags($this->rankTitle),
+                'rank_start' => $this->rankStart,
+                'rank_end' => $this->rankEnd,
+                'sort_order' => $maxSort + 1,
+            ]);
+        }
+
+        $this->resetRankTitleForm();
+        session()->flash('success', 'Gelar juara berhasil disimpan.');
+    }
+
+    public function deleteRankTitle($id)
+    {
+        ChampionRankTitle::whereHas('championCategory', fn($q) =>
+            $q->where('eventner_id', $this->eventner->id)
+        )->findOrFail($id)->delete();
+
+        session()->flash('success', 'Gelar juara berhasil dihapus.');
+    }
+
+    private function resetRankTitleForm()
+    {
+        $this->rankTitle = '';
+        $this->rankStart = '';
+        $this->rankEnd = '';
+        $this->editingRankTitleId = null;
+        $this->showRankTitleForm = false;
+    }
+
     public function render()
     {
-        $championCategories = ChampionCategory::with('assessmentCategories.subCategories.criterias')
+        $championCategories = ChampionCategory::with(['assessmentCategories.subCategories.criterias', 'rankTitles'])
             ->where('eventner_id', $this->eventner->id)
             ->get();
 
@@ -130,6 +220,7 @@ class Index extends Component
 
         // Calculate rankings for each champion category
         $rankings = collect();
+        $rankTitleMap = collect();
         if ($this->selectedCompetitionCategoryId) {
             $participants = \App\Models\Registration::where('competition_category_id', $this->selectedCompetitionCategoryId)
                 ->orderBy('nama_sekolah')
@@ -143,7 +234,6 @@ class Index extends Component
             foreach ($championCategories as $champion) {
                 $assessmentCatIds = $champion->assessmentCategories->pluck('id');
 
-                // Get all criteria IDs and their weights from selected assessment categories
                 $criteriaMap = [];
                 foreach ($champion->assessmentCategories as $ac) {
                     foreach ($ac->subCategories as $sub) {
@@ -169,20 +259,28 @@ class Index extends Component
                     ];
                 }
 
-                // Sort by total descending
                 usort($participantScores, fn($a, $b) => $b['total'] <=> $a['total']);
 
-                // Assign ranks
                 $rank = 1;
                 foreach ($participantScores as $index => &$ps) {
                     if ($index > 0 && $ps['total'] < $participantScores[$index - 1]['total']) {
                         $rank = $index + 1;
                     }
                     $ps['rank'] = $rank;
+
+                    // Find matching rank title
+                    $ps['title'] = null;
+                    foreach ($champion->rankTitles as $rt) {
+                        if ($rt->coversRank($rank)) {
+                            $ps['title'] = $rt->title;
+                            break;
+                        }
+                    }
                 }
                 unset($ps);
 
                 $rankings[$champion->id] = collect($participantScores);
+                $rankTitleMap[$champion->id] = $champion->rankTitles;
             }
         }
 
@@ -191,6 +289,7 @@ class Index extends Component
             'assessmentCategories' => $assessmentCategories,
             'competitionCategories' => $competitionCategories,
             'rankings' => $rankings,
+            'rankTitleMap' => $rankTitleMap,
         ])->title('Kategori Juara - ' . $this->eventner->nama_event);
     }
 }

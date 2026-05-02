@@ -236,6 +236,16 @@
             </a>
           </li>
           @endif
+          @if(auth()->user()->eventner && auth()->user()->eventner->scoring_code)
+          <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ route('public.champions', auth()->user()->eventner->scoring_code) }}" target="_blank" aria-expanded="false">
+              <span>
+                <i class="ti ti-trophy"></i>
+              </span>
+              <span class="hide-menu">Pengumuman Juara</span>
+            </a>
+          </li>
+          @endif
         @endif
       </ul>
     </nav>

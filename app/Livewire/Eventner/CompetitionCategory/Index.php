@@ -15,6 +15,7 @@ class Index extends Component
     public $name = '';
     public $tanggal_pelaksanaan = '';
     public $kuota = '';
+    public $max_registrations_per_school = 1;
     public $selectedJudges = [];
     
     public $isEditMode = false;
@@ -51,6 +52,7 @@ class Index extends Component
         $this->validate([
             'name' => 'required|string|max:255',
             'kuota' => 'nullable|integer|min:1',
+            'max_registrations_per_school' => 'required|integer|min:1',
             'tanggal_pelaksanaan' => 'nullable|date',
             'selectedJudges' => 'array',
             'selectedJudges.*' => 'exists:judges,id'
@@ -61,6 +63,7 @@ class Index extends Component
             $cat->update([
                 'name' => strip_tags($this->name), 
                 'kuota' => $this->kuota ?: null,
+                'max_registrations_per_school' => $this->max_registrations_per_school,
                 'tanggal_pelaksanaan' => $this->tanggal_pelaksanaan ?: null
             ]);
             $cat->judges()->sync($this->selectedJudges);
@@ -70,6 +73,7 @@ class Index extends Component
                 'eventner_id' => $this->eventnerId,
                 'name' => strip_tags($this->name),
                 'kuota' => $this->kuota ?: null,
+                'max_registrations_per_school' => $this->max_registrations_per_school,
                 'tanggal_pelaksanaan' => $this->tanggal_pelaksanaan ?: null,
             ]);
             $cat->judges()->attach($this->selectedJudges);
@@ -86,6 +90,7 @@ class Index extends Component
         $this->editingId = $cat->id;
         $this->name = $cat->name;
         $this->kuota = $cat->kuota ?? '';
+        $this->max_registrations_per_school = $cat->max_registrations_per_school ?? 1;
         $this->tanggal_pelaksanaan = $cat->tanggal_pelaksanaan ?? '';
         $this->selectedJudges = $cat->judges->pluck('id')->toArray();
     }
@@ -99,7 +104,7 @@ class Index extends Component
 
     public function resetForm()
     {
-        $this->reset(['name', 'kuota', 'tanggal_pelaksanaan', 'selectedJudges', 'isEditMode', 'editingId']);
+        $this->reset(['name', 'kuota', 'max_registrations_per_school', 'tanggal_pelaksanaan', 'selectedJudges', 'isEditMode', 'editingId']);
     }
 
     public function render()

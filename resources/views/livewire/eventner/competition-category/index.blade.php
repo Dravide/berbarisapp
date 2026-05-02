@@ -46,6 +46,7 @@
                                         <th class="ps-0 border-0 fw-semibold text-dark">Nama Kategori Tingkat</th>
                                         <th class="border-0 fw-semibold text-dark">Tanggal Pelaksanaan</th>
                                         <th class="border-0 fw-semibold text-dark text-center">Kuota Peserta</th>
+                                        <th class="border-0 fw-semibold text-dark text-center">Max Pasukan/Sekolah</th>
                                         <th class="border-0 fw-semibold text-dark">Juri yang Bertugas</th>
                                         <th class="border-0 fw-semibold text-dark text-end">Aksi</th>
                                     </tr>
@@ -69,6 +70,9 @@
                                                 @else
                                                     <span class="text-muted fs-2">Tanpa Batas</span>
                                                 @endif
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info-subtle text-info">{{ $cat->max_registrations_per_school ?? 1 }} pasukan</span>
                                             </td>
                                             <td>
                                                 <div class="d-flex flex-wrap gap-1">
@@ -122,6 +126,13 @@
                             <input type="number" class="form-control" wire:model="kuota" placeholder="Misal: 50" min="1">
                             <small class="form-text text-muted">Kosongkan jika tidak ada batasan kuota.</small>
                             @error('kuota') <span class="text-danger fs-2 d-block mt-1">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Max Pasukan per Sekolah</label>
+                            <input type="number" class="form-control" wire:model="max_registrations_per_school" min="1" max="20">
+                            <small class="form-text text-muted">Berapa pasukan yang boleh didaftarkan 1 sekolah.</small>
+                            @error('max_registrations_per_school') <span class="text-danger fs-2 d-block mt-1">{{ $message }}</span> @enderror
                         </div>
                         
                         <div class="alert alert-info bg-primary-subtle text-primary border-0 fs-2 py-2 mb-3">

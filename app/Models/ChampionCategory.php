@@ -24,4 +24,9 @@ class ChampionCategory extends Model
     {
         return $this->belongsToMany(AssessmentCategory::class, 'champion_assessment');
     }
+
+    public function rankTitles()
+    {
+        return $this->hasMany(ChampionRankTitle::class)->orderBy('sort_order')->orderBy('rank_start');
+    }
 }

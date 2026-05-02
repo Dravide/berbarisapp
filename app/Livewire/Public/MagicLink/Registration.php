@@ -5,19 +5,22 @@ namespace App\Livewire\Public\MagicLink;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use App\Models\Registration as RegistrationModel;
 use App\Models\Participant;
 
 #[Layout('layouts.frontend')]
-#[Title('Formulir Pendaftaran - BARIS APP')]
 class Registration extends Component
 {
     use WithFileUploads;
 
     public $token;
     public $registration;
+    public $siblingRegistrations;
 
+    // Active tab for managing which registration
+    public $activeRegId;
+
+    // Form fields
     public $logoSekolah;
     public $suratTugas;
     public $fotoPelatih;
@@ -25,6 +28,7 @@ class Registration extends Component
     public $dantonNama = '';
     public $dantonNisn = '';
     public $dantonFoto;
+    public $namaPelatih = '';
 
     public $participants = [];
 
@@ -35,39 +39,115 @@ class Registration extends Component
             ->firstOrFail();
 
         $this->token = $token;
+        $this->activeRegId = $this->registration->id;
+
+        // Load all registrations from the same school (same NPSN + same event)
+        $this->siblingRegistrations = RegistrationModel::with(['competitionCategory', 'participants'])
+            ->where('eventner_id', $this->registration->eventner_id)
+            ->where('npsn', $this->registration->npsn)
+            ->where('status_berkas', '!=', 'dibatalkan')
+            ->get();
+
+        $this->loadFormData();
+    }
+
+    public function switchRegistration($regId)
+    {
+        $reg = $this->siblingRegistrations->firstWhere('id', $regId);
+        if (!$reg) return;
+
+        $this->activeRegId = $regId;
+        $this->registration = $reg;
+        $this->loadFormData();
+    }
+
+    private function loadFormData()
+    {
         $this->dantonNama = $this->registration->danton_nama ?? '';
         $this->dantonNisn = $this->registration->danton_nisn ?? '';
+        $this->namaPelatih = $this->registration->nama_pelatih ?? '';
 
-        // Load existing participants or seed 12 empty slots
         if ($this->registration->participants->count() > 0) {
+            $this->participants = [];
             foreach ($this->registration->participants as $p) {
                 $this->participants[] = ['nama' => $p->nama, 'nisn' => $p->nisn ?? '', 'foto' => null, 'existing_foto' => $p->foto];
             }
         } else {
+            $this->participants = [];
             for ($i = 0; $i < 12; $i++) {
                 $this->participants[] = ['nama' => '', 'nisn' => '', 'foto' => null, 'existing_foto' => null];
             }
         }
+
+        // Reset file uploads
+        $this->logoSekolah = null;
+        $this->suratTugas = null;
+        $this->fotoPelatih = null;
+        $this->buktiPendaftaran = null;
+        $this->dantonFoto = null;
     }
 
     public function addParticipant()
     {
-        if ($this->registration->is_finalized) return;
+        if ($this->registration->status_berkas === 'Terverifikasi') return;
         $this->participants[] = ['nama' => '', 'nisn' => '', 'foto' => null, 'existing_foto' => null];
     }
 
     public function removeParticipant($index)
     {
-        if ($this->registration->is_finalized) return;
+        if ($this->registration->status_berkas === 'Terverifikasi') return;
         if (count($this->participants) > 1) {
             unset($this->participants[$index]);
             $this->participants = array_values($this->participants);
         }
     }
 
+    public function confirm()
+    {
+        $reg = $this->registration;
+
+        if ($reg->status_berkas !== 'booking') return;
+
+        // Check if TM has passed
+        if ($reg->eventner->technical_meeting && now()->lt($reg->eventner->technical_meeting)) {
+            session()->flash('error', 'Konfirmasi hanya bisa dilakukan setelah Technical Meeting (' . \Carbon\Carbon::parse($reg->eventner->technical_meeting)->translatedFormat('d F Y, H:i') . ').');
+            return;
+        }
+
+        $this->validate([
+            'namaPelatih' => 'required|string|max:255',
+            'dantonNama' => 'required|string|max:255',
+            'participants.*.nama' => 'required|string|max:255',
+        ], [
+            'namaPelatih.required' => 'Nama pelatih wajib diisi.',
+            'dantonNama.required' => 'Nama danton wajib diisi.',
+            'participants.*.nama.required' => 'Nama peserta wajib diisi.',
+        ]);
+
+        $reg->nama_pelatih = strip_tags($this->namaPelatih);
+        $reg->danton_nama = strip_tags($this->dantonNama);
+        $reg->danton_nisn = strip_tags($this->dantonNisn);
+        $reg->status_berkas = 'confirmed';
+        $reg->save();
+
+        $this->saveParticipants();
+
+        // Refresh
+        $this->registration = $reg->fresh(['participants']);
+        $this->siblingRegistrations = RegistrationModel::with(['competitionCategory', 'participants'])
+            ->where('eventner_id', $this->registration->eventner_id)
+            ->where('npsn', $this->registration->npsn)
+            ->where('status_berkas', '!=', 'dibatalkan')
+            ->get();
+
+        session()->flash('success', 'Konfirmasi berhasil! Data pasukan telah dikirim untuk diverifikasi panitia.');
+    }
+
     public function submit($isFinal = false)
     {
-        if ($this->registration->is_finalized) return;
+        $reg = $this->registration;
+
+        if ($reg->status_berkas === 'Terverifikasi') return;
 
         $rules = [
             'logoSekolah' => 'nullable|image|max:3072',
@@ -77,72 +157,85 @@ class Registration extends Component
             'dantonNama' => 'required|string|max:255',
             'dantonNisn' => 'nullable|string|max:20',
             'dantonFoto' => 'nullable|image|max:3072',
+            'namaPelatih' => 'required|string|max:255',
             'participants.*.nama' => 'required|string|max:255',
             'participants.*.nisn' => 'nullable|string|max:20',
             'participants.*.foto' => 'nullable|image|max:3072',
         ];
 
         if ($isFinal) {
-            $rules['buktiPendaftaran'] = 'required|image|max:3072';
-            $rules['logoSekolah'] = 'required_without:registration.logo_sekolah|image|max:3072';
             $rules['suratTugas'] = 'required_without:registration.surat_tugas|file|mimes:pdf,jpg,png|max:5120';
         }
 
         $this->validate($rules, [
-            'logoSekolah.image' => 'File Logo Sekolah harus berupa gambar (JPG, PNG).',
-            'logoSekolah.required_without' => 'Logo Sekolah wajib diunggah untuk finalisasi.',
-            'suratTugas.file' => 'File Surat Tugas harus berupa dokumen yang valid.',
-            'suratTugas.mimes' => 'File Surat Tugas harus berformat PDF, JPG, atau PNG.',
-            'suratTugas.required_without' => 'Surat Tugas wajib diunggah untuk finalisasi.',
+            'logoSekolah.image' => 'File Logo Sekolah harus berupa gambar.',
+            'suratTugas.file' => 'File Surat Tugas harus berupa dokumen.',
+            'suratTugas.mimes' => 'File Surat Tugas harus PDF, JPG, atau PNG.',
+            'suratTugas.required_without' => 'Surat Tugas wajib diunggah.',
             'fotoPelatih.image' => 'Foto pelatih harus berupa gambar.',
-            'buktiPendaftaran.image' => 'Kwitansi harus berupa gambar.',
-            'buktiPendaftaran.required' => 'Kwitansi pendaftaran wajib diunggah untuk finalisasi.',
             'dantonNama.required' => 'Nama Danton wajib diisi.',
-            'dantonNisn.max' => 'NISN Danton maksimal 20 karakter.',
-            'dantonFoto.image' => 'Foto Danton harus berupa gambar.',
+            'namaPelatih.required' => 'Nama pelatih wajib diisi.',
             'participants.*.nama.required' => 'Nama peserta wajib diisi.',
             'participants.*.foto.image' => 'Foto peserta harus berupa gambar.',
         ]);
 
-        $reg = $this->registration;
-
-        // Upload logo sekolah
         if ($this->logoSekolah) {
             $reg->logo_sekolah = $this->logoSekolah->store('registrations/logos', 'public');
         }
-
-        // Upload surat tugas
         if ($this->suratTugas) {
             $reg->surat_tugas = $this->suratTugas->store('registrations/surat', 'public');
         }
-
-        // Upload foto pelatih
         if ($this->fotoPelatih) {
             $reg->foto_pelatih = $this->fotoPelatih->store('registrations/pelatih', 'public');
         }
-
-        // Upload kwitansi
         if ($this->buktiPendaftaran) {
             $reg->bukti_pendaftaran = $this->buktiPendaftaran->store('registrations/kwitansi', 'public');
         }
 
-        // Save danton
-        $reg->danton_nama = $this->dantonNama;
-        $reg->danton_nisn = $this->dantonNisn;
+        $reg->nama_pelatih = strip_tags($this->namaPelatih);
+        $reg->danton_nama = strip_tags($this->dantonNama);
+        $reg->danton_nisn = strip_tags($this->dantonNisn);
         if ($this->dantonFoto) {
             $reg->danton_foto = $this->dantonFoto->store('registrations/danton', 'public');
         }
 
         if ($isFinal) {
             $reg->is_finalized = true;
+            if ($reg->status_berkas === 'booking') {
+                $reg->status_berkas = 'confirmed';
+            }
         }
 
         $reg->save();
+        $this->saveParticipants();
 
-        // Delete old participants and re-create
-        $reg->participants()->delete();
+        // Refresh
+        $this->registration = $reg->fresh(['participants']);
+        $this->siblingRegistrations = RegistrationModel::with(['competitionCategory', 'participants'])
+            ->where('eventner_id', $this->registration->eventner_id)
+            ->where('npsn', $this->registration->npsn)
+            ->where('status_berkas', '!=', 'dibatalkan')
+            ->get();
 
-        foreach ($this->participants as $index => $p) {
+        $this->logoSekolah = null;
+        $this->suratTugas = null;
+        $this->fotoPelatih = null;
+        $this->buktiPendaftaran = null;
+        $this->dantonFoto = null;
+
+        session()->flash('success', $isFinal
+            ? 'Data berhasil difinalisasi dan dikirim ke panitia!'
+            : 'Draft berhasil disimpan!'
+        );
+    }
+
+    private function saveParticipants()
+    {
+        $this->registration->participants()->delete();
+
+        foreach ($this->participants as $p) {
+            if (empty($p['nama'])) continue;
+
             $fotoPath = null;
             if (isset($p['foto']) && $p['foto']) {
                 $fotoPath = $p['foto']->store('registrations/peserta', 'public');
@@ -151,31 +244,18 @@ class Registration extends Component
             }
 
             Participant::create([
-                'registration_id' => $reg->id,
+                'registration_id' => $this->registration->id,
                 'nama' => $p['nama'],
                 'nisn' => $p['nisn'] ?? null,
                 'foto' => $fotoPath,
             ]);
         }
-
-        if ($isFinal) {
-            session()->flash('success', 'Data Pendaftaran telah BERHASIL DIKIRIM dan DIKUNCI. Terima kasih!');
-        } else {
-            session()->flash('success', 'Draft Pendaftaran berhasil disimpan! Anda masih bisa melengkapi data sebelum dikirim final.');
-        }
-
-        // Reload data
-        $this->registration = $reg->fresh(['participants']);
-        $this->logoSekolah = null;
-        $this->suratTugas = null;
-        $this->fotoPelatih = null;
-        $this->buktiPendaftaran = null;
-        $this->dantonFoto = null;
     }
 
     public function render()
     {
         return view('livewire.public.magic-link.registration')
+            ->title('Kelola Pendaftaran - ' . $this->registration->eventner->nama_event)
             ->layoutData(['eventner' => $this->registration->eventner]);
     }
 }

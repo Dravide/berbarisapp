@@ -83,12 +83,18 @@
                                             <span class="badge bg-light-success text-success mt-1"><i class="ti ti-phone"></i> {{ $reg->no_hp }}</span>
                                         </td>
                                         <td>
-                                            @if($reg->status_berkas === 'Menunggu')
-                                                <span class="badge bg-warning rounded-3 fw-semibold">Menunggu</span>
+                                            @if($reg->status_berkas === 'booking')
+                                                <span class="badge bg-secondary-subtle text-secondary rounded-3 fw-semibold"><i class="ti ti-clock me-1"></i>Booking</span>
+                                            @elseif($reg->status_berkas === 'confirmed' || $reg->status_berkas === 'Menunggu')
+                                                <span class="badge bg-warning rounded-3 fw-semibold">Menunggu Verifikasi</span>
                                             @elseif($reg->status_berkas === 'Terverifikasi')
                                                 <span class="badge bg-success rounded-3 fw-semibold">Terverifikasi</span>
-                                            @else
+                                            @elseif($reg->status_berkas === 'dibatalkan')
+                                                <span class="badge bg-dark rounded-3 fw-semibold">Dibatalkan</span>
+                                            @elseif($reg->status_berkas === 'Ditolak')
                                                 <span class="badge bg-danger rounded-3 fw-semibold">Ditolak</span>
+                                            @else
+                                                <span class="badge bg-light text-muted rounded-3 fw-semibold">{{ $reg->status_berkas }}</span>
                                             @endif
                                         </td>
                                         <td>
@@ -344,12 +350,18 @@
                 <div class="modal-footer bg-light border-top-0 rounded-bottom-4 p-4 justify-content-between">
                     <div>
                         <span class="text-muted small d-block mb-1">Status Saat Ini:</span>
-                        @if($selectedRegistration->status_berkas === 'Menunggu')
+                        @if($selectedRegistration->status_berkas === 'booking')
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 fw-bold"><i class="ti ti-clock me-1"></i>Booking</span>
+                        @elseif($selectedRegistration->status_berkas === 'confirmed' || $selectedRegistration->status_berkas === 'Menunggu')
                             <span class="badge bg-warning rounded-pill px-3 fw-bold">Menunggu Verifikasi</span>
                         @elseif($selectedRegistration->status_berkas === 'Terverifikasi')
                             <span class="badge bg-success rounded-pill px-3 fw-bold">Sudah ACC</span>
+                        @elseif($selectedRegistration->status_berkas === 'dibatalkan')
+                            <span class="badge bg-dark rounded-pill px-3 fw-bold">Dibatalkan</span>
+                        @elseif($selectedRegistration->status_berkas === 'Ditolak')
+                            <span class="badge bg-danger rounded-pill px-3 fw-bold">Ditolak</span>
                         @else
-                            <span class="badge bg-danger rounded-pill px-3 fw-bold">Status: Ditolak</span>
+                            <span class="badge bg-light text-muted rounded-pill px-3 fw-bold">{{ $selectedRegistration->status_berkas }}</span>
                         @endif
                     </div>
                     <div class="d-flex gap-2">

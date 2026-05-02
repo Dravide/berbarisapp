@@ -40,6 +40,9 @@
                                 <i class="ti ti-ticket me-1"></i> Beli Tiket
                             </a>
                         @endif
+                        <a href="{{ route('event.register', $eventner->slug) }}" class="btn btn-dark px-4">
+                            <i class="ti ti-clipboard-plus me-1"></i> Booking Pendaftaran
+                        </a>
                     </div>
                 </div>
 

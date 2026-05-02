@@ -41,10 +41,17 @@
                         </button>
                     @endforeach
                 </div>
-                <a href="{{ route('eventner.champion-categories.pdf', ['competition_category_id' => $selectedCompetitionCategoryId]) }}"
-                   class="btn btn-sm btn-danger px-3 fw-semibold" target="_blank">
-                    <i class="ti ti-file-type-pdf me-1"></i> Unduh PDF
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('eventner.champion-categories.pdf', ['competition_category_id' => $selectedCompetitionCategoryId]) }}"
+                       class="btn btn-sm btn-danger px-3 fw-semibold" target="_blank">
+                        <i class="ti ti-file-type-pdf me-1"></i> Unduh PDF
+                    </a>
+                    @if(!$showForm && !$showRankTitleForm)
+                        <button wire:click="create" class="btn btn-sm btn-primary px-3 fw-semibold">
+                            <i class="ti ti-plus me-1"></i> Tambah Kategori
+                        </button>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
@@ -112,8 +119,52 @@
             </div>
         @endif
 
+        {{-- Rank Title Form --}}
+        @if($showRankTitleForm)
+            <div class="{{ $showForm ? 'col-lg-12' : 'col-lg-5' }}">
+                <div class="card w-100 border-primary">
+                    <div class="card-header bg-primary-subtle d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 fw-semibold">
+                            <i class="ti ti-medal me-2"></i>
+                            {{ $editingRankTitleId ? 'Edit Gelar Juara' : 'Tambah Gelar Juara' }}
+                        </h5>
+                        <button wire:click="resetRankTitleForm" class="btn btn-sm btn-light">
+                            <i class="ti ti-x"></i>
+                        </button>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label class="form-label fw-semibold">Nama Gelar <span class="text-danger">*</span></label>
+                                <input type="text" wire:model="rankTitle" class="form-control" placeholder="Contoh: Juara Utama, Harapan 1...">
+                                @error('rankTitle') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Rank Awal <span class="text-danger">*</span></label>
+                                <input type="number" wire:model="rankStart" class="form-control" min="1" placeholder="1">
+                                @error('rankStart') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">Rank Akhir <span class="text-danger">*</span></label>
+                                <input type="number" wire:model="rankEnd" class="form-control" min="1" placeholder="3">
+                                @error('rankEnd') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <button wire:click="saveRankTitle" class="btn btn-primary w-100">
+                                    <i class="ti ti-check me-1"></i> Simpan
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-muted small mt-2 mb-0">
+                            <i class="ti ti-info-circle me-1"></i> Contoh: Rank 1-3 = "Juara Utama", Rank 4-6 = "Harapan 1", dst.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- Right: Rankings --}}
-        <div class="{{ $showForm ? 'col-lg-7' : 'col-12' }}">
+        <div class="{{ $showForm ? 'col-lg-7' : ($showRankTitleForm ? 'col-lg-7' : 'col-12') }}">
             @forelse($championCategories as $champion)
                 @php
                     $rankingData = $rankings->get($champion->id, collect());
@@ -125,6 +176,9 @@
                             <h5 class="mb-0 text-white fw-semibold">{{ $champion->name }}</h5>
                         </div>
                         <div class="d-flex gap-1">
+                            <button wire:click="showAddRankTitle({{ $champion->id }})" class="btn btn-sm btn-warning" title="Kelola Gelar">
+                                <i class="ti ti-medal me-1"></i> Gelar
+                            </button>
                             <button wire:click="edit({{ $champion->id }})" class="btn btn-sm btn-light" title="Edit">
                                 <i class="ti ti-edit"></i>
                             </button>
@@ -133,8 +187,25 @@
                             </button>
                         </div>
                     </div>
+
+                    {{-- Rank Title Badges --}}
+                    @if($champion->rankTitles->count() > 0)
+                        <div class="px-3 pt-3 pb-0">
+                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                @foreach($champion->rankTitles as $rt)
+                                    <span class="badge bg-warning-subtle text-dark border border-warning rounded-pill px-2 py-1">
+                                        <i class="ti ti-medal me-1"></i>{{ $rt->title }}
+                                        <small class="text-muted ms-1">(Rank {{ $rt->rank_start }}-{{ $rt->rank_end }})</small>
+                                        <button wire:click="editRankTitle({{ $rt->id }})" class="btn btn p-0 ms-1 text-primary"><i class="ti ti-edit fs-3"></i></button>
+                                        <button wire:click="deleteRankTitle({{ $rt->id }})" class="btn btn p-0 ms-1 text-danger" onclick="return confirm('Hapus gelar ini?')"><i class="ti ti-x fs-3"></i></button>
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
                     {{-- Assessment category badges --}}
-                    <div class="px-3 pt-3 pb-0">
+                    <div class="px-3 pt-2 pb-0">
                         <div class="d-flex flex-wrap gap-1 mb-3">
                             @foreach($champion->assessmentCategories as $ac)
                                 <span class="badge bg-primary-subtle text-primary rounded-pill">
@@ -143,6 +214,7 @@
                             @endforeach
                         </div>
                     </div>
+
                     {{-- Ranking Table --}}
                     <div class="card-body p-0">
                         @if($rankingData->count() > 0)
@@ -150,18 +222,27 @@
                                 <table class="table align-middle mb-0">
                                     <thead>
                                         <tr class="bg-light">
-                                            <th class="text-center" style="width:60px;">Rank</th>
-                                            <th>Peserta</th>
-                                            <th class="text-end" style="width:100px;">Total Nilai</th>
+                                            <th class="text-center" style="width:60px;">
+                                                <h6 class="fw-semibold mb-0">Rank</h6>
+                                            </th>
+                                            <th>
+                                                <h6 class="fw-semibold mb-0">Peserta</h6>
+                                            </th>
+                                            <th class="text-center" style="width:130px;">
+                                                <h6 class="fw-semibold mb-0">Gelar</h6>
+                                            </th>
+                                            <th class="text-end" style="width:100px;">
+                                                <h6 class="fw-semibold mb-0">Total Nilai</h6>
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         @foreach($rankingData as $ps)
                                             @php
                                                 $rankClass = '';
-                                                if ($ps['rank'] == 1) $rankClass = 'bg-warning-subtle text-warning';
-                                                elseif ($ps['rank'] == 2) $rankClass = 'bg-secondary-subtle text-secondary';
-                                                elseif ($ps['rank'] == 3) $rankClass = 'bg-danger-subtle text-danger';
+                                                if ($ps['rank'] == 1) $rankClass = 'table-warning';
+                                                elseif ($ps['rank'] == 2) $rankClass = 'table-light';
+                                                elseif ($ps['rank'] == 3) $rankClass = 'table-info';
                                             @endphp
                                             <tr class="{{ $rankClass }}">
                                                 <td class="text-center fw-bold">
@@ -170,7 +251,7 @@
                                                     @elseif($ps['rank'] == 2)
                                                         <span class="badge bg-secondary text-white rounded-pill px-2 py-1">🥈 2</span>
                                                     @elseif($ps['rank'] == 3)
-                                                        <span class="badge bg-danger text-white rounded-pill px-2 py-1">🥉 3</span>
+                                                        <span class="badge bg-info text-white rounded-pill px-2 py-1">🥉 3</span>
                                                     @else
                                                         {{ $ps['rank'] }}
                                                     @endif
@@ -189,6 +270,13 @@
                                                             <div class="text-muted small">Pelatih: {{ $ps['participant']->nama_pelatih }}</div>
                                                         </div>
                                                     </div>
+                                                </td>
+                                                <td class="text-center">
+                                                    @if($ps['title'])
+                                                        <span class="badge bg-success-subtle text-success border border-success rounded-pill px-2 py-1">
+                                                            <i class="ti ti-award me-1"></i>{{ $ps['title'] }}
+                                                        </span>
+                                                    @endif
                                                 </td>
                                                 <td class="text-end">
                                                     <span class="fw-bold fs-5 {{ $ps['rank'] <= 3 ? 'text-dark' : '' }}">{{ $ps['total'] }}</span>

@@ -9,7 +9,7 @@ class CompetitionCategory extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['eventner_id', 'name', 'tanggal_pelaksanaan', 'kuota'];
+    protected $fillable = ['eventner_id', 'name', 'tanggal_pelaksanaan', 'kuota', 'max_registrations_per_school'];
 
     public function eventner()
     {
@@ -24,5 +24,10 @@ class CompetitionCategory extends Model
     public function registrations()
     {
         return $this->hasMany(Registration::class);
+    }
+
+    public function remainingSlots(): int
+    {
+        return max(0, ($this->kuota ?? 0) - $this->registrations()->count());
     }
 }
