@@ -20,21 +20,5 @@ class UserSeeder extends Seeder
             'password' => Hash::make('password'),
             'role' => 'Admin',
         ]);
-
-        User::create([
-            'name' => 'Eventner User',
-            'username' => 'eventner',
-            'email' => 'eventner@baris.app',
-            'password' => Hash::make('password'),
-            'role' => 'Eventner',
-        ]);
-
-        User::create([
-            'name' => 'Peserta User',
-            'username' => 'peserta',
-            'email' => 'peserta@baris.app',
-            'password' => Hash::make('password'),
-            'role' => 'Peserta',
-        ]);
     }
 }
