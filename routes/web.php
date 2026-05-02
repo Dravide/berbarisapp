@@ -17,9 +17,12 @@ Route::get('/event/{slug}/participant', App\Livewire\Public\EventParticipant::cl
 // Voting Routes
 Route::get('/event/{slug}/vote', App\Livewire\Public\EventVote::class)->name('event.vote');
 Route::post('/webhook/xendit', [App\Http\Controllers\Webhook\XenditWebhookController::class, 'handle']);
+Route::get('/event/{slug}/ticket', App\Livewire\Public\EventTicket::class)->name('event.ticket');
 Route::get('/event/{slug}/drawing', App\Livewire\Eventner\Drawing\Spin::class)->name('event.drawing.spin');
 Route::get('/event/{slug}/drawing-results', App\Livewire\Eventner\Drawing\Results::class)->name('event.drawing.results');
+
 Route::get('/reg/{token}', App\Livewire\Public\MagicLink\Registration::class)->name('magic.link');
+Route::get('/scoreboard/{scoringCode}', App\Livewire\Public\Scoreboard\Index::class)->name('public.scoreboard');
 
 Route::middleware(['auth:web'])->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');

@@ -85,20 +85,20 @@ class Index extends Component
         if ($this->editId) {
             $reg = Registration::where('eventner_id', $eventner->id)->findOrFail($this->editId);
             $reg->update([
-                'nama_sekolah' => $this->nama_sekolah,
-                'npsn' => $this->npsn,
-                'nama_pelatih' => $this->nama_pelatih,
-                'no_hp' => $this->no_hp,
+                'nama_sekolah' => strip_tags($this->nama_sekolah),
+                'npsn' => strip_tags($this->npsn),
+                'nama_pelatih' => strip_tags($this->nama_pelatih),
+                'no_hp' => strip_tags($this->no_hp),
                 'competition_category_id' => $this->competition_category_id,
             ]);
             session()->flash('success', 'Data pendaftar berhasil diperbarui.');
         } else {
             Registration::create([
                 'eventner_id' => $eventner->id,
-                'nama_sekolah' => $this->nama_sekolah,
-                'npsn' => $this->npsn,
-                'nama_pelatih' => $this->nama_pelatih,
-                'no_hp' => $this->no_hp,
+                'nama_sekolah' => strip_tags($this->nama_sekolah),
+                'npsn' => strip_tags($this->npsn),
+                'nama_pelatih' => strip_tags($this->nama_pelatih),
+                'no_hp' => strip_tags($this->no_hp),
                 'competition_category_id' => $this->competition_category_id,
             ]);
             session()->flash('success', 'Sekolah pendaftar berhasil ditambahkan & Magic Link telah dibuat.');

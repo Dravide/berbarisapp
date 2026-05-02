@@ -59,7 +59,7 @@ class Index extends Component
         if ($this->isEditMode && $this->editingId) {
             $cat = CompetitionCategory::where('eventner_id', $this->eventnerId)->findOrFail($this->editingId);
             $cat->update([
-                'name' => $this->name, 
+                'name' => strip_tags($this->name), 
                 'kuota' => $this->kuota ?: null,
                 'tanggal_pelaksanaan' => $this->tanggal_pelaksanaan ?: null
             ]);
@@ -68,7 +68,7 @@ class Index extends Component
         } else {
             $cat = CompetitionCategory::create([
                 'eventner_id' => $this->eventnerId,
-                'name' => $this->name,
+                'name' => strip_tags($this->name),
                 'kuota' => $this->kuota ?: null,
                 'tanggal_pelaksanaan' => $this->tanggal_pelaksanaan ?: null,
             ]);

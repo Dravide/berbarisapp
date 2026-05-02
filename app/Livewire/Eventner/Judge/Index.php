@@ -57,16 +57,16 @@ class Index extends Component
         if ($this->isEditMode && $this->editingId) {
             $judge = Judge::where('eventner_id', $this->eventnerId)->findOrFail($this->editingId);
             $judge->update([
-                'name' => $this->name,
-                'phone_number' => $this->phone_number,
+                'name' => strip_tags($this->name),
+                'phone_number' => strip_tags($this->phone_number),
             ]);
             $judge->assessmentCategories()->sync($this->selectedCategories);
             session()->flash('success', 'Data juri berhasil diperbarui.');
         } else {
             $judge = Judge::create([
                 'eventner_id' => $this->eventnerId,
-                'name' => $this->name,
-                'phone_number' => $this->phone_number,
+                'name' => strip_tags($this->name),
+                'phone_number' => strip_tags($this->phone_number),
             ]);
             $judge->assessmentCategories()->attach($this->selectedCategories);
             session()->flash('success', 'Juri baru berhasil ditambahkan.');

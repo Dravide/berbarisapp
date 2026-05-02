@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Registration extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'eventner_id',
         'competition_category_id',
@@ -55,5 +59,13 @@ class Registration extends Model
     public function voteTransactions()
     {
         return $this->hasMany(VoteTransaction::class);
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['nama_sekolah', 'status_berkas', 'is_finalized'])
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn(string $eventName) => "Pendaftaran {$this->nama_sekolah} telah di-{$eventName}");
     }
 }

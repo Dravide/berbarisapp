@@ -1,0 +1,12 @@
+{
+    "plusjakartasans": {
+        "normal": "F:\\Project\\berbarisapp\\storage\\fonts\/plusjakartasans_normal_e19fb10ad318d660c5e1554598e5df1a",
+        "500": "F:\\Project\\berbarisapp\\storage\\fonts\/plusjakartasans_500_242040f1928162cb2a1d647ffe451af1",
+        "600": "F:\\Project\\berbarisapp\\storage\\fonts\/plusjakartasans_600_a3f4912eb76a248f61a96b2975f8a94d",
+        "bold": "plusjakartasans_bold_a3f4912eb76a248f61a96b2975f8a94d"
+    },
+    "pj": {
+        "normal": "F:\\Project\\berbarisapp\\storage\\fonts\/pj_normal_e19fb10ad318d660c5e1554598e5df1a",
+        "bold": "pj_bold_a3f4912eb76a248f61a96b2975f8a94d"
+    }
+}

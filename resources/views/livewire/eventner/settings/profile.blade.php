@@ -165,6 +165,16 @@
                                     @error('drawing_code') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                                 </div>
                             </div>
+
+                            <div class="col-md-12 mb-4">
+                                <div class="alert alert-info mb-0 border-0 fs-3 py-3">
+                                    <h6 class="fw-semibold mb-2"><i class="ti ti-key"></i> Kode Akses Input Nilai / Scoring (Opsional)</h6>
+                                    <label class="form-label mb-1">Proteksi halaman input nilai panitia dengan kode rahasia.</label>
+                                    <input type="text" class="form-control mt-1 w-50" wire:model="scoring_code" placeholder="Misal: SCORE2026">
+                                    <small class="form-text mt-1 d-block">Kode ini digunakan panitia untuk masuk ke <strong>halaman input nilai</strong> (<code>/event/{slug}/scoring</code>). Kosongkan jika tidak ingin diproteksi.</small>
+                                    @error('scoring_code') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
                         </div>
 
                         <hr class="my-4">

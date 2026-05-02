@@ -23,6 +23,7 @@ class EventDetail extends Component
     {
         return view('livewire.public.event-detail', [
             'eventner' => $this->eventner
-        ])->title($this->eventner->nama_event . ' - BARIS APP');
+        ])->title($this->eventner->nama_event . ' - BARIS APP')
+         ->layoutData(['eventner' => $this->eventner]);
     }
 }

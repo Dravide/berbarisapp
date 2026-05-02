@@ -108,7 +108,7 @@
                         <p class="text-muted fs-4 mb-4">NPSN: {{ $currentSchool->npsn }}</p>
 
                         {{-- Spinning Area --}}
-                        <div x-data="spinnerWidget()" class="w-100" style="max-width: 320px;">
+                        <div x-data="window.spinnerWidget()" class="w-100" style="max-width: 320px;">
                             {{-- Nomor Display --}}
                             <div class="position-relative mx-auto mb-4 d-flex align-items-center justify-content-center" style="width: 200px; height: 200px;">
                                 <!-- Spinning outer ring -->
@@ -226,8 +226,9 @@
         </div>
     </div>
 
+    @script
     <script>
-        function spinnerWidget() {
+        window.spinnerWidget = function() {
             return {
                 isSpinning: false,
                 displayNumber: 0,
@@ -252,10 +253,9 @@
                             speed += counter * 2;
                             setTimeout(animate, Math.min(speed, 300));
                         } else {
-                            // Spin selesai, panggil Livewire spin()
                             this.isSpinning = false;
-                            @this.call('spin').then(() => {
-                                this.result = @this.get('spinResult');
+                            Livewire.find('{{ $this->getId() }}').call('spin').then(() => {
+                                this.result = Livewire.find('{{ $this->getId() }}').get('spinResult');
                                 this.displayNumber = this.result;
                             });
                         }
@@ -266,6 +266,7 @@
             };
         }
     </script>
+    @endscript
     
     </section>
     @else

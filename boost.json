@@ -2,6 +2,7 @@
     "agents": [
         "gemini"
     ],
+    "cloud": false,
     "skills": [
         "laravel-best-practices",
         "livewire-development",

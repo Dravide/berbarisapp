@@ -6,23 +6,17 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::table('competition_categories', function (Blueprint $table) {
-            //
+        Schema::table('eventners', function (Blueprint $table) {
+            $table->string('scoring_code')->nullable()->after('drawing_code');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('competition_categories', function (Blueprint $table) {
-            //
+        Schema::table('eventners', function (Blueprint $table) {
+            $table->dropColumn('scoring_code');
         });
     }
 };

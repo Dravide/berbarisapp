@@ -89,6 +89,72 @@
                 </div>
             </div>
 
+            {{-- Charts Row --}}
+            <div class="row mb-4">
+                {{-- Scoring Progress --}}
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title fw-semibold mb-0">Progress Scoring per Kategori</h5>
+                        </div>
+                        <div class="card-body">
+                            @forelse($scoringProgress as $progress)
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="fw-semibold fs-3">{{ $progress['name'] }}</span>
+                                        <span class="text-muted fs-3">{{ $progress['scored'] }}/{{ $progress['total'] }}</span>
+                                    </div>
+                                    <div class="progress" style="height: 8px;">
+                                        @php $color = $progress['percentage'] >= 100 ? 'success' : ($progress['percentage'] >= 50 ? 'primary' : 'warning'); @endphp
+                                        <div class="progress-bar bg-{{ $color }}" role="progressbar" style="width: {{ $progress['percentage'] }}%" aria-valuenow="{{ $progress['percentage'] }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <div class="text-end"><small class="text-muted">{{ $progress['percentage'] }}%</small></div>
+                                </div>
+                            @empty
+                                <div class="text-center text-muted py-4">
+                                    <i class="ti ti-chart-donut-3 fs-8"></i>
+                                    <p class="mb-0 mt-2">Belum ada data penilaian.</p>
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Revenue Chart --}}
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="card-title fw-semibold mb-0">Revenue 30 Hari Terakhir</h5>
+                            <span class="badge bg-success-subtle text-success">Rp {{ number_format($totalRevenue + $ticketRevenue, 0, ',', '.') }}</span>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="revenueChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Top Participants --}}
+                <div class="col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h5 class="card-title fw-semibold mb-0">Top 10 Peserta</h5>
+                                @if($categories->count() > 1)
+                                    <select class="form-select form-select-sm w-auto" wire:model.live="selectedChartCategory">
+                                        @foreach($categories as $cat)
+                                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                        @endforeach
+                                    </select>
+                                @endif
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="topParticipantsChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="row">
                 <!-- Left Column -->
                 <div class="col-lg-8">
@@ -247,6 +313,86 @@
                     </div>
                 </div>
 
+                {{-- Drawing Results Summary --}}
+                <div class="card">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="card-title fw-semibold mb-0">
+                            <i class="ti ti-arrows-shuffle me-2"></i> Hasil Pengundian
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <a href="{{ route('eventner.drawing.index') }}" class="btn btn-sm btn-light">Kelola <i class="ti ti-arrow-right ms-1"></i></a>
+                            <a href="{{ route('event.drawing.spin', $eventner->slug) }}" target="_blank" class="btn btn-sm btn-primary">
+                                <i class="ti ti-arrows-shuffle me-1"></i> Layar Spin
+                            </a>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            @php
+                                $drawingData = [];
+                                foreach($eventner->competitionCategories as $cat) {
+                                    $drawn = \App\Models\Registration::where('eventner_id', $eventner->id)
+                                        ->where('competition_category_id', $cat->id)
+                                        ->whereNotNull('urutan_tampil')
+                                        ->count();
+                                    $total = \App\Models\Registration::where('eventner_id', $eventner->id)
+                                        ->where('competition_category_id', $cat->id)
+                                        ->count();
+                                    $drawingData[] = ['name' => $cat->name, 'drawn' => $drawn, 'total' => $total];
+                                }
+                            @endphp
+                            <table class="table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="border-bottom-0 ps-4">
+                                            <h6 class="fw-semibold mb-0">Kategori</h6>
+                                        </th>
+                                        <th class="border-bottom-0 text-center" width="150px">
+                                            <h6 class="fw-semibold mb-0">Progress</h6>
+                                        </th>
+                                        <th class="border-bottom-0 text-center" width="80px">
+                                            <h6 class="fw-semibold mb-0">Status</h6>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($drawingData as $dd)
+                                        @php
+                                            $drawPercent = $dd['total'] > 0 ? ($dd['drawn'] / $dd['total']) * 100 : 0;
+                                        @endphp
+                                        <tr>
+                                            <td class="ps-4">
+                                                <span class="fw-semibold">{{ $dd['name'] }}</span>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <div class="progress flex-grow-1" style="height: 6px;">
+                                                        <div class="progress-bar bg-primary" style="width: {{ $drawPercent }}%"></div>
+                                                    </div>
+                                                    <small class="text-muted text-nowrap">{{ $dd['drawn'] }}/{{ $dd['total'] }}</small>
+                                                </div>
+                                            </td>
+                                            <td class="text-center">
+                                                @if($drawPercent >= 100)
+                                                    <span class="badge bg-success-subtle text-success">Selesai</span>
+                                                @elseif($dd['drawn'] > 0)
+                                                    <span class="badge bg-warning-subtle text-warning">{{ round($drawPercent) }}%</span>
+                                                @else
+                                                    <span class="badge bg-light text-dark border">Belum</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="text-center p-4 text-muted">Tidak ada kategori lomba.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Right Column -->
                 <div class="col-lg-4">
                     <!-- Map Section -->
@@ -306,3 +452,91 @@
         </div>
     </div>
 </div>
+
+@script
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+    // Revenue Chart
+    const revenueCtx = document.getElementById('revenueChart');
+    if (revenueCtx) {
+        const revenueData = @json($revenueData);
+        new Chart(revenueCtx, {
+            type: 'bar',
+            data: {
+                labels: revenueData.map(d => d.date),
+                datasets: [{
+                    label: 'Voting',
+                    data: revenueData.map(d => d.vote),
+                    backgroundColor: 'rgba(94, 126, 210, 0.7)',
+                    borderRadius: 4,
+                }, {
+                    label: 'Tiket',
+                    data: revenueData.map(d => d.ticket),
+                    backgroundColor: 'rgba(41, 182, 115, 0.7)',
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10 } },
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                if (value >= 1000000) return 'Rp ' + (value/1000000).toFixed(1) + 'jt';
+                                if (value >= 1000) return 'Rp ' + (value/1000).toFixed(0) + 'rb';
+                                return 'Rp ' + value;
+                            }
+                        }
+                    },
+                    x: { ticks: { maxRotation: 45, maxTicksLimit: 15, font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    // Top Participants Chart
+    const topCtx = document.getElementById('topParticipantsChart');
+    if (topCtx) {
+        const topData = @json($topParticipants);
+        const colors = [
+            'rgba(255, 193, 7, 0.8)',   // gold
+            'rgba(173, 181, 189, 0.8)',  // silver
+            'rgba(205, 127, 50, 0.8)',   // bronze
+            'rgba(94, 126, 210, 0.6)',
+            'rgba(41, 182, 115, 0.6)',
+            'rgba(252, 143, 0, 0.6)',
+            'rgba(239, 83, 80, 0.6)',
+            'rgba(103, 58, 183, 0.6)',
+            'rgba(0, 188, 212, 0.6)',
+            'rgba(121, 134, 203, 0.6)',
+        ];
+        new Chart(topCtx, {
+            type: 'bar',
+            data: {
+                labels: topData.map(d => d.name.length > 15 ? d.name.substring(0,15)+'...' : d.name),
+                datasets: [{
+                    label: 'Total Skor',
+                    data: topData.map(d => d.total),
+                    backgroundColor: colors.slice(0, topData.length),
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { beginAtZero: true },
+                    y: { ticks: { font: { size: 11 } } }
+                }
+            }
+        });
+    }
+</script>
+@endscript

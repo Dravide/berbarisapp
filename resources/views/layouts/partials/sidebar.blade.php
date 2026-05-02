@@ -78,39 +78,29 @@
         @endif
 
         @if(auth()->user()->role === 'Eventner')
-          <!-- ---------------------------------- -->
-          <!-- Eventner Menu -->
-          <!-- ---------------------------------- -->
+          {{-- ============================================ --}}
+          {{-- ACARA --}}
+          {{-- ============================================ --}}
           <li class="nav-small-cap">
             <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-            <span class="hide-menu">Manajemen Eventner</span>
+            <span class="hide-menu">Acara</span>
           </li>
           <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('eventner.profile.*') ? 'active' : '' }}"
               href="{{ route('eventner.profile.index') }}" aria-expanded="false">
               <span>
-                <i class="ti ti-settings"></i>
+                <i class="ti ti-home-cog"></i>
               </span>
               <span class="hide-menu">Profil Event</span>
             </a>
           </li>
-          <li class="sidebar-item">
-            <a class="sidebar-link {{ request()->routeIs('eventner.format-nilai.*') ? 'active' : '' }}"
-              href="{{ route('eventner.format-nilai.builder') }}" aria-expanded="false">
-              <span>
-                <i class="ti ti-checklist"></i>
-              </span>
-              <span class="hide-menu">Format Penilaian</span>
-            </a>
-          </li>
-          <li class="sidebar-item">
-            <a class="sidebar-link {{ request()->routeIs('eventner.judges.*') ? 'active' : '' }}"
-              href="{{ route('eventner.judges.index') }}" aria-expanded="false">
-              <span>
-                <i class="ti ti-users"></i>
-              </span>
-              <span class="hide-menu">Daftar Juri</span>
-            </a>
+
+          {{-- ============================================ --}}
+          {{-- PESERTA --}}
+          {{-- ============================================ --}}
+          <li class="nav-small-cap">
+            <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+            <span class="hide-menu">Peserta</span>
           </li>
           <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('eventner.competition-categories.*') ? 'active' : '' }}"
@@ -131,6 +121,77 @@
             </a>
           </li>
           <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.judges.*') ? 'active' : '' }}"
+              href="{{ route('eventner.judges.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-user"></i>
+              </span>
+              <span class="hide-menu">Daftar Juri</span>
+            </a>
+          </li>
+
+          {{-- ============================================ --}}
+          {{-- PENILAIAN --}}
+          {{-- ============================================ --}}
+          <li class="nav-small-cap">
+            <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+            <span class="hide-menu">Penilaian</span>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.format-nilai.*') ? 'active' : '' }}"
+              href="{{ route('eventner.format-nilai.builder') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-checklist"></i>
+              </span>
+              <span class="hide-menu">Format Penilaian</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.scoring.*') ? 'active' : '' }}"
+              href="{{ route('eventner.scoring.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-clipboard-check"></i>
+              </span>
+              <span class="hide-menu">Input Nilai</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.score-recap.*') ? 'active' : '' }}"
+              href="{{ route('eventner.score-recap.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-report-analytics"></i>
+              </span>
+              <span class="hide-menu">Rekap Nilai</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.champion-categories.*') ? 'active' : '' }}"
+              href="{{ route('eventner.champion-categories.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-trophy"></i>
+              </span>
+              <span class="hide-menu">Kategori Juara</span>
+            </a>
+          </li>
+
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.drawing.*') ? 'active' : '' }}"
+              href="{{ route('eventner.drawing.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-arrows-shuffle"></i>
+              </span>
+              <span class="hide-menu">Drawing / Undian</span>
+            </a>
+          </li>
+
+          {{-- ============================================ --}}
+          {{-- INTERAKSI --}}
+          {{-- ============================================ --}}
+          <li class="nav-small-cap">
+            <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+            <span class="hide-menu">Interaksi</span>
+          </li>
+          <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('eventner.vote-results.*') ? 'active' : '' }}"
               href="{{ route('eventner.vote-results.index') }}" aria-expanded="false">
               <span>
@@ -139,6 +200,42 @@
               <span class="hide-menu">Hasil Voting</span>
             </a>
           </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.tickets.*') ? 'active' : '' }}"
+              href="{{ route('eventner.tickets.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-ticket"></i>
+              </span>
+              <span class="hide-menu">Tiket Online</span>
+            </a>
+          </li>
+
+          {{-- ============================================ --}}
+          {{-- LAINNYA --}}
+          {{-- ============================================ --}}
+          <li class="nav-small-cap">
+            <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+            <span class="hide-menu">Lainnya</span>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.activity-log.*') ? 'active' : '' }}"
+              href="{{ route('eventner.activity-log.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-history"></i>
+              </span>
+              <span class="hide-menu">Activity Log</span>
+            </a>
+          </li>
+          @if(auth()->user()->eventner && auth()->user()->eventner->scoring_code)
+          <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ route('public.scoreboard', auth()->user()->eventner->scoring_code) }}" target="_blank" aria-expanded="false">
+              <span>
+                <i class="ti ti-presentation"></i>
+              </span>
+              <span class="hide-menu">Live Scoreboard</span>
+            </a>
+          </li>
+          @endif
         @endif
       </ul>
     </nav>

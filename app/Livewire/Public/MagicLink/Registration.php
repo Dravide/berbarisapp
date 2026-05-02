@@ -175,6 +175,7 @@ class Registration extends Component
 
     public function render()
     {
-        return view('livewire.public.magic-link.registration');
+        return view('livewire.public.magic-link.registration')
+            ->layoutData(['eventner' => $this->registration->eventner]);
     }
 }

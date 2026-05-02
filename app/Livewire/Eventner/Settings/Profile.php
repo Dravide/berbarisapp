@@ -35,6 +35,7 @@ class Profile extends Component
     public $link_livestreaming;
 
     public $drawing_code;
+    public $scoring_code;
 
     public $logo;
     public $newLogo;
@@ -67,6 +68,7 @@ class Profile extends Component
         $this->link_whatsapp = $eventner->link_whatsapp;
         $this->link_livestreaming = $eventner->link_livestreaming;
         $this->drawing_code = $eventner->drawing_code;
+        $this->scoring_code = $eventner->scoring_code;
 
         $this->logo = $eventner->logo_event;
         $this->poster = $eventner->poster;
@@ -91,11 +93,12 @@ class Profile extends Component
             'link_whatsapp' => 'nullable|string|max:255',
             'link_livestreaming' => 'nullable|url|max:255',
             'drawing_code' => 'nullable|string|max:255',
+            'scoring_code' => 'nullable|string|max:255',
             'newLogo' => 'nullable|image|max:2048', 
             'newPoster' => 'nullable|image|max:3072', // allow up to 3MB for poster
         ]);
 
-        $eventner = Eventner::findOrFail($this->eventnerId);
+        $eventner = Eventner::where('user_id', Auth::id())->findOrFail($this->eventnerId);
 
         if ($this->newLogo) {
             // Delete old logo if exists
@@ -122,22 +125,23 @@ class Profile extends Component
         }
 
         $eventner->update([
-            'nama_event' => $this->nama_event,
-            'deskripsi' => $this->deskripsi,
-            'diselenggarakan_oleh' => $this->diselenggarakan_oleh,
-            'lokasi' => $this->lokasi,
-            'venue' => $this->venue,
+            'nama_event' => strip_tags($this->nama_event),
+            'deskripsi' => strip_tags($this->deskripsi),
+            'diselenggarakan_oleh' => strip_tags($this->diselenggarakan_oleh),
+            'lokasi' => strip_tags($this->lokasi),
+            'venue' => strip_tags($this->venue),
             'tanggal' => $this->tanggal,
-            'tanggal_pendaftaran' => $this->tanggal_pendaftaran,
-            'technical_meeting' => $this->technical_meeting,
-            'tingkat_perlombaan' => $this->tingkat_perlombaan,
+            'tanggal_pendaftaran' => strip_tags($this->tanggal_pendaftaran),
+            'technical_meeting' => strip_tags($this->technical_meeting),
+            'tingkat_perlombaan' => strip_tags($this->tingkat_perlombaan),
             'latitude' => $this->latitude,
             'longitude' => $this->longitude,
-            'link_instagram' => $this->link_instagram,
-            'link_tiktok' => $this->link_tiktok,
-            'link_whatsapp' => $this->link_whatsapp,
-            'link_livestreaming' => $this->link_livestreaming,
-            'drawing_code' => $this->drawing_code,
+            'link_instagram' => strip_tags($this->link_instagram),
+            'link_tiktok' => strip_tags($this->link_tiktok),
+            'link_whatsapp' => strip_tags($this->link_whatsapp),
+            'link_livestreaming' => strip_tags($this->link_livestreaming),
+            'drawing_code' => strip_tags($this->drawing_code),
+            'scoring_code' => strip_tags($this->scoring_code),
             'logo_event' => $eventner->logo_event,
             'poster' => $eventner->poster,
         ]);

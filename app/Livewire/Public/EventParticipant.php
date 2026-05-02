@@ -20,6 +20,7 @@ class EventParticipant extends Component
     public function render()
     {
         return view('livewire.public.event-participant')
-            ->title('Daftar Peserta - ' . $this->eventner->nama_event);
+            ->title('Daftar Peserta - ' . $this->eventner->nama_event)
+            ->layoutData(['eventner' => $this->eventner]);
     }
 }

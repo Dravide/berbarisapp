@@ -1,0 +1,249 @@
+<?php
+
+namespace App\Livewire\Eventner\Scoring;
+
+use App\Models\AssessmentCategory;
+use App\Models\AssessmentScore;
+use App\Models\CompetitionCategory;
+use App\Models\Judge;
+use App\Models\Registration;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Component;
+use Livewire\Attributes\Layout;
+
+#[Layout('layouts.admin')]
+class Index extends Component
+{
+    public $eventner;
+    public $view = 'categories'; // 'categories', 'participants', 'scoring'
+    public $selectedCategoryId;
+    public $search = '';
+    public $selectedRegistrationId;
+    public $selectedRegistration;
+    public $scores = []; // [criteria_id => 'score_value']
+    public $saveStatus = ''; // '', 'saved', 'error'
+
+    // Judge support
+    public $selectedJudgeId;
+    public $judges = [];
+
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'selectedCategoryId' => ['except' => ''],
+    ];
+
+    public function mount()
+    {
+        $this->eventner = Auth::user()->eventner;
+
+        if (!$this->eventner) {
+            abort(403, 'Anda belum memiliki data Event terdaftar.');
+        }
+
+        if ($this->selectedCategoryId) {
+            $this->view = 'participants';
+        }
+    }
+
+    public function selectCategory($id)
+    {
+        $this->selectedCategoryId = $id;
+        $this->view = 'participants';
+    }
+
+    public function backToCategories()
+    {
+        $this->view = 'categories';
+        $this->selectedCategoryId = null;
+        $this->search = '';
+        $this->selectedRegistrationId = null;
+        $this->selectedRegistration = null;
+        $this->selectedJudgeId = null;
+        $this->judges = [];
+    }
+
+    public function selectParticipant($id)
+    {
+        $this->selectedRegistrationId = $id;
+        $this->selectedRegistration = Registration::with('competitionCategory')->find($id);
+        $this->view = 'scoring';
+
+        // Load judges for this competition category
+        $this->loadJudges();
+
+        // Auto-select first judge if available
+        if (count($this->judges) > 0) {
+            $this->selectedJudgeId = $this->judges[0]->id;
+        }
+
+        $this->loadExistingScores();
+    }
+
+    public function updatedSelectedJudgeId()
+    {
+        $this->loadExistingScores();
+        $this->saveStatus = '';
+    }
+
+    public function loadJudges()
+    {
+        $category = $this->selectedRegistration->competitionCategory;
+        if ($category) {
+            $this->judges = $category->judges()->get();
+        }
+
+        // Fallback: if no judges assigned to category, get all event judges
+        if (empty($this->judges) || count($this->judges) === 0) {
+            $this->judges = $this->eventner->judges()->get();
+        }
+    }
+
+    public function backToParticipants()
+    {
+        $this->view = 'participants';
+        $this->scores = [];
+        $this->selectedRegistrationId = null;
+        $this->selectedRegistration = null;
+        $this->saveStatus = '';
+        $this->selectedJudgeId = null;
+        $this->judges = [];
+    }
+
+    public function loadExistingScores()
+    {
+        $this->scores = [];
+
+        if (!$this->selectedJudgeId) {
+            return;
+        }
+
+        $existingScores = AssessmentScore::where('registration_id', $this->selectedRegistrationId)
+            ->where('eventner_id', $this->eventner->id)
+            ->where('judge_id', $this->selectedJudgeId)
+            ->get();
+
+        foreach ($existingScores as $score) {
+            $this->scores[$score->assessment_criteria_id] = $score->score;
+        }
+    }
+
+    public function saveScores()
+    {
+        if (!$this->selectedJudgeId) {
+            $this->saveStatus = 'error';
+            return;
+        }
+
+        $eventnerId = $this->eventner->id;
+        $registrationId = $this->selectedRegistrationId;
+        $judgeId = $this->selectedJudgeId;
+
+        foreach ($this->scores as $criteriaId => $scoreValue) {
+            if ($scoreValue === '' || $scoreValue === null) {
+                continue;
+            }
+
+            AssessmentScore::updateOrCreate(
+                [
+                    'registration_id' => $registrationId,
+                    'assessment_criteria_id' => $criteriaId,
+                    'judge_id' => $judgeId,
+                ],
+                [
+                    'eventner_id' => $eventnerId,
+                    'score' => $scoreValue,
+                ]
+            );
+        }
+
+        $this->saveStatus = 'saved';
+    }
+
+    public function resetScores()
+    {
+        if (!$this->selectedJudgeId || !$this->selectedRegistrationId) {
+            return;
+        }
+
+        AssessmentScore::where('registration_id', $this->selectedRegistrationId)
+            ->where('eventner_id', $this->eventner->id)
+            ->where('judge_id', $this->selectedJudgeId)
+            ->delete();
+
+        $this->scores = [];
+        $this->saveStatus = '';
+        session()->flash('success', 'Nilai berhasil direset.');
+    }
+
+    public function render()
+    {
+        $participants = collect();
+        $selectedCategory = null;
+        $assessmentCategories = collect();
+
+        if ($this->selectedCategoryId) {
+            $selectedCategory = CompetitionCategory::find($this->selectedCategoryId);
+
+            $query = Registration::where('competition_category_id', $this->selectedCategoryId);
+
+            if ($this->search) {
+                $query->where(function ($q) {
+                    $q->where('nama_sekolah', 'like', '%' . $this->search . '%')
+                        ->orWhere('nama_pelatih', 'like', '%' . $this->search . '%');
+                });
+            }
+
+            $participants = $query->get();
+        }
+
+        if ($this->view === 'scoring' && $this->selectedRegistration) {
+            $category = $this->selectedRegistration->competitionCategory;
+            if ($category) {
+                $judgeIds = $category->judges()->pluck('judges.id');
+                if ($judgeIds->isNotEmpty()) {
+                    $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
+                        ->where('eventner_id', $this->eventner->id)
+                        ->whereHas('judges', function ($q) use ($judgeIds) {
+                            $q->whereIn('judges.id', $judgeIds);
+                        })
+                        ->get();
+                }
+
+                if ($assessmentCategories->isEmpty()) {
+                    $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
+                        ->where('eventner_id', $this->eventner->id)
+                        ->get();
+                }
+            }
+        }
+
+        // Calculate per-judge totals for the current registration
+        $judgeTotals = collect();
+        if ($this->view === 'scoring' && $this->selectedRegistration && count($this->judges) > 0) {
+            $allJudgeScores = AssessmentScore::where('registration_id', $this->selectedRegistrationId)
+                ->where('eventner_id', $this->eventner->id)
+                ->whereIn('judge_id', collect($this->judges)->pluck('id'))
+                ->get()
+                ->groupBy('judge_id');
+
+            foreach ($this->judges as $judge) {
+                $judgeScores = $allJudgeScores->get($judge->id, collect());
+                $total = $judgeScores->sum(fn($s) => (int) $s->score);
+                $filled = $judgeScores->count();
+                $judgeTotals->push([
+                    'judge' => $judge,
+                    'total' => $total,
+                    'filled' => $filled,
+                ]);
+            }
+        }
+
+        return view('livewire.eventner.scoring.index', [
+            'participants' => $participants,
+            'selectedCategory' => $selectedCategory,
+            'categories' => $this->eventner->competitionCategories->loadCount('registrations'),
+            'assessmentCategories' => $assessmentCategories,
+            'judgeTotals' => $judgeTotals,
+        ])->title('Input Nilai - ' . $this->eventner->nama_event);
+    }
+}

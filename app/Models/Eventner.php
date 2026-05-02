@@ -27,9 +27,14 @@ class Eventner extends Model
         'link_livestreaming',
         'slug',
         'drawing_code',
+        'scoring_code',
         'deskripsi',
         'latitude',
         'longitude',
+        'ticket_active',
+        'ticket_price',
+        'ticket_description',
+        'ticket_max_per_order',
     ];
 
     protected static function boot()
@@ -69,5 +74,25 @@ class Eventner extends Model
     public function voteTransactions()
     {
         return $this->hasMany(VoteTransaction::class);
+    }
+
+    public function assessmentScores()
+    {
+        return $this->hasMany(AssessmentScore::class);
+    }
+
+    public function assessmentCategories()
+    {
+        return $this->hasMany(AssessmentCategory::class);
+    }
+
+    public function judges()
+    {
+        return $this->hasMany(Judge::class);
+    }
+
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class);
     }
 }

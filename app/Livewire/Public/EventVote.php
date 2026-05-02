@@ -2,9 +2,13 @@
 
 namespace App\Livewire\Public;
 
+use App\Models\CompetitionCategory;
 use App\Models\Eventner;
 use App\Models\Registration;
 use App\Models\VoteTransaction;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Xendit\Configuration;
@@ -37,8 +41,7 @@ class EventVote extends Component
 
     public function mount($slug)
     {
-        $this->eventner = Eventner::with(['competitionCategories.registrations'])
-            ->where('slug', $slug)->firstOrFail();
+        $this->eventner = Eventner::where('slug', $slug)->firstOrFail();
             
         if ($this->selectedCategoryId) {
             $this->view = 'participants';
@@ -65,6 +68,13 @@ class EventVote extends Component
 
     public function submitVote()
     {
+        if (RateLimiter::tooManyAttempts('vote-submit:'.request()->ip(), $maxAttempts = 5)) {
+            session()->flash('error', 'Terlalu banyak permintaan. Silakan coba lagi dalam satu menit.');
+            return;
+        }
+
+        RateLimiter::hit('vote-submit:'.request()->ip(), $decaySeconds = 60);
+
         $this->validate();
 
         $amount = $this->voteCount * 1000;
@@ -110,6 +120,14 @@ class EventVote extends Component
             return redirect()->away($invoice->getInvoiceUrl());
 
         } catch (\Exception $e) {
+            Log::error('Xendit invoice creation failed', [
+                'external_id' => $externalId,
+                'registration_id' => $this->selectedRegistrationId,
+                'amount' => $amount,
+                'voter_email' => $this->voterEmail,
+                'error' => $e->getMessage(),
+            ]);
+
             session()->flash('error', 'Gagal membuat invoice: ' . $e->getMessage());
         }
     }
@@ -120,7 +138,7 @@ class EventVote extends Component
         $selectedCategory = null;
 
         if ($this->selectedCategoryId) {
-            $selectedCategory = \App\Models\CompetitionCategory::find($this->selectedCategoryId);
+            $selectedCategory = CompetitionCategory::find($this->selectedCategoryId);
             
             $query = Registration::where('competition_category_id', $this->selectedCategoryId);
             
@@ -137,7 +155,8 @@ class EventVote extends Component
         return view('livewire.public.event-vote', [
             'participants' => $participants,
             'selectedCategory' => $selectedCategory,
-            'categories' => $this->eventner->competitionCategories()->withCount('registrations')->get()
-        ])->title('Vote Peserta - ' . $this->eventner->nama_event);
+            'categories' => $this->eventner->competitionCategories->loadCount('registrations')
+        ])->title('Vote Peserta - ' . $this->eventner->nama_event)
+         ->layoutData(['eventner' => $this->eventner]);
     }
 }
