@@ -24,6 +24,11 @@ Route::get('/reg/{token}', App\Livewire\Public\MagicLink\Registration::class)->n
 Route::get('/scoreboard/{scoringCode}', App\Livewire\Public\Scoreboard\Index::class)->name('public.scoreboard');
 Route::get('/champions/{scoringCode}', App\Livewire\Public\Champions\Index::class)->name('public.champions');
 
+// Legal & Support Pages
+Route::get('/privacy', App\Livewire\Public\PrivacyPolicy::class)->name('privacy');
+Route::get('/terms', App\Livewire\Public\TermsConditions::class)->name('terms');
+Route::get('/help', App\Livewire\Public\HelpSupport::class)->name('help');
+
 Route::middleware(['auth:web'])->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('dashboard', App\Livewire\Dashboard\Index::class)->name('dashboard');

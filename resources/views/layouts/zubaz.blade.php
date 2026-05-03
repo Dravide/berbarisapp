@@ -46,7 +46,7 @@
             <nav class="navbar site-navbar">
                 <div class="brand-logo">
                     <a href="{{ url('/') }}">
-                        @if($logoPath)
+                        @if(($logoPath ?? null) && is_string($logoPath))
                             <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" style="max-height: 40px; object-fit: contain;">
                         @else
                             <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="BARIS APP" class="light-version-logo">
@@ -115,7 +115,7 @@
                     <div class="col-xl-4 col-lg-12">
                         <div class="zubuz-footer-textarea">
                             <a href="{{ url('/') }}">
-                                @if($logoPath)
+                                @if(($logoPath ?? null) && is_string($logoPath))
                                     <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" style="max-height: 40px;">
                                 @else
                                     <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="BARIS APP">
@@ -153,9 +153,9 @@
                             <div class="zubuz-footer-title"><p>Kontak</p></div>
                             <ul>
                                 <li><a href="mailto:{{ get_setting('landing_contact') ? json_decode(get_setting('landing_contact'))->email ?? '#' : '#' }}">Email Kami</a></li>
-                                <li><a href="#">Kebijakan Privasi</a></li>
-                                <li><a href="#">Syarat & Ketentuan</a></li>
-                                <li><a href="#">Bantuan & Support</a></li>
+                                <li><a href="{{ route('privacy') }}">Kebijakan Privasi</a></li>
+                                <li><a href="{{ route('terms') }}">Syarat & Ketentuan</a></li>
+                                <li><a href="{{ route('help') }}">Bantuan & Support</a></li>
                             </ul>
                         </div>
                     </div>
