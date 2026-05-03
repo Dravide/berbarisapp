@@ -1,30 +1,32 @@
 <div>
-    {{-- Banner --}}
-    <section class="bg-primary-subtle pt-7 pb-5">
-        <div class="custom-container">
+    {{-- Hero Banner --}}
+    <div class="section" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 60px 0 40px;">
+        <div class="container">
             <div class="row justify-content-center text-center">
                 <div class="col-lg-8">
-                    <span class="badge bg-warning text-dark mb-3 px-3 py-2 fw-semibold">Pembelian Tiket Online</span>
-                    <h1 class="text-dark fw-semibold fs-10 mb-2">{{ $eventner->nama_event }}</h1>
-                    <p class="fs-5 text-muted mb-4">
+                    <span style="display:inline-block; background: rgba(0,0,0,0.2); color: #fff; padding: 6px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 12px;">
+                        <i class="fa fa-ticket"></i> Pembelian Tiket Online
+                    </span>
+                    <h1 class="wow fadeInUp" style="color: #fff; font-size: 36px;">{{ $eventner->nama_event }}</h1>
+                    <p class="wow fadeInUp" style="color: rgba(255,255,255,0.9); font-size: 17px; margin-top: 8px;">
                         Beli tiket online, bayar via QRIS, dan dapatkan QR masuk langsung di HP Anda.
                     </p>
-                    <div class="d-flex justify-content-center gap-2">
-                        <a href="{{ route('event.detail', $eventner->slug) }}" class="btn btn-outline-primary px-4">
-                            <i class="ti ti-info-circle me-1"></i> Info Event
+                    <div class="wow fadeInUp mt-3">
+                        <a href="{{ route('event.detail', $eventner->slug) }}" class="zubuz-default-btn" style="background: rgba(255,255,255,0.25);">
+                            <span><i class="fa fa-info-circle"></i> Info Event</span>
                         </a>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 
-    <section class="py-5">
-        <div class="custom-container">
+    {{-- Main Content --}}
+    <div class="section zubuz-section-padding3">
+        <div class="container">
             @if(session()->has('error'))
-                <div class="alert alert-danger border-0 bg-danger-subtle text-danger alert-dismissible fade show mb-4">
+                <div class="wow fadeInUp" style="background: rgba(239,68,68,0.1); color: #ef4444; padding: 14px 20px; border-radius: 12px; margin-bottom: 24px;">
                     {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
 
@@ -32,31 +34,57 @@
                 {{-- CONFIRMATION VIEW --}}
                 <div class="row justify-content-center">
                     <div class="col-lg-6">
-                        <div class="card w-100 border-0 shadow-lg">
-                            <div class="card-header bg-success text-white text-center py-4">
-                                <i class="ti ti-circle-check fs-10 mb-2 d-block"></i>
-                                <h4 class="text-white fw-semibold mb-1">Pembayaran Berhasil!</h4>
-                                <p class="text-white text-opacity-75 mb-0 small">Tiket Anda sudah aktif</p>
+                        <div class="wow fadeInUp" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden;">
+                            {{-- Success Header --}}
+                            <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 30px; text-align: center;">
+                                <i class="fa fa-check-circle" style="font-size: 48px; color: #fff; display: block; margin-bottom: 10px;"></i>
+                                <h4 style="color: #fff; font-weight: 600; margin-bottom: 4px;">Pembayaran Berhasil!</h4>
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 14px;">Tiket Anda sudah aktif</p>
                             </div>
-                            <div class="card-body p-4 text-center">
-                                <div class="mb-4">
-                                    <img src="{{ asset('storage/' . $paidTicket->qr_code_path) }}" alt="QR Ticket" class="img-fluid" style="max-width:220px;">
+
+                            {{-- QR Code --}}
+                            <div style="padding: 30px; text-align: center;">
+                                <div style="margin-bottom: 24px;">
+                                    <img src="{{ asset('storage/' . $paidTicket->qr_code_path) }}" alt="QR Ticket" style="max-width: 200px;">
                                 </div>
-                                <div class="alert alert-info border-0 text-start mb-4">
-                                    <p class="fw-semibold mb-1"><i class="ti ti-info-circle me-1"></i> Cara Menggunakan</p>
-                                    <ol class="mb-0 ps-3 small">
+
+                                {{-- Info Box --}}
+                                <div style="background: rgba(0,114,255,0.06); border-radius: 12px; padding: 16px; text-align: left; margin-bottom: 24px;">
+                                    <p style="font-weight: 600; margin-bottom: 8px; font-size: 14px;">
+                                        <i class="fa fa-info-circle" style="color: #0072FF; margin-right: 4px;"></i> Cara Menggunakan
+                                    </p>
+                                    <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #4b5563;">
                                         <li>Simpan/screenshot QR code di atas</li>
                                         <li>Datang ke lokasi event</li>
                                         <li>Tunjukkan QR kepada panitia di gerbang</li>
                                         <li>Panitia akan scan dan memberikan gelang</li>
                                     </ol>
                                 </div>
-                                <table class="table table-sm mb-0">
-                                    <tr><td class="text-muted">Kode Order</td><td class="fw-semibold text-end">{{ $paidTicket->order_code }}</td></tr>
-                                    <tr><td class="text-muted">Nama</td><td class="fw-semibold text-end">{{ $paidTicket->buyer_name }}</td></tr>
-                                    <tr><td class="text-muted">Jumlah Tiket</td><td class="fw-semibold text-end">{{ $paidTicket->quantity }}</td></tr>
-                                    <tr><td class="text-muted">Total Bayar</td><td class="fw-semibold text-end">Rp {{ number_format($paidTicket->total_amount, 0, ',', '.') }}</td></tr>
-                                    <tr><td class="text-muted">Status</td><td class="text-end"><span class="badge bg-success">{{ $paidTicket->status }}</span></td></tr>
+
+                                {{-- Details --}}
+                                <table style="width: 100%; border-collapse: collapse;">
+                                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                                        <td style="padding: 10px 0; color: #6b7280; font-size: 14px;">Kode Order</td>
+                                        <td style="padding: 10px 0; text-align: right; font-weight: 600; font-size: 14px;">{{ $paidTicket->order_code }}</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                                        <td style="padding: 10px 0; color: #6b7280; font-size: 14px;">Nama</td>
+                                        <td style="padding: 10px 0; text-align: right; font-weight: 600; font-size: 14px;">{{ $paidTicket->buyer_name }}</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                                        <td style="padding: 10px 0; color: #6b7280; font-size: 14px;">Jumlah Tiket</td>
+                                        <td style="padding: 10px 0; text-align: right; font-weight: 600; font-size: 14px;">{{ $paidTicket->quantity }}</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                                        <td style="padding: 10px 0; color: #6b7280; font-size: 14px;">Total Bayar</td>
+                                        <td style="padding: 10px 0; text-align: right; font-weight: 600; font-size: 14px;">Rp {{ number_format($paidTicket->total_amount, 0, ',', '.') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 10px 0; color: #6b7280; font-size: 14px;">Status</td>
+                                        <td style="padding: 10px 0; text-align: right;">
+                                            <span style="background: rgba(16,185,129,0.1); color: #10b981; padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;">{{ $paidTicket->status }}</span>
+                                        </td>
+                                    </tr>
                                 </table>
                             </div>
                         </div>
@@ -66,84 +94,89 @@
                 {{-- PURCHASE FORM --}}
                 <div class="row justify-content-center">
                     <div class="col-lg-6">
-                        {{-- Ticket Info --}}
-                        <div class="card w-100 mb-4 border-0 shadow-sm">
-                            <div class="card-body p-4">
-                                <div class="d-flex align-items-center gap-3 mb-3">
-                                    <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style="width:50px;height:50px;">
-                                        <i class="ti ti-ticket fs-5"></i>
-                                    </div>
-                                    <div>
-                                        <h5 class="fw-semibold mb-0">Tiket Masuk Event</h5>
-                                        <p class="text-muted small mb-0">{{ $eventner->nama_event }}</p>
-                                    </div>
-                                    <div class="ms-auto text-end">
-                                        <h4 class="text-primary fw-bold mb-0">Rp {{ number_format($eventner->ticket_price, 0, ',', '.') }}</h4>
-                                        <span class="text-muted small">/ tiket</span>
-                                    </div>
+                        {{-- Ticket Info Card --}}
+                        <div class="wow fadeInUp" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; margin-bottom: 20px;">
+                            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+                                <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(0,114,255,0.1); display: flex; align-items: center; justify-content: center;">
+                                    <i class="fa fa-ticket" style="font-size: 20px; color: #0072FF;"></i>
                                 </div>
-                                @if($eventner->ticket_description)
-                                    <div class="bg-light rounded p-3 small text-muted">
-                                        {{ $eventner->ticket_description }}
-                                    </div>
-                                @endif
+                                <div style="flex: 1;">
+                                    <h5 style="margin: 0; font-weight: 600;">Tiket Masuk Event</h5>
+                                    <p style="margin: 2px 0 0; color: #6b7280; font-size: 14px;">{{ $eventner->nama_event }}</p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <h4 style="margin: 0; color: #0072FF; font-weight: 700;">Rp {{ number_format($eventner->ticket_price, 0, ',', '.') }}</h4>
+                                    <span style="color: #9ca3af; font-size: 13px;">/ tiket</span>
+                                </div>
                             </div>
+                            @if($eventner->ticket_description)
+                                <div style="background: #f8fafc; border-radius: 10px; padding: 14px; font-size: 14px; color: #6b7280;">
+                                    {{ $eventner->ticket_description }}
+                                </div>
+                            @endif
                         </div>
 
-                        {{-- Form --}}
-                        <div class="card w-100 border-0 shadow-sm">
-                            <div class="card-header bg-transparent border-bottom">
-                                <h5 class="fw-semibold mb-0"><i class="ti ti-forms me-2"></i>Formulir Pembelian</h5>
+                        {{-- Form Card --}}
+                        <div class="wow fadeInUp" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden;">
+                            <div style="padding: 18px 24px; border-bottom: 1px solid #e5e7eb;">
+                                <h5 style="margin: 0; font-weight: 600;">
+                                    <i class="fa fa-file-alt" style="margin-right: 8px; color: #0072FF;"></i>Formulir Pembelian
+                                </h5>
                             </div>
-                            <div class="card-body p-4">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Nama Lengkap <span class="text-danger">*</span></label>
-                                    <input type="text" wire:model="buyerName" class="form-control" placeholder="Masukkan nama lengkap">
-                                    @error('buyerName') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                            <div style="padding: 24px;">
+                                {{-- Name --}}
+                                <div style="margin-bottom: 18px;">
+                                    <label style="font-weight: 600; display: block; margin-bottom: 6px; font-size: 14px;">Nama Lengkap <span style="color: #ef4444;">*</span></label>
+                                    <input type="text" wire:model="buyerName" placeholder="Masukkan nama lengkap" style="width: 100%; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; font-size: 14px; outline: none;">
+                                    @error('buyerName') <span style="color: #ef4444; font-size: 13px;">{{ $message }}</span> @enderror
                                 </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
-                                    <input type="email" wire:model="buyerEmail" class="form-control" placeholder="contoh@email.com">
-                                    @error('buyerEmail') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                                {{-- Email --}}
+                                <div style="margin-bottom: 18px;">
+                                    <label style="font-weight: 600; display: block; margin-bottom: 6px; font-size: 14px;">Email <span style="color: #ef4444;">*</span></label>
+                                    <input type="email" wire:model="buyerEmail" placeholder="contoh@email.com" style="width: 100%; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; font-size: 14px; outline: none;">
+                                    @error('buyerEmail') <span style="color: #ef4444; font-size: 13px;">{{ $message }}</span> @enderror
                                 </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">No. WhatsApp <span class="text-danger">*</span></label>
-                                    <input type="tel" wire:model="buyerPhone" class="form-control" placeholder="08xxxxxxxxxx">
-                                    @error('buyerPhone') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                                {{-- Phone --}}
+                                <div style="margin-bottom: 18px;">
+                                    <label style="font-weight: 600; display: block; margin-bottom: 6px; font-size: 14px;">No. WhatsApp <span style="color: #ef4444;">*</span></label>
+                                    <input type="tel" wire:model="buyerPhone" placeholder="08xxxxxxxxxx" style="width: 100%; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; font-size: 14px; outline: none;">
+                                    @error('buyerPhone') <span style="color: #ef4444; font-size: 13px;">{{ $message }}</span> @enderror
                                 </div>
 
-                                <div class="mb-4">
-                                    <label class="form-label fw-semibold">Jumlah Tiket <span class="text-danger">*</span></label>
-                                    <div class="input-group" style="max-width: 200px;">
-                                        <button class="btn btn-outline-secondary" wire:click="$set('quantity', max(1, $quantity - 1))">−</button>
-                                        <input type="number" wire:model="quantity" class="form-control text-center" min="1" max="{{ $eventner->ticket_max_per_order ?? 10 }}">
-                                        <button class="btn btn-outline-secondary" wire:click="$set('quantity', min({{ $eventner->ticket_max_per_order ?? 10 }}, $quantity + 1))">+</button>
+                                {{-- Quantity --}}
+                                <div style="margin-bottom: 24px;">
+                                    <label style="font-weight: 600; display: block; margin-bottom: 6px; font-size: 14px;">Jumlah Tiket <span style="color: #ef4444;">*</span></label>
+                                    <div style="display: flex; max-width: 200px;">
+                                        <button type="button" wire:click="$set('quantity', max(1, $quantity - 1))" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px 0 0 8px; padding: 10px 16px; cursor: pointer; font-size: 16px;">−</button>
+                                        <input type="number" wire:model="quantity" style="border: 1px solid #e5e7eb; border-left: none; border-right: none; text-align: center; width: 100%; padding: 10px; font-size: 16px; font-weight: 600; outline: none;" min="1" max="{{ $eventner->ticket_max_per_order ?? 10 }}">
+                                        <button type="button" wire:click="$set('quantity', min({{ $eventner->ticket_max_per_order ?? 10 }}, $quantity + 1))" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 0 8px 8px 0; padding: 10px 16px; cursor: pointer; font-size: 16px;">+</button>
                                     </div>
-                                    <small class="text-muted">Maksimal {{ $eventner->ticket_max_per_order ?? 10 }} tiket per transaksi</small>
-                                    @error('quantity') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                                    <span style="color: #9ca3af; font-size: 13px;">Maksimal {{ $eventner->ticket_max_per_order ?? 10 }} tiket per transaksi</span>
+                                    @error('quantity') <span style="color: #ef4444; font-size: 13px;">{{ $message }}</span> @enderror
                                 </div>
 
                                 {{-- Summary --}}
-                                <div class="bg-light rounded p-3 mb-4">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span class="text-muted">{{ $eventner->ticket_price ? number_format($eventner->ticket_price, 0, ',', '.') : 0 }} x {{ $quantity }} tiket</span>
-                                        <span class="fw-semibold">Rp {{ number_format($this->total, 0, ',', '.') }}</span>
+                                <div style="background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                        <span style="color: #6b7280; font-size: 14px;">{{ number_format($eventner->ticket_price, 0, ',', '.') }} x {{ $quantity }} tiket</span>
+                                        <span style="font-weight: 600; font-size: 14px;">Rp {{ number_format($this->total, 0, ',', '.') }}</span>
                                     </div>
-                                    <hr class="my-2">
-                                    <div class="d-flex justify-content-between">
-                                        <span class="fw-bold">Total Bayar</span>
-                                        <span class="fw-bold text-primary fs-5">Rp {{ number_format($this->total, 0, ',', '.') }}</span>
+                                    <div style="border-top: 1px solid #e5e7eb; padding-top: 8px; display: flex; justify-content: space-between;">
+                                        <span style="font-weight: 700; font-size: 16px;">Total Bayar</span>
+                                        <span style="font-weight: 700; color: #0072FF; font-size: 18px;">Rp {{ number_format($this->total, 0, ',', '.') }}</span>
                                     </div>
                                 </div>
 
-                                <button wire:click="submitTicket" class="btn btn-primary w-100 py-8 fw-semibold" wire:loading.attr="disabled">
+                                {{-- Submit --}}
+                                <button wire:click="submitTicket" class="zubuz-default-btn" style="width: 100%;" wire:loading.attr="disabled">
                                     <span wire:loading.remove wire:target="submitTicket">
-                                        <i class="ti ti-credit-card me-2"></i> Bayar via QRIS
+                                        <i class="fa fa-credit-card"></i> Bayar via QRIS
                                     </span>
                                     <span wire:loading wire:target="submitTicket">
-                                        <span class="spinner-border spinner-border-sm me-2"></span> Memproses...
+                                        <span style="display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid #fff; border-radius: 50%; animation: spin 0.6s linear infinite;"></span>
+                                        Memproses...
                                     </span>
                                 </button>
                             </div>
@@ -152,5 +185,12 @@
                 </div>
             @endif
         </div>
-    </section>
+    </div>
 </div>
+
+<style>
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>

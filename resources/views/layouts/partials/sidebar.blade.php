@@ -75,6 +75,15 @@
               <span class="hide-menu">Pengaturan</span>
             </a>
           </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('admin.settings.landing-page') ? 'active' : '' }}"
+              href="{{ route('admin.settings.landing-page') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-layout"></i>
+              </span>
+              <span class="hide-menu">Landing Page</span>
+            </a>
+          </li>
         @endif
 
         @if(auth()->user()->role === 'Eventner')

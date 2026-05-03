@@ -1,202 +1,206 @@
 <div>
-    {{-- Banner --}}
-    <section class="bg-primary-subtle pt-7 pb-5">
-        <div class="custom-container">
+    {{-- Hero Banner --}}
+    <div class="section" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 60px 0 40px;">
+        <div class="container">
             <div class="row justify-content-center text-center">
                 <div class="col-lg-8">
-                    <span class="badge bg-warning text-dark mb-3 px-3 py-2 fw-semibold">Laman Voting Digital</span>
-                    <h1 class="text-dark fw-semibold fs-10 mb-2">Dukung Tim Jagoan Anda!</h1>
-                    <p class="fs-5 text-muted mb-4">
+                    <span style="display:inline-block; background: rgba(0,0,0,0.2); color: #fff; padding: 6px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 12px;">
+                        <i class="fa fa-heart"></i> Laman Voting Digital
+                    </span>
+                    <h1 class="wow fadeInUp" style="color: #fff; font-size: 36px;">Dukung Tim Jagoan Anda!</h1>
+                    <p class="wow fadeInUp" style="color: rgba(255,255,255,0.9); font-size: 17px; margin-top: 8px;">
                         Setiap vote sangat berarti untuk menentukan juara favorit di <strong>{{ $eventner->nama_event }}</strong>.
                     </p>
-                    <div class="d-flex justify-content-center gap-2">
-                        <a href="{{ route('event.detail', $eventner->slug) }}" class="btn btn-outline-primary px-4">
-                            <i class="ti ti-info-circle me-1"></i> Info Event
+                    <div class="wow fadeInUp mt-3 d-flex justify-content-center gap-2">
+                        <a href="{{ route('event.detail', $eventner->slug) }}" class="zubuz-default-btn" style="background: rgba(255,255,255,0.25);">
+                            <span><i class="fa fa-info-circle"></i> Info Event</span>
                         </a>
-                        <a href="{{ route('event.participant', $eventner->slug) }}" class="btn btn-outline-secondary px-4">
-                            <i class="ti ti-users me-1"></i> Daftar Peserta
+                        <a href="{{ route('event.participant', $eventner->slug) }}" class="zubuz-default-btn" style="background: rgba(255,255,255,0.15);">
+                            <span><i class="fa fa-users"></i> Daftar Peserta</span>
                         </a>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 
-    <section class="py-5">
-        <div class="custom-container">
+    {{-- Main Content --}}
+    <div class="section zubuz-section-padding3">
+        <div class="container">
+            @if (session()->has('error'))
+                <div class="wow fadeInUp" style="background: rgba(239,68,68,0.1); color: #ef4444; padding: 14px 20px; border-radius: 12px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+                    <span>{{ session('error') }}</span>
+                </div>
+            @endif
+
             <div class="row">
                 {{-- Left: Team Selection --}}
                 <div class="col-lg-8">
-                    @if (session()->has('error'))
-                        <div class="alert alert-danger border-0 bg-danger-subtle text-danger alert-dismissible fade show mb-4">
-                            {{ session('error') }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    @endif
-
                     @if($view == 'categories')
                         {{-- View A: Categories --}}
-                        <div class="mb-5">
-                            <h4 class="fw-semibold text-dark mb-4">Pilih Kategori Lomba</h4>
-                            <div class="row g-4">
-                                @foreach($categories as $cat)
-                                    <div class="col-md-6">
-                                        <div wire:click="selectCategory({{ $cat->id }})"
-                                             class="card w-100 mb-0"
-                                             style="cursor:pointer;">
-                                            <div class="card-body p-4 text-center">
-                                                <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:70px;height:70px;">
-                                                    <i class="ti ti-medal fs-8"></i>
-                                                </div>
-                                                <h5 class="fw-semibold text-dark mb-1">{{ $cat->name }}</h5>
-                                                <p class="text-muted mb-0 fs-3">{{ $cat->registrations_count }} Kontingen Terdaftar</p>
-                                                <div class="mt-3">
-                                                    <span class="btn btn-sm btn-primary px-3">Pilih Kategori</span>
-                                                </div>
-                                            </div>
-                                        </div>
+                        <div class="zubuz-section-title wow fadeInUp">
+                            <h2>Pilih Kategori Lomba</h2>
+                        </div>
+                        <div class="row">
+                            @foreach($categories as $cat)
+                            <div class="col-md-6 mb-4 wow fadeInUp">
+                                <div wire:click="selectCategory({{ $cat->id }})"
+                                     style="background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 30px; text-align: center; cursor: pointer; transition: all 0.3s;"
+                                     onmouseover="this.style.borderColor='#0072FF'; this.style.boxShadow='0 4px 20px rgba(0,114,255,0.15)';"
+                                     onmouseout="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
+                                    <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(0,114,255,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+                                        <i class="fa fa-trophy" style="font-size: 24px; color: #0072FF;"></i>
                                     </div>
-                                @endforeach
+                                    <h5 style="font-weight: 600; margin-bottom: 6px;">{{ $cat->name }}</h5>
+                                    <p style="color: #6b7280; margin-bottom: 16px;">{{ $cat->registrations_count }} Kontingen Terdaftar</p>
+                                    <span class="zubuz-default-btn" style="padding: 8px 20px; font-size: 13px;">
+                                        <span>Pilih Kategori</span>
+                                    </span>
+                                </div>
                             </div>
+                            @endforeach
                         </div>
                     @else
                         {{-- View B: Participants --}}
-                        <div class="mb-4">
-                            <div class="d-flex align-items-center gap-2 mb-3">
-                                <button wire:click="backToCategories" class="btn btn-sm btn-light d-flex align-items-center justify-content-center">
-                                    <i class="ti ti-arrow-left fs-5"></i>
+                        <div class="wow fadeInUp mb-3">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <button wire:click="backToCategories" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 12px; cursor: pointer;">
+                                    <i class="fa fa-arrow-left" style="color: #6b7280;"></i>
                                 </button>
-                                <nav aria-label="breadcrumb">
-                                    <ol class="breadcrumb mb-0">
-                                        <li class="breadcrumb-item"><a href="#" wire:click.prevent="backToCategories">Kategori</a></li>
-                                        <li class="breadcrumb-item active text-primary fw-semibold" aria-current="page">{{ $selectedCategory->name }}</li>
-                                    </ol>
+                                <nav>
+                                    <span style="color: #6b7280; font-size: 14px;">Kategori</span>
+                                    <span style="color: #9ca3af; margin: 0 6px;">/</span>
+                                    <strong style="color: #0072FF;">{{ $selectedCategory->name }}</strong>
                                 </nav>
                             </div>
+                        </div>
 
-                            <div class="card w-100 mb-4">
-                                <div class="card-body p-3">
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-transparent border-end-0">
-                                            <i class="ti ti-search text-muted"></i>
-                                        </span>
-                                        <input type="text" wire:model.live.debounce.300ms="search" class="form-control border-start-0" placeholder="Cari nama sekolah atau kontingen...">
+                        {{-- Search --}}
+                        <div class="wow fadeInUp mb-4" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 4px; overflow: hidden;">
+                            <div style="display: flex; align-items: center;">
+                                <span style="padding: 10px 14px; color: #9ca3af;"><i class="fa fa-search"></i></span>
+                                <input type="text" wire:model.live.debounce.300ms="search" placeholder="Cari nama sekolah atau kontingen..." style="border: none; outline: none; flex: 1; padding: 10px 0; font-size: 15px;">
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h4 style="font-weight: 600; margin: 0;">Pilih Peserta</h4>
+                            <span style="background: rgba(0,114,255,0.1); color: #0072FF; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;">{{ $participants->count() }} Ditemukan</span>
+                        </div>
+
+                        <div class="row">
+                            @forelse($participants as $reg)
+                            <div class="col-md-6 mb-3 wow fadeInUp">
+                                <div wire:click="selectTeam({{ $reg->id }})"
+                                     style="background: #fff; border: {{ $selectedRegistrationId == $reg->id ? '2px solid #0072FF' : '1px solid #e5e7eb' }}; border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.3s; {{ $selectedRegistrationId == $reg->id ? 'box-shadow: 0 4px 20px rgba(0,114,255,0.15);' : '' }}">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="position: relative;">
+                                            @if($reg->logo_sekolah)
+                                                <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 1px solid #e5e7eb;" alt="">
+                                            @else
+                                                <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(0,114,255,0.1); display: flex; align-items: center; justify-content: center; color: #0072FF;">
+                                                    <i class="fa fa-school" style="font-size: 18px;"></i>
+                                                </div>
+                                            @endif
+                                            @if($selectedRegistrationId == $reg->id)
+                                            <span style="position: absolute; top: -4px; right: -4px; width: 18px; height: 18px; background: #0072FF; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fa fa-check" style="color: #fff; font-size: 10px;"></i>
+                                            </span>
+                                            @endif
+                                        </div>
+                                        <div style="flex: 1; overflow: hidden;">
+                                            <h6 style="margin: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $reg->nama_sekolah }}</h6>
+                                            <p style="margin: 2px 0 0; color: #6b7280; font-size: 13px;">Pelatih: {{ $reg->nama_pelatih }}</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="d-flex align-items-center justify-content-between mb-3">
-                                <h4 class="fw-semibold text-dark mb-0">Pilih Peserta</h4>
-                                <span class="badge bg-primary-subtle text-primary px-3 py-2 fw-semibold">{{ $participants->count() }} Ditemukan</span>
+                            @empty
+                            <div class="col-12 text-center" style="padding: 60px 0;">
+                                <p style="color: #9ca3af;">Tidak ada kontingen yang sesuai.</p>
+                                <button wire:click="$set('search', '')" style="background: none; border: none; color: #0072FF; font-weight: 600; cursor: pointer;">Hapus Pencarian</button>
                             </div>
-
-                            <div class="row g-3">
-                                @forelse($participants as $reg)
-                                    <div class="col-md-6">
-                                        <div wire:click="selectTeam({{ $reg->id }})"
-                                             class="card w-100 mb-0 border {{ $selectedRegistrationId == $reg->id ? 'border-primary' : '' }}"
-                                             style="cursor:pointer;">
-                                            <div class="card-body p-3">
-                                                <div class="d-flex align-items-center gap-3">
-                                                    <div class="position-relative">
-                                                        @if($reg->logo_sekolah)
-                                                            <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" class="rounded-circle border" width="56" height="56" style="object-fit:cover;" alt="">
-                                                        @else
-                                                            <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style="width:56px;height:56px;">
-                                                                <i class="ti ti-school fs-6"></i>
-                                                            </div>
-                                                        @endif
-                                                        @if($selectedRegistrationId == $reg->id)
-                                                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-primary p-1">
-                                                                <i class="ti ti-check text-white fs-2"></i>
-                                                            </span>
-                                                        @endif
-                                                    </div>
-                                                    <div class="flex-grow-1 overflow-hidden">
-                                                        <h6 class="fw-semibold mb-0 fs-4 text-truncate">{{ $reg->nama_sekolah }}</h6>
-                                                        <p class="text-muted mb-0 fs-2 text-truncate">Pelatih: {{ $reg->nama_pelatih }}</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <div class="col-12 py-5 text-center">
-                                        <img src="{{ asset('templates/assets/images/backgrounds/search-error.svg') }}" width="200" class="mb-3" alt="">
-                                        <p class="text-muted fs-4">Tidak ada kontingen yang sesuai dengan pencarian Anda.</p>
-                                        <button wire:click="$set('search', '')" class="btn btn-link text-primary p-0">Hapus Pencarian</button>
-                                    </div>
-                                @endforelse
-                            </div>
+                            @endforelse
                         </div>
                     @endif
                 </div>
 
                 {{-- Right: Vote Form --}}
                 <div class="col-lg-4 mt-4 mt-lg-0">
-                    <div class="card w-100 sticky-top" style="top: 100px; z-index: 10;">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0 text-white fw-semibold"><i class="ti ti-heart me-2"></i>Form Voting</h5>
+                    <div class="wow fadeInRight" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; position: sticky; top: 100px;">
+                        {{-- Form Header --}}
+                        <div style="background: linear-gradient(135deg, #0072FF, #0046b3); padding: 18px 24px;">
+                            <h5 style="margin: 0; color: #fff; font-weight: 600;">
+                                <i class="fa fa-heart" style="margin-right: 8px;"></i>Form Voting
+                            </h5>
                         </div>
-                        <div class="card-body p-4">
+
+                        {{-- Form Body --}}
+                        <div style="padding: 24px;">
                             <form wire:submit.prevent="submitVote">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Jumlah Vote</label>
-                                    <div class="input-group">
-                                        <button class="btn btn-outline-primary" type="button" wire:click="$set('voteCount', {{ max(1, $voteCount - 1) }})">-</button>
-                                        <input type="number" class="form-control text-center fw-semibold" wire:model.live="voteCount" min="1">
-                                        <button class="btn btn-outline-primary" type="button" wire:click="$set('voteCount', {{ $voteCount + 1 }})">+</button>
+                                {{-- Vote Count --}}
+                                <div style="margin-bottom: 20px;">
+                                    <label style="font-weight: 600; display: block; margin-bottom: 8px; font-size: 14px;">Jumlah Vote</label>
+                                    <div style="display: flex; gap: 0;">
+                                        <button type="button" wire:click="$set('voteCount', {{ max(1, $voteCount - 1) }})" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px 0 0 8px; padding: 10px 16px; cursor: pointer; font-size: 18px; color: #0072FF;">−</button>
+                                        <input type="number" wire:model.live="voteCount" style="border: 1px solid #e5e7eb; border-left: none; border-right: none; text-align: center; font-weight: 600; font-size: 16px; width: 100%; padding: 10px; outline: none;">
+                                        <button type="button" wire:click="$set('voteCount', {{ $voteCount + 1 }})" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 0 8px 8px 0; padding: 10px 16px; cursor: pointer; font-size: 18px; color: #0072FF;">+</button>
                                     </div>
-                                    <div class="d-flex justify-content-between mt-2 px-1">
-                                        <button type="button" wire:click="$set('voteCount', 10)" class="btn btn-sm btn-outline-primary px-2">10</button>
-                                        <button type="button" wire:click="$set('voteCount', 50)" class="btn btn-sm btn-outline-primary px-2">50</button>
-                                        <button type="button" wire:click="$set('voteCount', 100)" class="btn btn-sm btn-outline-primary px-2">100</button>
-                                        <button type="button" wire:click="$set('voteCount', 500)" class="btn btn-sm btn-outline-primary px-2">500</button>
+                                    <div style="display: flex; gap: 6px; margin-top: 8px;">
+                                        <button type="button" wire:click="$set('voteCount', 10)" style="flex: 1; background: rgba(0,114,255,0.08); border: 1px solid rgba(0,114,255,0.2); border-radius: 6px; padding: 4px; cursor: pointer; color: #0072FF; font-weight: 600; font-size: 13px;">10</button>
+                                        <button type="button" wire:click="$set('voteCount', 50)" style="flex: 1; background: rgba(0,114,255,0.08); border: 1px solid rgba(0,114,255,0.2); border-radius: 6px; padding: 4px; cursor: pointer; color: #0072FF; font-weight: 600; font-size: 13px;">50</button>
+                                        <button type="button" wire:click="$set('voteCount', 100)" style="flex: 1; background: rgba(0,114,255,0.08); border: 1px solid rgba(0,114,255,0.2); border-radius: 6px; padding: 4px; cursor: pointer; color: #0072FF; font-weight: 600; font-size: 13px;">100</button>
+                                        <button type="button" wire:click="$set('voteCount', 500)" style="flex: 1; background: rgba(0,114,255,0.08); border: 1px solid rgba(0,114,255,0.2); border-radius: 6px; padding: 4px; cursor: pointer; color: #0072FF; font-weight: 600; font-size: 13px;">500</button>
                                     </div>
-                                    @error('voteCount') <span class="text-danger small">{{ $message }}</span> @enderror
+                                    @error('voteCount') <span style="color: #ef4444; font-size: 13px;">{{ $message }}</span> @enderror
                                 </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Nama Lengkap Anda</label>
-                                    <input type="text" class="form-control" wire:model="voterName" placeholder="Contoh: Budi Santoso">
-                                    @error('voterName') <span class="text-danger small">{{ $message }}</span> @enderror
+                                {{-- Name --}}
+                                <div style="margin-bottom: 16px;">
+                                    <label style="font-weight: 600; display: block; margin-bottom: 6px; font-size: 14px;">Nama Lengkap</label>
+                                    <input type="text" wire:model="voterName" placeholder="Contoh: Budi Santoso" style="width: 100%; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; font-size: 14px; outline: none;">
+                                    @error('voterName') <span style="color: #ef4444; font-size: 13px;">{{ $message }}</span> @enderror
                                 </div>
 
-                                <div class="mb-4">
-                                    <label class="form-label fw-semibold">Email (Untuk Bukti)</label>
-                                    <input type="email" class="form-control" wire:model="voterEmail" placeholder="email@contoh.com">
-                                    @error('voterEmail') <span class="text-danger small">{{ $message }}</span> @enderror
+                                {{-- Email --}}
+                                <div style="margin-bottom: 20px;">
+                                    <label style="font-weight: 600; display: block; margin-bottom: 6px; font-size: 14px;">Email (Untuk Bukti)</label>
+                                    <input type="email" wire:model="voterEmail" placeholder="email@contoh.com" style="width: 100%; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; font-size: 14px; outline: none;">
+                                    @error('voterEmail') <span style="color: #ef4444; font-size: 13px;">{{ $message }}</span> @enderror
                                 </div>
 
-                                <div class="bg-primary-subtle p-3 mb-4">
-                                    <div class="d-flex justify-content-between mb-2">
-                                        <span class="text-muted">Harga per Vote</span>
-                                        <span class="fw-semibold text-dark">Rp 1.000</span>
+                                {{-- Summary --}}
+                                <div style="background: #f8fafc; border-radius: 12px; padding: 16px; margin-bottom: 20px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                        <span style="color: #6b7280; font-size: 14px;">Harga per Vote</span>
+                                        <span style="font-weight: 600; font-size: 14px;">Rp 1.000</span>
                                     </div>
-                                    <div class="d-flex justify-content-between border-top pt-2">
-                                        <span class="fw-semibold text-dark fs-5">Total Bayar</span>
-                                        <span class="fw-semibold text-primary fs-5">Rp {{ number_format($voteCount * 1000, 0, ',', '.') }}</span>
+                                    <div style="border-top: 1px solid #e5e7eb; padding-top: 8px; display: flex; justify-content: space-between;">
+                                        <span style="font-weight: 700; font-size: 16px;">Total Bayar</span>
+                                        <span style="font-weight: 700; color: #0072FF; font-size: 18px;">Rp {{ number_format($voteCount * 1000, 0, ',', '.') }}</span>
                                     </div>
                                 </div>
 
+                                {{-- Submit --}}
                                 <button type="submit"
-                                        class="btn btn-primary w-100 py-8 fw-semibold"
-                                        {{ !$selectedRegistrationId ? 'disabled' : '' }}
-                                        wire:loading.attr="disabled">
+                                    class="zubuz-default-btn"
+                                    style="width: 100%; {{ !$selectedRegistrationId ? 'opacity: 0.5; cursor: not-allowed;' : '' }}"
+                                    {{ !$selectedRegistrationId ? 'disabled' : '' }}
+                                    wire:loading.attr="disabled">
                                     <span wire:loading.remove>Lanjutkan Ke Pembayaran</span>
                                     <span wire:loading>
-                                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                        <span style="display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid #fff; border-radius: 50%; animation: spin 0.6s linear infinite;"></span>
                                         Memproses...
                                     </span>
                                 </button>
 
                                 @if(!$selectedRegistrationId)
-                                    <p class="text-center text-danger small mt-2">Silakan pilih kontingen terlebih dahulu</p>
+                                <p style="text-align: center; color: #ef4444; font-size: 13px; margin-top: 8px;">Silakan pilih kontingen terlebih dahulu</p>
                                 @endif
 
-                                <div class="mt-4 text-center">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" height="25" alt="QRIS">
-                                    <p class="text-muted small mb-0 mt-2">Pembayaran aman via Xendit QRIS</p>
+                                <div style="text-align: center; margin-top: 16px;">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" height="22" alt="QRIS" style="opacity: 0.7;">
+                                    <p style="color: #9ca3af; font-size: 12px; margin-top: 6px;">Pembayaran aman via Xendit QRIS</p>
                                 </div>
                             </form>
                         </div>
@@ -204,5 +208,12 @@
                 </div>
             </div>
         </div>
-    </section>
+    </div>
 </div>
+
+<style>
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>

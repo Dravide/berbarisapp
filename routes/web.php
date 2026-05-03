@@ -3,9 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 
-Route::get('/', function () {
-    return redirect('/dashboard');
-});
+Route::get('/', App\Livewire\Public\LandingPage::class)->name('landing');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', App\Livewire\Auth\Login::class)->name('login');
