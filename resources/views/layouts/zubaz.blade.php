@@ -45,11 +45,13 @@
         <div class="container">
             <nav class="navbar site-navbar">
                 <div class="brand-logo">
-                    <a href="{{ url('/') }}">
+                    <a href="{{ url('/') }}" style="display: inline-block;">
                         @if(($logoPath ?? null) && is_string($logoPath))
-                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" style="max-height: 40px; object-fit: contain;">
+                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" class="light-version-logo" style="display: block; width: 128px;">
+                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" class="dark-version-logo" style="display: none; width: 128px;">
                         @else
                             <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="BARIS APP" class="light-version-logo">
+                            <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="BARIS APP" class="dark-version-logo" style="display: none;">
                         @endif
                     </a>
                 </div>
@@ -116,10 +118,12 @@
                         <div class="zubuz-footer-textarea">
                             <a href="{{ url('/') }}">
                                 @if(($logoPath ?? null) && is_string($logoPath))
-                                    <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" style="max-height: 40px;">
-                                @else
-                                    <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="BARIS APP">
-                                @endif
+                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" class="light-version-logo" style="display: block; width: 128px;">
+                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" class="dark-version-logo" style="display: none; width: 128px;">
+                        @else
+                            <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="BARIS APP" class="light-version-logo">
+                            <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="BARIS APP" class="dark-version-logo" style="display: none;">
+                        @endif
                             </a>
                             <p>{{ get_setting('site_title', 'BARIS APP') }} — Platform manajemen event dan kompetisi terpadu untuk penyelenggara dan peserta.</p>
                         </div>

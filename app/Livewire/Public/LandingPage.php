@@ -20,12 +20,12 @@ class LandingPage extends Component
     {
         // Load logo
         $this->logoPath = Setting::get('logo_dark')
-            ? Storage::url(Setting::get('logo_dark'))
+            ? Storage::disk('public')->url(Setting::get('logo_dark'))
             : null;
 
         $faviconSetting = Setting::get('favicon');
         $this->favicon = $faviconSetting
-            ? Storage::url($faviconSetting)
+            ? Storage::disk('public')->url($faviconSetting)
             : null;
 
         // Load sections order & active state
