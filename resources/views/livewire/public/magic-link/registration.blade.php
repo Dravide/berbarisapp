@@ -63,6 +63,13 @@
                         </div>
                     @endif
 
+                    @if(($registration->eventner->registration_status ?? 'open') == 'booking')
+                        <div class="wow fadeInUp" style="background: rgba(59,130,246,0.1); color: #3b82f6; padding: 16px 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #3b82f6;">
+                            <h6 style="color: #3b82f6; margin-bottom: 4px; font-weight: 700;"><i class="fa fa-info-circle me-1"></i> Mode Booking Aktif</h6>
+                            <p style="margin: 0; font-size: 14px;">Saat ini pendaftaran hanya diperbolehkan untuk memesan slot (Booking). Pengisian data pasukan akan dibuka setelah masa pendaftaran dibuka secara resmi oleh panitia.</p>
+                        </div>
+                    @endif
+
                     {{-- Status Badge --}}
                     @php
                         $statusConfig = [

@@ -149,6 +149,17 @@ class Registration extends Component
 
         if ($reg->status_berkas === 'Terverifikasi') return;
 
+        // Check registration status of the event
+        if (($reg->eventner->registration_status ?? 'open') == 'booking') {
+            session()->flash('error', 'Saat ini hanya diperbolehkan booking slot. Pengisian data pasukan akan dibuka setelah masa pendaftaran dibuka secara resmi.');
+            return;
+        }
+
+        if (($reg->eventner->registration_status ?? 'open') == 'closed') {
+            session()->flash('error', 'Pendaftaran telah ditutup. Perubahan data tidak lagi diperbolehkan.');
+            return;
+        }
+
         $rules = [
             'logoSekolah' => 'nullable|image|max:3072',
             'suratTugas' => 'nullable|file|mimes:pdf,jpg,png|max:5120',

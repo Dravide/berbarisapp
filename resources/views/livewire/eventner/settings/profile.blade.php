@@ -90,6 +90,40 @@
                     <div class="col-md-8">
                         <h6 class="fw-semibold mb-3">Informasi Acara</h6>
                         
+                        <div class="mb-4">
+                            <label class="form-label fw-bold d-block">Status Pendaftaran</label>
+                            <div class="d-flex flex-wrap gap-3">
+                                <div class="form-check form-check-inline m-0">
+                                    <input class="form-check-input" type="radio" wire:model="registration_status" id="statusOpen" value="open">
+                                    <label class="form-check-label text-success fw-semibold" for="statusOpen">
+                                        <i class="ti ti-circle-check"></i> Open Registration
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline m-0">
+                                    <input class="form-check-input" type="radio" wire:model="registration_status" id="statusBooking" value="booking">
+                                    <label class="form-check-label text-primary fw-semibold" for="statusBooking">
+                                        <i class="ti ti-bookmark"></i> Booking Only
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline m-0">
+                                    <input class="form-check-input" type="radio" wire:model="registration_status" id="statusClosed" value="closed">
+                                    <label class="form-check-label text-danger fw-semibold" for="statusClosed">
+                                        <i class="ti ti-lock"></i> Tutup (Closed)
+                                    </label>
+                                </div>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                @if($registration_status == 'open')
+                                    Peserta dapat mendaftar dan mengisi data lengkap.
+                                @elseif($registration_status == 'booking')
+                                    Hanya diperbolehkan booking slot (pembayaran), pengisian data ditangguhkan.
+                                @else
+                                    Halaman pendaftaran akan ditutup sepenuhnya.
+                                @endif
+                            </small>
+                            @error('registration_status') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                        </div>
+                        
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Nama Event <span class="text-danger">*</span></label>

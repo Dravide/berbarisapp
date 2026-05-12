@@ -72,11 +72,41 @@
         </div>
     </div>
 
-    {{-- Form Content --}}
+    {{-- Main Content --}}
     <div class="section" style="padding: 10px 0 50px;">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-8">
+
+                    @if(($eventner->registration_status ?? 'open') == 'closed')
+                        <div class="text-center wow fadeInUp" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 20px; padding: 60px 40px; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05);">
+                            <div style="width: 100px; height: 100px; background: rgba(239,68,68,0.1); color: #ef4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px;">
+                                <i class="fa fa-lock" style="font-size: 40px;"></i>
+                            </div>
+                            <h2 style="font-weight: 700; color: #111827; margin-bottom: 12px;">Pendaftaran Ditutup</h2>
+                            <p style="color: #6b7280; font-size: 16px; margin-bottom: 30px; line-height: 1.6;">
+                                Mohon maaf, pendaftaran untuk event <strong>{{ $eventner->nama_event }}</strong> saat ini telah ditutup secara resmi oleh panitia.
+                                <br>Pastikan Anda mengikuti informasi terbaru melalui kanal resmi kami.
+                            </p>
+                            <div class="d-flex justify-content-center gap-3">
+                                <a href="{{ route('event.detail', $eventner->slug) }}" class="zubuz-default-btn">
+                                    <span>Kembali ke Beranda Event</span>
+                                </a>
+                                <a href="{{ route('event.participant', $eventner->slug) }}" class="zubuz-default-btn" style="background: #f8fafc; color: #111827; border: 1px solid #e5e7eb;">
+                                    <span>Daftar Peserta</span>
+                                </a>
+                            </div>
+                            
+                            @if($eventner->link_whatsapp)
+                            <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #f3f4f6;">
+                                <p style="font-size: 14px; color: #9ca3af; margin-bottom: 12px;">Ada pertanyaan terkait pendaftaran?</p>
+                                <a href="{{ $eventner->link_whatsapp }}" target="_blank" style="color: #10b981; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                                    <i class="fa fa-whatsapp" style="font-size: 18px;"></i> Hubungi Panitia (WhatsApp)
+                                </a>
+                            </div>
+                            @endif
+                        </div>
+                    @else
 
                     {{-- STEP 1: Pilih Kategori --}}
                     @if($step === 1)
@@ -275,6 +305,7 @@
                                 </div>
                             </div>
                         </div>
+                    @endif
                     @endif
 
                 </div>

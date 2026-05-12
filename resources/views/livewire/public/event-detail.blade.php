@@ -62,9 +62,11 @@
                                 <i class="fa fa-ticket"></i> Beli Tiket
                             </a>
                             @endif
+                            @if(($eventner->registration_status ?? 'open') != 'closed')
                             <a href="{{ route('event.register', $eventner->slug) }}" style="background: #111827; color: #fff; border-radius: 30px; padding: 10px 20px; font-weight: 600; font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                                <i class="fa fa-clipboard"></i> Daftar
+                                <i class="fa fa-clipboard"></i> {{ ($eventner->registration_status ?? 'open') == 'booking' ? 'Booking Slot' : 'Daftar Sekarang' }}
                             </a>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -216,6 +218,37 @@
             @endif
         </div>
     </div>
+
+    {{-- Judges Section --}}
+    @if($eventner->judges->count() > 0)
+    <div class="section zubuz-section-padding3" style="background: #fff;">
+        <div class="container">
+            <div class="zubuz-section-title center wow fadeInUp">
+                <h2>Dewan Juri</h2>
+                <p>Kenali para pakar yang akan memberikan penilaian profesional pada acara ini.</p>
+            </div>
+            <div class="row g-4 justify-content-center">
+                @foreach($eventner->judges as $judge)
+                <div class="col-xl-3 col-lg-4 col-md-6 wow fadeInUp">
+                    <div style="background: #f8fafc; border-radius: 20px; padding: 24px; text-align: center; border: 1px solid #e2e8f0; height: 100%; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div style="width: 80px; height: 80px; background: var(--event-primary, #0072FF); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 32px; font-weight: 700;">
+                            {{ strtoupper(substr($judge->name, 0, 1)) }}
+                        </div>
+                        <h4 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">{{ $judge->name }}</h4>
+                        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;">
+                            @foreach($judge->assessmentCategories as $category)
+                            <span style="background: #fff; color: #64748b; border: 1px solid #e2e8f0; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase;">
+                                {{ $category->name }}
+                            </span>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
 
     {{-- Categories Section --}}
     @if($eventner->competitionCategories->count() > 0)

@@ -33,6 +33,7 @@ class Profile extends Component
     public $link_tiktok;
     public $link_whatsapp;
     public $link_livestreaming;
+    public $registration_status = 'open';
 
     public $drawing_code;
     public $scoring_code;
@@ -72,6 +73,7 @@ class Profile extends Component
         $this->link_tiktok = $eventner->link_tiktok;
         $this->link_whatsapp = $eventner->link_whatsapp;
         $this->link_livestreaming = $eventner->link_livestreaming;
+        $this->registration_status = $eventner->registration_status ?? 'open';
         $this->drawing_code = $eventner->drawing_code;
         $this->scoring_code = $eventner->scoring_code;
 
@@ -103,6 +105,7 @@ class Profile extends Component
             'link_tiktok' => 'nullable|url|max:255',
             'link_whatsapp' => 'nullable|string|max:255',
             'link_livestreaming' => 'nullable|url|max:255',
+            'registration_status' => 'required|in:open,booking,closed',
             'drawing_code' => 'nullable|string|max:255',
             'scoring_code' => 'nullable|string|max:255',
             'newLogo' => 'nullable|image|max:2048', 
@@ -151,6 +154,7 @@ class Profile extends Component
             'link_tiktok' => strip_tags($this->link_tiktok),
             'link_whatsapp' => strip_tags($this->link_whatsapp),
             'link_livestreaming' => strip_tags($this->link_livestreaming),
+            'registration_status' => $this->registration_status,
             'drawing_code' => strip_tags($this->drawing_code),
             'scoring_code' => strip_tags($this->scoring_code),
             'logo_event' => $eventner->logo_event,
