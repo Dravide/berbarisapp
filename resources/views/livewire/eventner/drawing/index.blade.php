@@ -126,37 +126,12 @@
                     @if($undrawnParticipants->count() > 0)
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Peserta</label>
-                            <div wire:key="select-wrapper-{{ $activeTab }}-{{ $undrawnParticipants->count() }}">
-                                <select 
-                                    x-data="{
-                                        init() {
-                                            const setup = () => {
-                                                if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
-                                                    setTimeout(setup, 100);
-                                                    return;
-                                                }
-                                                const el = $(this.$el);
-                                                el.select2({
-                                                    placeholder: '-- Cari Peserta --',
-                                                    allowClear: true,
-                                                    width: '100%'
-                                                });
-                                                el.on('change', (e) => {
-                                                    $wire.set('manualRegistrationId', e.target.value || null);
-                                                });
-                                            };
-                                            setup();
-                                        }
-                                    }"
-                                    class="form-select form-select-sm" 
-                                    id="select2-participant"
-                                >
-                                    <option value="">-- Cari Peserta --</option>
-                                    @foreach($undrawnParticipants as $p)
-                                        <option value="{{ $p->id }}" {{ (string) $manualRegistrationId === (string) $p->id ? 'selected' : '' }}>{{ $p->nama_sekolah }} ({{ $p->npsn }})</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            <select wire:model="manualRegistrationId" class="form-select form-select-sm">
+                                <option value="">-- Cari Peserta --</option>
+                                @foreach($undrawnParticipants as $p)
+                                    <option value="{{ $p->id }}">{{ $p->nama_sekolah }} ({{ $p->npsn }})</option>
+                                @endforeach
+                            </select>
                             @error('manualRegistrationId')
                                 <span class="text-danger fs-2">{{ $message }}</span>
                             @enderror
