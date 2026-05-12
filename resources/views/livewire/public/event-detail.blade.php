@@ -1,58 +1,60 @@
 <div>
     {{-- Hero / Banner Section --}}
-    <div class="section zubuz-hero-section" style="background-image: url({{ asset('templates/zubaz/assets/images/v1/hero-shape1.png') }})">
-        <div class="container">
+    <div class="section zubuz-hero-section" style="position: relative; overflow: hidden; min-height: auto; padding: 60px 0 40px;">
+        @if($eventner->poster)
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: url('{{ asset('storage/' . $eventner->poster) }}') center/cover no-repeat; opacity: 0.08;"></div>
+        @endif
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(var(--event-primary, 0,114,255),0.03) 0%, transparent 100%);"></div>
+        <div class="container" style="position: relative; z-index: 1;">
             <div class="row align-items-center">
                 <div class="col-lg-7">
                     <div class="zubuz-default-content wow fadeInLeft">
                         @if($eventner->tingkat_perlombaan)
-                        <span class="font-semibold" style="display:inline-block; background: rgba(0,114,255,0.1); color: #0072FF; padding: 4px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 12px;">{{ $eventner->tingkat_perlombaan }}</span>
+                        <span style="display:inline-block; background: var(--event-primary, #0072FF); color: #fff; padding: 4px 16px; border-radius: 20px; font-size: 13px; margin-bottom: 12px; font-weight: 600;">{{ $eventner->tingkat_perlombaan }}</span>
                         @endif
-                        <h1 style="font-size: 42px; line-height: 1.2;">{{ $eventner->nama_event }}</h1>
+                        <h1 style="font-size: clamp(28px, 5vw, 42px); line-height: 1.2; word-wrap: break-word;">{{ $eventner->nama_event }}</h1>
                         <p style="font-size: 17px; color: #6b7280; margin-bottom: 20px;">
                             Penyelenggara: <strong style="color: #111827;">{{ $eventner->diselenggarakan_oleh }}</strong>
                         </p>
 
-                        {{-- Date badges --}}
-                        <div class="d-flex flex-wrap gap-3 mb-4">
+                        {{-- Date badges (horizontal scroll on mobile) --}}
+                        <div class="d-flex flex-nowrap flex-md-wrap overflow-auto gap-2 mb-3 pb-2 pb-md-0" style="-webkit-overflow-scrolling: touch; scrollbar-width: none;">
                             @if($eventner->tanggal_pendaftaran)
-                            <div style="background: #fff; padding: 10px 20px; border-radius: 10px; border: 1px solid #e5e7eb; display: flex; align-items: center; gap: 8px;">
-                                <i class="fa fa-calendar" style="color: #0072FF;"></i>
+                            <div style="background: #fff; padding: 10px 16px; border-radius: 10px; border: 1px solid #e5e7eb; display: flex; align-items: center; gap: 8px; white-space: nowrap; min-width: fit-content;">
+                                <i class="fa fa-calendar" style="color: var(--event-primary, #0072FF);"></i>
                                 <div>
                                     <span style="font-size: 11px; color: #9ca3af; display: block;">Batas Pendaftaran</span>
-                                    <strong style="font-size: 14px;">{{ \Carbon\Carbon::parse($eventner->tanggal_pendaftaran)->translatedFormat('d F Y') }}</strong>
+                                    <strong style="font-size: 13px;">{{ \Carbon\Carbon::parse($eventner->tanggal_pendaftaran)->translatedFormat('d M Y') }}</strong>
                                 </div>
                             </div>
                             @endif
-
                             @if($eventner->tanggal)
-                            <div style="background: #fff; padding: 10px 20px; border-radius: 10px; border: 1px solid #e5e7eb; display: flex; align-items: center; gap: 8px;">
+                            <div style="background: #fff; padding: 10px 16px; border-radius: 10px; border: 1px solid #e5e7eb; display: flex; align-items: center; gap: 8px; white-space: nowrap; min-width: fit-content;">
                                 <i class="fa fa-flag" style="color: #ef4444;"></i>
                                 <div>
                                     <span style="font-size: 11px; color: #9ca3af; display: block;">Hari Perlombaan</span>
-                                    <strong style="font-size: 14px;">{{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d F Y') }}</strong>
+                                    <strong style="font-size: 13px;">{{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d M Y') }}</strong>
                                 </div>
                             </div>
                             @endif
-
                             @if($eventner->venue)
-                            <div style="background: #fff; padding: 10px 20px; border-radius: 10px; border: 1px solid #e5e7eb; display: flex; align-items: center; gap: 8px;">
+                            <div style="background: #fff; padding: 10px 16px; border-radius: 10px; border: 1px solid #e5e7eb; display: flex; align-items: center; gap: 8px; white-space: nowrap; min-width: fit-content;">
                                 <i class="fa fa-map-marker-alt" style="color: #10b981;"></i>
                                 <div>
                                     <span style="font-size: 11px; color: #9ca3af; display: block;">Venue</span>
-                                    <strong style="font-size: 14px;">{{ $eventner->venue }}</strong>
+                                    <strong style="font-size: 13px;">{{ $eventner->venue }}</strong>
                                 </div>
                             </div>
                             @endif
                         </div>
 
                         {{-- CTA Buttons --}}
-                        <div class="d-flex flex-wrap gap-2">
-                            <a href="{{ route('event.participant', $eventner->slug) }}" class="zubuz-default-btn">
-                                <span><i class="fa fa-users"></i> Lihat Peserta</span>
-                            </a>
-                            <a href="{{ route('event.vote', $eventner->slug) }}" class="zubuz-default-btn" style="background: #f59e0b;">
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            <a href="{{ route('event.vote', $eventner->slug) }}" class="zubuz-default-btn" style="background: var(--event-accent, #f59e0b);">
                                 <span><i class="fa fa-heart"></i> Vote Online</span>
+                            </a>
+                            <a href="{{ route('event.participant', $eventner->slug) }}" class="zubuz-default-btn" style="background: var(--event-primary, #0072FF);">
+                                <span><i class="fa fa-users"></i> Peserta</span>
                             </a>
                             @if($eventner->ticket_active && $eventner->ticket_price)
                             <a href="{{ route('event.ticket', $eventner->slug) }}" class="zubuz-default-btn" style="background: #10b981;">
@@ -60,27 +62,19 @@
                             </a>
                             @endif
                             <a href="{{ route('event.register', $eventner->slug) }}" class="zubuz-default-btn" style="background: #111827;">
-                                <span><i class="fa fa-clipboard"></i> Booking Pendaftaran</span>
+                                <span><i class="fa fa-clipboard"></i> Daftar</span>
                             </a>
                         </div>
                     </div>
                 </div>
 
-                <div class="col-lg-5">
-                    <div class="zubuz-thumb thumb-pr wow fadeInRight">
+                <div class="col-lg-5 mt-4 mt-lg-0">
+                    <div class="zubuz-thumb thumb-pr wow fadeInRight text-center">
                         @if($eventner->logo_event)
-                            <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt="{{ $eventner->nama_event }}" style="border-radius: 20px; max-height: 400px; object-fit: contain;">
+                            <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt="{{ $eventner->nama_event }}" style="border-radius: 20px; max-height: 320px; object-fit: contain; max-width: 100%;">
                         @else
-                            <img src="{{ asset('templates/zubaz/assets/images/v1/mocup01.png') }}" alt="">
+                            <img src="{{ asset('templates/zubaz/assets/images/v1/mocup01.png') }}" alt="" style="max-width: 100%;">
                         @endif
-                        <div class="zubuz-thumb-card">
-                            @if($eventner->tingkat_perlombaan)
-                            <div style="background: #fff; padding: 12px 16px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
-                                <span style="font-size: 11px; color: #9ca3af;">Tingkat</span>
-                                <strong style="display: block; color: #0072FF;">{{ $eventner->tingkat_perlombaan }}</strong>
-                            </div>
-                            @endif
-                        </div>
                     </div>
                 </div>
             </div>
@@ -106,15 +100,15 @@
     @endif
 
     {{-- Info Grid Section --}}
-    <div class="section zubuz-section-padding3 bg-light">
+    <div class="section zubuz-section-padding3" style="background: #f8fafc;">
         <div class="container">
             <div class="zubuz-section-title center wow fadeInUp">
                 <h2>Informasi Lengkap</h2>
             </div>
-            <div class="row">
-                {{-- Location --}}
+            <div class="row g-3">
+                @if($eventner->lokasi)
                 <div class="col-xl-4 col-md-6 wow fadeInUp">
-                    <div class="zubuz-iconbox-wrap">
+                    <div class="zubuz-iconbox-wrap" style="border-radius: 16px; border: 1px solid #e5e7eb; background: #fff;">
                         <div class="zubuz-iconbox-icon">
                             <img src="{{ asset('templates/zubaz/assets/images/v1/icon3.png') }}" alt="">
                         </div>
@@ -122,18 +116,18 @@
                             <h3>Lokasi</h3>
                             <p>{{ $eventner->lokasi }}</p>
                             @if($eventner->latitude && $eventner->longitude)
-                                <a href="https://www.google.com/maps?q={{ $eventner->latitude }},{{ $eventner->longitude }}" target="_blank" style="color: #0072FF; font-weight: 600; font-size: 14px;">
+                                <a href="https://www.google.com/maps?q={{ $eventner->latitude }},{{ $eventner->longitude }}" target="_blank" style="color: var(--event-primary, #0072FF); font-weight: 600; font-size: 14px;">
                                     Lihat di Maps <i class="fa fa-external-link-alt" style="font-size: 11px;"></i>
                                 </a>
                             @endif
                         </div>
                     </div>
                 </div>
+                @endif
 
-                {{-- Venue --}}
                 @if($eventner->venue)
                 <div class="col-xl-4 col-md-6 wow fadeInUp">
-                    <div class="zubuz-iconbox-wrap">
+                    <div class="zubuz-iconbox-wrap" style="border-radius: 16px; border: 1px solid #e5e7eb; background: #fff;">
                         <div class="zubuz-iconbox-icon">
                             <img src="{{ asset('templates/zubaz/assets/images/v1/icon4.png') }}" alt="">
                         </div>
@@ -145,10 +139,9 @@
                 </div>
                 @endif
 
-                {{-- Technical Meeting --}}
                 @if($eventner->technical_meeting)
                 <div class="col-xl-4 col-md-6 wow fadeInUp">
-                    <div class="zubuz-iconbox-wrap">
+                    <div class="zubuz-iconbox-wrap" style="border-radius: 16px; border: 1px solid #e5e7eb; background: #fff;">
                         <div class="zubuz-iconbox-icon">
                             <img src="{{ asset('templates/zubaz/assets/images/v1/icon5.png') }}" alt="">
                         </div>
@@ -160,10 +153,9 @@
                 </div>
                 @endif
 
-                {{-- Registration Deadline --}}
                 @if($eventner->tanggal_pendaftaran)
                 <div class="col-xl-4 col-md-6 wow fadeInUp">
-                    <div class="zubuz-iconbox-wrap">
+                    <div class="zubuz-iconbox-wrap" style="border-radius: 16px; border: 1px solid #e5e7eb; background: #fff;">
                         <div class="zubuz-iconbox-icon">
                             <img src="{{ asset('templates/zubaz/assets/images/v1/icon6.png') }}" alt="">
                         </div>
@@ -175,10 +167,9 @@
                 </div>
                 @endif
 
-                {{-- Event Date --}}
                 @if($eventner->tanggal)
                 <div class="col-xl-4 col-md-6 wow fadeInUp">
-                    <div class="zubuz-iconbox-wrap">
+                    <div class="zubuz-iconbox-wrap" style="border-radius: 16px; border: 1px solid #e5e7eb; background: #fff;">
                         <div class="zubuz-iconbox-icon">
                             <img src="{{ asset('templates/zubaz/assets/images/v1/icon7.png') }}" alt="">
                         </div>
@@ -190,10 +181,9 @@
                 </div>
                 @endif
 
-                {{-- Level --}}
                 @if($eventner->tingkat_perlombaan)
                 <div class="col-xl-4 col-md-6 wow fadeInUp">
-                    <div class="zubuz-iconbox-wrap">
+                    <div class="zubuz-iconbox-wrap" style="border-radius: 16px; border: 1px solid #e5e7eb; background: #fff;">
                         <div class="zubuz-iconbox-icon">
                             <img src="{{ asset('templates/zubaz/assets/images/v1/icon8.png') }}" alt="">
                         </div>
@@ -213,7 +203,7 @@
                     <div style="border-radius: 16px; overflow: hidden; border: 1px solid #e5e7eb;">
                         <iframe
                             width="100%"
-                            height="300"
+                            height="250"
                             style="border:0"
                             loading="lazy"
                             allowfullscreen
@@ -233,21 +223,23 @@
             <div class="zubuz-section-title center wow fadeInUp">
                 <h2>Kategori Lomba</h2>
             </div>
-            <div class="row">
+            <div class="row g-3">
                 @foreach($eventner->competitionCategories as $cat)
                 <div class="col-xl-4 col-md-6 wow fadeInUp">
-                    <div class="zubuz-iconbox-wrap">
-                        <div class="zubuz-iconbox-icon">
-                            <img src="{{ asset('templates/zubaz/assets/images/v1/icon3.png') }}" alt="">
-                        </div>
-                        <div class="zubuz-iconbox-data">
-                            <h3>{{ $cat->name }}</h3>
-                            <p>{{ $cat->registrations->count() }} peserta terdaftar</p>
-                            @if($cat->tanggal_pelaksanaan)
-                            <span style="font-size: 13px; color: #0072FF; font-weight: 600;">
-                                <i class="fa fa-calendar"></i> {{ \Carbon\Carbon::parse($cat->tanggal_pelaksanaan)->translatedFormat('d M Y') }}
-                            </span>
-                            @endif
+                    <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px; transition: all 0.3s;" onmouseover="this.style.borderColor='var(--event-primary, #0072FF)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.06)';" onmouseout="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <div style="width: 48px; height: 48px; border-radius: 12px; background: rgba(0,114,255,0.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <i class="fa fa-trophy" style="color: var(--event-primary, #0072FF); font-size: 18px;"></i>
+                            </div>
+                            <div style="min-width: 0;">
+                                <h5 style="margin: 0 0 4px; font-weight: 600; font-size: 16px;">{{ $cat->name }}</h5>
+                                <p style="margin: 0; color: #6b7280; font-size: 14px;">{{ $cat->registrations->count() }} peserta terdaftar</p>
+                                @if($cat->tanggal_pelaksanaan)
+                                <span style="font-size: 13px; color: var(--event-primary, #0072FF); font-weight: 600;">
+                                    <i class="fa fa-calendar"></i> {{ \Carbon\Carbon::parse($cat->tanggal_pelaksanaan)->translatedFormat('d M Y') }}
+                                </span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -265,31 +257,27 @@
             </div>
             <div class="row justify-content-center">
                 <div class="col-lg-8">
-                    <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <div class="d-flex flex-wrap justify-content-center gap-2">
                         @if($eventner->link_whatsapp)
                         <a href="{{ Str::startsWith($eventner->link_whatsapp, ['http://', 'https://']) ? $eventner->link_whatsapp : 'https://wa.me/' . preg_replace('/[^0-9]/', '', $eventner->link_whatsapp) }}" target="_blank" class="zubuz-default-btn" style="background: #25D366;">
                             <span><i class="fab fa-whatsapp"></i> WhatsApp</span>
                         </a>
                         @endif
-
                         @if($eventner->link_instagram)
                         <a href="{{ $eventner->link_instagram }}" target="_blank" class="zubuz-default-btn" style="background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);">
                             <span><i class="fab fa-instagram"></i> Instagram</span>
                         </a>
                         @endif
-
                         @if($eventner->link_tiktok)
                         <a href="{{ $eventner->link_tiktok }}" target="_blank" class="zubuz-default-btn" style="background: #111827;">
                             <span><i class="fab fa-tiktok"></i> TikTok</span>
                         </a>
                         @endif
-
                         @if($eventner->link_livestreaming)
                         <a href="{{ $eventner->link_livestreaming }}" target="_blank" class="zubuz-default-btn" style="background: #ef4444;">
                             <span><i class="fa fa-video"></i> Live Streaming</span>
                         </a>
                         @endif
-
                         @if(!$eventner->link_whatsapp && !$eventner->link_instagram && !$eventner->link_tiktok && !$eventner->link_livestreaming)
                         <p style="color: rgba(255,255,255,0.5);">Belum ada tautan yang ditambahkan penyelenggara.</p>
                         @endif
@@ -300,7 +288,7 @@
     </div>
 
     {{-- CTA Register Section --}}
-    <div class="zubuz-cta-section blue-bg">
+    <div class="zubuz-cta-section" style="background: var(--event-primary, #0072FF);">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-lg-7 order-lg-2 d-flex align-items-center">
@@ -308,18 +296,18 @@
                         <h2>Siap Bergabung?</h2>
                         <p>Daftarkan kontingen Anda sekarang dan jadilah bagian dari kompetisi ini!</p>
                         <div class="zubuz-extara-mt">
-                            <a class="zubuz-default-btn" href="{{ route('event.register', $eventner->slug) }}" style="background: #fff; color: #0072FF;">
+                            <a class="zubuz-default-btn" href="{{ route('event.register', $eventner->slug) }}" style="background: #fff; color: var(--event-primary, #0072FF);">
                                 <span><i class="fa fa-clipboard"></i> Booking Pendaftaran</span>
                             </a>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-5">
+                <div class="col-lg-5 mt-4 mt-lg-0">
                     <div class="zubuz-cta-thumb">
                         @if($eventner->poster)
-                            <img src="{{ asset('storage/' . $eventner->poster) }}" alt="{{ $eventner->nama_event }}" style="border-radius: 16px; max-height: 350px; object-fit: cover;">
+                            <img src="{{ asset('storage/' . $eventner->poster) }}" alt="{{ $eventner->nama_event }}" style="border-radius: 16px; max-height: 300px; object-fit: cover; width: 100%;">
                         @else
-                            <img src="{{ asset('templates/zubaz/assets/images/v1/cta-mocup.png') }}" alt="">
+                            <img src="{{ asset('templates/zubaz/assets/images/v1/cta-mocup.png') }}" alt="" style="max-width: 100%;">
                         @endif
                     </div>
                 </div>

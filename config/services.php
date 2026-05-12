@@ -35,9 +35,9 @@ return [
         ],
     ],
 
-    'xendit' => [
-        'key' => env('XENDIT_SECRET_KEY'),
-        'webhook_token' => env('XENDIT_WEBHOOK_TOKEN'),
+    'autogopay' => [
+        'api_key' => env('AUTOGOPAY_API_KEY'),
+        'base_url' => env('AUTOGOPAY_BASE_URL', 'https://v1-gateway.autogopay.site'),
     ],
 
 ];

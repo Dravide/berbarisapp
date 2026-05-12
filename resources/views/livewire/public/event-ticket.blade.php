@@ -1,14 +1,14 @@
 <div>
     {{-- Hero Banner --}}
-    <div class="section" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 60px 0 40px;">
+    <div class="section" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 50px 0 30px; position: relative; overflow: hidden;">
         <div class="container">
             <div class="row justify-content-center text-center">
                 <div class="col-lg-8">
                     <span style="display:inline-block; background: rgba(0,0,0,0.2); color: #fff; padding: 6px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 12px;">
                         <i class="fa fa-ticket"></i> Pembelian Tiket Online
                     </span>
-                    <h1 class="wow fadeInUp" style="color: #fff; font-size: 36px;">{{ $eventner->nama_event }}</h1>
-                    <p class="wow fadeInUp" style="color: rgba(255,255,255,0.9); font-size: 17px; margin-top: 8px;">
+                    <h1 class="wow fadeInUp" style="color: #fff; font-size: clamp(24px, 5vw, 36px);">{{ $eventner->nama_event }}</h1>
+                    <p class="wow fadeInUp" style="color: rgba(255,255,255,0.9); font-size: 15px; margin-top: 8px;">
                         Beli tiket online, bayar via QRIS, dan dapatkan QR masuk langsung di HP Anda.
                     </p>
                     <div class="wow fadeInUp mt-3">
@@ -30,7 +30,98 @@
                 </div>
             @endif
 
-            @if($view === 'confirmation' && $paidTicket)
+            @if($view === 'payment')
+                {{-- PAYMENT VIEW: QR Code --}}
+                <div class="row justify-content-center" wire:poll.5s="checkPaymentStatus">
+                    <div class="col-lg-5">
+                        <div class="wow fadeInUp" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden;">
+                            {{-- Header --}}
+                            <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 20px; text-align: center;">
+                                <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
+                                    <i class="fa fa-qrcode" style="font-size: 24px; color: #fff;"></i>
+                                </div>
+                                <h4 style="color: #fff; font-weight: 600; margin-bottom: 4px;">Scan & Bayar</h4>
+                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 14px;">Scan QR code di bawah dengan e-wallet</p>
+                            </div>
+
+                            {{-- QR Code --}}
+                            <div style="padding: 24px; text-align: center;">
+                                <div style="background: #fff; border: 2px solid #e5e7eb; border-radius: 16px; padding: 16px; display: inline-block; margin-bottom: 16px;">
+                                    <img src="{{ $qrImageUrl }}" alt="QRIS Payment" style="max-width: 220px; width: 100%;">
+                                </div>
+
+                                {{-- Amount --}}
+                                <div style="background: rgba(16,185,129,0.06); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                                    <p style="color: #6b7280; font-size: 13px; margin-bottom: 4px;">Total Pembayaran</p>
+                                    <h3 style="color: #059669; font-weight: 800; margin: 0;">Rp {{ number_format($paymentAmount, 0, ',', '.') }}</h3>
+                                    <p style="color: #6b7280; font-size: 12px; margin-top: 4px;">{{ $quantity }} tiket × Rp {{ number_format($eventner->ticket_price, 0, ',', '.') }}</p>
+                                </div>
+
+                                {{-- Timer --}}
+                                <div style="margin-bottom: 16px;" x-data="{ 
+                                    expiry: '{{ $expiryTime }}',
+                                    remaining: '',
+                                    expired: false,
+                                    init() {
+                                        this.updateTimer();
+                                        setInterval(() => this.updateTimer(), 1000);
+                                    },
+                                    updateTimer() {
+                                        const exp = new Date(this.expiry).getTime();
+                                        const now = Date.now();
+                                        const diff = exp - now;
+                                        if (diff <= 0) {
+                                            this.remaining = '00:00';
+                                            this.expired = true;
+                                            return;
+                                        }
+                                        const m = Math.floor(diff / 60000);
+                                        const s = Math.floor((diff % 60000) / 1000);
+                                        this.remaining = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+                                    }
+                                }">
+                                    <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                        <i class="fa fa-clock" style="color: #f59e0b;"></i>
+                                        <span style="font-weight: 600; font-size: 14px;" :class="expired ? 'text-danger' : ''">
+                                            Kedaluwarsa dalam: <span x-text="remaining" style="font-family: monospace; font-size: 16px;"></span>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {{-- Status --}}
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: #fffbeb; border-radius: 10px; margin-bottom: 16px;">
+                                    <span style="display: inline-block; width: 14px; height: 14px; border: 2px solid #f59e0b; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></span>
+                                    <span style="color: #92400e; font-size: 14px; font-weight: 500;">Menunggu pembayaran...</span>
+                                </div>
+
+                                {{-- Instructions --}}
+                                <div style="text-align: left; background: #f8fafc; border-radius: 10px; padding: 14px;">
+                                    <p style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">
+                                        <i class="fa fa-info-circle" style="color: #059669;"></i> Cara Bayar:
+                                    </p>
+                                    <ol style="margin: 0; padding-left: 18px; font-size: 13px; color: #4b5563; line-height: 1.8;">
+                                        <li>Buka aplikasi e-wallet (GoPay, OVO, DANA, dll)</li>
+                                        <li>Pilih menu <strong>Scan QR / Bayar</strong></li>
+                                        <li>Scan QR code di atas</li>
+                                        <li>Konfirmasi pembayaran</li>
+                                    </ol>
+                                </div>
+
+                                {{-- Cancel --}}
+                                <button wire:click="resetPayment" style="background: none; border: none; color: #6b7280; font-size: 13px; margin-top: 14px; cursor: pointer;">
+                                    <i class="fa fa-arrow-left"></i> Batal & Kembali
+                                </button>
+
+                                {{-- QRIS Logo --}}
+                                <div style="margin-top: 14px;">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" height="18" alt="QRIS" style="opacity: 0.5;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            @elseif($view === 'confirmation' && $paidTicket)
                 {{-- CONFIRMATION VIEW --}}
                 <div class="row justify-content-center">
                     <div class="col-lg-6">
@@ -172,13 +263,18 @@
                                 {{-- Submit --}}
                                 <button wire:click="submitTicket" class="zubuz-default-btn" style="width: 100%;" wire:loading.attr="disabled">
                                     <span wire:loading.remove wire:target="submitTicket">
-                                        <i class="fa fa-credit-card"></i> Bayar via QRIS
+                                        <i class="fa fa-qrcode"></i> Bayar via QRIS
                                     </span>
                                     <span wire:loading wire:target="submitTicket">
                                         <span style="display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid #fff; border-radius: 50%; animation: spin 0.6s linear infinite;"></span>
                                         Memproses...
                                     </span>
                                 </button>
+
+                                <div style="text-align: center; margin-top: 14px;">
+                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" height="18" alt="QRIS" style="opacity: 0.5;">
+                                    <p style="color: #9ca3af; font-size: 11px; margin-top: 4px;">Pembayaran aman via QRIS GoPay</p>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -206,6 +206,64 @@
                             </div>
                         </div>
 
+                        <hr class="my-4">
+                        <h6 class="fw-semibold mb-3"><i class="ti ti-palette me-1"></i> Tema & Tampilan Halaman Publik</h6>
+                        <p class="text-muted fs-3 mb-3">Pilih tema warna yang akan tampil di halaman publik event Anda.</p>
+                        
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold mb-2">Pilih Preset Tema</label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @php
+                                        $presets = [
+                                            ['id' => 'ocean', 'name' => 'Ocean', 'primary' => '#0072FF', 'accent' => '#00D4AA'],
+                                            ['id' => 'sunset', 'name' => 'Sunset', 'primary' => '#f59e0b', 'accent' => '#ef4444'],
+                                            ['id' => 'emerald', 'name' => 'Emerald', 'primary' => '#10b981', 'accent' => '#06b6d4'],
+                                            ['id' => 'royal', 'name' => 'Royal', 'primary' => '#8b5cf6', 'accent' => '#ec4899'],
+                                            ['id' => 'crimson', 'name' => 'Crimson', 'primary' => '#ef4444', 'accent' => '#f59e0b'],
+                                            ['id' => 'mono', 'name' => 'Mono', 'primary' => '#111827', 'accent' => '#6b7280'],
+                                        ];
+                                    @endphp
+                                    @foreach($presets as $p)
+                                    <button type="button" wire:click="$set('theme_preset', '{{ $p['id'] }}'); $set('theme_primary', '{{ $p['primary'] }}'); $set('theme_accent', '{{ $p['accent'] }}')"
+                                        class="btn {{ $theme_preset === $p['id'] ? 'border-2 border-dark' : 'border' }} rounded-3 p-0 overflow-hidden"
+                                        style="width: 80px; height: 56px; position: relative; {{ $theme_preset === $p['id'] ? 'box-shadow: 0 0 0 2px ' . $p['primary'] . ';' : '' }}">
+                                        <div style="width: 100%; height: 70%; background: {{ $p['primary'] }};"></div>
+                                        <div style="width: 100%; height: 30%; background: {{ $p['accent'] }};"></div>
+                                        <span style="position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 600; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">{{ $p['name'] }}</span>
+                                        @if($theme_preset === $p['id'])
+                                        <i class="ti ti-check" style="position: absolute; top: 2px; right: 4px; font-size: 14px; color: #fff;"></i>
+                                        @endif
+                                    </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">Warna Utama (Primary)</label>
+                                <div class="input-group">
+                                    <input type="color" wire:model="theme_primary" class="form-control form-control-color p-1" style="width: 44px; height: 38px; cursor: pointer;">
+                                    <input type="text" wire:model="theme_primary" class="form-control" style="font-family: monospace; font-size: 13px;">
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">Warna Aksen (Accent)</label>
+                                <div class="input-group">
+                                    <input type="color" wire:model="theme_accent" class="form-control form-control-color p-1" style="width: 44px; height: 38px; cursor: pointer;">
+                                    <input type="text" wire:model="theme_accent" class="form-control" style="font-family: monospace; font-size: 13px;">
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label">Preview</label>
+                                <div class="rounded-3 overflow-hidden border" style="height: 38px;">
+                                    <div style="width: 60%; height: 100%; display: inline-block; background: {{ $theme_primary }};"></div>
+                                    <div style="width: 40%; height: 100%; display: inline-block; background: {{ $theme_accent }};"></div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="d-flex justify-content-end mt-2">
                             <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" wire:target="save">
                                 <i class="ti ti-device-floppy me-1"></i> Simpan Perubahan

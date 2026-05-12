@@ -35,6 +35,11 @@ class Eventner extends Model
         'ticket_price',
         'ticket_description',
         'ticket_max_per_order',
+        'theme_config',
+    ];
+
+    protected $casts = [
+        'theme_config' => 'array',
     ];
 
     protected static function boot()

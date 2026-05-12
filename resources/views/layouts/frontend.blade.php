@@ -32,9 +32,37 @@
     <title>{{ $title ?? ($eventner?->nama_event ?? 'BARIS APP') }}</title>
 
     @livewireStyles
+
+    @isset($eventner?->theme_config)
+    <style>
+        :root {
+            --event-primary: {{ $eventner->theme_config['primary_color'] ?? '#0072FF' }};
+            --event-accent: {{ $eventner->theme_config['accent_color'] ?? '#00D4AA' }};
+        }
+    </style>
+    @endisset
+
+    <style>
+        /* Mobile-first responsive fixes */
+        @media (max-width: 767px) {
+            .zubuz-hero-section h1 { font-size: 28px !important; }
+            .zubuz-hero-section p { font-size: 15px !important; }
+            .zubuz-section-padding2, .zubuz-section-padding3, .zubuz-section-padding4 {
+                padding-top: 40px !important;
+                padding-bottom: 40px !important;
+            }
+            .site-header .brand-logo img { max-height: 32px !important; }
+            .zubuz-default-btn { min-width: auto !important; height: 44px !important; font-size: 14px !important; padding: 10px 16px !important; }
+            .d-flex.flex-wrap.gap-2 { gap: 8px !important; }
+            .d-flex.flex-wrap.gap-3 { gap: 8px !important; }
+        }
+        @media (max-width: 480px) {
+            .zubuz-hero-section h1 { font-size: 24px !important; }
+        }
+    </style>
 </head>
 
-<body class="light">
+<body class="light" style="padding-bottom: env(safe-area-inset-bottom);">
 
     {{-- Preloader --}}
     <div class="zubuz-preloader-wrap">

@@ -14,7 +14,7 @@ Route::get('/event/{slug}/participant', App\Livewire\Public\EventParticipant::cl
 
 // Voting Routes
 Route::get('/event/{slug}/vote', App\Livewire\Public\EventVote::class)->name('event.vote');
-Route::post('/webhook/xendit', [App\Http\Controllers\Webhook\XenditWebhookController::class, 'handle']);
+Route::post('/webhook/autogopay', [App\Http\Controllers\Webhook\AutoGoPayWebhookController::class, 'handle']);
 Route::get('/event/{slug}/ticket', App\Livewire\Public\EventTicket::class)->name('event.ticket');
 Route::get('/event/{slug}/register', App\Livewire\Public\Registration\Create::class)->name('event.register');
 Route::get('/event/{slug}/drawing', App\Livewire\Eventner\Drawing\Spin::class)->name('event.drawing.spin');

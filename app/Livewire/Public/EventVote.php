@@ -6,27 +6,32 @@ use App\Models\CompetitionCategory;
 use App\Models\Eventner;
 use App\Models\Registration;
 use App\Models\VoteTransaction;
-use Illuminate\Support\Facades\Cache;
+use App\Services\AutoGoPay;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
-use Xendit\Configuration;
-use Xendit\Invoice\InvoiceApi;
-use Xendit\Invoice\CreateInvoiceRequest;
 
 #[Layout('layouts.frontend')]
 class EventVote extends Component
 {
     public $eventner;
-    public $view = 'categories'; // 'categories' or 'participants'
+    public $view = 'categories'; // 'categories', 'participants', 'payment', 'success'
     public $selectedCategoryId;
     public $search = '';
     public $selectedRegistrationId;
     public $voterName;
     public $voterEmail;
     public $voteCount = 10;
-    
+
+    // Payment state
+    public $qrImageUrl;
+    public $expiryTime;
+    public $currentTransactionId;
+    public $autoGoPayTransactionId;
+    public $paymentAmount;
+    public $paymentConfirmed = false;
+
     protected $queryString = [
         'search' => ['except' => ''],
         'selectedCategoryId' => ['except' => ''],
@@ -42,7 +47,7 @@ class EventVote extends Component
     public function mount($slug)
     {
         $this->eventner = Eventner::where('slug', $slug)->firstOrFail();
-            
+
         if ($this->selectedCategoryId) {
             $this->view = 'participants';
         }
@@ -68,48 +73,35 @@ class EventVote extends Component
 
     public function submitVote()
     {
-        if (RateLimiter::tooManyAttempts('vote-submit:'.request()->ip(), $maxAttempts = 5)) {
+        if (RateLimiter::tooManyAttempts('vote-submit:' . request()->ip(), $maxAttempts = 5)) {
             session()->flash('error', 'Terlalu banyak permintaan. Silakan coba lagi dalam satu menit.');
             return;
         }
 
-        RateLimiter::hit('vote-submit:'.request()->ip(), $decaySeconds = 60);
+        RateLimiter::hit('vote-submit:' . request()->ip(), $decaySeconds = 60);
 
         $this->validate();
 
         $amount = $this->voteCount * 1000;
-        $registration = Registration::find($this->selectedRegistrationId);
-
-        Configuration::setApiKey(config('services.xendit.key'));
-        $apiInstance = new InvoiceApi();
-
-        $externalId = 'VOTE-' . time() . '-' . $this->selectedRegistrationId;
-
-        $customer = new \Xendit\Invoice\CustomerObject([
-            'given_names' => $this->voterName,
-            'email' => $this->voterEmail,
-        ]);
-
-        $createInvoiceRequest = new CreateInvoiceRequest([
-            'external_id' => $externalId,
-            'amount' => (float)$amount,
-            'payer_email' => $this->voterEmail,
-            'description' => "Voting Digital untuk " . $registration->nama_sekolah . " di event " . $this->eventner->nama_event,
-            'customer' => $customer,
-            'success_redirect_url' => route('event.detail', $this->eventner->slug),
-            'failure_redirect_url' => route('event.vote', $this->eventner->slug),
-            'currency' => 'IDR',
-            'reminder_time' => 1,
-        ]);
 
         try {
-            $invoice = $apiInstance->createInvoice($createInvoiceRequest);
+            // Generate QRIS via AutoGoPay
+            $service = new AutoGoPay();
+            $result = $service->generateQris($amount);
 
-            VoteTransaction::create([
+            if (!($result['success'] ?? false)) {
+                session()->flash('error', 'Gagal membuat QRIS. Silakan coba lagi.');
+                return;
+            }
+
+            $data = $result['data'];
+
+            // Simpan transaksi PENDING
+            $transaction = VoteTransaction::create([
                 'eventner_id' => $this->eventner->id,
                 'registration_id' => $this->selectedRegistrationId,
-                'xendit_invoice_id' => $invoice->getId(),
-                'xendit_invoice_url' => $invoice->getInvoiceUrl(),
+                'autogopay_transaction_id' => $data['transaction_id'],
+                'qr_url' => $data['qr_url'],
                 'amount' => $amount,
                 'votes_earned' => $this->voteCount,
                 'voter_name' => $this->voterName,
@@ -117,19 +109,85 @@ class EventVote extends Component
                 'status' => 'PENDING',
             ]);
 
-            return redirect()->away($invoice->getInvoiceUrl());
+            // Tampilkan QR code
+            $this->qrImageUrl = $data['qr_url'];
+            $this->expiryTime = $data['expiry_time'];
+            $this->currentTransactionId = $transaction->id;
+            $this->autoGoPayTransactionId = $data['transaction_id'];
+            $this->paymentAmount = $amount;
+            $this->paymentConfirmed = false;
+            $this->view = 'payment';
 
         } catch (\Exception $e) {
-            Log::error('Xendit invoice creation failed', [
-                'external_id' => $externalId,
+            Log::error('AutoGoPay QRIS generation failed (vote)', [
                 'registration_id' => $this->selectedRegistrationId,
                 'amount' => $amount,
-                'voter_email' => $this->voterEmail,
                 'error' => $e->getMessage(),
             ]);
 
-            session()->flash('error', 'Gagal membuat invoice: ' . $e->getMessage());
+            session()->flash('error', 'Gagal membuat QRIS: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Polling untuk cek status pembayaran (fallback jika webhook delay).
+     */
+    public function checkPaymentStatus()
+    {
+        if (!$this->autoGoPayTransactionId || $this->paymentConfirmed) {
+            return;
+        }
+
+        // Cek dari database dulu (lebih cepat jika webhook sudah masuk)
+        $tx = VoteTransaction::find($this->currentTransactionId);
+        if ($tx && $tx->status === 'PAID') {
+            $this->paymentConfirmed = true;
+            $this->view = 'success';
+            return;
+        }
+
+        if ($tx && $tx->status === 'EXPIRED') {
+            $this->view = 'participants';
+            session()->flash('error', 'Pembayaran kedaluwarsa. Silakan coba lagi.');
+            return;
+        }
+
+        // Fallback: cek langsung ke AutoGoPay API
+        try {
+            $service = new AutoGoPay();
+            $result = $service->checkStatus($this->autoGoPayTransactionId);
+
+            $status = $result['data']['transaction_status'] ?? 'pending';
+
+            if ($status === 'settlement') {
+                // Update di database
+                if ($tx && $tx->status !== 'PAID') {
+                    $tx->update(['status' => 'PAID', 'paid_at' => now()]);
+                }
+                $this->paymentConfirmed = true;
+                $this->view = 'success';
+            } elseif ($status === 'expire') {
+                if ($tx && $tx->status !== 'EXPIRED') {
+                    $tx->update(['status' => 'EXPIRED']);
+                }
+                $this->view = 'participants';
+                session()->flash('error', 'Pembayaran kedaluwarsa. Silakan coba lagi.');
+            }
+        } catch (\Exception $e) {
+            // Silently fail — akan retry di polling berikutnya
+            Log::warning('AutoGoPay status check failed', ['error' => $e->getMessage()]);
+        }
+    }
+
+    public function resetPayment()
+    {
+        $this->qrImageUrl = null;
+        $this->expiryTime = null;
+        $this->currentTransactionId = null;
+        $this->autoGoPayTransactionId = null;
+        $this->paymentAmount = null;
+        $this->paymentConfirmed = false;
+        $this->view = 'participants';
     }
 
     public function render()
@@ -139,16 +197,16 @@ class EventVote extends Component
 
         if ($this->selectedCategoryId) {
             $selectedCategory = CompetitionCategory::find($this->selectedCategoryId);
-            
+
             $query = Registration::where('competition_category_id', $this->selectedCategoryId);
-            
+
             if ($this->search) {
-                $query->where(function($q) {
+                $query->where(function ($q) {
                     $q->where('nama_sekolah', 'like', '%' . $this->search . '%')
                       ->orWhere('nama_pelatih', 'like', '%' . $this->search . '%');
                 });
             }
-            
+
             $participants = $query->get();
         }
 

@@ -43,6 +43,11 @@ class Profile extends Component
     public $poster;
     public $newPoster;
 
+    // Theme
+    public $theme_preset = 'ocean';
+    public $theme_primary = '#0072FF';
+    public $theme_accent = '#00D4AA';
+
     public function mount()
     {
         $eventner = Auth::user()->eventner;
@@ -72,6 +77,12 @@ class Profile extends Component
 
         $this->logo = $eventner->logo_event;
         $this->poster = $eventner->poster;
+
+        // Load theme config
+        $theme = $eventner->theme_config ?? [];
+        $this->theme_preset = $theme['preset'] ?? 'ocean';
+        $this->theme_primary = $theme['primary_color'] ?? '#0072FF';
+        $this->theme_accent = $theme['accent_color'] ?? '#00D4AA';
     }
 
     public function save()
@@ -144,6 +155,11 @@ class Profile extends Component
             'scoring_code' => strip_tags($this->scoring_code),
             'logo_event' => $eventner->logo_event,
             'poster' => $eventner->poster,
+            'theme_config' => [
+                'preset' => $this->theme_preset,
+                'primary_color' => $this->theme_primary,
+                'accent_color' => $this->theme_accent,
+            ],
         ]);
 
         $this->newLogo = null; 

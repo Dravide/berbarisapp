@@ -9,8 +9,8 @@ class VoteTransaction extends Model
     protected $fillable = [
         'eventner_id',
         'registration_id',
-        'xendit_invoice_id',
-        'xendit_invoice_url',
+        'autogopay_transaction_id',
+        'qr_url',
         'amount',
         'votes_earned',
         'voter_name',
