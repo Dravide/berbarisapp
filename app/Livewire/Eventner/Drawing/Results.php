@@ -57,6 +57,6 @@ class Results extends Component
             'results' => $results,
             'totalSchools' => $totalSchools,
             'eventner' => $eventner,
-        ]);
+        ])->layoutData(['eventner' => $eventner]);
     }
 }

@@ -141,6 +141,6 @@ class Spin extends Component
             'drawnSchools' => $drawnSchools,
             'totalSchools' => $totalSchools,
             'eventner' => $eventner,
-        ]);
+        ])->layoutData(['eventner' => $eventner]);
     }
 }
