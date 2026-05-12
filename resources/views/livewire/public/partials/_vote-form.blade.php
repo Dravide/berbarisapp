@@ -47,7 +47,7 @@
             </div>
             <div style="border-top: 1px solid #e5e7eb; padding-top: 6px; display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-weight: 700; font-size: 15px;">Total Bayar</span>
-                <span style="font-weight: 800; color: var(--event-primary, #0072FF); font-size: 20px;">Rp {{ number_format($voteCount * 1000, 0, ',', '.') }}</span>
+                <span style="font-weight: 800; color: var(--event-primary, #0072FF); font-size: 20px;">Rp {{ number_format((int)$voteCount * 1000, 0, ',', '.') }}</span>
             </div>
         </div>
 
