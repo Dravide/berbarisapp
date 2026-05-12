@@ -60,6 +60,8 @@
             .zubuz-hero-section h1 { font-size: 24px !important; }
         }
     </style>
+
+    @stack('styles')
 </head>
 
 <body class="light" style="padding-bottom: env(safe-area-inset-bottom);">

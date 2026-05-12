@@ -1,4 +1,14 @@
 <div>
+    @push('styles')
+        <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet">
+        <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet">
+        <style>
+            .filepond--root { font-family: 'Inter', sans-serif; margin-bottom: 0; }
+            .filepond--panel-root { border-radius: 8px; background-color: #fff; border: 1px solid #d1d5db; }
+            .filepond--drop-label { color: #6b7280; }
+        </style>
+    @endpush
+
     {{-- Hero Banner --}}
     <div style="background: linear-gradient(135deg, var(--event-primary, #0072FF) 0%, var(--event-accent, #00D4AA) 100%); padding: 140px 0 40px; position: relative; overflow: hidden;">
         <div style="position: absolute; top: -50%; right: -20%; width: 400px; height: 400px; border-radius: 50%; background: rgba(255,255,255,0.08);"></div>
@@ -175,7 +185,22 @@
                                     </div>
                                     <div class="col-md-6">
                                         <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;">Foto Pelatih</label>
-                                        <input type="file" wire:model="fotoPelatih" accept="image/*" style="width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 14px; font-size: 14px; outline: none; transition: all 0.2s; background: #fff;">
+                                        <div wire:ignore x-data="{ pond: null }" x-init="
+                                            pond = FilePond.create($refs.input, {
+                                                credits: false,
+                                                labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
+                                                server: {
+                                                    process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
+                                                        @this.upload('fotoPelatih', file, load, error, progress)
+                                                    },
+                                                    revert: (filename, load) => {
+                                                        @this.removeUpload('fotoPelatih', filename, load)
+                                                    },
+                                                },
+                                            });
+                                        ">
+                                            <input type="file" x-ref="input" accept="image/*">
+                                        </div>
                                         @error('fotoPelatih') <span style="display: block; font-size: 12px; color: #ef4444; margin-top: 4px;">{{ $message }}</span> @enderror
                                         @if($registration->foto_pelatih)
                                             <span style="display: block; font-size: 12px; color: #10b981; margin-top: 6px;"><i class="fa fa-check" style="margin-right: 4px;"></i>Sudah diunggah</span>
@@ -195,7 +220,22 @@
                                     <div class="row g-3">
                                         <div class="col-md-6">
                                             <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;">Logo Sekolah</label>
-                                            <input type="file" wire:model="logoSekolah" accept="image/*" style="width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 14px; font-size: 14px; background: #fff;">
+                                            <div wire:ignore x-data="{ pond: null }" x-init="
+                                                pond = FilePond.create($refs.input, {
+                                                    credits: false,
+                                                    labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
+                                                    server: {
+                                                        process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
+                                                            @this.upload('logoSekolah', file, load, error, progress)
+                                                        },
+                                                        revert: (filename, load) => {
+                                                            @this.removeUpload('logoSekolah', filename, load)
+                                                        },
+                                                    },
+                                                });
+                                            ">
+                                                <input type="file" x-ref="input" accept="image/*">
+                                            </div>
                                             @error('logoSekolah') <span style="display: block; font-size: 12px; color: #ef4444; margin-top: 4px;">{{ $message }}</span> @enderror
                                             @if($registration->logo_sekolah)
                                                 <span style="display: block; font-size: 12px; color: #10b981; margin-top: 6px;"><i class="fa fa-check" style="margin-right: 4px;"></i>Sudah diunggah</span>
@@ -203,7 +243,22 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;">Surat Tugas (.pdf/.jpg)</label>
-                                            <input type="file" wire:model="suratTugas" style="width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 14px; font-size: 14px; background: #fff;">
+                                            <div wire:ignore x-data="{ pond: null }" x-init="
+                                                pond = FilePond.create($refs.input, {
+                                                    credits: false,
+                                                    labelIdle: 'Tarik & Letakkan file atau <span class=\'filepond--label-action\'>Pilih File</span>',
+                                                    server: {
+                                                        process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
+                                                            @this.upload('suratTugas', file, load, error, progress)
+                                                        },
+                                                        revert: (filename, load) => {
+                                                            @this.removeUpload('suratTugas', filename, load)
+                                                        },
+                                                    },
+                                                });
+                                            ">
+                                                <input type="file" x-ref="input">
+                                            </div>
                                             @error('suratTugas') <span style="display: block; font-size: 12px; color: #ef4444; margin-top: 4px;">{{ $message }}</span> @enderror
                                             @if($registration->surat_tugas)
                                                 <span style="display: block; font-size: 12px; color: #10b981; margin-top: 6px;"><i class="fa fa-check" style="margin-right: 4px;"></i>Sudah diunggah</span>
@@ -211,7 +266,22 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;">Kwitansi Pendaftaran</label>
-                                            <input type="file" wire:model="buktiPendaftaran" accept="image/*" style="width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 14px; font-size: 14px; background: #fff;">
+                                            <div wire:ignore x-data="{ pond: null }" x-init="
+                                                pond = FilePond.create($refs.input, {
+                                                    credits: false,
+                                                    labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
+                                                    server: {
+                                                        process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
+                                                            @this.upload('buktiPendaftaran', file, load, error, progress)
+                                                        },
+                                                        revert: (filename, load) => {
+                                                            @this.removeUpload('buktiPendaftaran', filename, load)
+                                                        },
+                                                    },
+                                                });
+                                            ">
+                                                <input type="file" x-ref="input" accept="image/*">
+                                            </div>
                                             @error('buktiPendaftaran') <span style="display: block; font-size: 12px; color: #ef4444; margin-top: 4px;">{{ $message }}</span> @enderror
                                             @if($registration->bukti_pendaftaran)
                                                 <span style="display: block; font-size: 12px; color: #10b981; margin-top: 6px;"><i class="fa fa-check" style="margin-right: 4px;"></i>Sudah diunggah</span>
@@ -240,7 +310,22 @@
                                         </div>
                                         <div class="col-md-5">
                                             <label style="display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;">Pas Foto</label>
-                                            <input type="file" wire:model="dantonFoto" accept="image/*" style="width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 14px; font-size: 14px; background: #fff;">
+                                            <div wire:ignore x-data="{ pond: null }" x-init="
+                                                pond = FilePond.create($refs.input, {
+                                                    credits: false,
+                                                    labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
+                                                    server: {
+                                                        process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
+                                                            @this.upload('dantonFoto', file, load, error, progress)
+                                                        },
+                                                        revert: (filename, load) => {
+                                                            @this.removeUpload('dantonFoto', filename, load)
+                                                        },
+                                                    },
+                                                });
+                                            ">
+                                                <input type="file" x-ref="input" accept="image/*">
+                                            </div>
                                             @error('dantonFoto') <span style="display: block; font-size: 12px; color: #ef4444; margin-top: 4px;">{{ $message }}</span> @enderror
                                             @if($registration->danton_foto)
                                                 <span style="display: block; font-size: 12px; color: #10b981; margin-top: 6px;"><i class="fa fa-check" style="margin-right: 4px;"></i>Sudah diunggah</span>
@@ -262,7 +347,7 @@
                                 </div>
                                 <div style="padding: 20px;">
                                     @foreach($participants as $index => $participant)
-                                        <div style="display: flex; gap: 16px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #f3f4f6; align-items: flex-start; flex-wrap: wrap;">
+                                        <div wire:key="participant-{{ $index }}" style="display: flex; gap: 16px; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #f3f4f6; align-items: flex-start; flex-wrap: wrap;">
                                             <div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(0,114,255,0.1); color: var(--event-primary, #0072FF); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px; flex-shrink: 0;">
                                                 {{ $index + 1 }}
                                             </div>
@@ -277,7 +362,22 @@
                                             </div>
                                             <div style="flex: 1; min-width: 160px;">
                                                 <label style="display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 4px;">Pas Foto</label>
-                                                <input type="file" wire:model="participants.{{ $index }}.foto" accept="image/*" style="width: 100%; border: 1px solid #d1d5db; border-radius: 6px; padding: 4px 10px; font-size: 13px; background: #fff;">
+                                                <div wire:ignore x-data="{ pond: null }" x-init="
+                                                    pond = FilePond.create($refs.input, {
+                                                        credits: false,
+                                                        labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
+                                                        server: {
+                                                            process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
+                                                                @this.upload('participants.{{ $index }}.foto', file, load, error, progress)
+                                                            },
+                                                            revert: (filename, load) => {
+                                                                @this.removeUpload('participants.{{ $index }}.foto', filename, load)
+                                                            },
+                                                        },
+                                                    });
+                                                ">
+                                                    <input type="file" x-ref="input" accept="image/*">
+                                                </div>
                                                 @if(isset($participant['existing_foto']) && $participant['existing_foto'])
                                                     <span style="display: block; font-size: 11px; color: #10b981; margin-top: 4px;"><i class="fa fa-check" style="margin-right: 2px;"></i>Sudah diunggah</span>
                                                 @endif
@@ -368,4 +468,12 @@
             })
         }
     </script>
+    @push('scripts')
+        <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.js"></script>
+        <script src="https://unpkg.com/filepond-plugin-file-validate-type/dist/filepond-plugin-file-validate-type.js"></script>
+        <script src="https://unpkg.com/filepond/dist/filepond.js"></script>
+        <script>
+            FilePond.registerPlugin(FilePondPluginImagePreview, FilePondPluginFileValidateType);
+        </script>
+    @endpush
 </div>
