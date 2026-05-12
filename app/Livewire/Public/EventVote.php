@@ -198,7 +198,11 @@ class EventVote extends Component
         if ($this->selectedCategoryId) {
             $selectedCategory = CompetitionCategory::find($this->selectedCategoryId);
 
-            $query = Registration::where('competition_category_id', $this->selectedCategoryId);
+            $query = Registration::where('competition_category_id', $this->selectedCategoryId)
+                ->withSum(['voteTransactions as total_votes' => function($q) {
+                    $q->where('status', 'PAID');
+                }], 'votes_earned')
+                ->orderByDesc('total_votes');
 
             if ($this->search) {
                 $query->where(function ($q) {

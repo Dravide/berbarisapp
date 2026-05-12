@@ -239,6 +239,11 @@
                                                 <h6 style="margin: 0; font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $reg->nama_sekolah }}</h6>
                                                 <p style="margin: 2px 0 0; color: #6b7280; font-size: 12px;">Pelatih: {{ $reg->nama_pelatih }}</p>
                                             </div>
+                                            <div style="text-align: right; flex-shrink: 0;">
+                                                <span style="background: rgba(16,185,129,0.1); color: #10b981; padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" title="Total Vote Terkumpul">
+                                                    <i class="fa fa-heart"></i> {{ number_format($reg->total_votes ?? 0, 0, ',', '.') }}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
