@@ -126,19 +126,31 @@
                     @if($undrawnParticipants->count() > 0)
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Peserta</label>
-                            <div wire:ignore x-data="{
-                                init() {
-                                    const el = $(this.$refs.select);
-                                    el.select2({
-                                        placeholder: '-- Cari Peserta --',
-                                        allowClear: true,
-                                        width: '100%'
-                                    });
-                                    el.on('change', () => {
-                                        $wire.set('manualRegistrationId', el.val() || null);
-                                    });
-                                }
-                            }">
+                            <div wire:key="select-parent-{{ $undrawnParticipants->count() }}" 
+                                x-data="{
+                                    model: @entangle('manualRegistrationId'),
+                                    init() {
+                                        const setup = () => {
+                                            if (typeof $ === 'undefined' || typeof $.fn.select2 === 'undefined') {
+                                                setTimeout(setup, 50);
+                                                return;
+                                            }
+                                            const el = $(this.$refs.select);
+                                            el.select2({
+                                                placeholder: '-- Cari Peserta --',
+                                                allowClear: true,
+                                                width: '100%'
+                                            });
+                                            el.on('change', (e) => {
+                                                this.model = e.target.value || null;
+                                            });
+                                            this.$watch('model', (value) => {
+                                                el.val(value).trigger('change.select2');
+                                            });
+                                        };
+                                        setup();
+                                    }
+                                }" wire:ignore>
                                 <select x-ref="select" class="form-select form-select-sm" id="select2-participant">
                                     <option value="">-- Cari Peserta --</option>
                                     @foreach($undrawnParticipants as $p)
@@ -192,8 +204,8 @@
         </div>
     </div>
 
-    @once
+    @push('scripts')
     <link rel="stylesheet" href="{{ asset('templates/assets/libs/select2/dist/css/select2.min.css') }}">
     <script src="{{ asset('templates/assets/libs/select2/dist/js/select2.full.min.js') }}"></script>
-    @endonce
+    @endpush
 </div>
