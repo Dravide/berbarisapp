@@ -79,6 +79,16 @@
                             <textarea wire:model="description" class="form-control" rows="2" placeholder="Opsional: keterangan tambahan..."></textarea>
                         </div>
 
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Jumlah Juara (Top N) <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="ti ti-users"></i></span>
+                                <input type="number" wire:model="quantity" class="form-control" min="1" placeholder="Contoh: 3, 6, 10...">
+                            </div>
+                            <p class="text-muted small mt-1 mb-0"><i class="ti ti-info-circle me-1"></i> Jumlah peringkat teratas yang akan ditampilkan.</p>
+                            @error('quantity') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                        </div>
+
                         <div class="mb-4">
                             <label class="form-label fw-semibold">Rubrik Penilaian yang Dihitung <span class="text-danger">*</span></label>
                             <p class="text-muted small mb-3">Centang rubrik penilaian yang masuk ke perhitungan kategori juara ini.</p>
@@ -174,6 +184,7 @@
                         <div class="d-flex align-items-center gap-2">
                             <i class="ti ti-trophy text-warning"></i>
                             <h5 class="mb-0 text-white fw-semibold">{{ $champion->name }}</h5>
+                            <span class="badge bg-white text-dark rounded-pill ms-2">Top {{ $champion->quantity }}</span>
                         </div>
                         <div class="d-flex gap-1">
                             <button wire:click="showAddRankTitle({{ $champion->id }})" class="btn btn-sm btn-warning" title="Kelola Gelar">

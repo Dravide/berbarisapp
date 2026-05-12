@@ -13,6 +13,7 @@ class ChampionCategory extends Model
         'eventner_id',
         'name',
         'description',
+        'quantity',
     ];
 
     public function eventner()

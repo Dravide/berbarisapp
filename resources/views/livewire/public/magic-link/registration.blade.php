@@ -116,27 +116,48 @@
                                     @php
                                         $finalScores = \App\Models\AssessmentScore::where('registration_id', $registration->id)
                                             ->where('is_finalized', true)
-                                            ->with('judge')
-                                            ->get()
-                                            ->groupBy('judge_id');
+                                            ->with(['judge', 'assessmentCriteria.subCategory.category'])
+                                            ->get();
+
+                                        $categories = \App\Models\AssessmentCategory::where('eventner_id', $registration->eventner_id)->get();
+                                        $judges = \App\Models\Judge::whereIn('id', $finalScores->pluck('judge_id')->unique())->get();
+
+                                        $scoreTable = [];
+                                        foreach($finalScores as $score) {
+                                            $jid = $score->judge_id;
+                                            $cid = $score->assessmentCriteria->subCategory->assessment_category_id;
+                                            $scoreTable[$jid][$cid] = ($scoreTable[$jid][$cid] ?? 0) + $score->score;
+                                        }
 
                                         $totalAllJudges = 0;
                                     @endphp
-                                    <div style="background: #f8fafc; border-radius: 8px; padding: 12px;">
-                                        @foreach($finalScores as $judgeId => $scores)
-                                            @php
-                                                $judgeTotal = $scores->sum('score');
-                                                $totalAllJudges += $judgeTotal;
-                                                $judgeName = $scores->first()->judge->name;
-                                            @endphp
-                                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px;">
-                                                <span style="color: #6b7280;">{{ $judgeName }}</span>
-                                                <span style="font-weight: 700; color: #1f2937;">{{ number_format($judgeTotal, 0, ',', '.') }}</span>
+                                    <div style="background: #f8fafc; border-radius: 8px; padding: 12px; overflow-x: auto;">
+                                        @foreach($judges as $judge)
+                                            <div style="margin-bottom: 12px; border-bottom: 1px dashed #e5e7eb; padding-bottom: 8px;">
+                                                <div style="font-weight: 700; font-size: 13px; color: #1f2937; margin-bottom: 4px;">
+                                                    <i class="fa fa-user-tie" style="margin-right: 6px; color: #6b7280;"></i> {{ $judge->name }}
+                                                </div>
+                                                @php $jTotal = 0; @endphp
+                                                @foreach($categories as $cat)
+                                                    @php
+                                                        $val = $scoreTable[$judge->id][$cat->id] ?? 0;
+                                                        $jTotal += $val;
+                                                    @endphp
+                                                    <div style="display: flex; justify-content: space-between; font-size: 12px; margin-left: 20px; margin-bottom: 2px;">
+                                                        <span style="color: #6b7280;">{{ $cat->name }}</span>
+                                                        <span style="font-weight: 600; color: #374151;">{{ number_format($val, 0, ',', '.') }}</span>
+                                                    </div>
+                                                @endforeach
+                                                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-left: 20px; margin-top: 4px; border-top: 1px solid #f1f5f9; padding-top: 2px;">
+                                                    <span style="font-weight: 700; color: #1f2937;">Subtotal Juri</span>
+                                                    <span style="font-weight: 700; color: var(--event-primary, #0072FF);">{{ number_format($jTotal, 0, ',', '.') }}</span>
+                                                </div>
+                                                @php $totalAllJudges += $jTotal; @endphp
                                             </div>
                                         @endforeach
-                                        <div style="border-top: 1px solid #e5e7eb; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; align-items: center;">
-                                            <span style="font-weight: 700; font-size: 14px; color: #1f2937;">Total Akhir</span>
-                                            <span style="font-weight: 800; font-size: 18px; color: var(--event-primary, #0072FF);">{{ number_format($totalAllJudges, 0, ',', '.') }}</span>
+                                        <div style="margin-top: 8px; padding: 8px 12px; background: var(--event-primary, #0072FF); color: #fff; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-weight: 700; font-size: 13px;">TOTAL KESELURUHAN</span>
+                                            <span style="font-weight: 800; font-size: 16px;">{{ number_format($totalAllJudges, 0, ',', '.') }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -236,8 +257,115 @@
                     @endif
 
                     {{-- Form --}}
+                    @if($registration->status_berkas === 'Terverifikasi')
+                        {{-- Verified Data Table View --}}
+                        <div class="wow fadeInUp" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; margin-bottom: 40px;">
+                            <div style="background: #f8fafc; padding: 16px 20px; border-bottom: 1px solid #e5e7eb;">
+                                <h5 style="margin: 0; font-size: 16px; font-weight: 700; color: #1e293b;"><i class="fa fa-clipboard-check" style="margin-right: 8px; color: #10b981;"></i>Data Pendaftaran Terverifikasi</h5>
+                            </div>
+                            <div style="padding: 0;">
+                                <table class="table table-bordered mb-0" style="font-size: 14px;">
+                                    <tbody>
+                                        <tr>
+                                            <th style="width: 200px; background: #f9fafb; color: #64748b; font-weight: 600;">Kategori Lomba</th>
+                                            <td style="font-weight: 700; color: #1e293b;">{{ $registration->competitionCategory->name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th style="background: #f9fafb; color: #64748b; font-weight: 600;">Nama Sekolah</th>
+                                            <td style="font-weight: 700; color: #1e293b;">{{ $registration->nama_sekolah }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th style="background: #f9fafb; color: #64748b; font-weight: 600;">Data Pelatih</th>
+                                            <td>
+                                                <div style="display: flex; align-items: center; gap: 12px;">
+                                                    @if($registration->foto_pelatih)
+                                                        <img src="{{ asset('storage/' . $registration->foto_pelatih) }}" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover;">
+                                                    @endif
+                                                    <div>
+                                                        <div style="font-weight: 700;">{{ $registration->nama_pelatih }}</div>
+                                                        <div style="font-size: 12px; color: #64748b;">HP: {{ $registration->no_hp }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th style="background: #f9fafb; color: #64748b; font-weight: 600;">Berkas Persyaratan</th>
+                                            <td>
+                                                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                                    @if($registration->logo_sekolah)
+                                                        <a href="{{ asset('storage/' . $registration->logo_sekolah) }}" target="_blank" class="btn btn-sm btn-outline-secondary" style="font-size: 11px;"><i class="fa fa-image me-1"></i> Logo</a>
+                                                    @endif
+                                                    @if($registration->surat_tugas)
+                                                        <a href="{{ asset('storage/' . $registration->surat_tugas) }}" target="_blank" class="btn btn-sm btn-outline-secondary" style="font-size: 11px;"><i class="fa fa-file-pdf me-1"></i> Surat Tugas</a>
+                                                    @endif
+                                                    @if($registration->bukti_pendaftaran)
+                                                        <a href="{{ asset('storage/' . $registration->bukti_pendaftaran) }}" target="_blank" class="btn btn-sm btn-outline-secondary" style="font-size: 11px;"><i class="fa fa-receipt me-1"></i> Kwitansi</a>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th style="background: #f9fafb; color: #64748b; font-weight: 600;">Data Danton</th>
+                                            <td>
+                                                <div style="display: flex; align-items: center; gap: 12px;">
+                                                    @if($registration->danton_foto)
+                                                        <img src="{{ asset('storage/' . $registration->danton_foto) }}" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover;">
+                                                    @endif
+                                                    <div>
+                                                        <div style="font-weight: 700;">{{ $registration->danton_nama }}</div>
+                                                        <div style="font-size: 12px; color: #64748b;">NISN: {{ $registration->danton_nisn ?: '-' }}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div style="background: #f8fafc; padding: 12px 20px; border-top: 1px solid #e5e7eb; border-bottom: 1px solid #e5e7eb;">
+                                <h6 style="margin: 0; font-size: 14px; font-weight: 700; color: #475569;"><i class="fa fa-users" style="margin-right: 8px;"></i>Daftar Pasukan ({{ $registration->participants->count() }} Anggota)</h6>
+                            </div>
+                            <div style="padding: 0;">
+                                <table class="table table-striped table-hover mb-0" style="font-size: 13px;">
+                                    <thead style="background: #f1f5f9;">
+                                        <tr>
+                                            <th style="width: 50px; text-align: center;">No</th>
+                                            <th style="width: 60px;">Foto</th>
+                                            <th>Nama Lengkap</th>
+                                            <th>NISN</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($registration->participants as $index => $p)
+                                            <tr>
+                                                <td style="text-align: center; color: #94a3b8;">{{ $index + 1 }}</td>
+                                                <td>
+                                                    @if($p->foto)
+                                                        <img src="{{ asset('storage/' . $p->foto) }}" style="width: 32px; height: 32px; border-radius: 4px; object-fit: cover;">
+                                                    @else
+                                                        <div style="width: 32px; height: 32px; border-radius: 4px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: #94a3b8;"><i class="fa fa-user" style="font-size: 12px;"></i></div>
+                                                    @endif
+                                                </td>
+                                                <td style="font-weight: 600; color: #334155;">{{ $p->nama }}</td>
+                                                <td style="color: #64748b;">{{ $p->nisn ?: '-' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="text-center wow fadeInUp" style="margin-bottom: 60px;">
+                            <span style="display: inline-block; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; border-radius: 30px; padding: 12px 32px; font-weight: 800; font-size: 16px; box-shadow: 0 4px 12px rgba(16,185,129,0.1);">
+                                <i class="fa fa-check-circle" style="margin-right: 8px;"></i> TERVERIFIKASI PANITIA
+                            </span>
+                            <p style="margin-top: 12px; color: #64748b; font-size: 14px;">Data di atas adalah data resmi yang akan digunakan pada saat perlombaan.</p>
+                        </div>
+                    @else
+
+                    {{-- Form (for non-verified) --}}
                     @php
-                        $isLocked = ($registration->is_finalized && $registration->status_berkas !== 'Ditolak') || $registration->status_berkas === 'Terverifikasi';
+                        $isLocked = ($registration->is_finalized && $registration->status_berkas !== 'Ditolak');
                     @endphp
 
                     <fieldset {{ $isLocked ? 'disabled' : '' }}>
@@ -489,19 +617,14 @@
                                 </div>
                             @else
                                 <div class="text-center wow fadeInUp" style="margin-bottom: 40px;">
-                                    @if($registration->status_berkas === 'Terverifikasi')
-                                        <span style="display: inline-block; background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid #10b981; border-radius: 30px; padding: 12px 24px; font-weight: 700; font-size: 16px;">
-                                            <i class="fa fa-check-circle" style="margin-right: 6px;"></i> TERVERIFIKASI PANITIA
-                                        </span>
-                                    @else
-                                        <span style="display: inline-block; background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid #3b82f6; border-radius: 30px; padding: 12px 24px; font-weight: 700; font-size: 16px;">
-                                            <i class="fa fa-clock" style="margin-right: 6px;"></i> MENUNGGU VERIFIKASI
-                                        </span>
-                                    @endif
+                                    <span style="display: inline-block; background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid #3b82f6; border-radius: 30px; padding: 12px 24px; font-weight: 700; font-size: 16px;">
+                                        <i class="fa fa-clock" style="margin-right: 6px;"></i> MENUNGGU VERIFIKASI
+                                    </span>
                                 </div>
                             @endif
                         </form>
                     </fieldset>
+                    @endif
 
                 </div>
             </div>

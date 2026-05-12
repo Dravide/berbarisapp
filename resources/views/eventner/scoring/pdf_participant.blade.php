@@ -230,7 +230,7 @@
 
     @php
         use chillerlan\QRCode\QRCode;
-        $qrData = url('/event/' . $eventner->slug);
+        $qrData = route('magic.link', $registration->magic_token);
         $qrImage = (new QRCode)->render($qrData);
     @endphp
 

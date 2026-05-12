@@ -17,6 +17,7 @@ class Index extends Component
     public $eventner;
     public $name = '';
     public $description = '';
+    public $quantity = 1;
     public $selectedAssessmentCategories = [];
     public $editingId = null;
     public $showForm = false;
@@ -68,6 +69,7 @@ class Index extends Component
         $this->editingId = $id;
         $this->name = $champion->name;
         $this->description = $champion->description ?? '';
+        $this->quantity = $champion->quantity ?? 1;
         $this->selectedAssessmentCategories = $champion->assessmentCategories()->pluck('assessment_categories.id')->map(fn($id) => (string) $id)->toArray();
         $this->showForm = true;
     }
@@ -76,9 +78,11 @@ class Index extends Component
     {
         $this->validate([
             'name' => 'required|string|max:255',
+            'quantity' => 'required|integer|min:1',
             'selectedAssessmentCategories' => 'required|array|min:1',
         ], [
             'name.required' => 'Nama kategori juara wajib diisi.',
+            'quantity.required' => 'Jumlah juara wajib diisi.',
             'selectedAssessmentCategories.required' => 'Pilih minimal satu rubrik penilaian.',
             'selectedAssessmentCategories.min' => 'Pilih minimal satu rubrik penilaian.',
         ]);
@@ -87,6 +91,7 @@ class Index extends Component
             'eventner_id' => $this->eventner->id,
             'name' => strip_tags($this->name),
             'description' => strip_tags($this->description) ?: null,
+            'quantity' => $this->quantity,
         ];
 
         if ($this->editingId) {
@@ -119,6 +124,7 @@ class Index extends Component
     {
         $this->name = '';
         $this->description = '';
+        $this->quantity = 1;
         $this->selectedAssessmentCategories = [];
         $this->editingId = null;
         $this->showForm = false;
@@ -260,6 +266,9 @@ class Index extends Component
                 }
 
                 usort($participantScores, fn($a, $b) => $b['total'] <=> $a['total']);
+
+                // Only take Top N based on quantity
+                $participantScores = array_slice($participantScores, 0, $champion->quantity);
 
                 $rank = 1;
                 foreach ($participantScores as $index => &$ps) {

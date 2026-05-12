@@ -69,6 +69,9 @@ class ChampionCategoryController extends Controller
 
             usort($participantScores, fn($a, $b) => $b['total'] <=> $a['total']);
 
+            // Limit by quantity
+            $participantScores = array_slice($participantScores, 0, $champion->quantity);
+
             $rank = 1;
             foreach ($participantScores as $index => &$ps) {
                 if ($index > 0 && $ps['total'] < $participantScores[$index - 1]['total']) {
