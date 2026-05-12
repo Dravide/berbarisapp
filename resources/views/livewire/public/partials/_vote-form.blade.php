@@ -43,11 +43,11 @@
         <div style="background: #f8fafc; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
                 <span style="color: #6b7280; font-size: 14px;">Harga per Vote</span>
-                <span style="font-weight: 600; font-size: 14px;">Rp 1.000</span>
+                <span style="font-weight: 600; font-size: 14px;">Rp {{ number_format($eventner->vote_price ?? 1000, 0, ',', '.') }}</span>
             </div>
             <div style="border-top: 1px solid #e5e7eb; padding-top: 6px; display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-weight: 700; font-size: 15px;">Total Bayar</span>
-                <span style="font-weight: 800; color: var(--event-primary, #0072FF); font-size: 20px;" x-text="'Rp ' + (Number($wire.voteCount || 0) * 1000).toLocaleString('id-ID')">Rp {{ number_format((int)$voteCount * 1000, 0, ',', '.') }}</span>
+                <span style="font-weight: 800; color: var(--event-primary, #0072FF); font-size: 20px;" x-text="'Rp ' + (Number($wire.voteCount || 0) * {{ $eventner->vote_price ?? 1000 }}).toLocaleString('id-ID')">Rp {{ number_format((int)$voteCount * ($eventner->vote_price ?? 1000), 0, ',', '.') }}</span>
             </div>
         </div>
 

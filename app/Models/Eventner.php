@@ -37,6 +37,8 @@ class Eventner extends Model
         'ticket_max_per_order',
         'theme_config',
         'registration_status',
+        'vote_active',
+        'vote_price',
     ];
 
     protected $casts = [

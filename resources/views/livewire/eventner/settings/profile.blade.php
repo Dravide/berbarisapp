@@ -190,25 +190,45 @@
                                 @error('longitude') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                             </div>
 
-                            <div class="col-md-12 mb-4">
-                                <div class="alert alert-warning mb-0 border-0 fs-3 py-3">
-                                    <h6 class="fw-semibold mb-2"><i class="ti ti-lock"></i> Kunci Layar Pengundian (Opsional)</h6>
-                                    <label class="form-label mb-1">Maukah Anda memproteksi Halaman Spin Pengundian agar tidak semua orang bisa memutarnya?</label>
-                                    <input type="text" class="form-control mt-1 w-50" wire:model="drawing_code" placeholder="Misal: 123456">
-                                    <small class="form-text mt-1 d-block">Kosongkan jika Anda ingin layar pengundian bisa langsung diakses tanpa kode.</small>
-                                    @error('drawing_code') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="alert alert-warning mb-0 border-0 fs-3 py-3 h-100">
+                                    <h6 class="fw-semibold mb-2"><i class="ti ti-heart"></i> Fitur Vote Online</h6>
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" wire:model.live="vote_active" id="voteActive">
+                                        <label class="form-check-label fw-bold" for="voteActive">Aktifkan Vote Online</label>
+                                    </div>
+                                    @if($vote_active)
+                                    <div class="mt-2">
+                                        <label class="form-label mb-1">Harga per 1 Vote (Rp)</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">Rp</span>
+                                            <input type="number" class="form-control" wire:model="vote_price" placeholder="1000">
+                                        </div>
+                                        <small class="form-text text-muted">Biaya yang dikenakan kepada pendukung untuk setiap poin vote.</small>
+                                    </div>
+                                    @endif
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-info mb-0 border-0 fs-3 py-3 h-100">
+                                    <h6 class="fw-semibold mb-2"><i class="ti ti-lock"></i> Kunci Layar Pengundian</h6>
+                                    <label class="form-label mb-1">Proteksi Halaman Spin Pengundian dengan kode.</label>
+                                    <input type="text" class="form-control mt-1" wire:model="drawing_code" placeholder="Misal: 123456">
+                                    <small class="form-text mt-1 d-block">Kosongkan jika tidak ingin diproteksi.</small>
+                                </div>
+                            </div>
+                        </div>
 
-                            <div class="col-md-12 mb-4">
-                                <div class="alert alert-info mb-0 border-0 fs-3 py-3">
-                                    <h6 class="fw-semibold mb-2"><i class="ti ti-key"></i> Kode Akses Input Nilai / Scoring (Opsional)</h6>
-                                    <label class="form-label mb-1">Proteksi halaman input nilai panitia dengan kode rahasia.</label>
-                                    <input type="text" class="form-control mt-1 w-50" wire:model="scoring_code" placeholder="Misal: SCORE2026">
-                                    <small class="form-text mt-1 d-block">Kode ini digunakan panitia untuk masuk ke <strong>halaman input nilai</strong> (<code>/event/{slug}/scoring</code>). Kosongkan jika tidak ingin diproteksi.</small>
-                                    @error('scoring_code') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                                </div>
+                        <div class="col-md-12 mb-4">
+                            <div class="alert alert-primary mb-0 border-0 fs-3 py-3">
+                                <h6 class="fw-semibold mb-2"><i class="ti ti-key"></i> Kode Akses Input Nilai / Scoring (Opsional)</h6>
+                                <label class="form-label mb-1">Proteksi halaman input nilai panitia dengan kode rahasia.</label>
+                                <input type="text" class="form-control mt-1 w-50" wire:model="scoring_code" placeholder="Misal: SCORE2026">
+                                <small class="form-text mt-1 d-block">Kode ini digunakan panitia untuk masuk ke <strong>halaman input nilai</strong> (<code>/event/{slug}/scoring</code>). Kosongkan jika tidak ingin diproteksi.</small>
+                                @error('scoring_code') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                             </div>
+                        </div>
                         </div>
 
                         <hr class="my-4">

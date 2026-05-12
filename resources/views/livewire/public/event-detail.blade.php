@@ -51,9 +51,11 @@
 
                         {{-- CTA Buttons --}}
                         <div class="d-flex flex-wrap gap-2 mt-3">
+                            @if($eventner->vote_active)
                             <a href="{{ route('event.vote', $eventner->slug) }}" style="background: #f59e0b; color: #fff; border-radius: 30px; padding: 10px 20px; font-weight: 600; font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
                                 <i class="fa fa-heart"></i> Vote Online
                             </a>
+                            @endif
                             <a href="{{ route('event.participant', $eventner->slug) }}" style="background: #fff; color: var(--event-primary, #0072FF); border-radius: 30px; padding: 10px 20px; font-weight: 600; font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
                                 <i class="fa fa-users"></i> Peserta
                             </a>

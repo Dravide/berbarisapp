@@ -34,6 +34,8 @@ class Profile extends Component
     public $link_whatsapp;
     public $link_livestreaming;
     public $registration_status = 'open';
+    public $vote_active = true;
+    public $vote_price = 1000;
 
     public $drawing_code;
     public $scoring_code;
@@ -74,6 +76,8 @@ class Profile extends Component
         $this->link_whatsapp = $eventner->link_whatsapp;
         $this->link_livestreaming = $eventner->link_livestreaming;
         $this->registration_status = $eventner->registration_status ?? 'open';
+        $this->vote_active = (bool)($eventner->vote_active ?? true);
+        $this->vote_price = $eventner->vote_price ?? 1000;
         $this->drawing_code = $eventner->drawing_code;
         $this->scoring_code = $eventner->scoring_code;
 
@@ -106,6 +110,8 @@ class Profile extends Component
             'link_whatsapp' => 'nullable|string|max:255',
             'link_livestreaming' => 'nullable|url|max:255',
             'registration_status' => 'required|in:open,booking,closed',
+            'vote_active' => 'required|boolean',
+            'vote_price' => 'required|numeric|min:0',
             'drawing_code' => 'nullable|string|max:255',
             'scoring_code' => 'nullable|string|max:255',
             'newLogo' => 'nullable|image|max:2048', 
@@ -155,6 +161,8 @@ class Profile extends Component
             'link_whatsapp' => strip_tags($this->link_whatsapp),
             'link_livestreaming' => strip_tags($this->link_livestreaming),
             'registration_status' => $this->registration_status,
+            'vote_active' => $this->vote_active,
+            'vote_price' => $this->vote_price,
             'drawing_code' => strip_tags($this->drawing_code),
             'scoring_code' => strip_tags($this->scoring_code),
             'logo_event' => $eventner->logo_event,

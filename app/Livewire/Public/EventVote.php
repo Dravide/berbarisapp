@@ -48,6 +48,10 @@ class EventVote extends Component
     {
         $this->eventner = Eventner::where('slug', $slug)->firstOrFail();
 
+        if (!$this->eventner->vote_active) {
+            abort(403, 'Fitur Vote Online untuk event ini tidak aktif.');
+        }
+
         if ($this->selectedCategoryId) {
             $this->view = 'participants';
         }
@@ -90,9 +94,14 @@ class EventVote extends Component
 
         RateLimiter::hit('vote-submit:' . request()->ip(), $decaySeconds = 60);
 
+        if (!$this->eventner->vote_active) {
+            session()->flash('error', 'Fitur Vote Online sudah ditutup.');
+            return;
+        }
+
         $this->validate();
 
-        $amount = $this->voteCount * 1000;
+        $amount = $this->voteCount * ($this->eventner->vote_price ?? 1000);
 
         try {
             // Generate QRIS via AutoGoPay
