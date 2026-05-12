@@ -102,7 +102,7 @@
                                 <h2 style="font-weight: 700; margin-bottom: 4px; font-size: 24px; color: #1f2937;">{{ $currentSchool->nama_sekolah }}</h2>
                                 <p style="color: #6b7280; font-size: 14px; margin-bottom: 32px;">NPSN: {{ $currentSchool->npsn }}</p>
 
-                                <div x-data="window.spinnerWidget()" style="width: 100%; max-width: 320px; margin: 0 auto;">
+                                <div wire:key="spinner-{{ $currentSchool->id }}" x-data="window.spinnerWidget()" style="width: 100%; max-width: 320px; margin: 0 auto;">
                                     <div style="position: relative; margin: 0 auto 32px; width: 200px; height: 200px; display: flex; align-items: center; justify-content: center;">
                                         <!-- Spinning outer ring -->
                                         <div 
