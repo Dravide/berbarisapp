@@ -126,12 +126,26 @@
                     @if($undrawnParticipants->count() > 0)
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Peserta</label>
-                            <select class="form-select form-select-sm" id="select2-participant" wire:ignore>
-                                <option value="">-- Cari Peserta --</option>
-                                @foreach($undrawnParticipants as $p)
-                                    <option value="{{ $p->id }}" {{ (string) $manualRegistrationId === (string) $p->id ? 'selected' : '' }}>{{ $p->nama_sekolah }} ({{ $p->npsn }})</option>
-                                @endforeach
-                            </select>
+                            <div wire:ignore x-data="{
+                                init() {
+                                    const el = $(this.$refs.select);
+                                    el.select2({
+                                        placeholder: '-- Cari Peserta --',
+                                        allowClear: true,
+                                        width: '100%'
+                                    });
+                                    el.on('change', () => {
+                                        $wire.set('manualRegistrationId', el.val() || null);
+                                    });
+                                }
+                            }">
+                                <select x-ref="select" class="form-select form-select-sm" id="select2-participant">
+                                    <option value="">-- Cari Peserta --</option>
+                                    @foreach($undrawnParticipants as $p)
+                                        <option value="{{ $p->id }}" {{ (string) $manualRegistrationId === (string) $p->id ? 'selected' : '' }}>{{ $p->nama_sekolah }} ({{ $p->npsn }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             @error('manualRegistrationId')
                                 <span class="text-danger fs-2">{{ $message }}</span>
                             @enderror
@@ -180,36 +194,6 @@
 
     @once
     <link rel="stylesheet" href="{{ asset('templates/assets/libs/select2/dist/css/select2.min.css') }}">
-    @endonce
-
-    @script
     <script src="{{ asset('templates/assets/libs/select2/dist/js/select2.full.min.js') }}"></script>
-    <script>
-        function initSelect2() {
-            const sel = $('#select2-participant');
-            if (sel.length && !sel.hasClass('select2-hidden-accessible')) {
-                sel.select2({
-                    placeholder: '-- Cari Peserta --',
-                    allowClear: true,
-                    width: '100%'
-                });
-                sel.on('change', function() {
-                    Livewire.find('{{ $this->getId() }}').set('manualRegistrationId', $(this).val() || null);
-                });
-            }
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initSelect2);
-        } else {
-            initSelect2();
-        }
-
-        Livewire.hook('element.updated', (el) => {
-            if ($(el).find('#select2-participant').length) {
-                setTimeout(initSelect2, 100);
-            }
-        });
-    </script>
-    @endscript
+    @endonce
 </div>
