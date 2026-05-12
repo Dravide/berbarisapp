@@ -97,6 +97,7 @@
                             <thead>
                                 <tr style="background: #f8fafc; border-bottom: 1px solid #e5e7eb;">
                                     <th style="padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; color: #6b7280; width: 40px;">No</th>
+                                    <th style="padding: 12px 16px; text-align: center; font-weight: 600; font-size: 13px; color: #6b7280; width: 90px;">No. Undian</th>
                                     <th style="padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; color: #6b7280;">Sekolah / Kontingen</th>
                                     <th style="padding: 12px 16px; text-align: left; font-weight: 600; font-size: 13px; color: #6b7280;">Pelatih</th>
                                     <th style="padding: 12px 16px; text-align: center; font-weight: 600; font-size: 13px; color: #6b7280;">Pasukan</th>
@@ -107,6 +108,15 @@
                                 @foreach($cat->registrations as $idx => $reg)
                                 <tr style="border-bottom: 1px solid #f3f4f6;">
                                     <td style="padding: 12px 16px; font-weight: 600; color: #9ca3af;">{{ $idx + 1 }}</td>
+                                    <td style="padding: 12px 16px; text-align: center;">
+                                        @if($reg->urutan_tampil)
+                                            <span style="background: rgba(245,158,11,0.1); color: #f59e0b; padding: 4px 10px; border-radius: 8px; font-size: 14px; font-weight: 700; border: 1px solid rgba(245,158,11,0.2); min-width: 40px; display: inline-block;">
+                                                {{ str_pad($reg->urutan_tampil, 2, '0', STR_PAD_LEFT) }}
+                                            </span>
+                                        @else
+                                            <span style="color: #cbd5e1; font-size: 12px;">—</span>
+                                        @endif
+                                    </td>
                                     <td style="padding: 12px 16px;">
                                         <div style="display: flex; align-items: center; gap: 10px;">
                                             @if($reg->logo_sekolah)
