@@ -16,7 +16,7 @@
     <meta name="description" content="{{ $eventner?->nama_event ?? get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu') }}">
 
     {{-- Fonts --}}
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Raleway:wght@600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
 
     {{-- Zubaz CSS --}}
     <link rel="stylesheet" href="{{ asset('templates/zubaz/assets/css/bootstrap.min.css') }}">
@@ -41,6 +41,16 @@
         }
     </style>
     @endisset
+
+    <style>
+        :root {
+            --body-font: 'DM Sans', sans-serif;
+            --heading-font: 'DM Sans', sans-serif;
+        }
+        body, h1, h2, h3, h4, h5, h6, .zubuz-header-section, .zubuz-footer-section, .nav-link-item, .zubuz-default-btn {
+            font-family: 'DM Sans', sans-serif !important;
+        }
+    </style>
 
     <style>
         /* Mobile-first responsive fixes */

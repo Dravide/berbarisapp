@@ -20,8 +20,8 @@ Defined in `assets/css/app.css`.
 | **Gray** | `--gray-color` | `#414141` | Borders, meta text, muted labels. |
 
 ### Typography
-- **Headings Font:** `Raleway`, sans-serif (700 Bold)
-- **Body Font:** `Inter`, sans-serif (400 Regular, 600 SemiBold)
+- **Primary Font:** `DM Sans`, sans-serif (Weights: 400, 500, 600, 700)
+- **Usage:** Applied globally to both Headings and Body content for a unified modern look.
 
 ---
 
