@@ -15,6 +15,7 @@ class AssessmentScore extends Model
         'registration_id',
         'assessment_criteria_id',
         'score',
+        'is_finalized',
     ];
 
     public function eventner()

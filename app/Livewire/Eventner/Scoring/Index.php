@@ -22,6 +22,7 @@ class Index extends Component
     public $selectedRegistration;
     public $scores = []; // [criteria_id => 'score_value']
     public $saveStatus = ''; // '', 'saved', 'error'
+    public $isFinalized = false;
 
     // Judge support
     public $selectedJudgeId;
@@ -60,6 +61,7 @@ class Index extends Component
         $this->selectedRegistration = null;
         $this->selectedJudgeId = null;
         $this->judges = [];
+        $this->isFinalized = false;
     }
 
     public function selectParticipant($id)
@@ -107,11 +109,13 @@ class Index extends Component
         $this->saveStatus = '';
         $this->selectedJudgeId = null;
         $this->judges = [];
+        $this->isFinalized = false;
     }
 
     public function loadExistingScores()
     {
         $this->scores = [];
+        $this->isFinalized = false;
 
         if (!$this->selectedJudgeId) {
             return;
@@ -124,12 +128,15 @@ class Index extends Component
 
         foreach ($existingScores as $score) {
             $this->scores[$score->assessment_criteria_id] = $score->score;
+            if ($score->is_finalized) {
+                $this->isFinalized = true;
+            }
         }
     }
 
     public function saveScores()
     {
-        if (!$this->selectedJudgeId) {
+        if (!$this->selectedJudgeId || $this->isFinalized) {
             $this->saveStatus = 'error';
             return;
         }
@@ -157,6 +164,26 @@ class Index extends Component
         }
 
         $this->saveStatus = 'saved';
+    }
+
+    public function finalizeScores()
+    {
+        if (!$this->selectedJudgeId || $this->isFinalized) {
+            return;
+        }
+
+        // Save scores first to ensure latest data is finalized
+        $this->saveScores();
+
+        // Mark all scores for this judge and registration as finalized
+        AssessmentScore::where('registration_id', $this->selectedRegistrationId)
+            ->where('eventner_id', $this->eventner->id)
+            ->where('judge_id', $this->selectedJudgeId)
+            ->update(['is_finalized' => true]);
+
+        $this->isFinalized = true;
+        $this->saveStatus = 'finalized';
+        session()->flash('success', 'Penilaian berhasil difinalisasi dan dikunci.');
     }
 
     public function resetScores()

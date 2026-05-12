@@ -219,13 +219,16 @@
                                                             <td class="fw-semibold">{{ $criteria->name }}</td>
                                                             <td class="text-end" style="white-space:nowrap;">
                                                                 <div class="d-flex gap-1 justify-content-end">
-                                                                    @foreach($criteria->score_options as $option)
-                                                                        <button type="button"
-                                                                            wire:click="$set('scores.{{ $criteria->id }}', '{{ $option }}')"
-                                                                            class="btn btn-sm {{ isset($scores[$criteria->id]) && $scores[$criteria->id] == $option ? 'btn-primary' : 'btn-outline-primary' }} px-3 fw-semibold">
-                                                                            {{ $option }}
-                                                                        </button>
-                                                                    @endforeach
+                                                                     @foreach($criteria->score_options as $option)
+                                                                         <button type="button"
+                                                                             @if(!$isFinalized)
+                                                                             wire:click="$set('scores.{{ $criteria->id }}', '{{ $option }}')"
+                                                                             @endif
+                                                                             {{ $isFinalized ? 'disabled' : '' }}
+                                                                             class="btn btn-sm {{ isset($scores[$criteria->id]) && $scores[$criteria->id] == $option ? 'btn-primary' : 'btn-outline-primary' }} px-3 fw-semibold">
+                                                                             {{ $option }}
+                                                                         </button>
+                                                                     @endforeach
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -254,6 +257,16 @@
                             <div class="alert alert-success border-0 bg-success-subtle text-success d-flex align-items-center gap-2 mb-4">
                                 <i class="ti ti-check-circle fs-5"></i>
                                 Nilai berhasil disimpan!
+                            </div>
+                        @endif
+
+                        @if($isFinalized)
+                            <div class="alert alert-danger border-0 bg-danger-subtle text-danger d-flex align-items-center gap-2 mb-4">
+                                <i class="ti ti-lock fs-5"></i>
+                                <div>
+                                    <strong class="d-block">Nilai Terkunci</strong>
+                                    <span class="small">Penilaian untuk juri ini telah difinalisasi.</span>
+                                </div>
                             </div>
                         @endif
 
@@ -340,17 +353,32 @@
                             </div>
                         </div>
 
-                        @if($totalCriteria > 0)
+                        @if($totalCriteria > 0 && !$isFinalized)
                             <button wire:click="saveScores"
                                     class="btn btn-primary w-100 py-8 fw-semibold mb-2"
                                     wire:loading.attr="disabled">
                                 <span wire:loading.remove wire:target="saveScores">
-                                    <i class="ti ti-device-floppy me-2"></i> Simpan Semua Nilai
+                                    <i class="ti ti-device-floppy me-2"></i> Simpan Penilaian
                                 </span>
                                 <span wire:loading wire:target="saveScores">
                                     <span class="spinner-border spinner-border-sm me-2"></span> Menyimpan...
                                 </span>
                             </button>
+
+                            @if($filledCount == $totalCriteria)
+                                <button wire:click="finalizeScores"
+                                        class="btn btn-success w-100 py-2 fw-semibold mb-2"
+                                        wire:loading.attr="disabled"
+                                        onclick="return confirm('Yakin ingin memfinalisasi nilai? Setelah difinalisasi, nilai tidak dapat diubah kembali.')">
+                                    <span wire:loading.remove wire:target="finalizeScores">
+                                        <i class="ti ti-lock me-2"></i> Finalisasi & Kunci Nilai
+                                    </span>
+                                    <span wire:loading wire:target="finalizeScores">
+                                        <span class="spinner-border spinner-border-sm me-2"></span> Memproses...
+                                    </span>
+                                </button>
+                            @endif
+
                             <button wire:click="resetScores"
                                     class="btn btn-outline-danger w-100 py-2 fw-semibold mb-3"
                                     wire:loading.attr="disabled"
