@@ -71,6 +71,16 @@ class EventVote extends Component
         $this->selectedRegistrationId = $id;
     }
 
+    public function incrementVote()
+    {
+        $this->voteCount = (int)$this->voteCount + 1;
+    }
+
+    public function decrementVote()
+    {
+        $this->voteCount = max(1, (int)$this->voteCount - 1);
+    }
+
     public function submitVote()
     {
         if (RateLimiter::tooManyAttempts('vote-submit:' . request()->ip(), $maxAttempts = 5)) {

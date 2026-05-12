@@ -242,6 +242,30 @@
                                 @endif
                             </div>
                         </div>
+
+                        @php
+                            $topRegistration = $cat->registrations->sortByDesc('total_votes')->first();
+                        @endphp
+                        @if($topRegistration && $topRegistration->total_votes > 0)
+                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed #e5e7eb;">
+                            <p style="font-size: 11px; font-weight: 700; color: #9ca3af; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Vote Tertinggi Sementara</p>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                @if($topRegistration->logo_sekolah)
+                                    <img src="{{ asset('storage/' . $topRegistration->logo_sekolah) }}" style="width: 36px; height: 36px; border-radius: 8px; object-fit: contain; border: 1px solid #e5e7eb; padding: 2px;" alt="">
+                                @else
+                                    <div style="width: 36px; height: 36px; border-radius: 8px; background: #f3f4f6; display: flex; align-items: center; justify-content: center; border: 1px solid #e5e7eb;">
+                                        <i class="fa fa-school" style="color: #9ca3af; font-size: 14px;"></i>
+                                    </div>
+                                @endif
+                                <div style="min-width: 0; flex-grow: 1;">
+                                    <p style="margin: 0; font-size: 14px; font-weight: 700; color: #1f2937; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $topRegistration->nama_sekolah }}">{{ $topRegistration->nama_sekolah }}</p>
+                                    <span style="font-size: 13px; font-weight: 700; color: #f59e0b; display: inline-flex; align-items: center; background: rgba(245, 158, 11, 0.1); padding: 2px 8px; border-radius: 12px;">
+                                        <i class="fa fa-fire" style="margin-right: 4px;"></i>{{ number_format($topRegistration->total_votes, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
                 @endforeach

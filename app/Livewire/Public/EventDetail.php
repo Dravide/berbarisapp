@@ -14,7 +14,11 @@ class EventDetail extends Component
 
     public function mount($slug)
     {
-        $this->eventner = Eventner::with(['competitionCategories.registrations.participants'])
+        $this->eventner = Eventner::with(['competitionCategories.registrations' => function ($query) {
+            $query->withSum(['voteTransactions as total_votes' => function($q) {
+                $q->where('status', 'PAID');
+            }], 'votes_earned');
+        }, 'competitionCategories.registrations.participants'])
             ->where('slug', $slug)->firstOrFail();
     }
 

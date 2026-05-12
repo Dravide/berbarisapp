@@ -12,9 +12,9 @@
         <div style="margin-bottom: 18px;">
             <label style="font-weight: 600; display: block; margin-bottom: 6px; font-size: 14px;">Jumlah Vote</label>
             <div style="display: flex;">
-                <button type="button" x-on:click="$wire.voteCount = Math.max(1, Number($wire.voteCount) - 1)" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 10px 0 0 10px; width: 48px; height: 48px; cursor: pointer; font-size: 20px; color: var(--event-primary, #0072FF); display: flex; align-items: center; justify-content: center;">−</button>
-                <input type="number" wire:model.live="voteCount" style="border: 1px solid #e5e7eb; border-left: none; border-right: none; text-align: center; font-weight: 700; font-size: 18px; width: 100%; padding: 10px; outline: none; height: 48px;" min="1">
-                <button type="button" x-on:click="$wire.voteCount = Number($wire.voteCount) + 1" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 0 10px 10px 0; width: 48px; height: 48px; cursor: pointer; font-size: 20px; color: var(--event-primary, #0072FF); display: flex; align-items: center; justify-content: center;">+</button>
+                <button type="button" wire:click="decrementVote" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 10px 0 0 10px; width: 48px; height: 48px; cursor: pointer; font-size: 20px; color: var(--event-primary, #0072FF); display: flex; align-items: center; justify-content: center;">−</button>
+                <input type="number" wire:model.live.debounce.500ms="voteCount" style="border: 1px solid #e5e7eb; border-left: none; border-right: none; text-align: center; font-weight: 700; font-size: 18px; width: 100%; padding: 10px; outline: none; height: 48px;" min="1">
+                <button type="button" wire:click="incrementVote" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 0 10px 10px 0; width: 48px; height: 48px; cursor: pointer; font-size: 20px; color: var(--event-primary, #0072FF); display: flex; align-items: center; justify-content: center;">+</button>
             </div>
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px;">
                 <button type="button" wire:click="$set('voteCount', 10)" style="background: rgba(0,114,255,0.06); border: 1px solid rgba(0,114,255,0.15); border-radius: 8px; padding: 6px; cursor: pointer; color: var(--event-primary, #0072FF); font-weight: 700; font-size: 13px;">10</button>
