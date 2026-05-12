@@ -263,6 +263,20 @@ class Registration extends Component
         }
     }
 
+    public function getVoteTotalProperty()
+    {
+        return \App\Models\VoteTransaction::where('registration_id', $this->activeRegId)
+            ->where('status', 'PAID')
+            ->sum('votes_earned');
+    }
+
+    public function getIsScoringFinalizedProperty()
+    {
+        return \App\Models\AssessmentScore::where('registration_id', $this->activeRegId)
+            ->where('is_finalized', true)
+            ->exists();
+    }
+
     public function render()
     {
         return view('livewire.public.magic-link.registration')

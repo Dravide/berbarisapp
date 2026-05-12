@@ -99,6 +99,75 @@
                             </p>
                         </div>
                     </div>
+                    {{-- Verified Only: Score & Vote Recap --}}
+                    @if($registration->status_berkas === 'Terverifikasi')
+                        <div class="row g-3 mb-4">
+                            {{-- Score Recap Card --}}
+                            @if($this->is_scoring_finalized)
+                            <div class="col-md-{{ $registration->eventner->vote_active ? '6' : '12' }} wow fadeInUp">
+                                <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; height: 100%;">
+                                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(0,114,255,0.1); display: flex; align-items: center; justify-content: center;">
+                                            <i class="fa fa-trophy" style="color: var(--event-primary, #0072FF);"></i>
+                                        </div>
+                                        <h6 style="margin: 0; font-size: 15px; font-weight: 700;">Rekap Hasil Nilai</h6>
+                                    </div>
+                                    <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px;">Penilaian juri telah selesai dan difinalisasi.</p>
+                                    @php
+                                        $finalScores = \App\Models\AssessmentScore::where('registration_id', $registration->id)
+                                            ->where('is_finalized', true)
+                                            ->with('judge')
+                                            ->get()
+                                            ->groupBy('judge_id');
+
+                                        $totalAllJudges = 0;
+                                    @endphp
+                                    <div style="background: #f8fafc; border-radius: 8px; padding: 12px;">
+                                        @foreach($finalScores as $judgeId => $scores)
+                                            @php
+                                                $judgeTotal = $scores->sum('score');
+                                                $totalAllJudges += $judgeTotal;
+                                                $judgeName = $scores->first()->judge->name;
+                                            @endphp
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px;">
+                                                <span style="color: #6b7280;">{{ $judgeName }}</span>
+                                                <span style="font-weight: 700; color: #1f2937;">{{ number_format($judgeTotal, 0, ',', '.') }}</span>
+                                            </div>
+                                        @endforeach
+                                        <div style="border-top: 1px solid #e5e7eb; margin-top: 8px; padding-top: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                            <span style="font-weight: 700; font-size: 14px; color: #1f2937;">Total Akhir</span>
+                                            <span style="font-weight: 800; font-size: 18px; color: var(--event-primary, #0072FF);">{{ number_format($totalAllJudges, 0, ',', '.') }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
+                            {{-- Vote Recap Card --}}
+                            @if($registration->eventner->vote_active)
+                            <div class="col-md-{{ $this->is_scoring_finalized ? '6' : '12' }} wow fadeInUp">
+                                <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; height: 100%;">
+                                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                        <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(245,158,11,0.1); display: flex; align-items: center; justify-content: center;">
+                                            <i class="fa fa-heart" style="color: #f59e0b;"></i>
+                                        </div>
+                                        <h6 style="margin: 0; font-size: 15px; font-weight: 700;">Rekap Jumlah Vote</h6>
+                                    </div>
+                                    <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px;">Total dukungan (vote online) yang berhasil dikumpulkan.</p>
+                                    <div style="background: rgba(245,158,11,0.05); border: 1px dashed rgba(245,158,11,0.3); border-radius: 10px; padding: 20px; text-align: center;">
+                                        <h2 style="margin: 0; font-weight: 800; color: #f59e0b; font-size: 32px;">{{ number_format($this->vote_total, 0, ',', '.') }}</h2>
+                                        <p style="margin: 4px 0 0; font-size: 13px; font-weight: 600; color: #f59e0b; text-uppercase; letter-spacing: 1px;">Total Vote</p>
+                                    </div>
+                                    <div style="margin-top: 16px; text-align: center;">
+                                        <a href="{{ route('event.vote', $registration->eventner->slug) }}" style="font-size: 13px; color: var(--event-primary, #0072FF); font-weight: 600; text-decoration: none;">
+                                            Lihat Klasemen Vote <i class="fa fa-arrow-right" style="font-size: 10px; margin-left: 4px;"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                    @endif
 
                     {{-- Team Tabs (if multiple registrations) --}}
                     @if($siblingRegistrations->count() > 1)
