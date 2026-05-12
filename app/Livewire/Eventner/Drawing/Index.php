@@ -42,6 +42,7 @@ class Index extends Component
         $this->activeTab = $categoryId;
         $this->manualRegistrationId = null;
         $this->manualUrutan = null;
+        $this->dispatch('reinit-select2');
     }
 
     public function assignManual()
@@ -74,6 +75,7 @@ class Index extends Component
         session()->flash('success', "{$registration->nama_sekolah} mendapat urutan tampil #{$this->manualUrutan}.");
         $this->manualRegistrationId = null;
         $this->manualUrutan = null;
+        $this->dispatch('reinit-select2');
     }
 
     public function removeDrawing($id)
