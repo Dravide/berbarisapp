@@ -90,6 +90,18 @@
                                     </a>
                                 </div>
                                 <div class="col-md-3">
+                                    <a href="{{ route('admin.users.index') }}" class="btn btn-outline-info w-100 py-3 d-flex flex-column align-items-center">
+                                        <i class="ti ti-user-cog fs-8 mb-2"></i>
+                                        <span>Manajemen User</span>
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
+                                    <a href="{{ route('admin.schools.index') }}" class="btn btn-outline-success w-100 py-3 d-flex flex-column align-items-center">
+                                        <i class="ti ti-school fs-8 mb-2"></i>
+                                        <span>Data Sekolah</span>
+                                    </a>
+                                </div>
+                                <div class="col-md-3">
                                     <a href="{{ route('admin.settings.index') }}" class="btn btn-outline-secondary w-100 py-3 d-flex flex-column align-items-center">
                                         <i class="ti ti-settings fs-8 mb-2"></i>
                                         <span>Pengaturan Situs</span>

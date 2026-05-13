@@ -6,6 +6,8 @@ use Livewire\Component;
 use App\Models\AssessmentCategory;
 use App\Models\AssessmentSubCategory;
 use App\Models\AssessmentCriteria;
+use App\Models\DeductionCategory;
+use App\Models\DeductionCriteria;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -310,6 +312,165 @@ class Builder extends Component
     public function cancelEditCriteria()
     {
         $this->reset('editingCriteriaId', 'editCriteriaName', 'editCriteriaScores', 'editCriteriaWeight');
+    }
+
+    // ============================================================
+    // DEDUCTION CATEGORIES & CRITERIA
+    // ============================================================
+
+    public $newDeductionCategoryName = '';
+    public $newDeductionCriteriaNames = [];
+    public $newDeductionCriteriaOptions = [];
+
+    #[\Livewire\Attributes\Computed]
+    public function deductionCategories()
+    {
+        return DeductionCategory::with('criterias')
+            ->where('eventner_id', $this->eventnerId)
+            ->orderBy('sort_order')
+            ->get();
+    }
+
+    public function addDeductionCategory()
+    {
+        $this->validate(['newDeductionCategoryName' => 'required|string|max:255']);
+
+        $maxOrder = DeductionCategory::where('eventner_id', $this->eventnerId)->max('sort_order') ?? 0;
+
+        DeductionCategory::create([
+            'eventner_id' => $this->eventnerId,
+            'name' => strip_tags($this->newDeductionCategoryName),
+            'sort_order' => $maxOrder + 1,
+        ]);
+
+        $this->newDeductionCategoryName = '';
+    }
+
+    public function deleteDeductionCategory($id)
+    {
+        DeductionCategory::where('eventner_id', $this->eventnerId)->findOrFail($id)->delete();
+    }
+
+    public function addDeductionCriteria($categoryId)
+    {
+        DeductionCategory::where('eventner_id', $this->eventnerId)->findOrFail($categoryId);
+
+        $name = $this->newDeductionCriteriaNames[$categoryId] ?? '';
+        $optionsStr = $this->newDeductionCriteriaOptions[$categoryId] ?? '';
+
+        if (empty(trim($name)) || empty(trim($optionsStr))) {
+            return;
+        }
+
+        $options = array_map('trim', explode(',', $optionsStr));
+        $options = array_filter($options, fn($v) => $v !== '');
+
+        if (empty($options)) {
+            return;
+        }
+
+        // Ensure all values are numeric (allow negatives)
+        foreach ($options as $opt) {
+            if (!is_numeric($opt)) {
+                session()->flash('error', 'Semua opsi pengurangan harus berupa angka.');
+                return;
+            }
+        }
+
+        $maxOrder = DeductionCriteria::where('deduction_category_id', $categoryId)->max('sort_order') ?? 0;
+
+        DeductionCriteria::create([
+            'deduction_category_id' => $categoryId,
+            'name' => strip_tags($name),
+            'deduction_options' => array_values($options),
+            'sort_order' => $maxOrder + 1,
+        ]);
+
+        $this->newDeductionCriteriaNames[$categoryId] = '';
+        $this->newDeductionCriteriaOptions[$categoryId] = '';
+    }
+
+    public function deleteDeductionCriteria($id)
+    {
+        DeductionCriteria::whereHas('category', function ($q) {
+            $q->where('eventner_id', $this->eventnerId);
+        })->findOrFail($id)->delete();
+    }
+
+    // Edit Deduction Category
+    public $editingDeductionCategoryId = null;
+    public $editDeductionCategoryName = '';
+
+    public function startEditDeductionCategory($id)
+    {
+        $cat = DeductionCategory::where('eventner_id', $this->eventnerId)->findOrFail($id);
+        $this->editingDeductionCategoryId = $id;
+        $this->editDeductionCategoryName = $cat->name;
+    }
+
+    public function saveEditDeductionCategory()
+    {
+        $this->validate(['editDeductionCategoryName' => 'required|string|max:255']);
+        DeductionCategory::where('eventner_id', $this->eventnerId)
+            ->findOrFail($this->editingDeductionCategoryId)
+            ->update(['name' => strip_tags($this->editDeductionCategoryName)]);
+        $this->reset('editingDeductionCategoryId', 'editDeductionCategoryName');
+    }
+
+    public function cancelEditDeductionCategory()
+    {
+        $this->reset('editingDeductionCategoryId', 'editDeductionCategoryName');
+    }
+
+    // Edit Deduction Criteria
+    public $editingDeductionCriteriaId = null;
+    public $editDeductionCriteriaName = '';
+    public $editDeductionCriteriaOptions = '';
+
+    public function startEditDeductionCriteria($id)
+    {
+        $crit = DeductionCriteria::whereHas('category', function ($q) {
+            $q->where('eventner_id', $this->eventnerId);
+        })->findOrFail($id);
+        $this->editingDeductionCriteriaId = $id;
+        $this->editDeductionCriteriaName = $crit->name;
+        $this->editDeductionCriteriaOptions = implode(',', $crit->deduction_options ?? []);
+    }
+
+    public function saveEditDeductionCriteria()
+    {
+        $this->validate([
+            'editDeductionCriteriaName' => 'required|string|max:255',
+            'editDeductionCriteriaOptions' => 'required|string',
+        ]);
+
+        $options = array_filter(array_map('trim', explode(',', $this->editDeductionCriteriaOptions)), fn($v) => $v !== '');
+
+        if (empty($options)) {
+            return;
+        }
+
+        foreach ($options as $opt) {
+            if (!is_numeric($opt)) {
+                session()->flash('error', 'Semua opsi pengurangan harus berupa angka.');
+                return;
+            }
+        }
+
+        DeductionCriteria::whereHas('category', function ($q) {
+            $q->where('eventner_id', $this->eventnerId);
+        })->findOrFail($this->editingDeductionCriteriaId)
+            ->update([
+                'name' => strip_tags($this->editDeductionCriteriaName),
+                'deduction_options' => array_values($options),
+            ]);
+
+        $this->reset('editingDeductionCriteriaId', 'editDeductionCriteriaName', 'editDeductionCriteriaOptions');
+    }
+
+    public function cancelEditDeductionCriteria()
+    {
+        $this->reset('editingDeductionCriteriaId', 'editDeductionCriteriaName', 'editDeductionCriteriaOptions');
     }
 
     // ============================================================

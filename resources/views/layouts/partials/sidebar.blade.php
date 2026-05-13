@@ -59,11 +59,21 @@
             </a>
           </li>
           <li class="sidebar-item">
-            <a class="sidebar-link" href="javascript:void(0)" aria-expanded="false">
+            <a class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
+              href="{{ route('admin.users.index') }}" aria-expanded="false">
               <span>
-                <i class="ti ti-user-circle"></i>
+                <i class="ti ti-user-cog"></i>
               </span>
-              <span class="hide-menu">Peserta</span>
+              <span class="hide-menu">Manajemen User</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('admin.schools.*') ? 'active' : '' }}"
+              href="{{ route('admin.schools.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-school"></i>
+              </span>
+              <span class="hide-menu">Data Sekolah</span>
             </a>
           </li>
           <li class="sidebar-item">

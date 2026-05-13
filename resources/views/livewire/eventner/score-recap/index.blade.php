@@ -67,6 +67,8 @@
                                         <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">{{ $ac->name }}</h6></th>
                                     @endforeach
                                     <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">Total</h6></th>
+                                    <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0 text-danger">Pengurangan</h6></th>
+                                    <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0 text-dark">Nilai Akhir</h6></th>
                                     <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">PDF</h6></th>
                                 </tr>
                             </thead>
@@ -107,6 +109,16 @@
                                             <span class="badge bg-primary fw-semibold fs-3 px-3">{{ $data['grandTotal'] }}</span>
                                         </td>
                                         <td class="text-center">
+                                            @if($data['totalDeduction'] < 0)
+                                                <span class="badge bg-danger-subtle text-danger fw-semibold fs-3 px-3">{{ $data['totalDeduction'] }}</span>
+                                            @else
+                                                <span class="text-muted">0</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge {{ $data['finalScore'] >= $data['grandTotal'] ? 'bg-primary' : 'bg-dark' }} fw-semibold fs-3 px-3">{{ $data['finalScore'] }}</span>
+                                        </td>
+                                        <td class="text-center">
                                             <a href="{{ route('eventner.scoring.pdf-participant', ['registration_id' => $data['participant']->id]) }}"
                                                class="btn btn-sm btn-outline-danger p-1" target="_blank" title="Download PDF">
                                                 <i class="ti ti-file-type-pdf fs-4"></i>
@@ -124,7 +136,7 @@
                             <div class="card mb-0 bg-success-subtle border-0">
                                 <div class="card-body p-3 text-center">
                                     <p class="text-muted small mb-1 fw-semibold">Nilai Tertinggi</p>
-                                    <h3 class="fw-semibold text-success mb-0">{{ $scoringData->max('grandTotal') }}</h3>
+                                    <h3 class="fw-semibold text-success mb-0">{{ $scoringData->max('finalScore') }}</h3>
                                 </div>
                             </div>
                         </div>
@@ -132,7 +144,7 @@
                             <div class="card mb-0 bg-danger-subtle border-0">
                                 <div class="card-body p-3 text-center">
                                     <p class="text-muted small mb-1 fw-semibold">Nilai Terendah</p>
-                                    <h3 class="fw-semibold text-danger mb-0">{{ $scoringData->min('grandTotal') }}</h3>
+                                    <h3 class="fw-semibold text-danger mb-0">{{ $scoringData->min('finalScore') }}</h3>
                                 </div>
                             </div>
                         </div>
@@ -140,7 +152,7 @@
                             <div class="card mb-0 bg-primary-subtle border-0">
                                 <div class="card-body p-3 text-center">
                                     <p class="text-muted small mb-1 fw-semibold">Rata-rata</p>
-                                    <h3 class="fw-semibold text-primary mb-0">{{ round($scoringData->avg('grandTotal'), 1) }}</h3>
+                                    <h3 class="fw-semibold text-primary mb-0">{{ round($scoringData->avg('finalScore'), 1) }}</h3>
                                 </div>
                             </div>
                         </div>

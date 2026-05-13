@@ -103,4 +103,9 @@ class Eventner extends Model
     {
         return $this->hasMany(Ticket::class);
     }
+
+    public function deductionCategories()
+    {
+        return $this->hasMany(DeductionCategory::class);
+    }
 }

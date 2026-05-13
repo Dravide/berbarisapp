@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\AssessmentCategory;
 use App\Models\AssessmentScore;
 use App\Models\CompetitionCategory;
+use App\Models\DeductionCategory;
 use App\Models\Registration;
+use App\Models\ScoreDeduction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -245,6 +247,10 @@ class ScoringController extends Controller
             'judges' => $judges,
             'judgeScores' => $judgeScores,
             'judgeCategoryTotals' => $judgeCategoryTotals,
+            'deductionCategories' => DeductionCategory::with('criterias')->where('eventner_id', $eventner->id)->orderBy('sort_order')->get(),
+            'scoreDeductions' => ScoreDeduction::where('eventner_id', $eventner->id)->where('registration_id', $registrationId)->get()->keyBy('deduction_criteria_id'),
+            'totalDeduction' => ScoreDeduction::where('eventner_id', $eventner->id)->where('registration_id', $registrationId)->sum('amount'),
+            'finalScore' => $grandTotal + ScoreDeduction::where('eventner_id', $eventner->id)->where('registration_id', $registrationId)->sum('amount'),
         ];
 
         $pdf = Pdf::loadView('eventner.scoring.pdf_participant', $data)

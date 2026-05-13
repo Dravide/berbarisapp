@@ -68,6 +68,11 @@ class Registration extends Model
         return $this->hasMany(VoteTransaction::class);
     }
 
+    public function scoreDeductions()
+    {
+        return $this->hasMany(ScoreDeduction::class);
+    }
+
     public function isBooking(): bool
     {
         return $this->status_berkas === 'booking';

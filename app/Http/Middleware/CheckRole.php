@@ -16,7 +16,17 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        if (auth()->check() && auth()->user()->role === $role) {
+        if (!auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        $user = auth()->user();
+
+        if (!$user->is_active) {
+            return redirect()->route('dashboard')->with('message', 'Akun Anda dinonaktifkan. Hubungi administrator.');
+        }
+
+        if ($user->role === $role) {
             return $next($request);
         }
 

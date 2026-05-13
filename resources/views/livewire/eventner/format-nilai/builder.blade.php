@@ -215,9 +215,127 @@
                     @endif
                 </div>
             </div>
-        </div>
 
-        {{-- Panel Samping: Form Kategori Utama --}}
+            {{-- ========== RUBRIK PENGURANGAN NILAI ========== --}}
+            <div class="card w-100 mt-4">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white fw-semibold"><i class="ti ti-minus-circle me-2"></i>Rubrik Pengurangan Nilai</h5>
+                </div>
+                <div class="card-body bg-light">
+
+                    @if($this->deductionCategories->isEmpty())
+                        <div class="text-center py-4">
+                            <i class="ti ti-math-minus text-muted fs-10 d-block mb-2"></i>
+                            <h5 class="fw-semibold text-muted">Belum ada Rubrik Pengurangan</h5>
+                            <p class="text-muted fs-3">Tambahkan kategori pengurangan di panel kanan.</p>
+                        </div>
+                    @else
+                        <div class="accordion" id="accordionDeductions">
+                            @foreach($this->deductionCategories as $deductionCat)
+                                <div class="accordion-item mb-3 border bg-white">
+                                    <h2 class="accordion-header d-flex align-items-center" id="headingDed-{{ $deductionCat->id }}">
+                                        @if($editingDeductionCategoryId == $deductionCat->id)
+                                            <div class="d-flex align-items-center gap-2 flex-grow-1 px-3 py-2">
+                                                <input type="text" class="form-control form-control-sm" wire:model="editDeductionCategoryName" wire:keydown.enter="saveEditDeductionCategory" wire:keydown.escape="cancelEditDeductionCategory" placeholder="Nama kategori pengurangan...">
+                                                <button class="btn btn-sm btn-success" wire:click="saveEditDeductionCategory" title="Simpan"><i class="ti ti-check"></i></button>
+                                                <button class="btn btn-sm btn-outline-secondary" wire:click="cancelEditDeductionCategory" title="Batal"><i class="ti ti-x"></i></button>
+                                            </div>
+                                        @else
+                                            <button class="accordion-button collapsed fw-semibold fs-5 text-danger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDed-{{ $deductionCat->id }}">
+                                                {{ $deductionCat->name }}
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary border-0" wire:click="startEditDeductionCategory({{ $deductionCat->id }})" title="Edit">
+                                                <i class="ti ti-pencil"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger border-0" wire:click="deleteDeductionCategory({{ $deductionCat->id }})" title="Hapus" onclick="return confirm('Hapus kategori pengurangan ini beserta seluruh kriterianya?') || event.stopImmediatePropagation()">
+                                                <i class="ti ti-trash"></i>
+                                            </button>
+                                        @endif
+                                    </h2>
+                                    <div id="collapseDed-{{ $deductionCat->id }}" class="accordion-collapse collapse" aria-labelledby="headingDed-{{ $deductionCat->id }}" wire:ignore.self>
+                                        <div class="accordion-body bg-white pt-4">
+
+                                            {{-- List Kriteria Pengurangan --}}
+                                            @if($deductionCat->criterias->isNotEmpty())
+                                                <div class="table-responsive mb-3">
+                                                    <table class="table table-sm align-middle mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th class="border-0 fw-semibold">Kriteria Pengurangan</th>
+                                                                <th class="border-0 fw-semibold" width="40%">Opsi Pengurangan</th>
+                                                                <th class="border-0 fw-semibold text-center" width="80px">Aksi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($deductionCat->criterias as $deductionCrit)
+                                                                @if($editingDeductionCriteriaId == $deductionCrit->id)
+                                                                <tr class="table-warning">
+                                                                    <td>
+                                                                        <input type="text" class="form-control form-control-sm" wire:model="editDeductionCriteriaName" wire:keydown.enter="saveEditDeductionCriteria" wire:keydown.escape="cancelEditDeductionCriteria" placeholder="Nama kriteria">
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="text" class="form-control form-control-sm" wire:model="editDeductionCriteriaOptions" placeholder="-5,-10,-15" wire:keydown.enter="saveEditDeductionCriteria">
+                                                                        <span class="text-muted fs-2">Negatif, pisah koma</span>
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <div class="d-flex justify-content-center gap-1">
+                                                                            <button class="btn btn-sm btn-success p-1" wire:click="saveEditDeductionCriteria"><i class="ti ti-check"></i></button>
+                                                                            <button class="btn btn-sm btn-outline-secondary p-1" wire:click="cancelEditDeductionCriteria"><i class="ti ti-x"></i></button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                                @else
+                                                                <tr>
+                                                                    <td class="fw-semibold">{{ $deductionCrit->name }}</td>
+                                                                    <td>
+                                                                        <div class="d-flex flex-wrap gap-1">
+                                                                            @foreach($deductionCrit->deduction_options as $opt)
+                                                                                <span class="badge bg-danger">{{ $opt }}</span>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <div class="d-flex justify-content-center gap-1">
+                                                                            <button class="btn btn-sm btn-outline-primary p-1" wire:click="startEditDeductionCriteria({{ $deductionCrit->id }})"><i class="ti ti-pencil"></i></button>
+                                                                            <button class="btn btn-sm btn-outline-danger p-1" wire:click="deleteDeductionCriteria({{ $deductionCrit->id }})"><i class="ti ti-trash"></i></button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                                @endif
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            @else
+                                                <p class="text-muted fs-3 mb-3"><i>Belum ada kriteria pengurangan.</i></p>
+                                            @endif
+
+                                            {{-- Form Tambah Kriteria Pengurangan --}}
+                                            <div class="bg-light p-3 border border-dashed">
+                                                <h6 class="fs-3 fw-semibold mb-2">Tambah Kriteria Pengurangan</h6>
+                                                <div class="row align-items-end g-2">
+                                                    <div class="col-md-5">
+                                                        <input type="text" class="form-control form-control-sm" wire:model="newDeductionCriteriaNames.{{ $deductionCat->id }}" placeholder="Nama (Cth: Terlambat masuk)">
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <input type="text" class="form-control form-control-sm" wire:model="newDeductionCriteriaOptions.{{ $deductionCat->id }}" placeholder="Opsi pengurangan (Cth: -5,-10,-15)">
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <button class="btn btn-sm btn-danger w-100" wire:click="addDeductionCriteria({{ $deductionCat->id }})">
+                                                            <i class="ti ti-plus me-1"></i>Tambah
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
         <div class="col-md-3">
             <div class="card w-100">
                 <div class="card-body">
@@ -244,6 +362,24 @@
                 </div>
             </div>
 
+            {{-- Form Kategori Pengurangan --}}
+            <div class="card w-100 mt-3">
+                <div class="card-body">
+                    <h5 class="card-title fw-semibold mb-3 text-danger"><i class="ti ti-minus-circle me-1"></i> Kategori Pengurangan</h5>
+                    <p class="fs-3 text-muted">Buat kelompok pengurangan seperti "Pelanggaran Disiplin", "Pelanggaran Teknis".</p>
+                    <form wire:submit="addDeductionCategory">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nama Kategori Pengurangan</label>
+                            <input type="text" class="form-control @error('newDeductionCategoryName') is-invalid @enderror" wire:model="newDeductionCategoryName" placeholder="Cth: Pelanggaran Disiplin" required>
+                            @error('newDeductionCategoryName') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        </div>
+                        <button type="submit" class="btn btn-danger w-100" wire:loading.attr="disabled">
+                            <i class="ti ti-plus me-1"></i> Tambah Pengurangan
+                        </button>
+                    </form>
+                </div>
+            </div>
+
             <button type="button" class="btn btn-warning w-100 mt-3" data-bs-toggle="modal" data-bs-target="#previewModal">
                 <i class="ti ti-eye me-1"></i> Pratinjau Juri
             </button>
@@ -261,7 +397,7 @@
                 </div>
                 <div class="modal-body bg-light">
 
-                    @if($this->categories->isEmpty())
+                    @if($this->categories->isEmpty() && $this->deductionCategories->isEmpty())
                         <div class="alert alert-info border-0 bg-info-subtle">
                             Belum ada format yang dibuat. Silakan tambahkan pada panel utama.
                         </div>
@@ -307,10 +443,49 @@
                                     @endforeach
                                 </div>
                             @endforeach
+
+                            {{-- Preview: Rubrik Pengurangan --}}
+                            @if(!$this->deductionCategories->isEmpty())
+                                <div class="mt-4 pt-3 border-top">
+                                    <div class="bg-danger text-white p-2 fw-semibold mb-3 fs-4">RUBRIK PENGURANGAN NILAI</div>
+                                    @foreach($this->deductionCategories as $deductionCat)
+                                        <div class="ms-3 mb-3">
+                                            <div class="fw-semibold bg-danger-subtle text-danger p-2 mb-2 border">{{ $deductionCat->name }}</div>
+                                            @if($deductionCat->criterias->isNotEmpty())
+                                                <table class="table table-bordered mb-0">
+                                                    <tbody>
+                                                        @foreach($deductionCat->criterias as $deductionCrit)
+                                                            <tr>
+                                                                <td width="40%" class="fw-medium align-middle text-danger">{{ $deductionCrit->name }}</td>
+                                                                <td width="60%" class="text-center align-middle">
+                                                                    <div class="d-flex flex-wrap justify-content-center gap-2">
+                                                                        <div class="form-check form-check-inline m-0">
+                                                                            <input class="form-check-input" type="radio" name="preview_deduction_{{ $deductionCrit->id }}" id="preview_ded_{{ $deductionCrit->id }}_0">
+                                                                            <label class="form-check-label px-2 py-1 border border-success text-success" for="preview_ded_{{ $deductionCrit->id }}_0" style="min-width: 30px; text-align: center;">
+                                                                                0
+                                                                            </label>
+                                                                        </div>
+                                                                        @foreach($deductionCrit->deduction_options as $option)
+                                                                            <div class="form-check form-check-inline m-0">
+                                                                                <input class="form-check-input" type="radio" name="preview_deduction_{{ $deductionCrit->id }}" id="preview_ded_{{ $deductionCrit->id }}_{{ $loop->index + 1 }}">
+                                                                                <label class="form-check-label px-2 py-1 border border-danger text-danger" for="preview_ded_{{ $deductionCrit->id }}_{{ $loop->index + 1 }}" style="min-width: 30px; text-align: center;">
+                                                                                    {{ $option }}
+                                                                                </label>
+                                                                            </div>
+                                                                        @endforeach
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                     @endif
-
-                </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
                     <a href="{{ route('eventner.format-nilai.pdf') }}" target="_blank" class="btn btn-danger">

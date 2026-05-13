@@ -5,8 +5,10 @@ namespace App\Livewire\Eventner\Scoring;
 use App\Models\AssessmentCategory;
 use App\Models\AssessmentScore;
 use App\Models\CompetitionCategory;
+use App\Models\DeductionCategory;
 use App\Models\Judge;
 use App\Models\Registration;
+use App\Models\ScoreDeduction;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
@@ -27,6 +29,11 @@ class Index extends Component
     // Judge support
     public $selectedJudgeId;
     public $judges = [];
+
+    // Deduction support
+    public $deductions = []; // [deduction_criteria_id => amount]
+    public $deductionCategories = [];
+    public $deductionSaveStatus = '';
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -79,6 +86,7 @@ class Index extends Component
         }
 
         $this->loadExistingScores();
+        $this->loadDeductions();
     }
 
     public function updatedSelectedJudgeId()
@@ -110,6 +118,9 @@ class Index extends Component
         $this->selectedJudgeId = null;
         $this->judges = [];
         $this->isFinalized = false;
+        $this->deductions = [];
+        $this->deductionCategories = [];
+        $this->deductionSaveStatus = '';
     }
 
     public function loadExistingScores()
@@ -202,6 +213,57 @@ class Index extends Component
         session()->flash('success', 'Nilai berhasil direset.');
     }
 
+    public function loadDeductions()
+    {
+        $this->deductions = [];
+        $this->deductionSaveStatus = '';
+
+        $this->deductionCategories = DeductionCategory::with('criterias')
+            ->where('eventner_id', $this->eventner->id)
+            ->orderBy('sort_order')
+            ->get();
+
+        // Load existing deductions for this registration
+        $existingDeductions = ScoreDeduction::where('registration_id', $this->selectedRegistrationId)
+            ->where('eventner_id', $this->eventner->id)
+            ->get();
+
+        foreach ($existingDeductions as $deduction) {
+            $this->deductions[$deduction->deduction_criteria_id] = $deduction->amount;
+        }
+    }
+
+    public function saveDeductions()
+    {
+        if (!$this->selectedRegistrationId) {
+            return;
+        }
+
+        foreach ($this->deductions as $criteriaId => $amount) {
+            if ($amount === '' || $amount === null || (int) $amount === 0) {
+                // Remove if set to 0 or empty
+                ScoreDeduction::where('registration_id', $this->selectedRegistrationId)
+                    ->where('eventner_id', $this->eventner->id)
+                    ->where('deduction_criteria_id', $criteriaId)
+                    ->delete();
+                continue;
+            }
+
+            ScoreDeduction::updateOrCreate(
+                [
+                    'registration_id' => $this->selectedRegistrationId,
+                    'eventner_id' => $this->eventner->id,
+                    'deduction_criteria_id' => $criteriaId,
+                ],
+                [
+                    'amount' => (int) $amount,
+                ]
+            );
+        }
+
+        $this->deductionSaveStatus = 'saved';
+    }
+
     public function render()
     {
         $participants = collect();
@@ -265,12 +327,23 @@ class Index extends Component
             }
         }
 
+        // Calculate total deductions for current registration
+        $totalDeductions = 0;
+        if ($this->view === 'scoring') {
+            foreach ($this->deductions as $amount) {
+                if ($amount !== '' && $amount !== null) {
+                    $totalDeductions += abs((int) $amount);
+                }
+            }
+        }
+
         return view('livewire.eventner.scoring.index', [
             'participants' => $participants,
             'selectedCategory' => $selectedCategory,
             'categories' => $this->eventner->competitionCategories->loadCount('registrations'),
             'assessmentCategories' => $assessmentCategories,
             'judgeTotals' => $judgeTotals,
+            'totalDeductions' => $totalDeductions,
         ])->title('Input Nilai - ' . $this->eventner->nama_event);
     }
 }

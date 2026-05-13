@@ -6,6 +6,7 @@ use App\Models\AssessmentCategory;
 use App\Models\AssessmentScore;
 use App\Models\CompetitionCategory;
 use App\Models\Registration;
+use App\Models\ScoreDeduction;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
@@ -65,6 +66,12 @@ class Index extends Component
                 ->get()
                 ->groupBy('registration_id');
 
+            // Load deductions per registration
+            $allDeductions = ScoreDeduction::where('eventner_id', $this->eventner->id)
+                ->whereIn('registration_id', $participants->pluck('id'))
+                ->get()
+                ->groupBy('registration_id');
+
             $data = [];
             foreach ($participants as $participant) {
                 $participantScores = $allScores->get($participant->id, collect());
@@ -91,16 +98,23 @@ class Index extends Component
                     $grandTotal += $catTotal;
                 }
 
+                // Calculate deductions
+                $participantDeductions = $allDeductions->get($participant->id, collect());
+                $totalDeduction = $participantDeductions->sum('amount');
+                $finalScore = $grandTotal + $totalDeduction; // amount is already negative
+
                 $data[] = [
                     'participant' => $participant,
                     'criteriaTotals' => $criteriaTotals,
                     'categoryTotals' => $categoryTotals,
                     'grandTotal' => $grandTotal,
+                    'totalDeduction' => $totalDeduction,
+                    'finalScore' => $finalScore,
                 ];
             }
 
-            // Sort by grand total descending
-            usort($data, fn($a, $b) => $b['grandTotal'] <=> $a['grandTotal']);
+            // Sort by final score descending
+            usort($data, fn($a, $b) => $b['finalScore'] <=> $a['finalScore']);
             $scoringData = collect($data);
         }
 

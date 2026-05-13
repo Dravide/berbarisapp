@@ -212,8 +212,8 @@
     <table class="gt">
         <tr>
             <td class="gt-l">
-                <div class="gt-lb">Total Keseluruhan</div>
-                <div class="gt-v">{{ $grandTotal }}</div>
+                <div class="gt-lb">Nilai Akhir</div>
+                <div class="gt-v">{{ $finalScore }}</div>
             </td>
             <td class="gt-r">
                 <table>
@@ -223,10 +223,55 @@
                             <td class="gv">{{ $categoryTotals[$cat->id] ?? 0 }}</td>
                         </tr>
                     @endforeach
+                    <tr>
+                        <td class="gn" style="font-weight:bold;">Total Nilai Juri</td>
+                        <td class="gv" style="font-weight:bold;">{{ $grandTotal }}</td>
+                    </tr>
+                    @if($totalDeduction < 0)
+                        <tr>
+                            <td class="gn" style="color:#c0392b; font-weight:bold;">Pengurangan</td>
+                            <td class="gv" style="color:#c0392b; font-weight:bold;">{{ $totalDeduction }}</td>
+                        </tr>
+                    @endif
                 </table>
             </td>
         </tr>
     </table>
+
+    {{-- Pengurangan Detail --}}
+    @if($deductionCategories->isNotEmpty() && $totalDeduction < 0)
+        <table class="cat-head" style="margin-top:14px;">
+            <tr>
+                <td class="cat-name" style="background:#c0392b;">Rincian Pengurangan Nilai</td>
+                <td class="cat-score" style="background:#c0392b; color:#fff;">{{ $totalDeduction }} poin</td>
+            </tr>
+        </table>
+        @foreach($deductionCategories as $deductionCat)
+            @if($deductionCat->criterias->isNotEmpty())
+                <table class="krit">
+                    <thead>
+                        <tr>
+                            <th style="color:#c0392b;">{{ $deductionCat->name }}</th>
+                            <th style="width:80px; text-align:center;">Pengurangan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($deductionCat->criterias as $deductionCrit)
+                            @php
+                                $deductionAmount = $scoreDeductions[$deductionCrit->id]->amount ?? 0;
+                            @endphp
+                            @if($deductionAmount != 0)
+                                <tr>
+                                    <td class="cn">{{ $deductionCrit->name }}</td>
+                                    <td class="sv" style="color:#c0392b; background:#fdf2f2;">{{ $deductionAmount }}</td>
+                                </tr>
+                            @endif
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+        @endforeach
+    @endif
 
     @php
         use chillerlan\QRCode\QRCode;

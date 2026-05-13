@@ -330,6 +330,85 @@
                                     </div>
                                 </div>
                             @endif
+
+                            {{-- ========== PENGURANGAN NILAI ========== --}}
+                            @if(count($deductionCategories) > 0)
+                                <div class="border border-danger rounded p-3 mb-4">
+                                    <p class="text-danger small fw-semibold text-uppercase mb-3"><i class="ti ti-minus-circle me-1"></i> Pengurangan Nilai</p>
+                                    @foreach($deductionCategories as $deductionCat)
+                                        <p class="text-muted small fw-bold mb-2">{{ $deductionCat->name }}</p>
+                                        @foreach($deductionCat->criterias as $deductionCrit)
+                                            <div class="mb-3">
+                                                <span class="d-block small fw-semibold mb-1">{{ $deductionCrit->name }}</span>
+                                                <div class="d-flex flex-wrap gap-1">
+                                                    <button type="button"
+                                                        wire:click="$set('deductions.{{ $deductionCrit->id }}', 0)"
+                                                        class="btn btn-sm {{ (isset($deductions[$deductionCrit->id]) && $deductions[$deductionCrit->id] == 0) || !isset($deductions[$deductionCrit->id]) ? 'btn-success' : 'btn-outline-success' }} px-2">
+                                                        0
+                                                    </button>
+                                                    @foreach($deductionCrit->deduction_options as $option)
+                                                        <button type="button"
+                                                            wire:click="$set('deductions.{{ $deductionCrit->id }}', {{ $option }})"
+                                                            class="btn btn-sm {{ isset($deductions[$deductionCrit->id]) && $deductions[$deductionCrit->id] == $option ? 'btn-danger' : 'btn-outline-danger' }} px-2">
+                                                            {{ $option }}
+                                                        </button>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    @endforeach
+
+                                    {{-- Deduction summary --}}
+                                    @php
+                                        $totalDeductions = 0;
+                                        foreach ($deductions as $amount) {
+                                            if ($amount !== '' && $amount !== null) {
+                                                $totalDeductions += abs((int) $amount);
+                                            }
+                                        }
+                                    @endphp
+                                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                        <span class="fw-semibold text-danger small">Total Pengurangan</span>
+                                        <span class="fw-bold text-danger">-{{ $totalDeductions }}</span>
+                                    </div>
+
+                                    @if($deductionSaveStatus === 'saved')
+                                        <div class="alert alert-success py-1 px-2 fs-2 mt-2 mb-0">
+                                            <i class="ti ti-check-circle me-1"></i> Pengurangan disimpan!
+                                        </div>
+                                    @endif
+
+                                    <button wire:click="saveDeductions"
+                                            class="btn btn-danger w-100 py-2 fw-semibold mt-3"
+                                            wire:loading.attr="disabled">
+                                        <span wire:loading.remove wire:target="saveDeductions">
+                                            <i class="ti ti-device-floppy me-1"></i> Simpan Pengurangan
+                                        </span>
+                                        <span wire:loading wire:target="saveDeductions">
+                                            <span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...
+                                        </span>
+                                    </button>
+                                </div>
+
+                                {{-- Final Score --}}
+                                @if($totalDeductions > 0 || $judgeTotals->count() > 0)
+                                    <div class="border rounded p-3 mb-4 bg-dark text-white">
+                                        <p class="text-white text-opacity-75 small fw-semibold text-uppercase mb-2">Nilai Akhir</p>
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="small">Nilai Juri</span>
+                                            <span class="fw-semibold">{{ $judgeTotals->sum('total') }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="small">Pengurangan</span>
+                                            <span class="fw-semibold text-danger">-{{ $totalDeductions }}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center pt-2 border-top border-light">
+                                            <span class="fw-bold">NILAI AKHIR</span>
+                                            <span class="fw-bold fs-4">{{ $judgeTotals->sum('total') - $totalDeductions }}</span>
+                                        </div>
+                                    </div>
+                                @endif
+                            @endif
                         @endif
 
                         {{-- Progress --}}
