@@ -27,7 +27,7 @@
   background: var(--pm-bg);
   min-height: 100vh;
   position: relative;
-  padding-bottom: calc(var(--pm-nav-height) + 20px);
+  padding-bottom: calc(var(--pm-nav-height) + 100px);
 }
 
 /* ---- Hero Section ---- */
@@ -526,12 +526,13 @@
 /* ---- Floating Register Button ---- */
 .pm-fab {
   position: fixed;
-  bottom: calc(var(--pm-nav-height) + 12px);
+  bottom: calc(12px + env(safe-area-inset-bottom));
   left: 50%;
   transform: translateX(-50%);
   width: calc(100% - 32px);
   max-width: 448px;
   z-index: 99;
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .pm-fab .pm-btn {

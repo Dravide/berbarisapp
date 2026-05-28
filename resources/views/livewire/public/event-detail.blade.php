@@ -499,16 +499,19 @@
                         <h4 style="color: #fff; margin: 8px 0;">Scan & Bayar</h4>
                     </div>
                     <div style="padding: 24px; text-align: center;">
-                        <img src="{{ $qrImageUrl }}" alt="QRIS" style="max-width: 200px; border-radius: 8px; margin-bottom: 16px;">
-                        <div style="background: rgba(16,185,129,0.1); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-                            <h3 style="color: #10b981; margin: 0;">Rp {{ number_format($paymentAmount, 0, ',', '.') }}</h3>
-                            <p style="color: var(--pm-text-secondary); margin: 4px 0 0; font-size: 13px;">{{ $voteCount }} vote × Rp {{ number_format($eventner->vote_price ?? 1000, 0, ',', '.') }}</p>
+                        <div style="background: #fff; border: 2px solid var(--pm-border); border-radius: 12px; padding: 16px; display: inline-block; margin-bottom: 16px;">
+                            <img src="{{ $qrImageUrl }}" alt="QRIS" style="width: 200px; max-width: 100%; display: block;">
+                        </div>
+                        <div style="background: rgba(16,185,129,0.1); border-radius: 12px; padding: 16px; margin-bottom: 16px; max-width: 280px; margin-left: auto; margin-right: auto;">
+                            <h3 style="color: #10b981; margin: 0 0 4px;">Rp {{ number_format($paymentAmount, 0, ',', '.') }}</h3>
+                            <p style="color: var(--pm-text-secondary); margin: 0; font-size: 13px;">{{ $voteCount }} vote × Rp {{ number_format($eventner->vote_price ?? 1000, 0, ',', '.') }}</p>
                         </div>
                         <div x-data="{ remaining: '', expired: false, init() { this.updateTimer(); setInterval(() => this.updateTimer(), 1000); }, updateTimer() { const exp = new Date('{{ $expiryTime }}').getTime(); const now = Date.now(); const diff = exp - now; if (diff <= 0) { this.remaining = '00:00'; this.expired = true; return; } const m = Math.floor(diff / 60000); const s = Math.floor((diff % 60000) / 1000); this.remaining = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0'); } }">
-                            <span style="font-weight: 600;">Kedaluwarsa: <span x-text="remaining" style="font-family: monospace;"></span></span>
+                            <span style="font-weight: 600; color: var(--pm-text);">Kedaluwarsa: <span x-text="remaining" style="font-family: monospace; color: #ef4444;"></span></span>
                         </div>
-                        <button wire:click="resetPayment" style="background: none; border: 1px solid var(--pm-border); border-radius: 8px; padding: 10px 20px; margin-top: 16px; cursor: pointer; color: var(--pm-text-secondary);">
-                            <i class="fa fa-arrow-left"></i> Batal
+                        <p style="color: var(--pm-text-secondary); font-size: 12px; margin-top: 12px;">Buka aplikasi e-wallet dan scan QR di atas</p>
+                        <button wire:click="resetPayment" class="pm-btn pm-btn-outline" style="margin-top: 16px;">
+                            <i class="fa fa-arrow-left"></i> Batal & Kembali
                         </button>
                     </div>
                 </div>
@@ -608,12 +611,16 @@
 
                         <div style="margin-bottom: 14px;">
                             <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 6px;">Jumlah Vote</label>
-                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
                                 @foreach([10, 50, 100, 500] as $val)
                                 <button type="button" wire:click="$set('voteCount', {{ $val }})" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; {{ $voteCount == $val ? 'background: var(--pm-primary); color: #fff; border: none;' : 'background: var(--pm-bg); color: var(--pm-primary); border: 1px solid var(--pm-border);' }}">
                                     {{ $val }}
                                 </button>
                                 @endforeach
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 13px; color: var(--pm-text-secondary);">Custom:</span>
+                                <input type="number" wire:model.live.debounce.300ms="voteCount" min="1" max="10000" style="width: 100px; border: 1px solid var(--pm-border); border-radius: 6px; padding: 6px 10px; font-size: 14px; font-weight: 600; text-align: center;">
                             </div>
                         </div>
 
