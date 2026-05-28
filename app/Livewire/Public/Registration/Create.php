@@ -134,7 +134,7 @@ class Create extends Component
 
         $created = [];
         for ($i = 0; $i < $toCreate; $i++) {
-            $suffix = $toCreate > 1 ? ' (Pasukan ' . ($i + 1) . ')' : '';
+            $suffix = $toCreate > 1 ? ' (' . chr(65 + $i) . ')' : '';
             $created[] = Registration::create([
                 'eventner_id' => $this->eventner->id,
                 'competition_category_id' => $cat->id,

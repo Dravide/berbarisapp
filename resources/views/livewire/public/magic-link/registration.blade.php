@@ -88,7 +88,7 @@
                             <h6 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;">{{ $sc[3] }}</h6>
                             <p style="margin: 4px 0 0; font-size: 14px; color: #6b7280;">
                                 @if($registration->status_berkas === 'booking')
-                                    Slot Anda sudah dipesan. Lengkapi data pasukan dan konfirmasi setelah Technical Meeting.
+                                    Slot Anda sudah dipesan. Siapkan data dan berkas pasukan sebelum pengisian dibuka oleh panitia.
                                 @elseif($registration->status_berkas === 'confirmed')
                                     Data telah dikirim ke panitia. Menunggu verifikasi.
                                 @elseif($registration->status_berkas === 'Terverifikasi')
@@ -368,6 +368,87 @@
                         $isLocked = ($registration->is_finalized && $registration->status_berkas !== 'Ditolak');
                     @endphp
 
+                    @if($registration->status_berkas === 'booking')
+                        {{-- Booking: Show preparation info instead of form --}}
+                        <div class="wow fadeInUp" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 24px; overflow: hidden;">
+                            <div style="padding: 16px 20px; border-bottom: 1px solid #e5e7eb; background: #f8fafc;">
+                                <h5 style="margin: 0; font-size: 16px; font-weight: 600; color: #1f2937;"><i class="fa fa-clipboard-list" style="color: var(--event-primary, #0072FF); margin-right: 8px;"></i>Persiapan Data & Berkas</h5>
+                            </div>
+                            <div style="padding: 20px;">
+                                <p style="color: #6b7280; font-size: 14px; margin-bottom: 20px;">Pengisian data pasukan belum dibuka. Silakan persiapkan data dan berkas berikut agar proses pengisian nanti lebih cepat:</p>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div style="background: rgba(0,114,255,0.04); border: 1px solid rgba(0,114,255,0.15); border-radius: 10px; padding: 16px; height: 100%;">
+                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(0,114,255,0.1); display: flex; align-items: center; justify-content: center;">
+                                                    <i class="fa fa-user" style="color: #0072FF; font-size: 14px;"></i>
+                                                </div>
+                                                <h6 style="margin: 0; font-size: 14px; font-weight: 600; color: #1f2937;">Data Pelatih</h6>
+                                            </div>
+                                            <ul style="margin: 0; padding-left: 18px; color: #6b7280; font-size: 13px; line-height: 1.8;">
+                                                <li>Nama lengkap pelatih</li>
+                                                <li>Pas foto pelatih (format JPG/PNG)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div style="background: rgba(0,114,255,0.04); border: 1px solid rgba(0,114,255,0.15); border-radius: 10px; padding: 16px; height: 100%;">
+                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(0,114,255,0.1); display: flex; align-items: center; justify-content: center;">
+                                                    <i class="fa fa-file-alt" style="color: #0072FF; font-size: 14px;"></i>
+                                                </div>
+                                                <h6 style="margin: 0; font-size: 14px; font-weight: 600; color: #1f2937;">Berkas Persyaratan</h6>
+                                            </div>
+                                            <ul style="margin: 0; padding-left: 18px; color: #6b7280; font-size: 13px; line-height: 1.8;">
+                                                <li>Logo sekolah (format JPG/PNG)</li>
+                                                <li>Surat tugas (format PDF/JPG)</li>
+                                                <li>Kwitansi/bukti pendaftaran (format JPG/PNG)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div style="background: rgba(245,158,11,0.04); border: 1px solid rgba(245,158,11,0.15); border-radius: 10px; padding: 16px; height: 100%;">
+                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(245,158,11,0.1); display: flex; align-items: center; justify-content: center;">
+                                                    <i class="fa fa-star" style="color: #f59e0b; font-size: 14px;"></i>
+                                                </div>
+                                                <h6 style="margin: 0; font-size: 14px; font-weight: 600; color: #1f2937;">Komandan Pleton (Danton)</h6>
+                                            </div>
+                                            <ul style="margin: 0; padding-left: 18px; color: #6b7280; font-size: 13px; line-height: 1.8;">
+                                                <li>Nama lengkap danton</li>
+                                                <li>NISN</li>
+                                                <li>Pas foto danton (format JPG/PNG)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div style="background: rgba(16,185,129,0.04); border: 1px solid rgba(16,185,129,0.15); border-radius: 10px; padding: 16px; height: 100%;">
+                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(16,185,129,0.1); display: flex; align-items: center; justify-content: center;">
+                                                    <i class="fa fa-users" style="color: #10b981; font-size: 14px;"></i>
+                                                </div>
+                                                <h6 style="margin: 0; font-size: 14px; font-weight: 600; color: #1f2937;">Anggota Pasukan</h6>
+                                            </div>
+                                            <ul style="margin: 0; padding-left: 18px; color: #6b7280; font-size: 13px; line-height: 1.8;">
+                                                <li>Nama lengkap setiap anggota</li>
+                                                <li>NISN setiap anggota</li>
+                                                <li>Pas foto setiap anggota (format JPG/PNG)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 20px; padding: 14px 18px; background: rgba(59,130,246,0.06); border-radius: 10px; border: 1px dashed rgba(59,130,246,0.3);">
+                                    <p style="margin: 0; font-size: 13px; color: #3b82f6;">
+                                        <i class="fa fa-info-circle" style="margin-right: 6px;"></i>
+                                        Simpan link halaman ini. Pengisian data akan dibuka setelah Technical Meeting atau pengumuman resmi panitia. Anda akan dihubungi melalui email/WhatsApp.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+
                     <fieldset {{ $isLocked ? 'disabled' : '' }}>
 
                         {{-- Nama Pelatih --}}
@@ -624,6 +705,7 @@
                             @endif
                         </form>
                     </fieldset>
+                    @endif {{-- end booking check --}}
                     @endif
 
                 </div>
