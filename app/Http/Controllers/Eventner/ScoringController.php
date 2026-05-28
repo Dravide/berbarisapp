@@ -15,7 +15,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class ScoringController extends Controller
 {
-    public function downloadPdf(Request $request)
+    public function downloadCsv(Request $request)
     {
         $eventner = Auth::user()->eventner;
         if (!$eventner) {

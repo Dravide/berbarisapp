@@ -265,6 +265,32 @@
             </a>
           </li>
           @endif
+
+          {{-- ============================================ --}}
+          {{-- PARTNER & TENANT --}}
+          {{-- ============================================ --}}
+          <li class="nav-small-cap">
+            <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+            <span class="hide-menu">Partner & Tenant</span>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.sponsors.*') ? 'active' : '' }}"
+              href="{{ route('eventner.sponsors.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-brand-artstation"></i>
+              </span>
+              <span class="hide-menu">Sponsor & Partner</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.tenants.*') ? 'active' : '' }}"
+              href="{{ route('eventner.tenants.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-building-store"></i>
+              </span>
+              <span class="hide-menu">Tenant / Stand</span>
+            </a>
+          </li>
         @endif
       </ul>
     </nav>

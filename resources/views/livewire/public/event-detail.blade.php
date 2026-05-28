@@ -309,6 +309,110 @@
     </div>
     @endif
 
+    {{-- Tenants Section --}}
+    @if($eventner->tenants->count() > 0)
+    <div class="section zubuz-section-padding3" style="background: #f8fafc;">
+        <div class="container">
+            <div class="zubuz-section-title center wow fadeInUp">
+                <h2>Tenant & Stand Bazaar</h2>
+                <p>Kunjungi berbagai stand kuliner, minuman, souvenir, dan tenant seru lainnya di area perlombaan!</p>
+            </div>
+            <div class="row g-4 justify-content-center">
+                @foreach($eventner->tenants as $tenant)
+                <div class="col-xl-3 col-lg-4 col-md-6 wow fadeInUp">
+                    <div style="background: #fff; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; height: 100%; display: flex; flex-direction: column; transition: transform 0.3s;" onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <div style="text-align: center; margin-bottom: 14px;">
+                            @if($tenant->logo)
+                                <img src="{{ asset('storage/' . $tenant->logo) }}" alt="{{ $tenant->name }}" style="width: 80px; height: 80px; border-radius: 12px; object-fit: cover; border: 1px solid #e2e8f0; padding: 2px;">
+                            @else
+                                <div style="width: 80px; height: 80px; background: #fffbeb; color: #d97706; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto; border: 1px solid #fde68a;">
+                                    <i class="fa fa-store" style="font-size: 28px;"></i>
+                                </div>
+                            @endif
+                        </div>
+                        <div style="text-align: center; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 6px; color: #1e293b;">{{ $tenant->name }}</h4>
+                                <span style="display: inline-block; background: #fef3c7; color: #d97706; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; margin-bottom: 10px;">
+                                    @if($tenant->type === 'culinary') Kuliner @elseif($tenant->type === 'beverage') Minuman @elseif($tenant->type === 'souvenir') Souvenir @elseif($tenant->type === 'bazaar') Bazaar @else Lainnya @endif
+                                </span>
+                                @if($tenant->description)
+                                    <p style="font-size: 13px; color: #64748b; line-height: 1.5; margin: 0;">{{ $tenant->description }}</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Sponsors & Partners Section --}}
+    @if($eventner->sponsors->count() > 0)
+    <div class="section zubuz-section-padding3" style="background: #fff;">
+        <div class="container">
+            <div class="zubuz-section-title center wow fadeInUp">
+                <h2>Sponsor & Partner</h2>
+                <p>Acara ini diselenggarakan atas dukungan luar biasa dari para mitra kami.</p>
+            </div>
+
+            {{-- Group by Type for nice hierarchical display --}}
+            @php
+                $sponsorsGrouped = $eventner->sponsors->groupBy('type');
+                $typeOrders = ['sponsor', 'gold', 'silver', 'bronze', 'medpart', 'partner', 'supporting'];
+                $typeLabels = [
+                    'sponsor' => 'Sponsor Utama',
+                    'gold' => 'Sponsor Gold',
+                    'silver' => 'Sponsor Silver',
+                    'bronze' => 'Sponsor Bronze',
+                    'medpart' => 'Media Partner',
+                    'partner' => 'Event Partner',
+                    'supporting' => 'Supporting Partner'
+                ];
+            @endphp
+
+            @foreach($typeOrders as $tOrder)
+                @if(isset($sponsorsGrouped[$tOrder]) && $sponsorsGrouped[$tOrder]->count() > 0)
+                    <div style="margin-bottom: 40px;" class="wow fadeInUp">
+                        <div class="text-center mb-4">
+                            <h4 style="font-size: 14px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.5px; position: relative; display: inline-block; padding: 0 16px;">
+                                <span style="position: absolute; left: -100px; right: auto; top: 50%; height: 1px; width: 80px; background: #e2e8f0; display: block;"></span>
+                                {{ $typeLabels[$tOrder] }}
+                                <span style="position: absolute; right: -100px; left: auto; top: 50%; height: 1px; width: 80px; background: #e2e8f0; display: block;"></span>
+                            </h4>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 30px;">
+                            @foreach($sponsorsGrouped[$tOrder] as $sponsor)
+                                @if($sponsor->link)
+                                    <a href="{{ $sponsor->link }}" target="_blank" style="display: block; filter: grayscale(20%); transition: all 0.3s; margin: 10px;" onmouseover="this.style.filter='grayscale(0%)'; this.style.transform='scale(1.05)';" onmouseout="this.style.filter='grayscale(20%)'; this.style.transform='scale(1)';">
+                                @else
+                                    <div style="filter: grayscale(20%); transition: all 0.3s; margin: 10px;" onmouseover="this.style.filter='grayscale(0%)';" onmouseout="this.style.filter='grayscale(20%)';">
+                                @endif
+
+                                @if($sponsor->logo)
+                                    <img src="{{ asset('storage/' . $sponsor->logo) }}" alt="{{ $sponsor->name }}" style="max-height: @if(in_array($tOrder, ['sponsor', 'gold'])) 85px @elseif($tOrder === 'silver') 70px @else 55px @endif; max-width: 180px; object-fit: contain;" title="{{ $sponsor->name }}">
+                                @else
+                                    <div style="background: #f1f5f9; padding: 10px 24px; border-radius: 8px; border: 1px solid #e2e8f0; font-weight: 700; color: #475569; font-size: @if(in_array($tOrder, ['sponsor', 'gold'])) 16px @else 13px @endif;" title="{{ $sponsor->name }}">
+                                        {{ $sponsor->name }}
+                                    </div>
+                                @endif
+
+                                @if($sponsor->link)
+                                    </a>
+                                @else
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     {{-- Social Media & Links Section --}}
     <div class="section dark-bg zubuz-section-padding4">
         <div class="container">

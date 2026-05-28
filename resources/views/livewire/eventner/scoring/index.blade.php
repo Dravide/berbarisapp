@@ -32,8 +32,8 @@
         <div class="card w-100">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0 text-white fw-semibold"><i class="ti ti-category me-2"></i>Pilih Kategori Lomba</h5>
-                <a href="{{ route('eventner.scoring.pdf') }}" class="btn btn-sm btn-light" target="_blank">
-                    <i class="ti ti-file-type text-success me-1"></i> Rekap Semua (Excel)
+                <a href="{{ route('eventner.scoring.csv') }}" class="btn btn-sm btn-light" target="_blank">
+                    <i class="ti ti-file-type-csv text-success me-1"></i> Rekap Semua (CSV)
                 </a>
             </div>
             <div class="card-body p-4">
@@ -71,8 +71,8 @@
                     </button>
                     <h5 class="mb-0 text-white fw-semibold">{{ $selectedCategory->name }} — Pilih Peserta</h5>
                 </div>
-                <a href="{{ route('eventner.scoring.pdf', ['category_id' => $selectedCategoryId]) }}" class="btn btn-sm btn-light" target="_blank">
-                    <i class="ti ti-file-type text-success me-1"></i> Download Excel
+                <a href="{{ route('eventner.scoring.csv', ['category_id' => $selectedCategoryId]) }}" class="btn btn-sm btn-light" target="_blank">
+                    <i class="ti ti-file-type-csv text-success me-1"></i> Download CSV
                 </a>
             </div>
             <div class="card-body p-4">
@@ -148,7 +148,7 @@
                                     <p class="text-white text-opacity-75 mb-0 fs-2">Pelatih: {{ $selectedRegistration->nama_pelatih }} &bull; {{ $selectedRegistration->competitionCategory->name ?? '-' }}</p>
                                 </div>
                             </div>
-                            <a href="{{ route('eventner.scoring.pdf-participant', ['registration_id' => $selectedRegistration->id]) }}"
+                            <a href="{{ route('eventner.scoring.csv-participant', ['registration_id' => $selectedRegistration->id]) }}"
                                class="btn btn-sm btn-light" target="_blank">
                                 <i class="ti ti-file-type-pdf text-danger me-1"></i> PDF
                             </a>

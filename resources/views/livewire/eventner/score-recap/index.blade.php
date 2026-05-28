@@ -26,9 +26,9 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="card-title fw-semibold mb-0">Rekapitulasi Nilai per Kategori</h5>
                 @if($selectedCategoryId)
-                    <a href="{{ route('eventner.scoring.pdf', ['category_id' => $selectedCategoryId]) }}"
+                    <a href="{{ route('eventner.scoring.csv', ['category_id' => $selectedCategoryId]) }}"
                        class="btn btn-sm btn-outline-danger" target="_blank">
-                        <i class="ti ti-file-type-pdf me-1"></i> Download PDF
+                        <i class="ti ti-file-type-csv me-1"></i> Download CSV
                     </a>
                 @endif
             </div>
@@ -119,7 +119,7 @@
                                             <span class="badge {{ $data['finalScore'] >= $data['grandTotal'] ? 'bg-primary' : 'bg-dark' }} fw-semibold fs-3 px-3">{{ $data['finalScore'] }}</span>
                                         </td>
                                         <td class="text-center">
-                                            <a href="{{ route('eventner.scoring.pdf-participant', ['registration_id' => $data['participant']->id]) }}"
+                                            <a href="{{ route('eventner.scoring.csv-participant', ['registration_id' => $data['participant']->id]) }}"
                                                class="btn btn-sm btn-outline-danger p-1" target="_blank" title="Download PDF">
                                                 <i class="ti ti-file-type-pdf fs-4"></i>
                                             </a>

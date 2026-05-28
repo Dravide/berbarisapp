@@ -21,7 +21,13 @@ class EventDetail extends Component
                 }], 'votes_earned');
             }, 
             'competitionCategories.registrations.participants',
-            'judges.assessmentCategories'
+            'judges.assessmentCategories',
+            'sponsors' => function ($query) {
+                $query->where('is_active', true)->orderBy('sort_order')->latest();
+            },
+            'tenants' => function ($query) {
+                $query->where('is_active', true)->orderBy('sort_order')->latest();
+            },
         ])
             ->where('slug', $slug)->firstOrFail();
     }

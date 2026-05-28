@@ -5,6 +5,7 @@ namespace App\Livewire\Public\Registration;
 use App\Models\Eventner;
 use App\Models\Registration;
 use App\Models\CompetitionCategory;
+use App\Services\MailyService;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -68,11 +69,14 @@ class Create extends Component
                 'npsn' => 'required|string|max:20',
                 'nama_sekolah' => 'required|string|max:255',
                 'no_hp' => 'required|string|max:20',
+                'school_email' => 'required|email|max:255',
                 'password' => 'required|string|min:6|confirmed',
             ], [
                 'npsn.required' => 'NPSN wajib diisi.',
                 'nama_sekolah.required' => 'Nama sekolah wajib diisi.',
                 'no_hp.required' => 'No HP wajib diisi.',
+                'school_email.required' => 'Email sekolah wajib diisi.',
+                'school_email.email' => 'Format email tidak valid.',
                 'password.required' => 'Password wajib diisi.',
                 'password.min' => 'Password minimal 6 karakter.',
                 'password.confirmed' => 'Konfirmasi password tidak cocok.',
@@ -99,6 +103,7 @@ class Create extends Component
             'npsn' => 'required|string|max:20',
             'nama_sekolah' => 'required|string|max:255',
             'no_hp' => 'required|string|max:20',
+            'school_email' => 'required|email|max:255',
             'password' => 'required|string|min:6|confirmed',
         ]);
 
@@ -149,10 +154,30 @@ class Create extends Component
             return;
         }
 
-        // Redirect to magic link of first registration
         $first = $created[0];
-        return redirect()->route('magic.link', ['token' => $first->magic_token])
-            ->with('success', 'Booking berhasil! Silakan kelola data pasukan Anda.');
+        $magicLink = route('magic.link', ['token' => $first->magic_token]);
+        $createdCategoryIds = collect($created)->pluck('competition_category_id')->unique();
+        $emailCategories = $categories = CompetitionCategory::whereIn('id', $createdCategoryIds)
+            ->get()
+            ->map(fn($category) => [
+                'name' => $category->name,
+                'teams' => collect($created)->where('competition_category_id', $category->id)->count(),
+            ])
+            ->values()
+            ->all();
+
+        app(MailyService::class)->sendBookingConfirmation(
+            strip_tags($this->school_email),
+            strip_tags($this->nama_sekolah),
+            $this->eventner->nama_event,
+            $magicLink,
+            $emailCategories,
+            strip_tags($this->npsn),
+            strip_tags($this->no_hp)
+        );
+
+        return redirect($magicLink)
+            ->with('success', 'Booking berhasil! Detail pendaftaran dan link upload berkas telah dikirim ke email sekolah Anda.');
     }
 
     public function render()

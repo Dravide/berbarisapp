@@ -51,15 +51,33 @@ class Eventner extends Model
 
         static::creating(function ($model) {
             if (!$model->slug && $model->nama_event) {
-                // Ensure unique slug by appending random string if needed or just use id-based later.
-                // Since id is not available on creation, we use unique string for now.
-                $model->slug = \Illuminate\Support\Str::slug($model->nama_event) . '-' . \Illuminate\Support\Str::random(5);
+                $baseSlug = \Illuminate\Support\Str::slug($model->nama_event);
+                $slug = $baseSlug . '-' . \Illuminate\Support\Str::random(5);
+
+                // Retry if collision occurs
+                $retryCount = 0;
+                while (static::where('slug', $slug)->exists() && $retryCount < 10) {
+                    $slug = $baseSlug . '-' . \Illuminate\Support\Str::random(5 + $retryCount);
+                    $retryCount++;
+                }
+
+                $model->slug = $slug;
             }
         });
 
         static::updating(function ($model) {
             if ($model->isDirty('nama_event')) {
-                $model->slug = \Illuminate\Support\Str::slug($model->nama_event) . '-' . $model->id;
+                $baseSlug = \Illuminate\Support\Str::slug($model->nama_event);
+                $slug = $baseSlug . '-' . $model->id;
+
+                // Although id is unique, check if somehow there's a collision
+                $retryCount = 0;
+                while (static::where('slug', $slug)->where('id', '!=', $model->id)->exists() && $retryCount < 10) {
+                    $slug = $baseSlug . '-' . $model->id . '-' . \Illuminate\Support\Str::random(3);
+                    $retryCount++;
+                }
+
+                $model->slug = $slug;
             }
         });
     }
@@ -107,5 +125,15 @@ class Eventner extends Model
     public function deductionCategories()
     {
         return $this->hasMany(DeductionCategory::class);
+    }
+
+    public function sponsors()
+    {
+        return $this->hasMany(Sponsor::class);
+    }
+
+    public function tenants()
+    {
+        return $this->hasMany(Tenant::class);
     }
 }

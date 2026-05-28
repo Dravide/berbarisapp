@@ -201,8 +201,9 @@
                                         @error('no_hp') <span style="color: #ef4444; font-size: 13px;">{{ $message }}</span> @enderror
                                     </div>
                                     <div class="col-md-6">
-                                        <label style="font-weight: 600; display: block; margin-bottom: 6px; font-size: 14px;">Email Sekolah</label>
-                                        <input type="email" wire:model="school_email" placeholder="opsional" style="width: 100%; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; font-size: 14px; outline: none;">
+                                        <label style="font-weight: 600; display: block; margin-bottom: 6px; font-size: 14px;">Email Sekolah <span style="color: #ef4444;">*</span></label>
+                                        <input type="email" wire:model="school_email" placeholder="Alamat email sekolah" style="width: 100%; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 14px; font-size: 14px; outline: none;">
+                                        @error('school_email') <span style="color: #ef4444; font-size: 13px;">{{ $message }}</span> @enderror
                                     </div>
                                     <div class="col-md-6">
                                         <label style="font-weight: 600; display: block; margin-bottom: 6px; font-size: 14px;">Nama Pelatih</label>
