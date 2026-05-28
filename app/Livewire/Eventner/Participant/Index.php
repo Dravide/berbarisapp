@@ -15,7 +15,8 @@ class Index extends Component
     public $categories = [];
 
     public $competition_category_id = '';
-    
+    public $jumlah_pasukan = 1;
+
     // Modal form fields
     public $showModal = false;
     public $editId = null;
@@ -70,6 +71,7 @@ class Index extends Component
         $this->no_hp = '';
         $this->school_email = '';
         $this->competition_category_id = '';
+        $this->jumlah_pasukan = 1;
     }
 
     public function save()
@@ -81,6 +83,7 @@ class Index extends Component
             'no_hp' => 'required|string|max:20',
             'school_email' => 'nullable|email|max:255',
             'nama_pelatih' => 'nullable|string|max:255',
+            'jumlah_pasukan' => 'required|integer|min:1',
         ]);
 
         $eventner = auth()->user()->eventner;
@@ -97,17 +100,24 @@ class Index extends Component
             ]);
             session()->flash('success', 'Data pendaftar berhasil diperbarui.');
         } else {
-            Registration::create([
-                'eventner_id' => $eventner->id,
-                'nama_sekolah' => strip_tags($this->nama_sekolah),
-                'npsn' => strip_tags($this->npsn),
-                'nama_pelatih' => $this->nama_pelatih ? strip_tags($this->nama_pelatih) : null,
-                'no_hp' => strip_tags($this->no_hp),
-                'school_email' => $this->school_email ? strip_tags($this->school_email) : null,
-                'competition_category_id' => $this->competition_category_id,
-                'status_berkas' => 'Menunggu',
-            ]);
-            session()->flash('success', 'Sekolah pendaftar berhasil ditambahkan & Magic Link telah dibuat.');
+            $sharedToken = \Illuminate\Support\Str::random(16);
+
+            for ($i = 0; $i < $this->jumlah_pasukan; $i++) {
+                Registration::create([
+                    'eventner_id' => $eventner->id,
+                    'nama_sekolah' => strip_tags($this->nama_sekolah),
+                    'npsn' => strip_tags($this->npsn),
+                    'nama_pelatih' => $this->nama_pelatih ? strip_tags($this->nama_pelatih) : null,
+                    'no_hp' => strip_tags($this->no_hp),
+                    'school_email' => $this->school_email ? strip_tags($this->school_email) : null,
+                    'competition_category_id' => $this->competition_category_id,
+                    'magic_token' => $sharedToken,
+                    'status_berkas' => 'Menunggu',
+                ]);
+            }
+
+            $label = $this->jumlah_pasukan > 1 ? "{$this->jumlah_pasukan} pasukan" : 'pasukan';
+            session()->flash('success', "Sekolah pendaftar berhasil ditambahkan ({$label}) & Magic Link telah dibuat.");
         }
 
         $this->closeModal();

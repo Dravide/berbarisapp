@@ -201,6 +201,14 @@
                                 <input type="text" class="form-control" wire:model="nama_pelatih" placeholder="Nama pelatih / pembina">
                                 @error('nama_pelatih') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                             </div>
+                            @if(!$editId)
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Jumlah Pasukan <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" wire:model="jumlah_pasukan" min="1" max="20" placeholder="Jumlah pasukan yang didaftarkan" required>
+                                @error('jumlah_pasukan') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                <small class="text-muted">Semua pasukan akan masuk dalam 1 Magic Link.</small>
+                            </div>
+                            @endif
                         </div>
                     </div>
                     <div class="modal-footer">
