@@ -393,42 +393,6 @@
         </div>
         @endif
 
-        {{-- ========== RELATED EVENTS ========== --}}
-        @if($this->relatedEvents->count() > 0)
-        <div class="pm-section" style="padding-top: 0;">
-            <div class="pm-card">
-                <div class="pm-card-header">
-                    <div class="pm-card-header-icon"><i class="fa fa-calendar-plus"></i></div>
-                    <h3>Event Lainnya</h3>
-                </div>
-                <div class="pm-card-body">
-                    @foreach($this->relatedEvents as $rel)
-                    <a href="{{ route('event.detail', $rel->slug) }}" style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--pm-border); text-decoration: none;">
-                        @if($rel->logo_event)
-                            <img src="{{ asset('storage/' . $rel->logo_event) }}" style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;" alt="">
-                        @else
-                            <div style="width: 40px; height: 40px; border-radius: 8px; background: var(--pm-bg); display: flex; align-items: center; justify-content: center;">
-                                <i class="fa fa-calendar" style="color: var(--pm-text-secondary);"></i>
-                            </div>
-                        @endif
-                        <div style="flex: 1; min-width: 0;">
-                            <div style="font-weight: 600; font-size: 14px; color: var(--pm-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $rel->nama_event }}</div>
-                            <div style="font-size: 12px; color: var(--pm-text-secondary);">
-                                @if($rel->tanggal)
-                                    {{ \Carbon\Carbon::parse($rel->tanggal)->translatedFormat('d M Y') }}
-                                @else
-                                    {{ $rel->diselenggarakan_oleh }}
-                                @endif
-                            </div>
-                        </div>
-                        <i class="fa fa-chevron-right" style="color: var(--pm-text-secondary); font-size: 12px;"></i>
-                    </a>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-        @endif
-
     </div>
 
     {{-- ========== PARTICIPANTS TAB ========== --}}

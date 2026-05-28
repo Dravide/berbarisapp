@@ -256,16 +256,6 @@ class EventDetail extends Component
         return $query->get();
     }
 
-    #[Computed]
-    public function relatedEvents()
-    {
-        return Eventner::where('id', '!=', $this->eventner->id)
-            ->whereNotNull('slug')
-            ->latest()
-            ->take(3)
-            ->get();
-    }
-
     #[Title('Detail Event')]
     public function render()
     {
