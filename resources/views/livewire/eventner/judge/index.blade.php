@@ -43,7 +43,7 @@
                             <table class="table align-middle text-nowrap mb-0">
                                 <thead class="table-light">
                                     <tr>
-                                        <th class="ps-0 border-0 fw-semibold text-dark">Data Juri</th>
+                                        <th class="ps-0 border-0 fw-semibold text-dark">Foto & Data Juri</th>
                                         <th class="border-0 fw-semibold text-dark">Bagian / Kategori Penilaian</th>
                                         <th class="border-0 fw-semibold text-dark text-end">Aksi</th>
                                     </tr>
@@ -53,9 +53,17 @@
                                         <tr>
                                             <td class="ps-0">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-3" style="width: 40px; height: 40px; font-weight: bold; font-size: 16px;">
-                                                        {{ strtoupper(substr($judge->name, 0, 1)) }}
-                                                    </div>
+                                                    @if($judge->photo)
+                                                        <img src="{{ asset('storage/' . $judge->photo) }}"
+                                                             alt="{{ $judge->name }}"
+                                                             class="rounded-circle me-3 object-fit-cover"
+                                                             style="width: 48px; height: 48px;">
+                                                    @else
+                                                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-3"
+                                                             style="width: 48px; height: 48px; font-weight: bold; font-size: 18px;">
+                                                            {{ strtoupper(substr($judge->name, 0, 1)) }}
+                                                        </div>
+                                                    @endif
                                                     <div>
                                                         <h6 class="fw-semibold mb-1">{{ $judge->name }}</h6>
                                                         <p class="mb-0 text-muted fs-2">{{ $judge->phone_number ?? '-' }}</p>
@@ -97,9 +105,28 @@
                 <div class="card-body">
                     <h5 class="card-title fw-semibold mb-4">{{ $isEditMode ? 'Edit Data Juri' : 'Tambah Juri Baru' }}</h5>
                     <form wire:submit="save">
+                        <!-- Foto Profile -->
+                        <div class="mb-3">
+                            <label class="form-label">Foto Profil</label>
+                            <div class="text-center mb-2">
+                                @if ($photo)
+                                    <img src="{{ $photo->temporaryUrl() }}" alt="Preview" class="rounded-circle object-fit-cover" style="width: 80px; height: 80px;">
+                                @elseif($currentPhotoPath)
+                                    <img src="{{ asset('storage/' . $currentPhotoPath) }}" alt="Current" class="rounded-circle object-fit-cover" style="width: 80px; height: 80px;">
+                                @else
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 80px; height: 80px;">
+                                        <i class="ti ti-user text-muted" style="font-size: 32px;"></i>
+                                    </div>
+                                @endif
+                            </div>
+                            <input type="file" class="form-control" wire:model="photo" accept="image/*">
+                            <small class="text-muted">Format: JPG, PNG. Maks 2MB.</small>
+                            @error('photo') <span class="text-danger fs-2 d-block">{{ $message }}</span> @enderror
+                        </div>
+
                         <div class="mb-3">
                             <label class="form-label">Nama Lengkap</label>
-                            <input type="text" class="form-control" wire:model="name" placeholder="Misal: Juri PBB 1" required>
+                            <input type="text" class="form-control" wire:model="name" placeholder="Misal: H. Ahmad Dahlan, S.Pd." required>
                             @error('name') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                         </div>
                         <div class="mb-3">
@@ -107,7 +134,7 @@
                             <input type="text" class="form-control" wire:model="phone_number" placeholder="Misal: 08123456789">
                             @error('phone_number') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                         </div>
-                        
+
                         <hr>
                         <h6 class="fw-semibold mb-3">Tugaskan Kategori (Checklist):</h6>
                         <div class="mb-4">

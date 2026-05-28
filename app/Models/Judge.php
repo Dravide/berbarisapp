@@ -11,7 +11,7 @@ class Judge extends Model
 {
     use HasFactory, LogsActivity;
 
-    protected $fillable = ['eventner_id', 'name', 'phone_number'];
+    protected $fillable = ['eventner_id', 'name', 'phone_number', 'photo'];
 
     public function eventner()
     {

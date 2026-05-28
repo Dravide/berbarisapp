@@ -239,7 +239,11 @@
                 <div class="pm-judge-grid">
                     @foreach($eventner->judges as $judge)
                     <div class="pm-judge-card">
-                        <div class="pm-judge-avatar">{{ strtoupper(substr($judge->name, 0, 1)) }}</div>
+                        @if($judge->photo)
+                            <img src="{{ asset('storage/' . $judge->photo) }}" alt="{{ $judge->name }}" class="pm-judge-avatar" style="border-radius: 50%; object-fit: cover;">
+                        @else
+                            <div class="pm-judge-avatar">{{ strtoupper(substr($judge->name, 0, 1)) }}</div>
+                        @endif
                         <div class="pm-judge-name">{{ $judge->name }}</div>
                         <div class="pm-judge-tags">
                             @foreach($judge->assessmentCategories->take(2) as $cat)
