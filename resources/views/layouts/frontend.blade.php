@@ -34,8 +34,8 @@
     {{-- Tabler Icons --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 
-    {{-- Tailwind CDN --}}
-    <script src="https://cdn.tailwindcss.com"></script>
+    {{-- Tailwind CDN (deferred to avoid render-blocking; TODO: migrate to Vite build for production) --}}
+    <script src="https://cdn.tailwindcss.com" defer></script>
     <script>
         tailwindcss.config = {
             theme: {

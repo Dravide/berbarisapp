@@ -60,7 +60,7 @@
                 @foreach($cat->registrations as $reg)
                 <div style="display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--pm-border);">
                     @if($reg->logo_sekolah)
-                        <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" style="width: 40px; height: 40px; border-radius: 10px; object-fit: cover; border: 1px solid var(--pm-border);" alt="">
+                        <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" style="width: 40px; height: 40px; border-radius: 10px; object-fit: cover; border: 1px solid var(--pm-border);" alt="" loading="lazy">
                     @else
                         <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(38,101,253,0.08); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                             <i class="fa fa-school" style="color: var(--pm-primary); font-size: 16px;"></i>

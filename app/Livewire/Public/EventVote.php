@@ -46,7 +46,9 @@ class EventVote extends Component
 
     public function mount($slug)
     {
-        $this->eventner = Eventner::where('slug', $slug)->firstOrFail();
+        $this->eventner = Eventner::with(['competitionCategories' => function ($q) {
+            $q->withCount('registrations');
+        }])->where('slug', $slug)->firstOrFail();
 
         if (!$this->eventner->vote_active) {
             abort(403, 'Fitur Vote Online untuk event ini tidak aktif.');
@@ -236,7 +238,7 @@ class EventVote extends Component
         return view('livewire.public.event-vote', [
             'participants' => $participants,
             'selectedCategory' => $selectedCategory,
-            'categories' => $this->eventner->competitionCategories->loadCount('registrations')
+            'categories' => $this->eventner->competitionCategories
         ])->title('Vote Peserta - ' . $this->eventner->nama_event)
          ->layoutData(['eventner' => $this->eventner]);
     }

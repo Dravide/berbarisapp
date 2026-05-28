@@ -174,7 +174,7 @@
                         <div class="pm-top-vote-label">Peringkat 1 Vote</div>
                         <div class="pm-top-vote-school">
                             @if($topReg->logo_sekolah)
-                                <img src="{{ asset('storage/' . $topReg->logo_sekolah) }}" class="pm-top-vote-logo" alt="">
+                                <img src="{{ asset('storage/' . $topReg->logo_sekolah) }}" class="pm-top-vote-logo" alt="" loading="lazy">
                             @endif
                             <span class="pm-top-vote-name">{{ $topReg->nama_sekolah }}</span>
                             <span class="pm-vote-badge">
@@ -245,7 +245,7 @@
                             <a href="{{ $sponsor->link }}" target="_blank">
                         @endif
                         @if($sponsor->logo)
-                            <img src="{{ asset('storage/' . $sponsor->logo) }}" class="pm-sponsor-logo" alt="{{ $sponsor->name }}">
+                            <img src="{{ asset('storage/' . $sponsor->logo) }}" class="pm-sponsor-logo" alt="{{ $sponsor->name }}" loading="lazy">
                         @else
                             <div class="pm-sponsor-name">{{ $sponsor->name }}</div>
                         @endif
@@ -272,7 +272,7 @@
                 @foreach($eventner->tenants as $tenant)
                 <div class="pm-tenant-card">
                     @if($tenant->logo)
-                        <img src="{{ asset('storage/' . $tenant->logo) }}" class="pm-tenant-logo" alt="{{ $tenant->name }}">
+                        <img src="{{ asset('storage/' . $tenant->logo) }}" class="pm-tenant-logo" alt="{{ $tenant->name }}" loading="lazy">
                     @endif
                     <div class="pm-tenant-name">{{ $tenant->name }}</div>
                     <div class="pm-tenant-type">
