@@ -1,4 +1,4 @@
-<div class="premium-event-page" x-data="{ tab: 'info' }" x-init="tab = window.location.hash ? window.location.hash.replace('#','') : 'info'" data-theme="{{ ($eventner->theme_config['theme'] ?? 'light') }}">
+<div class="premium-event-page" x-data="{ tab: 'info' }" data-theme="{{ ($eventner->theme_config['theme'] ?? 'light') }}">
 
     {{-- ========== HERO ========== --}}
     <div class="pm-hero">
@@ -121,32 +121,29 @@
     </div>
 
     {{-- ========== TAB NAVIGATION ========== --}}
-    <div class="pm-section" style="padding: 0 16px;">
-        <div style="display: flex; gap: 4px; overflow-x: auto; padding: 4px 0; margin-bottom: 0; scrollbar-width: none;">
-            <button @click="tab = 'info'" :style="tab === 'info' ? 'background: var(--pm-primary); color: #fff;' : 'background: var(--pm-surface); color: var(--pm-text-secondary);'"
-                style="flex: 1; min-width: fit-content; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; white-space: nowrap;">
-                <i class="fa fa-info-circle" style="margin-right: 6px;"></i> Info
+    <div class="pm-section" style="padding: 0 16px; position: sticky; top: 0; z-index: 50; background: var(--pm-bg);">
+        <div style="display: flex; gap: 2px; background: var(--pm-surface); border-radius: 12px; padding: 4px; border: 1px solid var(--pm-border);">
+            <button @click="tab = 'info'" :class="tab === 'info' ? 'pm-tab-active' : ''" class="pm-tab-btn">
+                <i class="fa fa-info-circle"></i> Info
             </button>
-            <button @click="tab = 'participants'" :style="tab === 'participants' ? 'background: var(--pm-primary); color: #fff;' : 'background: var(--pm-surface); color: var(--pm-text-secondary);'"
-                style="flex: 1; min-width: fit-content; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; white-space: nowrap;">
-                <i class="fa fa-users" style="margin-right: 6px;"></i> Peserta
+            <button @click="tab = 'participants'" :class="tab === 'participants' ? 'pm-tab-active' : ''" class="pm-tab-btn">
+                <i class="fa fa-users"></i> Peserta
             </button>
             @if($eventner->vote_active)
-            <button @click="tab = 'vote'" :style="tab === 'vote' ? 'background: var(--pm-primary); color: #fff;' : 'background: var(--pm-surface); color: var(--pm-text-secondary);'"
-                style="flex: 1; min-width: fit-content; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; white-space: nowrap;">
-                <i class="fa fa-heart" style="margin-right: 6px;"></i> Voting
+            <button @click="tab = 'vote'" :class="tab === 'vote' ? 'pm-tab-active' : ''" class="pm-tab-btn">
+                <i class="fa fa-heart"></i> Voting
             </button>
             @endif
             @if($eventner->ticket_active && $eventner->ticket_price)
-            <button @click="window.location.href='{{ route('event.ticket', $eventner->slug) }}'" style="flex: 1; min-width: fit-content; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; white-space: nowrap; background: var(--pm-surface); color: var(--pm-text-secondary);">
-                <i class="fa fa-ticket" style="margin-right: 6px;"></i> Tiket
+            <button @click="window.location.href='{{ route('event.ticket', $eventner->slug) }}'" class="pm-tab-btn">
+                <i class="fa fa-ticket"></i> Tiket
             </button>
             @endif
         </div>
     </div>
 
     {{-- ========== TAB CONTENT ========== --}}
-    <div x-show="tab === 'info'" x-transition>
+    <div x-show="tab === 'info'" x-cloak>
 
         {{-- ========== QUOTA PROGRESS ========== --}}
         @if($eventner->competitionCategories->count() > 0)
@@ -439,7 +436,7 @@
     </div>
 
     {{-- ========== PARTICIPANTS TAB ========== --}}
-    <div x-show="tab === 'participants'" x-transition style="display: none;">
+    <div x-show="tab === 'participants'" x-cloak>
         <div class="pm-section" style="padding-top: 16px;">
             @php $totalKontingen = $eventner->competitionCategories->sum(fn($c) => $c->registrations->count()); @endphp
             <div class="pm-stats-grid" style="margin-bottom: 16px;">
@@ -492,7 +489,7 @@
 
     {{-- ========== VOTING TAB ========== --}}
     @if($eventner->vote_active)
-    <div x-show="tab === 'vote'" x-transition style="display: none;">
+    <div x-show="tab === 'vote'" x-cloak>
         <div class="pm-section" style="padding-top: 16px;">
             @if($voteView === 'payment')
                 {{-- PAYMENT VIEW --}}

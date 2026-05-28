@@ -743,6 +743,42 @@
   --pm-border: #334155;
 }
 
+/* ---- Tab Navigation Styles ---- */
+[x-cloak] { display: none !important; }
+.pm-tab-btn {
+  flex: 1;
+  min-width: fit-content;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+  background: transparent;
+  color: var(--pm-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.pm-tab-btn:hover {
+  background: var(--pm-bg);
+  color: var(--pm-text);
+}
+
+.pm-tab-btn.pm-tab-active {
+  background: var(--pm-primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(38, 101, 253, 0.3);
+}
+
+.pm-tab-btn i {
+  font-size: 16px;
+}
+
 /* ---- Responsive: Desktop sees mobile layout too ---- */
 @media (min-width: 481px) {
   .premium-event-page {
