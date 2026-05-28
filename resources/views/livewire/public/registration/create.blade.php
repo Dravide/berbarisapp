@@ -127,11 +127,11 @@
                                     @php
                                         $isFull = $cat->kuota && $cat->registrations_count >= $cat->kuota;
                                         $maxPerSchool = $cat->max_registrations_per_school ?? 1;
-                                        $selected = in_array($cat->id, $selectedCategories);
+                                        $selected = (string) $selectedCategory === (string) $cat->id;
                                     @endphp
                                     <div style="background: {{ $selected ? 'rgba(0,114,255,0.04)' : '#fff' }}; border: {{ $selected ? '2px solid #0072FF' : '1px solid #e5e7eb' }}; border-radius: 12px; padding: 16px; margin-bottom: 12px; {{ $isFull ? 'opacity: 0.5;' : '' }}">
                                         <div style="display: flex; align-items: flex-start; gap: 12px;">
-                                            <input type="checkbox" wire:model="selectedCategories" value="{{ $cat->id }}" id="cat_{{ $cat->id }}" {{ $isFull ? 'disabled' : '' }} style="margin-top: 4px; width: 18px; height: 18px; accent-color: #0072FF;">
+                                            <input type="radio" wire:model.live="selectedCategory" value="{{ $cat->id }}" id="cat_{{ $cat->id }}" {{ $isFull ? 'disabled' : '' }} style="margin-top: 4px; width: 18px; height: 18px; accent-color: #0072FF;">
 
                                             <div style="flex: 1;">
                                                 <label for="cat_{{ $cat->id }}" style="font-weight: 600; cursor: pointer; font-size: 15px;">{{ $cat->name }}</label>
@@ -151,7 +151,7 @@
                                                 <div style="margin-top: 12px; display: flex; align-items: center; gap: 6px;">
                                                     <span style="color: #6b7280; font-size: 13px;">Jumlah pasukan:</span>
                                                     @for($i = 1; $i <= $maxPerSchool; $i++)
-                                                        <button type="button" wire:click="$set('teamCounts.{{ $cat->id }}', {{ $i }})" style="padding: 4px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; {{ ($teamCounts[$cat->id] ?? 1) == $i ? 'background: #0072FF; color: #fff; border: 1px solid #0072FF;' : 'background: #fff; color: #0072FF; border: 1px solid rgba(0,114,255,0.3);' }}">
+                                                        <button type="button" wire:click="$set('teamCount', {{ $i }})" style="padding: 4px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; {{ ($teamCount ?? 1) == $i ? 'background: #0072FF; color: #fff; border: 1px solid #0072FF;' : 'background: #fff; color: #0072FF; border: 1px solid rgba(0,114,255,0.3);' }}">
                                                             {{ $i }}
                                                         </button>
                                                     @endfor
@@ -268,14 +268,15 @@
 
                                 {{-- Categories --}}
                                 <h6 style="font-weight: 600; margin-bottom: 12px;"><i class="fa fa-trophy" style="color: #0072FF; margin-right: 6px;"></i>Kategori & Pasukan</h6>
-                                @foreach($categories->whereIn('id', $selectedCategories) as $cat)
+                                @php $selectedCat = $categories->firstWhere('id', (int) $selectedCategory); @endphp
+                                @if($selectedCat)
                                 <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border-radius: 10px; padding: 12px 16px; margin-bottom: 8px;">
-                                    <span style="font-weight: 600;">{{ $cat->name }}</span>
+                                    <span style="font-weight: 600;">{{ $selectedCat->name }}</span>
                                     <span style="background: rgba(0,114,255,0.1); color: #0072FF; padding: 4px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;">
-                                        {{ $teamCounts[$cat->id] ?? 1 }} pasukan
+                                        {{ $teamCount ?? 1 }} pasukan
                                     </span>
                                 </div>
-                                @endforeach
+                                @endif
 
                                 {{-- Info --}}
                                 <div style="background: rgba(245,158,11,0.1); border-radius: 12px; padding: 16px; margin-top: 20px; margin-bottom: 20px;">

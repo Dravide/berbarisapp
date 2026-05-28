@@ -24,8 +24,8 @@ class Create extends Component
     public $step = 1;
 
     // Step 1: Category selection
-    public $selectedCategories = [];
-    public $teamCounts = [];
+    public $selectedCategory = null;
+    public $teamCount = 1;
 
     // Step 2: School data
     public $npsn = '';
@@ -52,15 +52,13 @@ class Create extends Component
     {
         if ($this->step === 1) {
             $this->validate([
-                'selectedCategories' => 'required|array|min:1',
+                'selectedCategory' => 'required',
             ], [
-                'selectedCategories.required' => 'Pilih minimal satu kategori lomba.',
+                'selectedCategory.required' => 'Pilih satu kategori lomba.',
             ]);
 
-            foreach ($this->selectedCategories as $catId) {
-                if (!isset($this->teamCounts[$catId]) || $this->teamCounts[$catId] < 1) {
-                    $this->teamCounts[$catId] = 1;
-                }
+            if ($this->teamCount < 1) {
+                $this->teamCount = 1;
             }
         }
 
@@ -107,71 +105,59 @@ class Create extends Component
             'password' => 'required|string|min:6|confirmed',
         ]);
 
-        $created = [];
-        foreach ($this->selectedCategories as $catId) {
-            $cat = CompetitionCategory::find($catId);
-            if (!$cat) continue;
-
-            $count = $this->teamCounts[$catId] ?? 1;
-            $existingCount = Registration::where('eventner_id', $this->eventner->id)
-                ->where('competition_category_id', $catId)
-                ->where('npsn', $this->npsn)
-                ->where('status_berkas', '!=', 'dibatalkan')
-                ->count();
-
-            $allowed = max(0, ($cat->max_registrations_per_school ?? 1) - $existingCount);
-            $toCreate = min($count, $allowed, $cat->remainingSlots());
-
-            if ($toCreate <= 0) {
-                $this->addError('selectedCategories', "Slot untuk {$cat->name} sudah penuh.");
-                continue;
-            }
-
-            $logoPath = null;
-            if ($this->logo_sekolah) {
-                $logoPath = $this->logo_sekolah->store('logos', 'public');
-            }
-
-            for ($i = 0; $i < $toCreate; $i++) {
-                $suffix = $toCreate > 1 ? ' (Pasukan ' . ($i + 1) . ')' : '';
-                $created[] = Registration::create([
-                    'eventner_id' => $this->eventner->id,
-                    'competition_category_id' => $catId,
-                    'nama_sekolah' => strip_tags($this->nama_sekolah) . $suffix,
-                    'npsn' => strip_tags($this->npsn),
-                    'nama_pelatih' => $this->nama_pelatih ? strip_tags($this->nama_pelatih) : null,
-                    'no_hp' => strip_tags($this->no_hp),
-                    'school_email' => $this->school_email ? strip_tags($this->school_email) : null,
-                    'logo_sekolah' => $logoPath,
-                    'password' => Hash::make($this->password),
-                    'status_berkas' => 'booking',
-                ]);
-            }
-        }
-
-        if (empty($created)) {
+        $cat = CompetitionCategory::find($this->selectedCategory);
+        if (!$cat) {
             $this->step = 1;
             return;
         }
 
+        $count = $this->teamCount;
+        $existingCount = Registration::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $cat->id)
+            ->where('npsn', $this->npsn)
+            ->where('status_berkas', '!=', 'dibatalkan')
+            ->count();
+
+        $allowed = max(0, ($cat->max_registrations_per_school ?? 1) - $existingCount);
+        $toCreate = min($count, $allowed, $cat->remainingSlots());
+
+        if ($toCreate <= 0) {
+            $this->addError('selectedCategory', "Slot untuk {$cat->name} sudah penuh.");
+            $this->step = 1;
+            return;
+        }
+
+        $logoPath = null;
+        if ($this->logo_sekolah) {
+            $logoPath = $this->logo_sekolah->store('logos', 'public');
+        }
+
+        $created = [];
+        for ($i = 0; $i < $toCreate; $i++) {
+            $suffix = $toCreate > 1 ? ' (Pasukan ' . ($i + 1) . ')' : '';
+            $created[] = Registration::create([
+                'eventner_id' => $this->eventner->id,
+                'competition_category_id' => $cat->id,
+                'nama_sekolah' => strip_tags($this->nama_sekolah) . $suffix,
+                'npsn' => strip_tags($this->npsn),
+                'nama_pelatih' => $this->nama_pelatih ? strip_tags($this->nama_pelatih) : null,
+                'no_hp' => strip_tags($this->no_hp),
+                'school_email' => $this->school_email ? strip_tags($this->school_email) : null,
+                'logo_sekolah' => $logoPath,
+                'password' => Hash::make($this->password),
+                'status_berkas' => 'booking',
+            ]);
+        }
+
         $first = $created[0];
         $magicLink = route('magic.link', ['token' => $first->magic_token]);
-        $createdCategoryIds = collect($created)->pluck('competition_category_id')->unique();
-        $emailCategories = $categories = CompetitionCategory::whereIn('id', $createdCategoryIds)
-            ->get()
-            ->map(fn($category) => [
-                'name' => $category->name,
-                'teams' => collect($created)->where('competition_category_id', $category->id)->count(),
-            ])
-            ->values()
-            ->all();
 
         app(MailyService::class)->sendBookingConfirmation(
             strip_tags($this->school_email),
             strip_tags($this->nama_sekolah),
             $this->eventner->nama_event,
             $magicLink,
-            $emailCategories,
+            [['name' => $cat->name, 'teams' => $toCreate]],
             strip_tags($this->npsn),
             strip_tags($this->no_hp)
         );
