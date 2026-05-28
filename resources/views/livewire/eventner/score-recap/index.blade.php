@@ -119,7 +119,7 @@
                                             <span class="badge {{ $data['finalScore'] >= $data['grandTotal'] ? 'bg-primary' : 'bg-dark' }} fw-semibold fs-3 px-3">{{ $data['finalScore'] }}</span>
                                         </td>
                                         <td class="text-center">
-                                            <a href="{{ route('eventner.scoring.csv-participant', ['registration_id' => $data['participant']->id]) }}"
+                                            <a href="{{ route('eventner.scoring.pdf-participant', ['registration_id' => $data['participant']->id]) }}"
                                                class="btn btn-sm btn-outline-danger p-1" target="_blank" title="Download PDF">
                                                 <i class="ti ti-file-type-pdf fs-4"></i>
                                             </a>

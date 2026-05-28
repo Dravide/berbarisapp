@@ -148,7 +148,7 @@
                                     <p class="text-white text-opacity-75 mb-0 fs-2">Pelatih: {{ $selectedRegistration->nama_pelatih }} &bull; {{ $selectedRegistration->competitionCategory->name ?? '-' }}</p>
                                 </div>
                             </div>
-                            <a href="{{ route('eventner.scoring.csv-participant', ['registration_id' => $selectedRegistration->id]) }}"
+                            <a href="{{ route('eventner.scoring.pdf-participant', ['registration_id' => $selectedRegistration->id]) }}"
                                class="btn btn-sm btn-light" target="_blank">
                                 <i class="ti ti-file-type-pdf text-danger me-1"></i> PDF
                             </a>
