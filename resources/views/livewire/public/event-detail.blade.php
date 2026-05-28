@@ -348,14 +348,6 @@
                             <i class="fab fa-facebook"></i> Facebook
                         </a>
                     </div>
-                    <div style="margin-top: 16px;">
-                        <label style="font-weight: 600; font-size: 13px; color: var(--pm-text); margin-bottom: 6px; display: block;">Embed Code</label>
-                        <div style="background: var(--pm-bg); border-radius: 8px; padding: 12px; border: 1px solid var(--pm-border);">
-                            <code style="font-size: 11px; color: var(--pm-text-secondary); word-break: break-all;">
-                                &lt;a href="{{ url('/event/' . $eventner->slug) }}"&gt;{{ $eventner->nama_event }}&lt;/a&gt;
-                            </code>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
