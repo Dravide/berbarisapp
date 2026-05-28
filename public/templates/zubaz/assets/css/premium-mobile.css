@@ -734,6 +734,15 @@
   border-radius: var(--pm-radius);
 }
 
+/* ---- Dark Theme Support ---- */
+.premium-event-page[data-theme="dark"] {
+  --pm-bg: #0f172a;
+  --pm-surface: #1e293b;
+  --pm-text: #f8fafc;
+  --pm-text-secondary: #94a3b8;
+  --pm-border: #334155;
+}
+
 /* ---- Responsive: Desktop sees mobile layout too ---- */
 @media (min-width: 481px) {
   .premium-event-page {
