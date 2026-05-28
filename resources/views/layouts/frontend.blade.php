@@ -16,7 +16,7 @@
     <meta name="description" content="{{ $eventner?->nama_event ?? get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu') }}">
 
     {{-- Fonts --}}
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     {{-- Zubaz CSS --}}
     <link rel="stylesheet" href="{{ asset('templates/zubaz/assets/css/bootstrap.min.css') }}">
@@ -26,8 +26,31 @@
     <link rel="stylesheet" href="{{ asset('templates/zubaz/assets/css/main.css') }}">
     <link rel="stylesheet" href="{{ asset('templates/zubaz/assets/css/app.min.css') }}">
 
+    {{-- DevFocus Light Design System --}}
+    <link rel="stylesheet" href="{{ asset('templates/zubaz/assets/css/devfocus-light.css') }}">
+    {{-- Premium Mobile Event Page --}}
+    <link rel="stylesheet" href="{{ asset('templates/zubaz/assets/css/premium-mobile.css') }}">
+
     {{-- Tabler Icons --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+
+    {{-- Tailwind CDN --}}
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwindcss.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        primary: '#2665fd',
+                        surface: '#ffffff',
+                        'surface-variant': '#f5f6fa',
+                        'on-surface': '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
 
     <title>{{ $title ?? ($eventner?->nama_event ?? 'BARIS APP') }}</title>
 
@@ -36,19 +59,19 @@
     @isset($eventner?->theme_config)
     <style>
         :root {
-            --event-primary: {{ $eventner->theme_config['primary_color'] ?? '#0072FF' }};
-            --event-accent: {{ $eventner->theme_config['accent_color'] ?? '#00D4AA' }};
+            --event-primary: {{ $eventner->theme_config['primary_color'] ?? '#2665fd' }};
+            --event-accent: {{ $eventner->theme_config['accent_color'] ?? '#64748b' }};
         }
     </style>
     @endisset
 
     <style>
         :root {
-            --body-font: 'DM Sans', sans-serif;
-            --heading-font: 'DM Sans', sans-serif;
+            --body-font: 'Inter', sans-serif;
+            --heading-font: 'Inter', sans-serif;
         }
         body, h1, h2, h3, h4, h5, h6, .zubuz-header-section, .zubuz-footer-section, .nav-link-item, .zubuz-default-btn {
-            font-family: 'DM Sans', sans-serif !important;
+            font-family: 'Inter', sans-serif !important;
         }
     </style>
 
@@ -76,14 +99,17 @@
 
 <body class="light" style="padding-bottom: env(safe-area-inset-bottom);">
 
-    {{-- Preloader --}}
+    {{-- Preloader (non-event pages only) --}}
+    @unless($eventner?->slug)
     <div class="zubuz-preloader-wrap">
         <div class="zubuz-preloader">
             <div></div><div></div><div></div><div></div>
         </div>
     </div>
+    @endunless
 
-    {{-- Header --}}
+    {{-- Header (non-event pages only) --}}
+    @unless($eventner?->slug)
     <header class="site-header site-header--menu-center zubuz-header-section" id="sticky-menu">
         <div class="container">
             <nav class="navbar site-navbar">
@@ -145,11 +171,13 @@
             </nav>
         </div>
     </header>
+    @endunless
 
     {{-- Main Content --}}
     {{ $slot }}
 
-    {{-- Footer --}}
+    {{-- Footer (non-event pages only) --}}
+    @unless($eventner?->slug)
     <footer class="zubuz-footer-section main-footer">
         <div class="container">
             <div class="zubuz-footer-top">
@@ -233,6 +261,7 @@
             </div>
         </div>
     </footer>
+    @endunless
 
     {{-- Scripts --}}
     <script src="{{ asset('templates/zubaz/assets/js/jquery-3.6.0.min.js') }}"></script>

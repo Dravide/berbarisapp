@@ -1,0 +1,122 @@
+/* ============================================
+   DevFocus Light Design System
+   Flat, minimal light theme for event pages
+   ============================================ */
+
+:root {
+  --df-primary: #2665fd;
+  --df-secondary: #64748b;
+  --df-surface: #ffffff;
+  --df-surface-variant: #f8fafc;
+  --df-on-surface: #0f172a;
+  --df-error: #df1c1c;
+  --df-border: #e2e8f0;
+  --df-radius: 8px;
+  --df-radius-lg: 12px;
+  --df-font: 'Inter', sans-serif;
+}
+
+body {
+  background-color: var(--df-surface-variant);
+  font-family: var(--df-font);
+  color: var(--df-on-surface);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--df-on-surface);
+  font-family: var(--df-font);
+}
+
+/* ---- Header ---- */
+.zubuz-header-section {
+  background: var(--df-surface) !important;
+  border-bottom: 1px solid var(--df-border);
+  box-shadow: none !important;
+}
+
+/* ---- Footer ---- */
+.zubuz-footer-section {
+  background: var(--df-surface) !important;
+  border-top: 1px solid var(--df-border);
+}
+
+/* ---- Buttons ---- */
+.zubuz-default-btn {
+  background: var(--df-primary) !important;
+  color: #fff !important;
+  border-radius: var(--df-radius) !important;
+  box-shadow: none !important;
+  border: none;
+}
+
+.zubuz-default-btn:hover {
+  opacity: 0.9;
+  box-shadow: none !important;
+}
+
+/* ---- Cards / Sections ---- */
+.zubuz-iconbox-wrap,
+.zubuz-section-padding2 {
+  box-shadow: none !important;
+}
+
+/* ---- Form Inputs ---- */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+select,
+textarea {
+  border: 1px solid var(--df-border) !important;
+  border-radius: var(--df-radius) !important;
+  background: var(--df-surface) !important;
+  color: var(--df-on-surface);
+  font-family: var(--df-font);
+  box-shadow: none !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--df-primary) !important;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(38, 101, 253, 0.15) !important;
+}
+
+/* ---- Tables ---- */
+table {
+  border-collapse: collapse;
+}
+
+.table th {
+  background: var(--df-surface-variant) !important;
+  color: var(--df-secondary) !important;
+  font-weight: 600;
+  border-color: var(--df-border) !important;
+}
+
+.table td {
+  border-color: var(--df-border) !important;
+  color: var(--df-on-surface);
+}
+
+/* ---- Badges ---- */
+.badge {
+  border-radius: var(--df-radius);
+  font-weight: 600;
+}
+
+/* ---- CTA Section ---- */
+.zubuz-cta-section {
+  background: var(--df-primary) !important;
+}
+
+/* ---- Misc ---- */
+a {
+  color: var(--df-primary);
+}
+
+.text-muted {
+  color: var(--df-secondary) !important;
+}

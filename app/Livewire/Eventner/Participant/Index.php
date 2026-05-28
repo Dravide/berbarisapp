@@ -23,6 +23,7 @@ class Index extends Component
     public $npsn = '';
     public $nama_pelatih = '';
     public $no_hp = '';
+    public $school_email = '';
 
     // Verification modal
     public $showVerifyModal = false;
@@ -67,17 +68,19 @@ class Index extends Component
         $this->npsn = '';
         $this->nama_pelatih = '';
         $this->no_hp = '';
+        $this->school_email = '';
         $this->competition_category_id = '';
     }
 
     public function save()
     {
         $this->validate([
-            'nama_sekolah' => 'required|string|max:255',
-            'npsn' => 'required|string|max:20',
-            'nama_pelatih' => 'required|string|max:255',
-            'no_hp' => 'required|string|max:20',
             'competition_category_id' => 'required|exists:competition_categories,id',
+            'npsn' => 'required|string|max:20',
+            'nama_sekolah' => 'required|string|max:255',
+            'no_hp' => 'required|string|max:20',
+            'school_email' => 'nullable|email|max:255',
+            'nama_pelatih' => 'nullable|string|max:255',
         ]);
 
         $eventner = auth()->user()->eventner;
@@ -87,8 +90,9 @@ class Index extends Component
             $reg->update([
                 'nama_sekolah' => strip_tags($this->nama_sekolah),
                 'npsn' => strip_tags($this->npsn),
-                'nama_pelatih' => strip_tags($this->nama_pelatih),
+                'nama_pelatih' => $this->nama_pelatih ? strip_tags($this->nama_pelatih) : null,
                 'no_hp' => strip_tags($this->no_hp),
+                'school_email' => $this->school_email ? strip_tags($this->school_email) : null,
                 'competition_category_id' => $this->competition_category_id,
             ]);
             session()->flash('success', 'Data pendaftar berhasil diperbarui.');
@@ -97,8 +101,9 @@ class Index extends Component
                 'eventner_id' => $eventner->id,
                 'nama_sekolah' => strip_tags($this->nama_sekolah),
                 'npsn' => strip_tags($this->npsn),
-                'nama_pelatih' => strip_tags($this->nama_pelatih),
+                'nama_pelatih' => $this->nama_pelatih ? strip_tags($this->nama_pelatih) : null,
                 'no_hp' => strip_tags($this->no_hp),
+                'school_email' => $this->school_email ? strip_tags($this->school_email) : null,
                 'competition_category_id' => $this->competition_category_id,
                 'status_berkas' => 'Menunggu',
             ]);
@@ -117,6 +122,7 @@ class Index extends Component
         $this->npsn = $reg->npsn;
         $this->nama_pelatih = $reg->nama_pelatih;
         $this->no_hp = $reg->no_hp;
+        $this->school_email = $reg->school_email;
         $this->competition_category_id = $reg->competition_category_id;
         $this->showModal = true;
     }

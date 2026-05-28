@@ -175,25 +175,32 @@
                             </select>
                             @error('competition_category_id') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Nama Sekolah / Kontingen <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" wire:model="nama_sekolah" placeholder="Cth: SMP Negeri 1 Cianjur" required>
-                            @error('nama_sekolah') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">NPSN <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" wire:model="npsn" placeholder="Cth: 20202021" required>
-                            @error('npsn') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Nama Pelatih / Pembina <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" wire:model="nama_pelatih" placeholder="Cth: Budi Santoso" required>
-                            @error('nama_pelatih') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">No. HP / WhatsApp <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" wire:model="no_hp" placeholder="Cth: 081234567890" required>
-                            @error('no_hp') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">NPSN <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" wire:model="npsn" placeholder="Nomor Pokok Sekolah Nasional" required>
+                                @error('npsn') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Nama Sekolah <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" wire:model="nama_sekolah" placeholder="Nama sekolah sesuai data resmi" required>
+                                @error('nama_sekolah') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">No HP / WhatsApp <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" wire:model="no_hp" placeholder="08xxxxxxxxxx" required>
+                                @error('no_hp') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Email Sekolah</label>
+                                <input type="email" class="form-control" wire:model="school_email" placeholder="Alamat email sekolah">
+                                @error('school_email') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Nama Pelatih</label>
+                                <input type="text" class="form-control" wire:model="nama_pelatih" placeholder="Nama pelatih / pembina">
+                                @error('nama_pelatih') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer">

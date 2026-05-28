@@ -1,18 +1,12 @@
-<div>
+<div class="premium-event-page">
     {{-- Hero Banner --}}
-    <div style="background: linear-gradient(135deg, var(--event-primary, #0072FF) 0%, var(--event-accent, #00D4AA) 100%); padding: 140px 0 40px; position: relative; overflow: hidden;">
-        <div style="position: absolute; top: -50%; right: -20%; width: 400px; height: 400px; border-radius: 50%; background: rgba(255,255,255,0.08);"></div>
-        <div style="position: absolute; bottom: -30%; left: -10%; width: 300px; height: 300px; border-radius: 50%; background: rgba(255,255,255,0.05);"></div>
-        <div class="container" style="position: relative; z-index: 1;">
-            <div class="text-center">
-                <span style="display:inline-block; background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); color: #fff; padding: 6px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 12px;">
-                    <i class="fa fa-heart"></i> Voting Digital
-                </span>
-                <h1 class="wow fadeInUp" style="color: #fff; font-size: clamp(24px, 5vw, 36px); margin-bottom: 8px;">Dukung Tim Jagoan Anda!</h1>
-                <p class="wow fadeInUp" style="color: rgba(255,255,255,0.9); font-size: 15px; max-width: 500px; margin: 0 auto;">
-                    Setiap vote sangat berarti untuk menentukan juara favorit di <strong>{{ $eventner->nama_event }}</strong>.
-                </p>
-            </div>
+    <div class="pm-hero" style="background: var(--event-primary, #2665fd); text-align: center;">
+        <div class="pm-hero-content">
+            <div class="pm-event-badge"><i class="fa fa-heart"></i> Voting Digital</div>
+            <h1 class="pm-event-title" style="font-size: clamp(24px, 5vw, 36px);">Dukung Tim Jagoan Anda!</h1>
+            <p class="pm-event-org" style="max-width: 500px; margin: 0 auto;">
+                Setiap vote sangat berarti untuk menentukan juara favorit di <strong>{{ $eventner->nama_event }}</strong>.
+            </p>
         </div>
     </div>
 
@@ -20,7 +14,7 @@
     <div class="section zubuz-section-padding3" style="padding-top: 30px;">
         <div class="container">
             @if (session()->has('error'))
-                <div class="wow fadeInUp" style="background: rgba(239,68,68,0.1); color: #ef4444; padding: 14px 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                <div class="wow fadeInUp" style="background: rgba(239,68,68,0.1); color: #ef4444; padding: 14px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
                     <i class="fa fa-exclamation-circle"></i>
                     <span>{{ session('error') }}</span>
                 </div>
@@ -30,9 +24,9 @@
                 {{-- PAYMENT VIEW: QR Code --}}
                 <div class="row justify-content-center" wire:poll.5s="checkPaymentStatus">
                     <div class="col-lg-5">
-                        <div class="wow fadeInUp" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden;">
+                        <div class="wow fadeInUp" style="background: #fff; border: 1px solid var(--df-border, #e2e8f0); border-radius: 8px; overflow: hidden;">
                             {{-- Header --}}
-                            <div style="background: linear-gradient(135deg, var(--event-primary, #0072FF), var(--event-accent, #00D4AA)); padding: 20px; text-align: center;">
+                            <div style="background: var(--event-primary, #2665fd); padding: 20px; text-align: center;">
                                 <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
                                     <i class="fa fa-qrcode" style="font-size: 24px; color: #fff;"></i>
                                 </div>
@@ -42,15 +36,15 @@
 
                             {{-- QR Code --}}
                             <div style="padding: 24px; text-align: center;">
-                                <div style="background: #fff; border: 2px solid #e5e7eb; border-radius: 16px; padding: 16px; display: inline-block; margin-bottom: 16px;">
+                                <div style="background: #fff; border: 2px solid var(--df-border, #e2e8f0); border-radius: 8px; padding: 16px; display: inline-block; margin-bottom: 16px;">
                                     <img src="{{ $qrImageUrl }}" alt="QRIS Payment" style="max-width: 220px; width: 100%;">
                                 </div>
 
                                 {{-- Amount --}}
-                                <div style="background: rgba(0,114,255,0.06); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
-                                    <p style="color: #6b7280; font-size: 13px; margin-bottom: 4px;">Total Pembayaran</p>
+                                <div style="background: rgba(38,101,253,0.06); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                                    <p style="color: var(--df-secondary, #64748b); font-size: 13px; margin-bottom: 4px;">Total Pembayaran</p>
                                     <h3 style="color: var(--event-primary, #0072FF); font-weight: 800; margin: 0;">Rp {{ number_format($paymentAmount, 0, ',', '.') }}</h3>
-                                    <p style="color: #6b7280; font-size: 12px; margin-top: 4px;">{{ $voteCount }} vote × Rp 1.000</p>
+                                    <p style="color: var(--df-secondary, #64748b); font-size: 12px; margin-top: 4px;">{{ $voteCount }} vote × Rp 1.000</p>
                                 </div>
 
                                 {{-- Timer --}}
@@ -85,13 +79,13 @@
                                 </div>
 
                                 {{-- Status --}}
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: #fffbeb; border-radius: 10px; margin-bottom: 16px;">
+                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: #fffbeb; border-radius: 8px; margin-bottom: 16px;">
                                     <span style="display: inline-block; width: 14px; height: 14px; border: 2px solid #f59e0b; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></span>
                                     <span style="color: #92400e; font-size: 14px; font-weight: 500;">Menunggu pembayaran...</span>
                                 </div>
 
                                 {{-- Instructions --}}
-                                <div style="text-align: left; background: #f8fafc; border-radius: 10px; padding: 14px;">
+                                <div style="text-align: left; background: var(--df-surface-variant, #f8fafc); border-radius: 8px; padding: 14px;">
                                     <p style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">
                                         <i class="fa fa-info-circle" style="color: var(--event-primary, #0072FF);"></i> Cara Bayar:
                                     </p>
@@ -104,7 +98,7 @@
                                 </div>
 
                                 {{-- Cancel --}}
-                                <button wire:click="resetPayment" style="background: none; border: none; color: #6b7280; font-size: 13px; margin-top: 14px; cursor: pointer;">
+                                <button wire:click="resetPayment" style="background: none; border: none; color: var(--df-secondary, #64748b); font-size: 13px; margin-top: 14px; cursor: pointer;">
                                     <i class="fa fa-arrow-left"></i> Batal & Kembali
                                 </button>
 
@@ -121,7 +115,7 @@
                 {{-- SUCCESS VIEW --}}
                 <div class="row justify-content-center">
                     <div class="col-lg-5">
-                        <div class="wow fadeInUp" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; text-align: center;">
+                        <div class="wow fadeInUp" style="background: #fff; border: 1px solid var(--df-border, #e2e8f0); border-radius: 8px; overflow: hidden; text-align: center;">
                             <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 30px;">
                                 <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
                                     <i class="fa fa-check" style="font-size: 28px; color: #fff;"></i>
@@ -130,7 +124,7 @@
                                 <p style="color: rgba(255,255,255,0.85); margin: 0; font-size: 15px;">Vote Anda telah dihitung</p>
                             </div>
                             <div style="padding: 24px;">
-                                <div style="background: rgba(16,185,129,0.08); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                                <div style="background: rgba(16,185,129,0.08); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
                                     <p style="color: #065f46; font-size: 14px; margin: 0;">
                                         <strong>{{ $voteCount }} vote</strong> untuk tim pilihan Anda telah berhasil ditambahkan.
                                     </p>
@@ -172,14 +166,14 @@
                                 @foreach($categories as $cat)
                                 <div class="col-6 col-md-6 wow fadeInUp">
                                     <div wire:click="selectCategory({{ $cat->id }})"
-                                         style="background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.3s;"
+                                         style="background: #fff; border: 1px solid var(--df-border, #e2e8f0); border-radius: 8px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.3s;"
                                          onmouseover="this.style.borderColor='var(--event-primary, #0072FF)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.06)';"
                                          onmouseout="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
-                                        <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(0,114,255,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                                        <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(38,101,253,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
                                             <i class="fa fa-trophy" style="font-size: 20px; color: var(--event-primary, #0072FF);"></i>
                                         </div>
                                         <h6 style="font-weight: 600; margin-bottom: 4px; font-size: 15px; line-height: 1.3;">{{ $cat->name }}</h6>
-                                        <p style="color: #6b7280; margin-bottom: 12px; font-size: 13px;">{{ $cat->registrations_count }} Kontingen</p>
+                                        <p style="color: var(--df-secondary, #64748b); margin-bottom: 12px; font-size: 13px;">{{ $cat->registrations_count }} Kontingen</p>
                                         <span style="display: inline-block; background: var(--event-primary, #0072FF); color: #fff; padding: 6px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;">
                                             Pilih <i class="fa fa-arrow-right" style="font-size: 10px; margin-left: 4px;"></i>
                                         </span>
@@ -191,11 +185,11 @@
                             {{-- View B: Participants --}}
                             <div class="wow fadeInUp mb-3">
                                 <div style="display: flex; align-items: center; gap: 10px;">
-                                    <button wire:click="backToCategories" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                        <i class="fa fa-arrow-left" style="color: #6b7280;"></i>
+                                    <button wire:click="backToCategories" style="background: #fff; border: 1px solid var(--df-border, #e2e8f0); border-radius: 8px; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <i class="fa fa-arrow-left" style="color: var(--df-secondary, #64748b);"></i>
                                     </button>
                                     <nav style="font-size: 14px;">
-                                        <span style="color: #6b7280;">Kategori</span>
+                                        <span style="color: var(--df-secondary, #64748b);">Kategori</span>
                                         <span style="color: #9ca3af; margin: 0 6px;">/</span>
                                         <strong style="color: var(--event-primary, #0072FF);">{{ $selectedCategory->name }}</strong>
                                     </nav>
@@ -204,7 +198,7 @@
 
                             {{-- Search --}}
                             <div class="wow fadeInUp mb-3">
-                                <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 2px 4px; display: flex; align-items: center;">
+                                <div style="background: #fff; border: 1px solid var(--df-border, #e2e8f0); border-radius: 8px; padding: 2px 4px; display: flex; align-items: center;">
                                     <span style="padding: 10px 12px; color: #9ca3af;"><i class="fa fa-search"></i></span>
                                     <input type="text" wire:model.live.debounce.300ms="search" placeholder="Cari nama sekolah..." style="border: none; outline: none; flex: 1; padding: 10px 0; font-size: 15px; min-width: 0;">
                                 </div>
@@ -212,20 +206,20 @@
 
                             <div class="d-flex align-items-center justify-content-between mb-3">
                                 <h5 style="font-weight: 600; margin: 0; font-size: 18px;">Pilih Peserta</h5>
-                                <span style="background: rgba(0,114,255,0.1); color: var(--event-primary, #0072FF); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">{{ $participants->count() }}</span>
+                                <span style="background: rgba(38,101,253,0.1); color: var(--event-primary, #0072FF); padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">{{ $participants->count() }}</span>
                             </div>
 
                             <div class="row g-2">
                                 @forelse($participants as $reg)
                                 <div class="col-12 col-md-6 wow fadeInUp">
                                     <div wire:click="selectTeam({{ $reg->id }})"
-                                         style="background: #fff; border: {{ $selectedRegistrationId == $reg->id ? '2px solid var(--event-primary, #0072FF)' : '1px solid #e5e7eb' }}; border-radius: 12px; padding: 14px; cursor: pointer; transition: all 0.3s; {{ $selectedRegistrationId == $reg->id ? 'box-shadow: 0 4px 16px rgba(0,114,255,0.12);' : '' }}">
+                                         style="background: #fff; border: {{ $selectedRegistrationId == $reg->id ? '2px solid var(--event-primary, #0072FF)' : '1px solid #e5e7eb' }}; border-radius: 8px; padding: 14px; cursor: pointer; transition: all 0.3s; {{ $selectedRegistrationId == $reg->id ? 'box-shadow: 0 4px 16px rgba(0,114,255,0.12);' : '' }}">
                                         <div style="display: flex; align-items: center; gap: 12px;">
                                             <div style="position: relative; flex-shrink: 0;">
                                                 @if($reg->logo_sekolah)
-                                                    <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 1px solid #e5e7eb;" alt="">
+                                                    <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 1px solid var(--df-border, #e2e8f0);" alt="">
                                                 @else
-                                                    <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0,114,255,0.1); display: flex; align-items: center; justify-content: center; color: var(--event-primary, #0072FF);">
+                                                    <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(38,101,253,0.1); display: flex; align-items: center; justify-content: center; color: var(--event-primary, #0072FF);">
                                                         <i class="fa fa-school" style="font-size: 16px;"></i>
                                                     </div>
                                                 @endif
@@ -237,7 +231,7 @@
                                             </div>
                                             <div style="flex: 1; min-width: 0;">
                                                 <h6 style="margin: 0; font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $reg->nama_sekolah }}</h6>
-                                                <p style="margin: 2px 0 0; color: #6b7280; font-size: 12px;">Pelatih: {{ $reg->nama_pelatih }}</p>
+                                                <p style="margin: 2px 0 0; color: var(--df-secondary, #64748b); font-size: 12px;">Pelatih: {{ $reg->nama_pelatih }}</p>
                                             </div>
                                             <div style="text-align: right; flex-shrink: 0;">
                                                 <span style="background: rgba(16,185,129,0.1); color: #10b981; padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" title="Total Vote Terkumpul">
@@ -264,7 +258,7 @@
                     <div class="col-lg-4 mt-4 mt-lg-0">
                         {{-- Desktop: sticky sidebar --}}
                         <div class="d-none d-lg-block">
-                            <div class="wow fadeInRight" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; overflow: hidden; position: sticky; top: 100px;">
+                            <div class="wow fadeInRight" style="background: #fff; border: 1px solid var(--df-border, #e2e8f0); border-radius: 8px; overflow: hidden; position: sticky; top: 100px;">
                                 @include('livewire.public.partials._vote-form')
                             </div>
                         </div>
@@ -275,22 +269,22 @@
     </div>
 
     @if($view !== 'payment' && $view !== 'success')
-    {{-- Mobile: Sticky bottom vote form --}}
+    {{-- Mobile: Sticky bottom vote form (sits above bottom nav) --}}
     <div class="d-lg-none" id="mobile-vote-bar">
         @if($selectedRegistrationId)
-        <div style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000; background: #fff; border-top: 1px solid #e5e7eb; padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 20px rgba(0,0,0,0.08);">
+        <div style="position: fixed; bottom: var(--pm-nav-height); left: 0; right: 0; z-index: 99; background: #fff; border-top: 1px solid #e5e7eb; padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 20px rgba(0,0,0,0.08);">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <div style="flex: 1; min-width: 0;">
-                    <p style="margin: 0; font-size: 12px; color: #6b7280;">Vote untuk</p>
+                    <p style="margin: 0; font-size: 12px; color: var(--df-secondary, #64748b);">Vote untuk</p>
                     <p style="margin: 0; font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ App\Models\Registration::find($selectedRegistrationId)?->nama_sekolah }}</p>
                 </div>
-                <button type="button" data-bs-toggle="modal" data-bs-target="#mobileVoteModal" style="background: var(--event-primary, #0072FF); color: #fff; border: none; border-radius: 10px; padding: 10px 20px; font-weight: 600; font-size: 14px; white-space: nowrap; cursor: pointer;">
+                <button type="button" data-bs-toggle="modal" data-bs-target="#mobileVoteModal" style="background: var(--event-primary, #0072FF); color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-weight: 600; font-size: 14px; white-space: nowrap; cursor: pointer;">
                     Vote {{ $voteCount }}x
                 </button>
             </div>
         </div>
         @else
-        <div style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 1000; background: #fff; border-top: 1px solid #e5e7eb; padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 20px rgba(0,0,0,0.08);">
+        <div style="position: fixed; bottom: var(--pm-nav-height); left: 0; right: 0; z-index: 99; background: #fff; border-top: 1px solid #e5e7eb; padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 20px rgba(0,0,0,0.08);">
             <div style="text-align: center;">
                 <p style="margin: 0; color: #9ca3af; font-size: 13px;"><i class="fa fa-hand-pointer"></i> Pilih kontingen terlebih dahulu untuk mulai voting</p>
             </div>
@@ -301,7 +295,7 @@
     {{-- Mobile Vote Modal --}}
     <div class="modal fade" id="mobileVoteModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
-            <div class="modal-content" style="border: none; border-radius: 20px 20px 0 0;">
+            <div class="modal-content" style="border: none; border-radius: 8px 20px 0 0;">
                 <div class="modal-header" style="border-bottom: 1px solid #e5e7eb; padding: 16px 20px;">
                     <h5 class="modal-title" style="font-weight: 600; font-size: 18px;">
                         <i class="fa fa-heart" style="color: var(--event-primary, #0072FF);"></i> Form Voting
@@ -315,6 +309,34 @@
         </div>
     </div>
     @endif
+
+    {{-- Bottom Navigation --}}
+    <nav class="pm-bottom-nav">
+        <a href="{{ route('event.detail', $eventner->slug) }}" class="pm-nav-item">
+            <i class="fa fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="{{ route('event.participant', $eventner->slug) }}" class="pm-nav-item">
+            <i class="fa fa-users"></i>
+            <span>Peserta</span>
+        </a>
+        <a href="{{ route('event.vote', $eventner->slug) }}" class="pm-nav-item active">
+            <i class="fa fa-heart"></i>
+            <span>Vote</span>
+        </a>
+        @if($eventner->ticket_active && $eventner->ticket_price)
+        <a href="{{ route('event.ticket', $eventner->slug) }}" class="pm-nav-item">
+            <i class="fa fa-ticket"></i>
+            <span>Tiket</span>
+        </a>
+        @endif
+        @if(($eventner->registration_status ?? 'open') != 'closed')
+        <a href="{{ route('event.register', $eventner->slug) }}" class="pm-nav-item" style="color: var(--pm-primary);">
+            <i class="fa fa-edit"></i>
+            <span>Daftar</span>
+        </a>
+        @endif
+    </nav>
 </div>
 
 <style>
