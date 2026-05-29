@@ -100,8 +100,6 @@ class Index extends Component
             ]);
             session()->flash('success', 'Data pendaftar berhasil diperbarui.');
         } else {
-            $sharedToken = \Illuminate\Support\Str::random(16);
-
             for ($i = 0; $i < $this->jumlah_pasukan; $i++) {
                 Registration::create([
                     'eventner_id' => $eventner->id,
@@ -111,7 +109,6 @@ class Index extends Component
                     'no_hp' => strip_tags($this->no_hp),
                     'school_email' => $this->school_email ? strip_tags($this->school_email) : null,
                     'competition_category_id' => $this->competition_category_id,
-                    'magic_token' => $sharedToken,
                     'status_berkas' => 'Menunggu',
                 ]);
             }

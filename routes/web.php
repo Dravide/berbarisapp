@@ -33,3 +33,6 @@ Route::middleware(['auth:web'])->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('dashboard', App\Livewire\Dashboard\Index::class)->name('dashboard');
 });
+
+// Juknis Download
+Route::get('/event/{slug}/juknis', [App\Http\Controllers\Public\PublicJuknisController::class, 'downloadJuknis'])->name('event.juknis');
