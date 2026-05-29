@@ -100,10 +100,12 @@ class Index extends Component
             ]);
             session()->flash('success', 'Data pendaftar berhasil diperbarui.');
         } else {
+            $letters = range('A', 'Z');
             for ($i = 0; $i < $this->jumlah_pasukan; $i++) {
+                $suffix = $this->jumlah_pasukan > 1 ? ' (' . $letters[$i] . ')' : '';
                 Registration::create([
                     'eventner_id' => $eventner->id,
-                    'nama_sekolah' => strip_tags($this->nama_sekolah),
+                    'nama_sekolah' => strip_tags($this->nama_sekolah) . $suffix,
                     'npsn' => strip_tags($this->npsn),
                     'nama_pelatih' => $this->nama_pelatih ? strip_tags($this->nama_pelatih) : null,
                     'no_hp' => strip_tags($this->no_hp),

@@ -67,13 +67,12 @@ class Create extends Component
                 'npsn' => 'required|string|max:20',
                 'nama_sekolah' => 'required|string|max:255',
                 'no_hp' => 'required|string|max:20',
-                'school_email' => 'required|email|max:255',
+                'school_email' => 'nullable|email|max:255',
                 'password' => 'required|string|min:6|confirmed',
             ], [
                 'npsn.required' => 'NPSN wajib diisi.',
                 'nama_sekolah.required' => 'Nama sekolah wajib diisi.',
                 'no_hp.required' => 'No HP wajib diisi.',
-                'school_email.required' => 'Email sekolah wajib diisi.',
                 'school_email.email' => 'Format email tidak valid.',
                 'password.required' => 'Password wajib diisi.',
                 'password.min' => 'Password minimal 6 karakter.',
@@ -152,15 +151,17 @@ class Create extends Component
         $first = $created[0];
         $magicLink = route('magic.link', ['token' => $first->magic_token]);
 
-        app(MailyService::class)->sendBookingConfirmation(
-            strip_tags($this->school_email),
-            strip_tags($this->nama_sekolah),
-            $this->eventner->nama_event,
-            $magicLink,
-            [['name' => $cat->name, 'teams' => $toCreate]],
-            strip_tags($this->npsn),
-            strip_tags($this->no_hp)
-        );
+        if ($this->school_email) {
+            app(MailyService::class)->sendBookingConfirmation(
+                strip_tags($this->school_email),
+                strip_tags($this->nama_sekolah),
+                $this->eventner->nama_event,
+                $magicLink,
+                [['name' => $cat->name, 'teams' => $toCreate]],
+                strip_tags($this->npsn),
+                strip_tags($this->no_hp)
+            );
+        }
 
         return redirect($magicLink)
             ->with('success', 'Booking berhasil! Detail pendaftaran dan link upload berkas telah dikirim ke email sekolah Anda.');

@@ -195,7 +195,7 @@
                                         @error('no_hp') <span style="color: #ef4444; font-size: 13px;">{{ $message }}</span> @enderror
                                     </div>
                                     <div class="col-md-6">
-                                        <label style="font-weight: 600; display: block; margin-bottom: 6px; font-size: 14px;">Email <span style="color: #ef4444;">*</span></label>
+                                        <label style="font-weight: 600; display: block; margin-bottom: 6px; font-size: 14px;">Email</label>
                                         <input type="email" wire:model="school_email" placeholder="email@contoh.com" style="width: 100%; border: 1px solid var(--df-border, #e2e8f0); border-radius: 8px; padding: 10px 14px; font-size: 14px; outline: none;">
                                         @error('school_email') <span style="color: #ef4444; font-size: 13px;">{{ $message }}</span> @enderror
                                         <span style="color: var(--df-secondary, #64748b); font-size: 11px; margin-top: 4px; display: block;">Email aktif untuk receive link magic link & konfirmasi pendaftaran.</span>
