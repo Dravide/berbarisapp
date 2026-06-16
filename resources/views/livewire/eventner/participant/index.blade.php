@@ -265,6 +265,7 @@
                                         @endif
                                     </div>
 
+                                    @if($selectedRegistration->eventner->surat_tugas_required)
                                     <div class="mb-4">
                                         <label class="d-block text-muted small mb-2 fw-semibold">Surat Tugas / Rekomendasi</label>
                                         @if($selectedRegistration->surat_tugas)
@@ -276,7 +277,9 @@
                                             <div class="p-2 bg-light rounded-3 border border-dashed text-center text-muted small">Belum diunggah</div>
                                         @endif
                                     </div>
+                                    @endif
 
+                                    @if($selectedRegistration->eventner->kwitansi_required)
                                     <div class="mb-0">
                                         <label class="d-block text-primary small mb-2 fw-bold"><i class="ti ti-receipt"></i> Kwitansi Pendaftaran</label>
                                         @if($selectedRegistration->bukti_pendaftaran)
@@ -287,6 +290,7 @@
                                             <div class="py-5 bg-warning-subtle text-warning rounded-3 border border-dashed text-center small fw-semibold">BELUM UNGGAH KWITANSI</div>
                                         @endif
                                     </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>

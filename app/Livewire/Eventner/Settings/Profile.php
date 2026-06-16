@@ -36,6 +36,8 @@ class Profile extends Component
     public $registration_status = 'open';
     public $vote_active = true;
     public $vote_price = 1000;
+    public $surat_tugas_required = true;
+    public $kwitansi_required = true;
 
     public $drawing_code;
     public $scoring_code;
@@ -78,6 +80,8 @@ class Profile extends Component
         $this->registration_status = $eventner->registration_status ?? 'open';
         $this->vote_active = (bool)($eventner->vote_active ?? true);
         $this->vote_price = $eventner->vote_price ?? 1000;
+        $this->surat_tugas_required = (bool)($eventner->surat_tugas_required ?? true);
+        $this->kwitansi_required = (bool)($eventner->kwitansi_required ?? true);
         $this->drawing_code = $eventner->drawing_code;
         $this->scoring_code = $eventner->scoring_code;
 
@@ -112,6 +116,8 @@ class Profile extends Component
             'registration_status' => 'required|in:open,booking,closed',
             'vote_active' => 'required|boolean',
             'vote_price' => 'required|numeric|min:0',
+            'surat_tugas_required' => 'required|boolean',
+            'kwitansi_required' => 'required|boolean',
             'drawing_code' => 'nullable|string|max:255',
             'scoring_code' => 'nullable|string|max:255',
             'newLogo' => 'nullable|image|max:2048', 
@@ -163,6 +169,8 @@ class Profile extends Component
             'registration_status' => $this->registration_status,
             'vote_active' => $this->vote_active,
             'vote_price' => $this->vote_price,
+            'surat_tugas_required' => $this->surat_tugas_required,
+            'kwitansi_required' => $this->kwitansi_required,
             'drawing_code' => strip_tags($this->drawing_code),
             'scoring_code' => strip_tags($this->scoring_code),
             'logo_event' => $eventner->logo_event,

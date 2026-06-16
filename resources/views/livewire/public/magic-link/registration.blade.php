@@ -393,8 +393,12 @@
                                             </div>
                                             <ul style="margin: 0; padding-left: 18px; color: var(--df-secondary, #64748b); font-size: 13px; line-height: 1.8;">
                                                 <li>Logo sekolah (format JPG/PNG)</li>
-                                                <li>Surat tugas (format PDF/JPG)</li>
-                                                <li>Kwitansi/bukti pendaftaran (format JPG/PNG)</li>
+                                                @if($registration->eventner->surat_tugas_required)
+                                                    <li>Surat tugas (format PDF/JPG)</li>
+                                                @endif
+                                                @if($registration->eventner->kwitansi_required)
+                                                    <li>Kwitansi/bukti pendaftaran (format JPG/PNG)</li>
+                                                @endif
                                             </ul>
                                         </div>
                                     </div>
@@ -438,7 +442,7 @@
                                 </div>
                             </div>
                         </div>
-                    @else
+                    @endif
 
                     <fieldset {{ $isLocked ? 'disabled' : '' }}>
 
@@ -517,6 +521,7 @@
                                                 <span style="display: block; font-size: 12px; color: #10b981; margin-top: 6px;"><i class="fa fa-check" style="margin-right: 4px;"></i>Sudah diunggah</span>
                                             @endif
                                         </div>
+                                        @if($registration->eventner->surat_tugas_required)
                                         <div class="col-md-6">
                                             <label style="display: block; font-size: 13px; font-weight: 600; color: var(--df-on-surface, #0f172a); margin-bottom: 6px;">Surat Tugas (.pdf/.jpg)</label>
                                             <div wire:ignore x-data="{ pond: null }" x-init="
@@ -540,6 +545,8 @@
                                                 <span style="display: block; font-size: 12px; color: #10b981; margin-top: 6px;"><i class="fa fa-check" style="margin-right: 4px;"></i>Sudah diunggah</span>
                                             @endif
                                         </div>
+                                        @endif
+                                        @if($registration->eventner->kwitansi_required)
                                         <div class="col-md-6">
                                             <label style="display: block; font-size: 13px; font-weight: 600; color: var(--df-on-surface, #0f172a); margin-bottom: 6px;">Kwitansi Pendaftaran</label>
                                             <div wire:ignore x-data="{ pond: null }" x-init="
@@ -563,6 +570,7 @@
                                                 <span style="display: block; font-size: 12px; color: #10b981; margin-top: 6px;"><i class="fa fa-check" style="margin-right: 4px;"></i>Sudah diunggah</span>
                                             @endif
                                         </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
@@ -696,7 +704,6 @@
                             @endif
                         </form>
                     </fieldset>
-                    @endif {{-- end booking check --}}
                     @endif
 
                 </div>

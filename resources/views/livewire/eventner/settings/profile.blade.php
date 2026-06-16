@@ -221,6 +221,21 @@
                         </div>
 
                         <div class="col-md-12 mb-4">
+                            <div class="alert alert-light border fs-3 py-3">
+                                <h6 class="fw-semibold mb-2"><i class="ti ti-file-text"></i> Berkas Pendaftaran Wajib</h6>
+                                <small class="d-block text-muted mb-3">Nonaktifkan toggle untuk menghilangkan field upload di form publik pendaftaran. Berkas yang sudah diunggah tetap tersimpan.</small>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" wire:model.live="surat_tugas_required" id="suratTugasRequired">
+                                    <label class="form-check-label fw-bold text-muted" for="suratTugasRequired">Surat Tugas</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" wire:model.live="kwitansi_required" id="kwitansiRequired">
+                                    <label class="form-check-label fw-bold text-muted" for="kwitansiRequired">Kwitansi Pendaftaran</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12 mb-4">
                             <div class="alert alert-primary mb-0 border-0 fs-3 py-3">
                                 <h6 class="fw-semibold mb-2"><i class="ti ti-key"></i> Kode Akses Input Nilai / Scoring (Opsional)</h6>
                                 <label class="form-label mb-1">Proteksi halaman input nilai panitia dengan kode rahasia.</label>

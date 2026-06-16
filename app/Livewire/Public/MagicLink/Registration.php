@@ -175,7 +175,12 @@ class Registration extends Component
         ];
 
         if ($isFinal) {
-            $rules['suratTugas'] = 'required_without:registration.surat_tugas|file|mimes:pdf,jpg,png|max:5120';
+            if ($reg->eventner->surat_tugas_required) {
+                $rules['suratTugas'] = 'required_without:registration.surat_tugas|file|mimes:pdf,jpg,png|max:5120';
+            }
+            if ($reg->eventner->kwitansi_required) {
+                $rules['buktiPendaftaran'] = 'required_without:registration.bukti_pendaftaran|image|max:3072';
+            }
         }
 
         $this->validate($rules, [
@@ -183,6 +188,8 @@ class Registration extends Component
             'suratTugas.file' => 'File Surat Tugas harus berupa dokumen.',
             'suratTugas.mimes' => 'File Surat Tugas harus PDF, JPG, atau PNG.',
             'suratTugas.required_without' => 'Surat Tugas wajib diunggah.',
+            'buktiPendaftaran.image' => 'File Kwitansi harus berupa gambar.',
+            'buktiPendaftaran.required_without' => 'Kwitansi pendaftaran wajib diunggah.',
             'fotoPelatih.image' => 'Foto pelatih harus berupa gambar.',
             'dantonNama.required' => 'Nama Danton wajib diisi.',
             'namaPelatih.required' => 'Nama pelatih wajib diisi.',
