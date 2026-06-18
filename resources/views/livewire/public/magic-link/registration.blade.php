@@ -729,7 +729,7 @@
         @endif
         @if($registration->eventner->ticket_active && $registration->eventner->ticket_price)
         <a href="{{ route('event.ticket', $registration->eventner->slug) }}" class="pm-nav-item">
-            <i class="fa fa-ticket"></i>
+            <i class="fa fa-ticket-alt"></i>
             <span>Tiket</span>
         </a>
         @endif

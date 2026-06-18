@@ -2,7 +2,7 @@
     {{-- Hero Banner --}}
     <div class="pm-hero" style="background: var(--event-primary, #2665fd); text-align: center;">
         <div class="pm-hero-content">
-            <div class="pm-event-badge"><i class="fa fa-ticket"></i> Pembelian Tiket Online</div>
+            <div class="pm-event-badge"><i class="fa fa-ticket-alt"></i> Pembelian Tiket Online</div>
             <h1 class="pm-event-title" style="font-size: clamp(24px, 5vw, 36px);">{{ $eventner->nama_event }}</h1>
             <p class="pm-event-org">
                 Beli tiket online, bayar via QRIS, dan dapatkan QR masuk langsung di HP Anda.

@@ -136,7 +136,7 @@
             @endif
             @if($eventner->ticket_active && $eventner->ticket_price)
             <button @click="window.location.href='{{ route('event.ticket', $eventner->slug) }}'" class="pm-tab-btn">
-                <i class="fa fa-ticket"></i> Tiket
+                <i class="fa fa-ticket-alt"></i> Tiket
             </button>
             @endif
         </div>
@@ -451,168 +451,74 @@
     @if($eventner->vote_active)
     <div x-show="tab === 'vote'" x-cloak>
         <div class="pm-section" style="padding-top: 16px;">
-            @if($voteView === 'payment')
-                {{-- PAYMENT VIEW --}}
+
+            <div class="pm-card" style="background: linear-gradient(135deg, #f59e0b, #ef4444); color: #fff; border: none; margin-bottom: 16px;">
+                <div class="pm-card-body" style="padding: 18px; text-align: center;">
+                    <i class="fa fa-heart" style="font-size: 28px; margin-bottom: 6px;"></i>
+                    <h4 style="margin: 0; color: #fff; font-weight: 700;">Dukung Kontingen Favoritmu</h4>
+                    <p style="margin: 6px 0 14px; color: rgba(255,255,255,0.9); font-size: 13px;">
+                        1 vote = Rp {{ number_format($eventner->vote_price ?? 1000, 0, ',', '.') }} via QRIS
+                    </p>
+                    <a href="{{ route('event.vote', $eventner->slug) }}" class="pm-btn" style="background: #fff; color: #ef4444; font-weight: 700;">
+                        <i class="fa fa-heart"></i> Vote Sekarang
+                    </a>
+                </div>
+            </div>
+
+            @if(count($this->voteLeaderboard) === 0)
                 <div class="pm-card">
-                    <div style="background: var(--pm-primary); padding: 20px; text-align: center;">
-                        <i class="fa fa-qrcode" style="font-size: 32px; color: #fff;"></i>
-                        <h4 style="color: #fff; margin: 8px 0;">Scan & Bayar</h4>
-                    </div>
-                    <div style="padding: 24px; text-align: center;">
-                        <div style="background: #fff; border: 2px solid var(--pm-border); border-radius: 12px; padding: 16px; display: inline-block; margin-bottom: 16px;">
-                            <img src="{{ $qrImageUrl }}" alt="QRIS" style="width: 200px; max-width: 100%; display: block;">
-                        </div>
-                        <div style="background: rgba(16,185,129,0.1); border-radius: 12px; padding: 16px; margin-bottom: 16px; max-width: 280px; margin-left: auto; margin-right: auto;">
-                            <h3 style="color: #10b981; margin: 0 0 4px;">Rp {{ number_format($paymentAmount, 0, ',', '.') }}</h3>
-                            <p style="color: var(--pm-text-secondary); margin: 0; font-size: 13px;">{{ $voteCount }} vote × Rp {{ number_format($eventner->vote_price ?? 1000, 0, ',', '.') }}</p>
-                        </div>
-                        <div x-data="{ remaining: '', expired: false, init() { this.updateTimer(); setInterval(() => this.updateTimer(), 1000); }, updateTimer() { const exp = new Date('{{ $expiryTime }}').getTime(); const now = Date.now(); const diff = exp - now; if (diff <= 0) { this.remaining = '00:00'; this.expired = true; return; } const m = Math.floor(diff / 60000); const s = Math.floor((diff % 60000) / 1000); this.remaining = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0'); } }">
-                            <span style="font-weight: 600; color: var(--pm-text);">Kedaluwarsa: <span x-text="remaining" style="font-family: monospace; color: #ef4444;"></span></span>
-                        </div>
-                        <p style="color: var(--pm-text-secondary); font-size: 12px; margin-top: 12px;">Buka aplikasi e-wallet dan scan QR di atas</p>
-                        <button wire:click="resetPayment" class="pm-btn pm-btn-outline" style="margin-top: 16px;">
-                            <i class="fa fa-arrow-left"></i> Batal & Kembali
-                        </button>
-                    </div>
-                </div>
-            @elseif($voteView === 'success')
-                {{-- SUCCESS --}}
-                <div class="pm-card">
-                    <div style="background: #10b981; padding: 30px; text-align: center;">
-                        <i class="fa fa-check-circle" style="font-size: 48px; color: #fff;"></i>
-                        <h3 style="color: #fff; margin: 12px 0 4px;">Pembayaran Berhasil!</h3>
-                        <p style="color: rgba(255,255,255,0.8); margin: 0;">{{ $voteCount }} vote telah ditambahkan.</p>
-                    </div>
-                    <div style="padding: 24px; text-align: center;">
-                        <button wire:click="backToCategories" class="pm-btn pm-btn-primary">
-                            <i class="fa fa-arrow-left"></i> Kembali ke Voting
-                        </button>
-                    </div>
-                </div>
-            @elseif($voteView === 'categories')
-                {{-- CATEGORIES --}}
-                <div style="text-align: center; margin-bottom: 16px;">
-                    <h4 style="font-weight: 700; color: var(--pm-text);">Pilih Kategori</h4>
-                </div>
-                <div style="display: grid; gap: 12px;">
-                    @foreach($this->voteCategories as $cat)
-                    <div wire:click="$set('selectedCategoryId', {{ $cat->id }}); $set('voteView', 'participants')"
-                        style="background: var(--pm-surface); border: 1px solid var(--pm-border); border-radius: 12px; padding: 16px; cursor: pointer; transition: all 0.2s;"
-                        onmouseover="this.style.borderColor='var(--pm-primary)'; this.style.boxShadow='0 4px 12px rgba(38,101,253,0.15)';"
-                        onmouseout="this.style.borderColor='var(--pm-border)'; this.style.boxShadow='none';">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            <div style="width: 48px; height: 48px; background: rgba(38,101,253,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fa fa-trophy" style="color: var(--pm-primary); font-size: 20px;"></i>
-                            </div>
-                            <div style="flex: 1;">
-                                <div style="font-weight: 700; font-size: 15px; color: var(--pm-text);">{{ $cat->name }}</div>
-                                <div style="font-size: 13px; color: var(--pm-text-secondary);">{{ $cat->registrations_count }} Kontingen</div>
-                            </div>
-                            <i class="fa fa-chevron-right" style="color: var(--pm-text-secondary);"></i>
-                        </div>
-                    </div>
-                    @endforeach
+                    <div class="pm-empty">Belum ada data voting.</div>
                 </div>
             @else
-                {{-- PARTICIPANTS --}}
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
-                    <button wire:click="backToCategories" style="background: var(--pm-surface); border: 1px solid var(--pm-border); border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                        <i class="fa fa-arrow-left" style="color: var(--pm-text-secondary);"></i>
-                    </button>
-                    <div>
-                        <div style="font-weight: 600; color: var(--pm-text);">{{ $this->voteParticipants->first()?->competitionCategory->name ?? 'Kategori' }}</div>
-                        <div style="font-size: 12px; color: var(--pm-text-secondary);">Pilih kontingen untuk divote</div>
-                    </div>
-                </div>
-
-                <div style="background: var(--pm-surface); border: 1px solid var(--pm-border); border-radius: 8px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                    <i class="fa fa-search" style="color: var(--pm-text-secondary);"></i>
-                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Cari nama sekolah..." style="border: none; outline: none; flex: 1; font-size: 15px; background: transparent;">
-                </div>
-
-                <div style="display: grid; gap: 10px;">
-                    @forelse($this->voteParticipants as $reg)
-                    <div wire:click="$set('selectedRegistrationId', {{ $reg->id }})"
-                        style="background: var(--pm-surface); border: {{ $selectedRegistrationId == $reg->id ? '2px solid var(--pm-primary)' : '1px solid var(--pm-border)' }}; border-radius: 12px; padding: 14px; cursor: pointer; transition: all 0.2s;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            @if($reg->logo_sekolah)
-                                <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover;" alt="" loading="lazy">
-                            @else
-                                <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(38,101,253,0.1); display: flex; align-items: center; justify-content: center;">
-                                    <i class="fa fa-school" style="color: var(--pm-primary);"></i>
+                @foreach($this->voteLeaderboard as $group)
+                    @if($group['top']->isNotEmpty())
+                        <div class="pm-card" style="margin-bottom: 12px;">
+                            <div class="pm-card-header" style="padding: 12px 16px;">
+                                <div class="pm-card-header-icon" style="background: rgba(38,101,253,0.1); color: var(--pm-primary);">
+                                    <i class="fa fa-trophy"></i>
                                 </div>
-                            @endif
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $reg->nama_sekolah }}</div>
-                                <div style="font-size: 12px; color: var(--pm-text-secondary);">Pelatih: {{ $reg->nama_pelatih }}</div>
+                                <h3 style="font-size: 15px;">{{ $group['category']->name }}</h3>
                             </div>
-                            <span style="background: rgba(245,158,11,0.1); color: #f59e0b; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px;">
-                                <i class="fa fa-heart"></i> {{ number_format($reg->total_votes ?? 0, 0, ',', '.') }}
-                            </span>
-                        </div>
-                    </div>
-                    @empty
-                    <div class="pm-empty">Tidak ada kontingen ditemukan.</div>
-                    @endforelse
-                </div>
-
-                {{-- VOTE FORM (shown when team selected) --}}
-                @if($selectedRegistrationId)
-                <div class="pm-card" style="margin-top: 16px;">
-                    <div style="background: var(--pm-primary); padding: 14px 18px;">
-                        <h5 style="color: #fff; margin: 0; font-size: 15px;"><i class="fa fa-heart" style="margin-right: 6px;"></i>Form Voting</h5>
-                    </div>
-                    <div style="padding: 16px;">
-                        @php $selectedTeam = \App\Models\Registration::find($selectedRegistrationId); @endphp
-                        <div style="background: var(--pm-bg); border-radius: 8px; padding: 12px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
-                            <span style="font-weight: 700; color: var(--pm-primary);">Vote untuk:</span>
-                            <span style="font-weight: 600;">{{ $selectedTeam->nama_sekolah }}</span>
-                        </div>
-
-                        <div style="margin-bottom: 14px;">
-                            <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 6px;">Jumlah Vote</label>
-                            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
-                                @foreach([10, 50, 100, 500] as $val)
-                                <button type="button" wire:click="$set('voteCount', {{ $val }})" style="padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; {{ $voteCount == $val ? 'background: var(--pm-primary); color: #fff; border: none;' : 'background: var(--pm-bg); color: var(--pm-primary); border: 1px solid var(--pm-border);' }}">
-                                    {{ $val }}
-                                </button>
-                                @endforeach
-                            </div>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="font-size: 13px; color: var(--pm-text-secondary);">Custom:</span>
-                                <input type="number" wire:model.live.debounce.300ms="voteCount" min="1" max="10000" style="width: 100px; border: 1px solid var(--pm-border); border-radius: 6px; padding: 6px 10px; font-size: 14px; font-weight: 600; text-align: center;">
+                            <div class="pm-card-body" style="padding: 8px 12px 12px;">
+                                <ol style="list-style: none; padding: 0; margin: 0;">
+                                    @foreach($group['top'] as $idx => $reg)
+                                        <li style="display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: {{ $loop->last ? 'none' : '1px solid var(--pm-border)' }};">
+                                            <span style="width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; color: #fff; background: {{ $idx === 0 ? '#f59e0b' : ($idx === 1 ? '#94a3b8' : ($idx === 2 ? '#cd7f32' : '#cbd5e1')) }};">
+                                                {{ $idx + 1 }}
+                                            </span>
+                                            @if($reg->logo_sekolah)
+                                                <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;" alt="" loading="lazy">
+                                            @else
+                                                <div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(38,101,253,0.1); display: flex; align-items: center; justify-content: center;">
+                                                    <i class="fa fa-school" style="color: var(--pm-primary); font-size: 13px;"></i>
+                                                </div>
+                                            @endif
+                                            <div style="flex: 1; min-width: 0;">
+                                                <div style="font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $reg->nama_sekolah }}</div>
+                                                <div style="font-size: 11px; color: var(--pm-text-secondary);">{{ $reg->danton_nama ?: $reg->nama_pelatih }}</div>
+                                            </div>
+                                            <span style="background: rgba(245,158,11,0.1); color: #f59e0b; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                                                <i class="fa fa-heart"></i> {{ number_format($reg->total_votes ?? 0, 0, ',', '.') }}
+                                            </span>
+                                        </li>
+                                    @endforeach
+                                </ol>
                             </div>
                         </div>
-
-                        <div style="margin-bottom: 12px;">
-                            <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 6px;">Nama Lengkap</label>
-                            <input type="text" wire:model="voterName" style="width: 100%; border: 1px solid var(--pm-border); border-radius: 8px; padding: 10px 12px; font-size: 14px;">
-                        </div>
-
-                        <div style="margin-bottom: 16px;">
-                            <label style="font-weight: 600; font-size: 13px; display: block; margin-bottom: 6px;">Email</label>
-                            <input type="email" wire:model="voterEmail" style="width: 100%; border: 1px solid var(--pm-border); border-radius: 8px; padding: 10px 12px; font-size: 14px;">
-                        </div>
-
-                        <div style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <span style="color: var(--pm-text-secondary); font-size: 13px;">Total Bayar</span>
-                                <span style="font-weight: 800; color: var(--pm-primary); font-size: 18px;">Rp {{ number_format($voteCount * ($eventner->vote_price ?? 1000), 0, ',', '.') }}</span>
-                            </div>
-                        </div>
-
-                        <button wire:click="submitVote" class="pm-btn pm-btn-primary" style="width: 100%;" wire:loading.attr="disabled">
-                            <span wire:loading.remove><i class="fa fa-credit-card"></i> Bayar Sekarang</span>
-                            <span wire:loading>Memproses...</span>
-                        </button>
-                        <p style="text-align: center; color: var(--pm-text-secondary); font-size: 11px; margin-top: 8px;">via QRIS</p>
-                    </div>
-                </div>
-                @endif
+                    @endif
+                @endforeach
             @endif
         </div>
     </div>
     @endif
+
+
+
+
+
+
+
+
 
     {{-- ========== FLOATING REGISTER CTA ========== --}}
     @if(($eventner->registration_status ?? 'open') != 'closed')

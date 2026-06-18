@@ -124,7 +124,7 @@
         @endif
         @if($eventner->ticket_active && $eventner->ticket_price)
         <a href="{{ route('event.ticket', $eventner->slug) }}" class="pm-nav-item">
-            <i class="fa fa-ticket"></i>
+            <i class="fa fa-ticket-alt"></i>
             <span>Tiket</span>
         </a>
         @endif
