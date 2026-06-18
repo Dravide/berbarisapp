@@ -122,9 +122,9 @@
     'frontend_url' => 'http://localhost:3000',
     'asset_url' => NULL,
     'timezone' => 'UTC',
-    'locale' => 'en',
-    'fallback_locale' => 'en',
-    'faker_locale' => 'en_US',
+    'locale' => 'id',
+    'fallback_locale' => 'id',
+    'faker_locale' => 'id_ID',
     'cipher' => 'AES-256-CBC',
     'key' => 'base64:/mjJ0wOnXumITyshFdFHHCxj5htkupQDxJXWOtqqPNM=',
     'previous_keys' => 
