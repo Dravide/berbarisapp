@@ -9,7 +9,9 @@
         h4 { text-align: center; margin-top: 0; color: #555; }
         .category-container { margin-top: 20px; }
         .category-title { background: #333; color: #fff; padding: 5px; font-weight: bold; }
+        .deduction-title { background: #b00020; color: #fff; padding: 5px; font-weight: bold; }
         .subcategory-title { margin-top: 10px; font-weight: bold; padding: 5px; background: #eee; }
+        .deduction-sub { margin-top: 10px; font-weight: bold; padding: 5px; background: #fde8e8; color: #b00020; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #ccc; padding: 6px; }
         th { background: #f9f9f9; text-align: left; }
@@ -41,19 +43,21 @@
                 
                 @foreach($category->subCategories as $subcat)
                     <div class="subcategory-title">{{ $subcat->name }}</div>
-                    
+
                     @if($subcat->criterias->isNotEmpty())
                         <table>
                             <thead>
                                 <tr>
                                     <th width="40%">Kriteria Penilaian</th>
-                                    <th width="60%" class="options">Skor Penilaian</th>
+                                    <th width="15%" class="options">Bobot</th>
+                                    <th width="45%" class="options">Skor Penilaian</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($subcat->criterias as $crit)
                                 <tr>
                                     <td>{{ $crit->name }}</td>
+                                    <td class="options">{{ $crit->weight ?? 1 }}x</td>
                                     <td class="options">
                                         @foreach($crit->score_options as $score)
                                             <span class="circle">{{ $score }}</span>
@@ -65,6 +69,36 @@
                         </table>
                     @endif
                 @endforeach
+
+                @if($category->deductionCategories->isNotEmpty())
+                    <div class="deduction-sub">PENGURANGAN NILAI (untuk kategori ini)</div>
+                    @foreach($category->deductionCategories as $deductionCat)
+                        <div class="subcategory-title">{{ $deductionCat->name }}</div>
+                        @if($deductionCat->criterias->isNotEmpty())
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th width="40%">Kriteria Pengurangan</th>
+                                        <th width="60%" class="options">Opsi Pengurangan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($deductionCat->criterias as $deductionCrit)
+                                    <tr>
+                                        <td>{{ $deductionCrit->name }}</td>
+                                        <td class="options">
+                                            <span class="circle">0</span>
+                                            @foreach($deductionCrit->deduction_options as $opt)
+                                                <span class="circle">{{ $opt }}</span>
+                                            @endforeach
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+                    @endforeach
+                @endif
             </div>
         @endforeach
     @endif

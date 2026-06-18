@@ -7,6 +7,8 @@ use App\Models\Ticket;
 use App\Models\VoteTransaction;
 use App\Services\AutoGoPay;
 use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+use chillerlan\QRCode\Output\QRGdImagePNG;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -74,11 +76,15 @@ class AutoGoPayWebhookController extends Controller
         // Cek Ticket (idempotent)
         $ticket = Ticket::where('autogopay_transaction_id', $transactionId)->first();
         if ($ticket && $ticket->status !== 'PAID') {
-            // Generate QR tiket masuk
-            $qrData = $ticket->order_code;
-            $qrImage = (new QRCode)->render($qrData);
+            // Generate QR tiket masuk (binary PNG)
+            $options = new QROptions;
+            $options->outputInterface = QRGdImagePNG::class;
+            $options->outputBase64 = false;
+            $options->scale = 6;
+
             $qrPath = 'tickets/' . $ticket->order_code . '.png';
-            Storage::put('public/' . $qrPath, base64_decode(explode(',', $qrImage, 2)[1] ?? ''));
+            $qrImage = (new QRCode($options))->render($ticket->order_code);
+            Storage::disk('public')->put($qrPath, $qrImage);
 
             $ticket->update([
                 'status' => 'PAID',
@@ -86,6 +92,16 @@ class AutoGoPayWebhookController extends Controller
                 'qr_code_path' => $qrPath,
             ]);
             Log::info('Ticket payment confirmed via webhook', ['transaction_id' => $transactionId, 'ticket_id' => $ticket->id]);
+
+            // Kirim email notifikasi ke buyer
+            try {
+                app(\App\Services\MailyService::class)->sendTicketConfirmation($ticket->fresh());
+            } catch (\Exception $e) {
+                Log::warning('Maily.id: sendTicketConfirmation failed (webhook)', [
+                    'error' => $e->getMessage(),
+                    'order' => $ticket->order_code,
+                ]);
+            }
         }
     }
 

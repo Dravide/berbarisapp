@@ -6,9 +6,12 @@ use Livewire\Component;
 use App\Models\AssessmentCategory;
 use App\Models\AssessmentSubCategory;
 use App\Models\AssessmentCriteria;
+use App\Models\AssessmentScore;
 use App\Models\DeductionCategory;
 use App\Models\DeductionCriteria;
+use App\Models\ScoreDeduction;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
@@ -38,10 +41,43 @@ class Builder extends Component
         $this->eventnerId = $eventner->id;
     }
 
+    /**
+     * Batas jumlah opsi nilai/pengurangan per kriteria.
+     */
+    public const MAX_OPTIONS = 20;
+
+    /**
+     * Cek apakah sebuah kriteria penilaian sudah punya nilai masuk.
+     */
+    private function criteriaHasScores(int $criteriaId): bool
+    {
+        return AssessmentScore::where('assessment_criteria_id', $criteriaId)->exists();
+    }
+
+    /**
+     * Cek apakah kumpulan kriteria penilaian sudah punya nilai masuk.
+     */
+    private function anyCriteriaHasScores(iterable $criteriaIds): bool
+    {
+        $ids = collect($criteriaIds)->flatten()->filter();
+
+        return $ids->isNotEmpty() && AssessmentScore::whereIn('assessment_criteria_id', $ids)->exists();
+    }
+
+    /**
+     * Cek apakah kumpulan kriteria pengurangan sudah dipakai di skor.
+     */
+    private function anyDeductionHasScores(iterable $deductionCriteriaIds): bool
+    {
+        $ids = collect($deductionCriteriaIds)->flatten()->filter();
+
+        return $ids->isNotEmpty() && ScoreDeduction::whereIn('deduction_criteria_id', $ids)->exists();
+    }
+
     #[\Livewire\Attributes\Computed]
     public function categories()
     {
-        return AssessmentCategory::with(['subCategories.criterias'])
+        return AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias'])
                 ->where('eventner_id', $this->eventnerId)
                 ->orderBy('sort_order')
                 ->get();
@@ -64,12 +100,29 @@ class Builder extends Component
 
     public function deleteCategory($id)
     {
-        AssessmentCategory::where('eventner_id', $this->eventnerId)->findOrFail($id)->delete();
+        $category = AssessmentCategory::where('eventner_id', $this->eventnerId)
+            ->with(['subCategories.criterias', 'deductionCategories.criterias'])
+            ->findOrFail($id);
+
+        $criteriaIds = $category->subCategories->flatMap->criterias->pluck('id');
+
+        if ($this->anyCriteriaHasScores($criteriaIds)) {
+            session()->flash('error', 'Tidak bisa menghapus kategori: sudah ada nilai yang masuk. Hapus/lck format sebelum penilaian dimulai.');
+            return;
+        }
+
+        $deductionCriteriaIds = $category->deductionCategories->flatMap->criterias->pluck('id');
+        if ($this->anyDeductionHasScores($deductionCriteriaIds)) {
+            session()->flash('error', 'Tidak bisa menghapus kategori: sudah ada nilai pengurangan yang masuk.');
+            return;
+        }
+
+        $category->delete();
     }
 
     public function duplicateCategory($id)
     {
-        $original = AssessmentCategory::with(['subCategories.criterias'])
+        $original = AssessmentCategory::with(['subCategories.criterias', 'judges', 'deductionCategories.criterias'])
             ->where('eventner_id', $this->eventnerId)
             ->findOrFail($id);
 
@@ -81,6 +134,11 @@ class Builder extends Component
             'name' => $original->name . ' (Salinan)',
             'sort_order' => $maxOrder + 1,
         ]);
+
+        // Clone pivot juri agar kategori hasil duplikat tetap punya juri yang sama
+        if ($original->judges->isNotEmpty()) {
+            $newCategory->judges()->sync($original->judges->pluck('id'));
+        }
 
         // Clone sub-categories and their criteria
         foreach ($original->subCategories as $subIndex => $sub) {
@@ -97,6 +155,25 @@ class Builder extends Component
                     'score_options' => $crit->score_options,
                     'weight' => $crit->weight ?? 1,
                     'sort_order' => $crit->sort_order,
+                ]);
+            }
+        }
+
+        // Clone deduction categories and their criterias, menempel ke kategori hasil duplikat
+        foreach ($original->deductionCategories as $dedIndex => $dedCat) {
+            $newDedCat = DeductionCategory::create([
+                'eventner_id' => $this->eventnerId,
+                'assessment_category_id' => $newCategory->id,
+                'name' => $dedCat->name,
+                'sort_order' => $dedIndex + 1,
+            ]);
+
+            foreach ($dedCat->criterias as $dedCrit) {
+                DeductionCriteria::create([
+                    'deduction_category_id' => $newDedCat->id,
+                    'name' => $dedCrit->name,
+                    'deduction_options' => $dedCrit->deduction_options,
+                    'sort_order' => $dedCrit->sort_order,
                 ]);
             }
         }
@@ -131,7 +208,13 @@ class Builder extends Component
         // Verify ownership through parent category
         $sub = AssessmentSubCategory::whereHas('category', function ($q) {
             $q->where('eventner_id', $this->eventnerId);
-        })->findOrFail($id);
+        })->with('criterias')->findOrFail($id);
+
+        if ($this->anyCriteriaHasScores($sub->criterias->pluck('id'))) {
+            session()->flash('error', 'Tidak bisa menghapus sub-kategori: sudah ada nilai yang masuk.');
+            return;
+        }
+
         $sub->delete();
     }
 
@@ -169,6 +252,11 @@ class Builder extends Component
             }
         }
 
+        if (count($scoreOptions) > self::MAX_OPTIONS) {
+            session()->flash("error_{$subCategoryId}", "Maksimal " . self::MAX_OPTIONS . " opsi nilai per kriteria.");
+            return;
+        }
+
         $maxOrder = AssessmentCriteria::where('assessment_sub_category_id', $subCategoryId)->max('sort_order') ?? 0;
 
         $weight = $this->newCriteriaWeights[$subCategoryId] ?? 1;
@@ -192,9 +280,16 @@ class Builder extends Component
     public function deleteCriteria($id)
     {
         // Verify ownership through parent chain: criteria -> subCategory -> category -> eventner
-        AssessmentCriteria::whereHas('subCategory.category', function ($q) {
+        $crit = AssessmentCriteria::whereHas('subCategory.category', function ($q) {
             $q->where('eventner_id', $this->eventnerId);
-        })->findOrFail($id)->delete();
+        })->findOrFail($id);
+
+        if ($this->criteriaHasScores($id)) {
+            session()->flash('error', 'Tidak bisa menghapus kriteria: sudah ada nilai yang masuk.');
+            return;
+        }
+
+        $crit->delete();
     }
 
     // ============================================================
@@ -295,6 +390,11 @@ class Builder extends Component
             }
         }
 
+        if (count($scoreOptions) > self::MAX_OPTIONS) {
+            session()->flash('error_criteria', 'Maksimal ' . self::MAX_OPTIONS . ' opsi nilai per kriteria.');
+            return;
+        }
+
         $weight = is_numeric($this->editCriteriaWeight) && $this->editCriteriaWeight >= 0 ? $this->editCriteriaWeight : 1;
 
         AssessmentCriteria::whereHas('subCategory.category', function ($q) {
@@ -318,37 +418,46 @@ class Builder extends Component
     // DEDUCTION CATEGORIES & CRITERIA
     // ============================================================
 
-    public $newDeductionCategoryName = '';
+    public $newDeductionCategoryNames = [];
     public $newDeductionCriteriaNames = [];
     public $newDeductionCriteriaOptions = [];
 
-    #[\Livewire\Attributes\Computed]
-    public function deductionCategories()
+    public function addDeductionCategory($assessmentCategoryId)
     {
-        return DeductionCategory::with('criterias')
-            ->where('eventner_id', $this->eventnerId)
-            ->orderBy('sort_order')
-            ->get();
-    }
+        // Pastikan assessment category milik eventner ini
+        AssessmentCategory::where('eventner_id', $this->eventnerId)->findOrFail($assessmentCategoryId);
 
-    public function addDeductionCategory()
-    {
-        $this->validate(['newDeductionCategoryName' => 'required|string|max:255']);
+        $name = $this->newDeductionCategoryNames[$assessmentCategoryId] ?? '';
 
-        $maxOrder = DeductionCategory::where('eventner_id', $this->eventnerId)->max('sort_order') ?? 0;
+        if (trim($name) === '') {
+            session()->flash("error_dedcat_{$assessmentCategoryId}", 'Nama kategori pengurangan wajib diisi.');
+            return;
+        }
+
+        $maxOrder = DeductionCategory::where('assessment_category_id', $assessmentCategoryId)->max('sort_order') ?? 0;
 
         DeductionCategory::create([
             'eventner_id' => $this->eventnerId,
-            'name' => strip_tags($this->newDeductionCategoryName),
+            'assessment_category_id' => $assessmentCategoryId,
+            'name' => strip_tags($name),
             'sort_order' => $maxOrder + 1,
         ]);
 
-        $this->newDeductionCategoryName = '';
+        $this->newDeductionCategoryNames[$assessmentCategoryId] = '';
     }
 
     public function deleteDeductionCategory($id)
     {
-        DeductionCategory::where('eventner_id', $this->eventnerId)->findOrFail($id)->delete();
+        $category = DeductionCategory::where('eventner_id', $this->eventnerId)
+            ->with('criterias')
+            ->findOrFail($id);
+
+        if ($this->anyDeductionHasScores($category->criterias->pluck('id'))) {
+            session()->flash('error', 'Tidak bisa menghapus kategori pengurangan: sudah ada nilai pengurangan yang masuk.');
+            return;
+        }
+
+        $category->delete();
     }
 
     public function addDeductionCriteria($categoryId)
@@ -377,6 +486,11 @@ class Builder extends Component
             }
         }
 
+        if (count($options) > self::MAX_OPTIONS) {
+            session()->flash('error', 'Maksimal ' . self::MAX_OPTIONS . ' opsi pengurangan per kriteria.');
+            return;
+        }
+
         $maxOrder = DeductionCriteria::where('deduction_category_id', $categoryId)->max('sort_order') ?? 0;
 
         DeductionCriteria::create([
@@ -394,7 +508,14 @@ class Builder extends Component
     {
         DeductionCriteria::whereHas('category', function ($q) {
             $q->where('eventner_id', $this->eventnerId);
-        })->findOrFail($id)->delete();
+        })->findOrFail($id);
+
+        if (ScoreDeduction::where('deduction_criteria_id', $id)->exists()) {
+            session()->flash('error', 'Tidak bisa menghapus kriteria pengurangan: sudah ada nilai pengurangan yang masuk.');
+            return;
+        }
+
+        DeductionCriteria::where('id', $id)->delete();
     }
 
     // Edit Deduction Category
@@ -457,6 +578,11 @@ class Builder extends Component
             }
         }
 
+        if (count($options) > self::MAX_OPTIONS) {
+            session()->flash('error', 'Maksimal ' . self::MAX_OPTIONS . ' opsi pengurangan per kriteria.');
+            return;
+        }
+
         DeductionCriteria::whereHas('category', function ($q) {
             $q->where('eventner_id', $this->eventnerId);
         })->findOrFail($this->editingDeductionCriteriaId)
@@ -494,9 +620,11 @@ class Builder extends Component
         array_splice($categories, $position, 0, $id);
 
         // Update all sort_order values
-        foreach ($categories as $order => $catId) {
-            AssessmentCategory::where('id', $catId)->update(['sort_order' => $order + 1]);
-        }
+        DB::transaction(function () use ($categories) {
+            foreach ($categories as $order => $catId) {
+                AssessmentCategory::where('id', $catId)->update(['sort_order' => $order + 1]);
+            }
+        });
     }
 
     public function reorderSubCategories($id, $position, $groupId)
@@ -512,38 +640,40 @@ class Builder extends Component
         $oldCategoryId = $movedSub->assessment_category_id;
         $newCategoryId = $groupId; // destination category from wire:sort:group-id
 
-        // If moving to a different category, update the foreign key
-        if ($oldCategoryId != $newCategoryId) {
-            $movedSub->update(['assessment_category_id' => $newCategoryId]);
+        DB::transaction(function () use ($movedSub, $oldCategoryId, $newCategoryId, $id, $position) {
+            // If moving to a different category, update the foreign key
+            if ($oldCategoryId != $newCategoryId) {
+                $movedSub->update(['assessment_category_id' => $newCategoryId]);
 
-            // Re-index old category's remaining sub-categories
-            $oldSiblings = AssessmentSubCategory::where('assessment_category_id', $oldCategoryId)
+                // Re-index old category's remaining sub-categories
+                $oldSiblings = AssessmentSubCategory::where('assessment_category_id', $oldCategoryId)
+                    ->orderBy('sort_order')
+                    ->pluck('id')
+                    ->toArray();
+                foreach ($oldSiblings as $order => $sibId) {
+                    AssessmentSubCategory::where('id', $sibId)->update(['sort_order' => $order + 1]);
+                }
+            }
+
+            // Re-index the destination category's sub-categories
+            $siblings = AssessmentSubCategory::where('assessment_category_id', $newCategoryId)
                 ->orderBy('sort_order')
                 ->pluck('id')
                 ->toArray();
-            foreach ($oldSiblings as $order => $sibId) {
+
+            // Remove the moved item if it's already in the list
+            $key = array_search($id, $siblings);
+            if ($key !== false) {
+                array_splice($siblings, $key, 1);
+            }
+
+            // Insert at the new position
+            array_splice($siblings, $position, 0, $id);
+
+            foreach ($siblings as $order => $sibId) {
                 AssessmentSubCategory::where('id', $sibId)->update(['sort_order' => $order + 1]);
             }
-        }
-
-        // Re-index the destination category's sub-categories
-        $siblings = AssessmentSubCategory::where('assessment_category_id', $newCategoryId)
-            ->orderBy('sort_order')
-            ->pluck('id')
-            ->toArray();
-
-        // Remove the moved item if it's already in the list
-        $key = array_search($id, $siblings);
-        if ($key !== false) {
-            array_splice($siblings, $key, 1);
-        }
-
-        // Insert at the new position
-        array_splice($siblings, $position, 0, $id);
-
-        foreach ($siblings as $order => $sibId) {
-            AssessmentSubCategory::where('id', $sibId)->update(['sort_order' => $order + 1]);
-        }
+        });
     }
 
     public function reorderCriterias($id, $position)
@@ -565,9 +695,11 @@ class Builder extends Component
 
         array_splice($criterias, $position, 0, $id);
 
-        foreach ($criterias as $order => $critId) {
-            AssessmentCriteria::where('id', $critId)->update(['sort_order' => $order + 1]);
-        }
+        DB::transaction(function () use ($criterias) {
+            foreach ($criterias as $order => $critId) {
+                AssessmentCriteria::where('id', $critId)->update(['sort_order' => $order + 1]);
+            }
+        });
     }
 
     // ============================================================

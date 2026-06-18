@@ -39,6 +39,11 @@ class Ticket extends Model
         });
     }
 
+    protected $casts = [
+        'paid_at' => 'datetime',
+        'checked_in_at' => 'datetime',
+    ];
+
     public function eventner()
     {
         return $this->belongsTo(Eventner::class);

@@ -129,8 +129,8 @@
 
                             {{-- QR Code --}}
                             <div style="padding: 30px; text-align: center;">
-                                <div style="margin-bottom: 24px;">
-                                    <img src="{{ asset('storage/' . $paidTicket->qr_code_path) }}" alt="QR Ticket" style="max-width: 200px;">
+                                <div style="display: flex; justify-content: center; align-items: center; margin-bottom: 24px;">
+                                    <img src="{{ asset('storage/' . $paidTicket->qr_code_path) }}" alt="QR Ticket" style="max-width: 200px; width: 200px; height: 200px; object-fit: contain; display: block; margin: 0 auto;">
                                 </div>
 
                                 {{-- Info Box --}}
@@ -179,26 +179,70 @@
                 {{-- PURCHASE FORM --}}
                 <div class="row justify-content-center">
                     <div class="col-lg-6">
-                        {{-- Ticket Info Card --}}
-                        <div class="wow fadeInUp" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 24px; margin-bottom: 20px;">
-                            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
-                                <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(0,114,255,0.1); display: flex; align-items: center; justify-content: center;">
-                                    <i class="fa fa-ticket" style="font-size: 20px; color: #0072FF;"></i>
-                                </div>
-                                <div style="flex: 1;">
-                                    <h5 style="margin: 0; font-weight: 600;">Tiket Masuk Event</h5>
-                                    <p style="margin: 2px 0 0; color: var(--df-secondary, #64748b); font-size: 14px;">{{ $eventner->nama_event }}</p>
-                                </div>
-                                <div style="text-align: right;">
-                                    <h4 style="margin: 0; color: #0072FF; font-weight: 700;">Rp {{ number_format($eventner->ticket_price, 0, ',', '.') }}</h4>
-                                    <span style="color: #9ca3af; font-size: 13px;">/ tiket</span>
-                                </div>
-                            </div>
-                            @if($eventner->ticket_description)
-                                <div style="background: #f8fafc; border-radius: 8px; padding: 14px; font-size: 14px; color: var(--df-secondary, #64748b);">
-                                    {{ $eventner->ticket_description }}
-                                </div>
+                        {{-- Event Detail Card --}}
+                        @php
+                            $tanggalLabel = $eventner->tanggal
+                                ? \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('l, d F Y')
+                                : null;
+                        @endphp
+                        <div class="wow fadeInUp" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-bottom: 20px;">
+
+                            @if($eventner->poster)
+                                <img src="{{ asset('storage/' . $eventner->poster) }}" alt="{{ $eventner->nama_event }}" style="width: 100%; max-height: 220px; object-fit: cover; display: block;">
                             @endif
+
+                            <div style="padding: 20px 24px;">
+                                <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+                                    @if($eventner->logo_event)
+                                        <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt="logo" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 1px solid #e5e7eb;">
+                                    @else
+                                        <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(0,114,255,0.1); display: flex; align-items: center; justify-content: center;">
+                                            <i class="fa fa-calendar-check" style="font-size: 20px; color: #0072FF;"></i>
+                                        </div>
+                                    @endif
+                                    <div style="flex: 1;">
+                                        <h5 style="margin: 0; font-weight: 700; line-height: 1.3;">{{ $eventner->nama_event }}</h5>
+                                        @if($eventner->diselenggarakan_oleh)
+                                            <p style="margin: 2px 0 0; color: var(--df-secondary, #64748b); font-size: 13px;">Diselenggarakan oleh {{ $eventner->diselenggarakan_oleh }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px; background: #f8fafc; border-radius: 8px;">
+                                    @if($tanggalLabel)
+                                        <div style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: #374151;">
+                                            <i class="fa fa-calendar-alt" style="width: 18px; color: #0072FF;"></i>
+                                            <span>{{ $tanggalLabel }}</span>
+                                        </div>
+                                    @endif
+                                    @if($eventner->venue || $eventner->lokasi)
+                                        <div style="display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: #374151;">
+                                            <i class="fa fa-map-marker-alt" style="width: 18px; color: #0072FF; margin-top: 2px;"></i>
+                                            <span>
+                                                @if($eventner->venue){{ $eventner->venue }}@endif
+                                                @if($eventner->venue && $eventner->lokasi) &mdash; @endif
+                                                @if($eventner->lokasi){{ $eventner->lokasi }}@endif
+                                            </span>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0f0f0;">
+                                    <div>
+                                        <p style="margin: 0; font-size: 12px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px;">Harga Tiket</p>
+                                        <h4 style="margin: 2px 0 0; color: #0072FF; font-weight: 700;">Rp {{ number_format($eventner->ticket_price, 0, ',', '.') }} <span style="color: #9ca3af; font-size: 13px; font-weight: 400;">/ tiket</span></h4>
+                                    </div>
+                                    <span style="background: rgba(16,185,129,0.1); color: #059669; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">
+                                        <i class="fa fa-check-circle"></i> Tiket Tersedia
+                                    </span>
+                                </div>
+
+                                @if($eventner->ticket_description)
+                                    <div style="background: rgba(0,114,255,0.05); border-left: 3px solid #0072FF; border-radius: 6px; padding: 12px 14px; margin-top: 14px; font-size: 13px; color: #4b5563; line-height: 1.6;">
+                                        {{ $eventner->ticket_description }}
+                                    </div>
+                                @endif
+                            </div>
                         </div>
 
                         {{-- Form Card --}}
@@ -294,7 +338,7 @@
         </a>
         @endif
         <a href="{{ route('event.ticket', $eventner->slug) }}" class="pm-nav-item active">
-            <i class="fa fa-ticket"></i>
+            <i class="fa fa-ticket-alt"></i>
             <span>Tiket</span>
         </a>
         @if(($eventner->registration_status ?? 'open') != 'closed')

@@ -6,6 +6,8 @@ use App\Models\Eventner;
 use App\Models\Ticket;
 use App\Services\AutoGoPay;
 use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+use chillerlan\QRCode\Output\QRGdImagePNG;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
@@ -167,16 +169,23 @@ class EventTicket extends Component
             if ($status === 'settlement') {
                 if ($ticket && $ticket->status !== 'PAID') {
                     // Generate QR tiket masuk
-                    $qrData = $ticket->order_code;
-                    $qrImage = (new QRCode)->render($qrData);
-                    $qrPath = 'tickets/' . $ticket->order_code . '.png';
-                    Storage::put('public/' . $qrPath, base64_decode(explode(',', $qrImage, 2)[1] ?? ''));
+                    $qrPath = $this->generateTicketQr($ticket);
 
                     $ticket->update([
                         'status' => 'PAID',
                         'paid_at' => now(),
                         'qr_code_path' => $qrPath,
                     ]);
+
+                    // Kirim email notifikasi (idempoten via cache)
+                    try {
+                        app(\App\Services\MailyService::class)->sendTicketConfirmation($ticket->fresh());
+                    } catch (\Exception $e) {
+                        Log::warning('Maily.id: sendTicketConfirmation failed (polling)', [
+                            'error' => $e->getMessage(),
+                            'order' => $ticket->order_code,
+                        ]);
+                    }
                 }
                 $this->paymentConfirmed = true;
                 $this->confirmOrder = $ticket->order_code;
@@ -191,6 +200,24 @@ class EventTicket extends Component
         } catch (\Exception $e) {
             Log::warning('AutoGoPay status check failed (ticket)', ['error' => $e->getMessage()]);
         }
+    }
+
+    /**
+     * Generate QR code PNG untuk tiket dan simpan ke storage.
+     * Return path relatif di disk 'public'.
+     */
+    public function generateTicketQr(Ticket $ticket): string
+    {
+        $options = new QROptions;
+        $options->outputInterface = QRGdImagePNG::class;
+        $options->outputBase64 = false;
+        $options->scale = 6;
+
+        $qrPath = 'tickets/' . $ticket->order_code . '.png';
+        $qrImage = (new QRCode($options))->render($ticket->order_code);
+        Storage::disk('public')->put($qrPath, $qrImage);
+
+        return $qrPath;
     }
 
     public function resetPayment()
@@ -212,6 +239,12 @@ class EventTicket extends Component
                 ->where('eventner_id', $this->eventner->id)
                 ->whereIn('status', ['PAID', 'CHECKED_IN'])
                 ->first();
+
+            // Regenerate QR kalau path kosong atau file tidak ada (mis. webhook lama generate file kosong)
+            if ($paidTicket && (!$paidTicket->qr_code_path || !Storage::disk('public')->exists($paidTicket->qr_code_path))) {
+                $paidTicket->qr_code_path = $this->generateTicketQr($paidTicket);
+                $paidTicket->save();
+            }
         }
 
         return view('livewire.public.event-ticket', [

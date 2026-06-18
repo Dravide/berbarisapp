@@ -16,6 +16,7 @@ Route::get('/event/{slug}/participant', App\Livewire\Public\EventParticipant::cl
 Route::get('/event/{slug}/vote', App\Livewire\Public\EventVote::class)->name('event.vote');
 Route::post('/webhook/autogopay', [App\Http\Controllers\Webhook\AutoGoPayWebhookController::class, 'handle']);
 Route::get('/event/{slug}/ticket', App\Livewire\Public\EventTicket::class)->name('event.ticket');
+Route::get('/scan/{token}', App\Livewire\Public\Checkin\Scan::class)->name('event.checkin.scan');
 Route::get('/event/{slug}/register', App\Livewire\Public\Registration\Create::class)->name('event.register');
 Route::get('/event/{slug}/drawing', App\Livewire\Eventner\Drawing\Spin::class)->name('event.drawing.spin');
 Route::get('/event/{slug}/drawing-results', App\Livewire\Eventner\Drawing\Results::class)->name('event.drawing.results');

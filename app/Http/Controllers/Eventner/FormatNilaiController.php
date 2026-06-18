@@ -17,13 +17,14 @@ class FormatNilaiController extends Controller
             abort(403, 'Anda bukan Eventner yang sah.');
         }
 
-        $categories = AssessmentCategory::with(['subCategories.criterias'])
+        $categories = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias'])
                 ->where('eventner_id', $eventner->id)
+                ->orderBy('sort_order')
                 ->get();
 
         $data = [
             'eventner' => $eventner,
-            'categories' => $categories
+            'categories' => $categories,
         ];
 
         $pdf = Pdf::loadView('eventner.format-nilai.pdf_rubrik', $data);

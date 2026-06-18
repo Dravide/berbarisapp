@@ -14,6 +14,10 @@ class ScoreDeduction extends Model
         'note',
     ];
 
+    protected $casts = [
+        'amount' => 'decimal:2',
+    ];
+
     public function eventner()
     {
         return $this->belongsTo(Eventner::class);

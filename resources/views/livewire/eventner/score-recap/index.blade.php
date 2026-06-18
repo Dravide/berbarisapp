@@ -100,9 +100,16 @@
                                         </td>
                                         <td><span class="text-muted">{{ $data['participant']->nama_pelatih }}</span></td>
                                         @foreach($assessmentCategories as $ac)
-                                            @php $catScore = $data['categoryTotals'][$ac->id] ?? 0; @endphp
+                                            @php
+                                                $catScore = $data['categoryTotals'][$ac->id] ?? 0;
+                                                $catDed = $data['categoryDeductions'][$ac->id] ?? 0;
+                                                $catFinal = $catScore + $catDed;
+                                            @endphp
                                             <td class="text-center">
-                                                <span class="fw-semibold {{ $catScore > 0 ? '' : 'text-muted' }}">{{ $catScore }}</span>
+                                                <span class="fw-semibold {{ $catFinal > 0 ? '' : 'text-muted' }}">{{ $catFinal }}</span>
+                                                @if($catDed < 0)
+                                                    <div class="text-danger fs-3" title="Pengurangan kategori ini">({{ $catDed }})</div>
+                                                @endif
                                             </td>
                                         @endforeach
                                         <td class="text-center">

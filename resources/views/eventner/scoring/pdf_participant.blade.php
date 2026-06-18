@@ -222,6 +222,12 @@
                             <td class="gn">{{ $cat->name }}</td>
                             <td class="gv">{{ $categoryTotals[$cat->id] ?? 0 }}</td>
                         </tr>
+                        @if(($categoryDeductions[$cat->id] ?? 0) < 0)
+                            <tr>
+                                <td class="gn" style="color:#c0392b; padding-left:16px;">&rsaquo; Pengurangan</td>
+                                <td class="gv" style="color:#c0392b;">{{ $categoryDeductions[$cat->id] }}</td>
+                            </tr>
+                        @endif
                     @endforeach
                     <tr>
                         <td class="gn" style="font-weight:bold;">Total Nilai Juri</td>
@@ -246,29 +252,35 @@
                 <td class="cat-score" style="background:#c0392b; color:#fff;">{{ $totalDeduction }} poin</td>
             </tr>
         </table>
-        @foreach($deductionCategories as $deductionCat)
-            @if($deductionCat->criterias->isNotEmpty())
-                <table class="krit">
-                    <thead>
-                        <tr>
-                            <th style="color:#c0392b;">{{ $deductionCat->name }}</th>
-                            <th style="width:80px; text-align:center;">Pengurangan</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($deductionCat->criterias as $deductionCrit)
-                            @php
-                                $deductionAmount = $scoreDeductions[$deductionCrit->id]->amount ?? 0;
-                            @endphp
-                            @if($deductionAmount != 0)
+        @php $dedByAssessment = $deductionCategories->groupBy('assessment_category_id'); @endphp
+        @foreach($assessmentCategories as $cat)
+            @php $deds = $dedByAssessment->get($cat->id, collect()); @endphp
+            @if($deds->isNotEmpty())
+                @foreach($deds as $deductionCat)
+                    @if($deductionCat->criterias->isNotEmpty())
+                        <table class="krit">
+                            <thead>
                                 <tr>
-                                    <td class="cn">{{ $deductionCrit->name }}</td>
-                                    <td class="sv" style="color:#c0392b; background:#fdf2f2;">{{ $deductionAmount }}</td>
+                                    <th style="color:#c0392b;">{{ $cat->name }} &mdash; {{ $deductionCat->name }}</th>
+                                    <th style="width:80px; text-align:center;">Pengurangan</th>
                                 </tr>
-                            @endif
-                        @endforeach
-                    </tbody>
-                </table>
+                            </thead>
+                            <tbody>
+                                @foreach($deductionCat->criterias as $deductionCrit)
+                                    @php
+                                        $deductionAmount = $scoreDeductions[$deductionCrit->id]->amount ?? 0;
+                                    @endphp
+                                    @if($deductionAmount != 0)
+                                        <tr>
+                                            <td class="cn">{{ $deductionCrit->name }}</td>
+                                            <td class="sv" style="color:#c0392b; background:#fdf2f2;">{{ $deductionAmount }}</td>
+                                        </tr>
+                                    @endif
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @endif
+                @endforeach
             @endif
         @endforeach
     @endif

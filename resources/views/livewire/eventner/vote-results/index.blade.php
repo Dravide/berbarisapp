@@ -107,9 +107,13 @@
                                                     $maxVotes = $results->first()->total_votes ?: 1;
                                                     $percent = (($reg->total_votes ?: 0) / $maxVotes) * 100;
                                                 @endphp
-                                                <div class="progress" style="height: 6px;">
+                                                <div class="progress mb-2" style="height: 6px;">
                                                     <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $percent }}%"></div>
                                                 </div>
+                                                <a href="{{ route('eventner.vote-results.show', ['registration' => $reg->id]) }}"
+                                                   class="btn btn-sm btn-outline-primary" title="Lihat detail voter">
+                                                    <i class="ti ti-users me-1"></i> Detail Voter
+                                                </a>
                                             </td>
                                         </tr>
                                     @endforeach

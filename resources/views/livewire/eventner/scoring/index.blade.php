@@ -334,28 +334,34 @@
                             {{-- ========== PENGURANGAN NILAI ========== --}}
                             @if(count($deductionCategories) > 0)
                                 <div class="border border-danger rounded p-3 mb-4">
-                                    <p class="text-danger small fw-semibold text-uppercase mb-3"><i class="ti ti-minus-circle me-1"></i> Pengurangan Nilai</p>
-                                    @foreach($deductionCategories as $deductionCat)
-                                        <p class="text-muted small fw-bold mb-2">{{ $deductionCat->name }}</p>
-                                        @foreach($deductionCat->criterias as $deductionCrit)
-                                            <div class="mb-3">
-                                                <span class="d-block small fw-semibold mb-1">{{ $deductionCrit->name }}</span>
-                                                <div class="d-flex flex-wrap gap-1">
-                                                    <button type="button"
-                                                        wire:click="$set('deductions.{{ $deductionCrit->id }}', 0)"
-                                                        class="btn btn-sm {{ (isset($deductions[$deductionCrit->id]) && $deductions[$deductionCrit->id] == 0) || !isset($deductions[$deductionCrit->id]) ? 'btn-success' : 'btn-outline-success' }} px-2">
-                                                        0
-                                                    </button>
-                                                    @foreach($deductionCrit->deduction_options as $option)
-                                                        <button type="button"
-                                                            wire:click="$set('deductions.{{ $deductionCrit->id }}', {{ $option }})"
-                                                            class="btn btn-sm {{ isset($deductions[$deductionCrit->id]) && $deductions[$deductionCrit->id] == $option ? 'btn-danger' : 'btn-outline-danger' }} px-2">
-                                                            {{ $option }}
-                                                        </button>
-                                                    @endforeach
-                                                </div>
-                                            </div>
-                                        @endforeach
+                                    <p class="text-danger small fw-semibold text-uppercase mb-3"><i class="ti ti-minus-circle me-1"></i> Pengurangan Nilai (per Kategori)</p>
+                                    @php $dedByAssessment = $deductionCategories->groupBy('assessment_category_id'); @endphp
+                                    @foreach($assessmentCategories as $ac)
+                                        @php $deds = $dedByAssessment->get($ac->id, collect()); @endphp
+                                        @if($deds->isNotEmpty())
+                                            @foreach($deds as $deductionCat)
+                                                <p class="text-muted small fw-bold mb-2"><i class="ti ti-category me-1"></i>{{ $ac->name }} — {{ $deductionCat->name }}</p>
+                                                @foreach($deductionCat->criterias as $deductionCrit)
+                                                    <div class="mb-3">
+                                                        <span class="d-block small fw-semibold mb-1">{{ $deductionCrit->name }}</span>
+                                                        <div class="d-flex flex-wrap gap-1">
+                                                            <button type="button"
+                                                                wire:click="$set('deductions.{{ $deductionCrit->id }}', 0)"
+                                                                class="btn btn-sm {{ (isset($deductions[$deductionCrit->id]) && $deductions[$deductionCrit->id] == 0) || !isset($deductions[$deductionCrit->id]) ? 'btn-success' : 'btn-outline-success' }} px-2">
+                                                                0
+                                                            </button>
+                                                            @foreach($deductionCrit->deduction_options as $option)
+                                                                <button type="button"
+                                                                    wire:click="$set('deductions.{{ $deductionCrit->id }}', {{ $option }})"
+                                                                    class="btn btn-sm {{ isset($deductions[$deductionCrit->id]) && $deductions[$deductionCrit->id] == $option ? 'btn-danger' : 'btn-outline-danger' }} px-2">
+                                                                    {{ $option }}
+                                                                </button>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            @endforeach
+                                        @endif
                                     @endforeach
 
                                     {{-- Deduction summary --}}
@@ -363,7 +369,7 @@
                                         $totalDeductions = 0;
                                         foreach ($deductions as $amount) {
                                             if ($amount !== '' && $amount !== null) {
-                                                $totalDeductions += abs((int) $amount);
+                                                $totalDeductions += abs((float) $amount);
                                             }
                                         }
                                     @endphp

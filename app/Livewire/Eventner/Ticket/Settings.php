@@ -3,6 +3,7 @@
 namespace App\Livewire\Eventner\Ticket;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 
@@ -27,6 +28,34 @@ class Settings extends Component
         $this->ticket_price = $this->eventner->ticket_price ?? '';
         $this->ticket_description = $this->eventner->ticket_description ?? '';
         $this->ticket_max_per_order = $this->eventner->ticket_max_per_order ?? 10;
+    }
+
+    /**
+     * Generate token check-in statis (sekali). Tidak auto-regenerate.
+     * Pakai regenerateCheckinToken() untuk rotate manual.
+     */
+    public function generateCheckinAccess()
+    {
+        if ($this->eventner->checkin_token) {
+            return;
+        }
+        $this->eventner->checkin_token = Str::random(40);
+        $this->eventner->save();
+        session()->flash('success', 'Akses check-in dibuat. URL di bawah statis — tidak berubah.');
+    }
+
+    public function regenerateCheckinToken()
+    {
+        $this->eventner->checkin_token = Str::random(40);
+        $this->eventner->save();
+        session()->flash('success', 'Token check-in dirotasi. URL lama tidak berlaku lagi.');
+    }
+
+    public function revokeCheckinAccess()
+    {
+        $this->eventner->checkin_token = null;
+        $this->eventner->save();
+        session()->flash('success', 'Akses check-in dicabut.');
     }
 
     public function save()

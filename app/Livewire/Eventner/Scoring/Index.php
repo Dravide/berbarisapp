@@ -220,6 +220,7 @@ class Index extends Component
 
         $this->deductionCategories = DeductionCategory::with('criterias')
             ->where('eventner_id', $this->eventner->id)
+            ->whereNotNull('assessment_category_id')
             ->orderBy('sort_order')
             ->get();
 
@@ -240,7 +241,7 @@ class Index extends Component
         }
 
         foreach ($this->deductions as $criteriaId => $amount) {
-            if ($amount === '' || $amount === null || (int) $amount === 0) {
+            if ($amount === '' || $amount === null || (float) $amount == 0) {
                 // Remove if set to 0 or empty
                 ScoreDeduction::where('registration_id', $this->selectedRegistrationId)
                     ->where('eventner_id', $this->eventner->id)
@@ -256,7 +257,7 @@ class Index extends Component
                     'deduction_criteria_id' => $criteriaId,
                 ],
                 [
-                    'amount' => (int) $amount,
+                    'amount' => (float) $amount,
                 ]
             );
         }
@@ -332,7 +333,7 @@ class Index extends Component
         if ($this->view === 'scoring') {
             foreach ($this->deductions as $amount) {
                 if ($amount !== '' && $amount !== null) {
-                    $totalDeductions += abs((int) $amount);
+                    $totalDeductions += abs((float) $amount);
                 }
             }
         }

@@ -41,6 +41,8 @@ class Eventner extends Model
         'vote_price',
         'surat_tugas_required',
         'kwitansi_required',
+        'checkin_token',
+        'checkin_pin',
     ];
 
     protected $casts = [

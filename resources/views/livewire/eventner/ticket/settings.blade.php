@@ -75,6 +75,54 @@
                     </div>
                 </div>
             </div>
+
+            {{-- ========== AKSES CHECK-IN PANITIA ========== --}}
+            @if($ticket_active)
+            <div class="card w-100 mt-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0 fw-semibold"><i class="ti ti-scan me-2"></i>Akses Check-in Panitia</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted mb-3">
+                        Buat link statis agar panitia bisa scan QR tiket di gerbang tanpa login.
+                        URL <strong>tidak berubah</strong> kecuali Anda rotate token secara manual.
+                    </p>
+
+                    @if($eventner->checkin_token)
+                        <div class="border rounded p-3 bg-light">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">URL Halaman Scan (Statis)</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" readonly value="{{ route('event.checkin.scan', $eventner->checkin_token) }}" id="checkinUrl">
+                                    <button class="btn btn-outline-primary" type="button" onclick="navigator.clipboard.writeText(document.getElementById('checkinUrl').value); this.innerHTML='<i class=\'ti ti-check\'></i> Tersalin'; setTimeout(()=>this.innerHTML='<i class=\'ti ti-copy\'></i> Salin', 1500)">
+                                        <i class="ti ti-copy"></i> Salin
+                                    </button>
+                                </div>
+                                <small class="text-muted">Bagikan ke panitia. Link ini tetap dipakai sampai di-rotate atau dicabut.</small>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="button" wire:click="regenerateCheckinToken" class="btn btn-warning px-3 fw-semibold" wire:loading.attr="disabled"
+                                        onclick="return confirm('Rotate token? URL lama tidak berlaku lagi.')">
+                                    <i class="ti ti-refresh me-1"></i> Rotate Token
+                                </button>
+                                <button type="button" wire:click="revokeCheckinAccess" class="btn btn-outline-danger px-3 fw-semibold" wire:loading.attr="disabled"
+                                        onclick="return confirm('Cabut akses check-in? Link lama akan hangus.')">
+                                    <i class="ti ti-trash me-1"></i> Cabut Akses
+                                </button>
+                            </div>
+                        </div>
+                    @else
+                        <div class="text-center py-4">
+                            <i class="ti ti-scan fs-10 text-muted d-block mb-2"></i>
+                            <p class="text-muted">Belum ada akses check-in. Generate untuk membuat link statis.</p>
+                            <button type="button" wire:click="generateCheckinAccess" class="btn btn-primary px-4 fw-semibold" wire:loading.attr="disabled">
+                                <i class="ti ti-plus me-1"></i> Generate Akses Check-in
+                            </button>
+                        </div>
+                    @endif
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 </div>

@@ -46,6 +46,22 @@ class ScoringController extends Controller
             ->get()
             ->groupBy('registration_id');
 
+        // Petakan deduction_criteria_id => assessment_category_id (hanya yang menempel kategori)
+        $deductionCats = DeductionCategory::with('criterias')
+            ->where('eventner_id', $eventner->id)
+            ->whereNotNull('assessment_category_id')
+            ->get();
+        $critToAssessment = [];
+        foreach ($deductionCats as $dc) {
+            foreach ($dc->criterias as $c) {
+                $critToAssessment[$c->id] = $dc->assessment_category_id;
+            }
+        }
+        $allDeductions = ScoreDeduction::where('eventner_id', $eventner->id)
+            ->whereIn('registration_id', $participants->pluck('id'))
+            ->get()
+            ->groupBy('registration_id');
+
         // Build scoring data per participant
         $scoringData = [];
         foreach ($participants as $participant) {
@@ -72,16 +88,32 @@ class ScoringController extends Controller
                 $grandTotal += $catTotal;
             }
 
+            // Pengurangan per kategori
+            $participantDeductions = $allDeductions->get($participant->id, collect());
+            $deductionByCat = [];
+            $totalDeduction = 0;
+            foreach ($participantDeductions as $d) {
+                $aid = $critToAssessment[$d->deduction_criteria_id] ?? null;
+                if ($aid !== null) {
+                    $deductionByCat[$aid] = ($deductionByCat[$aid] ?? 0) + (float) $d->amount;
+                    $totalDeduction += (float) $d->amount;
+                }
+            }
+            $finalScore = $grandTotal + $totalDeduction;
+
             $scoringData[] = [
                 'participant' => $participant,
                 'criteriaTotals' => $criteriaTotals,
                 'categoryTotals' => $categoryTotals,
+                'categoryDeductions' => $deductionByCat,
                 'grandTotal' => $grandTotal,
+                'totalDeduction' => $totalDeduction,
+                'finalScore' => $finalScore,
             ];
         }
 
-        // Sort by grand total descending (ranking)
-        usort($scoringData, fn($a, $b) => $b['grandTotal'] <=> $a['grandTotal']);
+        // Sort by final score descending (ranking)
+        usort($scoringData, fn($a, $b) => $b['finalScore'] <=> $a['finalScore']);
 
         $data = [
             'eventner' => $eventner,
@@ -126,6 +158,10 @@ class ScoringController extends Controller
             }
             $row1[] = 'Total';
             $row2[] = '';
+            $row1[] = 'Pengurangan';
+            $row2[] = '';
+            $row1[] = 'Nilai Akhir';
+            $row2[] = '';
             $row1[] = 'Rank';
             $row2[] = '';
 
@@ -148,6 +184,8 @@ class ScoringController extends Controller
                     $row[] = $data['categoryTotals'][$cat->id] ?? 0;
                 }
                 $row[] = $data['grandTotal'];
+                $row[] = $data['totalDeduction'] != 0 ? $data['totalDeduction'] : 0;
+                $row[] = $data['finalScore'];
                 $row[] = $index + 1;
                 fputcsv($file, $row);
             }
@@ -237,20 +275,53 @@ class ScoringController extends Controller
             ];
         }
 
+        // Pengurangan per kategori penilaian (hanya yang menempel pada kategori)
+        $deductionCategories = DeductionCategory::with(['criterias', 'assessmentCategory'])
+            ->where('eventner_id', $eventner->id)
+            ->whereNotNull('assessment_category_id')
+            ->orderBy('sort_order')
+            ->get();
+
+        $scoreDeductions = ScoreDeduction::where('eventner_id', $eventner->id)
+            ->where('registration_id', $registrationId)
+            ->get();
+
+        // Petakan deduction_criteria_id => assessment_category_id
+        $critToAssessment = [];
+        foreach ($deductionCategories as $dc) {
+            foreach ($dc->criterias as $c) {
+                $critToAssessment[$c->id] = $dc->assessment_category_id;
+            }
+        }
+
+        // Akumulasikan pengurangan per kategori penilaian
+        $categoryDeductions = [];
+        $totalDeduction = 0;
+        foreach ($scoreDeductions as $d) {
+            $aid = $critToAssessment[$d->deduction_criteria_id] ?? null;
+            if ($aid === null) {
+                continue; // deduksi yatim (tanpa kategori) tidak dihitung
+            }
+            $amt = (float) $d->amount;
+            $categoryDeductions[$aid] = ($categoryDeductions[$aid] ?? 0) + $amt;
+            $totalDeduction += $amt;
+        }
+
         $data = [
             'eventner' => $eventner,
             'registration' => $registration,
             'assessmentCategories' => $assessmentCategories,
             'criteriaTotals' => $criteriaTotals,
             'categoryTotals' => $categoryTotals,
+            'categoryDeductions' => $categoryDeductions,
             'grandTotal' => $grandTotal,
             'judges' => $judges,
             'judgeScores' => $judgeScores,
             'judgeCategoryTotals' => $judgeCategoryTotals,
-            'deductionCategories' => DeductionCategory::with('criterias')->where('eventner_id', $eventner->id)->orderBy('sort_order')->get(),
-            'scoreDeductions' => ScoreDeduction::where('eventner_id', $eventner->id)->where('registration_id', $registrationId)->get()->keyBy('deduction_criteria_id'),
-            'totalDeduction' => ScoreDeduction::where('eventner_id', $eventner->id)->where('registration_id', $registrationId)->sum('amount'),
-            'finalScore' => $grandTotal + ScoreDeduction::where('eventner_id', $eventner->id)->where('registration_id', $registrationId)->sum('amount'),
+            'deductionCategories' => $deductionCategories,
+            'scoreDeductions' => $scoreDeductions->keyBy('deduction_criteria_id'),
+            'totalDeduction' => $totalDeduction,
+            'finalScore' => $grandTotal + $totalDeduction,
         ];
 
         $pdf = Pdf::loadView('eventner.scoring.pdf_participant', $data)

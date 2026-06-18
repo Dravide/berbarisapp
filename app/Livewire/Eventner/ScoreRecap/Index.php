@@ -72,6 +72,15 @@ class Index extends Component
                 ->get()
                 ->groupBy('registration_id');
 
+            // Map deduction_criteria_id => assessment_category_id (target kategori penilaian)
+            $critToAssessment = \App\Models\DeductionCriteria::whereHas('category', function ($q) {
+                    $q->where('eventner_id', $this->eventner->id);
+                })
+                ->with('category:deduction_categories.id,assessment_category_id')
+                ->get()
+                ->pluck('category.assessment_category_id', 'id')
+                ->toArray();
+
             $data = [];
             foreach ($participants as $participant) {
                 $participantScores = $allScores->get($participant->id, collect());
@@ -84,8 +93,20 @@ class Index extends Component
                     $criteriaTotals[$cid] = ($criteriaTotals[$cid] ?? 0) + ((int) $score->score * $criteriaWeight);
                 }
 
+                // Distribusikan pengurangan ke kategori penilaian targetnya
+                $participantDeductions = $allDeductions->get($participant->id, collect());
+                $deductionByCat = [];
+                foreach ($participantDeductions as $d) {
+                    $aid = $critToAssessment[$d->deduction_criteria_id] ?? null;
+                    if ($aid !== null) {
+                        $deductionByCat[$aid] = ($deductionByCat[$aid] ?? 0) + (float) $d->amount;
+                    }
+                }
+
                 $categoryTotals = [];
+                $categoryDeductions = [];
                 $grandTotal = 0;
+                $finalScore = 0;
 
                 foreach ($assessmentCategories as $cat) {
                     $catTotal = 0;
@@ -94,19 +115,20 @@ class Index extends Component
                             $catTotal += $criteriaTotals[$crit->id] ?? 0;
                         }
                     }
+                    $catDeduction = $deductionByCat[$cat->id] ?? 0; // negatif
                     $categoryTotals[$cat->id] = $catTotal;
+                    $categoryDeductions[$cat->id] = $catDeduction;
                     $grandTotal += $catTotal;
+                    $finalScore += $catTotal + $catDeduction;
                 }
 
-                // Calculate deductions
-                $participantDeductions = $allDeductions->get($participant->id, collect());
-                $totalDeduction = $participantDeductions->sum('amount');
-                $finalScore = $grandTotal + $totalDeduction; // amount is already negative
+                $totalDeduction = array_sum($deductionByCat); // total pengurangan (negatif)
 
                 $data[] = [
                     'participant' => $participant,
                     'criteriaTotals' => $criteriaTotals,
                     'categoryTotals' => $categoryTotals,
+                    'categoryDeductions' => $categoryDeductions,
                     'grandTotal' => $grandTotal,
                     'totalDeduction' => $totalDeduction,
                     'finalScore' => $finalScore,
