@@ -159,13 +159,39 @@
 </head>
 <body>
 
+    @php
+        $safeLogoPath = null;
+        if ($eventner->logo_event) {
+            $fullPath = public_path('storage/' . $eventner->logo_event);
+            if (file_exists($fullPath) && is_file($fullPath)) {
+                $safeLogoPath = $fullPath;
+            }
+        }
+
+        $safeFotoPelatih = null;
+        if ($registration->foto_pelatih) {
+            $fullPath = public_path('storage/' . $registration->foto_pelatih);
+            if (file_exists($fullPath) && is_file($fullPath)) {
+                $safeFotoPelatih = $fullPath;
+            }
+        }
+
+        $safeFotoDanton = null;
+        if ($registration->danton_foto) {
+            $fullPath = public_path('storage/' . $registration->danton_foto);
+            if (file_exists($fullPath) && is_file($fullPath)) {
+                $safeFotoDanton = $fullPath;
+            }
+        }
+    @endphp
+
     <!-- KOP -->
     <div class="kop">
         <table>
             <tr>
-                @if($eventner->logo_event && file_exists(public_path('storage/' . $eventner->logo_event)))
+                @if($safeLogoPath)
                     <td style="width: 75px;">
-                        <img src="{{ public_path('storage/' . $eventner->logo_event) }}" class="kop-logo">
+                        <img src="{{ $safeLogoPath }}" class="kop-logo">
                     </td>
                 @endif
                 <td style="padding-left: 10px;">
@@ -214,8 +240,8 @@
             <td class="lbl" style="width: 20%; text-align: center;">Foto Pelatih</td>
             <td style="width: 30%; text-align: center;">
                 <div class="foto-container">
-                    @if($registration->foto_pelatih && file_exists(public_path('storage/' . $registration->foto_pelatih)))
-                        <img src="{{ public_path('storage/' . $registration->foto_pelatih) }}" class="foto-img">
+                    @if($safeFotoPelatih)
+                        <img src="{{ $safeFotoPelatih }}" class="foto-img">
                     @else
                         <div class="foto-placeholder">FOTO 3X4</div>
                     @endif
@@ -231,8 +257,8 @@
             <td class="lbl" style="text-align: center;">Foto Danton</td>
             <td style="text-align: center;">
                 <div class="foto-container">
-                    @if($registration->danton_foto && file_exists(public_path('storage/' . $registration->danton_foto)))
-                        <img src="{{ public_path('storage/' . $registration->danton_foto) }}" class="foto-img">
+                    @if($safeFotoDanton)
+                        <img src="{{ $safeFotoDanton }}" class="foto-img">
                     @else
                         <div class="foto-placeholder">FOTO 3X4</div>
                     @endif
@@ -264,9 +290,9 @@
     <div class="kop">
         <table>
             <tr>
-                @if($eventner->logo_event && file_exists(public_path('storage/' . $eventner->logo_event)))
+                @if($safeLogoPath)
                     <td style="width: 75px;">
-                        <img src="{{ public_path('storage/' . $eventner->logo_event) }}" class="kop-logo">
+                        <img src="{{ $safeLogoPath }}" class="kop-logo">
                     </td>
                 @endif
                 <td style="padding-left: 10px;">
@@ -289,14 +315,23 @@
         </thead>
         <tbody>
             @forelse($participants as $index => $participant)
+                @php
+                    $safeFotoAnggota = null;
+                    if ($participant->foto) {
+                        $fullPath = public_path('storage/' . $participant->foto);
+                        if (file_exists($fullPath) && is_file($fullPath)) {
+                            $safeFotoAnggota = $fullPath;
+                        }
+                    }
+                @endphp
                 <tr>
                     <td class="center">{{ $index + 1 }}</td>
                     <td><strong>{{ $participant->nama }}</strong></td>
                     <td>{{ $participant->nisn }}</td>
                     <td class="center" style="padding: 5px 0;">
                         <div class="foto-container" style="width: 45px; height: 60px;">
-                            @if($participant->foto && file_exists(public_path('storage/' . $participant->foto)))
-                                <img src="{{ public_path('storage/' . $participant->foto) }}" class="foto-img" style="width: 45px; height: 60px;">
+                            @if($safeFotoAnggota)
+                                <img src="{{ $safeFotoAnggota }}" class="foto-img" style="width: 45px; height: 60px;">
                             @else
                                 <div class="foto-placeholder" style="padding-top: 22px; font-size: 7px;">FOTO</div>
                             @endif
