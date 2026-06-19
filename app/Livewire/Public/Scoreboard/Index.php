@@ -19,7 +19,7 @@ class Index extends Component
     public $previousRanks = []; // Track previous ranks for animation
     public $activeInputSchool = null; // Track school currently being scored
 
-    public function mount($scoringCode)
+    public function mount($scoringCode, $categoryId = null)
     {
         $this->scoringCode = $scoringCode;
         $this->eventner = Eventner::where('scoring_code', $scoringCode)->firstOrFail();
@@ -28,7 +28,9 @@ class Index extends Component
             ->orderBy('name')
             ->get();
 
-        if ($this->categories->isNotEmpty()) {
+        if ($categoryId) {
+            $this->selectedCategoryId = $categoryId;
+        } elseif ($this->categories->isNotEmpty()) {
             $this->selectedCategoryId = $this->categories->first()->id;
         }
     }

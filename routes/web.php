@@ -22,7 +22,7 @@ Route::get('/event/{slug}/drawing', App\Livewire\Eventner\Drawing\Spin::class)->
 Route::get('/event/{slug}/drawing-results', App\Livewire\Eventner\Drawing\Results::class)->name('event.drawing.results');
 
 Route::get('/reg/{token}', App\Livewire\Public\MagicLink\Registration::class)->name('magic.link');
-Route::get('/scoreboard/{scoringCode}', App\Livewire\Public\Scoreboard\Index::class)->name('public.scoreboard');
+Route::get('/scoreboard/{scoringCode}/{categoryId?}', App\Livewire\Public\Scoreboard\Index::class)->name('public.scoreboard');
 Route::get('/champions/{scoringCode}', App\Livewire\Public\Champions\Index::class)->name('public.champions');
 
 // Legal & Support Pages

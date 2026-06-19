@@ -33,7 +33,15 @@
                         <h4 class="fw-semibold mb-8">
                             <i class="ti ti-trophy me-2"></i> Live Scoreboard
                         </h4>
-                        <p class="text-muted fs-3 mb-0">{{ $eventner->nama_event }}</p>
+                        <p class="text-muted fs-3 mb-0">
+                            {{ $eventner->nama_event }}
+                            @php
+                                $activeCat = collect($categories)->firstWhere('id', $selectedCategoryId);
+                            @endphp
+                            @if($activeCat)
+                                &mdash; <strong class="text-dark">{{ $activeCat->name }}</strong>
+                            @endif
+                        </p>
                     </div>
                     <div class="col-3 text-end">
                         <span class="badge bg-danger px-3 py-2">
@@ -43,21 +51,6 @@
                 </div>
             </div>
         </div>
-
-        {{-- Category Tabs --}}
-        @if($categories->count() > 1)
-        <ul class="nav nav-tabs nav-fill mb-4" role="tablist">
-            @foreach($categories as $cat)
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link {{ $selectedCategoryId == $cat->id ? 'active bg-primary text-white' : '' }}"
-                        wire:click="switchCategory({{ $cat->id }})"
-                        type="button" role="tab">
-                        {{ $cat->name }}
-                    </button>
-                </li>
-            @endforeach
-        </ul>
-        @endif
 
         {{-- Rankings Table --}}
         <div wire:poll.5s>
@@ -74,7 +67,6 @@
                                     <div class="text-primary fw-semibold small mb-2">{{ number_format($p2['total'], 0) }}</div>
                                     <div class="bg-secondary bg-opacity-25 border border-secondary border-opacity-25 rounded-top d-flex flex-column justify-content-center align-items-center w-100" style="height: 100px; min-height: 80px;">
                                         <span class="badge bg-secondary text-dark rounded-circle fs-5" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">2</span>
-                                        <div class="small text-muted mt-1" style="font-size: 0.75rem;">Perak</div>
                                     </div>
                                 </div>
                             @endif
@@ -90,7 +82,6 @@
                                     <div class="text-primary fw-bold mb-2">{{ number_format($p1['total'], 0) }}</div>
                                     <div class="bg-warning bg-opacity-25 border border-warning rounded-top d-flex flex-column justify-content-center align-items-center w-100" style="height: 140px; min-height: 110px;">
                                         <span class="badge bg-warning text-dark rounded-circle fs-4" style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;">1</span>
-                                        <div class="small text-warning-emphasis fw-bold mt-1" style="font-size: 0.8rem;">Emas</div>
                                     </div>
                                 </div>
                             @endif
@@ -103,7 +94,6 @@
                                     <div class="text-primary fw-semibold small mb-2">{{ number_format($p3['total'], 0) }}</div>
                                     <div class="bg-info-subtle border border-info-subtle rounded-top d-flex flex-column justify-content-center align-items-center w-100" style="height: 80px; min-height: 60px;">
                                         <span class="badge bg-info-subtle text-dark rounded-circle fs-5" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">3</span>
-                                        <div class="small text-muted mt-1" style="font-size: 0.75rem;">Perunggu</div>
                                     </div>
                                 </div>
                             @endif
