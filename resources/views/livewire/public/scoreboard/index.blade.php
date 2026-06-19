@@ -114,7 +114,7 @@
                         @endif
                     </h6>
                     <span class="badge bg-light text-dark border">
-                        <i class="ti ti-clock me-1"></i> {{ now()->format('H:i:s') }}
+                        <i class="ti ti-clock me-1"></i> <span id="clock-display">00:00:00</span>
                     </span>
                 </div>
                 <div class="card-body p-0">
@@ -177,3 +177,20 @@
 
     </div>
 </div>
+
+@script
+<script>
+    const updateLocalClock = () => {
+        const el = document.getElementById('clock-display');
+        if (el) {
+            const now = new Date();
+            const timeString = now.toTimeString().split(' ')[0];
+            el.textContent = timeString;
+        }
+    };
+
+    // Update immediately and then every second
+    updateLocalClock();
+    setInterval(updateLocalClock, 1000);
+</script>
+@endscript
