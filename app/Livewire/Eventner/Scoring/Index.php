@@ -287,23 +287,19 @@ class Index extends Component
         }
 
         if ($this->view === 'scoring' && $this->selectedRegistration) {
-            $category = $this->selectedRegistration->competitionCategory;
-            if ($category) {
-                $judgeIds = $category->judges()->pluck('judges.id');
-                if ($judgeIds->isNotEmpty()) {
-                    $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
-                        ->where('eventner_id', $this->eventner->id)
-                        ->whereHas('judges', function ($q) use ($judgeIds) {
-                            $q->whereIn('judges.id', $judgeIds);
-                        })
-                        ->get();
-                }
+            if ($this->selectedJudgeId) {
+                $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
+                    ->where('eventner_id', $this->eventner->id)
+                    ->whereHas('judges', function ($q) {
+                        $q->where('judges.id', $this->selectedJudgeId);
+                    })
+                    ->get();
+            }
 
-                if ($assessmentCategories->isEmpty()) {
-                    $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
-                        ->where('eventner_id', $this->eventner->id)
-                        ->get();
-                }
+            if (!isset($assessmentCategories) || $assessmentCategories->isEmpty()) {
+                $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
+                    ->where('eventner_id', $this->eventner->id)
+                    ->get();
             }
         }
 

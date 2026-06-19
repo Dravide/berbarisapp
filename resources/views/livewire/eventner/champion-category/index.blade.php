@@ -91,21 +91,46 @@
 
                         <div class="mb-4">
                             <label class="form-label fw-semibold">Rubrik Penilaian yang Dihitung <span class="text-danger">*</span></label>
-                            <p class="text-muted small mb-3">Centang rubrik penilaian yang masuk ke perhitungan kategori juara ini.</p>
-                            @error('selectedAssessmentCategories') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
+                            <p class="text-muted small mb-3">Centang rubrik/subkategori penilaian yang masuk ke perhitungan kategori juara ini.</p>
+                            @error('selectedSubCategories') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
 
                             @foreach($assessmentCategories as $cat)
-                                <div class="form-check mb-2">
-                                    <input class="form-check-input" type="checkbox"
-                                        wire:model="selectedAssessmentCategories"
-                                        value="{{ $cat->id }}"
-                                        id="ac_{{ $cat->id }}">
-                                    <label class="form-check-label fw-semibold" for="ac_{{ $cat->id }}">
-                                        {{ $cat->name }}
-                                    </label>
-                                    <span class="text-muted small ms-1">
-                                        ({{ $cat->subCategories->sum(fn($s) => $s->criterias->count()) }} kriteria)
-                                    </span>
+                                @php
+                                    $catSubs = $cat->subCategories->pluck('id')->map(fn($id) => (string) $id)->toArray();
+                                    $selectedCount = count(array_intersect($catSubs, $selectedSubCategories));
+                                    $allChecked = count($catSubs) > 0 && $selectedCount === count($catSubs);
+                                    $someChecked = $selectedCount > 0;
+                                @endphp
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                            wire:click="toggleCategory({{ $cat->id }})"
+                                            {{ $allChecked ? 'checked' : '' }}
+                                            data-indeterminate="{{ $someChecked && !$allChecked ? '1' : '0' }}"
+                                            id="ac_{{ $cat->id }}"
+                                            @if(empty($catSubs)) disabled @endif>
+                                        <label class="form-check-label fw-bold text-dark" for="ac_{{ $cat->id }}">
+                                            {{ $cat->name }}
+                                        </label>
+                                        <span class="text-muted small ms-1">
+                                            ({{ $cat->subCategories->sum(fn($s) => $s->criterias->count()) }} kriteria)
+                                        </span>
+                                    </div>
+                                    @if(count($catSubs) > 0)
+                                        <div class="ms-4 mt-2">
+                                            @foreach($cat->subCategories as $sub)
+                                                <div class="form-check mb-1">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        wire:model.live="selectedSubCategories"
+                                                        value="{{ $sub->id }}"
+                                                        id="asc_{{ $sub->id }}">
+                                                    <label class="form-check-label text-muted small" for="asc_{{ $sub->id }}">
+                                                        {{ $sub->name }} <span class="text-muted">({{ $sub->criterias->count() }} kriteria)</span>
+                                                    </label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
                                 </div>
                             @endforeach
 
@@ -218,10 +243,24 @@
                     {{-- Assessment category badges --}}
                     <div class="px-3 pt-2 pb-0">
                         <div class="d-flex flex-wrap gap-1 mb-3">
-                            @foreach($champion->assessmentCategories as $ac)
-                                <span class="badge bg-primary-subtle text-primary rounded-pill">
-                                    <i class="ti ti-check me-1"></i>{{ $ac->name }}
-                                </span>
+                            @php
+                                $groupedSubs = $champion->assessmentSubCategories->groupBy('assessment_category_id');
+                            @endphp
+                            @foreach($groupedSubs as $catId => $subs)
+                                @php
+                                    $cat = $subs->first()->category;
+                                    $totalCount = $cat ? $cat->subCategories->count() : 0;
+                                @endphp
+                                @if($cat)
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill" title="{{ $subs->pluck('name')->join(', ') }}">
+                                        <i class="ti ti-check me-1"></i>{{ $cat->name }}
+                                        @if($subs->count() < $totalCount)
+                                            <span class="badge bg-primary text-white rounded-pill ms-1" style="font-size: 0.7rem;">
+                                                {{ $subs->count() }}/{{ $totalCount }} sub
+                                            </span>
+                                        @endif
+                                    </span>
+                                @endif
                             @endforeach
                         </div>
                     </div>
@@ -319,3 +358,21 @@
         </div>
     </div>
 </div>
+
+@script
+<script>
+    const applyIndeterminate = () => {
+        document.querySelectorAll('[data-indeterminate="1"]').forEach(el => {
+            el.indeterminate = true;
+        });
+    };
+
+    // Run on initial load
+    applyIndeterminate();
+
+    // Hook into Livewire morph cycle
+    Livewire.hook('morph.updated', () => {
+        applyIndeterminate();
+    });
+</script>
+@endscript

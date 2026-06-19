@@ -18,7 +18,7 @@ class Index extends Component
     public $name = '';
     public $description = '';
     public $quantity = 1;
-    public $selectedAssessmentCategories = [];
+    public $selectedSubCategories = [];
     public $editingId = null;
     public $showForm = false;
     public $selectedCompetitionCategoryId;
@@ -70,7 +70,7 @@ class Index extends Component
         $this->name = $champion->name;
         $this->description = $champion->description ?? '';
         $this->quantity = $champion->quantity ?? 1;
-        $this->selectedAssessmentCategories = $champion->assessmentCategories()->pluck('assessment_categories.id')->map(fn($id) => (string) $id)->toArray();
+        $this->selectedSubCategories = $champion->assessmentSubCategories()->pluck('assessment_sub_categories.id')->map(fn($id) => (string) $id)->toArray();
         $this->showForm = true;
     }
 
@@ -79,12 +79,12 @@ class Index extends Component
         $this->validate([
             'name' => 'required|string|max:255',
             'quantity' => 'required|integer|min:1',
-            'selectedAssessmentCategories' => 'required|array|min:1',
+            'selectedSubCategories' => 'required|array|min:1',
         ], [
             'name.required' => 'Nama kategori juara wajib diisi.',
             'quantity.required' => 'Jumlah juara wajib diisi.',
-            'selectedAssessmentCategories.required' => 'Pilih minimal satu rubrik penilaian.',
-            'selectedAssessmentCategories.min' => 'Pilih minimal satu rubrik penilaian.',
+            'selectedSubCategories.required' => 'Pilih minimal satu rubrik penilaian.',
+            'selectedSubCategories.min' => 'Pilih minimal satu rubrik penilaian.',
         ]);
 
         $data = [
@@ -101,7 +101,7 @@ class Index extends Component
             $champion = ChampionCategory::create($data);
         }
 
-        $champion->assessmentCategories()->sync($this->selectedAssessmentCategories);
+        $champion->assessmentSubCategories()->sync($this->selectedSubCategories);
 
         $this->resetForm();
         session()->flash('success', $this->editingId ? 'Kategori juara berhasil diperbarui.' : 'Kategori juara berhasil ditambahkan.');
@@ -110,7 +110,7 @@ class Index extends Component
     public function delete($id)
     {
         $champion = ChampionCategory::where('eventner_id', $this->eventner->id)->findOrFail($id);
-        $champion->assessmentCategories()->detach();
+        $champion->assessmentSubCategories()->detach();
         $champion->delete();
         session()->flash('success', 'Kategori juara berhasil dihapus.');
     }
@@ -120,12 +120,33 @@ class Index extends Component
         $this->resetForm();
     }
 
+    public function toggleCategory($categoryId)
+    {
+        $category = AssessmentCategory::with('subCategories')->find($categoryId);
+        if (!$category) return;
+
+        $subIds = $category->subCategories->pluck('id')->map(fn($id) => (string) $id)->toArray();
+        if (empty($subIds)) return;
+
+        // Check if all are currently selected
+        $selectedCount = count(array_intersect($subIds, $this->selectedSubCategories));
+        $allSelected = $selectedCount === count($subIds);
+
+        if ($allSelected) {
+            // Remove all
+            $this->selectedSubCategories = array_diff($this->selectedSubCategories, $subIds);
+        } else {
+            // Add missing ones
+            $this->selectedSubCategories = array_values(array_unique(array_merge($this->selectedSubCategories, $subIds)));
+        }
+    }
+
     private function resetForm()
     {
         $this->name = '';
         $this->description = '';
         $this->quantity = 1;
-        $this->selectedAssessmentCategories = [];
+        $this->selectedSubCategories = [];
         $this->editingId = null;
         $this->showForm = false;
     }
@@ -214,7 +235,7 @@ class Index extends Component
 
     public function render()
     {
-        $championCategories = ChampionCategory::with(['assessmentCategories.subCategories.criterias', 'rankTitles'])
+        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles'])
             ->where('eventner_id', $this->eventner->id)
             ->get();
 
@@ -238,14 +259,10 @@ class Index extends Component
                 ->groupBy('registration_id');
 
             foreach ($championCategories as $champion) {
-                $assessmentCatIds = $champion->assessmentCategories->pluck('id');
-
                 $criteriaMap = [];
-                foreach ($champion->assessmentCategories as $ac) {
-                    foreach ($ac->subCategories as $sub) {
-                        foreach ($sub->criterias as $crit) {
-                            $criteriaMap[$crit->id] = $crit->weight ?? 1;
-                        }
+                foreach ($champion->assessmentSubCategories as $sub) {
+                    foreach ($sub->criterias as $crit) {
+                        $criteriaMap[$crit->id] = $crit->weight ?? 1;
                     }
                 }
 

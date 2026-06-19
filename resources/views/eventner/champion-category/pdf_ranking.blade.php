@@ -116,8 +116,22 @@
                 <h3><span style="color:#f1c40f;">&#9813;</span> {{ $champion->name }}</h3>
             </div>
             <div class="champ-badges">
-                @foreach($champion->assessmentCategories as $ac)
-                    <span class="champ-badge">{{ $ac->name }}</span>
+                @php
+                    $groupedSubs = $champion->assessmentSubCategories->groupBy('assessment_category_id');
+                @endphp
+                @foreach($groupedSubs as $catId => $subs)
+                    @php
+                        $cat = $subs->first()->category;
+                        $totalCount = $cat ? $cat->subCategories->count() : 0;
+                    @endphp
+                    @if($cat)
+                        <span class="champ-badge">
+                            {{ $cat->name }}
+                            @if($subs->count() < $totalCount)
+                                ({{ $subs->count() }}/{{ $totalCount }} sub)
+                            @endif
+                        </span>
+                    @endif
                 @endforeach
             </div>
 

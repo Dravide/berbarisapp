@@ -95,8 +95,12 @@ class ScoringController extends Controller
             foreach ($participantDeductions as $d) {
                 $aid = $critToAssessment[$d->deduction_criteria_id] ?? null;
                 if ($aid !== null) {
-                    $deductionByCat[$aid] = ($deductionByCat[$aid] ?? 0) + (float) $d->amount;
-                    $totalDeduction += (float) $d->amount;
+                    $amt = (float) $d->amount;
+                    if ($amt > 0) {
+                        $amt = -$amt;
+                    }
+                    $deductionByCat[$aid] = ($deductionByCat[$aid] ?? 0) + $amt;
+                    $totalDeduction += $amt;
                 }
             }
             $finalScore = $grandTotal + $totalDeduction;
@@ -275,10 +279,9 @@ class ScoringController extends Controller
             ];
         }
 
-        // Pengurangan per kategori penilaian (hanya yang menempel pada kategori)
+        // Pengurangan (baik menempel pada kategori maupun umum)
         $deductionCategories = DeductionCategory::with(['criterias', 'assessmentCategory'])
             ->where('eventner_id', $eventner->id)
-            ->whereNotNull('assessment_category_id')
             ->orderBy('sort_order')
             ->get();
 
@@ -290,20 +293,26 @@ class ScoringController extends Controller
         $critToAssessment = [];
         foreach ($deductionCategories as $dc) {
             foreach ($dc->criterias as $c) {
-                $critToAssessment[$c->id] = $dc->assessment_category_id;
+                if ($dc->assessment_category_id) {
+                    $critToAssessment[$c->id] = $dc->assessment_category_id;
+                }
             }
         }
 
-        // Akumulasikan pengurangan per kategori penilaian
+        // Akumulasikan pengurangan
         $categoryDeductions = [];
         $totalDeduction = 0;
         foreach ($scoreDeductions as $d) {
-            $aid = $critToAssessment[$d->deduction_criteria_id] ?? null;
-            if ($aid === null) {
-                continue; // deduksi yatim (tanpa kategori) tidak dihitung
-            }
             $amt = (float) $d->amount;
-            $categoryDeductions[$aid] = ($categoryDeductions[$aid] ?? 0) + $amt;
+            if ($amt > 0) {
+                $amt = -$amt;
+            }
+
+            $aid = $critToAssessment[$d->deduction_criteria_id] ?? null;
+            if ($aid !== null) {
+                $categoryDeductions[$aid] = ($categoryDeductions[$aid] ?? 0) + $amt;
+            }
+
             $totalDeduction += $amt;
         }
 

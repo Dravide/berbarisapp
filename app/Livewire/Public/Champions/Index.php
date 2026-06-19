@@ -41,7 +41,7 @@ class Index extends Component
     {
         $this->allRankings = [];
 
-        $championCategories = ChampionCategory::with(['assessmentCategories.subCategories.criterias', 'rankTitles'])
+        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles'])
             ->where('eventner_id', $this->eventner->id)
             ->get();
 
@@ -57,11 +57,9 @@ class Index extends Component
 
         foreach ($championCategories as $champion) {
             $criteriaMap = [];
-            foreach ($champion->assessmentCategories as $ac) {
-                foreach ($ac->subCategories as $sub) {
-                    foreach ($sub->criterias as $crit) {
-                        $criteriaMap[$crit->id] = $crit->weight ?? 1;
-                    }
+            foreach ($champion->assessmentSubCategories as $sub) {
+                foreach ($sub->criterias as $crit) {
+                    $criteriaMap[$crit->id] = $crit->weight ?? 1;
                 }
             }
 

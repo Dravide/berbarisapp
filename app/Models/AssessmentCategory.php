@@ -28,11 +28,6 @@ class AssessmentCategory extends Model
         return $this->belongsToMany(Judge::class);
     }
 
-    public function championCategories()
-    {
-        return $this->belongsToMany(ChampionCategory::class, 'champion_assessment');
-    }
-
     public function deductionCategories()
     {
         return $this->hasMany(DeductionCategory::class)->orderBy('sort_order');

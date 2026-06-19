@@ -23,7 +23,7 @@ class ChampionCategoryController extends Controller
         $competitionCategoryId = $request->query('competition_category_id');
         $competitionCategory = $competitionCategoryId ? CompetitionCategory::find($competitionCategoryId) : null;
 
-        $championCategories = ChampionCategory::with('assessmentCategories.subCategories.criterias')
+        $championCategories = ChampionCategory::with('assessmentSubCategories.criterias')
             ->where('eventner_id', $eventner->id)
             ->get();
 
@@ -44,11 +44,9 @@ class ChampionCategoryController extends Controller
         $rankings = [];
         foreach ($championCategories as $champion) {
             $criteriaIds = [];
-            foreach ($champion->assessmentCategories as $ac) {
-                foreach ($ac->subCategories as $sub) {
-                    foreach ($sub->criterias as $crit) {
-                        $criteriaIds[] = $crit->id;
-                    }
+            foreach ($champion->assessmentSubCategories as $sub) {
+                foreach ($sub->criterias as $crit) {
+                    $criteriaIds[] = $crit->id;
                 }
             }
 

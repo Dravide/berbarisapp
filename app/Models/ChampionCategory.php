@@ -21,9 +21,9 @@ class ChampionCategory extends Model
         return $this->belongsTo(Eventner::class);
     }
 
-    public function assessmentCategories()
+    public function assessmentSubCategories()
     {
-        return $this->belongsToMany(AssessmentCategory::class, 'champion_assessment');
+        return $this->belongsToMany(AssessmentSubCategory::class, 'champion_assessment', 'champion_category_id', 'assessment_sub_category_id');
     }
 
     public function rankTitles()

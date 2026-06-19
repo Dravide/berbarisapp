@@ -99,7 +99,11 @@ class Index extends Component
                 foreach ($participantDeductions as $d) {
                     $aid = $critToAssessment[$d->deduction_criteria_id] ?? null;
                     if ($aid !== null) {
-                        $deductionByCat[$aid] = ($deductionByCat[$aid] ?? 0) + (float) $d->amount;
+                        $amt = (float) $d->amount;
+                        if ($amt > 0) {
+                            $amt = -$amt;
+                        }
+                        $deductionByCat[$aid] = ($deductionByCat[$aid] ?? 0) + $amt;
                     }
                 }
 

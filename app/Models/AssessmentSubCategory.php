@@ -23,6 +23,11 @@ class AssessmentSubCategory extends Model
         return $this->hasMany(AssessmentCriteria::class, 'assessment_sub_category_id')->orderBy('sort_order');
     }
 
+    public function championCategories()
+    {
+        return $this->belongsToMany(ChampionCategory::class, 'champion_assessment', 'assessment_sub_category_id', 'champion_category_id');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

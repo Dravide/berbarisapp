@@ -179,6 +179,22 @@
                         @endforeach
                         <td class="total-col" style="background:#2c3e50; color:#fff;">{{ $categoryTotals[$cat->id] ?? 0 }}</td>
                     </tr>
+                    @if(($categoryDeductions[$cat->id] ?? 0) < 0)
+                        <tr>
+                            <td style="font-weight:bold; background:#fdf2f2; color:#c0392b;">Pengurangan</td>
+                            @foreach($judges as $judge)
+                                <td class="total-col" style="background:#fdf2f2; color:#c0392b;">-</td>
+                            @endforeach
+                            <td class="total-col" style="background:#fdf2f2; color:#c0392b; font-weight:bold;">{{ $categoryDeductions[$cat->id] }}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:bold; background:#ebf5fb; color:#2980b9;">Nilai Akhir Kategori</td>
+                            @foreach($judges as $judge)
+                                <td class="total-col" style="background:#ebf5fb; color:#2980b9;">-</td>
+                            @endforeach
+                            <td class="total-col" style="background:#2980b9; color:#fff; font-weight:bold;">{{ $categoryTotals[$cat->id] + $categoryDeductions[$cat->id] }}</td>
+                        </tr>
+                    @endif
                 </tbody>
             </table>
         @else
@@ -252,16 +268,74 @@
                 <td class="cat-score" style="background:#c0392b; color:#fff;">{{ $totalDeduction }} poin</td>
             </tr>
         </table>
+
+        {{-- 1. Pengurangan Terikat Kategori --}}
         @php $dedByAssessment = $deductionCategories->groupBy('assessment_category_id'); @endphp
         @foreach($assessmentCategories as $cat)
             @php $deds = $dedByAssessment->get($cat->id, collect()); @endphp
             @if($deds->isNotEmpty())
                 @foreach($deds as $deductionCat)
                     @if($deductionCat->criterias->isNotEmpty())
+                        @php
+                            // Check if any criteria in this category has deductions
+                            $hasActiveDeductions = false;
+                            foreach($deductionCat->criterias as $crit) {
+                                if (isset($scoreDeductions[$crit->id]) && $scoreDeductions[$crit->id]->amount != 0) {
+                                    $hasActiveDeductions = true;
+                                    break;
+                                }
+                            }
+                        @endphp
+                        @if($hasActiveDeductions)
+                            <table class="krit">
+                                <thead>
+                                    <tr>
+                                        <th style="color:#c0392b;">{{ $cat->name }} &mdash; {{ $deductionCat->name }}</th>
+                                        <th style="width:80px; text-align:center;">Pengurangan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($deductionCat->criterias as $deductionCrit)
+                                        @php
+                                            $deductionAmount = $scoreDeductions[$deductionCrit->id]->amount ?? 0;
+                                            if ($deductionAmount > 0) {
+                                                $deductionAmount = -$deductionAmount;
+                                            }
+                                        @endphp
+                                        @if($deductionAmount != 0)
+                                            <tr>
+                                                <td class="cn">{{ $deductionCrit->name }}</td>
+                                                <td class="sv" style="color:#c0392b; background:#fdf2f2;">{{ $deductionAmount }}</td>
+                                            </tr>
+                                        @endif
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+                    @endif
+                @endforeach
+            @endif
+        @endforeach
+
+        {{-- 2. Pengurangan Umum (Tanpa Kategori) --}}
+        @php $generalDeds = $deductionCategories->whereNull('assessment_category_id'); @endphp
+        @if($generalDeds->isNotEmpty())
+            @foreach($generalDeds as $deductionCat)
+                @if($deductionCat->criterias->isNotEmpty())
+                    @php
+                        $hasActiveDeductions = false;
+                        foreach($deductionCat->criterias as $crit) {
+                            if (isset($scoreDeductions[$crit->id]) && $scoreDeductions[$crit->id]->amount != 0) {
+                                $hasActiveDeductions = true;
+                                break;
+                            }
+                        }
+                    @endphp
+                    @if($hasActiveDeductions)
                         <table class="krit">
                             <thead>
                                 <tr>
-                                    <th style="color:#c0392b;">{{ $cat->name }} &mdash; {{ $deductionCat->name }}</th>
+                                    <th style="color:#c0392b;">{{ $deductionCat->name }} (Umum)</th>
                                     <th style="width:80px; text-align:center;">Pengurangan</th>
                                 </tr>
                             </thead>
@@ -269,6 +343,9 @@
                                 @foreach($deductionCat->criterias as $deductionCrit)
                                     @php
                                         $deductionAmount = $scoreDeductions[$deductionCrit->id]->amount ?? 0;
+                                        if ($deductionAmount > 0) {
+                                            $deductionAmount = -$deductionAmount;
+                                        }
                                     @endphp
                                     @if($deductionAmount != 0)
                                         <tr>
@@ -280,9 +357,9 @@
                             </tbody>
                         </table>
                     @endif
-                @endforeach
-            @endif
-        @endforeach
+                @endif
+            @endforeach
+        @endif
     @endif
 
     @php

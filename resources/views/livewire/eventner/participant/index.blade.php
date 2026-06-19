@@ -116,6 +116,12 @@
                                                     <i class="ti ti-checklist fs-4"></i> Verifikasi
                                                 </button>
 
+                                                @if($reg->status_berkas === 'Terverifikasi')
+                                                    <a href="{{ route('eventner.participants.pdf', $reg->id) }}" class="btn btn-sm btn-success text-white" title="Unduh Formulir PDF">
+                                                        <i class="ti ti-download fs-4"></i> Formulir
+                                                    </a>
+                                                @endif
+
                                                 <button 
                                                     type="button" 
                                                     class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
