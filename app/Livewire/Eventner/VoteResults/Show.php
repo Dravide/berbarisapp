@@ -15,6 +15,8 @@ class Show extends Component
 {
     use WithPagination;
 
+    protected string $paginationTheme = 'bootstrap';
+
     public Registration $registration;
     public string $search = '';
 
