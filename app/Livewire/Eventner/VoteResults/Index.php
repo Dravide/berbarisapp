@@ -36,20 +36,31 @@ class Index extends Component
     public function render()
     {
         $eventner = auth()->user()->eventner;
-        
+
         $results = [];
-        if ($eventner && $this->activeTab) {
-            $results = Registration::where('eventner_id', $eventner->id)
-                ->where('competition_category_id', $this->activeTab)
-                ->withSum(['voteTransactions as total_votes' => function ($query) {
-                    $query->where('status', 'PAID');
-                }], 'votes_earned')
-                ->orderByDesc('total_votes')
-                ->get();
+        $summary = null;
+
+        if ($eventner) {
+            // Calculate grand summary across all competition categories
+            $summary = VoteTransaction::where('eventner_id', $eventner->id)
+                ->where('status', 'PAID')
+                ->selectRaw('COUNT(*) as trx_count, COALESCE(SUM(votes_earned), 0) as total_votes, COALESCE(SUM(amount), 0) as total_amount')
+                ->first();
+
+            if ($this->activeTab) {
+                $results = Registration::where('eventner_id', $eventner->id)
+                    ->where('competition_category_id', $this->activeTab)
+                    ->withSum(['voteTransactions as total_votes' => function ($query) {
+                        $query->where('status', 'PAID');
+                    }], 'votes_earned')
+                    ->orderByDesc('total_votes')
+                    ->get();
+            }
         }
 
         return view('livewire.eventner.vote-results.index', [
-            'results' => $results
+            'results' => $results,
+            'summary' => $summary,
         ]);
     }
 }

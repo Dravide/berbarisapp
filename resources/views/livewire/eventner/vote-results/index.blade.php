@@ -18,6 +18,39 @@
         </div>
     </div>
 
+    <!-- Summary Cards -->
+    @if($summary)
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card mb-0 bg-primary-subtle border-0">
+                    <div class="card-body p-4 text-center">
+                        <p class="text-muted small mb-1 fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Total Transaksi Terverifikasi</p>
+                        <h2 class="fw-bold text-primary mb-0">{{ number_format($summary->trx_count) }}</h2>
+                        <small class="text-primary text-opacity-75">Pembayaran Sukses (PAID)</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-0 bg-success-subtle border-0">
+                    <div class="card-body p-4 text-center">
+                        <p class="text-muted small mb-1 fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Total Vote Masuk</p>
+                        <h2 class="fw-bold text-success mb-0">{{ number_format($summary->total_votes) }}</h2>
+                        <small class="text-success text-opacity-75">Suara Terakumulasi</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-0 bg-info-subtle border-0">
+                    <div class="card-body p-4 text-center">
+                        <p class="text-muted small mb-1 fw-semibold text-uppercase" style="letter-spacing: 0.5px;">Total Pendapatan Keseluruhan</p>
+                        <h2 class="fw-bold text-info mb-0">Rp {{ number_format($summary->total_amount, 0, ',', '.') }}</h2>
+                        <small class="text-info text-opacity-75">Omzet Kotor Voting</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="card">
         <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
