@@ -22,5 +22,6 @@ Route::get('tickets', App\Livewire\Eventner\Ticket\Index::class)->name('eventner
 Route::get('tickets/settings', App\Livewire\Eventner\Ticket\Settings::class)->name('eventner.tickets.settings');
 Route::get('activity-log', App\Livewire\Eventner\ActivityLog\Index::class)->name('eventner.activity-log.index');
 Route::get('drawing', App\Livewire\Eventner\Drawing\Index::class)->name('eventner.drawing.index');
+Route::get('drawing/print', [App\Http\Controllers\Eventner\DrawingController::class, 'print'])->name('eventner.drawing.print');
 Route::get('sponsors', App\Livewire\Eventner\Sponsor\Index::class)->name('eventner.sponsors.index');
 Route::get('tenants', App\Livewire\Eventner\Tenant\Index::class)->name('eventner.tenants.index');

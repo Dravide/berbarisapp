@@ -53,6 +53,11 @@
                         <i class="ti ti-list-numbers me-2"></i> Hasil Undian
                     </h5>
                     <div class="d-flex gap-2">
+                        @if($drawnResults->count() > 0)
+                            <a href="{{ route('eventner.drawing.print', ['competition_category_id' => $activeTab]) }}" target="_blank" class="btn btn-sm btn-success">
+                                <i class="ti ti-download me-1"></i> Unduh / Cetak
+                            </a>
+                        @endif
                         <a href="{{ route('event.drawing.spin', $eventner->slug) }}" target="_blank" class="btn btn-sm btn-primary">
                             <i class="ti ti-arrows-shuffle me-1"></i> Layar Spin
                         </a>
