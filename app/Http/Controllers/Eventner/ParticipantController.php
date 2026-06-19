@@ -30,20 +30,23 @@ class ParticipantController extends Controller
         // Eager load data
         $registration->load(['participants', 'competitionCategory', 'eventner']);
 
-        // Generate safe image paths and optimized thumbnails
+        // Generate safe image paths and optimized thumbnails, then convert to Base64
         $logoPath = $eventner->logo_event ? public_path('storage/' . $eventner->logo_event) : null;
-        $safeLogoPath = ($logoPath && file_exists($logoPath) && is_file($logoPath)) ? $logoPath : null;
+        $safeLogoPath = ($logoPath && file_exists($logoPath) && is_file($logoPath)) ? $this->imageToBase64($logoPath) : null;
 
         $fotoPelatihPath = $registration->foto_pelatih ? public_path('storage/' . $registration->foto_pelatih) : null;
-        $safeFotoPelatih = $this->getThumbnailPath($fotoPelatihPath, 150);
+        $thumbnailPelatih = $this->getThumbnailPath($fotoPelatihPath, 150);
+        $safeFotoPelatih = $thumbnailPelatih ? $this->imageToBase64($thumbnailPelatih) : null;
 
         $fotoDantonPath = $registration->danton_foto ? public_path('storage/' . $registration->danton_foto) : null;
-        $safeFotoDanton = $this->getThumbnailPath($fotoDantonPath, 150);
+        $thumbnailDanton = $this->getThumbnailPath($fotoDantonPath, 150);
+        $safeFotoDanton = $thumbnailDanton ? $this->imageToBase64($thumbnailDanton) : null;
 
         $participantsData = [];
         foreach ($registration->participants as $participant) {
             $fotoAnggotaPath = $participant->foto ? public_path('storage/' . $participant->foto) : null;
-            $safeFotoAnggota = $this->getThumbnailPath($fotoAnggotaPath, 100);
+            $thumbnailAnggota = $this->getThumbnailPath($fotoAnggotaPath, 100);
+            $safeFotoAnggota = $thumbnailAnggota ? $this->imageToBase64($thumbnailAnggota) : null;
 
             $participantsData[] = [
                 'nama' => $participant->nama,
@@ -70,6 +73,24 @@ class ParticipantController extends Controller
 
         $filename = 'Formulir_' . str_replace(['/', '\\', ' '], '_', $registration->nama_sekolah) . '.pdf';
         return $pdf->stream($filename);
+    }
+
+    /**
+     * Convert image to base64 Data URI to avoid DomPDF cURL/filesystem blocking issues
+     */
+    private function imageToBase64($path)
+    {
+        if (!$path || !file_exists($path) || !is_file($path)) {
+            return null;
+        }
+
+        try {
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $data = file_get_contents($path);
+            return 'data:image/' . $type . ';base64,' . base64_encode($data);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     /**
@@ -126,7 +147,7 @@ class ParticipantController extends Controller
                     break;
                 default:
                     return $originalPath;
-            }
+                }
 
             if (!$src) return $originalPath;
 
