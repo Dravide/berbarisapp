@@ -70,9 +70,15 @@ return new class extends Migration
 
         // 3. Drop foreign key and column for assessment_category_id
         if (Schema::hasColumn('champion_assessment', 'assessment_category_id')) {
+            try {
+                Schema::table('champion_assessment', function (Blueprint $table) {
+                    $table->dropForeign(['assessment_category_id']);
+                });
+            } catch (\Exception $e) {
+                // Ignore if foreign key constraint doesn't exist
+            }
+
             Schema::table('champion_assessment', function (Blueprint $table) {
-                // Drop FK using default Laravel naming convention
-                $table->dropForeign('champion_assessment_assessment_category_id_foreign');
                 $table->dropColumn('assessment_category_id');
             });
         }
