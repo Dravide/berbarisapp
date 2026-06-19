@@ -212,6 +212,14 @@
                             <span class="badge bg-white text-dark rounded-pill ms-2">Top {{ $champion->quantity }}</span>
                         </div>
                         <div class="d-flex gap-1">
+                            @if(!empty($eventner->scoring_code))
+                                <a href="{{ route('public.scoreboard.champion', ['scoringCode' => $eventner->scoring_code, 'championCategoryId' => $champion->id]) }}?category_id={{ $selectedCompetitionCategoryId }}"
+                                   target="_blank"
+                                   class="btn btn-sm btn-success text-white"
+                                   title="Buka Live Scoreboard Juara">
+                                    <i class="ti ti-device-tv me-1"></i> Scoreboard
+                                </a>
+                            @endif
                             <button wire:click="showAddRankTitle({{ $champion->id }})" class="btn btn-sm btn-warning" title="Kelola Gelar">
                                 <i class="ti ti-medal me-1"></i> Gelar
                             </button>
