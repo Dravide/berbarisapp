@@ -314,24 +314,15 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($participants as $index => $participant)
-                @php
-                    $safeFotoAnggota = null;
-                    if ($participant->foto) {
-                        $fullPath = public_path('storage/' . $participant->foto);
-                        if (file_exists($fullPath) && is_file($fullPath)) {
-                            $safeFotoAnggota = $fullPath;
-                        }
-                    }
-                @endphp
+            @forelse($participantsData as $index => $participant)
                 <tr>
                     <td class="center">{{ $index + 1 }}</td>
-                    <td><strong>{{ $participant->nama }}</strong></td>
-                    <td>{{ $participant->nisn }}</td>
+                    <td><strong>{{ $participant['nama'] }}</strong></td>
+                    <td>{{ $participant['nisn'] }}</td>
                     <td class="center" style="padding: 5px 0;">
                         <div class="foto-container" style="width: 45px; height: 60px;">
-                            @if($safeFotoAnggota)
-                                <img src="{{ $safeFotoAnggota }}" class="foto-img" style="width: 45px; height: 60px;">
+                            @if($participant['foto_path'])
+                                <img src="{{ $participant['foto_path'] }}" class="foto-img" style="width: 45px; height: 60px;">
                             @else
                                 <div class="foto-placeholder" style="padding-top: 22px; font-size: 7px;">FOTO</div>
                             @endif
