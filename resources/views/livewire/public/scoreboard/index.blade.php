@@ -32,6 +32,9 @@
                     <div class="col-9">
                         <h4 class="fw-semibold mb-8">
                             <i class="ti ti-trophy me-2"></i> Live Scoreboard
+                            @if($selectedChampionCategoryId && $championCategory)
+                                &mdash; <span class="text-primary">{{ $championCategory->name }}</span>
+                            @endif
                         </h4>
                         <p class="text-muted fs-3 mb-0">
                             {{ $eventner->nama_event }}
@@ -64,7 +67,10 @@
                                 @php $p2 = $rankings[1]; @endphp
                                 <div class="text-center d-flex flex-column align-items-center p-2 rounded {{ ($p2['direction'] ?? '') === 'up' ? 'rank-up-anim' : (($p2['direction'] ?? '') === 'down' ? 'rank-down-anim' : '') }}" style="width: 30%; transition: all 0.3s;" wire:key="podium-2-{{ $p2['id'] }}">
                                     <div class="fw-bold text-truncate w-100" style="font-size: 0.85rem;" title="{{ $p2['nama_sekolah'] }}">{{ $p2['nama_sekolah'] }}</div>
-                                    <div class="text-primary fw-semibold small mb-2">{{ number_format($p2['total'], 0) }}</div>
+                                    @if($p2['title'])
+                                        <div class="badge bg-success-subtle text-success border border-success rounded-pill px-2 py-0 mt-1" style="font-size: 0.7rem;">{{ $p2['title'] }}</div>
+                                    @endif
+                                    <div class="text-primary fw-semibold small mb-2 mt-1">{{ number_format($p2['total'], 0) }}</div>
                                     <div class="bg-secondary bg-opacity-25 border border-secondary border-opacity-25 rounded-top d-flex flex-column justify-content-center align-items-center w-100" style="height: 100px; min-height: 80px;">
                                         <span class="badge bg-secondary text-dark rounded-circle fs-5" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">2</span>
                                     </div>
@@ -79,7 +85,10 @@
                                         <i class="ti ti-crown text-warning fs-5"></i><br>
                                         {{ $p1['nama_sekolah'] }}
                                     </div>
-                                    <div class="text-primary fw-bold mb-2">{{ number_format($p1['total'], 0) }}</div>
+                                    @if($p1['title'])
+                                        <div class="badge bg-warning text-dark border border-warning rounded-pill px-2 py-0 mt-1" style="font-size: 0.75rem;">{{ $p1['title'] }}</div>
+                                    @endif
+                                    <div class="text-primary fw-bold mb-2 mt-1">{{ number_format($p1['total'], 0) }}</div>
                                     <div class="bg-warning bg-opacity-25 border border-warning rounded-top d-flex flex-column justify-content-center align-items-center w-100" style="height: 140px; min-height: 110px;">
                                         <span class="badge bg-warning text-dark rounded-circle fs-4" style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;">1</span>
                                     </div>
@@ -91,7 +100,10 @@
                                 @php $p3 = $rankings[2]; @endphp
                                 <div class="text-center d-flex flex-column align-items-center p-2 rounded {{ ($p3['direction'] ?? '') === 'up' ? 'rank-up-anim' : (($p3['direction'] ?? '') === 'down' ? 'rank-down-anim' : '') }}" style="width: 30%; transition: all 0.3s;" wire:key="podium-3-{{ $p3['id'] }}">
                                     <div class="fw-bold text-truncate w-100" style="font-size: 0.85rem;" title="{{ $p3['nama_sekolah'] }}">{{ $p3['nama_sekolah'] }}</div>
-                                    <div class="text-primary fw-semibold small mb-2">{{ number_format($p3['total'], 0) }}</div>
+                                    @if($p3['title'])
+                                        <div class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2 py-0 mt-1" style="font-size: 0.7rem;">{{ $p3['title'] }}</div>
+                                    @endif
+                                    <div class="text-primary fw-semibold small mb-2 mt-1">{{ number_format($p3['total'], 0) }}</div>
                                     <div class="bg-info-subtle border border-info-subtle rounded-top d-flex flex-column justify-content-center align-items-center w-100" style="height: 80px; min-height: 60px;">
                                         <span class="badge bg-info-subtle text-dark rounded-circle fs-5" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">3</span>
                                     </div>
@@ -149,8 +161,13 @@
                                                 <span class="text-muted fw-semibold">{{ $item['rank'] }}</span>
                                             </td>
                                             <td>
-                                                <span class="fw-semibold">{{ $item['nama_sekolah'] }}</span>
-                                                <br><small class="text-muted">NPSN: {{ $item['npsn'] }}</small>
+                                                <div class="d-flex align-items-center flex-wrap gap-2">
+                                                    <span class="fw-semibold">{{ $item['nama_sekolah'] }}</span>
+                                                    @if($item['title'])
+                                                        <span class="badge bg-success-subtle text-success border border-success rounded-pill px-2 py-0" style="font-size: 0.7rem;">{{ $item['title'] }}</span>
+                                                    @endif
+                                                </div>
+                                                <small class="text-muted">NPSN: {{ $item['npsn'] }}</small>
                                             </td>
                                             <td class="text-end pe-4">
                                                 <span class="fw-semibold text-primary">{{ number_format($item['total'], 0) }}</span>

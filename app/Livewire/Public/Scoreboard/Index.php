@@ -19,7 +19,10 @@ class Index extends Component
     public $previousRanks = []; // Track previous ranks for animation
     public $activeInputSchool = null; // Track school currently being scored
 
-    public function mount($scoringCode, $categoryId = null)
+    public $selectedChampionCategoryId = null;
+    public $championCategory = null;
+
+    public function mount($scoringCode, $competitionCategoryId = null, $championCategoryId = null)
     {
         $this->scoringCode = $scoringCode;
         $this->eventner = Eventner::where('scoring_code', $scoringCode)->firstOrFail();
@@ -28,8 +31,19 @@ class Index extends Component
             ->orderBy('name')
             ->get();
 
-        if ($categoryId) {
-            $this->selectedCategoryId = $categoryId;
+        if ($championCategoryId) {
+            $this->selectedChampionCategoryId = $championCategoryId;
+            $this->championCategory = \App\Models\ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles'])
+                ->where('eventner_id', $this->eventner->id)
+                ->findOrFail($championCategoryId);
+        }
+
+        // Determine active competition category
+        $requestCategoryId = request()->query('category_id');
+        if ($competitionCategoryId) {
+            $this->selectedCategoryId = $competitionCategoryId;
+        } elseif ($requestCategoryId) {
+            $this->selectedCategoryId = $requestCategoryId;
         } elseif ($this->categories->isNotEmpty()) {
             $this->selectedCategoryId = $this->categories->first()->id;
         }
@@ -58,13 +72,33 @@ class Index extends Component
             ->get()
             ->groupBy('registration_id');
 
+        // Build criteria filter if champion category is selected
+        $criteriaMap = null;
+        if ($this->selectedChampionCategoryId && $this->championCategory) {
+            $criteriaMap = [];
+            foreach ($this->championCategory->assessmentSubCategories as $sub) {
+                foreach ($sub->criterias as $crit) {
+                    $criteriaMap[$crit->id] = $crit->weight ?? 1;
+                }
+            }
+        }
+
         $rankings = [];
         foreach ($participants as $participant) {
             $scores = $allScores->get($participant->id, collect());
             $total = 0;
             foreach ($scores as $score) {
-                $weight = $score->assessmentCriteria->weight ?? 1;
-                $total += (int) $score->score * $weight;
+                if ($criteriaMap !== null) {
+                    // Filter: only calculate scores matching the champion category rubrics
+                    if (isset($criteriaMap[$score->assessment_criteria_id])) {
+                        $weight = $criteriaMap[$score->assessment_criteria_id];
+                        $total += (int) $score->score * $weight;
+                    }
+                } else {
+                    // Default: sum all criteria scores (weighted)
+                    $weight = $score->assessmentCriteria->weight ?? 1;
+                    $total += (int) $score->score * $weight;
+                }
             }
 
             $rankings[] = [
@@ -85,6 +119,17 @@ class Index extends Component
                 $rank = $i + 1;
             }
             $item['rank'] = $rank;
+
+            // Determine matching rank title if champion category is selected
+            $item['title'] = null;
+            if ($this->selectedChampionCategoryId && $this->championCategory) {
+                foreach ($this->championCategory->rankTitles as $rt) {
+                    if ($rt->coversRank($rank)) {
+                        $item['title'] = $rt->title;
+                        break;
+                    }
+                }
+            }
 
             // Compare with previous ranks
             $prev = $this->previousRanks[$item['id']] ?? null;
