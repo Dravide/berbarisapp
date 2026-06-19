@@ -19,6 +19,11 @@ class VoteTransaction extends Model
         'paid_at',
     ];
 
+    protected $casts = [
+        'paid_at' => 'datetime',
+        'created_at' => 'datetime',
+    ];
+
     public function eventner()
     {
         return $this->belongsTo(Eventner::class);

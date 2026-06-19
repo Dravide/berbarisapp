@@ -89,13 +89,12 @@
                 <table class="table align-middle text-nowrap mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th class="border-bottom-0"><h6 class="fw-semibold mb-0">#</h6></th>
-                            <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Voter</h6></th>
-                            <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Email</h6></th>
-                            <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">Vote</h6></th>
-                            <th class="border-bottom-0 text-end"><h6 class="fw-semibold mb-0">Nominal</h6></th>
-                            <th class="border-bottom-0"><h6 class="fw-semibold mb-0">ID Transaksi</h6></th>
-                            <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Waktu Bayar</h6></th>
+                            <th class="border-bottom-0" width="50px"><h6 class="fw-semibold mb-0">#</h6></th>
+                            <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Detail Voter</h6></th>
+                            <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">Jumlah Vote</h6></th>
+                            <th class="border-bottom-0 text-end"><h6 class="fw-semibold mb-0">Nominal Bayar</h6></th>
+                            <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Informasi Transaksi</h6></th>
+                            <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Waktu Transaksi</h6></th>
                             <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">Status</h6></th>
                         </tr>
                     </thead>
@@ -103,32 +102,59 @@
                         @forelse($voters as $i => $v)
                             <tr wire:key="voter-{{ $v->id }}">
                                 <td class="text-muted">{{ $voters->firstItem() + $i }}</td>
-                                <td class="fw-semibold">
+                                <td>
                                     <div class="d-flex align-items-center gap-2">
-                                        <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;">
-                                            <i class="ti ti-user"></i>
+                                        <div class="bg-primary-subtle text-primary rounded-circle d-flex align-items-center justify-content-center" style="width:34px;height:34px;">
+                                            <i class="ti ti-user fs-4"></i>
                                         </div>
-                                        {{ $v->voter_name }}
+                                        <div>
+                                            <h6 class="fw-semibold mb-0">{{ $v->voter_name }}</h6>
+                                            <span class="text-muted small" style="font-size: 0.75rem;">{{ $v->voter_email }}</span>
+                                        </div>
                                     </div>
                                 </td>
-                                <td><span class="text-muted">{{ $v->voter_email }}</span></td>
                                 <td class="text-center">
-                                    <span class="badge bg-success-subtle text-success fw-semibold">{{ number_format($v->votes_earned) }}</span>
+                                    <span class="badge bg-success text-white fw-bold px-3 py-1 fs-3 rounded-pill">{{ number_format($v->votes_earned) }} Vote</span>
                                 </td>
-                                <td class="text-end fw-semibold">Rp {{ number_format($v->amount, 0, ',', '.') }}</td>
-                                <td>
-                                    <code class="text-muted fs-3">{{ Str::limit($v->autogopay_transaction_id, 18, '…') }}</code>
+                                <td class="text-end fw-bold text-dark">
+                                    Rp {{ number_format($v->amount, 0, ',', '.') }}
                                 </td>
                                 <td>
-                                    <span class="text-muted fs-3">{{ optional($v->paid_at)->translatedFormat('d M Y H:i') ?? '-' }}</span>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <code class="text-primary fw-semibold fs-2 bg-light px-2 py-1 rounded" id="tx-{{ $v->id }}">{{ $v->autogopay_transaction_id }}</code>
+                                        <button type="button" class="btn btn p-0 text-muted" onclick="navigator.clipboard.writeText('{{ $v->autogopay_transaction_id }}'); alert('ID Transaksi berhasil disalin!');" title="Salin ID Transaksi">
+                                            <i class="ti ti-copy fs-4"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div>
+                                        <div class="d-flex align-items-center gap-1">
+                                            <span class="badge bg-success-subtle text-success py-0 px-2" style="font-size: 0.7rem;">Bayar</span>
+                                            <span class="text-dark fw-semibold fs-3">{{ $v->paid_at ? $v->paid_at->translatedFormat('d M Y H:i:s') : '-' }} WIB</span>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-1 mt-1">
+                                            <span class="badge bg-light text-muted py-0 px-2" style="font-size: 0.7rem;">Dibuat</span>
+                                            <span class="text-muted fs-2">{{ $v->created_at ? $v->created_at->translatedFormat('d M Y H:i:s') : '-' }} WIB</span>
+                                        </div>
+                                        @if($v->paid_at && $v->created_at)
+                                            @php
+                                                $diff = $v->paid_at->diffInSeconds($v->created_at);
+                                                $duration = $diff > 60 ? round($diff / 60) . ' menit' : $diff . ' detik';
+                                            @endphp
+                                            <small class="text-primary-emphasis d-block mt-1" style="font-size: 0.75rem;">
+                                                <i class="ti ti-clock me-1"></i> Proses bayar: {{ $duration }}
+                                            </small>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge bg-success-subtle text-success">{{ $v->status }}</span>
+                                    <span class="badge bg-success rounded-pill fw-semibold">{{ $v->status }}</span>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5">
+                                <td colspan="7" class="text-center py-5">
                                     <i class="ti ti-users-off fs-10 text-muted d-block mb-3"></i>
                                     <h6 class="fw-semibold text-muted">Belum Ada Voter</h6>
                                     <p class="text-muted mb-0">Belum ada pembayaran vote yang terverifikasi untuk kontingen ini.</p>
