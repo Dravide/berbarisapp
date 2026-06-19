@@ -61,6 +61,57 @@
 
         {{-- Rankings Table --}}
         <div wire:poll.5s>
+            {{-- Podium Top 3 --}}
+            @if(collect($rankings)->isNotEmpty())
+                <div class="card mb-4 bg-white border">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-center align-items-end gap-2 gap-md-4 pt-3">
+                            <!-- 2nd Place -->
+                            @if(isset($rankings[1]))
+                                @php $p2 = $rankings[1]; @endphp
+                                <div class="text-center d-flex flex-column align-items-center p-2 rounded {{ ($p2['direction'] ?? '') === 'up' ? 'rank-up-anim' : (($p2['direction'] ?? '') === 'down' ? 'rank-down-anim' : '') }}" style="width: 30%; transition: all 0.3s;" wire:key="podium-2-{{ $p2['id'] }}">
+                                    <div class="fw-bold text-truncate w-100" style="font-size: 0.85rem;" title="{{ $p2['nama_sekolah'] }}">{{ $p2['nama_sekolah'] }}</div>
+                                    <div class="text-primary fw-semibold small mb-2">{{ number_format($p2['total'], 0) }}</div>
+                                    <div class="bg-secondary bg-opacity-25 border border-secondary border-opacity-25 rounded-top d-flex flex-column justify-content-center align-items-center w-100" style="height: 100px; min-height: 80px;">
+                                        <span class="badge bg-secondary text-dark rounded-circle fs-5" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">2</span>
+                                        <div class="small text-muted mt-1" style="font-size: 0.75rem;">Perak</div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- 1st Place -->
+                            @if(isset($rankings[0]))
+                                @php $p1 = $rankings[0]; @endphp
+                                <div class="text-center d-flex flex-column align-items-center p-2 rounded {{ ($p1['direction'] ?? '') === 'up' ? 'rank-up-anim' : (($p1['direction'] ?? '') === 'down' ? 'rank-down-anim' : '') }}" style="width: 35%; transition: all 0.3s;" wire:key="podium-1-{{ $p1['id'] }}">
+                                    <div class="fw-bold text-truncate w-100" style="font-size: 0.95rem; color: #b8860b;" title="{{ $p1['nama_sekolah'] }}">
+                                        <i class="ti ti-crown text-warning fs-5"></i><br>
+                                        {{ $p1['nama_sekolah'] }}
+                                    </div>
+                                    <div class="text-primary fw-bold mb-2">{{ number_format($p1['total'], 0) }}</div>
+                                    <div class="bg-warning bg-opacity-25 border border-warning rounded-top d-flex flex-column justify-content-center align-items-center w-100" style="height: 140px; min-height: 110px;">
+                                        <span class="badge bg-warning text-dark rounded-circle fs-4" style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;">1</span>
+                                        <div class="small text-warning-emphasis fw-bold mt-1" style="font-size: 0.8rem;">Emas</div>
+                                    </div>
+                                </div>
+                            @endif
+
+                            <!-- 3rd Place -->
+                            @if(isset($rankings[2]))
+                                @php $p3 = $rankings[2]; @endphp
+                                <div class="text-center d-flex flex-column align-items-center p-2 rounded {{ ($p3['direction'] ?? '') === 'up' ? 'rank-up-anim' : (($p3['direction'] ?? '') === 'down' ? 'rank-down-anim' : '') }}" style="width: 30%; transition: all 0.3s;" wire:key="podium-3-{{ $p3['id'] }}">
+                                    <div class="fw-bold text-truncate w-100" style="font-size: 0.85rem;" title="{{ $p3['nama_sekolah'] }}">{{ $p3['nama_sekolah'] }}</div>
+                                    <div class="text-primary fw-semibold small mb-2">{{ number_format($p3['total'], 0) }}</div>
+                                    <div class="bg-info-subtle border border-info-subtle rounded-top d-flex flex-column justify-content-center align-items-center w-100" style="height: 80px; min-height: 60px;">
+                                        <span class="badge bg-info-subtle text-dark rounded-circle fs-5" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">3</span>
+                                        <div class="small text-muted mt-1" style="font-size: 0.75rem;">Perunggu</div>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="card">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center py-2 flex-wrap gap-2">
                     <h6 class="fw-semibold mb-0 d-flex align-items-center flex-wrap gap-2">
@@ -78,7 +129,7 @@
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        @if($rankings)
+                        @if(collect($rankings)->count() > 3)
                             <table class="table table-sm align-middle mb-0">
                                 <thead class="table-light">
                                     <tr>
@@ -94,13 +145,9 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($rankings as $item)
+                                    @foreach(collect($rankings)->slice(3) as $item)
                                         @php
                                             $rowClass = '';
-                                            if ($item['rank'] == 1) {
-                                                $rowClass .= 'table-warning ';
-                                            }
-
                                             if (($item['direction'] ?? '') === 'up') {
                                                 $rowClass .= 'rank-up-anim';
                                             } elseif (($item['direction'] ?? '') === 'down') {
@@ -109,17 +156,7 @@
                                         @endphp
                                         <tr wire:key="rank-row-{{ $item['id'] }}" class="{{ trim($rowClass) }}">
                                             <td class="ps-4">
-                                                @if($item['rank'] == 1)
-                                                    <span class="badge bg-warning text-dark">
-                                                        <i class="ti ti-crown me-1"></i>1
-                                                    </span>
-                                                @elseif($item['rank'] == 2)
-                                                    <span class="badge bg-secondary bg-opacity-25 text-dark">2</span>
-                                                @elseif($item['rank'] == 3)
-                                                    <span class="badge bg-info-subtle text-dark">3</span>
-                                                @else
-                                                    <span class="text-muted fw-semibold">{{ $item['rank'] }}</span>
-                                                @endif
+                                                <span class="text-muted fw-semibold">{{ $item['rank'] }}</span>
                                             </td>
                                             <td>
                                                 <span class="fw-semibold">{{ $item['nama_sekolah'] }}</span>
@@ -132,6 +169,10 @@
                                     @endforeach
                                 </tbody>
                             </table>
+                        @elseif(collect($rankings)->count() <= 3 && collect($rankings)->isNotEmpty())
+                            <div class="text-center py-4">
+                                <p class="text-muted fs-3 mb-0">Semua peringkat aktif ditampilkan di podium utama.</p>
+                            </div>
                         @else
                             <div class="text-center py-4">
                                 <i class="ti ti-scoreboard fs-8 text-muted d-block mb-2"></i>
