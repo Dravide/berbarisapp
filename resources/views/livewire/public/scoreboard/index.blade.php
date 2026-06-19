@@ -1,3 +1,27 @@
+<style>
+    @keyframes flashGreen {
+        0% { background-color: rgba(39, 174, 96, 0.25); }
+        100% { background-color: transparent; }
+    }
+    @keyframes flashRed {
+        0% { background-color: rgba(192, 41, 43, 0.2); }
+        100% { background-color: transparent; }
+    }
+    .rank-up-anim {
+        animation: flashGreen 3s ease-out;
+    }
+    .rank-down-anim {
+        animation: flashRed 3s ease-out;
+    }
+    .animate-pulse-slow {
+        animation: pulseSlow 2s infinite;
+    }
+    @keyframes pulseSlow {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+</style>
+
 <div class="row justify-content-center">
     <div class="col-lg-8">
 
@@ -26,7 +50,7 @@
             @foreach($categories as $cat)
                 <li class="nav-item" role="presentation">
                     <button class="nav-link {{ $selectedCategoryId == $cat->id ? 'active bg-primary text-white' : '' }}"
-                        wire:click="$set('selectedCategoryId', {{ $cat->id }})"
+                        wire:click="switchCategory({{ $cat->id }})"
                         type="button" role="tab">
                         {{ $cat->name }}
                     </button>
@@ -38,9 +62,15 @@
         {{-- Rankings Table --}}
         <div wire:poll.5s>
             <div class="card">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center py-2">
-                    <h6 class="fw-semibold mb-0">
-                        <i class="ti ti-list-numbers me-1"></i> Peringkat Peserta
+                <div class="card-header bg-white d-flex justify-content-between align-items-center py-2 flex-wrap gap-2">
+                    <h6 class="fw-semibold mb-0 d-flex align-items-center flex-wrap gap-2">
+                        <span><i class="ti ti-list-numbers me-1"></i> Peringkat Peserta</span>
+                        @if($activeInputSchool)
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle animate-pulse-slow py-1 ms-lg-2">
+                                <span class="spinner-grow spinner-grow-sm text-danger me-1" style="width: 8px; height: 8px;" role="status"></span>
+                                Menilai: <strong>{{ $activeInputSchool }}</strong>
+                            </span>
+                        @endif
                     </h6>
                     <span class="badge bg-light text-dark border">
                         <i class="ti ti-clock me-1"></i> {{ now()->format('H:i:s') }}
@@ -65,7 +95,19 @@
                                 </thead>
                                 <tbody>
                                     @foreach($rankings as $item)
-                                        <tr class="{{ $item['rank'] == 1 ? 'table-warning' : '' }}">
+                                        @php
+                                            $rowClass = '';
+                                            if ($item['rank'] == 1) {
+                                                $rowClass .= 'table-warning ';
+                                            }
+
+                                            if (($item['direction'] ?? '') === 'up') {
+                                                $rowClass .= 'rank-up-anim';
+                                            } elseif (($item['direction'] ?? '') === 'down') {
+                                                $rowClass .= 'rank-down-anim';
+                                            }
+                                        @endphp
+                                        <tr wire:key="rank-row-{{ $item['id'] }}" class="{{ trim($rowClass) }}">
                                             <td class="ps-4">
                                                 @if($item['rank'] == 1)
                                                     <span class="badge bg-warning text-dark">

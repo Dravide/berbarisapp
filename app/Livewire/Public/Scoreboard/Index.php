@@ -16,6 +16,8 @@ class Index extends Component
     public $scoringCode;
     public $selectedCategoryId = null;
     public $categories = [];
+    public $previousRanks = []; // Track previous ranks for animation
+    public $activeInputSchool = null; // Track school currently being scored
 
     public function mount($scoringCode)
     {
@@ -29,6 +31,12 @@ class Index extends Component
         if ($this->categories->isNotEmpty()) {
             $this->selectedCategoryId = $this->categories->first()->id;
         }
+    }
+
+    public function switchCategory($categoryId)
+    {
+        $this->selectedCategoryId = $categoryId;
+        $this->previousRanks = [];
     }
 
     public function getRankingsProperty()
@@ -68,15 +76,44 @@ class Index extends Component
 
         usort($rankings, fn($a, $b) => $b['total'] <=> $a['total']);
 
-        // Assign ranks (handle ties)
+        // Assign ranks (handle ties) and determine direction
         $rank = 1;
         foreach ($rankings as $i => &$item) {
             if ($i > 0 && $item['total'] < $rankings[$i - 1]['total']) {
                 $rank = $i + 1;
             }
             $item['rank'] = $rank;
+
+            // Compare with previous ranks
+            $prev = $this->previousRanks[$item['id']] ?? null;
+            if ($prev !== null) {
+                if ($rank < $prev) {
+                    $item['direction'] = 'up';
+                } elseif ($rank > $prev) {
+                    $item['direction'] = 'down';
+                } else {
+                    $item['direction'] = 'same';
+                }
+            } else {
+                $item['direction'] = 'same';
+            }
         }
         unset($item);
+
+        // Cache ranks for next poll comparison
+        $this->previousRanks = collect($rankings)->pluck('rank', 'id')->toArray();
+
+        // Check active scoring in last 15 seconds
+        $latestScore = AssessmentScore::with('registration')
+            ->where('eventner_id', $this->eventner->id)
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
+        if ($latestScore && $latestScore->updated_at->gt(now()->subSeconds(15))) {
+            $this->activeInputSchool = $latestScore->registration->nama_sekolah;
+        } else {
+            $this->activeInputSchool = null;
+        }
 
         return $rankings;
     }
