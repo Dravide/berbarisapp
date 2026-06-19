@@ -214,14 +214,16 @@
         <table class="table-results">
             <thead>
                 <tr>
-                    <th style="width: 15%; text-align: center;">No. Urut</th>
-                    <th style="width: 60%;">Nama Sekolah / Kontingen</th>
-                    <th style="width: 25%; text-align: center;">NPSN</th>
+                    <th style="width: 12%; text-align: center;">No. Urut</th>
+                    <th style="width: 15%; text-align: center;">No. Undian</th>
+                    <th style="width: 53%;">Nama Sekolah / Kontingen</th>
+                    <th style="width: 20%; text-align: center;">NPSN</th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($results as $reg)
+                @forelse($results as $index => $reg)
                     <tr>
+                        <td class="center">{{ $index + 1 }}</td>
                         <td class="center">
                             <span class="number-badge">{{ $reg->urutan_tampil }}</span>
                         </td>
@@ -230,7 +232,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="3" class="center" style="padding: 30px; color: #888;">Belum ada urutan tampil yang diundi pada kategori ini.</td>
+                        <td colspan="4" class="center" style="padding: 30px; color: #888;">Belum ada urutan tampil yang diundi pada kategori ini.</td>
                     </tr>
                 @endforelse
             </tbody>
