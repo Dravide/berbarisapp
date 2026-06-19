@@ -117,7 +117,7 @@
                                                 </button>
 
                                                 @if($reg->status_berkas === 'Terverifikasi')
-                                                    <a href="{{ route('eventner.participants.pdf', $reg->id) }}" class="btn btn-sm btn-success text-white" title="Unduh Formulir PDF">
+                                                    <a href="{{ route('eventner.participants.pdf', $reg->id) }}" target="_blank" class="btn btn-sm btn-success text-white" title="Lihat Formulir PDF">
                                                         <i class="ti ti-download fs-4"></i> Formulir
                                                     </a>
                                                 @endif

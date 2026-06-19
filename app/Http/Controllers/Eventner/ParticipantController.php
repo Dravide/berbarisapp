@@ -69,7 +69,7 @@ class ParticipantController extends Controller
             ->setOption('margin-right', '10mm');
 
         $filename = 'Formulir_' . str_replace(['/', '\\', ' '], '_', $registration->nama_sekolah) . '.pdf';
-        return $pdf->download($filename);
+        return $pdf->stream($filename);
     }
 
     /**
