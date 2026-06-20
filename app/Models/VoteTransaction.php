@@ -3,9 +3,21 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class VoteTransaction extends Model
 {
+    use LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'paid_at'])
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(fn (string $eventName) => "Transaksi voting {$this->autogopay_transaction_id} telah di-{$eventName}");
+    }
+
     protected $fillable = [
         'eventner_id',
         'registration_id',

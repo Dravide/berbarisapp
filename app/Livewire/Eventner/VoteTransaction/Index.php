@@ -63,6 +63,27 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function markAsPaid($id)
+    {
+        $eventner = auth()->user()->eventner;
+        abort_unless($eventner, 403, 'Anda belum memiliki data Event terdaftar.');
+
+        // Scope ke eventner milik user (cegah akses lintas tenant)
+        $transaction = VoteTransaction::where('eventner_id', $eventner->id)->findOrFail($id);
+
+        if ($transaction->status !== 'PENDING') {
+            session()->flash('error', 'Transaksi ini tidak dapat dikonfirmasi (status: ' . $transaction->status . '). Hanya transaksi PENDING yang bisa dikonfirmasi manual.');
+            return;
+        }
+
+        $transaction->update([
+            'status' => 'PAID',
+            'paid_at' => now(),
+        ]);
+
+        session()->flash('success', 'Transaksi voting berhasil dikonfirmasi sebagai PAID. Vote telah dihitung.');
+    }
+
     public function render()
     {
         $eventner = auth()->user()->eventner;

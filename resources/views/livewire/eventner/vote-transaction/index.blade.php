@@ -19,6 +19,20 @@
         </div>
     </div>
 
+    {{-- Flash Message --}}
+    @if(session()->has('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="ti ti-check me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if(session()->has('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="ti ti-alert-circle me-2"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
     {{-- Summary Cards --}}
     <div class="row g-3 mb-4">
         {{-- Total Transaksi --}}
@@ -145,6 +159,7 @@
                             <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Informasi Transaksi</h6></th>
                             <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Waktu Transaksi</h6></th>
                             <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">Status</h6></th>
+                            <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">Aksi</h6></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -229,10 +244,23 @@
                                         <span class="badge bg-danger rounded-pill fw-semibold">{{ $v->status }}</span>
                                     @endif
                                 </td>
+                                <td class="text-center">
+                                    @if($v->status === 'PENDING')
+                                        <button type="button"
+                                            class="btn btn-success btn-sm rounded-pill px-3"
+                                            wire:click="markAsPaid({{ $v->id }})"
+                                            wire:confirm="Konfirmasi pembayaran transaksi ini menjadi PAID secara manual? Pastikan uang BENAR-BENAR sudah masuk."
+                                            title="Konfirmasi Pembayaran Manual">
+                                            <i class="ti ti-check me-1"></i> Konfirmasi Bayar
+                                        </button>
+                                    @else
+                                        <span class="text-muted small">-</span>
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5">
+                                <td colspan="9" class="text-center py-5">
                                     <i class="ti ti-receipt-off fs-10 text-muted d-block mb-3"></i>
                                     <h6 class="fw-semibold text-muted">Tidak Ada Transaksi</h6>
                                     <p class="text-muted mb-0">Belum ada data transaksi voting yang ditemukan atau cocok dengan kriteria filter.</p>
