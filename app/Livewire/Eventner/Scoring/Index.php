@@ -183,6 +183,39 @@ class Index extends Component
             return;
         }
 
+        // Validate that all criteria are filled
+        $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
+            ->where('eventner_id', $this->eventner->id)
+            ->whereHas('judges', function ($q) {
+                $q->where('judges.id', $this->selectedJudgeId);
+            })
+            ->get();
+
+        if ($assessmentCategories->isEmpty()) {
+            $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
+                ->where('eventner_id', $this->eventner->id)
+                ->get();
+        }
+
+        $missing = false;
+        foreach ($assessmentCategories as $cat) {
+            foreach ($cat->subCategories as $sub) {
+                foreach ($sub->criterias as $crit) {
+                    $value = $this->scores[$crit->id] ?? null;
+                    if ($value === '' || $value === null) {
+                        $missing = true;
+                        break 3;
+                    }
+                }
+            }
+        }
+
+        if ($missing) {
+            $this->saveStatus = 'error';
+            session()->flash('scoring_error', 'Semua kriteria nilai harus diisi sebelum melakukan finalisasi.');
+            return;
+        }
+
         // Save scores first to ensure latest data is finalized
         $this->saveScores();
 
