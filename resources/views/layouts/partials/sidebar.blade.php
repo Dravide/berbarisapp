@@ -220,6 +220,15 @@
             </a>
           </li>
           <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.vote-transactions.*') ? 'active' : '' }}"
+              href="{{ route('eventner.vote-transactions.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-receipt"></i>
+              </span>
+              <span class="hide-menu">Transaksi Voting</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('eventner.tickets.*') ? 'active' : '' }}"
               href="{{ route('eventner.tickets.index') }}" aria-expanded="false">
               <span>
