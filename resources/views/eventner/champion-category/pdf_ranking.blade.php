@@ -34,14 +34,16 @@
         .subjudul { text-align: center; font-size: 9px; color: #888; margin-bottom: 14px; }
 
         /* CHAMPION SECTION */
-        .champ-section { margin-bottom: 16px; page-break-inside: avoid; }
+        .champ-section { margin-bottom: 16px; }
         .champ-header { background: #2c3e50; color: #fff; padding: 8px 12px; border-radius: 4px 4px 0 0; }
         .champ-header h3 { font-size: 12px; margin: 0; font-weight: bold; }
         .champ-badges { padding: 6px 12px; background: #ecf0f1; border-left: 2px solid #3498db; border-right: 2px solid #3498db; }
         .champ-badge { display: inline-block; background: #3498db; color: #fff; padding: 2px 8px; border-radius: 10px; font-size: 7px; font-weight: bold; margin-right: 3px; }
 
         /* RANKING TABLE */
-        table.rank { width: 100%; border-collapse: collapse; }
+        table.rank { width: 100%; border-collapse: collapse; page-break-inside: auto; }
+        table.rank thead { display: table-header-group; }
+        table.rank tr { page-break-inside: avoid; page-break-after: auto; }
         table.rank th { background: #f8f9fa; padding: 5px 8px; font-size: 7px; font-weight: bold; text-transform: uppercase; color: #888; text-align: left; border: 1px solid #ddd; }
         table.rank th:last-child { text-align: right; }
         table.rank td { padding: 6px 8px; border: 1px solid #ddd; font-size: 9px; vertical-align: middle; }
