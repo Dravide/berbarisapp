@@ -212,6 +212,12 @@
                             <span class="badge bg-white text-dark rounded-pill ms-2">Top {{ $champion->quantity }}</span>
                         </div>
                         <div class="d-flex gap-1">
+                            <a href="{{ route('eventner.champion-categories.pdf', [
+                                'competition_category_id' => $selectedCompetitionCategoryId,
+                                'champion_category_id' => $champion->id,
+                            ]) }}" target="_blank" class="btn btn-sm btn-danger text-white" title="Unduh PDF Kategori Juara ini">
+                                <i class="ti ti-file-type-pdf me-1"></i> PDF
+                            </a>
                             @if(!empty($eventner->scoring_code))
                                 <a href="{{ route('public.scoreboard.champion', ['scoringCode' => $eventner->scoring_code, 'championCategoryId' => $champion->id]) }}?category_id={{ $selectedCompetitionCategoryId }}"
                                    target="_blank"

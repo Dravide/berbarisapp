@@ -23,9 +23,16 @@ class ChampionCategoryController extends Controller
         $competitionCategoryId = $request->query('competition_category_id');
         $competitionCategory = $competitionCategoryId ? CompetitionCategory::find($competitionCategoryId) : null;
 
+        $championCategoryId = $request->query('champion_category_id');
+
         $championCategories = ChampionCategory::with('assessmentSubCategories.criterias')
             ->where('eventner_id', $eventner->id)
+            ->when($championCategoryId, fn($q) => $q->where('id', $championCategoryId))
             ->get();
+
+        if ($championCategoryId && $championCategories->isEmpty()) {
+            abort(404, 'Kategori juara tidak ditemukan.');
+        }
 
         // Get participants
         $participantsQuery = Registration::where('eventner_id', $eventner->id);
