@@ -139,6 +139,12 @@
 
             @else
                 {{-- NORMAL VOTE VIEW (categories/participants) --}}
+                @if(!$eventner->vote_active)
+                    <div class="wow fadeInUp" style="background: rgba(245,158,11,0.1); color: #92400e; padding: 14px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(245,158,11,0.3);">
+                        <i class="fa fa-lock"></i>
+                        <span><strong>Vote Ditutup.</strong> Berikut adalah hasil akhir voting per kategori.</span>
+                    </div>
+                @endif
                 {{-- Quick Nav on mobile --}}
                 <div class="d-lg-none mb-3 wow fadeInUp">
                     <div class="d-flex gap-2 overflow-auto pb-2" style="scrollbar-width: none; -webkit-overflow-scrolling: touch;">
@@ -156,7 +162,7 @@
 
                 <div class="row">
                     {{-- Left: Team Selection --}}
-                    <div class="col-lg-8">
+                    <div class="col-lg-{{ $eventner->vote_active ? '8' : '12' }}">
                         @if($view == 'categories')
                             {{-- View A: Categories --}}
                             <div class="zubuz-section-title wow fadeInUp">
@@ -212,8 +218,12 @@
                             <div class="row g-2">
                                 @forelse($participants as $reg)
                                 <div class="col-12 col-md-6 wow fadeInUp">
+                                    @if($eventner->vote_active)
                                     <div wire:click="selectTeam({{ $reg->id }})"
                                          style="background: #fff; border: {{ $selectedRegistrationId == $reg->id ? '2px solid var(--event-primary, #0072FF)' : '1px solid #e5e7eb' }}; border-radius: 8px; padding: 14px; cursor: pointer; transition: all 0.3s; {{ $selectedRegistrationId == $reg->id ? 'box-shadow: 0 4px 16px rgba(0,114,255,0.12);' : '' }}">
+                                    @else
+                                    <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; transition: all 0.3s;">
+                                    @endif
                                         <div style="display: flex; align-items: center; gap: 12px;">
                                             <div style="position: relative; flex-shrink: 0;">
                                                 @if($reg->logo_sekolah)
@@ -255,6 +265,7 @@
                     </div>
 
                     {{-- Right: Vote Form --}}
+                    @if($eventner->vote_active)
                     <div class="col-lg-4 mt-4 mt-lg-0">
                         {{-- Desktop: sticky sidebar --}}
                         <div class="d-none d-lg-block">
@@ -263,12 +274,13 @@
                             </div>
                         </div>
                     </div>
+                    @endif
                 </div>
             @endif
         </div>
     </div>
 
-    @if($view !== 'payment' && $view !== 'success')
+    @if($view !== 'payment' && $view !== 'success' && $eventner->vote_active)
     {{-- Mobile: Sticky bottom vote form (sits above bottom nav) --}}
     <div class="d-lg-none" id="mobile-vote-bar">
         @if($selectedRegistrationId)

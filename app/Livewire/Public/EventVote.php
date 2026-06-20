@@ -50,8 +50,8 @@ class EventVote extends Component
             $q->withCount('registrations');
         }])->where('slug', $slug)->firstOrFail();
 
-        if (!$this->eventner->vote_active) {
-            abort(403, 'Fitur Vote Online untuk event ini tidak aktif.');
+        if (!$this->eventner->vote_active && in_array($this->view, ['payment', 'success'])) {
+            $this->view = $this->selectedCategoryId ? 'participants' : 'categories';
         }
 
         if ($this->selectedCategoryId) {
