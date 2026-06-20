@@ -144,7 +144,12 @@
                             <td style="width:33%;">
                                 <div class="podium-box podium-2">
                                     <div class="podium-rank">2</div>
-                                    <div class="podium-name">{{ $rankingData[1]['participant']->nama_sekolah }}</div>
+                                    <div class="podium-name">
+                                        @if($rankingData[1]['participant']->urutan_tampil)
+                                            <span style="opacity:0.85; font-size:0.85em;">Undian #{{ $rankingData[1]['participant']->urutan_tampil }}</span><br>
+                                        @endif
+                                        {{ $rankingData[1]['participant']->nama_sekolah }}
+                                    </div>
                                     <div class="podium-score">{{ $rankingData[1]['total'] }}</div>
                                 </div>
                             </td>
@@ -152,7 +157,12 @@
                             <td style="width:34%;">
                                 <div class="podium-box podium-1">
                                     <div class="podium-rank">1</div>
-                                    <div class="podium-name">{{ $rankingData[0]['participant']->nama_sekolah }}</div>
+                                    <div class="podium-name">
+                                        @if($rankingData[0]['participant']->urutan_tampil)
+                                            <span style="opacity:0.85; font-size:0.85em;">Undian #{{ $rankingData[0]['participant']->urutan_tampil }}</span><br>
+                                        @endif
+                                        {{ $rankingData[0]['participant']->nama_sekolah }}
+                                    </div>
                                     <div class="podium-score">{{ $rankingData[0]['total'] }}</div>
                                 </div>
                             </td>
@@ -160,7 +170,12 @@
                             <td style="width:33%;">
                                 <div class="podium-box podium-3">
                                     <div class="podium-rank">3</div>
-                                    <div class="podium-name">{{ $rankingData[2]['participant']->nama_sekolah }}</div>
+                                    <div class="podium-name">
+                                        @if($rankingData[2]['participant']->urutan_tampil)
+                                            <span style="opacity:0.85; font-size:0.85em;">Undian #{{ $rankingData[2]['participant']->urutan_tampil }}</span><br>
+                                        @endif
+                                        {{ $rankingData[2]['participant']->nama_sekolah }}
+                                    </div>
                                     <div class="podium-score">{{ $rankingData[2]['total'] }}</div>
                                 </div>
                             </td>
@@ -174,6 +189,7 @@
                 <thead>
                     <tr>
                         <th style="text-align:center;">Rank</th>
+                        <th style="text-align:center; width: 60px;">No. Undian</th>
                         <th>Peserta</th>
                         <th>Pelatih</th>
                         <th style="text-align:right;">Total Nilai</th>
@@ -199,6 +215,7 @@
                                     {{ $ps['rank'] }}
                                 @endif
                             </td>
+                            <td style="text-align:center;">{{ $ps['participant']->urutan_tampil ?: '-' }}</td>
                             <td class="name-col">{{ $ps['participant']->nama_sekolah }}</td>
                             <td>{{ $ps['participant']->nama_pelatih }}</td>
                             <td class="score-col">{{ $ps['total'] }}</td>
