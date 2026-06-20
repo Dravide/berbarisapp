@@ -10,6 +10,7 @@ Route::get('competition-categories', App\Livewire\Eventner\CompetitionCategory\I
 Route::get('participants', App\Livewire\Eventner\Participant\Index::class)->name('eventner.participants.index');
 Route::get('participants/{registration}/pdf', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadPdf'])->name('eventner.participants.pdf');
 Route::get('vote-results', App\Livewire\Eventner\VoteResults\Index::class)->name('eventner.vote-results.index');
+Route::get('vote-results/pdf', [App\Http\Controllers\Eventner\VoteResultsController::class, 'downloadPdf'])->name('eventner.vote-results.pdf');
 Route::get('vote-results/{registration}', App\Livewire\Eventner\VoteResults\Show::class)->name('eventner.vote-results.show');
 Route::get('vote-transactions', App\Livewire\Eventner\VoteTransaction\Index::class)->name('eventner.vote-transactions.index');
 Route::get('vote-transactions/csv', [App\Http\Controllers\Eventner\VoteTransactionController::class, 'downloadCsv'])->name('eventner.vote-transactions.csv');

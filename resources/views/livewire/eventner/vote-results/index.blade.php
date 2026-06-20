@@ -58,8 +58,11 @@
                     <h5 class="card-title fw-semibold mb-1">Klasemen Voting Peserta</h5>
                     <p class="text-muted mb-0">Berdasarkan total nominal yang berhasil terverifikasi (PAID)</p>
                 </div>
-                <div class="text-end">
+                <div class="text-end d-flex align-items-center gap-2">
                     <span class="badge bg-primary rounded-pill px-3 py-2">1 Vote = Rp 1.000</span>
+                    <a href="{{ route('eventner.vote-results.pdf') }}" class="btn btn-danger btn-sm rounded-pill px-3">
+                        <i class="ti ti-file-type-pdf me-1"></i> Rekap PDF
+                    </a>
                 </div>
             </div>
 
