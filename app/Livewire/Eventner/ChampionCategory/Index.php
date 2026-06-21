@@ -18,6 +18,7 @@ class Index extends Component
     public $name = '';
     public $description = '';
     public $quantity = 1;
+    public $isPublic = false;
     public $selectedSubCategories = [];
     public $editingId = null;
     public $showForm = false;
@@ -70,6 +71,7 @@ class Index extends Component
         $this->name = $champion->name;
         $this->description = $champion->description ?? '';
         $this->quantity = $champion->quantity ?? 1;
+        $this->isPublic = $champion->is_public ?? false;
         $this->selectedSubCategories = $champion->assessmentSubCategories()->pluck('assessment_sub_categories.id')->map(fn($id) => (string) $id)->toArray();
         $this->showForm = true;
     }
@@ -92,6 +94,7 @@ class Index extends Component
             'name' => strip_tags($this->name),
             'description' => strip_tags($this->description) ?: null,
             'quantity' => $this->quantity,
+            'is_public' => $this->isPublic,
         ];
 
         if ($this->editingId) {
@@ -146,6 +149,7 @@ class Index extends Component
         $this->name = '';
         $this->description = '';
         $this->quantity = 1;
+        $this->isPublic = false;
         $this->selectedSubCategories = [];
         $this->editingId = null;
         $this->showForm = false;

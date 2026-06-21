@@ -89,6 +89,16 @@
                             @error('quantity') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                         </div>
 
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" wire:model="isPublic" id="isPublic" role="switch">
+                                <label class="form-check-label fw-semibold" for="isPublic">
+                                    <i class="ti ti-world me-1"></i> Tampilkan di Laman Hasil Perlombaan
+                                </label>
+                            </div>
+                            <p class="text-muted small mt-1 mb-0"><i class="ti ti-info-circle me-1"></i> Jika aktif, kategori juara ini akan tampil di halaman publik <strong>Hasil Perlombaan</strong>.</p>
+                        </div>
+
                         <div class="mb-4">
                             <label class="form-label fw-semibold">Rubrik Penilaian yang Dihitung <span class="text-danger">*</span></label>
                             <p class="text-muted small mb-3">Centang rubrik/subkategori penilaian yang masuk ke perhitungan kategori juara ini.</p>

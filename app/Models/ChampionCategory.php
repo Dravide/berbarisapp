@@ -14,6 +14,11 @@ class ChampionCategory extends Model
         'name',
         'description',
         'quantity',
+        'is_public',
+    ];
+
+    protected $casts = [
+        'is_public' => 'boolean',
     ];
 
     public function eventner()

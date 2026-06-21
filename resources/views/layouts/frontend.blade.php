@@ -56,6 +56,7 @@
                 @isset($eventner?->slug)
                     <a href="{{ route('event.detail', $eventner->slug) }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.detail') ? 'text-primary bg-primary/5' : '' }}">Info</a>
                     <a href="{{ route('event.participant', $eventner->slug) }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.participant') ? 'text-primary bg-primary/5' : '' }}">Peserta</a>
+                    <a href="{{ route('event.results', $eventner->slug) }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.results') ? 'text-primary bg-primary/5' : '' }}">Hasil</a>
                     <a href="{{ route('event.vote', $eventner->slug) }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.vote') ? 'text-primary bg-primary/5' : '' }}">Vote</a>
                     @if($eventner->ticket_active && $eventner->ticket_price)
                         <a href="{{ route('event.ticket', $eventner->slug) }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.ticket') ? 'text-primary bg-primary/5' : '' }}">Tiket</a>
@@ -91,6 +92,7 @@
                 @isset($eventner?->slug)
                     <a href="{{ route('event.detail', $eventner->slug) }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.detail') ? 'text-primary bg-primary/5' : '' }}">Info Event</a>
                     <a href="{{ route('event.participant', $eventner->slug) }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.participant') ? 'text-primary bg-primary/5' : '' }}">Peserta</a>
+                    <a href="{{ route('event.results', $eventner->slug) }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.results') ? 'text-primary bg-primary/5' : '' }}">Hasil Perlombaan</a>
                     <a href="{{ route('event.vote', $eventner->slug) }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.vote') ? 'text-primary bg-primary/5' : '' }}">Vote</a>
                     @if($eventner->ticket_active && $eventner->ticket_price)
                         <a href="{{ route('event.ticket', $eventner->slug) }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.ticket') ? 'text-primary bg-primary/5' : '' }}">Tiket</a>
@@ -140,6 +142,7 @@
                         @isset($eventner?->slug)
                             <li><a href="{{ route('event.detail', $eventner->slug) }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Info Event</a></li>
                             <li><a href="{{ route('event.participant', $eventner->slug) }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Daftar Peserta</a></li>
+                            <li><a href="{{ route('event.results', $eventner->slug) }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Hasil Perlombaan</a></li>
                             <li><a href="{{ route('event.vote', $eventner->slug) }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Voting</a></li>
                             @if($eventner->ticket_active)
                                 <li><a href="{{ route('event.ticket', $eventner->slug) }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Beli Tiket</a></li>
