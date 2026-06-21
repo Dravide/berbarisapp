@@ -163,7 +163,7 @@
 
             <div class="grid gap-8 lg:grid-cols-12">
                 {{-- Left: Selection Area --}}
-                <div class="lg:col-span-{{ $eventner->vote_active ? '8' : '12' }}">
+                <div class="{{ $eventner->vote_active ? 'lg:col-span-8' : 'lg:col-span-12' }}">
                     @if($view == 'categories')
                         {{-- VIEW A: Categories selection --}}
                         <div class="mb-6">
