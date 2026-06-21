@@ -41,7 +41,7 @@ class EventResult extends Component
         $this->allRankings = [];
 
         // Only fetch champion categories that are marked as public
-        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles'])
+        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias'])
             ->where('eventner_id', $this->eventner->id)
             ->where('is_public', true)
             ->get();
@@ -80,15 +80,20 @@ class EventResult extends Component
                 }
             }
 
-            $firstSub = $champion->assessmentSubCategories->first();
-            $firstSubCriteriaIds = $firstSub ? $firstSub->criterias->pluck('id')->toArray() : [];
+            // Build tiebreak criteria map
+            $tiebreakCriteriaMap = [];
+            foreach ($champion->tiebreakSubCategories as $sub) {
+                foreach ($sub->criterias as $crit) {
+                    $tiebreakCriteriaMap[$crit->id] = $crit->weight ?? 1;
+                }
+            }
 
             $participantScores = [];
             foreach ($participants as $participant) {
                 $scores = $allScores->get($participant->id, collect());
 
                 $total = 0;
-                $firstSubTotal = 0;
+                $tiebreakTotal = 0;
                 $otherTotal = 0;
 
                 foreach ($scores as $score) {
@@ -96,13 +101,15 @@ class EventResult extends Component
                     if ($weight !== null) {
                         $scoreVal = (int) $score->score * $weight;
                         $total += $scoreVal;
-
-                        if (in_array($score->assessment_criteria_id, $firstSubCriteriaIds)) {
-                            $firstSubTotal += $scoreVal;
-                        }
                     } else {
                         $weightOther = $allCriteriaWeightMap[$score->assessment_criteria_id] ?? 1;
                         $otherTotal += (int) $score->score * $weightOther;
+                    }
+
+                    // Tiebreak score (separate calculation)
+                    $tbWeight = $tiebreakCriteriaMap[$score->assessment_criteria_id] ?? null;
+                    if ($tbWeight !== null) {
+                        $tiebreakTotal += (int) $score->score * $tbWeight;
                     }
                 }
 
@@ -112,7 +119,7 @@ class EventResult extends Component
                 $participantScores[] = [
                     'participant' => $participant,
                     'total' => $total,
-                    'first_sub_total' => $firstSubTotal,
+                    'tiebreak_total' => $tiebreakTotal,
                     'other_total' => $otherTotal,
                     'deduction' => $totalDeduction,
                     'urutan_tampil' => $participant->urutan_tampil ?? 999999,
@@ -123,8 +130,8 @@ class EventResult extends Component
                 if ($b['total'] !== $a['total']) {
                     return $b['total'] <=> $a['total'];
                 }
-                if ($b['first_sub_total'] !== $a['first_sub_total']) {
-                    return $b['first_sub_total'] <=> $a['first_sub_total'];
+                if ($b['tiebreak_total'] !== $a['tiebreak_total']) {
+                    return $b['tiebreak_total'] <=> $a['tiebreak_total'];
                 }
                 if ($b['other_total'] !== $a['other_total']) {
                     return $b['other_total'] <=> $a['other_total'];

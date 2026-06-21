@@ -35,4 +35,9 @@ class ChampionCategory extends Model
     {
         return $this->hasMany(ChampionRankTitle::class)->orderBy('sort_order')->orderBy('rank_start');
     }
+
+    public function tiebreakSubCategories()
+    {
+        return $this->belongsToMany(AssessmentSubCategory::class, 'champion_tiebreak', 'champion_category_id', 'assessment_sub_category_id');
+    }
 }

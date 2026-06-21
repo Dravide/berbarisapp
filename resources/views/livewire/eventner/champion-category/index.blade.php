@@ -152,6 +152,49 @@
                             @endif
                         </div>
 
+                        {{-- Tie Break Sub Categories --}}
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold"><i class="ti ti-arrows-sort me-1"></i> Tie Break</label>
+                            <p class="text-muted small mb-3">Jika total skor sama, pemenang ditentukan oleh skor rubrik yang dicentang di sini.</p>
+
+                            @foreach($assessmentCategories as $cat)
+                                @php
+                                    $catSubs = $cat->subCategories->pluck('id')->map(fn($id) => (string) $id)->toArray();
+                                    $tbSelectedCount = count(array_intersect($catSubs, $selectedTiebreakSubCategories));
+                                    $tbAllChecked = count($catSubs) > 0 && $tbSelectedCount === count($catSubs);
+                                    $tbSomeChecked = $tbSelectedCount > 0;
+                                @endphp
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                            wire:click="toggleTiebreakCategory({{ $cat->id }})"
+                                            {{ $tbAllChecked ? 'checked' : '' }}
+                                            data-indeterminate="{{ $tbSomeChecked && !$tbAllChecked ? '1' : '0' }}"
+                                            id="tb_ac_{{ $cat->id }}"
+                                            @if(empty($catSubs)) disabled @endif>
+                                        <label class="form-check-label fw-bold text-dark" for="tb_ac_{{ $cat->id }}">
+                                            {{ $cat->name }}
+                                        </label>
+                                    </div>
+                                    @if(count($catSubs) > 0)
+                                        <div class="ms-4 mt-2">
+                                            @foreach($cat->subCategories as $sub)
+                                                <div class="form-check mb-1">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        wire:model.live="selectedTiebreakSubCategories"
+                                                        value="{{ $sub->id }}"
+                                                        id="tb_asc_{{ $sub->id }}">
+                                                    <label class="form-check-label text-muted small" for="tb_asc_{{ $sub->id }}">
+                                                        {{ $sub->name }} <span class="text-muted">({{ $sub->criterias->count() }} kriteria)</span>
+                                                    </label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+
                         <div class="d-flex gap-2">
                             <button wire:click="save" class="btn btn-primary px-4 fw-semibold" wire:loading.attr="disabled">
                                 <span wire:loading.remove wire:target="save"><i class="ti ti-device-floppy me-1"></i> Simpan</span>

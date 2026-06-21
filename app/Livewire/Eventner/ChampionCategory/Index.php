@@ -20,6 +20,7 @@ class Index extends Component
     public $quantity = 1;
     public $isPublic = false;
     public $selectedSubCategories = [];
+    public $selectedTiebreakSubCategories = [];
     public $editingId = null;
     public $showForm = false;
     public $selectedCompetitionCategoryId;
@@ -73,6 +74,7 @@ class Index extends Component
         $this->quantity = $champion->quantity ?? 1;
         $this->isPublic = $champion->is_public ?? false;
         $this->selectedSubCategories = $champion->assessmentSubCategories()->pluck('assessment_sub_categories.id')->map(fn($id) => (string) $id)->toArray();
+        $this->selectedTiebreakSubCategories = $champion->tiebreakSubCategories()->pluck('assessment_sub_categories.id')->map(fn($id) => (string) $id)->toArray();
         $this->showForm = true;
     }
 
@@ -105,6 +107,7 @@ class Index extends Component
         }
 
         $champion->assessmentSubCategories()->sync($this->selectedSubCategories);
+        $champion->tiebreakSubCategories()->sync($this->selectedTiebreakSubCategories);
 
         $this->resetForm();
         session()->flash('success', $this->editingId ? 'Kategori juara berhasil diperbarui.' : 'Kategori juara berhasil ditambahkan.');
@@ -144,6 +147,24 @@ class Index extends Component
         }
     }
 
+    public function toggleTiebreakCategory($categoryId)
+    {
+        $category = AssessmentCategory::with('subCategories')->find($categoryId);
+        if (!$category) return;
+
+        $subIds = $category->subCategories->pluck('id')->map(fn($id) => (string) $id)->toArray();
+        if (empty($subIds)) return;
+
+        $selectedCount = count(array_intersect($subIds, $this->selectedTiebreakSubCategories));
+        $allSelected = $selectedCount === count($subIds);
+
+        if ($allSelected) {
+            $this->selectedTiebreakSubCategories = array_diff($this->selectedTiebreakSubCategories, $subIds);
+        } else {
+            $this->selectedTiebreakSubCategories = array_values(array_unique(array_merge($this->selectedTiebreakSubCategories, $subIds)));
+        }
+    }
+
     private function resetForm()
     {
         $this->name = '';
@@ -151,6 +172,7 @@ class Index extends Component
         $this->quantity = 1;
         $this->isPublic = false;
         $this->selectedSubCategories = [];
+        $this->selectedTiebreakSubCategories = [];
         $this->editingId = null;
         $this->showForm = false;
     }
@@ -239,7 +261,7 @@ class Index extends Component
 
     public function render()
     {
-        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles'])
+        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias'])
             ->where('eventner_id', $this->eventner->id)
             ->get();
 
@@ -284,16 +306,20 @@ class Index extends Component
                     }
                 }
 
-                // Kriteria untuk subkategori pertama (prioritas tie-break)
-                $firstSub = $champion->assessmentSubCategories->first();
-                $firstSubCriteriaIds = $firstSub ? $firstSub->criterias->pluck('id')->toArray() : [];
+                // Kriteria untuk tiebreak
+                $tiebreakCriteriaMap = [];
+                foreach ($champion->tiebreakSubCategories as $sub) {
+                    foreach ($sub->criterias as $crit) {
+                        $tiebreakCriteriaMap[$crit->id] = $crit->weight ?? 1;
+                    }
+                }
 
                 $participantScores = [];
                 foreach ($participants as $participant) {
                     $scores = $allScores->get($participant->id, collect());
 
                     $total = 0;
-                    $firstSubTotal = 0;
+                    $tiebreakTotal = 0;
                     $otherTotal = 0;
 
                     foreach ($scores as $score) {
@@ -301,13 +327,15 @@ class Index extends Component
                         if ($weight !== null) {
                             $scoreVal = (int) $score->score * $weight;
                             $total += $scoreVal;
-
-                            if (in_array($score->assessment_criteria_id, $firstSubCriteriaIds)) {
-                                $firstSubTotal += $scoreVal;
-                            }
                         } else {
                             $weightOther = $allCriteriaWeightMap[$score->assessment_criteria_id] ?? 1;
                             $otherTotal += (int) $score->score * $weightOther;
+                        }
+
+                        // Tiebreak score (separate calculation)
+                        $tbWeight = $tiebreakCriteriaMap[$score->assessment_criteria_id] ?? null;
+                        if ($tbWeight !== null) {
+                            $tiebreakTotal += (int) $score->score * $tbWeight;
                         }
                     }
 
@@ -317,7 +345,7 @@ class Index extends Component
                     $participantScores[] = [
                         'participant' => $participant,
                         'total' => $total,
-                        'first_sub_total' => $firstSubTotal,
+                        'tiebreak_total' => $tiebreakTotal,
                         'other_total' => $otherTotal,
                         'deduction' => $totalDeduction,
                         'urutan_tampil' => $participant->urutan_tampil ?? 999999,
@@ -328,8 +356,8 @@ class Index extends Component
                     if ($b['total'] !== $a['total']) {
                         return $b['total'] <=> $a['total'];
                     }
-                    if ($b['first_sub_total'] !== $a['first_sub_total']) {
-                        return $b['first_sub_total'] <=> $a['first_sub_total'];
+                    if ($b['tiebreak_total'] !== $a['tiebreak_total']) {
+                        return $b['tiebreak_total'] <=> $a['tiebreak_total'];
                     }
                     if ($b['other_total'] !== $a['other_total']) {
                         return $b['other_total'] <=> $a['other_total'];
