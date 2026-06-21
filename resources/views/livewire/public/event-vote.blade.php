@@ -1,363 +1,302 @@
-<div class="premium-event-page">
-    {{-- Hero Banner --}}
-    <div class="pm-hero" style="background: var(--event-primary, #2665fd); text-align: center;">
-        <div class="pm-hero-content">
-            <div class="pm-event-badge"><i class="fa fa-heart"></i> Voting Digital</div>
-            <h1 class="pm-event-title" style="font-size: clamp(24px, 5vw, 36px);">Dukung Tim Jagoan Anda!</h1>
-            <p class="pm-event-org" style="max-width: 500px; margin: 0 auto;">
-                Setiap vote sangat berarti untuk menentukan juara favorit di <strong>{{ $eventner->nama_event }}</strong>.
+<div class="min-h-screen bg-surface" x-data="{ showMobileForm: false }">
+
+    {{-- ========== HERO ========== --}}
+    <div class="relative overflow-hidden bg-gradient-to-br from-primary via-[#0053da] to-tertiary text-white py-12 md:py-16">
+        <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
+        <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
+
+        <div class="container-landing relative z-10 flex flex-col items-center text-center">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-md border border-white/10 mb-3">
+                <i class="ti ti-heart-filled text-emerald-400"></i>
+                Voting Digital
+            </span>
+            <h1 class="font-display text-2xl font-extrabold tracking-tight sm:text-3xl md:text-4xl max-w-4xl leading-tight">
+                Dukung Tim Jagoan Anda!
+            </h1>
+            <p class="mt-2.5 text-xs font-medium text-white/80 md:text-sm max-w-xl">
+                Setiap vote sangat berarti untuk menentukan juara terfavorit di event <strong class="text-secondary font-semibold">{{ $eventner->nama_event }}</strong>.
             </p>
+            <div class="mt-4">
+                <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-ghost !border-white/20 !text-white hover:!bg-white/10 text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
+                    <i class="ti ti-arrow-left"></i> Kembali Ke Detail Event
+                </a>
+            </div>
         </div>
     </div>
 
-    {{-- Main Content --}}
-    <div class="section zubuz-section-padding3" style="padding-top: 30px;">
-        <div class="container">
-            @if (session()->has('error'))
-                <div class="wow fadeInUp" style="background: rgba(239,68,68,0.1); color: #ef4444; padding: 14px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
-                    <i class="fa fa-exclamation-circle"></i>
-                    <span>{{ session('error') }}</span>
+    {{-- ========== MAIN CONTENT ========== --}}
+    <div class="container-landing py-8">
+        @if (session()->has('error'))
+            <div class="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-sm font-semibold flex items-center gap-2">
+                <i class="ti ti-alert-circle text-lg"></i>
+                {{ session('error') }}
+            </div>
+        @endif
+
+        {{-- ========== VIEW: PAYMENT (QRIS) ========== --}}
+        @if($view === 'payment')
+            <div class="flex justify-center" wire:poll.5s="checkPaymentStatus">
+                <div class="w-full max-w-md">
+                    <div class="surface-card overflow-hidden">
+                        {{-- Payment Header --}}
+                        <div class="bg-primary text-white p-6 text-center relative overflow-hidden">
+                            <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/5 blur-xl"></div>
+                            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 text-white shadow-sm mb-3 mx-auto">
+                                <i class="ti ti-qrcode text-2xl"></i>
+                            </div>
+                            <h3 class="font-display text-base font-bold text-white mb-0.5">Scan &amp; Bayar</h3>
+                            <p class="text-xs text-white/80">Scan QR Code di bawah menggunakan aplikasi e-wallet Anda</p>
+                        </div>
+
+                        {{-- Payment Body --}}
+                        <div class="p-6 text-center">
+                            {{-- QR Code Image Box --}}
+                            <div class="inline-block bg-white border-2 border-outline-variant/60 rounded-2xl p-4 shadow-sm mb-6">
+                                <img src="{{ $qrImageUrl }}" alt="QRIS Payment" class="max-w-[220px] w-full mx-auto">
+                            </div>
+
+                            {{-- Payment Amount --}}
+                            <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 mb-4">
+                                <span class="text-xs text-on-surface-variant font-medium block mb-1">Total Pembayaran</span>
+                                <h2 class="text-2xl font-extrabold text-emerald-600 leading-tight">Rp {{ number_format($paymentAmount, 0, ',', '.') }}</h2>
+                                <span class="text-[11px] text-on-surface-variant font-medium block mt-1">{{ $voteCount }} vote × Rp {{ number_format($eventner->vote_price ?? 1000, 0, ',', '.') }}</span>
+                            </div>
+
+                            {{-- Timer --}}
+                            <div class="mb-4" x-data="{
+                                expiry: '{{ $expiryTime }}',
+                                remaining: '',
+                                expired: false,
+                                init() {
+                                    this.updateTimer();
+                                    setInterval(() => this.updateTimer(), 1000);
+                                },
+                                updateTimer() {
+                                    const exp = new Date(this.expiry).getTime();
+                                    const now = Date.now();
+                                    const diff = exp - now;
+                                    if (diff <= 0) {
+                                        this.remaining = '00:00';
+                                        this.expired = true;
+                                        return;
+                                    }
+                                    const m = Math.floor(diff / 60000);
+                                    const s = Math.floor((diff % 60000) / 1000);
+                                    this.remaining = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+                                }
+                            }">
+                                <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/20 rounded-full text-xs font-bold text-amber-600">
+                                    <i class="ti ti-clock"></i>
+                                    Kedaluwarsa dalam: <span x-text="remaining" class="font-mono text-sm leading-none"></span>
+                                </div>
+                            </div>
+
+                            {{-- Waiting Status --}}
+                            <div class="flex items-center justify-center gap-2 py-3 px-4 bg-amber-500/5 border border-amber-500/15 rounded-xl mb-6">
+                                <span class="h-4 w-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin shrink-0"></span>
+                                <span class="text-amber-800 text-xs font-semibold">Menunggu Pembayaran...</span>
+                            </div>
+
+                            {{-- Instructions --}}
+                            <div class="text-left bg-surface-container-low border border-outline-variant/40 rounded-xl p-4 mb-4">
+                                <span class="text-xs font-bold text-deep-slate inline-flex items-center gap-1 mb-2">
+                                    <i class="ti ti-info-circle text-emerald-600"></i> Cara Bayar:
+                                </span>
+                                <ol class="list-decimal pl-4 text-xs text-on-surface-variant space-y-1.5 leading-relaxed">
+                                    <li>Buka aplikasi e-wallet (GoPay, OVO, DANA, dll) atau M-Banking</li>
+                                    <li>Pilih menu <strong>Scan QRIS / Bayar</strong></li>
+                                    <li>Scan QR Code di atas</li>
+                                    <li>Periksa nominal pembayaran sudah sesuai dan konfirmasi</li>
+                                </ol>
+                            </div>
+
+                            {{-- Cancel Button --}}
+                            <button wire:click="resetPayment" class="text-xs font-bold text-on-surface-variant hover:text-red-500 transition inline-flex items-center gap-1 bg-transparent border-none cursor-pointer">
+                                <i class="ti ti-arrow-left"></i> Batal &amp; Kembali
+                            </button>
+
+                            {{-- QRIS Logo --}}
+                            <div class="mt-6 border-t border-outline-variant/30 pt-4 flex justify-center">
+                                <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" class="h-5 opacity-60" alt="QRIS">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {{-- ========== VIEW: SUCCESS ========== --}}
+        @elseif($view === 'success')
+            <div class="flex justify-center">
+                <div class="w-full max-w-md">
+                    <div class="surface-card overflow-hidden">
+                        {{-- Success Header --}}
+                        <div class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-8 text-center relative overflow-hidden">
+                            <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/5 blur-xl"></div>
+                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 text-white shadow-sm mb-3 mx-auto">
+                                <i class="ti ti-heart-filled text-3xl text-white"></i>
+                            </div>
+                            <h3 class="font-display text-lg font-bold text-white mb-0.5">Dukungan Berhasil!</h3>
+                            <p class="text-sm text-white/80">Terima kasih atas partisipasi Anda</p>
+                        </div>
+
+                        {{-- Success Body --}}
+                        <div class="p-6 text-center">
+                            <div class="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-5 mb-6 text-sm text-emerald-800">
+                                <strong>{{ $voteCount }} vote</strong> untuk tim pilihan Anda telah berhasil ditambahkan dan dihitung di sistem real-time kami.
+                            </div>
+                            <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-secondary py-3.5 px-6 font-bold text-sm w-full text-center text-decoration-none">
+                                <i class="ti ti-arrow-left"></i> Kembali Ke Detail Event
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        {{-- ========== VIEW: NORMAL (CATEGORIES/PARTICIPANTS) ========== --}}
+        @else
+            @if(!$eventner->vote_active)
+                <div class="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 text-sm font-semibold flex items-center gap-2">
+                    <i class="ti ti-lock text-lg"></i>
+                    <span><strong>Voting Ditutup.</strong> Layanan voting berbayar telah berakhir. Berikut hasil akhir voting.</span>
                 </div>
             @endif
 
-            @if($view === 'payment')
-                {{-- PAYMENT VIEW: QR Code --}}
-                <div class="row justify-content-center" wire:poll.5s="checkPaymentStatus">
-                    <div class="col-lg-5">
-                        <div class="wow fadeInUp" style="background: #fff; border: 1px solid var(--df-border, #e2e8f0); border-radius: 8px; overflow: hidden;">
-                            {{-- Header --}}
-                            <div style="background: var(--event-primary, #2665fd); padding: 20px; text-align: center;">
-                                <div style="width: 56px; height: 56px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px;">
-                                    <i class="fa fa-qrcode" style="font-size: 24px; color: #fff;"></i>
-                                </div>
-                                <h4 style="color: #fff; font-weight: 600; margin-bottom: 4px;">Scan & Bayar</h4>
-                                <p style="color: rgba(255,255,255,0.8); margin: 0; font-size: 14px;">Scan QR code di bawah dengan e-wallet</p>
-                            </div>
-
-                            {{-- QR Code --}}
-                            <div style="padding: 24px; text-align: center;">
-                                <div style="background: #fff; border: 2px solid var(--df-border, #e2e8f0); border-radius: 8px; padding: 16px; display: inline-block; margin-bottom: 16px;">
-                                    <img src="{{ $qrImageUrl }}" alt="QRIS Payment" style="max-width: 220px; width: 100%;">
-                                </div>
-
-                                {{-- Amount --}}
-                                <div style="background: rgba(38,101,253,0.06); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-                                    <p style="color: var(--df-secondary, #64748b); font-size: 13px; margin-bottom: 4px;">Total Pembayaran</p>
-                                    <h3 style="color: var(--event-primary, #0072FF); font-weight: 800; margin: 0;">Rp {{ number_format($paymentAmount, 0, ',', '.') }}</h3>
-                                    <p style="color: var(--df-secondary, #64748b); font-size: 12px; margin-top: 4px;">{{ $voteCount }} vote × Rp 1.000</p>
-                                </div>
-
-                                {{-- Timer --}}
-                                <div style="margin-bottom: 16px;" x-data="{ 
-                                    expiry: '{{ $expiryTime }}',
-                                    remaining: '',
-                                    expired: false,
-                                    init() {
-                                        this.updateTimer();
-                                        setInterval(() => this.updateTimer(), 1000);
-                                    },
-                                    updateTimer() {
-                                        const exp = new Date(this.expiry).getTime();
-                                        const now = Date.now();
-                                        const diff = exp - now;
-                                        if (diff <= 0) {
-                                            this.remaining = '00:00';
-                                            this.expired = true;
-                                            return;
-                                        }
-                                        const m = Math.floor(diff / 60000);
-                                        const s = Math.floor((diff % 60000) / 1000);
-                                        this.remaining = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-                                    }
-                                }">
-                                    <div style="display: flex; align-items: center; justify-content: center; gap: 6px;">
-                                        <i class="fa fa-clock" style="color: #f59e0b;"></i>
-                                        <span style="font-weight: 600; font-size: 14px;" :class="expired ? 'text-danger' : ''">
-                                            Kedaluwarsa dalam: <span x-text="remaining" style="font-family: monospace; font-size: 16px;"></span>
-                                        </span>
-                                    </div>
-                                </div>
-
-                                {{-- Status --}}
-                                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: #fffbeb; border-radius: 8px; margin-bottom: 16px;">
-                                    <span style="display: inline-block; width: 14px; height: 14px; border: 2px solid #f59e0b; border-top: 2px solid transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></span>
-                                    <span style="color: #92400e; font-size: 14px; font-weight: 500;">Menunggu pembayaran...</span>
-                                </div>
-
-                                {{-- Instructions --}}
-                                <div style="text-align: left; background: var(--df-surface-variant, #f8fafc); border-radius: 8px; padding: 14px;">
-                                    <p style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">
-                                        <i class="fa fa-info-circle" style="color: var(--event-primary, #0072FF);"></i> Cara Bayar:
-                                    </p>
-                                    <ol style="margin: 0; padding-left: 18px; font-size: 13px; color: #4b5563; line-height: 1.8;">
-                                        <li>Buka aplikasi e-wallet (GoPay, OVO, DANA, dll)</li>
-                                        <li>Pilih menu <strong>Scan QR / Bayar</strong></li>
-                                        <li>Scan QR code di atas</li>
-                                        <li>Konfirmasi pembayaran</li>
-                                    </ol>
-                                </div>
-
-                                {{-- Cancel --}}
-                                <button wire:click="resetPayment" style="background: none; border: none; color: var(--df-secondary, #64748b); font-size: 13px; margin-top: 14px; cursor: pointer;">
-                                    <i class="fa fa-arrow-left"></i> Batal & Kembali
-                                </button>
-
-                                {{-- QRIS Logo --}}
-                                <div style="margin-top: 14px;">
-                                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" height="18" alt="QRIS" style="opacity: 0.5;">
-                                </div>
-                            </div>
+            <div class="grid gap-8 lg:grid-cols-12">
+                {{-- Left: Selection Area --}}
+                <div class="lg:col-span-{{ $eventner->vote_active ? '8' : '12' }}">
+                    @if($view == 'categories')
+                        {{-- VIEW A: Categories selection --}}
+                        <div class="mb-6">
+                            <h2 class="font-display text-lg font-bold text-deep-slate inline-flex items-center gap-2">
+                                <i class="ti ti-medal text-primary text-xl"></i>
+                                Pilih Kategori Lomba
+                            </h2>
                         </div>
-                    </div>
-                </div>
 
-            @elseif($view === 'success')
-                {{-- SUCCESS VIEW --}}
-                <div class="row justify-content-center">
-                    <div class="col-lg-5">
-                        <div class="wow fadeInUp" style="background: #fff; border: 1px solid var(--df-border, #e2e8f0); border-radius: 8px; overflow: hidden; text-align: center;">
-                            <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 30px;">
-                                <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,0.2); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
-                                    <i class="fa fa-check" style="font-size: 28px; color: #fff;"></i>
-                                </div>
-                                <h3 style="color: #fff; font-weight: 700; margin-bottom: 4px;">Pembayaran Berhasil!</h3>
-                                <p style="color: rgba(255,255,255,0.85); margin: 0; font-size: 15px;">Vote Anda telah dihitung</p>
-                            </div>
-                            <div style="padding: 24px;">
-                                <div style="background: rgba(16,185,129,0.08); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
-                                    <p style="color: #065f46; font-size: 14px; margin: 0;">
-                                        <strong>{{ $voteCount }} vote</strong> untuk tim pilihan Anda telah berhasil ditambahkan.
-                                    </p>
-                                </div>
-                                <a href="{{ route('event.detail', $eventner->slug) }}" class="zubuz-default-btn" style="width: 100%;">
-                                    <span><i class="fa fa-arrow-left"></i> Kembali ke Event</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            @else
-                {{-- NORMAL VOTE VIEW (categories/participants) --}}
-                @if(!$eventner->vote_active)
-                    <div class="wow fadeInUp" style="background: rgba(245,158,11,0.1); color: #92400e; padding: 14px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(245,158,11,0.3);">
-                        <i class="fa fa-lock"></i>
-                        <span><strong>Vote Ditutup.</strong> Berikut adalah hasil akhir voting per kategori.</span>
-                    </div>
-                @endif
-                {{-- Quick Nav on mobile --}}
-                <div class="d-lg-none mb-3 wow fadeInUp">
-                    <div class="d-flex gap-2 overflow-auto pb-2" style="scrollbar-width: none; -webkit-overflow-scrolling: touch;">
-                        <a href="{{ route('event.detail', $eventner->slug) }}" class="zubuz-default-btn" style="min-width: fit-content; padding: 8px 16px; font-size: 13px; background: #f1f5f9; color: #475569; white-space: nowrap;">
-                            <span><i class="fa fa-info-circle"></i> Info</span>
-                        </a>
-                        <a href="{{ route('event.participant', $eventner->slug) }}" class="zubuz-default-btn" style="min-width: fit-content; padding: 8px 16px; font-size: 13px; background: #f1f5f9; color: #475569; white-space: nowrap;">
-                            <span><i class="fa fa-users"></i> Peserta</span>
-                        </a>
-                        <a href="{{ route('event.vote', $eventner->slug) }}" class="zubuz-default-btn" style="min-width: fit-content; padding: 8px 16px; font-size: 13px; background: var(--event-primary, #0072FF); white-space: nowrap;">
-                            <span><i class="fa fa-heart"></i> Vote</span>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="row">
-                    {{-- Left: Team Selection --}}
-                    <div class="col-lg-{{ $eventner->vote_active ? '8' : '12' }}">
-                        @if($view == 'categories')
-                            {{-- View A: Categories --}}
-                            <div class="zubuz-section-title wow fadeInUp">
-                                <h2 style="font-size: 24px;">Pilih Kategori Lomba</h2>
-                            </div>
-                            <div class="row g-3">
-                                @foreach($categories as $cat)
-                                <div class="col-6 col-md-6 wow fadeInUp">
-                                    <div wire:click="selectCategory({{ $cat->id }})"
-                                         style="background: #fff; border: 1px solid var(--df-border, #e2e8f0); border-radius: 8px; padding: 24px 16px; text-align: center; cursor: pointer; transition: all 0.3s;"
-                                         onmouseover="this.style.borderColor='var(--event-primary, #0072FF)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.06)';"
-                                         onmouseout="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
-                                        <div style="width: 52px; height: 52px; border-radius: 14px; background: rgba(38,101,253,0.1); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
-                                            <i class="fa fa-trophy" style="font-size: 20px; color: var(--event-primary, #0072FF);"></i>
-                                        </div>
-                                        <h6 style="font-weight: 600; margin-bottom: 4px; font-size: 15px; line-height: 1.3;">{{ $cat->name }}</h6>
-                                        <p style="color: var(--df-secondary, #64748b); margin-bottom: 12px; font-size: 13px;">{{ $cat->registrations_count }} Kontingen</p>
-                                        <span style="display: inline-block; background: var(--event-primary, #0072FF); color: #fff; padding: 6px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;">
-                                            Pilih <i class="fa fa-arrow-right" style="font-size: 10px; margin-left: 4px;"></i>
-                                        </span>
+                        <div class="grid gap-4 grid-cols-2 md:grid-cols-3">
+                            @foreach($categories as $cat)
+                                <div wire:click="selectCategory({{ $cat->id }})"
+                                     class="surface-card surface-card-hover p-5 text-center cursor-pointer border border-outline-variant/50 flex flex-col items-center justify-center">
+                                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary mb-3">
+                                        <i class="ti ti-trophy text-2xl"></i>
                                     </div>
+                                    <h4 class="font-display text-sm font-bold text-deep-slate leading-tight mb-1 text-center truncate max-w-full" title="{{ $cat->name }}">{{ $cat->name }}</h4>
+                                    <span class="text-xs text-on-surface-variant font-medium block mb-4">{{ $cat->registrations_count }} Kontingen</span>
+                                    <span class="btn-ghost py-1.5 px-4 text-xs font-semibold leading-normal inline-flex items-center gap-1.5">
+                                        Pilih Kategori <i class="ti ti-arrow-right text-[10px]"></i>
+                                    </span>
                                 </div>
-                                @endforeach
-                            </div>
-                        @else
-                            {{-- View B: Participants --}}
-                            <div class="wow fadeInUp mb-3">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <button wire:click="backToCategories" style="background: #fff; border: 1px solid var(--df-border, #e2e8f0); border-radius: 8px; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                        <i class="fa fa-arrow-left" style="color: var(--df-secondary, #64748b);"></i>
-                                    </button>
-                                    <nav style="font-size: 14px;">
-                                        <span style="color: var(--df-secondary, #64748b);">Kategori</span>
-                                        <span style="color: #9ca3af; margin: 0 6px;">/</span>
-                                        <strong style="color: var(--event-primary, #0072FF);">{{ $selectedCategory->name }}</strong>
-                                    </nav>
-                                </div>
-                            </div>
+                            @endforeach
+                        </div>
+                    @else
+                        {{-- VIEW B: Participants list --}}
+                        <div class="flex items-center gap-3 mb-6">
+                            <button wire:click="backToCategories" class="flex h-10 w-10 items-center justify-center rounded-xl border border-outline-variant/60 bg-white hover:bg-primary/5 transition text-on-surface-variant cursor-pointer">
+                                <i class="ti ti-arrow-left text-lg"></i>
+                            </button>
+                            <nav class="text-sm font-medium text-on-surface-variant flex items-center gap-1.5">
+                                <span>Kategori</span>
+                                <span class="text-outline-variant">/</span>
+                                <strong class="text-primary font-bold">{{ $selectedCategory->name }}</strong>
+                            </nav>
+                        </div>
 
-                            {{-- Search --}}
-                            <div class="wow fadeInUp mb-3">
-                                <div style="background: #fff; border: 1px solid var(--df-border, #e2e8f0); border-radius: 8px; padding: 2px 4px; display: flex; align-items: center;">
-                                    <span style="padding: 10px 12px; color: #9ca3af;"><i class="fa fa-search"></i></span>
-                                    <input type="text" wire:model.live.debounce.300ms="search" placeholder="Cari nama sekolah..." style="border: none; outline: none; flex: 1; padding: 10px 0; font-size: 15px; min-width: 0;">
-                                </div>
-                            </div>
+                        {{-- Search Input --}}
+                        <div class="mb-6 relative">
+                            <i class="ti ti-search absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg"></i>
+                            <input type="text" wire:model.live.debounce.300ms="search" placeholder="Cari nama sekolah / kontingen..." class="field-input w-full pl-11">
+                        </div>
 
-                            <div class="d-flex align-items-center justify-content-between mb-3">
-                                <h5 style="font-weight: 600; margin: 0; font-size: 18px;">Pilih Peserta</h5>
-                                <span style="background: rgba(38,101,253,0.1); color: var(--event-primary, #0072FF); padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">{{ $participants->count() }}</span>
-                            </div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-display text-base font-bold text-deep-slate">Pilih Kontingen</h3>
+                            <span class="chip py-0.5 px-2.5 text-xs font-bold leading-normal">{{ $participants->count() }} kontingen</span>
+                        </div>
 
-                            <div class="row g-2">
-                                @forelse($participants as $reg)
-                                <div class="col-12 col-md-6 wow fadeInUp">
-                                    @if($eventner->vote_active)
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            @forelse($participants as $reg)
+                                @if($eventner->vote_active)
                                     <div wire:click="selectTeam({{ $reg->id }})"
-                                         style="background: #fff; border: {{ $selectedRegistrationId == $reg->id ? '2px solid var(--event-primary, #0072FF)' : '1px solid #e5e7eb' }}; border-radius: 8px; padding: 14px; cursor: pointer; transition: all 0.3s; {{ $selectedRegistrationId == $reg->id ? 'box-shadow: 0 4px 16px rgba(0,114,255,0.12);' : '' }}">
-                                    @else
-                                    <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 14px; transition: all 0.3s;">
-                                    @endif
-                                        <div style="display: flex; align-items: center; gap: 12px;">
-                                            <div style="position: relative; flex-shrink: 0;">
-                                                @if($reg->logo_sekolah)
-                                                    <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 1px solid var(--df-border, #e2e8f0);" alt="">
-                                                @else
-                                                    <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(38,101,253,0.1); display: flex; align-items: center; justify-content: center; color: var(--event-primary, #0072FF);">
-                                                        <i class="fa fa-school" style="font-size: 16px;"></i>
-                                                    </div>
-                                                @endif
-                                                @if($selectedRegistrationId == $reg->id)
-                                                <span style="position: absolute; top: -3px; right: -3px; width: 18px; height: 18px; background: var(--event-primary, #0072FF); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #fff;">
-                                                    <i class="fa fa-check" style="color: #fff; font-size: 8px;"></i>
+                                         class="surface-card cursor-pointer p-4 transition duration-200 {{ $selectedRegistrationId == $reg->id ? 'ring-2 ring-primary bg-primary/5 border-transparent shadow-md' : 'border-outline-variant/50 hover:-translate-y-0.5 hover:shadow-sm' }}">
+                                @else
+                                    <div class="surface-card p-4 border-outline-variant/50">
+                                @endif
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="relative shrink-0">
+                                            @if($reg->logo_sekolah)
+                                                <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" alt="" class="h-11 w-11 rounded-full object-cover border border-outline-variant/30">
+                                            @else
+                                                <div class="flex h-11 w-11 items-center justify-center rounded-full bg-primary/5 text-primary border border-outline-variant/30">
+                                                    <i class="ti ti-school text-xl"></i>
+                                                </div>
+                                            @endif
+                                            @if($selectedRegistrationId == $reg->id)
+                                                <span class="absolute -top-1 -right-1 h-5 w-5 bg-primary text-white border-2 border-white rounded-full flex items-center justify-center shadow-sm">
+                                                    <i class="ti ti-check text-[9px] font-bold"></i>
                                                 </span>
-                                                @endif
-                                            </div>
-                                            <div style="flex: 1; min-width: 0;">
-                                                <h6 style="margin: 0; font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ $reg->nama_sekolah }}</h6>
-                                                <p style="margin: 2px 0 0; color: var(--df-secondary, #64748b); font-size: 12px;">Pelatih: {{ $reg->nama_pelatih }}</p>
-                                            </div>
-                                            <div style="text-align: right; flex-shrink: 0;">
-                                                <span style="background: rgba(16,185,129,0.1); color: #10b981; padding: 4px 8px; border-radius: 8px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" title="Total Vote Terkumpul">
-                                                    <i class="fa fa-heart"></i> {{ number_format($reg->total_votes ?? 0, 0, ',', '.') }}
-                                                </span>
-                                            </div>
+                                            @endif
                                         </div>
+                                        <div class="flex-1 min-w-0">
+                                            <h4 class="text-sm font-bold text-deep-slate leading-tight mb-0.5 truncate">{{ $reg->nama_sekolah }}</h4>
+                                            <span class="text-xs text-on-surface-variant block truncate">Pelatih: {{ $reg->nama_pelatih ?? '—' }}</span>
+                                        </div>
+                                        <span class="chip py-1 px-3 !text-[11px] shrink-0 inline-flex items-center gap-1 bg-amber-500/10 !text-amber-700 font-bold" title="Total Vote Terkumpul">
+                                            <i class="ti ti-heart-filled text-xs text-amber-600"></i> {{ number_format($reg->total_votes ?? 0, 0, ',', '.') }}
+                                        </span>
                                     </div>
                                 </div>
-                                @empty
-                                <div class="col-12 text-center" style="padding: 40px 0;">
-                                    <div style="width: 60px; height: 60px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
-                                        <i class="fa fa-search" style="color: #9ca3af; font-size: 20px;"></i>
+                            @empty
+                                <div class="col-span-full text-center py-10 bg-white border border-outline-variant/40 rounded-2xl">
+                                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-primary/5 text-primary mx-auto mb-3">
+                                        <i class="ti ti-search text-xl"></i>
                                     </div>
-                                    <p style="color: #9ca3af; margin-bottom: 8px;">Tidak ada kontingen ditemukan.</p>
-                                    <button wire:click="$set('search', '')" style="background: none; border: none; color: var(--event-primary, #0072FF); font-weight: 600; cursor: pointer; font-size: 14px;">Hapus Pencarian</button>
+                                    <p class="text-sm font-semibold text-on-surface-variant mb-2">Tidak ada kontingen ditemukan.</p>
+                                    <button wire:click="$set('search', '')" class="text-xs font-bold text-primary bg-transparent border-none cursor-pointer hover:underline">Hapus Pencarian</button>
                                 </div>
-                                @endforelse
-                            </div>
-                        @endif
-                    </div>
+                            @endforelse
+                        </div>
 
-                    {{-- Right: Vote Form --}}
-                    @if($eventner->vote_active)
-                    <div class="col-lg-4 mt-4 mt-lg-0">
-                        {{-- Desktop: sticky sidebar --}}
-                        <div class="d-none d-lg-block">
-                            <div class="wow fadeInRight" style="background: #fff; border: 1px solid var(--df-border, #e2e8f0); border-radius: 8px; overflow: hidden; position: sticky; top: 100px;">
+                        {{-- Mobile-only inline form --}}
+                        @if($eventner->vote_active && $selectedRegistrationId)
+                            <div class="lg:hidden mt-8 surface-card overflow-hidden" id="mobile-vote-form">
                                 @include('livewire.public.partials._vote-form')
                             </div>
+                        @endif
+                    @endif
+                </div>
+
+                {{-- Right: Sticky Sidebar Voting Form (Desktop Only) --}}
+                @if($eventner->vote_active)
+                    <div class="hidden lg:block lg:col-span-4">
+                        <div class="surface-card overflow-hidden sticky top-24">
+                            @include('livewire.public.partials._vote-form')
                         </div>
                     </div>
-                    @endif
+                @endif
+            </div>
+        @endif
+    </div>
+
+    {{-- ========== STICKY BOTTOM FORM (Mobile Only) ========== --}}
+    @if($view !== 'payment' && $view !== 'success' && $eventner->vote_active)
+        <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-outline-variant/50 p-4 shadow-[0_-4px_24px_rgba(0,0,0,0.06)]" style="padding-bottom: calc(1rem + env(safe-area-inset-bottom));">
+            @if($selectedRegistrationId)
+                <div class="flex items-center justify-between gap-4">
+                    <div class="min-w-0 flex-1">
+                        <span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider block">Dukungan Untuk</span>
+                        <h4 class="text-sm font-bold text-deep-slate truncate">{{ App\Models\Registration::find($selectedRegistrationId)?->nama_sekolah }}</h4>
+                    </div>
+                    <a href="#mobile-vote-form" class="btn-primary py-2.5 px-5 font-bold text-xs leading-normal shrink-0 text-decoration-none">
+                        Isi Formulir Vote
+                    </a>
+                </div>
+            @else
+                <div class="text-center py-1">
+                    <p class="text-xs font-semibold text-on-surface-variant inline-flex items-center gap-1.5 m-0">
+                        <i class="ti ti-hand-finger text-primary"></i> Pilih kontingen terlebih dahulu untuk mulai voting
+                    </p>
                 </div>
             @endif
         </div>
-    </div>
-
-    @if($view !== 'payment' && $view !== 'success' && $eventner->vote_active)
-    {{-- Mobile: Sticky bottom vote form (sits above bottom nav) --}}
-    <div class="d-lg-none" id="mobile-vote-bar">
-        @if($selectedRegistrationId)
-        <div style="position: fixed; bottom: var(--pm-nav-height); left: 0; right: 0; z-index: 99; background: #fff; border-top: 1px solid #e5e7eb; padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 20px rgba(0,0,0,0.08);">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="flex: 1; min-width: 0;">
-                    <p style="margin: 0; font-size: 12px; color: var(--df-secondary, #64748b);">Vote untuk</p>
-                    <p style="margin: 0; font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ App\Models\Registration::find($selectedRegistrationId)?->nama_sekolah }}</p>
-                </div>
-                <button type="button" data-bs-toggle="modal" data-bs-target="#mobileVoteModal" style="background: var(--event-primary, #0072FF); color: #fff; border: none; border-radius: 8px; padding: 10px 20px; font-weight: 600; font-size: 14px; white-space: nowrap; cursor: pointer;">
-                    Vote {{ $voteCount }}x
-                </button>
-            </div>
-        </div>
-        @else
-        <div style="position: fixed; bottom: var(--pm-nav-height); left: 0; right: 0; z-index: 99; background: #fff; border-top: 1px solid #e5e7eb; padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 20px rgba(0,0,0,0.08);">
-            <div style="text-align: center;">
-                <p style="margin: 0; color: #9ca3af; font-size: 13px;"><i class="fa fa-hand-pointer"></i> Pilih kontingen terlebih dahulu untuk mulai voting</p>
-            </div>
-        </div>
-        @endif
-    </div>
-
-    {{-- Mobile Vote Modal --}}
-    <div class="modal fade" id="mobileVoteModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
-            <div class="modal-content" style="border: none; border-radius: 8px 20px 0 0;">
-                <div class="modal-header" style="border-bottom: 1px solid #e5e7eb; padding: 16px 20px;">
-                    <h5 class="modal-title" style="font-weight: 600; font-size: 18px;">
-                        <i class="fa fa-heart" style="color: var(--event-primary, #0072FF);"></i> Form Voting
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body" style="padding: 20px;">
-                    @include('livewire.public.partials._vote-form')
-                </div>
-            </div>
-        </div>
-    </div>
     @endif
 
-    {{-- Bottom Navigation --}}
-    <nav class="pm-bottom-nav">
-        <a href="{{ route('event.detail', $eventner->slug) }}" class="pm-nav-item">
-            <i class="fa fa-home"></i>
-            <span>Home</span>
-        </a>
-        <a href="{{ route('event.participant', $eventner->slug) }}" class="pm-nav-item">
-            <i class="fa fa-users"></i>
-            <span>Peserta</span>
-        </a>
-        <a href="{{ route('event.vote', $eventner->slug) }}" class="pm-nav-item active">
-            <i class="fa fa-heart"></i>
-            <span>Vote</span>
-        </a>
-        @if($eventner->ticket_active && $eventner->ticket_price)
-        <a href="{{ route('event.ticket', $eventner->slug) }}" class="pm-nav-item">
-            <i class="fa fa-ticket-alt"></i>
-            <span>Tiket</span>
-        </a>
-        @endif
-        @if(($eventner->registration_status ?? 'open') != 'closed')
-        <a href="{{ route('event.register', $eventner->slug) }}" class="pm-nav-item" style="color: var(--pm-primary);">
-            <i class="fa fa-edit"></i>
-            <span>Daftar</span>
-        </a>
-        @endif
-    </nav>
 </div>
-
-<style>
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    /* Add padding at bottom for mobile sticky bar */
-    @media (max-width: 991px) {
-        body { padding-bottom: 80px !important; }
-    }
-</style>

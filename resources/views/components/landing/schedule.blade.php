@@ -5,30 +5,35 @@
 @endphp
 
 @if(count($items) > 0)
-<div class="section zubuz-section-padding3 bg-light" id="schedule">
-    <div class="container">
-        <div class="zubuz-section-title center">
-            <h2>{{ $title }}</h2>
+<section id="schedule" class="section-pad bg-surface">
+    <div class="container-landing">
+        <div class="mx-auto max-w-2xl text-center">
+            <span class="overline justify-center">Jadwal</span>
+            <h2 class="mt-4 text-3xl font-bold md:text-4xl">{{ $title }}</h2>
         </div>
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                @foreach($items as $index => $item)
-                <div class="d-flex align-items-start gap-3 mb-4">
-                    <div class="bg-primary text-white rounded p-3 text-center flex-shrink-0" style="min-width: 100px;">
-                        <div class="fs-8 fw-bold">{{ $item['date'] ?? '' }}</div>
-                        <div class="fs-3">{{ $item['time'] ?? '' }}</div>
-                    </div>
-                    <div class="flex-grow-1">
-                        <h5 class="fw-semibold">{{ $item['title'] ?? '' }}</h5>
-                        <p class="text-muted mb-1">{{ $item['description'] ?? '' }}</p>
-                        @if(!empty($item['location']))
-                        <small class="text-primary"><i class="fas fa-map-marker-alt me-1"></i>{{ $item['location'] }}</small>
-                        @endif
-                    </div>
+
+        <div class="mx-auto mt-12 max-w-3xl space-y-4">
+            @foreach($items as $index => $item)
+            <div class="surface-card surface-card-hover flex flex-col gap-4 p-5 sm:flex-row sm:items-center" wire:key="schedule-{{ $index }}">
+                <div class="flex flex-shrink-0 flex-col items-center justify-center rounded-xl bg-primary px-5 py-3 text-white sm:w-28">
+                    <span class="font-display text-sm font-bold">{{ $item['date'] ?? '' }}</span>
+                    <span class="text-xs text-white/80">{{ $item['time'] ?? '' }}</span>
                 </div>
-                @endforeach
+                <div class="flex-1">
+                    <h3 class="font-bold text-deep-slate">{{ $item['title'] ?? '' }}</h3>
+                    @if(!empty($item['description']))
+                    <p class="mt-1 text-sm text-on-surface-variant">{{ $item['description'] }}</p>
+                    @endif
+                    @if(!empty($item['location']))
+                    <p class="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary">
+                        <i class="ti ti-map-pin"></i>
+                        {{ $item['location'] }}
+                    </p>
+                    @endif
+                </div>
             </div>
+            @endforeach
         </div>
     </div>
-</div>
+</section>
 @endif

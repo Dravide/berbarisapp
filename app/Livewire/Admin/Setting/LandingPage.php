@@ -65,6 +65,14 @@ class LandingPage extends Component
     public $gallery_title;
     public $gallery_items = [];
 
+    // Ticket section (live data; admin sets heading only)
+    public $ticket_title;
+    public $ticket_subtitle;
+
+    // Vote section (live data; admin sets heading only)
+    public $vote_title;
+    public $vote_subtitle;
+
     // Social links
     public $social_instagram;
     public $social_tiktok;
@@ -74,8 +82,8 @@ class LandingPage extends Component
     public function mount()
     {
         // Load section order & active
-        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', '["hero","features","about","eventners","cta"]'), true);
-        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', '{"hero":true,"features":true,"about":true,"eventners":true,"cta":true}'), true);
+        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', '["hero","features","about","eventners","ticket","vote","cta"]'), true);
+        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', '{"hero":true,"features":true,"about":true,"eventners":true,"ticket":true,"vote":true,"cta":true}'), true);
 
         // Load Hero
         $hero = json_decode(Setting::get('landing_hero', '{}'), true) ?? [];
@@ -124,6 +132,16 @@ class LandingPage extends Component
         $gallery = json_decode(Setting::get('landing_gallery', '{}'), true) ?? [];
         $this->gallery_title = $gallery['title'] ?? 'Galeri';
         $this->gallery_items = $gallery['items'] ?? [];
+
+        // Load Ticket section
+        $ticket = json_decode(Setting::get('landing_ticket', '{}'), true) ?? [];
+        $this->ticket_title = $ticket['title'] ?? 'E-Tiket Digital';
+        $this->ticket_subtitle = $ticket['subtitle'] ?? 'Beli tiket event favoritmu secara online. Praktis, aman, dengan QR code check-in.';
+
+        // Load Vote section
+        $vote = json_decode(Setting::get('landing_vote', '{}'), true) ?? [];
+        $this->vote_title = $vote['title'] ?? 'Voting Online';
+        $this->vote_subtitle = $vote['subtitle'] ?? 'Dukung peserta favoritmu lewat voting online. Setiap suara menentukan juara favorit.';
 
         // Load Social Links
         $socials = json_decode(Setting::get('landing_social_links', '{}'), true) ?? [];
@@ -331,6 +349,18 @@ class LandingPage extends Component
             'tiktok' => $this->social_tiktok,
             'youtube' => $this->social_youtube,
             'facebook' => $this->social_facebook,
+        ]));
+
+        // Save Ticket section
+        Setting::set('landing_ticket', json_encode([
+            'title' => $this->ticket_title,
+            'subtitle' => $this->ticket_subtitle,
+        ]));
+
+        // Save Vote section
+        Setting::set('landing_vote', json_encode([
+            'title' => $this->vote_title,
+            'subtitle' => $this->vote_subtitle,
         ]));
 
         $this->reset(['hero_background_image', 'about_image', 'cta_image']);

@@ -13,6 +13,12 @@
             @case('eventners')
                 @include('components.landing.eventners', ['eventners' => $eventners])
                 @break
+            @case('ticket')
+                @include('components.landing.ticket', ['section' => (object)['content' => $section['content']], 'events' => $ticketEvents])
+                @break
+            @case('vote')
+                @include('components.landing.vote', ['section' => (object)['content' => $section['content']], 'events' => $voteEvents])
+                @break
             @case('cta')
                 @include('components.landing.cta', ['section' => (object)['content' => $section['content']]])
                 @break

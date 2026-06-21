@@ -1,77 +1,67 @@
 @php
-    $eventners = $eventners ?? [];
+    $eventners = $eventners ?? collect();
 @endphp
 
 @if($eventners->count() > 0)
-<div class="section zubuz-section-padding3" id="eventners">
-    <div class="container">
-        <div class="zubuz-section-title center">
-            <h2>Penyelenggara Event yang Telah Bergabung</h2>
-            <p class="mt-2 text-muted" style="max-width: 600px; margin: 8px auto 0;">
-                Mereka telah mempercayakan pengelolaan event dan kompetisi mereka melalui platform kami.
-            </p>
+<section id="eventners" class="section-pad bg-surface">
+    <div class="container-landing">
+        <div class="mx-auto max-w-2xl text-center">
+            <span class="overline justify-center">Penyelenggara</span>
+            <h2 class="mt-4 text-3xl font-bold md:text-4xl">Penyelenggara Event yang Telah Bergabung</h2>
+            <p class="mt-4 text-on-surface-variant">Mereka telah mempercayakan pengelolaan event dan kompetisi mereka melalui platform kami.</p>
         </div>
-        <div class="row">
+
+        <div class="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             @foreach($eventners as $eventner)
-            <div class="col-xl-3 col-lg-4 col-md-6 mb-4">
-                <div class="zubuz-iconbox-wrap center" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 32px 20px; height: 100%; transition: all 0.3s ease;">
-                    {{-- Logo --}}
-                    <div style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; background: #f3f4f6;">
-                        @if($eventner->logo_event)
-                            <img src="{{ Storage::url($eventner->logo_event) }}" alt="{{ $eventner->nama_event }}" style="width: 100%; height: 100%; object-fit: cover;">
-                        @else
-                            <span style="font-size: 28px; font-weight: 700; color: #0072FF;">
-                                {{ strtoupper(substr($eventner->nama_event, 0, 1)) }}
+            <div class="surface-card surface-card-hover group flex flex-col overflow-hidden p-0">
+                {{-- Poster banner --}}
+                <a href="{{ route('event.detail', $eventner->slug) }}" class="relative block aspect-[4/3] overflow-hidden">
+                    @if($eventner->poster)
+                        <img src="{{ Storage::url($eventner->poster) }}" alt="{{ $eventner->nama_event }}" class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
+                    @else
+                        <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/15 via-surface-container-lowest to-tertiary/15">
+                            <span class="font-display text-4xl font-extrabold text-primary/50">
+                                {{ strtoupper(substr($eventner->nama_event ?? '?', 0, 1)) }}
                             </span>
-                        @endif
-                    </div>
+                        </div>
+                    @endif
+                    @if($eventner->tingkat_perlombaan)
+                    <span class="chip absolute left-3 top-3 backdrop-blur">{{ $eventner->tingkat_perlombaan }}</span>
+                    @endif
+                </a>
 
-                    <div class="zubuz-iconbox-data">
-                        <h3 style="font-size: 18px; margin-bottom: 4px; line-height: 1.3;">{{ $eventner->nama_event }}</h3>
-                        <p style="font-size: 13px; color: #6b7280; margin-bottom: 10px;">{{ $eventner->diselenggarakan_oleh }}</p>
+                {{-- Body --}}
+                <div class="flex flex-1 flex-col p-5">
+                    <h3 class="text-base font-bold leading-snug text-deep-slate transition-colors duration-200 group-hover:text-primary">{{ $eventner->nama_event }}</h3>
+                    <p class="mt-1 text-xs text-on-surface-variant">{{ $eventner->diselenggarakan_oleh }}</p>
 
-                        @if($eventner->tingkat_perlombaan)
-                        <span style="display: inline-block; background: #eff6ff; color: #0072FF; font-size: 11px; padding: 2px 10px; border-radius: 20px; font-weight: 600;">
-                            {{ $eventner->tingkat_perlombaan }}
+                    <div class="mt-4 flex items-center gap-4 border-t border-outline-variant/50 pt-3 text-xs text-on-surface-variant">
+                        @if($eventner->lokasi)
+                        <span class="inline-flex items-center gap-1">
+                            <i class="ti ti-map-pin text-primary"></i>
+                            {{ \Illuminate\Support\Str::limit($eventner->lokasi, 15) }}
                         </span>
                         @endif
-
-                        <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #f3f4f6;">
-                            <div class="d-flex justify-content-center gap-3" style="font-size: 12px; color: #9ca3af;">
-                                <span>
-                                    <i class="fas fa-map-marker-alt" style="color: #0072FF;"></i>
-                                    {{ Str::limit($eventner->lokasi, 15) }}
-                                </span>
-                                <span>
-                                    <i class="fas fa-users" style="color: #10b981;"></i>
-                                    {{ $eventner->registrations->count() }} peserta
-                                </span>
-                            </div>
-                        </div>
-
-                        <div style="margin-top: 14px;">
-                            <a href="{{ route('event.detail', $eventner->slug) }}"
-                               style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: #0072FF; text-decoration: none;">
-                                Lihat Event
-                                <svg width="16" height="14" viewBox="0 0 26 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M15.5 2.25L24.25 11M24.25 11L15.5 19.75M24.25 11L1.75 11" stroke="#0072FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                            </a>
-                        </div>
+                        <span class="inline-flex items-center gap-1">
+                            <i class="ti ti-users text-[#5a7d00]"></i>
+                            {{ $eventner->registrations_count ?? $eventner->registrations->count() }} peserta
+                        </span>
                     </div>
+
+                    <a href="{{ route('event.detail', $eventner->slug) }}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary transition group-hover:gap-2">
+                        Lihat Event
+                        <i class="ti ti-arrow-right"></i>
+                    </a>
                 </div>
             </div>
             @endforeach
         </div>
 
-        {{-- CTA to explore more --}}
         @if($eventners->count() > 8)
-        <div class="text-center mt-4">
-            <a href="#" class="zubuz-default-btn" style="background: transparent; border: 2px solid #0072FF; color: #0072FF;">
-                <span>Lihat Semua Event</span>
-            </a>
+        <div class="mt-10 text-center">
+            <a href="#" class="btn-ghost">Lihat Semua Event</a>
         </div>
         @endif
     </div>
-</div>
+</section>
 @endif

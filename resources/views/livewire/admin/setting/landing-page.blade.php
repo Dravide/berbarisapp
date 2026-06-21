@@ -60,6 +60,8 @@
                                             'statistics' => 'Statistik',
                                             'faq' => 'FAQ',
                                             'gallery' => 'Galeri',
+                                            'ticket' => 'Tiket',
+                                            'vote' => 'Vote',
                                             'social' => 'Sosial Media',
                                         ] as $key => $label)
                                         <li class="nav-item">
@@ -389,6 +391,48 @@
                                             </div>
                                         </div>
                                         @endforeach
+                                    </div>
+                                    @endif
+
+                                    {{-- ==================== TICKET TAB ==================== --}}
+                                    @if($activeTab === 'ticket')
+                                    <div wire:key="tab-ticket">
+                                        <h5 class="fw-semibold mb-3"><i class="ti ti-ticket me-2"></i>Section Tiket</h5>
+                                        <div class="alert alert-light border d-flex align-items-center mb-3">
+                                            <i class="ti ti-info-circle fs-6 me-2 text-primary"></i>
+                                            <span class="fs-2">Menampilkan event yang mengaktifkan tiket secara <strong>otomatis (data live)</strong>. Atur hanya judul &amp; subjudul section.</span>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12 mb-3">
+                                                <label class="form-label">Judul Section</label>
+                                                <input type="text" class="form-control" wire:model="ticket_title" placeholder="Mis: E-Tiket Digital">
+                                            </div>
+                                            <div class="col-12 mb-3">
+                                                <label class="form-label">Subjudul</label>
+                                                <textarea class="form-control" wire:model="ticket_subtitle" rows="2" placeholder="Deskripsi singkat section tiket"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    {{-- ==================== VOTE TAB ==================== --}}
+                                    @if($activeTab === 'vote')
+                                    <div wire:key="tab-vote">
+                                        <h5 class="fw-semibold mb-3"><i class="ti ti-thumb-up me-2"></i>Section Vote</h5>
+                                        <div class="alert alert-light border d-flex align-items-center mb-3">
+                                            <i class="ti ti-info-circle fs-6 me-2 text-primary"></i>
+                                            <span class="fs-2">Menampilkan event yang mengaktifkan voting secara <strong>otomatis (data live)</strong>. Atur hanya judul &amp; subjudul section.</span>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12 mb-3">
+                                                <label class="form-label">Judul Section</label>
+                                                <input type="text" class="form-control" wire:model="vote_title" placeholder="Mis: Voting Online">
+                                            </div>
+                                            <div class="col-12 mb-3">
+                                                <label class="form-label">Subjudul</label>
+                                                <textarea class="form-control" wire:model="vote_subtitle" rows="2" placeholder="Deskripsi singkat section vote"></textarea>
+                                            </div>
+                                        </div>
                                     </div>
                                     @endif
 

@@ -51,7 +51,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::aduQgelMeZVImezR',
+            '_route' => 'generated::eFwqYbvaklX8PFDH',
           ),
           1 => NULL,
           2 => 
@@ -71,7 +71,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::oX9ZsRCZOWYYMq9t',
+            '_route' => 'generated::q4T4KzuEBBM42aTf',
           ),
           1 => NULL,
           2 => 
@@ -91,7 +91,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::kB7IKQm3XawLkTaE',
+            '_route' => 'generated::4W0tngE8kY3HZsK1',
           ),
           1 => NULL,
           2 => 
@@ -130,7 +130,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::FNOX51jQN9duAGHj',
+            '_route' => 'generated::wFLG66sUyErHigqb',
           ),
           1 => NULL,
           2 => 
@@ -190,7 +190,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::OfxFJKphbmjMR5XJ',
+            '_route' => 'generated::NjrhgLiDWabTGt76',
           ),
           1 => NULL,
           2 => 
@@ -562,6 +562,66 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
+      '/eventner/vote-results/pdf' => 
+      array (
+        0 => 
+        array (
+          0 => 
+          array (
+            '_route' => 'eventner.vote-results.pdf',
+          ),
+          1 => NULL,
+          2 => 
+          array (
+            'GET' => 0,
+            'HEAD' => 1,
+          ),
+          3 => NULL,
+          4 => false,
+          5 => false,
+          6 => NULL,
+        ),
+      ),
+      '/eventner/vote-transactions' => 
+      array (
+        0 => 
+        array (
+          0 => 
+          array (
+            '_route' => 'eventner.vote-transactions.index',
+          ),
+          1 => NULL,
+          2 => 
+          array (
+            'GET' => 0,
+            'HEAD' => 1,
+          ),
+          3 => NULL,
+          4 => false,
+          5 => false,
+          6 => NULL,
+        ),
+      ),
+      '/eventner/vote-transactions/csv' => 
+      array (
+        0 => 
+        array (
+          0 => 
+          array (
+            '_route' => 'eventner.vote-transactions.csv',
+          ),
+          1 => NULL,
+          2 => 
+          array (
+            'GET' => 0,
+            'HEAD' => 1,
+          ),
+          3 => NULL,
+          4 => false,
+          5 => false,
+          6 => NULL,
+        ),
+      ),
       '/eventner/profile' => 
       array (
         0 => 
@@ -782,6 +842,26 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
+      '/eventner/drawing/print' => 
+      array (
+        0 => 
+        array (
+          0 => 
+          array (
+            '_route' => 'eventner.drawing.print',
+          ),
+          1 => NULL,
+          2 => 
+          array (
+            'GET' => 0,
+            'HEAD' => 1,
+          ),
+          3 => NULL,
+          4 => false,
+          5 => false,
+          6 => NULL,
+        ),
+      ),
       '/eventner/sponsors' => 
       array (
         0 => 
@@ -825,7 +905,7 @@ app('router')->setCompiledRoutes(
     ),
     2 => 
     array (
-      0 => '{^(?|/livewire\\-e0870fd1/(?|preview\\-file/([^/]++)(*:52)|js/([^/\\.]++)\\.js(*:76)|css/([^/\\.]++)\\.(?|css(*:105)|global\\.css(*:124)))|/event(?|/([^/]++)(?|(*:155)|/(?|participant(*:178)|vote(*:190)|ticket(*:204)|register(*:220)|drawing(?|(*:238)|\\-results(*:255))|juknis(*:270)))|ner/(?|participants/([^/]++)/pdf(*:312)|vote\\-results/([^/]++)(*:342)))|/s(?|c(?|an/([^/]++)(*:372)|oreboard/([^/]++)(*:397))|torage/(.*)(?|(*:420)))|/reg/([^/]++)(*:443)|/champions/([^/]++)(*:470)|/admin/(?|eventner/([^/]++)(*:505)|schools/([^/]++)(*:529)))/?$}sDu',
+      0 => '{^(?|/livewire\\-e0870fd1/(?|preview\\-file/([^/]++)(*:52)|js/([^/\\.]++)\\.js(*:76)|css/([^/\\.]++)\\.(?|css(*:105)|global\\.css(*:124)))|/event(?|/([^/]++)(?|(*:155)|/(?|participant(*:178)|vote(*:190)|ticket(*:204)|register(*:220)|drawing(?|(*:238)|\\-results(*:255))|juknis(*:270)))|ner/(?|participants/([^/]++)/pdf(*:312)|vote\\-results/([^/]++)(*:342)))|/s(?|c(?|an/([^/]++)(*:372)|oreboard/([^/]++)(?|(*:400)|/c(?|ategory/([^/]++)(*:429)|hampion/([^/]++)(*:453))))|torage/(.*)(?|(*:478)))|/reg/([^/]++)(*:501)|/champions/([^/]++)(*:528)|/admin/(?|eventner/([^/]++)(*:563)|schools/([^/]++)(*:587)))/?$}sDu',
     ),
     3 => 
     array (
@@ -858,7 +938,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::31f2UKVZJn80lPnn',
+            '_route' => 'generated::wmuQ47l5m83EIqTw',
           ),
           1 => 
           array (
@@ -881,7 +961,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::8PEOdcJ4HOa9FrxU',
+            '_route' => 'generated::eoNRQMOWkJGg77hb',
           ),
           1 => 
           array (
@@ -904,7 +984,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::wwLY73Qa7Pmt55Ux',
+            '_route' => 'generated::KpvCm1hfeYL0Rmcq',
           ),
           1 => 
           array (
@@ -1174,7 +1254,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      397 => 
+      400 => 
       array (
         0 => 
         array (
@@ -1197,7 +1277,55 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      420 => 
+      429 => 
+      array (
+        0 => 
+        array (
+          0 => 
+          array (
+            '_route' => 'public.scoreboard.category',
+          ),
+          1 => 
+          array (
+            0 => 'scoringCode',
+            1 => 'competitionCategoryId',
+          ),
+          2 => 
+          array (
+            'GET' => 0,
+            'HEAD' => 1,
+          ),
+          3 => NULL,
+          4 => false,
+          5 => true,
+          6 => NULL,
+        ),
+      ),
+      453 => 
+      array (
+        0 => 
+        array (
+          0 => 
+          array (
+            '_route' => 'public.scoreboard.champion',
+          ),
+          1 => 
+          array (
+            0 => 'scoringCode',
+            1 => 'championCategoryId',
+          ),
+          2 => 
+          array (
+            'GET' => 0,
+            'HEAD' => 1,
+          ),
+          3 => NULL,
+          4 => false,
+          5 => true,
+          6 => NULL,
+        ),
+      ),
+      478 => 
       array (
         0 => 
         array (
@@ -1239,7 +1367,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      443 => 
+      501 => 
       array (
         0 => 
         array (
@@ -1262,7 +1390,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      470 => 
+      528 => 
       array (
         0 => 
         array (
@@ -1285,7 +1413,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      505 => 
+      563 => 
       array (
         0 => 
         array (
@@ -1308,7 +1436,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      529 => 
+      587 => 
       array (
         0 => 
         array (
@@ -1447,7 +1575,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::aduQgelMeZVImezR' => 
+    'generated::eFwqYbvaklX8PFDH' => 
     array (
       'methods' => 
       array (
@@ -1459,7 +1587,7 @@ app('router')->setCompiledRoutes(
       array (
         'uses' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@returnJavaScriptAsFile',
         'controller' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@returnJavaScriptAsFile',
-        'as' => 'generated::aduQgelMeZVImezR',
+        'as' => 'generated::eFwqYbvaklX8PFDH',
       ),
       'fallback' => false,
       'defaults' => 
@@ -1475,7 +1603,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::oX9ZsRCZOWYYMq9t' => 
+    'generated::q4T4KzuEBBM42aTf' => 
     array (
       'methods' => 
       array (
@@ -1487,7 +1615,7 @@ app('router')->setCompiledRoutes(
       array (
         'uses' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@maps',
         'controller' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@maps',
-        'as' => 'generated::oX9ZsRCZOWYYMq9t',
+        'as' => 'generated::q4T4KzuEBBM42aTf',
       ),
       'fallback' => false,
       'defaults' => 
@@ -1503,7 +1631,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::kB7IKQm3XawLkTaE' => 
+    'generated::4W0tngE8kY3HZsK1' => 
     array (
       'methods' => 
       array (
@@ -1515,7 +1643,7 @@ app('router')->setCompiledRoutes(
       array (
         'uses' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@cspMaps',
         'controller' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@cspMaps',
-        'as' => 'generated::kB7IKQm3XawLkTaE',
+        'as' => 'generated::4W0tngE8kY3HZsK1',
       ),
       'fallback' => false,
       'defaults' => 
@@ -1586,7 +1714,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::31f2UKVZJn80lPnn' => 
+    'generated::wmuQ47l5m83EIqTw' => 
     array (
       'methods' => 
       array (
@@ -1623,7 +1751,7 @@ app('router')->setCompiledRoutes(
                 $component.\'.js\',
             );
         }";s:5:"scope";s:51:"Livewire\\Features\\SupportJsModules\\SupportJsModules";s:4:"this";N;s:4:"self";s:32:"00000000000007560000000000000000";}}',
-        'as' => 'generated::31f2UKVZJn80lPnn',
+        'as' => 'generated::wmuQ47l5m83EIqTw',
       ),
       'fallback' => false,
       'defaults' => 
@@ -1639,7 +1767,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::8PEOdcJ4HOa9FrxU' => 
+    'generated::eoNRQMOWkJGg77hb' => 
     array (
       'methods' => 
       array (
@@ -1680,7 +1808,7 @@ app('router')->setCompiledRoutes(
                 \'text/css; charset=utf-8\',
             );
         }";s:5:"scope";s:53:"Livewire\\Features\\SupportCssModules\\SupportCssModules";s:4:"this";N;s:4:"self";s:32:"00000000000007580000000000000000";}}',
-        'as' => 'generated::8PEOdcJ4HOa9FrxU',
+        'as' => 'generated::eoNRQMOWkJGg77hb',
       ),
       'fallback' => false,
       'defaults' => 
@@ -1696,7 +1824,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::wwLY73Qa7Pmt55Ux' => 
+    'generated::KpvCm1hfeYL0Rmcq' => 
     array (
       'methods' => 
       array (
@@ -1734,7 +1862,7 @@ app('router')->setCompiledRoutes(
                 \'text/css; charset=utf-8\',
             );
         }";s:5:"scope";s:53:"Livewire\\Features\\SupportCssModules\\SupportCssModules";s:4:"this";N;s:4:"self";s:32:"000000000000075a0000000000000000";}}',
-        'as' => 'generated::wwLY73Qa7Pmt55Ux',
+        'as' => 'generated::KpvCm1hfeYL0Rmcq',
       ),
       'fallback' => false,
       'defaults' => 
@@ -1750,7 +1878,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::FNOX51jQN9duAGHj' => 
+    'generated::wFLG66sUyErHigqb' => 
     array (
       'methods' => 
       array (
@@ -1787,7 +1915,7 @@ app('router')->setCompiledRoutes(
                         \'exception\' => $exception,
                     ]), status: $status);
                 }";s:5:"scope";s:54:"Illuminate\\Foundation\\Configuration\\ApplicationBuilder";s:4:"this";N;s:4:"self";s:32:"00000000000007d10000000000000000";}}',
-        'as' => 'generated::FNOX51jQN9duAGHj',
+        'as' => 'generated::wFLG66sUyErHigqb',
       ),
       'fallback' => false,
       'defaults' => 
@@ -1989,7 +2117,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::OfxFJKphbmjMR5XJ' => 
+    'generated::NjrhgLiDWabTGt76' => 
     array (
       'methods' => 
       array (
@@ -2009,7 +2137,7 @@ app('router')->setCompiledRoutes(
         'where' => 
         array (
         ),
-        'as' => 'generated::OfxFJKphbmjMR5XJ',
+        'as' => 'generated::NjrhgLiDWabTGt76',
       ),
       'fallback' => false,
       'defaults' => 
@@ -2269,6 +2397,80 @@ app('router')->setCompiledRoutes(
         array (
         ),
         'as' => 'public.scoreboard',
+      ),
+      'fallback' => false,
+      'defaults' => 
+      array (
+      ),
+      'wheres' => 
+      array (
+      ),
+      'bindingFields' => 
+      array (
+      ),
+      'lockSeconds' => NULL,
+      'waitSeconds' => NULL,
+      'withTrashed' => false,
+    ),
+    'public.scoreboard.category' => 
+    array (
+      'methods' => 
+      array (
+        0 => 'GET',
+        1 => 'HEAD',
+      ),
+      'uri' => 'scoreboard/{scoringCode}/category/{competitionCategoryId}',
+      'action' => 
+      array (
+        'middleware' => 
+        array (
+          0 => 'web',
+        ),
+        'uses' => 'App\\Livewire\\Public\\Scoreboard\\Index@__invoke',
+        'controller' => 'App\\Livewire\\Public\\Scoreboard\\Index',
+        'namespace' => NULL,
+        'prefix' => '',
+        'where' => 
+        array (
+        ),
+        'as' => 'public.scoreboard.category',
+      ),
+      'fallback' => false,
+      'defaults' => 
+      array (
+      ),
+      'wheres' => 
+      array (
+      ),
+      'bindingFields' => 
+      array (
+      ),
+      'lockSeconds' => NULL,
+      'waitSeconds' => NULL,
+      'withTrashed' => false,
+    ),
+    'public.scoreboard.champion' => 
+    array (
+      'methods' => 
+      array (
+        0 => 'GET',
+        1 => 'HEAD',
+      ),
+      'uri' => 'scoreboard/{scoringCode}/champion/{championCategoryId}',
+      'action' => 
+      array (
+        'middleware' => 
+        array (
+          0 => 'web',
+        ),
+        'uses' => 'App\\Livewire\\Public\\Scoreboard\\Index@__invoke',
+        'controller' => 'App\\Livewire\\Public\\Scoreboard\\Index',
+        'namespace' => NULL,
+        'prefix' => '',
+        'where' => 
+        array (
+        ),
+        'as' => 'public.scoreboard.champion',
       ),
       'fallback' => false,
       'defaults' => 
@@ -3168,6 +3370,45 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
+    'eventner.vote-results.pdf' => 
+    array (
+      'methods' => 
+      array (
+        0 => 'GET',
+        1 => 'HEAD',
+      ),
+      'uri' => 'eventner/vote-results/pdf',
+      'action' => 
+      array (
+        'middleware' => 
+        array (
+          0 => 'web',
+          1 => 'auth',
+          2 => 'role:Eventner',
+        ),
+        'uses' => 'App\\Http\\Controllers\\Eventner\\VoteResultsController@downloadPdf',
+        'controller' => 'App\\Http\\Controllers\\Eventner\\VoteResultsController@downloadPdf',
+        'namespace' => NULL,
+        'prefix' => 'eventner',
+        'where' => 
+        array (
+        ),
+        'as' => 'eventner.vote-results.pdf',
+      ),
+      'fallback' => false,
+      'defaults' => 
+      array (
+      ),
+      'wheres' => 
+      array (
+      ),
+      'bindingFields' => 
+      array (
+      ),
+      'lockSeconds' => NULL,
+      'waitSeconds' => NULL,
+      'withTrashed' => false,
+    ),
     'eventner.vote-results.show' => 
     array (
       'methods' => 
@@ -3192,6 +3433,84 @@ app('router')->setCompiledRoutes(
         array (
         ),
         'as' => 'eventner.vote-results.show',
+      ),
+      'fallback' => false,
+      'defaults' => 
+      array (
+      ),
+      'wheres' => 
+      array (
+      ),
+      'bindingFields' => 
+      array (
+      ),
+      'lockSeconds' => NULL,
+      'waitSeconds' => NULL,
+      'withTrashed' => false,
+    ),
+    'eventner.vote-transactions.index' => 
+    array (
+      'methods' => 
+      array (
+        0 => 'GET',
+        1 => 'HEAD',
+      ),
+      'uri' => 'eventner/vote-transactions',
+      'action' => 
+      array (
+        'middleware' => 
+        array (
+          0 => 'web',
+          1 => 'auth',
+          2 => 'role:Eventner',
+        ),
+        'uses' => 'App\\Livewire\\Eventner\\VoteTransaction\\Index@__invoke',
+        'controller' => 'App\\Livewire\\Eventner\\VoteTransaction\\Index',
+        'namespace' => NULL,
+        'prefix' => 'eventner',
+        'where' => 
+        array (
+        ),
+        'as' => 'eventner.vote-transactions.index',
+      ),
+      'fallback' => false,
+      'defaults' => 
+      array (
+      ),
+      'wheres' => 
+      array (
+      ),
+      'bindingFields' => 
+      array (
+      ),
+      'lockSeconds' => NULL,
+      'waitSeconds' => NULL,
+      'withTrashed' => false,
+    ),
+    'eventner.vote-transactions.csv' => 
+    array (
+      'methods' => 
+      array (
+        0 => 'GET',
+        1 => 'HEAD',
+      ),
+      'uri' => 'eventner/vote-transactions/csv',
+      'action' => 
+      array (
+        'middleware' => 
+        array (
+          0 => 'web',
+          1 => 'auth',
+          2 => 'role:Eventner',
+        ),
+        'uses' => 'App\\Http\\Controllers\\Eventner\\VoteTransactionController@downloadCsv',
+        'controller' => 'App\\Http\\Controllers\\Eventner\\VoteTransactionController@downloadCsv',
+        'namespace' => NULL,
+        'prefix' => 'eventner',
+        'where' => 
+        array (
+        ),
+        'as' => 'eventner.vote-transactions.csv',
       ),
       'fallback' => false,
       'defaults' => 
@@ -3636,6 +3955,45 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
+    'eventner.drawing.print' => 
+    array (
+      'methods' => 
+      array (
+        0 => 'GET',
+        1 => 'HEAD',
+      ),
+      'uri' => 'eventner/drawing/print',
+      'action' => 
+      array (
+        'middleware' => 
+        array (
+          0 => 'web',
+          1 => 'auth',
+          2 => 'role:Eventner',
+        ),
+        'uses' => 'App\\Http\\Controllers\\Eventner\\DrawingController@print',
+        'controller' => 'App\\Http\\Controllers\\Eventner\\DrawingController@print',
+        'namespace' => NULL,
+        'prefix' => 'eventner',
+        'where' => 
+        array (
+        ),
+        'as' => 'eventner.drawing.print',
+      ),
+      'fallback' => false,
+      'defaults' => 
+      array (
+      ),
+      'wheres' => 
+      array (
+      ),
+      'bindingFields' => 
+      array (
+      ),
+      'lockSeconds' => NULL,
+      'waitSeconds' => NULL,
+      'withTrashed' => false,
+    ),
     'eventner.sponsors.index' => 
     array (
       'methods' => 
@@ -3763,7 +4121,7 @@ app('router')->setCompiledRoutes(
                         $config,
                         $isProduction
                     ))($request, $path);
-                }";s:5:"scope";s:47:"Illuminate\\Filesystem\\FilesystemServiceProvider";s:4:"this";N;s:4:"self";s:32:"00000000000008080000000000000000";}}',
+                }";s:5:"scope";s:47:"Illuminate\\Filesystem\\FilesystemServiceProvider";s:4:"this";N;s:4:"self";s:32:"000000000000080e0000000000000000";}}',
         'as' => 'storage.local.upload',
       ),
       'fallback' => false,

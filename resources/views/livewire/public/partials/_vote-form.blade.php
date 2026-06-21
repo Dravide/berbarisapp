@@ -1,78 +1,80 @@
 {{-- Vote Form Header --}}
-<div style="background: linear-gradient(135deg, var(--event-primary, #0072FF), var(--event-accent, #00D4AA)); padding: 16px 20px;">
-    <h5 style="margin: 0; color: #fff; font-weight: 600; font-size: 16px;">
-        <i class="fa fa-heart" style="margin-right: 6px;"></i>Form Voting
+<div class="bg-gradient-to-r from-primary to-tertiary text-white px-5 py-4 border-b border-outline-variant/30">
+    <h5 class="font-display text-sm font-bold text-white inline-flex items-center gap-1.5 mb-0">
+        <i class="ti ti-heart-filled"></i>
+        Formulir Dukungan Voting
     </h5>
 </div>
 
 {{-- Form Body --}}
-<div style="padding: 20px;" x-data>
-    <form wire:submit.prevent="submitVote">
-        {{-- Vote Count --}}
-        <div style="margin-bottom: 18px;">
-            <label style="font-weight: 600; display: block; margin-bottom: 6px; font-size: 14px;">Jumlah Vote</label>
-            <div style="display: flex;">
-                <button type="button" x-on:click="$wire.voteCount = Math.max(1, Number($wire.voteCount) - 1)" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 10px 0 0 10px; width: 48px; height: 48px; cursor: pointer; font-size: 20px; color: var(--event-primary, #0072FF); display: flex; align-items: center; justify-content: center;">−</button>
-                <input type="number" x-model="$wire.voteCount" style="border: 1px solid #e5e7eb; border-left: none; border-right: none; text-align: center; font-weight: 700; font-size: 18px; width: 100%; padding: 10px; outline: none; height: 48px;" min="1">
-                <button type="button" x-on:click="$wire.voteCount = Number($wire.voteCount) + 1" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 0 10px 10px 0; width: 48px; height: 48px; cursor: pointer; font-size: 20px; color: var(--event-primary, #0072FF); display: flex; align-items: center; justify-content: center;">+</button>
+<div class="p-5 font-sans" x-data>
+    <form wire:submit.prevent="submitVote" class="flex flex-col gap-4">
+        {{-- Vote Count Counter --}}
+        <div>
+            <label class="text-xs font-bold text-deep-slate block mb-1.5 uppercase tracking-wider">Jumlah Vote</label>
+            <div class="flex max-w-[160px] border border-outline-variant/60 rounded-lg overflow-hidden h-11 bg-surface">
+                <button type="button" x-on:click="$wire.voteCount = Math.max(1, Number($wire.voteCount || 0) - 1)" class="w-12 flex items-center justify-center font-bold text-lg text-primary hover:bg-primary/5 border-r border-outline-variant/60 transition cursor-pointer select-none">−</button>
+                <input type="number" x-model="$wire.voteCount" class="flex-1 text-center font-bold text-sm text-deep-slate border-none outline-none h-full w-full bg-transparent px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" min="1">
+                <button type="button" x-on:click="$wire.voteCount = Number($wire.voteCount || 0) + 1" class="w-12 flex items-center justify-center font-bold text-lg text-primary hover:bg-primary/5 border-l border-outline-variant/60 transition cursor-pointer select-none">+</button>
             </div>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 8px;">
-                <button type="button" x-on:click="$wire.voteCount = 10" style="background: rgba(0,114,255,0.06); border: 1px solid rgba(0,114,255,0.15); border-radius: 8px; padding: 6px; cursor: pointer; color: var(--event-primary, #0072FF); font-weight: 700; font-size: 13px;">10</button>
-                <button type="button" x-on:click="$wire.voteCount = 50" style="background: rgba(0,114,255,0.06); border: 1px solid rgba(0,114,255,0.15); border-radius: 8px; padding: 6px; cursor: pointer; color: var(--event-primary, #0072FF); font-weight: 700; font-size: 13px;">50</button>
-                <button type="button" x-on:click="$wire.voteCount = 100" style="background: rgba(0,114,255,0.06); border: 1px solid rgba(0,114,255,0.15); border-radius: 8px; padding: 6px; cursor: pointer; color: var(--event-primary, #0072FF); font-weight: 700; font-size: 13px;">100</button>
-                <button type="button" x-on:click="$wire.voteCount = 500" style="background: rgba(0,114,255,0.06); border: 1px solid rgba(0,114,255,0.15); border-radius: 8px; padding: 6px; cursor: pointer; color: var(--event-primary, #0072FF); font-weight: 700; font-size: 13px;">500</button>
+
+            {{-- Quick select buttons --}}
+            <div class="grid grid-cols-4 gap-1.5 mt-2.5">
+                <button type="button" x-on:click="$wire.voteCount = 10" class="chip py-1.5 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">10</button>
+                <button type="button" x-on:click="$wire.voteCount = 50" class="chip py-1.5 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">50</button>
+                <button type="button" x-on:click="$wire.voteCount = 100" class="chip py-1.5 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">100</button>
+                <button type="button" x-on:click="$wire.voteCount = 500" class="chip py-1.5 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">500</button>
             </div>
-            @error('voteCount') <span style="color: #ef4444; font-size: 13px;">{{ $message }}</span> @enderror
+            @error('voteCount') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
         </div>
 
         {{-- Name --}}
-        <div style="margin-bottom: 14px;">
-            <label style="font-weight: 600; display: block; margin-bottom: 4px; font-size: 14px;">Nama Lengkap</label>
-            <input type="text" wire:model="voterName" placeholder="Contoh: Budi Santoso" style="width: 100%; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; font-size: 15px; outline: none; min-height: 48px;">
-            @error('voterName') <span style="color: #ef4444; font-size: 13px;">{{ $message }}</span> @enderror
+        <div>
+            <label class="text-xs font-bold text-deep-slate block mb-1.5 uppercase tracking-wider">Nama Lengkap</label>
+            <input type="text" wire:model="voterName" placeholder="Contoh: Budi Santoso" class="field-input w-full">
+            @error('voterName') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
         </div>
 
         {{-- Email --}}
-        <div style="margin-bottom: 18px;">
-            <label style="font-weight: 600; display: block; margin-bottom: 4px; font-size: 14px;">Email (Untuk Bukti)</label>
-            <input type="email" wire:model="voterEmail" placeholder="email@contoh.com" style="width: 100%; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; font-size: 15px; outline: none; min-height: 48px;">
-            @error('voterEmail') <span style="color: #ef4444; font-size: 13px;">{{ $message }}</span> @enderror
+        <div>
+            <label class="text-xs font-bold text-deep-slate block mb-1.5 uppercase tracking-wider">Email (Untuk Bukti Transaksi)</label>
+            <input type="email" wire:model="voterEmail" placeholder="email@contoh.com" class="field-input w-full">
+            @error('voterEmail') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
         </div>
 
-        {{-- Summary --}}
-        <div style="background: #f8fafc; border-radius: 12px; padding: 14px; margin-bottom: 18px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-                <span style="color: #6b7280; font-size: 14px;">Harga per Vote</span>
-                <span style="font-weight: 600; font-size: 14px;">Rp {{ number_format($eventner->vote_price ?? 1000, 0, ',', '.') }}</span>
+        {{-- Price Summary --}}
+        <div class="bg-surface-container-low border border-outline-variant/40 rounded-xl p-3.5 mt-2">
+            <div class="flex justify-between items-center text-xs font-semibold text-on-surface-variant mb-1.5">
+                <span>Harga per Vote</span>
+                <span>Rp {{ number_format($eventner->vote_price ?? 1000, 0, ',', '.') }}</span>
             </div>
-            <div style="border-top: 1px solid #e5e7eb; padding-top: 6px; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: 700; font-size: 15px;">Total Bayar</span>
-                <span style="font-weight: 800; color: var(--event-primary, #0072FF); font-size: 20px;" x-text="'Rp ' + (Number($wire.voteCount || 0) * {{ $eventner->vote_price ?? 1000 }}).toLocaleString('id-ID')">Rp {{ number_format((int)$voteCount * ($eventner->vote_price ?? 1000), 0, ',', '.') }}</span>
+            <div class="border-t border-outline-variant/30 pt-1.5 flex justify-between items-center">
+                <span class="text-xs font-bold text-deep-slate">Total Pembayaran</span>
+                <span class="text-base font-extrabold text-primary" x-text="'Rp ' + (Number($wire.voteCount || 0) * {{ $eventner->vote_price ?? 1000 }}).toLocaleString('id-ID')">Rp {{ number_format((int)$voteCount * ($eventner->vote_price ?? 1000), 0, ',', '.') }}</span>
             </div>
         </div>
 
-        {{-- Submit --}}
+        {{-- Submit button --}}
         <button type="submit"
-            class="zubuz-default-btn"
-            style="width: 100%; height: 50px; font-size: 16px; {{ !$selectedRegistrationId ? 'opacity: 0.5; cursor: not-allowed;' : '' }}"
+            class="btn-primary py-3.5 px-6 font-bold text-sm w-full text-center inline-flex justify-center cursor-pointer shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             {{ !$selectedRegistrationId ? 'disabled' : '' }}
             wire:loading.attr="disabled">
             <span wire:loading.remove>Lanjutkan Ke Pembayaran</span>
-            <span wire:loading>
-                <span style="display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top: 2px solid #fff; border-radius: 50%; animation: spin 0.6s linear infinite;"></span>
+            <span wire:loading class="inline-flex items-center gap-2">
+                <span class="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                 Memproses...
             </span>
         </button>
 
         @if(!$selectedRegistrationId)
-        <p style="text-align: center; color: #ef4444; font-size: 13px; margin-top: 8px;">
-            <i class="fa fa-exclamation-circle"></i> Pilih kontingen terlebih dahulu
-        </p>
+            <div class="p-2.5 rounded-lg bg-red-500/5 border border-red-500/10 text-red-500 text-center text-xs font-semibold leading-normal">
+                <i class="ti ti-alert-circle"></i> Silakan pilih kontingen/sekolah terlebih dahulu
+            </div>
         @endif
 
-        <div style="text-align: center; margin-top: 14px;">
-            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" height="20" alt="QRIS" style="opacity: 0.7;">
-            <p style="color: #9ca3af; font-size: 11px; margin-top: 4px;">Pembayaran aman via QRIS GoPay</p>
+        <div class="text-center mt-3 border-t border-outline-variant/30 pt-3">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a2/Logo_QRIS.svg" class="h-5 opacity-60 mx-auto" alt="QRIS">
+            <p class="text-[10px] text-on-surface-variant font-medium mt-1">Pembayaran aman dengan QRIS GoPay</p>
         </div>
     </form>
 </div>

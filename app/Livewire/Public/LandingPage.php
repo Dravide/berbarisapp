@@ -29,8 +29,8 @@ class LandingPage extends Component
             : null;
 
         // Load sections order & active state
-        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', '["hero","features","about","eventners","cta"]'), true);
-        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', '{"hero":true,"features":true,"about":true,"eventners":true,"cta":true}'), true);
+        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', '["hero","features","about","eventners","ticket","vote","cta"]'), true);
+        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', '{"hero":true,"features":true,"about":true,"eventners":true,"ticket":true,"vote":true,"cta":true}'), true);
 
         // Load each section's content
         foreach ($this->sectionsOrder as $type) {
@@ -54,10 +54,23 @@ class LandingPage extends Component
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $ticketEvents = Eventner::where('ticket_active', true)
+            ->whereNotNull('ticket_price')
+            ->orderBy('created_at', 'desc')
+            ->limit(8)
+            ->get();
+
+        $voteEvents = Eventner::where('vote_active', true)
+            ->orderBy('created_at', 'desc')
+            ->limit(8)
+            ->get();
+
         return view('livewire.public.landing-page', [
             'eventners' => $eventners,
+            'ticketEvents' => $ticketEvents,
+            'voteEvents' => $voteEvents,
         ])
-            ->layout('layouts.zubaz', [
+            ->layout('layouts.landing', [
                 'logoPath' => $this->logoPath,
                 'favicon' => $this->favicon,
             ])

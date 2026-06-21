@@ -1,185 +1,191 @@
-# UI/UX Guide - Zubuz Design System
-
-This comprehensive guide documents all UI components, styles, and patterns available in the **Berbaris App** project, based on the **Zubuz** template.
-
+---
+name: Vibrant Momentum
+colors:
+  surface: '#f8f9fa'
+  surface-dim: '#d9dadb'
+  surface-bright: '#f8f9fa'
+  surface-container-lowest: '#ffffff'
+  surface-container-low: '#f3f4f5'
+  surface-container: '#edeeef'
+  surface-container-high: '#e7e8e9'
+  surface-container-highest: '#e1e3e4'
+  on-surface: '#191c1d'
+  on-surface-variant: '#424656'
+  inverse-surface: '#2e3132'
+  inverse-on-surface: '#f0f1f2'
+  outline: '#737687'
+  outline-variant: '#c2c6d9'
+  surface-tint: '#0053da'
+  primary: '#004cca'
+  on-primary: '#ffffff'
+  primary-container: '#0062ff'
+  on-primary-container: '#f3f3ff'
+  inverse-primary: '#b4c5ff'
+  secondary: '#446900'
+  on-secondary: '#ffffff'
+  secondary-container: '#b2f746'
+  on-secondary-container: '#496f00'
+  tertiary: '#006168'
+  on-tertiary: '#ffffff'
+  tertiary-container: '#007c84'
+  on-tertiary-container: '#d7fbff'
+  error: '#ba1a1a'
+  on-error: '#ffffff'
+  error-container: '#ffdad6'
+  on-error-container: '#93000a'
+  primary-fixed: '#dbe1ff'
+  primary-fixed-dim: '#b4c5ff'
+  on-primary-fixed: '#00174b'
+  on-primary-fixed-variant: '#003ea8'
+  secondary-fixed: '#b2f746'
+  secondary-fixed-dim: '#98da27'
+  on-secondary-fixed: '#121f00'
+  on-secondary-fixed-variant: '#334f00'
+  tertiary-fixed: '#7df4ff'
+  tertiary-fixed-dim: '#00dbe9'
+  on-tertiary-fixed: '#002022'
+  on-tertiary-fixed-variant: '#004f54'
+  background: '#f8f9fa'
+  on-background: '#191c1d'
+  surface-variant: '#e1e3e4'
+  electric-blue: '#0062FF'
+  neon-lime: '#A3E635'
+  cyber-cyan: '#00F0FF'
+  deep-slate: '#111827'
+  cool-gray: '#4B5563'
+typography:
+  display-lg:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 48px
+    fontWeight: '800'
+    lineHeight: 56px
+    letterSpacing: -0.02em
+  display-lg-mobile:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 32px
+    fontWeight: '800'
+    lineHeight: 40px
+    letterSpacing: -0.02em
+  headline-lg:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 32px
+    fontWeight: '700'
+    lineHeight: 40px
+    letterSpacing: -0.01em
+  headline-md:
+    fontFamily: Plus Jakarta Sans
+    fontSize: 24px
+    fontWeight: '700'
+    lineHeight: 32px
+  body-lg:
+    fontFamily: Inter
+    fontSize: 18px
+    fontWeight: '400'
+    lineHeight: 28px
+  body-md:
+    fontFamily: Inter
+    fontSize: 16px
+    fontWeight: '400'
+    lineHeight: 24px
+  label-lg:
+    fontFamily: Inter
+    fontSize: 14px
+    fontWeight: '600'
+    lineHeight: 20px
+    letterSpacing: 0.05em
+  label-md:
+    fontFamily: Inter
+    fontSize: 12px
+    fontWeight: '500'
+    lineHeight: 16px
+rounded:
+  sm: 0.25rem
+  DEFAULT: 0.5rem
+  md: 0.75rem
+  lg: 1rem
+  xl: 1.5rem
+  full: 9999px
+spacing:
+  base: 8px
+  grid-margin: 24px
+  grid-gutter: 24px
+  section-gap-lg: 120px
+  section-gap-md: 80px
+  container-max: 1280px
 ---
 
-## 1. Core Design Tokens
+## Brand & Style
 
-### Color Palette
-Defined in `assets/css/app.css`.
+The design system is engineered to transform a standard event management utility into a high-energy, tech-forward platform. The brand personality is **Professional**, **Efficient**, and **Futuristic**, yet maintains a **Welcoming** atmosphere for organizers and participants alike.
 
-| Token | Variable | Value | Usage |
-| :--- | :--- | :--- | :--- |
-| **Primary** | `--primary-color` | `#2332DD` | Main brand color, primary actions. |
-| **Secondary** | `--secondary-color` | `#ABFB4F` | Accent color, neon highlights. |
-| **Heading** | `--heading-color` | `#000000` | All titles and headings. |
-| **Body** | `--body-color` | `#0C0C0C` | Standard text content. |
-| **Dark BG** | `--dark-bg` | `#000000` | Dark section backgrounds. |
-| **Light BG** | `--light-bg` | `#FAFAFA` | Default light section backgrounds. |
-| **Gray** | `--gray-color` | `#414141` | Borders, meta text, muted labels. |
+We employ a **Modern Corporate** style infused with **Glassmorphism** and **High-Contrast** accents. This approach uses clean, structured layouts to signal reliability, while leveraging vibrant "Electric Blue" and "Neon Lime" to inject energy and excitement—mimicking the thrill of live competitions. The interface relies on generous whitespace and layered depth to ensure clarity even when managing complex data like live scoreboards and participant registrations.
 
-### Typography
-- **Primary Font:** `DM Sans`, sans-serif (Weights: 400, 500, 600, 700)
-- **Usage:** Applied globally to both Headings and Body content for a unified modern look.
+## Colors
 
----
+The palette revolves around **Electric Blue**, a high-saturation primary that commands attention and establishes authority. We pair this with **Neon Lime** as a functional accent for primary actions (CTAs) and success states, creating a "tech-native" look.
 
-## 2. Navigation & Layout
+- **Primary (Electric Blue):** Used for branding, main navigation, and primary interactive states.
+- **Secondary (Neon Lime):** Reserved for high-priority conversion points and "Live" status indicators.
+- **Tertiary (Cyber Cyan):** Utilized for secondary accents, data visualization, and interactive links.
+- **Surface & Neutrals:** We use a hierarchy of off-whites (`#F8F9FA`) and sophisticated grays to create "tonal layering." Deep Slate (`#111827`) is used for high-contrast typography to ensure maximum readability.
 
-### Site Header
-- **Menu Center:** `.site-header--menu-center`
-- **Sticky Menu:** `#sticky-menu` (requires `assets/js/menu/menu.js`)
-- **Transparent/Dark Mode Header:** Add `.dark-bg.white-menu` classes.
+## Typography
 
-### Breadcrumbs
-```html
-<div class="zubuz-breadcrumb">
-  <div class="container">
-    <h1 class="post__title">Page Title</h1>
-    <nav class="breadcrumbs">
-      <ul>
-        <li><a href="index.html">Home</a></li>
-        <li aria-current="page"> Current Page</li>
-      </ul>
-    </nav>
-  </div>
-</div>
-```
+The typography system uses **Plus Jakarta Sans** for headings to provide a modern, friendly, and slightly geometric personality. High-level displays utilize tight letter spacing and heavy weights to create a "bold" editorial feel.
 
-### Footer
-Standard multi-column footer with subscription form.
-```html
-<footer class="zubuz-footer-section main-footer">
-  <div class="container">
-    <div class="zubuz-footer-top">...</div>
-    <div class="zubuz-footer-bottom">
-      <div class="zubuz-social-icon">...</div>
-      <div class="zubuz-copywright">...</div>
-    </div>
-  </div>
-</footer>
-```
+**Inter** is the workhorse for body copy and UI labels, chosen for its exceptional legibility in data-dense environments like registration lists and scoreboards. 
 
----
+**Usage Notes:**
+- Use `display-lg` for hero sections with tight leading.
+- Use `label-lg` for section overlines or small categories, always in uppercase with increased tracking for a technical, organized appearance.
 
-## 3. Interaction Components
+## Layout & Spacing
+
+This design system utilizes an **8px linear grid** to ensure mathematical harmony across all components. 
+
+### Grid Philosophy
+- **Desktop:** 12-column fluid grid with a 1280px max-width. Large 24px gutters provide breathing room for complex data cards.
+- **Tablet:** 8-column grid with 20px margins.
+- **Mobile:** 4-column grid with 16px margins.
+
+### Rhythm
+We prioritize "Generous Whitespace." Sections should be separated by significant vertical gaps (`section-gap-lg`) to prevent cognitive overload. Within components, use consistent padding (e.g., 24px or 32px for cards) to create a sense of premium quality and organization.
+
+## Elevation & Depth
+
+We convey depth through a combination of **Tonal Layers** and **Ambient Shadows**.
+
+1.  **Background (Level 0):** The primary canvas uses our neutral off-white.
+2.  **Surface (Level 1):** White cards with a very soft, diffused shadow (15% opacity Electric Blue tint) to make them feel like they are floating just above the canvas.
+3.  **Glassmorphism (Overlays):** For navigation bars and modal headers, use a backdrop blur (12px) with a semi-transparent white fill (80% opacity). This maintains context while providing a futuristic, high-fidelity look.
+4.  **Interactive States:** On hover, elements should lift slightly (increase shadow spread) and may incorporate a subtle gradient stroke to emphasize the "Electric" brand nature.
+
+## Shapes
+
+The shape language is defined by **Soft Geometricism**. We avoid sharp corners to keep the platform welcoming, but use structured radii to maintain a professional SaaS feel.
+
+- **Standard Components:** 0.5rem (8px) for buttons and inputs.
+- **Large Containers (Cards):** 1rem (16px) to 1.5rem (24px) for event cards and feature containers.
+- **Special Elements:** Use pill-shapes (full rounding) for status badges (e.g., "Live", "U15") to distinguish them from interactive buttons.
+
+## Components
 
 ### Buttons
-- **Default:** `.zubuz-default-btn`
-- **Header Variant:** `.zubuz-header-btn`
-- **Login Variant:** `.zubuz-login-btn`
-- **Pricing Variant:** `.zubuz-pricing-btn` (add `.active` for highlighted plan)
+- **Primary:** Neon Lime background with Deep Slate text. Bold weight. This is the "Hero" action.
+- **Secondary:** Electric Blue background with White text.
+- **Ghost:** Electric Blue outline or text-only for less critical actions.
 
-### Accordions (FAQ)
-Uses `assets/js/faq.js`.
-```html
-<div class="zubuz-accordion-wrap" id="zubuz-accordion">
-  <div class="zubuz-accordion-item open">
-    <div class="zubuz-accordion-header">
-      <h3>Question?</h3>
-      <div class="zubuz-active-icon"><svg>...</svg></div>
-    </div>
-    <div class="zubuz-accordion-body"><p>Answer...</p></div>
-  </div>
-</div>
-```
+### Cards
+Cards are the primary vehicle for event data. They must feature:
+- 16px+ corner radius.
+- Subtle 1px border in a slightly darker neutral to define edges on white backgrounds.
+- Intentional grouping: Image at the top, metadata in small uppercase labels, and the title in Plus Jakarta Sans.
 
-### Pricing Tables
-- **Container:** `.zubuz-pricing-four-column`
-- **Card:** `.zubuz-pricing-wrap` (add `.active` for the featured plan)
-- **Feature Comparison Table:** `.zubuz-table-wrap` wrapping a standard `<table>`.
+### Input Fields
+Inputs should be clean with a 1px cool-gray border. On focus, the border transitions to Electric Blue with a soft blue glow (outer shadow).
 
----
+### Status Badges
+Small, high-contrast pills. For example, a "Live Now" badge uses a pulse animation with a Neon Lime dot to signify real-time activity.
 
-## 4. Content Components
-
-### Icon Boxes
-Versatile components for features or contact info.
-- **Center Aligned:** `.zubuz-iconbox-wrap.center`
-- **Left Aligned:** `.zubuz-iconbox-wrap-left`
-- **Variants:** Add `.light` for dark backgrounds, `.data-small` for compact data.
-
-### Testimonials
-```html
-<div class="zubuz-testimonial-wrap">
-  <div class="zubuz-testimonial-rating"><ul><li><img src="star.svg"></li>...</ul></div>
-  <div class="zubuz-testimonial-data"><h3>Review Title</h3><p>"Content"</p></div>
-  <div class="zubuz-testimonial-author">
-    <div class="zubuz-testimonial-author-thumb"><img src="user.png"></div>
-    <div class="zubuz-testimonial-author-data"><span>Name</span><p>Role</p></div>
-  </div>
-</div>
-```
-
-### Blog Cards
-```html
-<div class="zubuz-blog-wrap">
-  <div class="zubuz-blog-thumb">
-    <img src="blog.png">
-    <div class="zubuz-blog-categorie">Category</div>
-  </div>
-  <div class="zubuz-blog-data">
-    <p>Date</p>
-    <h3>Title</h3>
-    <a class="zubuz-blog-btn" href="#"><svg>...</svg></a>
-  </div>
-</div>
-```
-
----
-
-## 5. Forms & Inputs
-
-### Standard Form
-```html
-<div class="zubuz-form-wrap">
-  <form>
-    <div class="zubuz-main-form"><input type="text" placeholder="Name"></div>
-    <div class="zubuz-main-form"><textarea placeholder="Message"></textarea></div>
-    <button id="zubuz-submit-btn" type="submit"><span>Submit</span></button>
-  </form>
-</div>
-```
-
-### Subscribe Form (Footer)
-```html
-<div class="zubuz-subscribe-one">
-  <form>
-    <input type="email" placeholder="Email Address">
-    <button class="zubuz-default-btn zubuz-subscription-btn one" type="submit">
-      <span>Subscribe</span>
-    </button>
-  </form>
-</div>
-```
-
----
-
-## 6. Utilities & Helpers
-
-### Spacing Utilities
-- **Padding:** `.zubuz-section-padding`, `.zubuz-section-padding2` (standard), `.zubuz-section-padding3` (large).
-- **Margin Bottom:** `.rt-mb-24`, `.rt-mb-15`, `.rt-mb-8`.
-
-### Text Utilities
-- **Font Size:** `.f-size-12` to `.f-size-40`
-- **Font Weight:** `.font-bold` (700), `.font-semibold` (600), `.font-medium` (500), `.font-normal` (400).
-- **Line Height:** `.line-height-10` to `.line-height-40`.
-
-### Miscellaneous
-- **Preloader:** `.zubuz-preloader-wrap` (automated via `assets/js/app.js`).
-- **Dividers:** `.zubuz-divider` (subtle horizontal line).
-- **Social Icons:** `.zubuz-social-icon` with `<ul>` and FontAwesome icons.
-
----
-
-## 7. Assets Reference
-
-| Type | Path |
-| :--- | :--- |
-| **Main CSS** | `public/templates/zubaz/assets/css/main.css` |
-| **Base CSS** | `public/templates/zubaz/assets/css/app.min.css` |
-| **Main JS** | `public/templates/zubaz/assets/js/app.js` |
-| **Bootstrap** | `public/templates/zubaz/assets/css/bootstrap.min.css` |
-| **Icons** | FontAwesome 5 & Icomoon |
+### Chips & Tags
+Used for categories (e.g., "Sports", "Academic"). Use a light tint of the Primary color with 60% opacity to keep them subordinate to main CTAs.

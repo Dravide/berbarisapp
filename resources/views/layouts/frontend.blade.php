@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 
 <head>
     <meta charset="UTF-8">
@@ -15,264 +15,207 @@
 
     <meta name="description" content="{{ $eventner?->nama_event ?? get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu') }}">
 
-    {{-- Fonts --}}
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-    {{-- Zubaz CSS --}}
-    <link rel="stylesheet" href="{{ asset('templates/zubaz/assets/css/bootstrap.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('templates/zubaz/assets/css/magnific-popup.css') }}">
-    <link rel="stylesheet" href="{{ asset('templates/zubaz/assets/css/animate.css') }}">
-    <link rel="stylesheet" href="{{ asset('templates/zubaz/assets/css/fontawesome.css') }}">
-    <link rel="stylesheet" href="{{ asset('templates/zubaz/assets/css/main.css') }}">
-    <link rel="stylesheet" href="{{ asset('templates/zubaz/assets/css/app.min.css') }}">
-
-    {{-- DevFocus Light Design System --}}
-    <link rel="stylesheet" href="{{ asset('templates/zubaz/assets/css/devfocus-light.css') }}">
-    {{-- Premium Mobile Event Page --}}
-    <link rel="stylesheet" href="{{ asset('templates/zubaz/assets/css/premium-mobile.css') }}">
+    {{-- Fonts (Plus Jakarta Sans + Inter) --}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
     {{-- Tabler Icons --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 
-    {{-- Tailwind CDN (deferred to avoid render-blocking; TODO: migrate to Vite build for production) --}}
-    <script src="https://cdn.tailwindcss.com" defer></script>
-    <script>
-        tailwindcss.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
-                    colors: {
-                        primary: '#2665fd',
-                        surface: '#ffffff',
-                        'surface-variant': '#f5f6fa',
-                        'on-surface': '#0f172a',
-                    }
-                }
-            }
-        }
-    </script>
+    {{-- CSS Assets (new Design System via landing.css) --}}
+    @vite(['resources/css/landing.css', 'resources/js/app.js'])
 
     <title>{{ $title ?? ($eventner?->nama_event ?? 'BARIS APP') }}</title>
 
     @livewireStyles
-
-    @isset($eventner?->theme_config)
-    <style>
-        :root {
-            --event-primary: {{ $eventner->theme_config['primary_color'] ?? '#2665fd' }};
-            --event-accent: {{ $eventner->theme_config['accent_color'] ?? '#64748b' }};
-        }
-    </style>
-    @endisset
-
-    <style>
-        :root {
-            --body-font: 'Inter', sans-serif;
-            --heading-font: 'Inter', sans-serif;
-        }
-        body, h1, h2, h3, h4, h5, h6, .zubuz-header-section, .zubuz-footer-section, .nav-link-item, .zubuz-default-btn {
-            font-family: 'Inter', sans-serif !important;
-        }
-    </style>
-
-    <style>
-        /* Mobile-first responsive fixes */
-        @media (max-width: 767px) {
-            .zubuz-hero-section h1 { font-size: 28px !important; }
-            .zubuz-hero-section p { font-size: 15px !important; }
-            .zubuz-section-padding2, .zubuz-section-padding3, .zubuz-section-padding4 {
-                padding-top: 40px !important;
-                padding-bottom: 40px !important;
-            }
-            .site-header .brand-logo img { max-height: 32px !important; }
-            .zubuz-default-btn { min-width: auto !important; height: 44px !important; font-size: 14px !important; padding: 10px 16px !important; }
-            .d-flex.flex-wrap.gap-2 { gap: 8px !important; }
-            .d-flex.flex-wrap.gap-3 { gap: 8px !important; }
-        }
-        @media (max-width: 480px) {
-            .zubuz-hero-section h1 { font-size: 24px !important; }
-        }
-    </style>
-
     @stack('styles')
 </head>
 
-<body class="light" style="padding-bottom: env(safe-area-inset-bottom);">
+<body class="bg-surface text-on-surface font-sans antialiased min-h-screen flex flex-col justify-between" style="padding-bottom: env(safe-area-inset-bottom);">
 
-    {{-- Preloader (non-event pages only) --}}
-    @unless($eventner?->slug)
-    <div class="zubuz-preloader-wrap">
-        <div class="zubuz-preloader">
-            <div></div><div></div><div></div><div></div>
-        </div>
-    </div>
-    @endunless
-
-    {{-- Header (non-event pages only) --}}
-    @unless($eventner?->slug)
-    <header class="site-header site-header--menu-center zubuz-header-section" id="sticky-menu">
-        <div class="container">
-            <nav class="navbar site-navbar">
-                <div class="brand-logo">
-                    <a href="{{ url('/') }}">
-                        @isset($eventner?->logo_event)
-                            <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt="{{ $eventner->nama_event }}" style="max-height: 40px; object-fit: contain;">
-                        @else
-                            <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="BARIS APP" class="light-version-logo">
-                        @endisset
-                    </a>
-                </div>
-
-                <div class="menu-block-wrapper">
-                    <div class="menu-overlay"></div>
-                    <nav class="menu-block" id="append-menu-header">
-                        <div class="mobile-menu-head">
-                            <div class="go-back"><i class="fa fa-angle-left"></i></div>
-                            <div class="current-menu-title"></div>
-                            <div class="mobile-menu-close">&times;</div>
-                        </div>
-                        <ul class="site-menu-main">
-                            @isset($eventner?->slug)
-                            <li class="nav-item">
-                                <a href="{{ route('event.detail', $eventner->slug) }}" class="nav-link-item">Info Event</a>
-                            </li>
-                            <li class="nav-item">
-                                <a href="{{ route('event.participant', $eventner->slug) }}" class="nav-link-item">Peserta</a>
-                            </li>
-                            @if($eventner->ticket_active && $eventner->ticket_price)
-                            <li class="nav-item">
-                                <a href="{{ route('event.ticket', $eventner->slug) }}" class="nav-link-item">Tiket</a>
-                            </li>
-                            @endif
-                            <li class="nav-item">
-                                <a href="{{ route('event.vote', $eventner->slug) }}" class="nav-link-item">Vote</a>
-                            </li>
-                            @endisset
-                        </ul>
-                    </nav>
-                </div>
-
-                <div class="header-btn header-btn-l1 ms-auto d-none d-xs-inline-flex">
-                    <div class="zubuz-header-btn-wrap">
-                        <a class="zubuz-login-btn" href="{{ url('/') }}">
-                            <i class="fa fa-arrow-left"></i> Beranda
-                        </a>
+    {{-- Header / Navigation --}}
+    <header class="glass-nav sticky top-0 z-50">
+        <div class="container-landing flex h-16 items-center justify-between">
+            {{-- Brand logo & name --}}
+            <a href="{{ url('/') }}" class="flex items-center gap-2 text-decoration-none">
+                @isset($eventner?->logo_event)
+                    <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt="{{ $eventner->nama_event }}" class="h-9 w-9 rounded-lg object-cover">
+                @else
+                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <i class="ti ti-calendar-event text-xl"></i>
                     </div>
-                    @isset($eventner?->slug)
-                    <a class="zubuz-default-btn zubuz-header-btn" href="{{ route('event.register', $eventner->slug) }}">
-                        <span>Daftar Sekarang</span>
-                    </a>
-                    @endisset
-                </div>
+                @endisset
+                <span class="font-display text-base font-bold text-deep-slate tracking-tight">
+                    {{ $eventner?->nama_event ?? get_setting('site_title', 'BARIS APP') }}
+                </span>
+            </a>
 
-                <div class="mobile-menu-trigger light">
-                    <span></span>
-                </div>
+            {{-- Desktop navigation --}}
+            <nav class="hidden items-center gap-2 md:flex">
+                @isset($eventner?->slug)
+                    <a href="{{ route('event.detail', $eventner->slug) }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.detail') ? 'text-primary bg-primary/5' : '' }}">Info</a>
+                    <a href="{{ route('event.participant', $eventner->slug) }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.participant') ? 'text-primary bg-primary/5' : '' }}">Peserta</a>
+                    @if($eventner->vote_active)
+                        <a href="{{ route('event.vote', $eventner->slug) }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.vote') ? 'text-primary bg-primary/5' : '' }}">Vote</a>
+                    @endif
+                    @if($eventner->ticket_active && $eventner->ticket_price)
+                        <a href="{{ route('event.ticket', $eventner->slug) }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.ticket') ? 'text-primary bg-primary/5' : '' }}">Tiket</a>
+                    @endif
+                @else
+                    <a href="{{ url('/') }}#features" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Fitur</a>
+                    <a href="{{ url('/') }}#eventners" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Event</a>
+                    <a href="{{ url('/') }}#contact" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Kontak</a>
+                @endisset
             </nav>
+
+            {{-- CTA / Action Buttons --}}
+            <div class="flex items-center gap-2">
+                @isset($eventner?->slug)
+                    <a href="{{ route('event.register', $eventner->slug) }}" class="btn-primary py-2 px-4 text-xs font-bold leading-none hidden sm:inline-flex">
+                        Daftar
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="btn-ghost py-2 px-4 text-xs font-bold leading-none hidden sm:inline-flex">Login</a>
+                    <a href="{{ route('login') }}" class="btn-primary py-2 px-4 text-xs font-bold leading-none hidden sm:inline-flex">Mulai Sekarang</a>
+                @endisset
+
+                {{-- Mobile menu toggle button --}}
+                <button id="nav-toggle" class="md:hidden flex h-10 w-10 items-center justify-center rounded-md text-on-surface hover:bg-primary/5" aria-label="Toggle Menu">
+                    <i class="ti ti-menu-2 text-2xl"></i>
+                </button>
+            </div>
+        </div>
+
+        {{-- Mobile menu (hidden by default) --}}
+        <div id="mobile-menu" class="hidden border-t border-outline-variant/50 md:hidden bg-white/95 backdrop-blur-xl">
+            <div class="container-landing flex flex-col gap-1 py-3">
+                @isset($eventner?->slug)
+                    <a href="{{ route('event.detail', $eventner->slug) }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.detail') ? 'text-primary bg-primary/5' : '' }}">Info Event</a>
+                    <a href="{{ route('event.participant', $eventner->slug) }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.participant') ? 'text-primary bg-primary/5' : '' }}">Peserta</a>
+                    @if($eventner->vote_active)
+                        <a href="{{ route('event.vote', $eventner->slug) }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.vote') ? 'text-primary bg-primary/5' : '' }}">Vote</a>
+                    @endif
+                    @if($eventner->ticket_active && $eventner->ticket_price)
+                        <a href="{{ route('event.ticket', $eventner->slug) }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.ticket') ? 'text-primary bg-primary/5' : '' }}">Tiket</a>
+                    @endif
+                    <a href="{{ route('event.register', $eventner->slug) }}" class="btn-primary text-center mt-2 py-2.5">Daftar Sekarang</a>
+                @else
+                    <a href="{{ url('/') }}#features" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5">Fitur</a>
+                    <a href="{{ url('/') }}#eventners" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5">Event</a>
+                    <a href="{{ url('/') }}#contact" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5">Kontak</a>
+                    <a href="{{ route('login') }}" class="btn-ghost text-center mt-2 py-2.5">Login</a>
+                    <a href="{{ route('login') }}" class="btn-primary text-center mt-1 py-2.5">Mulai Sekarang</a>
+                @endisset
+            </div>
         </div>
     </header>
-    @endunless
 
-    {{-- Main Content --}}
-    {{ $slot }}
+    {{-- Main Content Slot --}}
+    <main class="flex-1 w-full">
+        {{ $slot }}
+    </main>
 
-    {{-- Footer (non-event pages only) --}}
-    @unless($eventner?->slug)
-    <footer class="zubuz-footer-section main-footer">
-        <div class="container">
-            <div class="zubuz-footer-top">
-                <div class="row">
-                    <div class="col-xl-4 col-lg-12">
-                        <div class="zubuz-footer-textarea">
-                            <a href="{{ url('/') }}">
-                                @isset($eventner?->logo_event)
-                                    <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt="" style="max-height: 40px; object-fit: contain;">
-                                @else
-                                    <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="">
-                                @endisset
-                            </a>
-                            <p>{{ $eventner?->nama_event ?? get_setting('site_title', 'BARIS APP') }} — {{ $eventner?->deskripsi ? Str::limit(strip_tags($eventner->deskripsi), 120) : 'Platform manajemen event dan kompetisi terpadu.' }}</p>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-4">
-                        <div class="zubuz-footer-menu extar-margin">
-                            <div class="zubuz-footer-title"><p>Navigasi</p></div>
-                            <ul>
-                                @isset($eventner?->slug)
-                                <li><a href="{{ route('event.detail', $eventner->slug) }}">Info Event</a></li>
-                                <li><a href="{{ route('event.participant', $eventner->slug) }}">Daftar Peserta</a></li>
-                                <li><a href="{{ route('event.vote', $eventner->slug) }}">Voting</a></li>
-                                @if($eventner->ticket_active)
-                                <li><a href="{{ route('event.ticket', $eventner->slug) }}">Beli Tiket</a></li>
-                                @endif
-                                @endisset
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-xl-2 col-md-4">
-                        <div class="zubuz-footer-menu">
-                            <div class="zubuz-footer-title"><p>Kontak</p></div>
-                            <ul>
-                                @if($eventner?->link_whatsapp)
-                                <li><a href="{{ Str::startsWith($eventner->link_whatsapp, ['http://', 'https://']) ? $eventner->link_whatsapp : 'https://wa.me/' . preg_replace('/[^0-9]/', '', $eventner->link_whatsapp) }}" target="_blank">WhatsApp</a></li>
-                                @endif
-                                @if($eventner?->link_instagram)
-                                <li><a href="{{ $eventner->link_instagram }}" target="_blank">Instagram</a></li>
-                                @endif
-                                @if($eventner?->link_tiktok)
-                                <li><a href="{{ $eventner->link_tiktok }}" target="_blank">TikTok</a></li>
-                                @endif
-                                @if($eventner?->link_livestreaming)
-                                <li><a href="{{ $eventner->link_livestreaming }}" target="_blank">Live Stream</a></li>
-                                @endif
-                            </ul>
-                        </div>
-                    </div>
-                    <div class="col-xl-3 col-md-4">
-                        <div class="zubuz-footer-menu extar-margin">
-                            <div class="zubuz-footer-title"><p>Penyelenggara</p></div>
-                            <ul>
-                                <li><a href="#">{{ $eventner?->diselenggarakan_oleh ?? '-' }}</a></li>
-                                @if($eventner?->lokasi)
-                                <li><a href="#"><i class="fa fa-map-marker-alt"></i> {{ $eventner->lokasi }}</a></li>
-                                @endif
-                            </ul>
-                        </div>
-                    </div>
+    {{-- Footer section --}}
+    <footer class="bg-deep-slate text-white/80 border-t border-white/5">
+        <div class="container-landing py-12 md:py-16">
+            <div class="grid gap-10 sm:grid-cols-2 md:grid-cols-4">
+                {{-- Brand Column --}}
+                <div class="flex flex-col gap-4">
+                    <a href="{{ url('/') }}" class="flex items-center gap-2 text-decoration-none text-white">
+                        @isset($eventner?->logo_event)
+                            <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt="" class="h-9 w-9 rounded-lg object-cover">
+                        @else
+                            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white">
+                                <i class="ti ti-calendar-event text-xl"></i>
+                            </div>
+                        @endisset
+                        <span class="font-display text-base font-bold tracking-tight text-white">{{ $eventner?->nama_event ?? get_setting('site_title', 'BARIS APP') }}</span>
+                    </a>
+                    <p class="text-sm text-white/60 leading-relaxed">
+                        {{ $eventner?->deskripsi ? Str::limit(strip_tags($eventner->deskripsi), 120) : 'Platform manajemen event dan kompetisi terpadu.' }}
+                    </p>
                 </div>
-            </div>
-            <div class="zubuz-footer-bottom">
-                <div class="zubuz-social-icon order-md-2">
-                    <ul>
+
+                {{-- Navigasi Column --}}
+                <div>
+                    <h4 class="overline !text-white/90 mb-4">Navigasi</h4>
+                    <ul class="space-y-2 text-sm list-none p-0 m-0">
+                        @isset($eventner?->slug)
+                            <li><a href="{{ route('event.detail', $eventner->slug) }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Info Event</a></li>
+                            <li><a href="{{ route('event.participant', $eventner->slug) }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Daftar Peserta</a></li>
+                            <li><a href="{{ route('event.vote', $eventner->slug) }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Voting</a></li>
+                            @if($eventner->ticket_active)
+                                <li><a href="{{ route('event.ticket', $eventner->slug) }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Beli Tiket</a></li>
+                            @endif
+                        @else
+                            <li><a href="{{ url('/') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Beranda</a></li>
+                        @endisset
+                    </ul>
+                </div>
+
+                {{-- Kontak Column --}}
+                <div>
+                    <h4 class="overline !text-white/90 mb-4">Kontak</h4>
+                    <ul class="space-y-2 text-sm list-none p-0 m-0">
+                        @if($eventner?->link_whatsapp)
+                            <li>
+                                <a href="{{ Str::startsWith($eventner->link_whatsapp, ['http://', 'https://']) ? $eventner->link_whatsapp : 'https://wa.me/' . preg_replace('/[^0-9]/', '', $eventner->link_whatsapp) }}" target="_blank" class="text-white/60 hover:text-secondary text-decoration-none transition inline-flex items-center gap-1.5">
+                                    <i class="ti ti-brand-whatsapp text-base"></i> WhatsApp
+                                </a>
+                            </li>
+                        @endif
                         @if($eventner?->link_instagram)
-                        <li><a href="{{ $eventner->link_instagram }}" target="_blank"><i class="fab fa-instagram"></i></a></li>
+                            <li>
+                                <a href="{{ $eventner->link_instagram }}" target="_blank" class="text-white/60 hover:text-secondary text-decoration-none transition inline-flex items-center gap-1.5">
+                                    <i class="ti ti-brand-instagram text-base"></i> Instagram
+                                </a>
+                            </li>
                         @endif
                         @if($eventner?->link_tiktok)
-                        <li><a href="{{ $eventner->link_tiktok }}" target="_blank"><i class="fab fa-tiktok"></i></a></li>
+                            <li>
+                                <a href="{{ $eventner->link_tiktok }}" target="_blank" class="text-white/60 hover:text-secondary text-decoration-none transition inline-flex items-center gap-1.5">
+                                    <i class="ti ti-brand-tiktok text-base"></i> TikTok
+                                </a>
+                            </li>
                         @endif
-                        @if($eventner?->link_whatsapp)
-                        <li><a href="{{ $eventner->link_whatsapp }}" target="_blank"><i class="fab fa-whatsapp"></i></a></li>
+                        @if($eventner?->link_livestreaming)
+                            <li>
+                                <a href="{{ $eventner->link_livestreaming }}" target="_blank" class="text-white/60 hover:text-secondary text-decoration-none transition inline-flex items-center gap-1.5">
+                                    <i class="ti ti-brand-youtube text-base"></i> Live Stream
+                                </a>
+                            </li>
                         @endif
                     </ul>
                 </div>
-                <div class="zubuz-copywright">
-                    <p>&copy; {{ date('Y') }} {{ $eventner?->diselenggarakan_oleh ?? get_setting('site_title', 'BARIS APP') }}. Powered by <a href="{{ url('/') }}" style="color: #0072FF;">BARIS APP</a></p>
+
+                {{-- Penyelenggara Column --}}
+                <div>
+                    <h4 class="overline !text-white/90 mb-4">Penyelenggara</h4>
+                    <ul class="space-y-2 text-sm list-none p-0 m-0 text-white/60">
+                        <li class="font-medium text-white/80">{{ $eventner?->diselenggarakan_oleh ?? '-' }}</li>
+                        @if($eventner?->lokasi)
+                            <li class="inline-flex items-center gap-1.5 leading-normal">
+                                <i class="ti ti-map-pin text-primary text-base shrink-0"></i> {{ $eventner->lokasi }}
+                            </li>
+                        @endif
+                    </ul>
                 </div>
+            </div>
+
+            {{-- Bottom copyright --}}
+            <div class="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row">
+                <p class="m-0">&copy; {{ date('Y') }} {{ $eventner?->diselenggarakan_oleh ?? get_setting('site_title', 'BARIS APP') }}. Hak cipta dilindungi.</p>
+                <p class="m-0">Powered by <a href="{{ url('/') }}" class="text-secondary hover:text-secondary hover:underline text-decoration-none transition font-semibold">BARIS APP</a></p>
             </div>
         </div>
     </footer>
-    @endunless
 
     {{-- Scripts --}}
-    <script src="{{ asset('templates/zubaz/assets/js/jquery-3.6.0.min.js') }}"></script>
-    <script src="{{ asset('templates/zubaz/assets/js/bootstrap.bundle.min.js') }}"></script>
-    <script src="{{ asset('templates/zubaz/assets/js/menu/menu.js') }}"></script>
-    <script src="{{ asset('templates/zubaz/assets/js/wow.min.js') }}"></script>
-    <script src="{{ asset('templates/zubaz/assets/js/faq.js') }}"></script>
-    <script src="{{ asset('templates/zubaz/assets/js/app.js') }}"></script>
-
     <script>
-        new WOW().init();
+        document.getElementById('nav-toggle')?.addEventListener('click', () => {
+            document.getElementById('mobile-menu')?.classList.toggle('hidden');
+        });
     </script>
 
     @livewireScripts

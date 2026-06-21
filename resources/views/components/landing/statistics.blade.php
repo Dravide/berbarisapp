@@ -9,20 +9,20 @@
 @endphp
 
 @if(count($items) > 0)
-<div class="section dark-bg zubuz-section-padding4">
-    <div class="container">
-        <div class="row">
+<section id="statistics" class="bg-deep-slate py-16 md:py-20">
+    <div class="container-landing">
+        <div class="grid grid-cols-2 gap-8 lg:grid-cols-4">
             @foreach($items as $index => $item)
-            <div class="col-lg-3 col-md-6">
-                <div class="zubuz-counter-wrap text-center text-white">
-                    <h2 class="text-white" style="font-size: 48px; font-weight: 700;">
-                        {{ $item['value'] ?? 0 }}{{ $item['suffix'] ?? '' }}
-                    </h2>
-                    <p class="text-white-50">{{ $item['label'] ?? '' }}</p>
+            <div class="text-center">
+                <div class="font-display text-4xl font-extrabold tracking-tight text-secondary md:text-5xl">
+                    {{ $item['value'] ?? 0 }}{{ $item['suffix'] ?? '' }}
+                </div>
+                <div class="mt-2 text-xs uppercase tracking-[0.15em] text-white/60 sm:text-sm">
+                    {{ $item['label'] ?? '' }}
                 </div>
             </div>
             @endforeach
         </div>
     </div>
-</div>
+</section>
 @endif

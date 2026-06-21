@@ -5,43 +5,45 @@
 @endphp
 
 @if(count($items) > 0)
-<div class="section zubuz-section-padding2 bg-light" id="testimonials">
-    <div class="container">
-        <div class="zubuz-section-title center">
-            <h2>{{ $title }}</h2>
+<section id="testimonials" class="section-pad bg-surface-container-low">
+    <div class="container-landing">
+        <div class="mx-auto max-w-2xl text-center">
+            <span class="overline justify-center">Testimoni</span>
+            <h2 class="mt-4 text-3xl font-bold md:text-4xl">{{ $title }}</h2>
         </div>
-        <div class="row">
+
+        <div class="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2">
             @foreach($items as $index => $item)
-            <div class="col-lg-6">
-                <div class="zubuz-testimonial-wrap">
-                    <div class="zubuz-testimonial-rating">
-                        <ul>
-                            @for($r = 0; $r < ($item['rating'] ?? 5); $r++)
-                            <li><img src="{{ asset('templates/zubaz/assets/images/icon/star-green.svg') }}" alt=""></li>
-                            @endfor
-                        </ul>
+            <div class="surface-card surface-card-hover flex flex-col p-7" wire:key="testi-{{ $index }}">
+                <div class="mb-4 flex items-center gap-1 text-secondary">
+                    @for($r = 0; $r < ($item['rating'] ?? 5); $r++)
+                        <i class="ti ti-star-filled"></i>
+                    @endfor
+                </div>
+
+                <p class="flex-1 text-base leading-relaxed text-on-surface-variant">
+                    <i class="ti ti-quote text-2xl text-primary/30"></i>
+                    {{ $item['text'] ?? '' }}
+                </p>
+
+                <div class="mt-6 flex items-center gap-3 border-t border-outline-variant/50 pt-5">
+                    <div class="flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-primary/10">
+                        @if(!empty($item['avatar']))
+                            <img src="{{ Storage::url($item['avatar']) }}" alt="{{ $item['name'] ?? '' }}" class="h-full w-full object-cover">
+                        @else
+                            <span class="font-display text-sm font-bold text-primary">
+                                {{ strtoupper(substr($item['name'] ?? '?', 0, 1)) }}
+                            </span>
+                        @endif
                     </div>
-                    <div class="zubuz-testimonial-data">
-                        <h3>{{ $item['title'] ?? $item['name'] ?? '' }}</h3>
-                        <p>"{{ $item['text'] ?? '' }}"</p>
-                    </div>
-                    <div class="zubuz-testimonial-author">
-                        <div class="zubuz-testimonial-author-thumb">
-                            @if(!empty($item['avatar']))
-                                <img src="{{ Storage::url($item['avatar']) }}" alt="{{ $item['name'] ?? '' }}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover;">
-                            @else
-                                <img src="{{ asset('templates/zubaz/assets/images/v1/t_user' . (($index % 4) + 1) . '.png') }}" alt="">
-                            @endif
-                        </div>
-                        <div class="zubuz-testimonial-author-data">
-                            <span>{{ $item['name'] ?? '' }}</span>
-                            <p>{{ $item['role'] ?? '' }}</p>
-                        </div>
+                    <div>
+                        <div class="font-semibold text-deep-slate">{{ $item['name'] ?? '' }}</div>
+                        <div class="text-xs text-on-surface-variant">{{ $item['role'] ?? '' }}</div>
                     </div>
                 </div>
             </div>
             @endforeach
         </div>
     </div>
-</div>
+</section>
 @endif

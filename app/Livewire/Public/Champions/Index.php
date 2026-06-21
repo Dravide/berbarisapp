@@ -55,6 +55,20 @@ class Index extends Component
             ->get()
             ->groupBy('registration_id');
 
+        // Ambil data deduction
+        $allDeductions = \App\Models\ScoreDeduction::where('eventner_id', $this->eventner->id)
+            ->get()
+            ->groupBy('registration_id');
+
+        // Ambil semua kriteria beserta bobotnya untuk menghitung other_total
+        $allCriteriaWeightMap = \App\Models\AssessmentCriteria::whereIn(
+            'assessment_sub_category_id',
+            \App\Models\AssessmentSubCategory::whereIn(
+                'assessment_category_id',
+                \App\Models\AssessmentCategory::where('eventner_id', $this->eventner->id)->pluck('id')
+            )->pluck('id')
+        )->pluck('weight', 'id')->toArray();
+
         foreach ($championCategories as $champion) {
             $criteriaMap = [];
             foreach ($champion->assessmentSubCategories as $sub) {
@@ -63,29 +77,64 @@ class Index extends Component
                 }
             }
 
+            // Kriteria untuk subkategori pertama (prioritas tie-break)
+            $firstSub = $champion->assessmentSubCategories->first();
+            $firstSubCriteriaIds = $firstSub ? $firstSub->criterias->pluck('id')->toArray() : [];
+
             $participantScores = [];
             foreach ($participants as $participant) {
                 $scores = $allScores->get($participant->id, collect());
+
                 $total = 0;
+                $firstSubTotal = 0;
+                $otherTotal = 0;
+
                 foreach ($scores as $score) {
-                    if (isset($criteriaMap[$score->assessment_criteria_id])) {
-                        $weight = $criteriaMap[$score->assessment_criteria_id];
-                        $total += (int) $score->score * $weight;
+                    $weight = $criteriaMap[$score->assessment_criteria_id] ?? null;
+                    if ($weight !== null) {
+                        $scoreVal = (int) $score->score * $weight;
+                        $total += $scoreVal;
+
+                        if (in_array($score->assessment_criteria_id, $firstSubCriteriaIds)) {
+                            $firstSubTotal += $scoreVal;
+                        }
+                    } else {
+                        $weightOther = $allCriteriaWeightMap[$score->assessment_criteria_id] ?? 1;
+                        $otherTotal += (int) $score->score * $weightOther;
                     }
                 }
+
+                $deductions = $allDeductions->get($participant->id, collect());
+                $totalDeduction = $deductions->sum('amount');
+
                 $participantScores[] = [
                     'participant' => $participant,
                     'total' => $total,
+                    'first_sub_total' => $firstSubTotal,
+                    'other_total' => $otherTotal,
+                    'deduction' => $totalDeduction,
+                    'urutan_tampil' => $participant->urutan_tampil ?? 999999,
                 ];
             }
 
-            usort($participantScores, fn($a, $b) => $b['total'] <=> $a['total']);
-
-            $rank = 1;
-            foreach ($participantScores as $index => &$ps) {
-                if ($index > 0 && $ps['total'] < $participantScores[$index - 1]['total']) {
-                    $rank = $index + 1;
+            usort($participantScores, function ($a, $b) {
+                if ($b['total'] !== $a['total']) {
+                    return $b['total'] <=> $a['total'];
                 }
+                if ($b['first_sub_total'] !== $a['first_sub_total']) {
+                    return $b['first_sub_total'] <=> $a['first_sub_total'];
+                }
+                if ($b['other_total'] !== $a['other_total']) {
+                    return $b['other_total'] <=> $a['other_total'];
+                }
+                if ($a['deduction'] !== $b['deduction']) {
+                    return $a['deduction'] <=> $b['deduction'];
+                }
+                return $a['urutan_tampil'] <=> $b['urutan_tampil'];
+            });
+
+            foreach ($participantScores as $index => &$ps) {
+                $rank = $index + 1;
                 $ps['rank'] = $rank;
                 $ps['title'] = null;
 

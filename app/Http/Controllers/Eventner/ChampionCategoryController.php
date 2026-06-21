@@ -34,6 +34,20 @@ class ChampionCategoryController extends Controller
             abort(404, 'Kategori juara tidak ditemukan.');
         }
 
+        // Ambil data deduction
+        $allDeductions = \App\Models\ScoreDeduction::where('eventner_id', $eventner->id)
+            ->get()
+            ->groupBy('registration_id');
+
+        // Ambil semua kriteria beserta bobotnya untuk menghitung other_total
+        $allCriteriaWeightMap = \App\Models\AssessmentCriteria::whereIn(
+            'assessment_sub_category_id',
+            \App\Models\AssessmentSubCategory::whereIn(
+                'assessment_category_id',
+                \App\Models\AssessmentCategory::where('eventner_id', $eventner->id)->pluck('id')
+            )->pluck('id')
+        )->pluck('weight', 'id')->toArray();
+
         // Get participants
         $participantsQuery = Registration::where('eventner_id', $eventner->id);
         if ($competitionCategoryId) {
@@ -50,39 +64,74 @@ class ChampionCategoryController extends Controller
         // Calculate rankings per champion category
         $rankings = [];
         foreach ($championCategories as $champion) {
-            $criteriaIds = [];
+            $criteriaMap = [];
             foreach ($champion->assessmentSubCategories as $sub) {
                 foreach ($sub->criterias as $crit) {
-                    $criteriaIds[] = $crit->id;
+                    $criteriaMap[$crit->id] = $crit->weight ?? 1;
                 }
             }
+
+            // Kriteria untuk subkategori pertama (prioritas tie-break)
+            $firstSub = $champion->assessmentSubCategories->first();
+            $firstSubCriteriaIds = $firstSub ? $firstSub->criterias->pluck('id')->toArray() : [];
 
             $participantScores = [];
             foreach ($participants as $participant) {
                 $scores = $allScores->get($participant->id, collect());
+
                 $total = 0;
+                $firstSubTotal = 0;
+                $otherTotal = 0;
+
                 foreach ($scores as $score) {
-                    if (in_array($score->assessment_criteria_id, $criteriaIds)) {
-                        $total += (int) $score->score;
+                    $weight = $criteriaMap[$score->assessment_criteria_id] ?? null;
+                    if ($weight !== null) {
+                        $scoreVal = (int) $score->score * $weight;
+                        $total += $scoreVal;
+
+                        if (in_array($score->assessment_criteria_id, $firstSubCriteriaIds)) {
+                            $firstSubTotal += $scoreVal;
+                        }
+                    } else {
+                        $weightOther = $allCriteriaWeightMap[$score->assessment_criteria_id] ?? 1;
+                        $otherTotal += (int) $score->score * $weightOther;
                     }
                 }
+
+                $deductions = $allDeductions->get($participant->id, collect());
+                $totalDeduction = $deductions->sum('amount');
+
                 $participantScores[] = [
                     'participant' => $participant,
                     'total' => $total,
+                    'first_sub_total' => $firstSubTotal,
+                    'other_total' => $otherTotal,
+                    'deduction' => $totalDeduction,
+                    'urutan_tampil' => $participant->urutan_tampil ?? 999999,
                 ];
             }
 
-            usort($participantScores, fn($a, $b) => $b['total'] <=> $a['total']);
+            usort($participantScores, function ($a, $b) {
+                if ($b['total'] !== $a['total']) {
+                    return $b['total'] <=> $a['total'];
+                }
+                if ($b['first_sub_total'] !== $a['first_sub_total']) {
+                    return $b['first_sub_total'] <=> $a['first_sub_total'];
+                }
+                if ($b['other_total'] !== $a['other_total']) {
+                    return $b['other_total'] <=> $a['other_total'];
+                }
+                if ($a['deduction'] !== $b['deduction']) {
+                    return $a['deduction'] <=> $b['deduction'];
+                }
+                return $a['urutan_tampil'] <=> $b['urutan_tampil'];
+            });
 
             // Limit by quantity
             $participantScores = array_slice($participantScores, 0, $champion->quantity);
 
-            $rank = 1;
             foreach ($participantScores as $index => &$ps) {
-                if ($index > 0 && $ps['total'] < $participantScores[$index - 1]['total']) {
-                    $rank = $index + 1;
-                }
-                $ps['rank'] = $rank;
+                $ps['rank'] = $index + 1;
             }
             unset($ps);
 
