@@ -212,85 +212,88 @@
 
                         {{-- ========== VOTE LEADERBOARD PODIUM (Juara 1-3) ========== --}}
                         @if($top3->isNotEmpty())
-                            <div class="surface-card p-6 mb-8 border border-outline-variant/50 bg-white">
-                                <span class="overline text-center justify-center mb-6">Pimpinan Klasemen</span>
+                            @php
+                                $rank1 = $top3->values()->get(0);
+                                $rank2 = $top3->values()->get(1);
+                                $rank3 = $top3->values()->get(2);
+                            @endphp
+                            <div class="surface-card mb-8 border border-outline-variant/50 bg-white overflow-hidden">
+                                <span class="overline text-center justify-center pt-6 pb-4">Pimpinan Klasemen</span>
 
-                                <div class="flex items-end justify-center gap-2 md:gap-4 max-w-lg mx-auto pt-6 pb-2">
-                                    {{-- Juara 2 (Silver) --}}
-                                    @if($top3->count() >= 2)
-                                        @php $reg2 = $top3->values()->get(1); @endphp
-                                        <div wire:click="selectTeam({{ $reg2->id }})" class="flex-1 flex flex-col items-center cursor-pointer group text-center min-w-0">
-                                            <div class="relative mb-3 shrink-0">
-                                                @if($reg2->logo_sekolah)
-                                                    <img src="{{ asset('storage/' . $reg2->logo_sekolah) }}" alt="" class="h-12 w-12 md:h-14 md:w-14 rounded-full object-cover border-4 border-slate-300 shadow-md transition group-hover:scale-105 {{ $selectedRegistrationId == $reg2->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
-                                                @else
-                                                    <div class="flex h-12 w-12 md:h-14 md:w-14 items-center justify-center rounded-full bg-primary/5 text-primary border-4 border-slate-300 shadow-md {{ $selectedRegistrationId == $reg2->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
-                                                        <i class="ti ti-school text-xl"></i>
-                                                    </div>
-                                                @endif
-                                                <span class="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-slate-400 text-white border-2 border-white flex items-center justify-center text-[10px] font-bold shadow-sm">2</span>
-                                            </div>
-                                            <div class="w-full mb-1">
-                                                <h4 class="text-xs font-bold text-deep-slate truncate group-hover:text-primary transition px-1">{{ $reg2->nama_sekolah }}</h4>
-                                            </div>
-                                            <div class="h-24 w-full bg-gradient-to-t from-slate-200 via-slate-100 to-white/50 border border-slate-300/70 border-b-0 rounded-t-xl flex flex-col items-center justify-center gap-1 shadow-inner">
-                                                <span class="inline-flex items-center gap-0.5 rounded-full bg-slate-400/10 px-2 py-0.5 text-[10px] font-bold text-slate-700">
-                                                    <i class="ti ti-heart-filled text-slate-500"></i> {{ number_format($reg2->total_votes ?? 0, 0, ',', '.') }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    @endif
+                                <div class="flex items-end justify-center gap-3 sm:gap-6 max-w-lg mx-auto px-6 pb-4">
 
-                                    {{-- Juara 1 (Gold) --}}
-                                    @if($top3->count() >= 1)
-                                        @php $reg1 = $top3->values()->get(0); @endphp
-                                        <div wire:click="selectTeam({{ $reg1->id }})" class="flex-1 flex flex-col items-center cursor-pointer group text-center min-w-0 z-10">
-                                            <div class="relative mb-3 shrink-0">
-                                                <i class="ti ti-crown text-2xl text-amber-500 absolute -top-6 left-1/2 -translate-x-1/2 animate-bounce"></i>
-                                                @if($reg1->logo_sekolah)
-                                                    <img src="{{ asset('storage/' . $reg1->logo_sekolah) }}" alt="" class="h-16 w-16 md:h-20 md:w-20 rounded-full object-cover border-4 border-yellow-400 shadow-lg transition group-hover:scale-105 {{ $selectedRegistrationId == $reg1->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
+                                    {{-- 2nd Place --}}
+                                    <div class="flex flex-col items-center flex-1 max-w-[140px]">
+                                        @if($rank2)
+                                            <div wire:click="selectTeam({{ $rank2->id }})" class="flex flex-col items-center cursor-pointer group w-full">
+                                                @if($rank2->logo_sekolah)
+                                                    <img src="{{ asset('storage/' . $rank2->logo_sekolah) }}" alt="" class="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover border-2 border-slate-300 shadow-md mb-2 transition group-hover:scale-105 {{ $selectedRegistrationId == $rank2->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
                                                 @else
-                                                    <div class="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-full bg-primary/5 text-primary border-4 border-yellow-400 shadow-lg {{ $selectedRegistrationId == $reg1->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
+                                                    <div class="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-slate-100 text-slate-500 border-2 border-slate-300 shadow-md mb-2 {{ $selectedRegistrationId == $rank2->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
                                                         <i class="ti ti-school text-2xl"></i>
                                                     </div>
                                                 @endif
-                                                <span class="absolute -bottom-1 -right-1 h-6 w-6 rounded-full bg-yellow-400 text-white border-2 border-white flex items-center justify-center text-xs font-bold shadow-sm">1</span>
+                                                <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank2->nama_sekolah }}</h4>
+                                                <span class="font-display font-extrabold text-primary text-sm mb-1">{{ number_format($rank2->total_votes ?? 0, 0, ',', '.') }}</span>
+                                                <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vote</span>
+                                                <div class="w-full bg-gradient-to-t from-slate-200 to-slate-100 border border-slate-200/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 80px;">
+                                                    <span class="font-display text-3xl font-extrabold text-slate-400">2</span>
+                                                </div>
                                             </div>
-                                            <div class="w-full mb-1">
-                                                <h4 class="text-sm font-extrabold text-deep-slate truncate group-hover:text-primary transition px-1">{{ $reg1->nama_sekolah }}</h4>
-                                            </div>
-                                            <div class="h-32 w-full bg-gradient-to-t from-yellow-200 via-yellow-100 to-white/50 border border-yellow-300/70 border-b-0 rounded-t-xl flex flex-col items-center justify-center gap-1 shadow-sm">
-                                                <span class="inline-flex items-center gap-0.5 rounded-full bg-yellow-400/20 px-2.5 py-1 text-[11px] font-bold text-amber-700">
-                                                    <i class="ti ti-heart-filled text-amber-500"></i> {{ number_format($reg1->total_votes ?? 0, 0, ',', '.') }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    @endif
+                                        @else
+                                            <div class="w-full bg-slate-50 border border-slate-200/50 rounded-t-xl" style="height: 80px;"></div>
+                                        @endif
+                                    </div>
 
-                                    {{-- Juara 3 (Bronze) --}}
-                                    @if($top3->count() >= 3)
-                                        @php $reg3 = $top3->values()->get(2); @endphp
-                                        <div wire:click="selectTeam({{ $reg3->id }})" class="flex-1 flex flex-col items-center cursor-pointer group text-center min-w-0">
-                                            <div class="relative mb-3 shrink-0">
-                                                @if($reg3->logo_sekolah)
-                                                    <img src="{{ asset('storage/' . $reg3->logo_sekolah) }}" alt="" class="h-11 w-11 md:h-13 md:w-13 rounded-full object-cover border-4 border-amber-500 shadow-md transition group-hover:scale-105 {{ $selectedRegistrationId == $reg3->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
+                                    {{-- 1st Place --}}
+                                    <div class="flex flex-col items-center flex-1 max-w-[160px]">
+                                        @if($rank1)
+                                            <div wire:click="selectTeam({{ $rank1->id }})" class="flex flex-col items-center cursor-pointer group w-full">
+                                                <div class="relative mb-2">
+                                                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                                                        <i class="ti ti-crown-filled text-amber-400 text-2xl drop-shadow-sm"></i>
+                                                    </div>
+                                                    @if($rank1->logo_sekolah)
+                                                        <img src="{{ asset('storage/' . $rank1->logo_sekolah) }}" alt="" class="h-18 w-18 sm:h-20 sm:w-20 rounded-full object-cover border-3 border-amber-400 shadow-lg ring-4 ring-amber-400/20 transition group-hover:scale-105 {{ $selectedRegistrationId == $rank1->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
+                                                    @else
+                                                        <div class="flex h-18 w-18 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-amber-50 text-amber-500 border-3 border-amber-400 shadow-lg ring-4 ring-amber-400/20 {{ $selectedRegistrationId == $rank1->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
+                                                            <i class="ti ti-school text-3xl"></i>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank1->nama_sekolah }}</h4>
+                                                <span class="font-display font-extrabold text-primary text-base mb-1">{{ number_format($rank1->total_votes ?? 0, 0, ',', '.') }}</span>
+                                                <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vote</span>
+                                                <div class="w-full bg-gradient-to-t from-amber-300 to-amber-200 border border-amber-300/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 110px;">
+                                                    <span class="font-display text-4xl font-extrabold text-amber-500/80">1</span>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    {{-- 3rd Place --}}
+                                    <div class="flex flex-col items-center flex-1 max-w-[140px]">
+                                        @if($rank3)
+                                            <div wire:click="selectTeam({{ $rank3->id }})" class="flex flex-col items-center cursor-pointer group w-full">
+                                                @if($rank3->logo_sekolah)
+                                                    <img src="{{ asset('storage/' . $rank3->logo_sekolah) }}" alt="" class="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover border-2 border-sky-300 shadow-md mb-2 transition group-hover:scale-105 {{ $selectedRegistrationId == $rank3->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
                                                 @else
-                                                    <div class="flex h-11 w-11 md:h-13 md:w-13 items-center justify-center rounded-full bg-primary/5 text-primary border-4 border-amber-500 shadow-md {{ $selectedRegistrationId == $reg3->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
-                                                        <i class="ti ti-school text-lg"></i>
+                                                    <div class="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-sky-50 text-sky-500 border-2 border-sky-300 shadow-md mb-2 {{ $selectedRegistrationId == $rank3->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
+                                                        <i class="ti ti-school text-2xl"></i>
                                                     </div>
                                                 @endif
-                                                <span class="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-amber-600 text-white border-2 border-white flex items-center justify-center text-[10px] font-bold shadow-sm">3</span>
+                                                <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank3->nama_sekolah }}</h4>
+                                                <span class="font-display font-extrabold text-primary text-sm mb-1">{{ number_format($rank3->total_votes ?? 0, 0, ',', '.') }}</span>
+                                                <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vote</span>
+                                                <div class="w-full bg-gradient-to-t from-sky-200 to-sky-100 border border-sky-200/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 60px;">
+                                                    <span class="font-display text-3xl font-extrabold text-sky-400/80">3</span>
+                                                </div>
                                             </div>
-                                            <div class="w-full mb-1">
-                                                <h4 class="text-xs font-bold text-deep-slate truncate group-hover:text-primary transition px-1">{{ $reg3->nama_sekolah }}</h4>
-                                            </div>
-                                            <div class="h-20 w-full bg-gradient-to-t from-amber-200/60 via-amber-100/40 to-white/50 border border-amber-500/40 border-b-0 rounded-t-xl flex flex-col items-center justify-center gap-1 shadow-inner">
-                                                <span class="inline-flex items-center gap-0.5 rounded-full bg-amber-600/10 px-2 py-0.5 text-[10px] font-bold text-amber-800">
-                                                    <i class="ti ti-heart-filled text-amber-600"></i> {{ number_format($reg3->total_votes ?? 0, 0, ',', '.') }}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    @endif
+                                        @else
+                                            <div class="w-full bg-sky-50 border border-sky-200/50 rounded-t-xl" style="height: 60px;"></div>
+                                        @endif
+                                    </div>
+
                                 </div>
                             </div>
                         @endif
