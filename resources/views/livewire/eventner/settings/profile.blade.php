@@ -333,6 +333,72 @@
                             </div>
                         </div>
 
+                        {{-- ===== LIVESTREAM OVERLAY INFO ===== --}}
+                        <hr class="my-4">
+                        <div class="rounded-3 border border-warning-subtle bg-warning-subtle bg-opacity-10 p-4">
+                            <h6 class="fw-semibold mb-3 text-dark">
+                                <i class="ti ti-video text-danger me-1"></i> 🔴 Livestream Overlay
+                            </h6>
+                            <p class="text-muted small mb-3">
+                                Gunakan URL di bawah sebagai <strong>Browser Source</strong> di OBS Studio / Streamlabs dengan ukuran <code>1920×1080</code>.
+                                Background hijau (<code>#00FF00</code>) adalah chroma key untuk tangkapan kamera.
+                                Halaman akan auto-refresh data vote setiap 10 detik.
+                            </p>
+
+                            @php
+                                use Illuminate\Support\Facades\Auth;
+                                $eventnerObj = Auth::user()->eventner;
+                                $baseOverlayUrl = $eventnerObj ? url('/event/' . $eventnerObj->slug . '/overlay') : '#';
+                            @endphp
+
+                            <div class="table-responsive">
+                                <table class="table table-sm table-borderless align-middle mb-0">
+                                    <thead>
+                                        <tr class="small text-muted">
+                                            <th style="width: 100px;">Mode</th>
+                                            <th>URL</th>
+                                            <th style="width: 80px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php
+                                            $modes = [
+                                                ['mode' => 'full', 'label' => 'Default', 'desc' => 'Greenscreen + Vote + Kegiatan'],
+                                                ['mode' => 'greenscreen', 'label' => 'Greenscreen', 'desc' => 'Chroma key full layar'],
+                                                ['mode' => 'vote', 'label' => 'Vote', 'desc' => 'Leaderboard vote fullscreen'],
+                                                ['mode' => 'kegiatan', 'label' => 'Kegiatan', 'desc' => 'Daftar kategori lomba'],
+                                            ];
+                                        @endphp
+                                        @foreach($modes as $m)
+                                            <tr>
+                                                <td>
+                                                    <span class="badge bg-dark text-white rounded-pill px-2">{{ $m['label'] }}</span>
+                                                </td>
+                                                <td>
+                                                    <code class="text-dark small" style="word-break: break-all;" id="overlay-url-{{ $m['mode'] }}">
+                                                        {{ $baseOverlayUrl }}?mode={{ $m['mode'] }}
+                                                    </code>
+                                                    <div class="text-muted small mt-0">{{ $m['desc'] }}</div>
+                                                </td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                                        onclick="navigator.clipboard.writeText('{{ $baseOverlayUrl }}?mode={{ $m['mode'] }}'); alert('URL berhasil disalin!');">
+                                                        <i class="ti ti-copy fs-4"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="mt-3">
+                                <a href="{{ $baseOverlayUrl }}?mode=full" target="_blank" class="btn btn-sm btn-danger px-3">
+                                    <i class="ti ti-external-link me-1"></i> Buka Halaman Overlay
+                                </a>
+                            </div>
+                        </div>
+
                         <div class="d-flex justify-content-end mt-2">
                             <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" wire:target="save">
                                 <i class="ti ti-device-floppy me-1"></i> Simpan Perubahan

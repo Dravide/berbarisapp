@@ -28,6 +28,9 @@ Route::get('/scoreboard/{scoringCode}/category/{competitionCategoryId}', App\Liv
 Route::get('/scoreboard/{scoringCode}/champion/{championCategoryId}', App\Livewire\Public\Scoreboard\Index::class)->name('public.scoreboard.champion');
 Route::get('/champions/{scoringCode}', App\Livewire\Public\Champions\Index::class)->name('public.champions');
 
+// Livestream Overlay
+Route::get('/event/{slug}/overlay', App\Livewire\Public\LivestreamOverlay::class)->name('event.overlay');
+
 // Legal & Support Pages
 Route::get('/privacy', App\Livewire\Public\PrivacyPolicy::class)->name('privacy');
 Route::get('/terms', App\Livewire\Public\TermsConditions::class)->name('terms');
