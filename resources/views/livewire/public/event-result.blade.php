@@ -75,6 +75,13 @@
     {{-- ========== CHAMPION RANKINGS ========== --}}
     <div class="container-landing py-8">
         @forelse($allRankings as $group)
+            @php
+                $top3 = collect($group['participants'])->where('rank', '<=', 3)->values();
+                $rest = collect($group['participants'])->where('rank', '>', 3)->values();
+                $rank1 = $top3->firstWhere('rank', 1);
+                $rank2 = $top3->firstWhere('rank', 2);
+                $rank3 = $top3->firstWhere('rank', 3);
+            @endphp
             <div class="surface-card mb-6 overflow-hidden">
                 {{-- Champion Category Header --}}
                 <div class="flex items-center justify-between bg-surface-container px-6 py-4 border-b border-outline-variant/40">
@@ -87,66 +94,135 @@
                     @endif
                 </div>
 
-                {{-- Rank Title Legend --}}
-                @if($group['rankTitles']->count() > 0)
-                    <div class="px-6 pt-4">
-                        <div class="flex flex-wrap gap-2">
-                            @foreach($group['rankTitles'] as $rt)
-                                <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 text-xs font-bold text-amber-700">
-                                    <i class="ti ti-medal"></i> {{ $rt->title }}
-                                    <span class="text-amber-500/60 font-medium">(Rank {{ $rt->rank_start }}-{{ $rt->rank_end }})</span>
-                                </span>
-                            @endforeach
+                {{-- ===== PODIUM TOP 3 ===== --}}
+                @if($top3->count() > 0)
+                    <div class="px-6 pt-8 pb-4">
+                        <div class="flex items-end justify-center gap-3 sm:gap-6 max-w-lg mx-auto">
+
+                            {{-- 2nd Place --}}
+                            <div class="flex flex-col items-center flex-1 max-w-[140px]">
+                                @if($rank2)
+                                    @if($rank2['participant']->logo_sekolah)
+                                        <img src="{{ asset('storage/' . $rank2['participant']->logo_sekolah) }}" alt="" class="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover border-2 border-slate-300 shadow-md mb-2">
+                                    @else
+                                        <div class="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-slate-100 text-slate-500 border-2 border-slate-300 shadow-md mb-2">
+                                            <i class="ti ti-school text-2xl"></i>
+                                        </div>
+                                    @endif
+                                    <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2">{{ $rank2['participant']->nama_sekolah }}</h4>
+                                    @if($rank2['title'])
+                                        <span class="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 mb-1.5">
+                                            <i class="ti ti-award"></i> {{ $rank2['title'] }}
+                                        </span>
+                                    @endif
+                                    <span class="font-display font-extrabold text-primary text-sm">{{ number_format($rank2['total'], 0) }}</span>
+                                    <div class="w-full bg-gradient-to-t from-slate-200 to-slate-100 border border-slate-200/80 rounded-t-xl mt-3 flex items-center justify-center" style="height: 80px;">
+                                        <span class="font-display text-3xl font-extrabold text-slate-400">2</span>
+                                    </div>
+                                @else
+                                    <div class="w-full bg-slate-50 border border-slate-200/50 rounded-t-xl" style="height: 80px;"></div>
+                                @endif
+                            </div>
+
+                            {{-- 1st Place --}}
+                            <div class="flex flex-col items-center flex-1 max-w-[160px]">
+                                @if($rank1)
+                                    <div class="relative mb-2">
+                                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                                            <i class="ti ti-crown-filled text-amber-400 text-2xl drop-shadow-sm"></i>
+                                        </div>
+                                        @if($rank1['participant']->logo_sekolah)
+                                            <img src="{{ asset('storage/' . $rank1['participant']->logo_sekolah) }}" alt="" class="h-18 w-18 sm:h-20 sm:w-20 rounded-full object-cover border-3 border-amber-400 shadow-lg ring-4 ring-amber-400/20">
+                                        @else
+                                            <div class="flex h-18 w-18 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-amber-50 text-amber-500 border-3 border-amber-400 shadow-lg ring-4 ring-amber-400/20">
+                                                <i class="ti ti-school text-3xl"></i>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2">{{ $rank1['participant']->nama_sekolah }}</h4>
+                                    @if($rank1['title'])
+                                        <span class="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 mb-1.5">
+                                            <i class="ti ti-award"></i> {{ $rank1['title'] }}
+                                        </span>
+                                    @endif
+                                    <span class="font-display font-extrabold text-primary text-base">{{ number_format($rank1['total'], 0) }}</span>
+                                    <div class="w-full bg-gradient-to-t from-amber-300 to-amber-200 border border-amber-300/80 rounded-t-xl mt-3 flex items-center justify-center" style="height: 110px;">
+                                        <span class="font-display text-4xl font-extrabold text-amber-500/80">1</span>
+                                    </div>
+                                @endif
+                            </div>
+
+                            {{-- 3rd Place --}}
+                            <div class="flex flex-col items-center flex-1 max-w-[140px]">
+                                @if($rank3)
+                                    @if($rank3['participant']->logo_sekolah)
+                                        <img src="{{ asset('storage/' . $rank3['participant']->logo_sekolah) }}" alt="" class="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover border-2 border-sky-300 shadow-md mb-2">
+                                    @else
+                                        <div class="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-sky-50 text-sky-500 border-2 border-sky-300 shadow-md mb-2">
+                                            <i class="ti ti-school text-2xl"></i>
+                                        </div>
+                                    @endif
+                                    <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2">{{ $rank3['participant']->nama_sekolah }}</h4>
+                                    @if($rank3['title'])
+                                        <span class="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 mb-1.5">
+                                            <i class="ti ti-award"></i> {{ $rank3['title'] }}
+                                        </span>
+                                    @endif
+                                    <span class="font-display font-extrabold text-primary text-sm">{{ number_format($rank3['total'], 0) }}</span>
+                                    <div class="w-full bg-gradient-to-t from-sky-200 to-sky-100 border border-sky-200/80 rounded-t-xl mt-3 flex items-center justify-center" style="height: 60px;">
+                                        <span class="font-display text-3xl font-extrabold text-sky-400/80">3</span>
+                                    </div>
+                                @else
+                                    <div class="w-full bg-sky-50 border border-sky-200/50 rounded-t-xl" style="height: 60px;"></div>
+                                @endif
+                            </div>
+
                         </div>
                     </div>
                 @endif
 
-                {{-- Rankings List --}}
-                <div class="divide-y divide-outline-variant/30">
-                    @foreach($group['participants'] as $ps)
-                        <div class="flex items-center gap-4 px-6 py-4 hover:bg-surface-container-lowest transition duration-150">
-                            {{-- Rank Badge --}}
-                            <div class="shrink-0 w-10 text-center">
-                                @if($ps['rank'] == 1)
-                                    <span class="inline-flex items-center justify-center h-9 w-9 rounded-full bg-amber-500 text-white font-bold text-sm shadow-sm">1</span>
-                                @elseif($ps['rank'] == 2)
-                                    <span class="inline-flex items-center justify-center h-9 w-9 rounded-full bg-slate-400 text-white font-bold text-sm shadow-sm">2</span>
-                                @elseif($ps['rank'] == 3)
-                                    <span class="inline-flex items-center justify-center h-9 w-9 rounded-full bg-sky-500 text-white font-bold text-sm shadow-sm">3</span>
-                                @else
-                                    <span class="inline-flex items-center justify-center h-9 w-9 rounded-full bg-surface-container border border-outline-variant/30 font-bold text-sm text-on-surface-variant">{{ $ps['rank'] }}</span>
-                                @endif
-                            </div>
+                {{-- ===== REMAINING RANKINGS (4+) ===== --}}
+                @if($rest->count() > 0)
+                    <div class="border-t border-outline-variant/30">
+                        <div class="divide-y divide-outline-variant/30">
+                            @foreach($rest as $ps)
+                                <div class="flex items-center gap-4 px-6 py-4 hover:bg-surface-container-lowest transition duration-150">
+                                    {{-- Rank Badge --}}
+                                    <div class="shrink-0 w-10 text-center">
+                                        <span class="inline-flex items-center justify-center h-9 w-9 rounded-full bg-surface-container border border-outline-variant/30 font-bold text-sm text-on-surface-variant">{{ $ps['rank'] }}</span>
+                                    </div>
 
-                            {{-- School Info --}}
-                            @if($ps['participant']->logo_sekolah)
-                                <img src="{{ asset('storage/' . $ps['participant']->logo_sekolah) }}" alt="" class="h-11 w-11 rounded-xl object-cover border border-outline-variant/30 shadow-sm shrink-0">
-                            @else
-                                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/5 text-primary border border-outline-variant/30 shrink-0">
-                                    <i class="ti ti-school text-xl"></i>
-                                </div>
-                            @endif
-
-                            <div class="flex-1 min-w-0">
-                                <h4 class="text-sm font-bold text-deep-slate leading-tight mb-1 inline-flex items-center gap-2 flex-wrap">
-                                    {{ $ps['participant']->nama_sekolah }}
-                                    @if($ps['title'])
-                                        <span class="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 border border-emerald-500/20">
-                                            <i class="ti ti-award"></i> {{ $ps['title'] }}
-                                        </span>
+                                    {{-- School Info --}}
+                                    @if($ps['participant']->logo_sekolah)
+                                        <img src="{{ asset('storage/' . $ps['participant']->logo_sekolah) }}" alt="" class="h-11 w-11 rounded-xl object-cover border border-outline-variant/30 shadow-sm shrink-0">
+                                    @else
+                                        <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/5 text-primary border border-outline-variant/30 shrink-0">
+                                            <i class="ti ti-school text-xl"></i>
+                                        </div>
                                     @endif
-                                </h4>
-                                <span class="text-xs text-on-surface-variant block">NPSN: {{ $ps['participant']->npsn }}</span>
-                            </div>
 
-                            {{-- Score --}}
-                            <div class="shrink-0 text-right">
-                                <span class="font-display font-extrabold text-primary text-lg">{{ number_format($ps['total'], 0) }}</span>
-                                <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">Skor</span>
-                            </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h4 class="text-sm font-bold text-deep-slate leading-tight mb-1 inline-flex items-center gap-2 flex-wrap">
+                                            {{ $ps['participant']->nama_sekolah }}
+                                            @if($ps['title'])
+                                                <span class="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 border border-emerald-500/20">
+                                                    <i class="ti ti-award"></i> {{ $ps['title'] }}
+                                                </span>
+                                            @endif
+                                        </h4>
+                                        <span class="text-xs text-on-surface-variant block">NPSN: {{ $ps['participant']->npsn }}</span>
+                                    </div>
+
+                                    {{-- Score --}}
+                                    <div class="shrink-0 text-right">
+                                        <span class="font-display font-extrabold text-primary text-lg">{{ number_format($ps['total'], 0) }}</span>
+                                        <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">Skor</span>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
-                    @endforeach
-                </div>
+                    </div>
+                @endif
             </div>
         @empty
             <div class="surface-card p-12 text-center">
