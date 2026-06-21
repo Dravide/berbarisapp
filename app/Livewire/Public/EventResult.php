@@ -142,7 +142,8 @@ class EventResult extends Component
 
                 foreach ($champion->rankTitles as $rt) {
                     if ($rt->coversRank($rank)) {
-                        $ps['title'] = $rt->title;
+                        $positionInGroup = $rank - $rt->rank_start + 1;
+                        $ps['title'] = $rt->title . ' ' . $positionInGroup;
                         break;
                     }
                 }
