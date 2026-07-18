@@ -21,8 +21,6 @@ class EventDetail extends Component
         'tab' => ['except' => 'info'],
     ];
 
-    protected $validTabs = ['info', 'participants', 'results', 'vote', 'ticket'];
-
     public function mount($slug)
     {
         $this->eventner = Eventner::with([
@@ -45,23 +43,15 @@ class EventDetail extends Component
 
         $this->registration_status = $this->eventner->registration_status ?? 'open';
 
-        if (!in_array($this->tab, $this->validTabs)) {
+        if (!in_array($this->tab, ['info', 'participants', 'vote'])) {
             $this->tab = 'info';
         }
     }
 
     public function setTab($tab)
     {
-        if (in_array($tab, $this->validTabs)) {
-            $this->tab = $tab;
-        }
+        $this->tab = $tab;
     }
-
-    public function getIsTabActive(string $tab): bool
-    {
-        return $this->tab === $tab;
-    }
-
 
     /**
      * Leaderboard voting: top kontingen per kategori lomba.

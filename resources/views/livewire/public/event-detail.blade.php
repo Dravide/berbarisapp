@@ -44,24 +44,6 @@
                     <h1 class="font-display text-2xl font-extrabold tracking-tight text-deep-slate leading-tight sm:text-3xl">
                         {{ $eventner->nama_event }}
                     </h1>
-                    {{-- Navigation --}}
-                    @php $navTabs = [
-                        ['id'=>'info','icon'=>'info-circle','label'=>'Info'],
-                        ['id'=>'participants','icon'=>'users','label'=>'Peserta'],
-                        ['id'=>'results','icon'=>'trophy','label'=>'Hasil'],
-                        ['id'=>'vote','icon'=>'heart','label'=>'Vote'],
-                        ['id'=>'ticket','icon'=>'ticket','label'=>'Tiket'],
-                    ]; @endphp
-                    <div class="flex flex-wrap items-center gap-1 mt-3">
-                        @foreach($navTabs as $nt)
-                            <button wire:click="setTab('{{ $nt['id'] }}')"
-                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold transition
-                                {{ $tab === $nt['id'] ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface-variant hover:bg-primary/10 hover:text-primary' }}">
-                                <i class="ti ti-{{ $nt['icon'] }} text-sm"></i>
-                                {{ $nt['label'] }}
-                            </button>
-                        @endforeach
-                    </div>
                     <p class="mt-2 text-sm font-semibold text-on-surface-variant">
                         <i class="ti ti-building-skyscraper text-primary me-1"></i> Diselenggarakan oleh: <span class="text-primary font-bold">{{ $eventner->diselenggarakan_oleh }}</span>
                     </p>
@@ -113,9 +95,6 @@
             @endif
         </div>
     </div>
-
-    {{-- ========== TAB: INFO ========== --}}
-    @if($tab === 'info')
 
     {{-- ========== QUICK INFO CARD ========== --}}
     @php
@@ -435,171 +414,6 @@
         @endif
     </div>
 
-    {{-- ========== TAB: PESERTA ========== --}}
-    @if($tab === 'participants')
-    <div class="container-landing py-6">
-        <div class="max-w-4xl mx-auto">
-            @foreach($eventner->competitionCategories as $cat)
-                <div class="surface-card overflow-hidden mb-4">
-                    <div class="bg-surface-container px-6 py-3 border-b border-outline-variant/40">
-                        <h3 class="font-display text-sm font-bold text-deep-slate inline-flex items-center gap-2">
-                            <i class="ti ti-medal text-primary"></i> {{ $cat->full_name }}
-                            <span class="text-xs text-on-surface-variant font-medium">({{ $cat->registrations->count() }} peserta)</span>
-                        </h3>
-                    </div>
-                    @if($cat->registrations->isNotEmpty())
-                    <div class="p-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                        @foreach($cat->registrations as $reg)
-                        <div class="flex items-center gap-3 p-3 rounded-xl border border-outline-variant/30 hover:bg-surface-container transition">
-                            @if($reg->logo_sekolah)
-                                <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" class="h-10 w-10 rounded-lg object-cover shrink-0" alt="{{ $reg->nama_sekolah }}">
-                            @else
-                                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                                    <i class="ti ti-school text-lg"></i>
-                                </div>
-                            @endif
-                            <div class="min-w-0">
-                                <h4 class="text-sm font-bold text-deep-slate leading-tight truncate">{{ $reg->nama_sekolah }}</h4>
-                                <p class="text-xs text-on-surface-variant truncate">{{ $reg->danton_nama ?: $reg->nama_pelatih ?: '-' }}</p>
-                            </div>
-                        </div>
-                        @endforeach
-                    </div>
-                    @else
-                    <div class="p-6 text-center text-sm text-on-surface-variant">Belum ada peserta terdaftar.</div>
-                    @endif
-                </div>
-            @endforeach
-        </div>
-    </div>
-    @endif {{-- /tab-participants --}}
-
-    {{-- ========== TAB: HASIL ========== --}}
-    @if($tab === 'results')
-    <div class="container-landing py-6">
-        <div class="max-w-4xl mx-auto text-center">
-            <div class="surface-card p-12">
-                <div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mx-auto mb-4">
-                    <i class="ti ti-trophy text-3xl"></i>
-                </div>
-                <h3 class="font-display text-lg font-bold text-deep-slate mb-2">Pengumuman Juara</h3>
-                <p class="text-sm text-on-surface-variant mb-6">Hasil kompetisi akan diumumkan setelah perlombaan selesai.</p>
-                <a href="{{ route('public.champions', $eventner->scoring_code) }}" target="_blank" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
-                    <i class="ti ti-external-link"></i> Lihat Pengumuman Juara
-                </a>
-            </div>
-        </div>
-    </div>
-    @endif {{-- /tab-results --}}
-
-    {{-- ========== TAB: VOTE ========== --}}
-    @if($tab === 'vote')
-    <div class="container-landing py-6">
-        <div class="max-w-4xl mx-auto">
-            @if($eventner->vote_active)
-                @if($this->voteLeaderboard->isNotEmpty())
-                    @foreach($this->voteLeaderboard as $lb)
-                        @if($lb['top']->isNotEmpty())
-                        <div class="surface-card overflow-hidden mb-4">
-                            <div class="bg-surface-container px-6 py-3 border-b border-outline-variant/40 flex items-center justify-between">
-                                <h3 class="font-display text-sm font-bold text-deep-slate inline-flex items-center gap-2">
-                                    <i class="ti ti-chart-bar text-primary"></i> {{ $lb['category']->full_name }}
-                                </h3>
-                            </div>
-                            <div class="p-4 grid gap-3">
-                                @foreach($lb['top'] as $idx => $reg)
-                                <div class="flex items-center gap-4 p-3 rounded-xl border {{ $idx == 0 ? 'border-amber-400 bg-amber-50' : ($idx == 1 ? 'border-gray-300 bg-gray-50' : ($idx == 2 ? 'border-orange-300 bg-orange-50' : 'border-outline-variant/30')) }}">
-                                    <div class="flex h-10 w-10 items-center justify-center rounded-full {{ $idx == 0 ? 'bg-amber-400 text-white' : ($idx == 1 ? 'bg-gray-400 text-white' : ($idx == 2 ? 'bg-orange-400 text-white' : 'bg-surface-container text-on-surface-variant')) }} font-extrabold text-sm shrink-0">
-                                        {{ $idx + 1 }}
-                                    </div>
-                                    <div class="flex-1 min-w-0">
-                                        <h4 class="text-sm font-bold text-deep-slate truncate">{{ $reg->nama_sekolah }}</h4>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-sm font-extrabold text-primary">{{ number_format($reg->total_votes ?? 0) }}</span>
-                                        <span class="text-xs text-on-surface-variant block">vote</span>
-                                    </div>
-                                </div>
-                                @endforeach
-                            </div>
-                        </div>
-                        @endif
-                    @endforeach
-                @else
-                <div class="surface-card p-12 text-center">
-                    <div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mx-auto mb-4">
-                        <i class="ti ti-chart-bar text-3xl"></i>
-                    </div>
-                    <h3 class="font-display text-lg font-bold text-deep-slate mb-2">Belum Ada Vote</h3>
-                    <p class="text-sm text-on-surface-variant mb-6">Jadilah yang pertama memberikan dukungan!</p>
-                </div>
-                @endif
-
-                <div class="text-center mt-6">
-                    <a href="{{ route('event.vote', $eventner->slug) }}" class="btn-primary py-3.5 px-8 font-bold text-sm inline-flex items-center gap-2 text-decoration-none shadow-md">
-                        <i class="ti ti-heart text-base"></i> Beli Vote Sekarang
-                    </a>
-                </div>
-            @else
-                <div class="surface-card p-12 text-center">
-                    <div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mx-auto mb-4">
-                        <i class="ti ti-heart-broken text-3xl"></i>
-                    </div>
-                    <h3 class="font-display text-lg font-bold text-deep-slate mb-2">Voting Belum Dibuka</h3>
-                    <p class="text-sm text-on-surface-variant">Fitur voting belum diaktifkan oleh panitia.</p>
-                </div>
-            @endif
-        </div>
-    </div>
-    @endif {{-- /tab-vote --}}
-
-    {{-- ========== TAB: TIKET ========== --}}
-    @if($tab === 'ticket')
-    <div class="container-landing py-6">
-        <div class="max-w-4xl mx-auto">
-            @if($eventner->ticket_active && $eventner->ticket_price)
-            <div class="surface-card overflow-hidden">
-                <div class="bg-primary text-white p-6 text-center">
-                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-white/20 mx-auto mb-3">
-                        <i class="ti ti-ticket text-2xl"></i>
-                    </div>
-                    <h3 class="font-display text-lg font-bold text-white mb-1">Tiket Masuk Online</h3>
-                    <p class="text-sm text-white/80">Dapatkan tiket masuk event dengan mudah dan cepat.</p>
-                </div>
-                <div class="p-6">
-                    <div class="grid gap-4 sm:grid-cols-2 mb-6">
-                        <div class="bg-surface-container rounded-xl p-4 text-center">
-                            <span class="text-xs text-on-surface-variant font-bold uppercase">Harga Tiket</span>
-                            <h4 class="text-xl font-extrabold text-deep-slate mt-1">Rp {{ number_format($eventner->ticket_price, 0, ',', '.') }}</h4>
-                        </div>
-                        <div class="bg-surface-container rounded-xl p-4 text-center">
-                            <span class="text-xs text-on-surface-variant font-bold uppercase">Maks Per Transaksi</span>
-                            <h4 class="text-xl font-extrabold text-deep-slate mt-1">{{ $eventner->ticket_max_per_order ?? 10 }} Tiket</h4>
-                        </div>
-                    </div>
-                    @if($eventner->ticket_description)
-                    <div class="bg-surface-container rounded-xl p-4 mb-6">
-                        <span class="text-xs text-on-surface-variant font-bold uppercase">Keterangan</span>
-                        <p class="text-sm text-on-surface-variant mt-1 mb-0">{{ $eventner->ticket_description }}</p>
-                    </div>
-                    @endif
-                    <a href="{{ route('event.ticket', $eventner->slug) }}" class="btn-primary py-3.5 px-6 font-bold text-sm w-full text-center inline-flex justify-center items-center gap-2 text-decoration-none shadow-md">
-                        <i class="ti ti-ticket text-base"></i> Beli Tiket Sekarang
-                    </a>
-                </div>
-            </div>
-            @else
-            <div class="surface-card p-12 text-center">
-                <div class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mx-auto mb-4">
-                    <i class="ti ti-ticket-off text-3xl"></i>
-                </div>
-                <h3 class="font-display text-lg font-bold text-deep-slate mb-2">Tiket Belum Tersedia</h3>
-                <p class="text-sm text-on-surface-variant">Penjualan tiket online belum dibuka oleh panitia.</p>
-            </div>
-            @endif
-        </div>
-    </div>
-    @endif {{-- /tab-ticket --}}
 
     {{-- ========== FLOATING REGISTER CTA (Fixed Bottom) ========== --}}
     @if(($eventner->registration_status ?? 'open') != 'closed')
