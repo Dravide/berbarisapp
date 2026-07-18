@@ -44,6 +44,24 @@
                     <h1 class="font-display text-2xl font-extrabold tracking-tight text-deep-slate leading-tight sm:text-3xl">
                         {{ $eventner->nama_event }}
                     </h1>
+                    {{-- Navigation --}}
+                    @php $navTabs = [
+                        ['id'=>'info','icon'=>'info-circle','label'=>'Info'],
+                        ['id'=>'participants','icon'=>'users','label'=>'Peserta'],
+                        ['id'=>'results','icon'=>'trophy','label'=>'Hasil'],
+                        ['id'=>'vote','icon'=>'heart','label'=>'Vote'],
+                        ['id'=>'ticket','icon'=>'ticket','label'=>'Tiket'],
+                    ]; @endphp
+                    <div class="flex flex-wrap items-center gap-1 mt-3">
+                        @foreach($navTabs as $nt)
+                            <button wire:click="setTab('{{ $nt['id'] }}')"
+                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold transition
+                                {{ $tab === $nt['id'] ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface-variant hover:bg-primary/10 hover:text-primary' }}">
+                                <i class="ti ti-{{ $nt['icon'] }} text-sm"></i>
+                                {{ $nt['label'] }}
+                            </button>
+                        @endforeach
+                    </div>
                     <p class="mt-2 text-sm font-semibold text-on-surface-variant">
                         <i class="ti ti-building-skyscraper text-primary me-1"></i> Diselenggarakan oleh: <span class="text-primary font-bold">{{ $eventner->diselenggarakan_oleh }}</span>
                     </p>
@@ -96,32 +114,7 @@
         </div>
     </div>
 
-    {{-- ========== TAB NAVIGATION ========== --}}
-    <div class="container-landing pt-6">
-        <div class="surface-card overflow-hidden">
-            <div class="flex overflow-x-auto border-b border-outline-variant/30">
-                @php $navTabs = [
-                    ['id'=>'info','icon'=>'info-circle','label'=>'Info'],
-                    ['id'=>'participants','icon'=>'users','label'=>'Peserta'],
-                    ['id'=>'results','icon'=>'trophy','label'=>'Hasil'],
-                    ['id'=>'vote','icon'=>'heart','label'=>'Vote'],
-                    ['id'=>'ticket','icon'=>'ticket','label'=>'Tiket'],
-                ]; @endphp
-                @foreach($navTabs as $nt)
-                    <button wire:click="setTab('{{ $nt['id'] }}')" wire:key="tab-{{ $nt['id'] }}"
-                        class="flex-1 min-w-[80px] flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-bold border-b-2 transition-all duration-200 whitespace-nowrap
-                        {{ $tab === $nt['id'] ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-on-surface-variant hover:text-deep-slate hover:bg-surface-container' }}">
-                        <i class="ti ti-{{ $nt['icon'] }} text-base"></i>
-                        <span class="hidden sm:inline">{{ $nt['label'] }}</span>
-                    </button>
-                @endforeach
-            </div>
-        </div>
-    </div>
-
-    {{-- ========== TAB CONTENT ========== --}}
-    @if($tab === 'info')
-        {{-- ========== QUICK INFO CARD ========== --}}
+    {{-- ========== QUICK INFO CARD ========== --}}
     @php
         $totalKuota = $eventner->competitionCategories->sum('kuota');
         $totalReg = $eventner->competitionCategories->sum(fn($c) => $c->registrations->count());
