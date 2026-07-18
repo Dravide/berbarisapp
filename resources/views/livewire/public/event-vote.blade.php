@@ -211,7 +211,7 @@
                             <nav class="text-sm font-medium text-on-surface-variant flex items-center gap-1.5">
                                 <span>Kategori</span>
                                 <span class="text-outline-variant">/</span>
-                                <strong class="text-primary font-bold">{{ $selectedCategory->name }}</strong>
+                                <strong class="text-primary font-bold">{{ $selectedCategory?->full_name }}</strong>
                             </nav>
                         </div>
 
