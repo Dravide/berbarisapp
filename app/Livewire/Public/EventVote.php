@@ -272,7 +272,7 @@ class EventVote extends Component
         return view('livewire.public.event-vote', [
             'participants' => $participants,
             'selectedCategory' => $selectedCategory,
-            'categories' => $this->eventner->competitionCategories
+            'categories' => $this->eventner->competitionCategories()->whereNotNull('parent_id')->with('parent')->get()
         ])->title('Vote Peserta - ' . $this->eventner->nama_event)
          ->layoutData(['eventner' => $this->eventner]);
     }
