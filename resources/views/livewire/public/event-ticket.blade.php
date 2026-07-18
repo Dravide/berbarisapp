@@ -326,6 +326,7 @@
                             <div class="mb-4">
                                 <label class="text-sm font-bold text-deep-slate block mb-1.5">Email <span class="text-red-500">*</span></label>
                                 <input type="email" wire:model="buyerEmail" placeholder="contoh@email.com" class="field-input w-full">
+                                <span class="text-[10px] text-on-surface-variant font-medium mt-1 block leading-normal">Bukti tiket (QR Code + kode order) akan dikirim ke email ini setelah pembayaran.</span>
                                 @error('buyerEmail') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                             </div>
 
