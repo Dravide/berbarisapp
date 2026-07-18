@@ -64,7 +64,7 @@ class EventDetail extends Component
     {
         $perCategory = [];
 
-        foreach ($this->eventner->competitionCategories as $cat) {
+        foreach ($this->eventner->competitionCategories->whereNotNull('parent_id') as $cat) {
             $top = $cat->registrations
                 ->sortByDesc('total_votes')
                 ->take(5)

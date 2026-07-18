@@ -13,7 +13,9 @@ class EventParticipant extends Component
 
     public function mount($slug)
     {
-        $this->eventner = Eventner::with(['competitionCategories.registrations' => function ($q) {
+        $this->eventner = Eventner::with(['competitionCategories' => function ($q) {
+            $q->whereNotNull('parent_id');
+        }, 'competitionCategories.registrations' => function ($q) {
             $q->where('status_berkas', '!=', 'dibatalkan')
               ->orderBy('urutan_tampil', 'asc');
         }, 'competitionCategories.registrations.participants'])

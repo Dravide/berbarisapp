@@ -188,7 +188,7 @@ class EventScoring extends Component
         return view('livewire.public.event-scoring', [
             'participants' => $participants,
             'selectedCategory' => $selectedCategory,
-            'categories' => $this->eventner->competitionCategories->loadCount('registrations'),
+            'categories' => $this->eventner->competitionCategories()->whereNotNull('parent_id')->with('parent')->get()->loadCount('registrations'),
             'assessmentCategories' => $assessmentCategories,
         ])->layout($layout)->layoutData(['eventner' => $this->eventner])->title('Input Nilai - ' . $this->eventner->nama_event);
     }

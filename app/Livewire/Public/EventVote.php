@@ -48,7 +48,7 @@ class EventVote extends Component
     public function mount($slug)
     {
         $this->eventner = Eventner::with(['competitionCategories' => function ($q) {
-            $q->withCount('registrations');
+            $q->whereNotNull('parent_id')->withCount('registrations');
         }])->where('slug', $slug)->firstOrFail();
 
         // Cek voting ditutup

@@ -27,8 +27,8 @@ class Settings extends Component
         }
 
         $this->ticket_active = (bool) $this->eventner->ticket_active;
-        $this->ticket_start = $this->eventner->ticket_start?->format('Y-m-d\TH:i') ?? '';
-        $this->ticket_end = $this->eventner->ticket_end?->format('Y-m-d\TH:i') ?? '';
+        $this->ticket_start = $this->eventner->ticket_start ? \Carbon\Carbon::parse($this->eventner->ticket_start)->format('Y-m-d\TH:i') : '';
+        $this->ticket_end = $this->eventner->ticket_end ? \Carbon\Carbon::parse($this->eventner->ticket_end)->format('Y-m-d\TH:i') : '';
         $this->ticket_price = $this->eventner->ticket_price ?? '';
         $this->ticket_description = $this->eventner->ticket_description ?? '';
         $this->ticket_max_per_order = $this->eventner->ticket_max_per_order ?? 10;

@@ -21,7 +21,11 @@ class EventResult extends Component
     {
         $this->eventner = Eventner::where('slug', $slug)->firstOrFail();
 
-        $this->categories = $this->eventner->competitionCategories()->get()->toArray();
+        $this->categories = $this->eventner->competitionCategories()
+            ->whereNotNull('parent_id')
+            ->with('parent')
+            ->get()
+            ->toArray();
 
         if (count($this->categories) > 0) {
             $this->selectedCategoryId = $this->categories[0]['id'];

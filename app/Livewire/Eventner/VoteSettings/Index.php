@@ -23,8 +23,8 @@ class Index extends Component
 
         $this->vote_active = (bool) $eventner->vote_active;
         $this->vote_price = $eventner->vote_price ?? 1000;
-        $this->vote_start = $eventner->vote_start?->format('Y-m-d\TH:i') ?? '';
-        $this->vote_end = $eventner->vote_end?->format('Y-m-d\TH:i') ?? '';
+        $this->vote_start = $eventner->vote_start ? \Carbon\Carbon::parse($eventner->vote_start)->format('Y-m-d\TH:i') : '';
+        $this->vote_end = $eventner->vote_end ? \Carbon\Carbon::parse($eventner->vote_end)->format('Y-m-d\TH:i') : '';
     }
 
     public function save()
