@@ -31,7 +31,11 @@ class Index extends Component
             abort(403, 'Anda belum memiliki data Event terdaftar.');
         }
 
-        $this->categories = $this->eventner->competitionCategories()->get()->toArray();
+        $this->categories = $this->eventner->competitionCategories()
+            ->whereNotNull('parent_id')
+            ->with('parent')
+            ->get()
+            ->toArray();
         $this->drawing_code = $this->eventner->drawing_code ?? '';
 
         if (count($this->categories) > 0) {

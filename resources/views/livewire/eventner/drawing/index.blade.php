@@ -49,20 +49,18 @@
         </div>
     @endif
 
-    {{-- Category Tabs --}}
-    @if(count($categories) > 1)
-    <ul class="nav nav-tabs nav-fill mb-4" role="tablist">
-        @foreach($categories as $cat)
-            <li class="nav-item" role="presentation">
-                <button class="nav-link {{ $activeTab == $cat['id'] ? 'active bg-primary text-white' : '' }}"
-                    wire:click="switchTab({{ $cat['id'] }})"
-                    type="button" role="tab">
-                    <i class="ti ti-layers-intersect me-1"></i> {{ $cat['name'] }}
-                </button>
-            </li>
-        @endforeach
-    </ul>
-    @endif
+    {{-- Kategori Select --}}
+    <div class="mb-4" style="max-width: 380px;">
+        <div class="input-group">
+            <span class="input-group-text bg-primary text-white"><i class="ti ti-category"></i></span>
+            <select class="form-select" wire:model.live="activeTab">
+                @foreach($categories as $cat)
+                    @php $tabLabel = !empty($cat['parent']) ? $cat['parent']['name'] . ' — ' . $cat['name'] : $cat['name']; @endphp
+                    <option value="{{ $cat['id'] }}">{{ $tabLabel }}</option>
+                @endforeach
+            </select>
+        </div>
+    </div>
 
     <div class="row">
         {{-- Results Table --}}
