@@ -34,26 +34,26 @@
                 </button>
             </div>
 
-            <!-- Tabs -->
-            <ul class="nav nav-tabs nav-fill mb-4" role="tablist">
-                @forelse ($categories as $category)
-                    <li class="nav-item" role="presentation">
-                        <button 
-                            class="nav-link {{ $activeTab == $category['id'] ? 'active bg-primary text-white' : '' }}" 
-                            wire:click="switchTab('{{ $category['id'] }}')"
-                            type="button" 
-                            role="tab"
-                        >
+            <!-- Kategori Select -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="input-group" style="max-width: 380px;">
+                    <span class="input-group-text bg-primary text-white"><i class="ti ti-category"></i></span>
+                    <select class="form-select" wire:model.live="activeTab">
+                        @forelse ($categories as $category)
                             @php $tabLabel = !empty($category['parent']) ? $category['parent']['name'] . ' — ' . $category['name'] : $category['name']; @endphp
-                            <i class="ti ti-medal me-2"></i> {{ $tabLabel }}
-                        </button>
-                    </li>
-                @empty
-                    <li class="nav-item">
-                        <span class="nav-link text-muted">Belum ada Kategori Lomba. <a href="{{ route('eventner.competition-categories.index') }}">Tambahkan di sini</a>.</span>
-                    </li>
-                @endforelse
-            </ul>
+                            <option value="{{ $category['id'] }}">{{ $tabLabel }}</option>
+                        @empty
+                            <option value="">Belum ada Kategori Lomba</option>
+                        @endforelse
+                    </select>
+                </div>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-light text-dark d-flex align-items-center px-3">{{ $registrations->count() }} peserta</span>
+                    <button wire:click="openModal(activeTab)" class="btn btn-primary btn-sm">
+                        <i class="ti ti-plus me-1"></i> Tambah
+                    </button>
+                </div>
+            </div>
 
             <!-- Tab Content -->
             <div class="tab-content">
