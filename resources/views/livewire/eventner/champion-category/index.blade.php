@@ -32,14 +32,14 @@
         <div class="card-body p-3">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-3 flex-wrap">
-                    <span class="text-muted fw-semibold small"><i class="ti ti-filter me-1"></i> Kategori Lomba:</span>
-                    @foreach($competitionCategories as $cc)
-                        <button wire:click="selectCompetitionCategory({{ $cc->id }})"
-                            class="btn btn-sm {{ $selectedCompetitionCategoryId == $cc->id ? 'btn-primary' : 'btn-outline-primary' }} px-3">
-                            {{ $cc->full_name }}
-                            <span class="badge {{ $selectedCompetitionCategoryId == $cc->id ? 'bg-white text-primary' : 'bg-primary' }} ms-1">{{ $cc->registrations_count }}</span>
-                        </button>
-                    @endforeach
+                    <div class="input-group" style="max-width: 360px;">
+                        <span class="input-group-text bg-primary text-white"><i class="ti ti-category"></i></span>
+                        <select class="form-select" wire:model.live="selectedCompetitionCategoryId">
+                            @foreach($competitionCategories as $cc)
+                                <option value="{{ $cc->id }}">{{ $cc->full_name }} ({{ $cc->registrations_count }})</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
                 <div class="d-flex gap-2">
                     <a href="{{ route('eventner.champion-categories.pdf', ['competition_category_id' => $selectedCompetitionCategoryId]) }}"
