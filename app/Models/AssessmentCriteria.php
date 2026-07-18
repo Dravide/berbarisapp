@@ -18,6 +18,16 @@ class AssessmentCriteria extends Model
         'weight' => 'decimal:2',
     ];
 
+    public function getScoreOptionsFlatAttribute(): array
+    {
+        return array_map(fn($opt) => is_array($opt) ? ($opt['score'] ?? '') : $opt, $this->score_options ?? []);
+    }
+
+    public function getHasLabelsAttribute(): bool
+    {
+        return collect($this->score_options ?? [])->contains(fn($opt) => is_array($opt) && !empty($opt['label']));
+    }
+
     public function subCategory()
     {
         return $this->belongsTo(AssessmentSubCategory::class, 'assessment_sub_category_id');

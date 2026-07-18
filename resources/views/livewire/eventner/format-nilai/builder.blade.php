@@ -148,28 +148,6 @@
                                                                 </thead>
                                                                 <tbody wire:sort="reorderCriterias">
                                                                     @foreach($subCat->criterias as $crit)
-                                                                        @if($editingCriteriaId == $crit->id)
-                                                                        <tr class="table-warning">
-                                                                            <td>
-                                                                                <input type="text" class="form-control form-control-sm" wire:model="editCriteriaName" wire:keydown.enter="saveEditCriteria" wire:keydown.escape="cancelEditCriteria" placeholder="Nama kriteria">
-                                                                            </td>
-                                                                            <td>
-                                                                                <input type="text" class="form-control form-control-sm" wire:model="editCriteriaScores" wire:keydown.enter="saveEditCriteria" wire:keydown.escape="cancelEditCriteria" placeholder="50,60,70,80,90,100">
-                                                                                @error('editCriteriaScores')
-                                                                                    <span class="text-danger fs-2">{{ $message }}</span>
-                                                                                @enderror
-                                                                            </td>
-                                                                            <td class="text-center">
-                                                                                <input type="number" class="form-control form-control-sm text-center" wire:model="editCriteriaWeight" min="0" step="0.5">
-                                                                            </td>
-                                                                            <td class="text-center">
-                                                                                <div class="d-flex justify-content-center gap-1">
-                                                                                    <button class="btn btn-sm btn-success p-1" wire:click="saveEditCriteria" title="Simpan"><i class="ti ti-check"></i></button>
-                                                                                    <button class="btn btn-sm btn-outline-secondary p-1" wire:click="cancelEditCriteria" title="Batal"><i class="ti ti-x"></i></button>
-                                                                                </div>
-                                                                            </td>
-                                                                        </tr>
-                                                                        @else
                                                                         <tr wire:key="crit-{{ $crit->id }}" wire:sort:item="{{ $crit->id }}">
                                                                             <td class="fw-semibold">
                                                                                 <span class="text-muted cursor-grab me-2" wire:sort:handle title="Seret"><i class="ti ti-grip-vertical"></i></span>
@@ -178,7 +156,8 @@
                                                                             <td>
                                                                                 <div class="d-flex flex-wrap gap-1">
                                                                                     @foreach($crit->score_options as $score)
-                                                                                        <span class="badge bg-primary">{{ $score }}</span>
+                                                                                        @php $val = is_array($score) ? $score['score'] : $score; $lbl = is_array($score) ? ($score['label'] ?? null) : null; @endphp
+                                                                                        <span class="badge bg-primary">{{ $val }}@if($lbl) <small class="opacity-75">({{ $lbl }})</small>@endif</span>
                                                                                     @endforeach
                                                                                 </div>
                                                                             </td>
@@ -191,7 +170,7 @@
                                                                             </td>
                                                                             <td class="text-center">
                                                                                 <div class="d-flex justify-content-center gap-1">
-                                                                                    <button class="btn btn-sm btn-outline-primary p-1" wire:click="startEditCriteria({{ $crit->id }})" title="Edit">
+                                                                                    <button class="btn btn-sm btn-outline-primary p-1" wire:click="openCriteriaModal({{ $subCat->id }}, {{ $crit->id }})" title="Edit Kriteria">
                                                                                         <i class="ti ti-pencil"></i>
                                                                                     </button>
                                                                                     <button class="btn btn-sm btn-outline-danger p-1" wire:click="deleteCriteria({{ $crit->id }})" title="Hapus">
@@ -200,7 +179,6 @@
                                                                                 </div>
                                                                             </td>
                                                                         </tr>
-                                                                        @endif
                                                                     @endforeach
                                                                 </tbody>
                                                             </table>
@@ -209,28 +187,12 @@
                                                         <p class="text-muted fs-3 mb-3"><i>Belum ada kriteria di sub-kategori ini.</i></p>
                                                     @endif
 
-                                                    {{-- Form Tambah Kriteria --}}
-                                                    <div class="bg-light p-3 border border-dashed">
-                                                        <h6 class="fs-3 fw-semibold mb-2">Tambah Kriteria Baru</h6>
-                                                        @if(session()->has("error_{$subCat->id}"))
-                                                            <div class="text-danger fs-2 mb-2"><i class="ti ti-alert-circle"></i> {{ session("error_{$subCat->id}") }}</div>
-                                                        @endif
-                                                        <div class="row align-items-end g-2">
-                                                            <div class="col-md-4">
-                                                                <input type="text" class="form-control form-control-sm" wire:model="newCriteriaNames.{{ $subCat->id }}" placeholder="Nama Kriteria (Cth: Sikap istirahat)">
-                                                            </div>
-                                                            <div class="col-md-4">
-                                                                <input type="text" class="form-control form-control-sm" wire:model="newCriteriaScores.{{ $subCat->id }}" placeholder="Skor dipisah koma (Cth: 50,60,70,80,90,100)">
-                                                            </div>
-                                                            <div class="col-md-2">
-                                                                <input type="number" class="form-control form-control-sm" wire:model="newCriteriaWeights.{{ $subCat->id }}" placeholder="Bobot" min="0" step="0.5" value="1">
-                                                            </div>
-                                                            <div class="col-md-2">
-                                                                <button class="btn btn-sm btn-primary w-100" wire:click="addCriteria({{ $subCat->id }})">
-                                                                    <i class="ti ti-plus me-1"></i>Tambah
-                                                                </button>
-                                                            </div>
-                                                        </div>
+                                                    {{-- Tambah Kriteria — satu tombol buka modal --}}
+                                                    <div class="bg-light p-3 border border-dashed text-center">
+                                                        <button class="btn btn-primary btn-sm" wire:click="openCriteriaModal({{ $subCat->id }})">
+                                                            <i class="ti ti-plus me-1"></i>Tambah Kriteria
+                                                        </button>
+                                                        <small class="d-block text-muted mt-2">Nama, skor, bobot, dan label diatur dalam satu modal.</small>
                                                     </div>
 
                                                 </div>
@@ -449,10 +411,12 @@
                                                                 <td width="60%" class="text-center align-middle">
                                                                     <div class="d-flex flex-wrap justify-content-center gap-2">
                                                                         @foreach($crit->score_options as $score)
+                                                                            @php $sv = is_array($score) ? $score['score'] : $score; $lb = is_array($score) ? ($score['label'] ?? null) : null; @endphp
                                                                             <div class="form-check form-check-inline m-0">
                                                                                 <input class="form-check-input" type="radio" name="preview_radio_{{ $crit->id }}" id="preview_rad_{{ $crit->id }}_{{ $loop->index }}">
-                                                                                <label class="form-check-label px-2 py-1 border" for="preview_rad_{{ $crit->id }}_{{ $loop->index }}" style="min-width: 30px; text-align: center;">
-                                                                                    {{ $score }}
+                                                                                <label class="form-check-label px-2 py-1 border text-center d-flex flex-column align-items-center lh-1" for="preview_rad_{{ $crit->id }}_{{ $loop->index }}" style="min-width: 40px;">
+                                                                                    <span>{{ $sv }}</span>
+                                                                                    @if($lb) <small class="fs-1 opacity-75 mt-0">{{ $lb }}</small> @endif
                                                                                 </label>
                                                                             </div>
                                                                         @endforeach
@@ -587,6 +551,115 @@
         </div>
     </div>
 </div>
+
+<!-- Modal Kriteria (Nama + Bobot + Label Groups) -->
+@if($showCriteriaModal)
+<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,.5); z-index: 1050;">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title text-white fw-semibold">
+                    <i class="ti ti-edit me-2"></i>{{ $criteriaModalTargetId ? 'Edit' : 'Tambah' }} Kriteria
+                </h5>
+                <button type="button" class="btn-close btn-close-white" wire:click="closeCriteriaModal"></button>
+            </div>
+            <div class="modal-body">
+                @if(session()->has('error_criteria_modal'))
+                    <div class="alert alert-danger py-2 fs-3">{{ session('error_criteria_modal') }}</div>
+                @endif
+
+                {{-- Nama & Bobot --}}
+                <div class="row g-3 mb-4">
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold">Nama Kriteria <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" wire:model="criteriaModalName" placeholder="Cth: Sikap Istirahat">
+                        @error('criteriaModalName') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Bobot</label>
+                        <input type="number" class="form-control" wire:model="criteriaModalWeight" min="0" step="0.5" value="1">
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                {{-- Label Groups --}}
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="fw-semibold mb-0"><i class="ti ti-tags text-primary me-1"></i> Kelompok Nilai (Label)</h6>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-sm btn-outline-primary" wire:click="addLabelRow"><i class="ti ti-plus me-1"></i>Baris</button>
+                        <button class="btn btn-sm btn-outline-secondary" wire:click="fillLabelPreset">⚡ Preset</button>
+                    </div>
+                </div>
+                <p class="text-muted fs-3 mb-3">Kelompokkan nilai ke dalam label agar mudah dinilai juri. Kosongkan label untuk nilai biasa.</p>
+
+                <table class="table table-sm align-middle mb-3 border">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="fw-semibold" width="30%">Label</th>
+                            <th class="fw-semibold">Angka Skor</th>
+                            <th class="text-center" width="50px"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($labelGroups as $idx => $group)
+                        <tr>
+                            <td>
+                                <select class="form-select form-select-sm" wire:model="labelGroups.{{ $idx }}.label">
+                                    <option value="">— Tanpa Label —</option>
+                                    <option value="Kurang">Kurang</option>
+                                    <option value="Cukup">Cukup</option>
+                                    <option value="Baik">Baik</option>
+                                    <option value="Sangat Baik">Sangat Baik</option>
+                                    <option value="Memuaskan">Memuaskan</option>
+                                    <option value="Istimewa">Istimewa</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" class="form-control form-control-sm" wire:model="labelGroups.{{ $idx }}.scores" placeholder="Cth: 23, 30 atau rentang 0 – 25">
+                            </td>
+                            <td class="text-center">
+                                @if(count($labelGroups) > 1)
+                                <button class="btn btn-sm btn-outline-danger p-1" wire:click="removeLabelRow({{ $idx }})" title="Hapus"><i class="ti ti-x"></i></button>
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+
+                {{-- Preview --}}
+                @php
+                    $previewScores = [];
+                    foreach($labelGroups as $g) {
+                        $label = trim($g['label'] ?? '');
+                        $scoresRaw = str_replace([' &ndash; ', ' - ', '&ndash;', ';'], ',', $g['scores'] ?? '');
+                        foreach(array_filter(array_map('trim', explode(',', $scoresRaw))) as $s) {
+                            $previewScores[] = $label ? "$s ($label)" : $s;
+                        }
+                    }
+                @endphp
+                @if(!empty($previewScores))
+                <div class="bg-light p-3 rounded border">
+                    <span class="fs-2 fw-semibold text-muted d-block mb-2">Preview:</span>
+                    <div class="d-flex flex-wrap gap-1">
+                        @foreach($previewScores as $ps)
+                            <span class="badge bg-primary px-2 py-1">{{ $ps }}</span>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" wire:click="closeCriteriaModal">Batal</button>
+                <button class="btn btn-primary" wire:click="saveCriteriaModal">
+                    <i class="ti ti-check me-1"></i> {{ $criteriaModalTargetId ? 'Simpan Perubahan' : 'Tambah Kriteria' }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 
 <style>
     .cursor-grab { cursor: grab; }

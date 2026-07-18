@@ -56,7 +56,7 @@ class Dashboard extends Component
             ->sum('total_amount');
 
         $this->totalRegistrations = Registration::where('eventner_id', $eventnerId)->count();
-        $this->totalCategories = $this->eventner->competitionCategories()->count();
+        $this->totalCategories = $this->eventner->competitionCategories()->whereNotNull('parent_id')->count();
         $this->totalJudges = Judge::where('eventner_id', $eventnerId)->count();
 
         // Recent registrations
@@ -72,9 +72,9 @@ class Dashboard extends Component
         // Revenue chart data (last 30 days)
         $this->loadRevenueData();
 
-        // Default to first category for top participants chart
+        // Default to first child category for top participants chart
         if (!$this->selectedChartCategory) {
-            $first = $this->eventner->competitionCategories->first();
+            $first = $this->eventner->competitionCategories()->whereNotNull('parent_id')->first();
             if ($first) {
                 $this->selectedChartCategory = $first->id;
             }
@@ -84,7 +84,7 @@ class Dashboard extends Component
 
     public function loadScoringProgress()
     {
-        $categories = $this->eventner->competitionCategories;
+        $categories = $this->eventner->competitionCategories()->whereNotNull('parent_id')->get();
         $judges = Judge::where('eventner_id', $this->eventner->id)->count();
         $judges = max($judges, 1);
 
@@ -114,7 +114,7 @@ class Dashboard extends Component
             $percentage = round(($scoredParticipants / $totalParticipants) * 100);
 
             $this->scoringProgress[] = [
-                'name' => $category->name,
+                'name' => $category->full_name,
                 'total' => $totalParticipants,
                 'scored' => $scoredParticipants,
                 'percentage' => $percentage,
@@ -194,7 +194,7 @@ class Dashboard extends Component
 
     public function render()
     {
-        $categories = $this->eventner->competitionCategories()->withCount('registrations')->get();
+        $categories = $this->eventner->competitionCategories()->whereNotNull('parent_id')->with('parent')->withCount('registrations')->get();
 
         return view('livewire.eventner.dashboard', [
             'categories' => $categories,

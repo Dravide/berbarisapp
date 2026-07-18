@@ -191,8 +191,23 @@ class Index extends Component
                 ->get()
             : collect();
 
+        // Summary stats across all registrations in the event
+        $allRegs = $eventner
+            ? Registration::with('participants')->where('eventner_id', $eventner->id)->get()
+            : collect();
+
+        $summary = [
+            'total_registrations' => $allRegs->count(),
+            'total_anggota' => $allRegs->sum(fn($r) => $r->participants->count()),
+            'booking' => $allRegs->where('status_berkas', 'booking')->count(),
+            'confirmed' => $allRegs->where('status_berkas', 'confirmed')->count(),
+            'verified' => $allRegs->where('status_berkas', 'Terverifikasi')->count(),
+            'rejected' => $allRegs->where('status_berkas', 'Ditolak')->count(),
+        ];
+
         return view('livewire.eventner.participant.index', [
             'registrations' => $registrations,
+            'summary' => $summary,
         ]);
     }
 }

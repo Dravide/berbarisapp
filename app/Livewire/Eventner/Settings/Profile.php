@@ -37,7 +37,7 @@ class Profile extends Component
     public $surat_tugas_required = true;
     public $kwitansi_required = true;
 
-    public $scoring_code;
+
 
     public $logo;
     public $newLogo;
@@ -77,7 +77,7 @@ class Profile extends Component
         $this->registration_status = $eventner->registration_status ?? 'open';
         $this->surat_tugas_required = (bool)($eventner->surat_tugas_required ?? true);
         $this->kwitansi_required = (bool)($eventner->kwitansi_required ?? true);
-        $this->scoring_code = $eventner->scoring_code;
+
 
         $this->logo = $eventner->logo_event;
         $this->poster = $eventner->poster;
@@ -107,13 +107,28 @@ class Profile extends Component
             'link_tiktok' => 'nullable|url|max:255',
             'link_whatsapp' => 'nullable|string|max:255',
             'link_livestreaming' => 'nullable|url|max:255',
-            'registration_status' => 'required|in:open,booking,closed',
             'surat_tugas_required' => 'required|boolean',
             'kwitansi_required' => 'required|boolean',
-            'scoring_code' => 'nullable|string|max:255',
-            'newLogo' => 'nullable|image|max:2048', 
+
+            'newLogo' => 'nullable|image|max:2048',
             'newPoster' => 'nullable|image|max:3072', // allow up to 3MB for poster
         ]);
+
+        // Auto-compute registration_status from dates
+        $now = now();
+        $tm = $this->technical_meeting ? \Carbon\Carbon::parse($this->technical_meeting) : null;
+        $tglPendaftaran = $this->tanggal_pendaftaran ? \Carbon\Carbon::parse($this->tanggal_pendaftaran) : null;
+        $tglEvent = $this->tanggal ? \Carbon\Carbon::parse($this->tanggal) : null;
+
+        if ($tglPendaftaran && $now->gt($tglPendaftaran)) {
+            $this->registration_status = 'closed';
+        } elseif ($tglEvent && $now->gt($tglEvent)) {
+            $this->registration_status = 'closed';
+        } elseif ($tm && $now->lt($tm)) {
+            $this->registration_status = 'booking';
+        } else {
+            $this->registration_status = 'open';
+        }
 
         $eventner = Eventner::where('user_id', Auth::id())->findOrFail($this->eventnerId);
 
@@ -160,7 +175,7 @@ class Profile extends Component
             'registration_status' => $this->registration_status,
             'surat_tugas_required' => $this->surat_tugas_required,
             'kwitansi_required' => $this->kwitansi_required,
-            'scoring_code' => strip_tags($this->scoring_code),
+
             'logo_event' => $eventner->logo_event,
             'poster' => $eventner->poster,
             'theme_config' => [

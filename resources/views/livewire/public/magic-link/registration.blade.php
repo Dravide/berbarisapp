@@ -484,12 +484,15 @@
                 @endif
 
                 @php
+                    $regStatus = $registration->eventner->registration_status ?? 'open';
                     $beforeTm = $registration->status_berkas === 'booking'
                         && $registration->eventner->technical_meeting
                         && now()->lt($registration->eventner->technical_meeting);
+                    // Form shown when: registration is open, OR (booking mode + TM passed)
+                    $showForm = $regStatus === 'open' || !$beforeTm;
                 @endphp
 
-                @if(!$beforeTm)
+                @if($showForm)
                 <fieldset {{ $isLocked ? 'disabled' : '' }} class="flex flex-col gap-6">
 
                     {{-- Data Pelatih Card --}}
@@ -745,7 +748,7 @@
                                     <i class="ti ti-save"></i> Simpan Draft
                                 </button>
 
-                                @if($registration->status_berkas === 'booking' && (!$registration->eventner->technical_meeting || now()->gte($registration->eventner->technical_meeting)))
+                                @if($registration->status_berkas === 'booking' && ($regStatus === 'open' || !$registration->eventner->technical_meeting || now()->gte($registration->eventner->technical_meeting)))
                                     <button type="button" onclick="confirmAction()" class="btn-primary !bg-emerald-500 hover:!bg-emerald-600 !text-white border-none py-3.5 px-6 font-bold text-sm inline-flex items-center gap-1.5 cursor-pointer shadow-md hover:shadow-lg">
                                         <i class="ti ti-circle-check"></i> Konfirmasi &amp; Kirim
                                     </button>

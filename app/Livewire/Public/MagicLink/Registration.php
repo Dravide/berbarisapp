@@ -108,10 +108,12 @@ class Registration extends Component
 
         if ($reg->status_berkas !== 'booking') return;
 
-        // Check if TM has passed
-        if ($reg->eventner->technical_meeting && now()->lt($reg->eventner->technical_meeting)) {
-            session()->flash('error', 'Konfirmasi hanya bisa dilakukan setelah Technical Meeting (' . \Carbon\Carbon::parse($reg->eventner->technical_meeting)->translatedFormat('d F Y, H:i') . ').');
-            return;
+        // Only require TM check if registration is still in booking mode
+        if (($reg->eventner->registration_status ?? 'open') === 'booking') {
+            if ($reg->eventner->technical_meeting && now()->lt($reg->eventner->technical_meeting)) {
+                session()->flash('error', 'Konfirmasi hanya bisa dilakukan setelah Technical Meeting (' . \Carbon\Carbon::parse($reg->eventner->technical_meeting)->translatedFormat('d F Y, H:i') . ').');
+                return;
+            }
         }
 
         $this->validate([

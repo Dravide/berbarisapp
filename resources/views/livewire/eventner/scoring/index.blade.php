@@ -213,24 +213,62 @@
                                         </h6>
                                         <div class="table-responsive">
                                             <table class="table align-middle mb-0">
+                                                @php
+                                                    // Build unique ordered label groups for this sub-category
+                                                    $headerGroups = [];
+                                                    foreach($subCat->criterias as $c) {
+                                                        foreach($c->score_options as $o) {
+                                                            $sv = is_array($o) ? $o['score'] : $o;
+                                                            $lb = is_array($o) ? ($o['label'] ?? null) : null;
+                                                            $key = $lb ?: $sv;
+                                                            if (!isset($headerGroups[$key])) {
+                                                                $headerGroups[$key] = ['label' => $lb ?: $sv, 'count' => 0];
+                                                            }
+                                                            $headerGroups[$key]['count']++;
+                                                        }
+                                                    }
+                                                    $totalOpts = array_sum(array_column($headerGroups, 'count'));
+                                                @endphp
+                                                <thead>
+                                                    <tr class="table-light">
+                                                        <th class="fw-semibold border-bottom-0" width="20%">Kriteria</th>
+                                                        @foreach($headerGroups as $g)
+                                                            <th class="text-center border-bottom-0 px-1" colspan="{{ $g['count'] }}" width="{{ floor(80 / $totalOpts * $g['count']) }}%">
+                                                                <span class="badge bg-secondary bg-opacity-25 text-dark fw-semibold fs-2 d-inline-block w-100">{{ $g['label'] }}</span>
+                                                            </th>
+                                                        @endforeach
+                                                    </tr>
+                                                </thead>
                                                 <tbody>
                                                     @foreach($subCat->criterias as $criteria)
+                                                        @php
+                                                            // Group options by label for this criteria
+                                                            $critGroups = [];
+                                                            foreach($criteria->score_options as $o) {
+                                                                $sv = is_array($o) ? $o['score'] : $o;
+                                                                $lb = is_array($o) ? ($o['label'] ?? null) : null;
+                                                                $key = $lb ?: $sv;
+                                                                $critGroups[$key][] = ['score' => $sv, 'label' => $lb, 'key' => $key];
+                                                            }
+                                                        @endphp
                                                         <tr class="{{ isset($scores[$criteria->id]) && $scores[$criteria->id] !== '' && $scores[$criteria->id] !== null ? 'table-success' : '' }}">
                                                             <td class="fw-semibold">{{ $criteria->name }}</td>
-                                                            <td class="text-end" style="white-space:nowrap;">
-                                                                <div class="d-flex gap-1 justify-content-end">
-                                                                     @foreach($criteria->score_options as $option)
-                                                                         <button type="button"
-                                                                             @if(!$isFinalized)
-                                                                             wire:click="$set('scores.{{ $criteria->id }}', '{{ $option }}')"
-                                                                             @endif
-                                                                             {{ $isFinalized ? 'disabled' : '' }}
-                                                                             class="btn btn-sm {{ isset($scores[$criteria->id]) && $scores[$criteria->id] == $option ? 'btn-primary' : 'btn-outline-primary' }} px-3 fw-semibold">
-                                                                             {{ $option }}
-                                                                         </button>
-                                                                     @endforeach
-                                                                </div>
-                                                            </td>
+                                                            @foreach($headerGroups as $gKey => $g)
+                                                                <td class="text-center px-1" colspan="{{ $g['count'] }}" style="white-space:nowrap;">
+                                                                    @if(isset($critGroups[$gKey]))
+                                                                        @foreach($critGroups[$gKey] as $opt)
+                                                                            @php $selected = isset($scores[$criteria->id]) && $scores[$criteria->id] == $opt['score']; @endphp
+                                                                            <button type="button"
+                                                                                @if(!$isFinalized) wire:click="$set('scores.{{ $criteria->id }}', '{{ $opt['score'] }}')" @endif
+                                                                                {{ $isFinalized ? 'disabled' : '' }}
+                                                                                class="btn btn-sm {{ $selected ? 'btn-primary' : 'btn-outline-primary' }} px-1 fw-semibold py-1"
+                                                                                style="min-width:32px;">
+                                                                                <span>{{ $opt['score'] }}</span>
+                                                                            </button>
+                                                                        @endforeach
+                                                                    @endif
+                                                                </td>
+                                                            @endforeach
                                                         </tr>
                                                     @endforeach
                                                 </tbody>

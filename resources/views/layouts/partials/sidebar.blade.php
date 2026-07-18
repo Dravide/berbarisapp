@@ -148,6 +148,15 @@
               <span class="hide-menu">Daftar Juri</span>
             </a>
           </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.drawing.*') ? 'active' : '' }}"
+              href="{{ route('eventner.drawing.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-arrows-shuffle"></i>
+              </span>
+              <span class="hide-menu">Drawing / Undian</span>
+            </a>
+          </li>
 
           {{-- ============================================ --}}
           {{-- PENILAIAN --}}
@@ -190,16 +199,6 @@
                 <i class="ti ti-trophy"></i>
               </span>
               <span class="hide-menu">Kategori Juara</span>
-            </a>
-          </li>
-
-          <li class="sidebar-item">
-            <a class="sidebar-link {{ request()->routeIs('eventner.drawing.*') ? 'active' : '' }}"
-              href="{{ route('eventner.drawing.index') }}" aria-expanded="false">
-              <span>
-                <i class="ti ti-arrows-shuffle"></i>
-              </span>
-              <span class="hide-menu">Drawing / Undian</span>
             </a>
           </li>
 
@@ -313,7 +312,7 @@
           <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('eventner.faq.*') ? 'active' : '' }}"
               href="{{ route('eventner.faq.index') }}" aria-expanded="false">
-              <span><i class="ti ti-help-circle"></i></span>
+              <span><i class="ti ti-info-circle"></i></span>
               <span class="hide-menu">FAQ</span>
             </a>
           </li>
@@ -336,7 +335,7 @@
             <a class="sidebar-link {{ request()->routeIs('eventner.sponsors.*') ? 'active' : '' }}"
               href="{{ route('eventner.sponsors.index') }}" aria-expanded="false">
               <span>
-                <i class="ti ti-brand-artstation"></i>
+                <i class="ti ti-affiliate"></i>
               </span>
               <span class="hide-menu">Sponsor & Partner</span>
             </a>

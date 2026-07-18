@@ -142,7 +142,7 @@
                                 @if($categories->count() > 1)
                                     <select class="form-select form-select-sm w-auto" wire:model.live="selectedChartCategory">
                                         @foreach($categories as $cat)
-                                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                            <option value="{{ $cat->id }}">{{ $cat->full_name }}</option>
                                         @endforeach
                                     </select>
                                 @endif
@@ -233,7 +233,7 @@
                                             @endphp
                                             <tr>
                                                 <td class="ps-4">
-                                                    <span class="fw-bold text-dark">{{ $category->name }}</span>
+                                                    <span class="fw-bold text-dark">{{ $category->full_name }}</span>
                                                 </td>
                                                 <td>{{ $category->tanggal_pelaksanaan ?: '-' }}</td>
                                                 <td>
@@ -286,7 +286,7 @@
                                                     <h6 class="mb-0 fw-semibold">{{ $registration->nama_sekolah }}</h6>
                                                     <span class="text-muted fs-2">{{ $registration->npsn }}</span>
                                                 </td>
-                                                <td>{{ $registration->competitionCategory->name }}</td>
+                                                <td>{{ $registration->competitionCategory->full_name }}</td>
                                                 <td class="fs-2 text-muted">{{ $registration->created_at->format('d/m/Y H:i') }}</td>
                                                 <td class="text-center">
                                                     @if($registration->status_berkas == 'Diverifikasi')
@@ -313,8 +313,63 @@
                     </div>
                 </div>
 
-                {{-- Drawing Results Summary --}}
-                <div class="card">
+                <!-- Right Column -->
+                <div class="col-lg-4">
+                    <!-- Map Section -->
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title fw-semibold mb-0">Lokasi Venue</h5>
+                        </div>
+                        <div class="card-body">
+                            @if($eventner->latitude && $eventner->longitude)
+                                <div class="rounded overflow-hidden mb-3 border">
+                                    <iframe
+                                        width="100%"
+                                        height="250"
+                                        frameborder="0"
+                                        scrolling="no"
+                                        marginheight="0"
+                                        marginwidth="0"
+                                        src="https://maps.google.com/maps?q={{ $eventner->latitude }},{{ $eventner->longitude }}&hl=id&z=15&output=embed">
+                                    </iframe>
+                                </div>
+                                <a href="https://www.google.com/maps/search/?api=1&query={{ $eventner->latitude }},{{ $eventner->longitude }}" target="_blank" class="btn btn-primary w-100">
+                                    <i class="ti ti-navigation me-2"></i> Buka Google Maps
+                                </a>
+                            @else
+                                <div class="bg-light rounded p-4 text-center border">
+                                    <i class="ti ti-map-off fs-8 text-muted"></i>
+                                    <p class="mb-0 text-muted mt-2">Koordinat lokasi belum diset.</p>
+                                    <a href="{{ route('eventner.profile.index') }}" class="btn btn-sm btn-link">Setel Lokasi</a>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    <!-- Quick Links -->
+                    <div class="card">
+                        <div class="card-header bg-white text-primary fw-bold">Pintasan Panitia</div>
+                        <div class="list-group list-group-flush">
+                            <a href="{{ route('eventner.judges.index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                <i class="ti ti-gavel fs-5 me-2"></i> Kelola Juri
+                            </a>
+                            <a href="{{ route('eventner.format-nilai.builder') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                <i class="ti ti-file-text fs-5 me-2"></i> Builder Format Nilai
+                            </a>
+                            <a href="{{ route('eventner.vote-results.index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
+                                <i class="ti ti-chart-bar fs-5 me-2"></i> Hasil Voting
+                            </a>
+                            <a href="{{ route('event.drawing.spin', $eventner->slug) }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center bg-primary-subtle">
+                                <i class="ti ti-arrows-shuffle fs-5 me-2 text-primary"></i> <span class="fw-bold">Layar Pengundian (Spin)</span>
+                            </a>
+                            <a href="{{ route('event.drawing.results', $eventner->slug) }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center bg-primary-subtle">
+                                <i class="ti ti-list-numbers fs-5 me-2 text-primary"></i> <span class="fw-bold">Lihat Hasil Undian</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    {{-- Drawing Results Summary --}}
+                    <div class="card">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
                         <h5 class="card-title fw-semibold mb-0">
                             <i class="ti ti-arrows-shuffle me-2"></i> Hasil Pengundian
@@ -338,7 +393,7 @@
                                     $total = \App\Models\Registration::where('eventner_id', $eventner->id)
                                         ->where('competition_category_id', $cat->id)
                                         ->count();
-                                    $drawingData[] = ['name' => $cat->name, 'drawn' => $drawn, 'total' => $total];
+                                    $drawingData[] = ['name' => $cat->full_name, 'drawn' => $drawn, 'total' => $total];
                                 }
                             @endphp
                             <table class="table align-middle mb-0">
@@ -392,61 +447,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Right Column -->
-                <div class="col-lg-4">
-                    <!-- Map Section -->
-                    <div class="card">
-                        <div class="card-header bg-white">
-                            <h5 class="card-title fw-semibold mb-0">Lokasi Venue</h5>
-                        </div>
-                        <div class="card-body">
-                            @if($eventner->latitude && $eventner->longitude)
-                                <div class="rounded overflow-hidden mb-3 border">
-                                    <iframe 
-                                        width="100%" 
-                                        height="250" 
-                                        frameborder="0" 
-                                        scrolling="no" 
-                                        marginheight="0" 
-                                        marginwidth="0" 
-                                        src="https://maps.google.com/maps?q={{ $eventner->latitude }},{{ $eventner->longitude }}&hl=id&z=15&output=embed">
-                                    </iframe>
-                                </div>
-                                <a href="https://www.google.com/maps/search/?api=1&query={{ $eventner->latitude }},{{ $eventner->longitude }}" target="_blank" class="btn btn-primary w-100">
-                                    <i class="ti ti-navigation me-2"></i> Buka Google Maps
-                                </a>
-                            @else
-                                <div class="bg-light rounded p-4 text-center border">
-                                    <i class="ti ti-map-off fs-8 text-muted"></i>
-                                    <p class="mb-0 text-muted mt-2">Koordinat lokasi belum diset.</p>
-                                    <a href="{{ route('eventner.profile.index') }}" class="btn btn-sm btn-link">Setel Lokasi</a>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-
-                    <!-- Quick Links -->
-                    <div class="card">
-                        <div class="card-header bg-white text-primary fw-bold">Pintasan Panitia</div>
-                        <div class="list-group list-group-flush">
-                            <a href="{{ route('eventner.judges.index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
-                                <i class="ti ti-gavel fs-5 me-2"></i> Kelola Juri
-                            </a>
-                            <a href="{{ route('eventner.format-nilai.builder') }}" class="list-group-item list-group-item-action d-flex align-items-center">
-                                <i class="ti ti-file-text fs-5 me-2"></i> Builder Format Nilai
-                            </a>
-                            <a href="{{ route('eventner.vote-results.index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
-                                <i class="ti ti-chart-bar fs-5 me-2"></i> Hasil Voting
-                            </a>
-                            <a href="{{ route('event.drawing.spin', $eventner->slug) }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center bg-primary-subtle">
-                                <i class="ti ti-arrows-shuffle fs-5 me-2 text-primary"></i> <span class="fw-bold">Layar Pengundian (Spin)</span>
-                            </a>
-                            <a href="{{ route('event.drawing.results', $eventner->slug) }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center bg-primary-subtle">
-                                <i class="ti ti-list-numbers fs-5 me-2 text-primary"></i> <span class="fw-bold">Lihat Hasil Undian</span>
-                            </a>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>

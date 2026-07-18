@@ -1,91 +1,100 @@
 <div wire:poll.3s>
-    {{-- Hero Banner --}}
-    <div style="background: linear-gradient(135deg, var(--event-primary, #0072FF) 0%, var(--event-accent, #00D4AA) 100%); padding: 140px 0 40px; position: relative; overflow: hidden;">
-        <div style="position: absolute; top: -50%; right: -20%; width: 400px; height: 400px; border-radius: 50%; background: rgba(255,255,255,0.08);"></div>
-        <div style="position: absolute; bottom: -30%; left: -10%; width: 300px; height: 300px; border-radius: 50%; background: rgba(255,255,255,0.05);"></div>
-        <div class="container" style="position: relative; z-index: 1;">
-            <div class="row align-items-center">
-                <div class="col-lg-8 text-center text-lg-start mb-4 mb-lg-0">
-                    <span style="display:inline-block; background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); color: #fff; padding: 6px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 12px;">
-                        <i class="fa fa-broadcast-tower"></i> Hasil Undian Live
-                    </span>
-                    <h1 class="wow fadeInUp" style="color: #fff; font-size: clamp(24px, 5vw, 36px); margin-bottom: 8px;">Hasil Pengundian Urutan Tampil</h1>
-                    <p class="wow fadeInUp" style="color: rgba(255,255,255,0.9); font-size: 15px; margin-bottom: 0;">Event: <strong>{{ $eventner->nama_event }}</strong></p>
-                    <div class="mt-4 wow fadeInUp">
-                        <a href="{{ route('event.detail', $slug) }}" style="background: transparent; border: 1px solid rgba(255,255,255,0.5); color: #fff; padding: 10px 20px; border-radius: 30px; font-size: 14px; font-weight: 600; text-decoration: none; margin-right: 8px; display: inline-block;">
-                            <i class="fa fa-arrow-left me-1"></i> Kembali ke Event
+    {{-- HERO --}}
+    <div class="min-h-screen bg-surface">
+        <div class="relative overflow-hidden bg-gradient-to-br from-primary via-[#0053da] to-tertiary text-white py-10 md:py-14">
+            <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
+            <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
+
+            <div class="container-landing relative z-10">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-md border border-white/10 mb-3">
+                            <i class="ti ti-table"></i>
+                            Hasil Undian Live
+                        </span>
+                        <h1 class="font-display text-xl font-extrabold tracking-tight sm:text-2xl leading-tight">
+                            Hasil Pengundian Urutan Tampil
+                        </h1>
+                        <p class="mt-1.5 text-xs font-medium text-white/80 md:text-sm">
+                            Event: <strong class="text-secondary">{{ $eventner->nama_event }}</strong>
+                        </p>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="{{ route('event.detail', $slug) }}" class="btn-ghost !border-white/20 !text-white hover:!bg-white/10 text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
+                            <i class="ti ti-arrow-left"></i> Kembali
                         </a>
-                        <a href="{{ route('event.drawing.spin', $slug) }}" style="background: #fff; border: none; color: var(--event-primary, #0072FF); padding: 10px 20px; border-radius: 30px; font-size: 14px; font-weight: 600; text-decoration: none; display: inline-block;">
-                            <i class="fa fa-random me-1"></i> Kembali ke Spin
+                        <a href="{{ route('event.drawing.spin', $slug) }}" class="btn-primary text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
+                            <i class="ti ti-arrows-shuffle"></i> Spin
                         </a>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    {{-- Main Content --}}
-    <div class="section zubuz-section-padding3" style="padding-top: 40px;">
-        <div class="container">
-
-            <!-- Tabs Kategori -->
-            <div class="wow fadeInUp" style="display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 24px;">
-                @foreach ($categories as $category)
-                    <button wire:click="switchTab('{{ $category['id'] }}')"
-                        style="white-space: nowrap; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; transition: all 0.2s; border: none; outline: none; {{ $activeTab == $category['id'] ? 'background: var(--event-primary, #0072FF); color: #fff;' : 'background: #f3f4f6; color: #4b5563;' }}">
-                        <i class="fa fa-medal" style="margin-right: 6px;"></i> {{ $category['name'] }}
-                    </button>
-                @endforeach
-            </div>
-
-            <!-- Live Badge -->
-            <div class="wow fadeInUp" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span style="background: #ef4444; color: #fff; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; box-shadow: 0 4px 10px rgba(239,68,68,0.3);">
-                        <i class="fa fa-circle text-white me-2" style="font-size: 10px; animation: pulse 2s infinite;"></i> LIVE
-                    </span>
-                    <span style="color: #6b7280; font-size: 14px;">Update otomatis setiap 3 detik</span>
+        <div class="container-landing py-6">
+            {{-- Select Kategori --}}
+            @if(count($categories) > 0)
+            <div class="mb-6">
+                <div class="mx-auto" style="max-width: 420px;">
+                    <select wire:model.live="activeTab" wire:change="switchTab"
+                        class="w-full appearance-none bg-white border border-outline-variant/40 rounded-xl px-5 py-3.5 text-sm font-bold text-deep-slate shadow-sm cursor-pointer
+                               focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition">
+                        @foreach($categories as $cat)
+                            @php $label = !empty($cat['parent']) ? $cat['parent']['name'] . ' — ' . $cat['name'] : $cat['name']; @endphp
+                            <option value="{{ $cat['id'] }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
                 </div>
-                <span style="background: rgba(0,114,255,0.1); color: var(--event-primary, #0072FF); padding: 8px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; border: 1px solid rgba(0,114,255,0.2);">
-                    {{ $results->count() }} / {{ $totalSchools }} Ditentukan
-                </span>
+            </div>
+            @endif
+
+            {{-- Info Bar --}}
+            <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="inline-flex items-center gap-1.5 rounded-full bg-error/10 text-error px-3.5 py-1.5 text-xs font-bold border border-error/20">
+                        <span class="flex h-2 w-2 rounded-full bg-error animate-pulse"></span>
+                        LIVE
+                    </span>
+                    <span class="text-xs text-on-surface-variant font-medium">Update otomatis</span>
+                </div>
+                <span class="chip py-1.5 px-4 text-xs font-bold">{{ $results->count() }} / {{ $totalSchools }} Ditentukan</span>
             </div>
 
-            <!-- Tabel Hasil -->
-            <div class="wow fadeInUp" style="background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+            {{-- Results Table --}}
+            <div class="surface-card overflow-hidden">
                 @if($results->count() > 0)
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
-                            <thead style="background: var(--event-primary, #0072FF); color: #fff;">
-                                <tr>
-                                    <th style="padding: 16px 24px; text-align: left; font-size: 14px; font-weight: 600; width: 100px;">URUTAN</th>
-                                    <th style="padding: 16px 24px; text-align: left; font-size: 14px; font-weight: 600; width: 100px;">LOGO</th>
-                                    <th style="padding: 16px 24px; text-align: left; font-size: 14px; font-weight: 600;">NAMA SEKOLAH / KONTINGEN</th>
-                                    <th style="padding: 16px 24px; text-align: left; font-size: 14px; font-weight: 600;">NPSN</th>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse text-left">
+                            <thead>
+                                <tr class="bg-primary text-on-primary">
+                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider w-20">Urutan</th>
+                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider w-20">Logo</th>
+                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Nama Sekolah</th>
+                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider w-40">NPSN</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="divide-y divide-outline-variant/30">
                                 @foreach($results as $reg)
-                                    <tr style="border-bottom: 1px solid #e5e7eb; transition: background-color 0.3s; background: {{ $loop->last ? 'rgba(16,185,129,0.05)' : 'transparent' }};">
-                                        <td style="padding: 16px 24px;">
-                                            <span style="display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 50%; background: {{ $loop->last ? '#10b981' : 'var(--event-primary, #0072FF)' }}; color: #fff; font-weight: 700; font-size: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                                    <tr class="transition hover:bg-surface-container-lowest {{ $loop->last ? 'bg-emerald-500/5' : '' }}">
+                                        <td class="px-6 py-5">
+                                            <span class="flex items-center justify-center h-10 w-10 rounded-full text-white font-bold text-base shadow-sm {{ $loop->last ? 'bg-emerald-500' : 'bg-primary' }}">
                                                 {{ $reg->urutan_tampil }}
                                             </span>
                                         </td>
-                                        <td style="padding: 16px 24px;">
+                                        <td class="px-6 py-5">
                                             @if($reg->logo_sekolah)
-                                                <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" style="width: 50px; height: 50px; object-fit: contain; border-radius: 8px; border: 1px solid #e5e7eb; padding: 4px; background: #fff;" alt="Logo">
+                                                <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" class="h-12 w-12 rounded-xl border border-outline-variant/30 p-1 object-cover bg-white">
                                             @else
-                                                <div style="width: 50px; height: 50px; border-radius: 8px; background: #f3f4f6; border: 1px solid #e5e7eb; display: inline-flex; align-items: center; justify-content: center;">
-                                                    <i class="fa fa-school" style="font-size: 20px; color: #9ca3af;"></i>
+                                                <div class="h-12 w-12 rounded-xl bg-surface-container flex items-center justify-center border border-outline-variant/30">
+                                                    <i class="ti ti-school text-xl text-on-surface-variant"></i>
                                                 </div>
                                             @endif
                                         </td>
-                                        <td style="padding: 16px 24px;">
-                                            <h5 style="margin: 0; font-size: 16px; font-weight: 700; color: #1f2937;">{{ $reg->nama_sekolah }}</h5>
+                                        <td class="px-6 py-5">
+                                            <h5 class="font-display text-sm font-bold text-deep-slate mb-0">{{ $reg->nama_sekolah }}</h5>
                                         </td>
-                                        <td style="padding: 16px 24px;">
-                                            <span style="font-size: 14px; color: #6b7280; font-weight: 600;">{{ $reg->npsn }}</span>
+                                        <td class="px-6 py-5">
+                                            <span class="text-sm font-semibold text-on-surface-variant">{{ $reg->npsn }}</span>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -93,23 +102,15 @@
                         </table>
                     </div>
                 @else
-                    <div style="padding: 80px 20px; text-align: center;">
-                        <div style="width: 100px; height: 100px; border-radius: 50%; background: rgba(0,114,255,0.05); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 24px;">
-                            <i class="fa fa-hourglass-half" style="font-size: 40px; color: var(--event-primary, #0072FF);"></i>
+                    <div class="py-20 text-center">
+                        <div class="flex h-20 w-20 items-center justify-center rounded-full bg-primary/5 text-primary mx-auto mb-6">
+                            <i class="ti ti-hourglass-empty text-4xl"></i>
                         </div>
-                        <h4 style="font-weight: 700; color: #1f2937; margin-bottom: 12px;">Menunggu Pengundian...</h4>
-                        <p style="color: #6b7280; font-size: 15px; margin: 0;">Hasil akan muncul otomatis saat pengundian dilakukan di laman Spin.</p>
+                        <h4 class="font-display text-base font-bold text-deep-slate mb-2">Menunggu Pengundian...</h4>
+                        <p class="text-sm text-on-surface-variant">Hasil akan muncul otomatis saat pengundian dilakukan.</p>
                     </div>
                 @endif
             </div>
-
-            <style>
-                @keyframes pulse {
-                    0% { transform: scale(0.95); opacity: 1; }
-                    50% { transform: scale(1.2); opacity: 0.5; }
-                    100% { transform: scale(0.95); opacity: 1; }
-                }
-            </style>
         </div>
     </div>
 </div>

@@ -91,37 +91,53 @@
                         <h6 class="fw-semibold mb-3">Informasi Acara</h6>
                         
                         <div class="mb-4">
-                            <label class="form-label fw-bold d-block">Status Pendaftaran</label>
-                            <div class="d-flex flex-wrap gap-3">
-                                <div class="form-check form-check-inline m-0">
-                                    <input class="form-check-input" type="radio" wire:model="registration_status" id="statusOpen" value="open">
-                                    <label class="form-check-label text-success fw-semibold" for="statusOpen">
-                                        <i class="ti ti-circle-check"></i> Open Registration
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline m-0">
-                                    <input class="form-check-input" type="radio" wire:model="registration_status" id="statusBooking" value="booking">
-                                    <label class="form-check-label text-primary fw-semibold" for="statusBooking">
-                                        <i class="ti ti-bookmark"></i> Booking Only
-                                    </label>
-                                </div>
-                                <div class="form-check form-check-inline m-0">
-                                    <input class="form-check-input" type="radio" wire:model="registration_status" id="statusClosed" value="closed">
-                                    <label class="form-check-label text-danger fw-semibold" for="statusClosed">
-                                        <i class="ti ti-lock"></i> Tutup (Closed)
-                                    </label>
+                            <label class="form-label fw-bold d-block">Status Pendaftaran <small class="text-muted fw-normal">(Otomatis berdasarkan tanggal)</small></label>
+                            @php
+                                $now = now();
+                                $tm = $technical_meeting ? \Carbon\Carbon::parse($technical_meeting) : null;
+                                $tglPendaftaran = $tanggal_pendaftaran ? \Carbon\Carbon::parse($tanggal_pendaftaran) : null;
+                                $tglEvent = $tanggal ? \Carbon\Carbon::parse($tanggal) : null;
+
+                                if ($tglPendaftaran && $now->gt($tglPendaftaran)) {
+                                    $computedStatus = 'closed';
+                                } elseif ($tglEvent && $now->gt($tglEvent)) {
+                                    $computedStatus = 'closed';
+                                } elseif ($tm && $now->lt($tm)) {
+                                    $computedStatus = 'booking';
+                                } else {
+                                    $computedStatus = 'open';
+                                }
+                            @endphp
+                            <div class="d-flex align-items-center gap-3 mt-2">
+                                @if($computedStatus === 'open')
+                                    <span class="badge bg-success fs-4 px-3 py-2 rounded-pill">
+                                        <i class="ti ti-circle-check me-1"></i> Open Registration
+                                    </span>
+                                    <small class="text-muted">Peserta dapat mendaftar dan mengisi data lengkap.</small>
+                                @elseif($computedStatus === 'booking')
+                                    <span class="badge bg-primary fs-4 px-3 py-2 rounded-pill">
+                                        <i class="ti ti-bookmark me-1"></i> Booking Only
+                                    </span>
+                                    <small class="text-muted">Menunggu Technical Meeting. Hanya booking slot yang diperbolehkan.</small>
+                                @else
+                                    <span class="badge bg-danger fs-4 px-3 py-2 rounded-pill">
+                                        <i class="ti ti-lock me-1"></i> Tutup (Closed)
+                                    </span>
+                                    <small class="text-muted">Pendaftaran telah ditutup.</small>
+                                @endif
+                            </div>
+                            <div class="mt-2 p-3 bg-light rounded-3 border small">
+                                <div class="d-flex flex-wrap gap-4">
+                                    <div>
+                                        <span class="text-muted">TM (Booking berakhir):</span>
+                                        <strong>{{ $technical_meeting ? \Carbon\Carbon::parse($technical_meeting)->translatedFormat('d M Y, H:i') : 'Belum diset' }}</strong>
+                                    </div>
+                                    <div>
+                                        <span class="text-muted">Deadline Pendaftaran:</span>
+                                        <strong>{{ $tanggal_pendaftaran ? \Carbon\Carbon::parse($tanggal_pendaftaran)->translatedFormat('d M Y') : 'Belum diset' }}</strong>
+                                    </div>
                                 </div>
                             </div>
-                            <small class="text-muted d-block mt-2">
-                                @if($registration_status == 'open')
-                                    Peserta dapat mendaftar dan mengisi data lengkap.
-                                @elseif($registration_status == 'booking')
-                                    Hanya diperbolehkan booking slot (pembayaran), pengisian data ditangguhkan.
-                                @else
-                                    Halaman pendaftaran akan ditutup sepenuhnya.
-                                @endif
-                            </small>
-                            @error('registration_status') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                         </div>
                         
                         <div class="row">
@@ -205,15 +221,6 @@
                             </div>
                         </div>
 
-                        <div class="col-md-12 mb-4">
-                            <div class="alert alert-primary mb-0 border-0 fs-3 py-3">
-                                <h6 class="fw-semibold mb-2"><i class="ti ti-key"></i> Kode Akses Input Nilai / Scoring (Opsional)</h6>
-                                <label class="form-label mb-1">Proteksi halaman input nilai panitia dengan kode rahasia.</label>
-                                <input type="text" class="form-control mt-1 w-50" wire:model="scoring_code" placeholder="Misal: SCORE2026">
-                                <small class="form-text mt-1 d-block">Kode ini digunakan panitia untuk masuk ke <strong>halaman input nilai</strong> (<code>/event/{slug}/scoring</code>). Kosongkan jika tidak ingin diproteksi.</small>
-                                @error('scoring_code') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
                         </div>
 
                         <hr class="my-4">

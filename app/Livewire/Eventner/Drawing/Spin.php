@@ -35,7 +35,11 @@ class Spin extends Component
         }
 
         if ($eventner) {
-            $this->categories = $eventner->competitionCategories()->get()->toArray();
+            $this->categories = $eventner->competitionCategories()
+                ->whereNotNull('parent_id')
+                ->with('parent')
+                ->get()
+                ->toArray();
         }
 
         if (count($this->categories) > 0) {

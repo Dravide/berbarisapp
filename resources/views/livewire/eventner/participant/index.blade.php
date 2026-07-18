@@ -18,6 +18,62 @@
         </div>
     </div>
 
+    {{-- ===== SUMMARY STATS CARDS ===== --}}
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-sm-6">
+            <div class="card border-start border-primary border-3 shadow-none">
+                <div class="card-body px-3 py-3 d-flex align-items-center gap-3">
+                    <span class="rounded-2 d-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary" style="width:44px;height:44px;">
+                        <i class="ti ti-school fs-6"></i>
+                    </span>
+                    <div>
+                        <h5 class="mb-0 fw-bold fs-5">{{ $summary['total_registrations'] }}</h5>
+                        <span class="text-muted" style="font-size:12px;">Total Kontingen</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6">
+            <div class="card border-start border-info border-3 shadow-none">
+                <div class="card-body px-3 py-3 d-flex align-items-center gap-3">
+                    <span class="rounded-2 d-flex align-items-center justify-content-center bg-info bg-opacity-10 text-info" style="width:44px;height:44px;">
+                        <i class="ti ti-users fs-6"></i>
+                    </span>
+                    <div>
+                        <h5 class="mb-0 fw-bold fs-5">{{ $summary['total_anggota'] }}</h5>
+                        <span class="text-muted" style="font-size:12px;">Total Anggota</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6">
+            <div class="card border-start border-warning border-3 shadow-none">
+                <div class="card-body px-3 py-3 d-flex align-items-center gap-3">
+                    <span class="rounded-2 d-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning" style="width:44px;height:44px;">
+                        <i class="ti ti-clock fs-6"></i>
+                    </span>
+                    <div>
+                        <h5 class="mb-0 fw-bold fs-5">{{ $summary['booking'] }}</h5>
+                        <span class="text-muted" style="font-size:12px;">Booking</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6">
+            <div class="card border-start border-success border-3 shadow-none">
+                <div class="card-body px-3 py-3 d-flex align-items-center gap-3">
+                    <span class="rounded-2 d-flex align-items-center justify-content-center bg-success bg-opacity-10 text-success" style="width:44px;height:44px;">
+                        <i class="ti ti-circle-check fs-6"></i>
+                    </span>
+                    <div>
+                        <h5 class="mb-0 fw-bold fs-5">{{ $summary['verified'] }}</h5>
+                        <span class="text-muted" style="font-size:12px;">Terverifikasi</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     @if(session()->has('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             <i class="ti ti-check me-2"></i> {{ session('success') }}
@@ -236,181 +292,277 @@
     <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,.6); z-index: 1050;">
         <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
             <div class="modal-content shadow-lg border-0 rounded-4">
-                <div class="modal-header bg-light border-bottom-0 rounded-top-4 p-4">
+                {{-- Header --}}
+                <div class="modal-header bg-primary text-white rounded-top-4 p-4 border-bottom-0">
                     <div>
-                        <h4 class="modal-title fw-bold mb-1">Verifikasi Pendaftaran</h4>
-                        <p class="text-muted mb-0">{{ $selectedRegistration->nama_sekolah }} | <span class="badge bg-primary-subtle text-primary">{{ $selectedRegistration->competitionCategory->name }}</span></p>
+                        <h4 class="modal-title fw-bold mb-1 text-white">
+                            <i class="ti ti-checklist me-2"></i>Verifikasi Pendaftaran
+                        </h4>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="fw-bold fs-4">{{ $selectedRegistration->nama_sekolah }}</span>
+                            <span class="badge bg-white bg-opacity-25 text-white rounded-pill px-3 py-1">{{ $selectedRegistration->competitionCategory->full_name }}</span>
+                            @if($selectedRegistration->is_finalized)
+                                <span class="badge bg-white bg-opacity-25 text-white rounded-pill px-3 py-1"><i class="ti ti-lock me-1"></i>Finalized</span>
+                            @else
+                                <span class="badge bg-warning text-dark rounded-pill px-3 py-1"><i class="ti ti-alert-circle me-1"></i>Belum Final</span>
+                            @endif
+                        </div>
                     </div>
-                    <button type="button" class="btn-close" wire:click="closeVerifyModal"></button>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closeVerifyModal"></button>
                 </div>
-                <div class="modal-body p-4 bg-light-subtle">
-                    
+
+                {{-- Body: Checklist-style verification --}}
+                <div class="modal-body p-0">
                     @if(!$selectedRegistration->is_finalized)
-                        <div class="alert alert-warning mb-4 rounded-4 border-0 shadow-sm d-flex align-items-center gap-3">
-                            <i class="ti ti-alert-circle fs-7"></i>
+                        <div class="alert alert-warning m-4 mb-0 rounded-3 border-0 d-flex align-items-center gap-3 shadow-sm">
+                            <i class="ti ti-alert-triangle fs-8 text-warning"></i>
                             <div>
-                                <h6 class="fw-bold mb-0">Peringatan: Data Belum Final</h6>
-                                <p class="mb-0 small">Sekolah ini belum menekan tombol "Finalisasi" pada portal mereka. Data mungkin masih berubah.</p>
+                                <h6 class="fw-bold mb-0">Data Belum Difinalisasi</h6>
+                                <p class="mb-0 small">Sekolah belum menekan tombol "Finalisasi" pada portal. Data mungkin masih berubah.</p>
                             </div>
                         </div>
                     @endif
 
-                    <div class="row g-4">
-                        <!-- Kolom Kiri: Berkas Utama -->
-                        <div class="col-lg-4">
-                            <div class="card border-0 shadow-sm rounded-4 h-100 mb-0">
-                                <div class="card-body p-4">
-                                    <h5 class="fw-semibold mb-3 border-bottom pb-2 text-primary"><i class="ti ti-file-description"></i> Berkas Utama</h5>
-                                    
-                                    <div class="mb-4 text-center">
-                                        <label class="d-block text-muted small mb-2 text-start fw-semibold">Logo Sekolah</label>
-                                        @if($selectedRegistration->logo_sekolah)
-                                            <a href="{{ asset('storage/' . $selectedRegistration->logo_sekolah) }}" target="_blank">
-                                                <img src="{{ asset('storage/' . $selectedRegistration->logo_sekolah) }}" class="img-fluid rounded-3 border p-2" style="max-height: 120px;" alt="Logo">
-                                            </a>
-                                        @else
-                                            <div class="py-4 bg-light rounded-3 border border-dashed text-muted small">Belum diunggah</div>
-                                        @endif
-                                    </div>
-
-                                    @if($selectedRegistration->eventner->surat_tugas_required)
-                                    <div class="mb-4">
-                                        <label class="d-block text-muted small mb-2 fw-semibold">Surat Tugas / Rekomendasi</label>
-                                        @if($selectedRegistration->surat_tugas)
-                                            <div class="d-flex align-items-center justify-content-between p-2 bg-light rounded-3 border">
-                                                <span class="small text-truncate me-2"><i class="ti ti-file"></i> Surat_Tugas...</span>
-                                                <a href="{{ asset('storage/' . $selectedRegistration->surat_tugas) }}" target="_blank" class="btn btn-sm btn-primary py-1 px-2"><i class="ti ti-download fs-2"></i></a>
-                                            </div>
-                                        @else
-                                            <div class="p-2 bg-light rounded-3 border border-dashed text-center text-muted small">Belum diunggah</div>
-                                        @endif
-                                    </div>
+                    {{-- Row 1: Berkas Checklist --}}
+                    <div class="p-4 pb-0">
+                        <h5 class="fw-bold mb-3 text-uppercase small text-primary"><i class="ti ti-file-check me-1"></i> Ceklis Berkas Persyaratan</h5>
+                    </div>
+                    <div class="row g-0 px-4">
+                        {{-- Logo Sekolah --}}
+                        <div class="col-md-4 p-3 border-end border-bottom">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="flex-shrink-0">
+                                    @if($selectedRegistration->logo_sekolah)
+                                        <img src="{{ asset('storage/' . $selectedRegistration->logo_sekolah) }}" class="rounded-3 border" style="width:60px;height:60px;object-fit:cover;">
+                                    @else
+                                        <div class="bg-danger bg-opacity-10 rounded-3 d-flex align-items-center justify-content-center border border-danger border-opacity-25" style="width:60px;height:60px;">
+                                            <i class="ti ti-photo-off text-danger fs-4"></i>
+                                        </div>
                                     @endif
-
-                                    @if($selectedRegistration->eventner->kwitansi_required)
-                                    <div class="mb-0">
-                                        <label class="d-block text-primary small mb-2 fw-bold"><i class="ti ti-receipt"></i> Kwitansi Pendaftaran</label>
-                                        @if($selectedRegistration->bukti_pendaftaran)
-                                            <a href="{{ asset('storage/' . $selectedRegistration->bukti_pendaftaran) }}" target="_blank">
-                                                <img src="{{ asset('storage/' . $selectedRegistration->bukti_pendaftaran) }}" class="img-fluid rounded-3 border p-1" alt="Kwitansi">
-                                            </a>
-                                        @else
-                                            <div class="py-5 bg-warning-subtle text-warning rounded-3 border border-dashed text-center small fw-semibold">BELUM UNGGAH KWITANSI</div>
-                                        @endif
-                                    </div>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Logo Sekolah</h6>
+                                    @if($selectedRegistration->logo_sekolah)
+                                        <a href="{{ asset('storage/' . $selectedRegistration->logo_sekolah) }}" target="_blank" class="small text-primary"><i class="ti ti-external-link"></i> Lihat</a>
+                                        <span class="badge bg-success-subtle text-success ms-2"><i class="ti ti-check"></i></span>
+                                    @else
+                                        <span class="badge bg-danger-subtle text-danger mt-1"><i class="ti ti-x"></i> Belum diunggah</span>
                                     @endif
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Kolom Tengah & Kanan: Pasukan -->
-                        <div class="col-lg-8">
-                            <!-- Data Pelatih & Danton -->
-                            <div class="card border-0 shadow-sm rounded-4 mb-4">
-                                <div class="card-body p-4">
-                                    <div class="row align-items-center">
-                                        <div class="col-md-6 border-end">
-                                            <h5 class="fw-semibold mb-3 text-primary small text-uppercase"><i class="ti ti-user-star"></i> Pelatih/Pembina</h5>
-                                            <div class="d-flex align-items-center gap-3">
-                                                @if($selectedRegistration->foto_pelatih)
-                                                    <img src="{{ asset('storage/' . $selectedRegistration->foto_pelatih) }}" class="rounded-circle border" style="width: 50px; height: 50px; object-fit: cover;">
-                                                @else
-                                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center border" style="width: 50px; height: 50px;"><i class="ti ti-user text-muted"></i></div>
-                                                @endif
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold">{{ $selectedRegistration->nama_pelatih }}</h6>
-                                                    <small class="text-muted">{{ $selectedRegistration->no_hp }}</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6 ps-md-4">
-                                            <h5 class="fw-semibold mb-3 text-primary small text-uppercase"><i class="ti ti-star"></i> Komandan Pleton (Danton)</h5>
-                                            <div class="d-flex align-items-center gap-3">
-                                                @if($selectedRegistration->danton_foto)
-                                                    <img src="{{ asset('storage/' . $selectedRegistration->danton_foto) }}" class="rounded-3 border" style="width: 50px; height: 65px; object-fit: cover;">
-                                                @else
-                                                    <div class="bg-light rounded-3 d-flex align-items-center justify-content-center border" style="width: 50px; height: 65px;"><i class="ti ti-user text-muted"></i></div>
-                                                @endif
-                                                <div>
-                                                    <h6 class="mb-0 fw-bold">{{ $selectedRegistration->danton_nama ?: '--- belum diisi ---' }}</h6>
-                                                    <small class="text-muted">NISN: {{ $selectedRegistration->danton_nisn ?: '-' }}</small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Daftar Anggota -->
-                            <div class="card border-0 shadow-sm rounded-4 mb-0">
-                                <div class="card-body p-4">
-                                    <h5 class="fw-semibold mb-4 border-bottom pb-2 text-primary"><i class="ti ti-users"></i> Daftar Anggota ({{ $selectedRegistration->participants->count() }})</h5>
-                                    
-                                    @if($selectedRegistration->participants->count() > 0)
-                                        <div class="row g-3">
-                                            @foreach($selectedRegistration->participants as $p)
-                                                <div class="col-md-6 col-xl-4">
-                                                    <div class="d-flex align-items-center gap-2 p-2 border rounded-3 bg-light-subtle">
-                                                        @if($p->foto)
-                                                            <img src="{{ asset('storage/' . $p->foto) }}" class="rounded-2" style="width: 40px; height: 50px; object-fit: cover;">
-                                                        @else
-                                                            <div class="bg-light rounded-2 border d-flex align-items-center justify-content-center" style="width: 40px; height: 50px;"><i class="ti ti-user text-muted fs-4"></i></div>
-                                                        @endif
-                                                        <div class="overflow-hidden">
-                                                            <h6 class="mb-0 small fw-bold text-truncate">{{ $p->nama }}</h6>
-                                                            <small class="text-muted fs-2 text-truncate d-block">NISN: {{ $p->nisn ?: '-' }}</small>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
+                        {{-- Surat Tugas --}}
+                        <div class="col-md-4 p-3 border-end border-bottom">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="flex-shrink-0">
+                                    @if($selectedRegistration->surat_tugas)
+                                        <div class="bg-success bg-opacity-10 rounded-3 d-flex align-items-center justify-content-center border border-success border-opacity-25" style="width:60px;height:60px;">
+                                            <i class="ti ti-file-text text-success fs-4"></i>
                                         </div>
                                     @else
-                                        <div class="text-center py-4 text-muted small border border-dashed rounded-3">
-                                            Belum ada data anggota peserta.
+                                        <div class="rounded-3 d-flex align-items-center justify-content-center border {{ $selectedRegistration->eventner->surat_tugas_required ? 'bg-danger bg-opacity-10 border-danger border-opacity-25' : 'bg-light text-muted' }}" style="width:60px;height:60px;">
+                                            <i class="ti ti-file-off fs-4 {{ $selectedRegistration->eventner->surat_tugas_required ? 'text-danger' : 'text-muted' }}"></i>
                                         </div>
                                     @endif
                                 </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Surat Tugas</h6>
+                                    @if($selectedRegistration->surat_tugas)
+                                        <a href="{{ asset('storage/' . $selectedRegistration->surat_tugas) }}" target="_blank" class="small text-primary"><i class="ti ti-external-link"></i> Lihat</a>
+                                        <span class="badge bg-success-subtle text-success ms-2"><i class="ti ti-check"></i></span>
+                                    @else
+                                        @if($selectedRegistration->eventner->surat_tugas_required)
+                                            <span class="badge bg-danger-subtle text-danger mt-1"><i class="ti ti-x"></i> Wajib, belum ada</span>
+                                        @else
+                                            <span class="text-muted small mt-1">Tidak wajib</span>
+                                        @endif
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        {{-- Kwitansi --}}
+                        <div class="col-md-4 p-3 border-bottom">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="flex-shrink-0">
+                                    @if($selectedRegistration->bukti_pendaftaran)
+                                        <img src="{{ asset('storage/' . $selectedRegistration->bukti_pendaftaran) }}" class="rounded-3 border" style="width:60px;height:60px;object-fit:cover;">
+                                    @else
+                                        <div class="rounded-3 d-flex align-items-center justify-content-center border {{ $selectedRegistration->eventner->kwitansi_required ? 'bg-danger bg-opacity-10 border-danger border-opacity-25' : 'bg-light text-muted' }}" style="width:60px;height:60px;">
+                                            <i class="ti ti-receipt-off fs-4 {{ $selectedRegistration->eventner->kwitansi_required ? 'text-danger' : 'text-muted' }}"></i>
+                                        </div>
+                                    @endif
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold mb-0">Kwitansi</h6>
+                                    @if($selectedRegistration->bukti_pendaftaran)
+                                        <a href="{{ asset('storage/' . $selectedRegistration->bukti_pendaftaran) }}" target="_blank" class="small text-primary"><i class="ti ti-external-link"></i> Lihat</a>
+                                        <span class="badge bg-success-subtle text-success ms-2"><i class="ti ti-check"></i></span>
+                                    @else
+                                        @if($selectedRegistration->eventner->kwitansi_required)
+                                            <span class="badge bg-danger-subtle text-danger mt-1"><i class="ti ti-x"></i> Wajib, belum ada</span>
+                                        @else
+                                            <span class="text-muted small mt-1">Tidak wajib</span>
+                                        @endif
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Row 2: Pelatih & Danton --}}
+                    <div class="p-4 pb-0">
+                        <h5 class="fw-bold mb-3 text-uppercase small text-primary"><i class="ti ti-user-check me-1"></i> Data Pelatih & Danton</h5>
+                    </div>
+                    <div class="row g-0 px-4">
+                        <div class="col-md-6 p-3 border-end border-bottom">
+                            <div class="d-flex align-items-center gap-3">
+                                @if($selectedRegistration->foto_pelatih)
+                                    <img src="{{ asset('storage/' . $selectedRegistration->foto_pelatih) }}" class="rounded-circle border" style="width:56px;height:56px;object-fit:cover;">
+                                @else
+                                    <div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center border border-warning border-opacity-25" style="width:56px;height:56px;">
+                                        <i class="ti ti-user-off text-warning fs-5"></i>
+                                    </div>
+                                @endif
+                                <div>
+                                    <h6 class="fw-bold mb-1">{{ $selectedRegistration->nama_pelatih ?: '---' }}</h6>
+                                    <small class="text-muted"><i class="ti ti-phone me-1"></i>{{ $selectedRegistration->no_hp }}</small>
+                                    @if(!$selectedRegistration->foto_pelatih)
+                                        <span class="badge bg-warning-subtle text-warning ms-2"><i class="ti ti-alert-circle"></i> Foto belum ada</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 p-3 border-bottom">
+                            <div class="d-flex align-items-center gap-3">
+                                @if($selectedRegistration->danton_foto)
+                                    <img src="{{ asset('storage/' . $selectedRegistration->danton_foto) }}" class="rounded-3 border" style="width:44px;height:56px;object-fit:cover;">
+                                @else
+                                    <div class="bg-warning bg-opacity-10 rounded-3 d-flex align-items-center justify-content-center border border-warning border-opacity-25" style="width:44px;height:56px;">
+                                        <i class="ti ti-user-off text-warning fs-5"></i>
+                                    </div>
+                                @endif
+                                <div>
+                                    <h6 class="fw-bold mb-1">{{ $selectedRegistration->danton_nama ?: '---' }}</h6>
+                                    <small class="text-muted">NISN: {{ $selectedRegistration->danton_nisn ?: '-' }}</small>
+                                    @if(!$selectedRegistration->danton_foto || !$selectedRegistration->danton_nama)
+                                        <span class="badge bg-warning-subtle text-warning ms-2"><i class="ti ti-alert-circle"></i> Belum lengkap</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Row 3: Anggota Pasukan --}}
+                    <div class="p-4 pb-0">
+                        <h5 class="fw-bold mb-3 text-uppercase small text-primary"><i class="ti ti-users-group me-1"></i> Anggota Pasukan
+                            <span class="badge bg-primary-subtle text-primary ms-2 fs-2">{{ $selectedRegistration->participants->count() }} orang</span>
+                        </h5>
+                    </div>
+                    <div class="p-4 pt-2">
+                        @if($selectedRegistration->participants->count() > 0)
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle mb-0 border">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="ps-3" style="width:40px;">No</th>
+                                            <th style="width:60px;">Foto</th>
+                                            <th>Nama</th>
+                                            <th>NISN</th>
+                                            <th class="text-center" style="width:80px;">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($selectedRegistration->participants as $idx => $p)
+                                            <tr>
+                                                <td class="ps-3 fw-bold text-muted">{{ $idx + 1 }}</td>
+                                                <td>
+                                                    @if($p->foto)
+                                                        <img src="{{ asset('storage/' . $p->foto) }}" class="rounded-2 border" style="width:36px;height:44px;object-fit:cover;">
+                                                    @else
+                                                        <div class="bg-warning bg-opacity-10 rounded-2 d-flex align-items-center justify-content-center border border-warning border-opacity-25" style="width:36px;height:44px;">
+                                                            <i class="ti ti-user-off text-warning fs-6"></i>
+                                                        </div>
+                                                    @endif
+                                                </td>
+                                                <td class="fw-semibold">{{ $p->nama }}</td>
+                                                <td class="text-muted small">{{ $p->nisn ?: '-' }}</td>
+                                                <td class="text-center">
+                                                    @if($p->foto)
+                                                        <span class="badge bg-success-subtle text-success"><i class="ti ti-check"></i></span>
+                                                    @else
+                                                        <span class="badge bg-warning-subtle text-warning"><i class="ti ti-photo-off"></i></span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="text-center py-5 bg-light rounded-3 border border-dashed text-muted">
+                                <i class="ti ti-users-off fs-8 d-block mb-2"></i>
+                                <span class="fw-semibold">Belum ada data anggota pasukan.</span>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Verdict Summary --}}
+                    <div class="p-4 pt-0">
+                        @php
+                            $checkCount = 0; $totalChecks = 0;
+                            // Logo
+                            $totalChecks++; if($selectedRegistration->logo_sekolah) $checkCount++;
+                            // Surat tugas
+                            if($selectedRegistration->eventner->surat_tugas_required) { $totalChecks++; if($selectedRegistration->surat_tugas) $checkCount++; }
+                            // Kwitansi
+                            if($selectedRegistration->eventner->kwitansi_required) { $totalChecks++; if($selectedRegistration->bukti_pendaftaran) $checkCount++; }
+                            // Pelatih
+                            $totalChecks++; if($selectedRegistration->nama_pelatih) $checkCount++;
+                            // Danton
+                            $totalChecks++; if($selectedRegistration->danton_nama) $checkCount++;
+                            // Anggota
+                            if($selectedRegistration->participants->count() > 0) { $totalChecks++; $checkCount++; }
+                            $pct = $totalChecks > 0 ? round($checkCount / $totalChecks * 100) : 0;
+                            $verdictColor = $pct == 100 ? 'success' : ($pct >= 60 ? 'warning' : 'danger');
+                        @endphp
+                        <div class="d-flex align-items-center justify-content-between bg-{{ $verdictColor }}-subtle rounded-3 p-3 border border-{{ $verdictColor }} border-opacity-25">
+                            <div>
+                                <span class="fw-bold text-{{ $verdictColor }}"><i class="ti ti-clipboard-check me-1"></i>Kelengkapan Berkas:</span>
+                                <span class="ms-2 fw-bold">{{ $checkCount }}/{{ $totalChecks }} item ({{ $pct }}%)</span>
+                            </div>
+                            <div class="progress flex-grow-1 mx-3" style="height:8px;max-width:200px;">
+                                <div class="progress-bar bg-{{ $verdictColor }}" style="width:{{ $pct }}%"></div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light border-top-0 rounded-bottom-4 p-4 justify-content-between">
+
+                {{-- Footer Actions --}}
+                <div class="modal-footer bg-light border-top rounded-bottom-4 p-4 justify-content-between">
                     <div>
-                        <span class="text-muted small d-block mb-1">Status Saat Ini:</span>
+                        <span class="text-muted small">Status Saat Ini:</span>
                         @if($selectedRegistration->status_berkas === 'booking')
-                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 fw-bold"><i class="ti ti-clock me-1"></i>Booking</span>
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-3 py-1 ms-2 fw-bold"><i class="ti ti-clock me-1"></i>Booking</span>
                         @elseif($selectedRegistration->status_berkas === 'confirmed' || $selectedRegistration->status_berkas === 'Menunggu')
-                            <span class="badge bg-warning rounded-pill px-3 fw-bold">Menunggu Verifikasi</span>
+                            <span class="badge bg-warning rounded-pill px-3 py-1 ms-2 fw-bold">Menunggu Verifikasi</span>
                         @elseif($selectedRegistration->status_berkas === 'Terverifikasi')
-                            <span class="badge bg-success rounded-pill px-3 fw-bold">Sudah ACC</span>
+                            <span class="badge bg-success rounded-pill px-3 py-1 ms-2 fw-bold">Sudah ACC</span>
                         @elseif($selectedRegistration->status_berkas === 'dibatalkan')
-                            <span class="badge bg-dark rounded-pill px-3 fw-bold">Dibatalkan</span>
+                            <span class="badge bg-dark rounded-pill px-3 py-1 ms-2 fw-bold">Dibatalkan</span>
                         @elseif($selectedRegistration->status_berkas === 'Ditolak')
-                            <span class="badge bg-danger rounded-pill px-3 fw-bold">Ditolak</span>
+                            <span class="badge bg-danger rounded-pill px-3 py-1 ms-2 fw-bold">Ditolak</span>
                         @else
-                            <span class="badge bg-light text-muted rounded-pill px-3 fw-bold">{{ $selectedRegistration->status_berkas }}</span>
+                            <span class="badge bg-light text-muted rounded-pill px-3 py-1 ms-2 fw-bold">{{ $selectedRegistration->status_berkas }}</span>
                         @endif
                     </div>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-light px-4 py-2 rounded-pill fw-semibold" wire:click="closeVerifyModal">Tutup</button>
-                        
-                        <div class="vr mx-2"></div>
-
-                        <button 
-                            type="button" 
-                            class="btn btn-danger px-4 py-2 rounded-pill fw-semibold shadow-sm"
-                            wire:click="verifyStatus('Ditolak')"
-                            wire:confirm="Yakin ingin MENOLAK berkas pendaftaran ini?"
-                        >
-                            <i class="ti ti-x me-1"></i> Tolak Berkas
+                        <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold" wire:click="closeVerifyModal">
+                            <i class="ti ti-x me-1"></i>Tutup
                         </button>
-
-                        <button 
-                            type="button" 
-                            class="btn btn-success px-4 py-2 rounded-pill fw-semibold shadow-md"
-                            wire:click="verifyStatus('Terverifikasi')"
-                            wire:confirm="Nyatakan semua data & berkas sudah LENGKAP dan BENAR?"
-                        >
+                        <button type="button" class="btn btn-danger px-4 rounded-pill fw-semibold" wire:click="verifyStatus('Ditolak')" wire:confirm="Yakin ingin MENOLAK berkas pendaftaran ini?">
+                            <i class="ti ti-x me-1"></i> Tolak
+                        </button>
+                        <button type="button" class="btn btn-success px-4 rounded-pill fw-semibold shadow-sm" wire:click="verifyStatus('Terverifikasi')" wire:confirm="Nyatakan semua data & berkas sudah LENGKAP dan BENAR?">
                             <i class="ti ti-check me-1"></i> Verifikasi / ACC
                         </button>
                     </div>

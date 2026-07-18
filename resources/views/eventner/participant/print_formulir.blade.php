@@ -267,36 +267,54 @@
         <div class="section-title">I. Identitas Kontingen / Sekolah</div>
         <table class="table-detail">
             <tr>
-                <td class="lbl">Nama Sekolah</td>
-                <td>{{ $registration->nama_sekolah }}</td>
+                <td class="lbl" style="width:18%;">Nama Sekolah</td>
+                <td style="width:32%;">{{ $registration->nama_sekolah }}</td>
+                <td class="lbl" style="width:18%;">Logo</td>
+                <td style="width:32%; text-align:center;">
+                    @if($registration->logo_sekolah)
+                        <img src="{{ asset('storage/' . $registration->logo_sekolah) }}" style="max-height:50px; max-width:100px;">
+                    @else
+                        <span style="color:#888; font-size:11px;">Tidak tersedia</span>
+                    @endif
+                </td>
+            </tr>
+            <tr>
                 <td class="lbl">NPSN</td>
                 <td>{{ $registration->npsn }}</td>
-            </tr>
-            <tr>
                 <td class="lbl">Kategori Lomba</td>
-                <td>{{ $registration->competitionCategory->name ?? '-' }}</td>
-                <td class="lbl">No. HP / WhatsApp</td>
-                <td>{{ $registration->no_hp }}</td>
+                <td><strong>{{ $registration->competitionCategory->full_name ?? '-' }}</strong></td>
             </tr>
             <tr>
+                <td class="lbl">No. HP / WA</td>
+                <td>{{ $registration->no_hp }}</td>
                 <td class="lbl">Email Sekolah</td>
                 <td>{{ $registration->school_email ?? '-' }}</td>
-                <td class="lbl">Status Verifikasi</td>
-                <td style="color: green; font-weight: bold;">TERVERIFIKASI</td>
             </tr>
+            @if($registration->urutan_tampil)
+            <tr>
+                <td class="lbl">Urutan Tampil</td>
+                <td><strong>#{{ str_pad($registration->urutan_tampil, 2, '0', STR_PAD_LEFT) }}</strong></td>
+                <td class="lbl">Status Verifikasi</td>
+                <td style="color: green; font-weight: bold;">{{ $registration->status_berkas }}</td>
+            </tr>
+            @else
+            <tr>
+                <td class="lbl">Status Verifikasi</td>
+                <td colspan="3" style="color: green; font-weight: bold;">{{ $registration->status_berkas }}</td>
+            </tr>
+            @endif
         </table>
 
         <!-- STRUKTUR PASUKAN -->
-        <div class="section-title">II. Struktur Official & Danton</div>
+        <div class="section-title">II. Struktur Official &amp; Danton</div>
         <table class="table-detail">
             <tr>
-                <td class="lbl" style="width: 20%;">Pelatih / Official</td>
-                <td style="width: 30%;">
+                <td class="lbl" style="width:18%;">Pelatih / Official</td>
+                <td style="width:32%;">
                     <strong>{{ $registration->nama_pelatih ?? '-' }}</strong>
-                    <p style="margin: 5px 0 0 0; font-size: 11px; color: #666;">Pelatih Utama / Penanggung Jawab Pasukan</p>
                 </td>
-                <td class="lbl" style="width: 20%; text-align: center;">Foto Pelatih</td>
-                <td style="width: 30%; text-align: center;">
+                <td class="lbl" style="width:18%; text-align: center;">Foto Pelatih</td>
+                <td style="width:32%; text-align: center;">
                     <div class="foto-container">
                         @if($registration->foto_pelatih)
                             <img src="{{ asset('storage/' . $registration->foto_pelatih) }}" class="foto-img">
@@ -310,7 +328,7 @@
                 <td class="lbl">Komandan Ton (Danton)</td>
                 <td>
                     <strong>{{ $registration->danton_nama ?? '-' }}</strong>
-                    <p style="margin: 3px 0 0 0;">NISN: {{ $registration->danton_nisn ?? '-' }}</p>
+                    <p style="margin: 3px 0 0 0; font-size:11px;">NISN: {{ $registration->danton_nisn ?? '-' }}</p>
                 </td>
                 <td class="lbl" style="text-align: center;">Foto Danton</td>
                 <td style="text-align: center;">
@@ -325,22 +343,34 @@
             </tr>
         </table>
 
-        <!-- TANDA TANGAN -->
-        <table class="signature-table">
+        {{-- Berkas Lampiran --}}
+        @if($eventner->surat_tugas_required || $eventner->kwitansi_required)
+        <div class="section-title">III. Berkas Persyaratan</div>
+        <table class="table-detail">
             <tr>
-                <td>
-                    <p>Pelatih / Official,</p>
-                    <div class="signature-space"></div>
-                    <p class="signature-name">{{ $registration->nama_pelatih ?? '............................' }}</p>
+                @if($eventner->surat_tugas_required)
+                <td class="lbl" style="width:18%;">Surat Tugas</td>
+                <td style="width:32%;">
+                    @if($registration->surat_tugas)
+                        <span style="color:green; font-weight:bold;">✓ Terlampir</span>
+                    @else
+                        <span style="color:red;">✗ Belum diunggah</span>
+                    @endif
                 </td>
-                <td>
-                    <p>Panitia Pelaksana,</p>
-                    <div class="signature-space"></div>
-                    <p class="signature-name">Verifikator BARIS APP</p>
-                    <p style="font-size: 11px; margin-top: 4px;">(Sistem Terverifikasi Otomatis)</p>
+                @endif
+                @if($eventner->kwitansi_required)
+                <td class="lbl" style="width:18%;">Kwitansi</td>
+                <td style="width:32%;">
+                    @if($registration->bukti_pendaftaran)
+                        <span style="color:green; font-weight:bold;">✓ Terlampir</span>
+                    @else
+                        <span style="color:red;">✗ Belum diunggah</span>
+                    @endif
                 </td>
+                @endif
             </tr>
         </table>
+        @endif
 
         <!-- PAGE BREAK UNTUK ANGGOTA -->
         <div class="page-break"></div>
@@ -352,42 +382,69 @@
             @endif
             <div class="kop-text">
                 <h1 class="kop-title">{{ $eventner->nama_event }}</h1>
-                <p class="kop-sub">Daftar Anggota Pasukan - {{ $registration->nama_sekolah }}</p>
+                <p class="kop-sub">Daftar Anggota Pasukan — {{ $registration->nama_sekolah }} ({{ $participants->count() }} Anggota)</p>
             </div>
         </div>
 
-        <div class="section-title">III. Daftar Anggota Pasukan</div>
+        <div class="section-title">IV. Daftar Anggota Pasukan</div>
         <table class="table-member">
             <thead>
                 <tr>
-                    <th style="width: 8%; text-align: center;">No</th>
-                    <th style="width: 47%;">Nama Lengkap</th>
-                    <th style="width: 25%;">NISN</th>
-                    <th style="width: 20%; text-align: center;">Foto 3x4</th>
+                    <th style="width: 6%; text-align: center;">No</th>
+                    <th style="width: 17%; text-align: center;">Foto</th>
+                    <th style="width: 42%;">Nama Lengkap</th>
+                    <th style="width: 20%;">NISN</th>
+                    <th style="width: 15%; text-align: center;">Tanda Tangan</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($participants as $index => $participant)
                     <tr>
-                        <td class="center">{{ $index + 1 }}</td>
-                        <td><strong>{{ $participant->nama }}</strong></td>
-                        <td>{{ $participant->nisn }}</td>
-                        <td class="center" style="padding: 5px 0;">
-                            <div class="foto-container" style="width: 60px; height: 80px;">
+                        <td class="center">{{ $index + 1 }}.</td>
+                        <td class="center" style="padding: 4px 0;">
+                            <div class="foto-container" style="width: 45px; height: 60px;">
                                 @if($participant->foto)
-                                    <img src="{{ asset('storage/' . $participant->foto) }}" class="foto-img" style="width: 60px; height: 80px;">
+                                    <img src="{{ asset('storage/' . $participant->foto) }}" class="foto-img" style="width: 45px; height: 60px;">
                                 @else
-                                    <div class="foto-placeholder">Foto</div>
+                                    <div class="foto-placeholder" style="font-size:7px;">FOTO</div>
                                 @endif
                             </div>
                         </td>
+                        <td><strong>{{ $participant->nama }}</strong></td>
+                        <td>{{ $participant->nisn ?: '-' }}</td>
+                        <td></td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="center" style="padding: 30px; color: #888;">Belum ada anggota pasukan yang didaftarkan.</td>
+                        <td colspan="5" class="center" style="padding: 30px; color: #888;">Belum ada anggota pasukan yang didaftarkan.</td>
                     </tr>
                 @endforelse
             </tbody>
+        </table>
+
+        <!-- TANDA TANGAN -->
+        @php
+            use chillerlan\QRCode\QRCode;
+            $qrData = route('magic.link', $registration->magic_token);
+            $qrImage = (new QRCode)->render($qrData);
+        @endphp
+        <div class="section-title" style="margin-top: 30px;">V. Pengesahan</div>
+        <table class="signature-table">
+            <tr>
+                <td>
+                    <p><strong>Pelatih / Official</strong></p>
+                    <div class="signature-space"></div>
+                    <p class="signature-name">{{ $registration->nama_pelatih ?? '............................' }}</p>
+                </td>
+                <td>
+                    <p><strong>Ketua Panitia</strong></p>
+                    <div style="margin: 0 auto; text-align: center;">
+                        <img src="{{ $qrImage }}" style="width:80px; height:80px;" alt="QR">
+                    </div>
+                    <p style="font-size:10px; margin:4px 0 0 0;">Scan untuk verifikasi data</p>
+                    <p class="signature-name" style="margin-top: 8px;">{{ $eventner->diselenggarakan_oleh }}</p>
+                </td>
+            </tr>
         </table>
     </div>
 

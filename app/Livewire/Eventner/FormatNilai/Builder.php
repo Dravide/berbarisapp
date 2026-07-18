@@ -35,10 +35,6 @@ class Builder extends Component
     // Arrays to hold independent input states per item to avoid interfering with each other
     public $newSubCategoryNames = [];
 
-    public $newCriteriaNames = [];
-    public $newCriteriaScores = []; // e.g. "50,60,70,80,90,100"
-    public $newCriteriaWeights = []; // weight per criteria, default 1
-
     public function mount()
     {
         // Get the active eventner ID from the authenticated user
@@ -251,65 +247,6 @@ class Builder extends Component
         $sub->delete();
     }
 
-    public function addCriteria($subCategoryId)
-    {
-        // Verify the sub-category belongs to this eventner
-        $subCat = AssessmentSubCategory::whereHas('category', function ($q) {
-            $q->where('eventner_id', $this->eventnerId);
-        })->findOrFail($subCategoryId);
-
-        $name = $this->newCriteriaNames[$subCategoryId] ?? '';
-        $scoresStr = $this->newCriteriaScores[$subCategoryId] ?? '';
-
-        if (empty(trim($name)) || empty(trim($scoresStr))) {
-            session()->flash("error_{$subCategoryId}", "Nama Kriteria dan Opsi Nilai wajib diisi.");
-            return;
-        }
-
-        // Parse comma separated values
-        $scoreOptions = array_map('trim', explode(',', $scoresStr));
-
-        // Remove empty values
-        $scoreOptions = array_filter($scoreOptions, function($val) { return $val !== ''; });
-
-        if (empty($scoreOptions)) {
-            session()->flash("error_{$subCategoryId}", "Opsi Nilai tidak valid.");
-            return;
-        }
-
-        // Validate all score options are numeric
-        foreach ($scoreOptions as $opt) {
-            if (!is_numeric($opt)) {
-                session()->flash("error_{$subCategoryId}", "Semua opsi nilai harus berupa angka.");
-                return;
-            }
-        }
-
-        if (count($scoreOptions) > self::MAX_OPTIONS) {
-            session()->flash("error_{$subCategoryId}", "Maksimal " . self::MAX_OPTIONS . " opsi nilai per kriteria.");
-            return;
-        }
-
-        $maxOrder = AssessmentCriteria::where('assessment_sub_category_id', $subCategoryId)->max('sort_order') ?? 0;
-
-        $weight = $this->newCriteriaWeights[$subCategoryId] ?? 1;
-        if (!is_numeric($weight) || $weight < 0) {
-            $weight = 1;
-        }
-
-        AssessmentCriteria::create([
-            'assessment_sub_category_id' => $subCategoryId,
-            'name' => strip_tags($name),
-            'score_options' => array_values($scoreOptions),
-            'weight' => $weight,
-            'sort_order' => $maxOrder + 1,
-        ]);
-
-        $this->newCriteriaNames[$subCategoryId] = '';
-        $this->newCriteriaScores[$subCategoryId] = '';
-        $this->newCriteriaWeights[$subCategoryId] = '';
-    }
-
     public function deleteCriteria($id)
     {
         // Verify ownership through parent chain: criteria -> subCategory -> category -> eventner
@@ -383,68 +320,165 @@ class Builder extends Component
     }
 
     // ============================================================
-    // EDIT: Criteria
+    // KRITERIA MODAL (Tambah & Edit — Nama, Bobot, Label Groups)
     // ============================================================
-    public $editingCriteriaId = null;
-    public $editCriteriaName = '';
-    public $editCriteriaScores = '';
-    public $editCriteriaWeight = 1;
+    public $showCriteriaModal = false;
+    public $criteriaModalSubCategoryId = null;
+    public $criteriaModalTargetId = null; // null = new, int = editing
+    public $criteriaModalName = '';
+    public $criteriaModalWeight = 1;
+    public $labelGroups = []; // [ ['label' => 'Kurang', 'scores' => '23,30'], ... ]
 
-    public function startEditCriteria($id)
+    public function openCriteriaModal($subCategoryId, $criteriaId = null)
     {
-        $crit = AssessmentCriteria::whereHas('subCategory.category', function ($q) {
-            $q->where('eventner_id', $this->eventnerId);
-        })->findOrFail($id);
-        $this->editingCriteriaId = $id;
-        $this->editCriteriaName = $crit->name;
-        $this->editCriteriaScores = implode(',', $crit->score_options ?? []);
-        $this->editCriteriaWeight = $crit->weight ?? 1;
-    }
+        $this->criteriaModalSubCategoryId = $subCategoryId;
+        $this->criteriaModalTargetId = $criteriaId;
+        $this->labelGroups = [];
 
-    public function saveEditCriteria()
-    {
-        $this->validate([
-            'editCriteriaName' => 'required|string|max:255',
-            'editCriteriaScores' => 'required|string',
-        ]);
+        if ($criteriaId) {
+            // Editing existing criteria
+            $crit = AssessmentCriteria::whereHas('subCategory.category', function ($q) {
+                $q->where('eventner_id', $this->eventnerId);
+            })->findOrFail($criteriaId);
 
-        $scoreOptions = array_filter(array_map('trim', explode(',', $this->editCriteriaScores)), fn($v) => $v !== '');
+            $this->criteriaModalName = $crit->name;
+            $this->criteriaModalWeight = $crit->weight ?? 1;
 
-        if (empty($scoreOptions)) {
-            session()->flash('error_criteria', 'Opsi Nilai tidak valid.');
-            return;
+            // Load existing label groups from score_options
+            $grouped = [];
+            foreach ($crit->score_options ?? [] as $opt) {
+                if (is_array($opt) && !empty($opt['label'])) {
+                    $label = $opt['label'];
+                    if (!isset($grouped[$label])) {
+                        $grouped[$label] = ['label' => $label, 'scores' => []];
+                    }
+                    $grouped[$label]['scores'][] = $opt['score'];
+                } else {
+                    $score = is_array($opt) ? ($opt['score'] ?? '') : $opt;
+                    if (!isset($grouped[''])) {
+                        $grouped[''] = ['label' => '', 'scores' => []];
+                    }
+                    $grouped['']['scores'][] = $score;
+                }
+            }
+            foreach ($grouped as $g) {
+                $this->labelGroups[] = ['label' => $g['label'], 'scores' => implode(', ', $g['scores'])];
+            }
+        } else {
+            // New criteria
+            $this->criteriaModalName = '';
+            $this->criteriaModalWeight = 1;
         }
 
-        // Validate all score options are numeric
-        foreach ($scoreOptions as $opt) {
-            if (!is_numeric($opt)) {
-                session()->flash('error_criteria', 'Semua opsi nilai harus berupa angka.');
-                return;
+        if (empty($this->labelGroups)) {
+            $this->labelGroups[] = ['label' => '', 'scores' => ''];
+        }
+
+        $this->showCriteriaModal = true;
+    }
+
+    public function closeCriteriaModal()
+    {
+        $this->reset('showCriteriaModal', 'criteriaModalSubCategoryId', 'criteriaModalTargetId',
+            'criteriaModalName', 'criteriaModalWeight', 'labelGroups');
+    }
+
+    public function addLabelRow()
+    {
+        $this->labelGroups[] = ['label' => '', 'scores' => ''];
+    }
+
+    public function removeLabelRow($index)
+    {
+        if (count($this->labelGroups) > 1) {
+            unset($this->labelGroups[$index]);
+            $this->labelGroups = array_values($this->labelGroups);
+        }
+    }
+
+    public function fillLabelPreset()
+    {
+        $this->labelGroups = [
+            ['label' => 'Kurang', 'scores' => '0 – 25'],
+            ['label' => 'Cukup', 'scores' => '26 – 50'],
+            ['label' => 'Baik', 'scores' => '51 – 75'],
+            ['label' => 'Sangat Baik', 'scores' => '76 – 100'],
+        ];
+    }
+
+    public function saveCriteriaModal()
+    {
+        $this->validate(['criteriaModalName' => 'required|string|max:255']);
+
+        // Generate score_options from label groups
+        $allScores = [];
+        $hasLabels = false;
+
+        foreach ($this->labelGroups as $group) {
+            $label = trim($group['label'] ?? '');
+            $scoresRaw = $group['scores'] ?? '';
+
+            $scoresStr = str_replace([' – ', ' - ', '–', ';'], ',', $scoresRaw);
+            $parts = array_map('trim', explode(',', $scoresStr));
+            $parts = array_filter($parts, fn($v) => $v !== '');
+
+            if (!empty($label)) $hasLabels = true;
+
+            foreach ($parts as $part) {
+                if (empty($label)) {
+                    $allScores[] = $part;
+                } else {
+                    $allScores[] = ['score' => $part, 'label' => $label];
+                }
             }
         }
 
-        if (count($scoreOptions) > self::MAX_OPTIONS) {
-            session()->flash('error_criteria', 'Maksimal ' . self::MAX_OPTIONS . ' opsi nilai per kriteria.');
+        if (empty($allScores)) {
+            session()->flash('error_criteria_modal', 'Minimal satu skor harus diisi.');
             return;
         }
 
-        $weight = is_numeric($this->editCriteriaWeight) && $this->editCriteriaWeight >= 0 ? $this->editCriteriaWeight : 1;
+        // Normalize
+        if ($hasLabels) {
+            $scoreOptions = array_values(array_map(
+                fn($s) => is_array($s) ? $s : ['score' => $s, 'label' => ''],
+                $allScores
+            ));
+        } else {
+            $scoreOptions = array_values(array_map(
+                fn($s) => is_array($s) ? $s['score'] : $s,
+                $allScores
+            ));
+        }
 
-        AssessmentCriteria::whereHas('subCategory.category', function ($q) {
-            $q->where('eventner_id', $this->eventnerId);
-        })->findOrFail($this->editingCriteriaId)
-            ->update([
-                'name' => strip_tags($this->editCriteriaName),
-                'score_options' => array_values($scoreOptions),
-                'weight' => $weight,
+        if ($this->criteriaModalTargetId) {
+            // Edit existing
+            AssessmentCriteria::whereHas('subCategory.category', function ($q) {
+                $q->where('eventner_id', $this->eventnerId);
+            })->findOrFail($this->criteriaModalTargetId)
+                ->update([
+                    'name' => strip_tags($this->criteriaModalName),
+                    'score_options' => $scoreOptions,
+                    'weight' => $this->criteriaModalWeight >= 0 ? $this->criteriaModalWeight : 1,
+                ]);
+        } else {
+            // Create new
+            $subCat = AssessmentSubCategory::whereHas('category', function ($q) {
+                $q->where('eventner_id', $this->eventnerId);
+            })->findOrFail($this->criteriaModalSubCategoryId);
+
+            $maxOrder = AssessmentCriteria::where('assessment_sub_category_id', $subCat->id)->max('sort_order') ?? 0;
+
+            AssessmentCriteria::create([
+                'assessment_sub_category_id' => $subCat->id,
+                'name' => strip_tags($this->criteriaModalName),
+                'score_options' => $scoreOptions,
+                'weight' => $this->criteriaModalWeight >= 0 ? $this->criteriaModalWeight : 1,
+                'sort_order' => $maxOrder + 1,
             ]);
+        }
 
-        $this->reset('editingCriteriaId', 'editCriteriaName', 'editCriteriaScores', 'editCriteriaWeight');
-    }
-
-    public function cancelEditCriteria()
-    {
-        $this->reset('editingCriteriaId', 'editCriteriaName', 'editCriteriaScores', 'editCriteriaWeight');
+        $this->closeCriteriaModal();
     }
 
     // ============================================================
