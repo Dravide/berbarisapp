@@ -13,6 +13,8 @@ class Index extends Component
 {
     use WithPagination;
 
+    protected string $paginationTheme = 'bootstrap';
+
     public $search = '';
     public $filterEvent = '';
 
