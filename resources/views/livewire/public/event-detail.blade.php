@@ -45,8 +45,25 @@
                         {{ $eventner->nama_event }}
                     </h1>
                     <p class="mt-2 text-sm font-semibold text-on-surface-variant">
-                        Diselenggarakan oleh: <span class="text-primary font-bold">{{ $eventner->diselenggarakan_oleh }}</span>
+                        <i class="ti ti-building-skyscraper text-primary me-1"></i> Diselenggarakan oleh: <span class="text-primary font-bold">{{ $eventner->diselenggarakan_oleh }}</span>
                     </p>
+                    <div class="flex flex-wrap items-center gap-2 mt-2">
+                        @if($eventner->link_instagram)
+                            <a href="{{ $eventner->link_instagram }}" target="_blank" class="inline-flex items-center gap-1 rounded-full bg-pink-500/10 px-3 py-1 text-[11px] font-bold text-pink-600 border border-pink-500/20 hover:bg-pink-500/20 transition text-decoration-none">
+                                <i class="ti ti-brand-instagram"></i> Instagram
+                            </a>
+                        @endif
+                        @if($eventner->link_tiktok)
+                            <a href="{{ $eventner->link_tiktok }}" target="_blank" class="inline-flex items-center gap-1 rounded-full bg-dark/10 px-3 py-1 text-[11px] font-bold text-dark border border-dark/20 hover:bg-dark/10 transition text-decoration-none">
+                                <i class="ti ti-brand-tiktok"></i> TikTok
+                            </a>
+                        @endif
+                        @if($eventner->link_whatsapp)
+                            <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $eventner->link_whatsapp) }}" target="_blank" class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-600 border border-emerald-500/20 hover:bg-emerald-500/20 transition text-decoration-none">
+                                <i class="ti ti-brand-whatsapp"></i> WhatsApp
+                            </a>
+                        @endif
+                    </div>
                 </div>
             </div>
 
