@@ -21,7 +21,6 @@ class EventTicket extends Component
     public $view = 'form'; // 'form', 'payment', 'confirmation'
     public $buyerName;
     public $buyerEmail;
-    public $buyerPhone;
     public $quantity = 1;
     public $confirmOrder;
 
@@ -40,7 +39,6 @@ class EventTicket extends Component
     protected $rules = [
         'buyerName' => 'required|string|max:255',
         'buyerEmail' => 'required|email|max:255',
-        'buyerPhone' => 'required|string|max:20',
         'quantity' => 'required|integer|min:1',
     ];
 
@@ -115,7 +113,7 @@ class EventTicket extends Component
                 'eventner_id' => $this->eventner->id,
                 'buyer_name' => $this->buyerName,
                 'buyer_email' => $this->buyerEmail,
-                'buyer_phone' => $this->buyerPhone,
+                'buyer_phone' => null,
                 'quantity' => $this->quantity,
                 'price_per_ticket' => $this->eventner->ticket_price,
                 'total_amount' => $totalAmount,

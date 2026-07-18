@@ -329,13 +329,6 @@
                                 @error('buyerEmail') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                             </div>
 
-                            {{-- Phone Input --}}
-                            <div class="mb-4">
-                                <label class="text-sm font-bold text-deep-slate block mb-1.5">No. WhatsApp <span class="text-red-500">*</span></label>
-                                <input type="tel" wire:model="buyerPhone" placeholder="08xxxxxxxxxx" class="field-input w-full">
-                                @error('buyerPhone') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                            </div>
-
                             {{-- Quantity Counter --}}
                             <div class="mb-6">
                                 <label class="text-sm font-bold text-deep-slate block mb-1.5">Jumlah Tiket <span class="text-red-500">*</span></label>
