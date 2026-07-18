@@ -34,7 +34,12 @@ class Index extends Component
     {
         $eventner = auth()->user()->eventner;
         if ($eventner) {
-            $this->categories = $eventner->competitionCategories()->get()->toArray();
+            // Only show child categories (leaf nodes) with parent eager-loaded
+            $this->categories = $eventner->competitionCategories()
+                ->whereNotNull('parent_id')
+                ->with('parent')
+                ->get()
+                ->toArray();
         }
 
         if (count($this->categories) > 0) {

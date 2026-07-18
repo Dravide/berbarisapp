@@ -44,7 +44,8 @@
                             type="button" 
                             role="tab"
                         >
-                            <i class="ti ti-medal me-2"></i> {{ $category['name'] }}
+                            @php $tabLabel = !empty($category['parent']) ? $category['parent']['name'] . ' — ' . $category['name'] : $category['name']; @endphp
+                            <i class="ti ti-medal me-2"></i> {{ $tabLabel }}
                         </button>
                     </li>
                 @empty
@@ -176,7 +177,8 @@
                             <select class="form-select" wire:model="competition_category_id" required>
                                 <option value="">-- Pilih Kategori --</option>
                                 @foreach($categories as $cat)
-                                    <option value="{{ $cat['id'] }}">{{ $cat['name'] }}</option>
+                                    @php $label = $cat['parent_id'] ? \App\Models\CompetitionCategory::find($cat['parent_id'])?->name . ' — ' . $cat['name'] : $cat['name']; @endphp
+                                    <option value="{{ $cat['id'] }}">{{ $label }}</option>
                                 @endforeach
                             </select>
                             @error('competition_category_id') <span class="text-danger fs-2">{{ $message }}</span> @enderror
