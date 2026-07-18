@@ -27,6 +27,7 @@ class VoteTransaction extends Model
         'votes_earned',
         'voter_name',
         'voter_email',
+        'comment',
         'status',
         'paid_at',
     ];

@@ -23,6 +23,38 @@
     {{-- Tabler Icons --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 
+    {{-- Dynamic Theme Colors (from Eventner profile) --}}
+    @php
+        $themeConfig = $eventner?->theme_config ?? [];
+        $primaryColor = $themeConfig['primary_color'] ?? '#0062ff';
+        $accentColor = $themeConfig['accent_color'] ?? '#a3e635';
+        $bgType = $themeConfig['bg_type'] ?? 'solid';
+        $bgImage = ($bgType === 'image' && !empty($themeConfig['bg_image'])) ? 'url(' . asset('storage/' . $themeConfig['bg_image']) . ')' : '';
+
+        if ($bgType === 'image' && $bgImage) {
+            $htmlBg = "background: {$bgImage} no-repeat center center fixed; background-size: cover;";
+            $bodyBg = 'transparent';
+        } elseif ($bgType === 'gradient') {
+            $dir = $themeConfig['gradient_dir'] ?? 'to bottom right';
+            $color2 = $themeConfig['gradient_color'] ?? '#0ea5e9';
+            $htmlBg = "background: linear-gradient({$dir}, {$primaryColor}, {$color2}) fixed;";
+            $bodyBg = 'transparent';
+        } else {
+            $htmlBg = "background: {$primaryColor};";
+            $bodyBg = '#f8f9fa';
+        }
+    @endphp
+    <style>
+        :root {
+            --event-primary: {{ $primaryColor }};
+            --event-accent: {{ $accentColor }};
+            --color-primary: {{ $primaryColor }};
+            --color-secondary: {{ $accentColor }};
+        }
+        html { {{ $htmlBg }} }
+        body { background: transparent !important; }
+    </style>
+
     {{-- CSS Assets (new Design System via landing.css) --}}
     @vite(['resources/css/landing.css', 'resources/js/app.js'])
 

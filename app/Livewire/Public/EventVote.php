@@ -24,6 +24,7 @@ class EventVote extends Component
     public $voterName;
     public $voterEmail;
     public $voteCount = 10;
+    public $voterComment = '';
 
     // Payment state
     public $qrImageUrl;
@@ -154,6 +155,7 @@ class EventVote extends Component
                 'votes_earned' => $totalVotes,
                 'voter_name' => $this->voterName,
                 'voter_email' => $this->voterEmail,
+                'comment' => strip_tags($this->voterComment),
                 'status' => 'PENDING',
             ]);
 
@@ -258,6 +260,7 @@ class EventVote extends Component
     {
         $participants = collect();
         $selectedCategory = null;
+        $recentComments = collect();
 
         if ($this->selectedCategoryId) {
             $selectedCategory = CompetitionCategory::find($this->selectedCategoryId);
@@ -276,12 +279,35 @@ class EventVote extends Component
             }
 
             $participants = $query->get();
+
+            // Load recent comments per participant
+            $regIds = $participants->pluck('id');
+            $recentComments = \App\Models\VoteTransaction::whereIn('registration_id', $regIds)
+                ->where('status', 'PAID')
+                ->whereNotNull('comment')
+                ->where('comment', '!=', '')
+                ->orderByDesc('paid_at')
+                ->get()
+                ->groupBy('registration_id');
+
         }
+
+        // All comments for floating widget (from all participants in event)
+        $allComments = \App\Models\VoteTransaction::with('registration')
+            ->where('eventner_id', $this->eventner->id)
+            ->where('status', 'PAID')
+            ->whereNotNull('comment')
+            ->where('comment', '!=', '')
+            ->orderByDesc('paid_at')
+            ->limit(50)
+            ->get();
 
         return view('livewire.public.event-vote', [
             'participants' => $participants,
             'selectedCategory' => $selectedCategory,
-            'categories' => $this->eventner->competitionCategories()->whereNotNull('parent_id')->with('parent')->get()
+            'categories' => $this->eventner->competitionCategories()->whereNotNull('parent_id')->with('parent')->get(),
+            'recentComments' => $recentComments,
+            'allComments' => $allComments ?? collect(),
         ])->title('Vote Peserta - ' . $this->eventner->nama_event)
          ->layoutData(['eventner' => $this->eventner]);
     }

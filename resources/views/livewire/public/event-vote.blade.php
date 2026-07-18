@@ -149,6 +149,12 @@
                             <div class="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-5 mb-6 text-sm text-emerald-800">
                                 <strong>{{ $voteCount }} vote</strong> untuk tim pilihan Anda telah berhasil ditambahkan dan dihitung di sistem real-time kami.
                             </div>
+                            @if($voterComment)
+                                <div class="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6 text-left">
+                                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block mb-1">Pesan Anda:</span>
+                                    <p class="text-sm font-medium text-deep-slate mb-0 italic">"{{ $voterComment }}"</p>
+                                </div>
+                            @endif
                             <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-secondary py-3.5 px-6 font-bold text-sm w-full text-center text-decoration-none">
                                 <i class="ti ti-arrow-left"></i> Kembali Ke Detail Event
                             </a>
@@ -480,6 +486,19 @@
                                         <div class="flex-1 min-w-0">
                                             <h4 class="text-sm font-bold text-deep-slate leading-tight mb-0.5 truncate">{{ $reg->nama_sekolah }}</h4>
                                             <span class="text-xs text-on-surface-variant block truncate">Pelatih: {{ $reg->nama_pelatih ?? '—' }}</span>
+                                            @php $comments = $recentComments->get($reg->id, collect()); @endphp
+                                            @if($comments->isNotEmpty())
+                                                <div class="mt-1.5 flex flex-col gap-0.5">
+                                                    @foreach($comments->take(2) as $comment)
+                                                        <span class="text-[10px] text-primary/70 italic leading-tight truncate block">
+                                                            <i class="ti ti-message text-[9px]"></i> {{ Str::limit($comment->comment, 60) }}
+                                                        </span>
+                                                    @endforeach
+                                                    @if($comments->count() > 2)
+                                                        <span class="text-[9px] text-on-surface-variant font-medium">+{{ $comments->count() - 2 }} komentar lainnya</span>
+                                                    @endif
+                                                </div>
+                                            @endif
                                         </div>
                                         <span class="chip py-1 px-3 !text-[11px] shrink-0 inline-flex items-center gap-1 bg-amber-500/10 !text-amber-700 font-bold" title="Total Vote Terkumpul">
                                             <i class="ti ti-heart-filled text-xs text-amber-600"></i> {{ number_format($reg->total_votes ?? 0, 0, ',', '.') }}
@@ -539,6 +558,64 @@
                     </p>
                 </div>
             @endif
+        </div>
+    @endif
+
+    {{-- ========== FLOATING COMMENTS BUTTON ========== --}}
+    @if(!in_array($view, ['payment', 'success', 'scheduled', 'closed']))
+        <div class="fixed bottom-6 right-6 z-50" x-data="{ open: false }">
+            <button type="button" @click="open = !open"
+                class="flex items-center gap-2 bg-primary text-on-primary px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all cursor-pointer border-none"
+                :class="open ? 'scale-90 opacity-80' : ''">
+                <i class="ti ti-message text-lg"></i>
+                <span class="text-sm font-bold">{{ $allComments->count() }}</span>
+            </button>
+
+            <div x-show="open" @click.away="open = false" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
+                class="absolute bottom-16 right-0 w-80 sm:w-96 surface-card shadow-2xl rounded-2xl overflow-hidden border border-outline-variant/40"
+                style="max-height: 500px;">
+                <div class="bg-primary text-on-primary px-5 py-3.5 flex items-center justify-between">
+                    <h4 class="font-display text-sm font-bold text-on-primary inline-flex items-center gap-2 mb-0">
+                        <i class="ti ti-heart-filled"></i> Pesan &amp; Dukungan
+                    </h4>
+                    <button type="button" @click="open = false" class="text-on-primary/70 hover:text-on-primary bg-transparent border-none cursor-pointer">
+                        <i class="ti ti-x"></i>
+                    </button>
+                </div>
+                <div class="overflow-y-auto" style="max-height: 400px;">
+                    @if($allComments->isNotEmpty())
+                    <div class="divide-y divide-outline-variant/30">
+                        @foreach($allComments as $c)
+                            <div class="px-5 py-4">
+                                <div class="flex items-start gap-3">
+                                    <span class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0 text-xs font-bold">
+                                        {{ strtoupper(substr($c->voter_name, 0, 1)) }}
+                                    </span>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span class="text-xs font-bold text-deep-slate truncate">{{ $c->voter_name }}</span>
+                                            <span class="text-[9px] text-on-surface-variant shrink-0">{{ $c->paid_at?->diffForHumans() }}</span>
+                                        </div>
+                                        <p class="text-xs text-on-surface-variant/90 mt-1 leading-relaxed mb-0">
+                                            &ldquo;{{ $c->comment }}&rdquo;
+                                        </p>
+                                        @if($c->registration)
+                                            <span class="text-[10px] text-primary font-medium mt-1 block">
+                                                <i class="ti ti-school text-[9px]"></i> {{ $c->registration->nama_sekolah }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    @else
+                        <div class="p-8 text-center">
+                            <p class="text-sm text-on-surface-variant">Belum ada komentar.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
         </div>
     @endif
 

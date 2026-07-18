@@ -254,29 +254,50 @@
 
                         <hr class="my-4">
                         <h6 class="fw-semibold mb-3"><i class="ti ti-palette me-1"></i> Tema & Tampilan Halaman Publik</h6>
-                        <p class="text-muted fs-3 mb-3">Pilih tema warna yang akan tampil di halaman publik event Anda.</p>
-                        
+                        <p class="text-muted fs-3 mb-3">Sesuaikan tampilan halaman publik event dengan warna khas acara Anda.</p>
+
+                        {{-- Background Image --}}
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label fw-semibold">Gambar Latar Halaman Publik (Opsional)</label>
+                                <input type="file" wire:model="theme_bg" class="form-control form-control-sm" accept="image/*">
+                                <small class="text-muted d-block mt-1">Rekomendasi: 1920×1080, format JPG/PNG. Maks 2MB.</small>
+                                @if($theme_bg_preview)
+                                    <img src="{{ $theme_bg_preview }}" class="img-fluid rounded mt-2 border" style="max-height:120px;">
+                                @elseif($theme_bg_url)
+                                    <img src="{{ asset('storage/' . $theme_bg_url) }}" class="img-fluid rounded mt-2 border" style="max-height:120px;">
+                                @endif
+                            </div>
+                        </div>
+
+                        {{-- Presets --}}
                         <div class="row mb-3">
                             <div class="col-12">
                                 <label class="form-label fw-semibold mb-2">Pilih Preset Tema</label>
                                 <div class="d-flex flex-wrap gap-2">
                                     @php
                                         $presets = [
-                                            ['id' => 'ocean', 'name' => 'Ocean', 'primary' => '#0072FF', 'accent' => '#00D4AA'],
-                                            ['id' => 'sunset', 'name' => 'Sunset', 'primary' => '#f59e0b', 'accent' => '#ef4444'],
-                                            ['id' => 'emerald', 'name' => 'Emerald', 'primary' => '#10b981', 'accent' => '#06b6d4'],
-                                            ['id' => 'royal', 'name' => 'Royal', 'primary' => '#8b5cf6', 'accent' => '#ec4899'],
-                                            ['id' => 'crimson', 'name' => 'Crimson', 'primary' => '#ef4444', 'accent' => '#f59e0b'],
+                                            ['id' => 'ocean', 'name' => 'Ocean', 'primary' => '#0062ff', 'accent' => '#00D4AA'],
+                                            ['id' => 'sunset', 'name' => 'Sunset', 'primary' => '#f97316', 'accent' => '#ef4444'],
+                                            ['id' => 'emerald', 'name' => 'Emerald', 'primary' => '#059669', 'accent' => '#06b6d4'],
+                                            ['id' => 'royal', 'name' => 'Royal', 'primary' => '#7c3aed', 'accent' => '#ec4899'],
+                                            ['id' => 'crimson', 'name' => 'Crimson', 'primary' => '#dc2626', 'accent' => '#fbbf24'],
+                                            ['id' => 'midnight', 'name' => 'Midnight', 'primary' => '#1e293b', 'accent' => '#38bdf8'],
+                                            ['id' => 'forest', 'name' => 'Forest', 'primary' => '#166534', 'accent' => '#84cc16'],
+                                            ['id' => 'cherry', 'name' => 'Cherry', 'primary' => '#be123c', 'accent' => '#f472b6'],
+                                            ['id' => 'tropical', 'name' => 'Tropical', 'primary' => '#0d9488', 'accent' => '#fcd34d'],
+                                            ['id' => 'nebula', 'name' => 'Nebula', 'primary' => '#4338ca', 'accent' => '#c084fc'],
                                             ['id' => 'mono', 'name' => 'Mono', 'primary' => '#111827', 'accent' => '#6b7280'],
+                                            ['id' => 'rose', 'name' => 'Rose', 'primary' => '#e11d48', 'accent' => '#fda4af'],
                                         ];
                                     @endphp
                                     @foreach($presets as $p)
                                     <button type="button" wire:click="$set('theme_preset', '{{ $p['id'] }}'); $set('theme_primary', '{{ $p['primary'] }}'); $set('theme_accent', '{{ $p['accent'] }}')"
                                         class="btn {{ $theme_preset === $p['id'] ? 'border-2 border-dark' : 'border' }} rounded-3 p-0 overflow-hidden"
-                                        style="width: 80px; height: 56px; position: relative; {{ $theme_preset === $p['id'] ? 'box-shadow: 0 0 0 2px ' . $p['primary'] . ';' : '' }}">
+                                        style="width: 82px; height: 56px; position: relative; {{ $theme_preset === $p['id'] ? 'box-shadow: 0 0 0 2px ' . $p['primary'] . ';' : '' }}">
                                         <div style="width: 100%; height: 70%; background: {{ $p['primary'] }};"></div>
                                         <div style="width: 100%; height: 30%; background: {{ $p['accent'] }};"></div>
-                                        <span style="position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 10px; font-weight: 600; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">{{ $p['name'] }}</span>
+                                        <span style="position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 600; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); white-space:nowrap;">{{ $p['name'] }}</span>
                                         @if($theme_preset === $p['id'])
                                         <i class="ti ti-check" style="position: absolute; top: 2px; right: 4px; font-size: 14px; color: #fff;"></i>
                                         @endif
@@ -286,6 +307,7 @@
                             </div>
                         </div>
 
+                        {{-- Custom Colors --}}
                         <div class="row mb-4">
                             <div class="col-md-4 mb-2">
                                 <label class="form-label">Warna Utama (Primary)</label>
@@ -303,12 +325,52 @@
                             </div>
                             <div class="col-md-4 mb-2">
                                 <label class="form-label">Preview</label>
-                                <div class="rounded-3 overflow-hidden border" style="height: 38px;">
+                                <div class="rounded-3 overflow-hidden border d-flex align-items-center" style="height: 38px;">
                                     <div style="width: 60%; height: 100%; display: inline-block; background: {{ $theme_primary }};"></div>
                                     <div style="width: 40%; height: 100%; display: inline-block; background: {{ $theme_accent }};"></div>
                                 </div>
                             </div>
                         </div>
+
+                        {{-- Background Type --}}
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <label class="form-label fw-semibold mb-2">Jenis Latar Halaman</label>
+                                <div class="d-flex gap-3 flex-wrap">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" wire:model="theme_bg_type" value="solid" id="bgSolid">
+                                        <label class="form-check-label" for="bgSolid">Solid</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" wire:model="theme_bg_type" value="gradient" id="bgGradient">
+                                        <label class="form-check-label" for="bgGradient">Gradient</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" wire:model="theme_bg_type" value="image" id="bgImage">
+                                        <label class="form-check-label" for="bgImage">Gambar</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Gradient Picker (show only if gradient selected) --}}
+                        @if($theme_bg_type === 'gradient')
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-2">
+                                <label class="form-label">Gradient Arah</label>
+                                <select wire:model="theme_gradient_dir" class="form-select form-select-sm">
+                                    <option value="to right">Kiri → Kanan</option>
+                                    <option value="to bottom">Atas → Bawah</option>
+                                    <option value="to bottom right">Diagonal ↘</option>
+                                    <option value="135deg">135°</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label">Gradient Warna 2</label>
+                                <input type="color" wire:model="theme_gradient_color" class="form-control form-control-color p-1" style="width:100%;height:38px;cursor:pointer;">
+                            </div>
+                        </div>
+                        @endif
 
                         {{-- ===== LIVESTREAM OVERLAY INFO ===== --}}
                         <hr class="my-4">

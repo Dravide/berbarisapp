@@ -51,6 +51,10 @@ class Eventner extends Model
 
     protected $casts = [
         'theme_config' => 'array',
+        'ticket_start' => 'datetime',
+        'ticket_end' => 'datetime',
+        'vote_start' => 'datetime',
+        'vote_end' => 'datetime',
     ];
 
     protected static function boot()

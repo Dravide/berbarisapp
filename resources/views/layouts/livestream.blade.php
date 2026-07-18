@@ -10,6 +10,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 
+    @php
+        $themeConfig = $eventner?->theme_config ?? [];
+        $primaryColor = $themeConfig['primary_color'] ?? '#0062ff';
+        $accentColor = $themeConfig['accent_color'] ?? '#a3e635';
+    @endphp
+    <style>
+        :root {
+            --event-primary: {{ $primaryColor }};
+            --event-accent: {{ $accentColor }};
+            --color-primary: {{ $primaryColor }};
+            --color-secondary: {{ $accentColor }};
+        }
+    </style>
+
     @vite(['resources/css/landing.css', 'resources/js/app.js'])
 
     <style>

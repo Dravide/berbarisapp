@@ -36,6 +36,8 @@ class LivestreamOverlay extends Component
         // Load competition categories (except greenscreen mode)
         if ($this->mode !== 'greenscreen') {
             $this->categories = CompetitionCategory::where('eventner_id', $this->eventner->id)
+                ->whereNotNull('parent_id')
+                ->with('parent')
                 ->withCount('registrations')
                 ->orderBy('name')
                 ->get();

@@ -49,6 +49,12 @@ class Profile extends Component
     public $theme_preset = 'ocean';
     public $theme_primary = '#0072FF';
     public $theme_accent = '#00D4AA';
+    public $theme_bg_type = 'solid';
+    public $theme_gradient_dir = 'to right';
+    public $theme_gradient_color = '#0ea5e9';
+    public $theme_bg;
+    public $theme_bg_preview;
+    public $theme_bg_url;
 
     public function mount()
     {
@@ -87,6 +93,10 @@ class Profile extends Component
         $this->theme_preset = $theme['preset'] ?? 'ocean';
         $this->theme_primary = $theme['primary_color'] ?? '#0072FF';
         $this->theme_accent = $theme['accent_color'] ?? '#00D4AA';
+        $this->theme_bg_type = $theme['bg_type'] ?? 'solid';
+        $this->theme_gradient_dir = $theme['gradient_dir'] ?? 'to right';
+        $this->theme_gradient_color = $theme['gradient_color'] ?? '#0ea5e9';
+        $this->theme_bg_url = $theme['bg_image'] ?? '';
     }
 
     public function save()
@@ -112,6 +122,7 @@ class Profile extends Component
 
             'newLogo' => 'nullable|image|max:2048',
             'newPoster' => 'nullable|image|max:3072', // allow up to 3MB for poster
+            'theme_bg' => 'nullable|image|max:2048',
         ]);
 
         // Auto-compute registration_status from dates
@@ -156,6 +167,14 @@ class Profile extends Component
             $this->poster = $path;
         }
 
+        if ($this->theme_bg) {
+            if ($eventner->theme_config['bg_image'] ?? false) {
+                Storage::disk('public')->delete($eventner->theme_config['bg_image']);
+            }
+            $bgPath = $this->theme_bg->store('themes', 'public');
+            $this->theme_bg_url = $bgPath;
+        }
+
         $eventner->update([
             'nama_event' => strip_tags($this->nama_event),
             'deskripsi' => strip_tags($this->deskripsi),
@@ -182,6 +201,10 @@ class Profile extends Component
                 'preset' => $this->theme_preset,
                 'primary_color' => $this->theme_primary,
                 'accent_color' => $this->theme_accent,
+                'bg_type' => $this->theme_bg_type,
+                'gradient_dir' => $this->theme_gradient_dir,
+                'gradient_color' => $this->theme_gradient_color,
+                'bg_image' => $this->theme_bg_url,
             ],
         ]);
 

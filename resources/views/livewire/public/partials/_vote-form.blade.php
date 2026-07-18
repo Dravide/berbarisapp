@@ -42,6 +42,12 @@
             @error('voterEmail') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
         </div>
 
+        {{-- Comment --}}
+        <div>
+            <label class="text-xs font-bold text-deep-slate block mb-1.5 uppercase tracking-wider">Pesan / Komentar <span class="text-on-surface-variant font-normal normal-case">(Opsional)</span></label>
+            <textarea wire:model="voterComment" placeholder="Berikan semangat untuk tim ini..." rows="2" class="field-input w-full resize-none"></textarea>
+        </div>
+
         {{-- Price Summary --}}
         <div class="bg-surface-container-low border border-outline-variant/40 rounded-xl p-3.5 mt-2">
             <div class="flex justify-between items-center text-xs font-semibold text-on-surface-variant mb-1.5">
