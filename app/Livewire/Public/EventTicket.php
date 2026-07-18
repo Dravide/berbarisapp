@@ -52,6 +52,15 @@ class EventTicket extends Component
             abort(404, 'Tiket tidak tersedia untuk event ini.');
         }
 
+        // Cek jadwal penjualan
+        if ($this->eventner->ticket_start && now()->lt($this->eventner->ticket_start)) {
+            $this->view = 'scheduled';
+            return;
+        }
+        if ($this->eventner->ticket_end && now()->gt($this->eventner->ticket_end)) {
+            $this->view = 'closed';
+        }
+
         if ($this->confirmOrder) {
             $this->view = 'confirmation';
         }

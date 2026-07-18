@@ -12,6 +12,8 @@ class Settings extends Component
 {
     public $eventner;
     public $ticket_active = false;
+    public $ticket_start = '';
+    public $ticket_end = '';
     public $ticket_price = '';
     public $ticket_description = '';
     public $ticket_max_per_order = 10;
@@ -25,6 +27,8 @@ class Settings extends Component
         }
 
         $this->ticket_active = (bool) $this->eventner->ticket_active;
+        $this->ticket_start = $this->eventner->ticket_start?->format('Y-m-d\TH:i') ?? '';
+        $this->ticket_end = $this->eventner->ticket_end?->format('Y-m-d\TH:i') ?? '';
         $this->ticket_price = $this->eventner->ticket_price ?? '';
         $this->ticket_description = $this->eventner->ticket_description ?? '';
         $this->ticket_max_per_order = $this->eventner->ticket_max_per_order ?? 10;
@@ -71,6 +75,8 @@ class Settings extends Component
 
         $this->eventner->update([
             'ticket_active' => $this->ticket_active,
+            'ticket_start' => $this->ticket_start ?: null,
+            'ticket_end' => $this->ticket_end ?: null,
             'ticket_price' => $this->ticket_active ? $this->ticket_price : null,
             'ticket_description' => $this->ticket_description ?: null,
             'ticket_max_per_order' => $this->ticket_max_per_order,

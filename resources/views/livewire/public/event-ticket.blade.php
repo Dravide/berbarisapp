@@ -33,8 +33,47 @@
             </div>
         @endif
 
-        {{-- ========== VIEW: PAYMENT (QRIS) ========== --}}
-        @if($view === 'payment')
+        {{-- ========== VIEW: SCHEDULED (belum mulai) ========== --}}
+        @if($view === 'scheduled')
+            <div class="flex justify-center">
+                <div class="w-full max-w-lg surface-card overflow-hidden">
+                    <div class="bg-amber-500 text-white p-8 text-center">
+                        <div class="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 shadow-sm mb-3 mx-auto">
+                            <i class="ti ti-clock text-3xl"></i>
+                        </div>
+                        <h3 class="font-display text-lg font-bold text-white mb-1">Penjualan Tiket Belum Dibuka</h3>
+                        <p class="text-sm text-white/80">Tiket akan tersedia mulai:</p>
+                        <p class="text-lg font-bold mt-2">{{ \Carbon\Carbon::parse($eventner->ticket_start)->translatedFormat('l, d M Y - H:i') }} WIB</p>
+                    </div>
+                    <div class="p-6 text-center">
+                        <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
+                            <i class="ti ti-arrow-left"></i> Kembali ke Event
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ========== VIEW: CLOSED (sudah berakhir) ========== --}}
+        @elseif($view === 'closed')
+            <div class="flex justify-center">
+                <div class="w-full max-w-lg surface-card overflow-hidden">
+                    <div class="bg-red-500 text-white p-8 text-center">
+                        <div class="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 shadow-sm mb-3 mx-auto">
+                            <i class="ti ti-lock text-3xl"></i>
+                        </div>
+                        <h3 class="font-display text-lg font-bold text-white mb-1">Penjualan Tiket Telah Berakhir</h3>
+                        <p class="text-sm text-white/80">Periode penjualan tiket sudah ditutup.</p>
+                    </div>
+                    <div class="p-6 text-center">
+                        <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
+                            <i class="ti ti-arrow-left"></i> Kembali ke Event
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ========== VIEW: PAYMENT (QRIS) ========== --}}
+        @elseif($view === 'payment')
             <div class="flex justify-center" wire:poll.5s="checkPaymentStatus">
                 <div class="w-full max-w-md">
                     <div class="surface-card overflow-hidden">

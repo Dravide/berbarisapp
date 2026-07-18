@@ -46,6 +46,18 @@
 
                     @if($ticket_active)
                         <div class="border rounded p-4">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Penjualan Mulai <span class="text-muted">(Opsional)</span></label>
+                                    <input type="datetime-local" wire:model="ticket_start" class="form-control">
+                                    <small class="form-text text-muted">Kosongkan jika langsung aktif.</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Penjualan Berakhir <span class="text-muted">(Opsional)</span></label>
+                                    <input type="datetime-local" wire:model="ticket_end" class="form-control">
+                                    <small class="form-text text-muted">Kosongkan jika tidak ada batas akhir.</small>
+                                </div>
+                            </div>
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Harga Per Tiket (Rp) <span class="text-danger">*</span></label>
                                 <input type="number" wire:model="ticket_price" class="form-control" placeholder="Contoh: 50000" min="0" step="1000">

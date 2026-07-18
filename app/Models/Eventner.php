@@ -32,6 +32,8 @@ class Eventner extends Model
         'latitude',
         'longitude',
         'ticket_active',
+        'ticket_start',
+        'ticket_end',
         'ticket_price',
         'ticket_description',
         'ticket_max_per_order',
