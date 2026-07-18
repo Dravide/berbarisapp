@@ -227,7 +227,7 @@
                     @foreach($siblingRegistrations as $sib)
                         <button wire:click="switchRegistration({{ $sib->id }})"
                             class="whitespace-nowrap py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border-none outline-none cursor-pointer {{ $activeRegId == $sib->id ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface-variant hover:text-primary' }}">
-                            <i class="ti ti-users-group"></i> {{ $sib->competitionCategory->name }}
+                            <i class="ti ti-users-group"></i> {{ $sib->competitionCategory->full_name }}
                             @if($sib->participants->count() > 0)
                                 <span class="inline-block py-0.5 px-1.5 rounded-full text-[10px] ml-1 font-bold {{ $activeRegId == $sib->id ? 'bg-white text-primary' : 'bg-outline-variant/30 text-on-surface-variant' }}">{{ $sib->participants->count() }}</span>
                             @endif
@@ -240,7 +240,7 @@
             <div class="surface-card overflow-hidden">
                 <div class="bg-primary/5 px-5 py-3 border-b border-outline-variant/40">
                     <h3 class="font-display text-sm font-bold text-primary inline-flex items-center gap-1.5 mb-0">
-                        <i class="ti ti-medal"></i> {{ $registration->competitionCategory->name }}
+                        <i class="ti ti-medal"></i> {{ $registration->competitionCategory->full_name }}
                     </h3>
                 </div>
                 <div class="p-4 px-5">
@@ -299,7 +299,7 @@
                             <tbody class="divide-y divide-outline-variant/30">
                                 <tr>
                                     <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold w-1/3">Kategori Lomba</th>
-                                    <td class="px-5 py-3.5 text-deep-slate font-bold">{{ $registration->competitionCategory->name }}</td>
+                                    <td class="px-5 py-3.5 text-deep-slate font-bold">{{ $registration->competitionCategory->full_name }}</td>
                                 </tr>
                                 <tr>
                                     <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">Nama Sekolah</th>
@@ -483,6 +483,13 @@
                     </div>
                 @endif
 
+                @php
+                    $beforeTm = $registration->status_berkas === 'booking'
+                        && $registration->eventner->technical_meeting
+                        && now()->lt($registration->eventner->technical_meeting);
+                @endphp
+
+                @if(!$beforeTm)
                 <fieldset {{ $isLocked ? 'disabled' : '' }} class="flex flex-col gap-6">
 
                     {{-- Data Pelatih Card --}}
@@ -757,6 +764,7 @@
                         @endif
                     </form>
                 </fieldset>
+                @endif
             @endif
 
         </div>

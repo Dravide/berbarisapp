@@ -66,7 +66,8 @@ class EventVote extends Component
             $this->view = 'scheduled';
         }
 
-        if ($this->selectedCategoryId) {
+        // Only allow participant view if voting is active and not scheduled/closed
+        if ($this->selectedCategoryId && !in_array($this->view, ['scheduled', 'closed'])) {
             $this->view = 'participants';
         }
     }
@@ -243,6 +244,14 @@ class EventVote extends Component
             ->active()
             ->orderByDesc('vote_multiplier')
             ->first();
+    }
+
+    public function getAllBoostersProperty()
+    {
+        return VoteBooster::where('eventner_id', $this->eventner->id)
+            ->where('is_active', true)
+            ->orderBy('starts_at')
+            ->get();
     }
 
     public function render()

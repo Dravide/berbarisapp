@@ -54,20 +54,26 @@
         </div>
     </div>
 
-    {{-- ========== CATEGORY TABS ========== --}}
+    {{-- ========== CATEGORY SELECT ========== --}}
     @if(count($categories) > 1)
         <div class="container-landing pt-6">
-            <div class="flex flex-wrap gap-2 justify-center">
-                @foreach($categories as $cat)
-                    <button
-                        wire:click="switchCategory({{ $cat['id'] }})"
-                        class="px-4 py-2 rounded-full text-sm font-bold transition border
-                            {{ $selectedCategoryId == $cat['id']
-                                ? 'bg-primary text-white border-primary shadow-sm'
-                                : 'bg-white text-on-surface-variant border-outline-variant/40 hover:bg-primary/5 hover:text-primary hover:border-primary/30' }}">
-                        {{ $cat['name'] }}
-                    </button>
-                @endforeach
+            <div class="mx-auto" style="max-width: 420px;">
+                <label class="block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-2 text-center">
+                    <i class="ti ti-filter text-primary"></i> Pilih Kategori Lomba
+                </label>
+                <div class="relative">
+                    <select
+                        wire:model.live="selectedCategoryId"
+                        wire:change="switchCategory(selectedCategoryId)"
+                        class="w-full appearance-none bg-white border border-outline-variant/40 rounded-xl px-5 py-3.5 text-sm font-bold text-deep-slate shadow-sm cursor-pointer
+                               focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition">
+                        @foreach($categories as $cat)
+                            @php $label = !empty($cat['parent']) ? $cat['parent']['name'] . ' — ' . $cat['name'] : $cat['name']; @endphp
+                            <option value="{{ $cat['id'] }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                    <i class="ti ti-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"></i>
+                </div>
             </div>
         </div>
     @endif

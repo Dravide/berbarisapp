@@ -159,23 +159,135 @@
 
         {{-- ========== VIEW: NORMAL (CATEGORIES/PARTICIPANTS) ========== --}}
         @else
+            {{-- ========== VIEW: SCHEDULED (belum mulai) ========== --}}
             @if($view === 'scheduled')
-                <div class="mb-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-800 text-sm font-semibold flex items-center gap-2">
-                    <i class="ti ti-clock text-lg"></i>
-                    <span><strong>Voting Belum Dibuka.</strong> Voting akan dimulai pada {{ \Carbon\Carbon::parse($eventner->vote_start)->translatedFormat('d M Y, H:i') }} WIB.</span>
+                <div class="flex justify-center">
+                    <div class="w-full max-w-lg surface-card overflow-hidden">
+                        <div class="bg-primary text-on-primary p-8 text-center">
+                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-on-primary/20 shadow-sm mb-3 mx-auto">
+                                <i class="ti ti-clock text-3xl"></i>
+                            </div>
+                            <h3 class="font-display text-lg font-bold text-on-primary mb-1">Voting Belum Dibuka</h3>
+                            <p class="text-sm text-on-primary/80">Voting akan dimulai pada:</p>
+                            <p class="text-lg font-bold mt-2" style="color: #ffffff;">{{ \Carbon\Carbon::parse($eventner->vote_start)->translatedFormat('l, d M Y - H:i') }} WIB</p>
+                        </div>
+                        <div class="p-6 text-center">
+                            <p class="text-sm text-on-surface-variant mb-6 leading-relaxed">Tim Anda sudah terdaftar dalam kategori di bawah. Voting baru bisa dilakukan setelah jadwal dibuka.</p>
+                            <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
+                                <i class="ti ti-arrow-left"></i> Kembali ke Event
+                            </a>
+                        </div>
+                    </div>
                 </div>
             @elseif($view === 'closed')
-                <div class="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 text-sm font-semibold flex items-center gap-2">
-                    <i class="ti ti-lock text-lg"></i>
-                    <span><strong>Voting Telah Berakhir.</strong> Layanan voting berbayar telah ditutup. Berikut hasil akhir voting.</span>
+                <div class="flex justify-center">
+                    <div class="w-full max-w-lg surface-card overflow-hidden">
+                        <div class="bg-error text-on-error p-8 text-center">
+                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-on-error/20 shadow-sm mb-3 mx-auto">
+                                <i class="ti ti-lock text-3xl"></i>
+                            </div>
+                            <h3 class="font-display text-lg font-bold text-on-error mb-1">Voting Telah Berakhir</h3>
+                            <p class="text-sm text-on-error/80">Periode voting sudah ditutup.</p>
+                        </div>
+                        <div class="p-6 text-center">
+                            <p class="text-sm text-on-surface-variant mb-6 leading-relaxed">Berikut data peserta yang terdaftar di setiap kategori.</p>
+                            <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
+                                <i class="ti ti-arrow-left"></i> Kembali ke Event
+                            </a>
+                        </div>
+                    </div>
                 </div>
             @elseif(!$eventner->vote_active)
-                <div class="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 text-sm font-semibold flex items-center gap-2">
-                    <i class="ti ti-lock text-lg"></i>
-                    <span><strong>Voting Ditutup.</strong> Layanan voting berbayar belum diaktifkan oleh panitia.</span>
+                <div class="flex justify-center">
+                    <div class="w-full max-w-lg surface-card overflow-hidden">
+                        <div class="bg-cool-gray text-on-primary p-8 text-center">
+                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-on-primary/20 shadow-sm mb-3 mx-auto">
+                                <i class="ti ti-lock-off text-3xl"></i>
+                            </div>
+                            <h3 class="font-display text-lg font-bold text-on-primary mb-1">Voting Belum Diaktifkan</h3>
+                            <p class="text-sm text-on-primary/80">Layanan voting belum diaktifkan oleh panitia.</p>
+                        </div>
+                        <div class="p-6 text-center">
+                            <p class="text-sm text-on-surface-variant mb-6 leading-relaxed">Berikut data peserta yang terdaftar di setiap kategori.</p>
+                            <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
+                                <i class="ti ti-arrow-left"></i> Kembali ke Event
+                            </a>
+                        </div>
+                    </div>
                 </div>
             @endif
 
+            {{-- ========== VOTE BOOSTER INFO ========== --}}
+            @if(!in_array($view, ['scheduled', 'closed', 'payment', 'success']) && $eventner->vote_active)
+                @php $activeBooster = $this->activeBooster; $allBoosters = $this->allBoosters; @endphp
+                @if($activeBooster)
+                    <div class="mb-6 p-5 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 flex items-center gap-4 flex-wrap">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500 text-white shrink-0">
+                            <i class="ti ti-bolt text-2xl"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-display text-sm font-bold text-amber-700 mb-0.5">
+                                <i class="ti ti-bolt-filled text-amber-500"></i> Vote Booster Aktif!
+                            </h4>
+                            <p class="text-xs text-on-surface-variant leading-relaxed mb-0">
+                                Setiap transaksi dapat <strong class="text-amber-700">{{ $activeBooster->vote_multiplier }}× vote</strong> dari harga normal.
+                                Berlaku hingga {{ \Carbon\Carbon::parse($activeBooster->ends_at)->translatedFormat('d M Y, H:i') }} WIB.
+                            </p>
+                        </div>
+                        <span class="inline-flex items-center gap-1 rounded-full bg-amber-500 text-white px-3 py-1.5 text-xs font-bold whitespace-nowrap">
+                            {{ $activeBooster->vote_multiplier }}× BOOST
+                        </span>
+                    </div>
+                @endif
+
+                @if($allBoosters->isNotEmpty())
+                    <div class="mb-6">
+                        <details class="surface-card border border-outline-variant/40 overflow-hidden" {{ $activeBooster ? 'open' : '' }}>
+                            <summary class="px-5 py-3 cursor-pointer text-xs font-bold text-on-surface-variant hover:text-primary transition flex items-center gap-2 select-none">
+                                <i class="ti ti-calendar-bolt text-sm"></i> Jadwal Vote Booster ({{ $allBoosters->count() }})
+                                <i class="ti ti-chevron-down text-[10px] ml-auto details-arrow"></i>
+                            </summary>
+                            <div class="border-t border-outline-variant/30 divide-y divide-outline-variant/20">
+                                @foreach($allBoosters as $booster)
+                                    @php
+                                        $isBoosting = $booster->starts_at <= now() && $booster->ends_at >= now();
+                                        $isPast = $booster->ends_at < now();
+                                    @endphp
+                                    <div class="flex items-center justify-between px-5 py-3 text-xs {{ $isBoosting ? 'bg-amber-500/5' : ($isPast ? 'opacity-50' : '') }}">
+                                        <div class="flex items-center gap-3">
+                                            @if($isBoosting)
+                                                <span class="flex h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse shrink-0"></span>
+                                            @elseif($isPast)
+                                                <span class="flex h-2.5 w-2.5 rounded-full bg-outline-variant shrink-0"></span>
+                                            @else
+                                                <span class="flex h-2.5 w-2.5 rounded-full bg-primary shrink-0"></span>
+                                            @endif
+                                            <span class="font-semibold text-deep-slate">
+                                                {{ \Carbon\Carbon::parse($booster->starts_at)->translatedFormat('d M, H:i') }} — {{ \Carbon\Carbon::parse($booster->ends_at)->translatedFormat('d M, H:i') }}
+                                            </span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            @if($isBoosting)
+                                                <span class="inline-flex items-center gap-0.5 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-700 border border-amber-500/30">
+                                                    <i class="ti ti-bolt-filled"></i> AKTIF
+                                                </span>
+                                            @elseif($isPast)
+                                                <span class="text-[10px] font-medium text-on-surface-variant">Selesai</span>
+                                            @else
+                                                <span class="text-[10px] font-medium text-on-surface-variant">Mendatang</span>
+                                            @endif
+                                            <span class="font-bold text-primary">{{ $booster->vote_multiplier }}×</span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </details>
+                    </div>
+                @endif
+            @endif
+
+            {{-- Grid + participant data only for active views --}}
+            @if(!in_array($view, ['scheduled', 'closed']) && $eventner->vote_active)
             <div class="grid gap-8 lg:grid-cols-12">
                 {{-- Left: Selection Area --}}
                 <div class="{{ $eventner->vote_active ? 'lg:col-span-8' : 'lg:col-span-12' }}">
@@ -207,10 +319,8 @@
                         {{-- VIEW B: Participants list --}}
                         @php
                             $top3 = collect();
-                            $remainingParticipants = $participants;
                             if (!$search && $participants->count() > 0) {
                                 $top3 = $participants->take(3);
-                                $remainingParticipants = $participants->slice(3);
                             }
                         @endphp
 
@@ -313,6 +423,15 @@
                             </div>
                         @endif
 
+                        {{-- ===== DIVIDER ===== --}}
+                        <div class="flex items-center gap-4 my-8">
+                            <div class="flex-1 h-px bg-outline-variant/40"></div>
+                            <span class="text-xs font-bold text-on-surface-variant uppercase tracking-wider whitespace-nowrap">
+                                <i class="ti ti-user-plus text-primary me-1"></i> Pilih Kontingen Untuk Voting
+                            </span>
+                            <div class="flex-1 h-px bg-outline-variant/40"></div>
+                        </div>
+
                         {{-- Search Input --}}
                         <div class="mb-6 relative">
                             <i class="ti ti-search absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg"></i>
@@ -325,7 +444,7 @@
                         </div>
 
                         <div class="grid gap-3 sm:grid-cols-2">
-                            @forelse($remainingParticipants as $reg)
+                            @forelse($participants as $reg)
                                 @php $rank = $search ? ($loop->index + 1) : ($loop->index + 4); @endphp
                                 @if($eventner->vote_active)
                                     <div wire:click="selectTeam({{ $reg->id }})"
@@ -396,11 +515,12 @@
                     </div>
                 @endif
             </div>
+            @endif
         @endif
     </div>
 
     {{-- ========== STICKY BOTTOM FORM (Mobile Only) ========== --}}
-    @if($view !== 'payment' && $view !== 'success' && $eventner->vote_active)
+    @if($view !== 'payment' && $view !== 'success' && !in_array($view, ['scheduled', 'closed']) && $eventner->vote_active)
         <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-outline-variant/50 p-4 shadow-[0_-4px_24px_rgba(0,0,0,0.06)]" style="padding-bottom: calc(1rem + env(safe-area-inset-bottom));">
             @if($selectedRegistrationId)
                 <div class="flex items-center justify-between gap-4">

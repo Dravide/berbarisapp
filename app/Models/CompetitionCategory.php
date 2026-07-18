@@ -43,7 +43,10 @@ class CompetitionCategory extends Model
 
     public function remainingSlots(): int
     {
-        return max(0, ($this->kuota ?? 0) - $this->registrations()->count());
+        if (!$this->kuota) {
+            return PHP_INT_MAX; // unlimited
+        }
+        return max(0, $this->kuota - $this->registrations()->count());
     }
 
     public function getFullNameAttribute(): string

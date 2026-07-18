@@ -121,62 +121,115 @@
                             </h3>
                         </div>
                         <div class="p-6">
-                            @error('selectedCategory')
+                            @error('selectedCategories')
                                 <div class="p-3.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 text-xs font-semibold mb-4 leading-normal">
                                     {{ $message }}
                                 </div>
                             @enderror
 
-                            <p class="text-sm text-on-surface-variant mb-6">Pilih kategori lomba yang ingin diikuti dan tentukan jumlah pasukan sekolah Anda.</p>
+                            <p class="text-sm text-on-surface-variant mb-2">Pilih tingkat terlebih dahulu, lalu pilih lomba di bawah tingkat tersebut.</p>
 
-                            <div class="flex flex-col gap-3">
-                                @foreach($categories as $cat)
-                                    @php
-                                        $isFull = $cat->kuota && $cat->registrations_count >= $cat->kuota;
-                                        $maxPerSchool = $cat->max_registrations_per_school ?? 1;
-                                        $selected = (string) $selectedCategory === (string) $cat->id;
-                                    @endphp
-                                    <div class="border rounded-xl p-4 transition-all duration-200 {{ $selected ? 'border-primary bg-primary/5 shadow-sm' : 'border-outline-variant/50' }} {{ $isFull ? 'opacity-50' : '' }}">
-                                        <div class="flex items-start gap-3">
-                                            <input type="radio" wire:model.live="selectedCategory" value="{{ $cat->id }}" id="cat_{{ $cat->id }}" {{ $isFull ? 'disabled' : '' }} class="mt-1 h-5 w-5 accent-primary shrink-0 cursor-pointer">
+                            @php
+                                $lockedTingkat = $this->lockedTingkat();
+                                $grouped = $categories->groupBy('name');
+                            @endphp
 
-                                            <div class="flex-1 min-w-0">
-                                                <label for="cat_{{ $cat->id }}" class="text-sm font-bold text-deep-slate cursor-pointer block hover:text-primary transition leading-tight">{{ $cat->full_name }}</label>
+                            @foreach($grouped as $tingkatName => $cats)
+                                @php
+                                    $isLocked = $lockedTingkat !== null && $tingkatName !== $lockedTingkat;
+                                @endphp
+                                <div class="mb-6 last:mb-0 {{ $isLocked ? 'opacity-40 pointer-events-none' : '' }}">
+                                    <h4 class="font-display text-sm font-bold text-deep-slate mb-3 flex items-center gap-2">
+                                        <span class="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-primary/10 text-primary text-xs font-bold">
+                                            {{ substr($tingkatName, 0, 4) }}
+                                        </span>
+                                        {{ $tingkatName }}
+                                        @if($isLocked)
+                                            <span class="text-[10px] font-semibold text-on-surface-variant ml-1">(terkunci)</span>
+                                        @endif
+                                    </h4>
 
-                                                <div class="flex flex-wrap gap-2 mt-2">
-                                                    <span class="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary border border-primary/20">
-                                                        <i class="ti ti-users"></i> {{ $cat->registrations_count }} / {{ $cat->kuota ?? '∞' }} Pasukan
-                                                    </span>
-                                                    <span class="inline-flex items-center gap-1 rounded-md bg-[#5a7d00]/10 px-2 py-0.5 text-[10px] font-bold text-[#5a7d00] border border-[#5a7d00]/20">
-                                                        Maks {{ $maxPerSchool }} per Sekolah
-                                                    </span>
-                                                    @if($isFull)
-                                                        <span class="inline-flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-600 border border-red-500/20">Kuota Penuh</span>
-                                                    @endif
-                                                </div>
+                                    <div class="flex flex-col gap-2 ml-9">
+                                        @foreach($cats as $cat)
+                                            @php
+                                                $isFull = $cat->kuota && $cat->registrations_count >= $cat->kuota;
+                                                $maxPerSchool = $cat->max_registrations_per_school ?? 1;
+                                                $checked = in_array($cat->id, $selectedCategories);
+                                                $disabled = $isFull || ($isLocked && !$checked);
+                                            @endphp
+                                            <div class="border rounded-xl p-3.5 transition-all duration-200 {{ $checked ? 'border-primary bg-primary/5 shadow-sm' : 'border-outline-variant/50' }} {{ $disabled ? 'opacity-50' : '' }}">
+                                                <div class="flex items-start gap-3">
+                                                    <input type="checkbox" wire:click="toggleCategory({{ $cat->id }})" id="cat_{{ $cat->id }}"
+                                                        {{ $isFull ? 'disabled' : '' }}
+                                                        {{ $disabled ? 'disabled' : '' }}
+                                                        {{ $checked ? 'checked' : '' }}
+                                                        class="mt-1 h-5 w-5 accent-primary shrink-0 cursor-pointer rounded">
 
-                                                {{-- Team Count Multi-Pasukan Selection --}}
-                                                @if($selected && $maxPerSchool > 1)
-                                                    <div class="mt-4 flex items-center gap-2 bg-white border border-outline-variant/40 rounded-lg p-2 max-w-sm">
-                                                        <span class="text-xs text-on-surface-variant font-bold shrink-0">Jumlah Pasukan:</span>
-                                                        <div class="flex gap-1.5 ml-auto">
-                                                            @for($i = 1; $i <= $maxPerSchool; $i++)
-                                                                <button type="button" wire:click="$set('teamCount', {{ $i }})" class="h-8 w-10 text-xs font-bold rounded transition cursor-pointer {{ ($teamCount ?? 1) == $i ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-primary hover:bg-primary/5' }}">
-                                                                    {{ $i }}
-                                                                </button>
-                                                            @endfor
+                                                    <div class="flex-1 min-w-0">
+                                                        <label for="cat_{{ $cat->id }}" class="text-sm font-bold text-deep-slate cursor-pointer block leading-tight">
+                                                            {{ $cat->parent?->name }}
+                                                            <span class="font-normal text-on-surface-variant">—</span>
+                                                            {{ $cat->name }}
+                                                        </label>
+
+                                                        <div class="flex flex-wrap gap-2 mt-2">
+                                                            <span class="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary border border-primary/20">
+                                                                <i class="ti ti-users"></i> {{ $cat->registrations_count }} / {{ $cat->kuota ?? '∞' }} Pasukan
+                                                            </span>
+                                                            <span class="inline-flex items-center gap-1 rounded-md bg-[#5a7d00]/10 px-2 py-0.5 text-[10px] font-bold text-[#5a7d00] border border-[#5a7d00]/20">
+                                                                Maks {{ $maxPerSchool }} per Sekolah
+                                                            </span>
+                                                            @if($isFull)
+                                                                <span class="inline-flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-600 border border-red-500/20">Kuota Penuh</span>
+                                                            @endif
                                                         </div>
+
+                                                        {{-- Team Count Multi-Pasukan --}}
+                                                        @if($checked && $maxPerSchool > 1)
+                                                            <div class="mt-4 flex items-center gap-2 bg-white border border-outline-variant/40 rounded-lg p-2 max-w-sm">
+                                                                <span class="text-xs text-on-surface-variant font-bold shrink-0">Jumlah Pasukan:</span>
+                                                                <div class="flex gap-1.5 ml-auto">
+                                                                    @for($i = 1; $i <= $maxPerSchool; $i++)
+                                                                        <button type="button" wire:click="setTeamCount({{ $cat->id }}, {{ $i }})" class="h-8 w-10 text-xs font-bold rounded transition cursor-pointer {{ ($teamCounts[$cat->id] ?? 1) == $i ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-primary hover:bg-primary/5' }}">
+                                                                            {{ $i }}
+                                                                        </button>
+                                                                    @endfor
+                                                                </div>
+                                                            </div>
+                                                        @endif
                                                     </div>
-                                                @endif
+                                                </div>
                                             </div>
-                                        </div>
+                                        @endforeach
                                     </div>
-                                @endforeach
-                            </div>
+                                </div>
+                            @endforeach
 
                             @if($categories->isEmpty())
                                 <div class="text-center py-8 text-sm font-semibold text-on-surface-variant">
                                     Belum ada kategori lomba yang tersedia saat ini.
+                                </div>
+                            @endif
+
+                            {{-- Selected summary --}}
+                            @if(count($selectedCategories) > 0)
+                                <div class="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-xl">
+                                    <span class="text-xs font-bold text-primary uppercase tracking-wider block mb-2">
+                                        <i class="ti ti-check-circle"></i> {{ count($selectedCategories) }} Kategori Dipilih
+                                    </span>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach($selectedCategories as $scId)
+                                            @php $sc = $categories->firstWhere('id', $scId); @endphp
+                                            @if($sc)
+                                                <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-bold text-primary">
+                                                    {{ $sc->full_name }}
+                                                    @if(($sc->max_registrations_per_school ?? 1) > 1)
+                                                        <span class="text-[10px] opacity-75">({{ $teamCounts[$sc->id] ?? 1 }} pasukan)</span>
+                                                    @endif
+                                                </span>
+                                            @endif
+                                        @endforeach
+                                    </div>
                                 </div>
                             @endif
 
@@ -285,15 +338,19 @@
                             <h4 class="font-display text-sm font-bold text-deep-slate mb-3 inline-flex items-center gap-1.5">
                                 <i class="ti ti-medal text-primary"></i> Kategori Pilihan
                             </h4>
-                            @php $selectedCat = $categories->firstWhere('id', (int) $selectedCategory); @endphp
-                            @if($selectedCat)
-                                <div class="flex items-center justify-between bg-surface-container-low border border-outline-variant/40 rounded-xl p-4 mb-6 text-sm">
-                                    <span class="font-bold text-deep-slate">{{ $selectedCat->full_name }}</span>
-                                    <span class="chip py-1 px-3 bg-primary/10 font-bold text-xs">
-                                        {{ $teamCount ?? 1 }} pasukan
-                                    </span>
-                                </div>
-                            @endif
+                            <div class="bg-surface-container-low border border-outline-variant/40 rounded-xl p-4 mb-6 space-y-2">
+                                @foreach($selectedCategories as $scId)
+                                    @php $scCat = $categories->firstWhere('id', (int) $scId); @endphp
+                                    @if($scCat)
+                                        <div class="flex items-center justify-between text-sm">
+                                            <span class="font-bold text-deep-slate">{{ $scCat->full_name }}</span>
+                                            <span class="chip py-1 px-3 bg-primary/10 font-bold text-xs">
+                                                {{ $teamCounts[$scCat->id] ?? 1 }} pasukan
+                                            </span>
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
 
                             {{-- Informational Warning Box --}}
                             <div class="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 mb-6 flex gap-3 text-xs leading-normal">
