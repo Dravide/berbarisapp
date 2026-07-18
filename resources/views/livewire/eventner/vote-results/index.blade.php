@@ -70,10 +70,10 @@
             <ul class="nav nav-tabs nav-fill mb-4" role="tablist">
                 @forelse ($categories as $category)
                     <li class="nav-item" role="presentation">
-                        <button 
-                            class="nav-link {{ $activeTab == $category->id ? 'active bg-primary text-white' : '' }}" 
+                        <button
+                            class="nav-link {{ $activeTab == $category->id ? 'active bg-primary text-white' : '' }}"
                             wire:click="switchTab('{{ $category->id }}')"
-                            type="button" 
+                            type="button"
                             role="tab"
                         >
                             <i class="ti ti-medal me-2"></i> {{ $category->name }}

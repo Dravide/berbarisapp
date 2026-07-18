@@ -36,7 +36,7 @@
                     @foreach($competitionCategories as $cc)
                         <button wire:click="selectCompetitionCategory({{ $cc->id }})"
                             class="btn btn-sm {{ $selectedCompetitionCategoryId == $cc->id ? 'btn-primary' : 'btn-outline-primary' }} px-3">
-                            {{ $cc->name }}
+                            {{ $cc->full_name }}
                             <span class="badge {{ $selectedCompetitionCategoryId == $cc->id ? 'bg-white text-primary' : 'bg-primary' }} ms-1">{{ $cc->registrations_count }}</span>
                         </button>
                     @endforeach

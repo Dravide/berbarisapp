@@ -45,7 +45,10 @@ class Index extends Component
 
     public function render()
     {
-        $categories = $this->eventner->competitionCategories()->withCount('registrations')->get();
+        $categories = $this->eventner->competitionCategories()
+            ->whereNotNull('parent_id')
+            ->withCount('registrations')
+            ->get();
         $selectedCategory = null;
         $scoringData = collect();
 

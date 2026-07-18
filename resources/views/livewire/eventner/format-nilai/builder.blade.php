@@ -20,6 +20,31 @@
         </div>
     </div>
 
+    {{-- Pilih tingkat lomba --}}
+    <div class="row mb-4">
+        <div class="col-md-5">
+            <div class="input-group">
+                <span class="input-group-text bg-primary text-white"><i class="ti ti-category"></i></span>
+                <select class="form-select" wire:model.live="activeTab">
+                    <option value="">Semua Tingkat (Global)</option>
+                    @foreach($this->competitionCategories as $cc)
+                        <option value="{{ $cc->id }}">{{ $cc->full_name }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+        @if($activeTab !== '')
+        <div class="col-md-7 d-flex align-items-center gap-2">
+            <span class="text-primary fw-semibold">
+                <i class="ti ti-check me-1"></i> Format untuk: {{ $this->competitionCategories->firstWhere('id', $activeTab)?->full_name }}
+            </span>
+            <button wire:click="$toggle('showCopyModal')" class="btn btn-outline-secondary btn-sm ms-auto" data-bs-toggle="modal" data-bs-target="#copyModal">
+                <i class="ti ti-copy me-1"></i> Salin dari Tingkat Lain
+            </button>
+        </div>
+        @endif
+    </div>
+
     <div class="row">
         {{-- Panel Utama Builder --}}
         <div class="col-md-9">
@@ -53,6 +78,11 @@
                                     @else
                                         <button class="accordion-button collapsed fw-semibold fs-5 text-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCat-{{ $category->id }}" aria-expanded="false" aria-controls="collapseCat-{{ $category->id }}">
                                             {{ $category->name }}
+                                            @if($category->competitionCategory)
+                                                <span class="badge bg-success-subtle text-success ms-2 fs-1">{{ $category->competitionCategory->full_name }}</span>
+                                            @else
+                                                <span class="badge bg-secondary-subtle text-secondary ms-2 fs-1">Semua Kategori</span>
+                                            @endif
                                         </button>
                                         <button class="btn btn-sm btn-outline-primary border-0" wire:click="startEditCategory({{ $category->id }})" title="Edit nama kategori">
                                             <i class="ti ti-pencil"></i>
@@ -346,6 +376,12 @@
                     <h5 class="card-title fw-semibold mb-3">Buat Kategori Utama</h5>
                     <p class="fs-3 text-muted">Contoh kategori: PBB, Formasi, atau Kostum. Rubrik pengurangan diatur di dalam masing-masing kategori.</p>
 
+                    @if($activeTab !== '')
+                        <div class="alert alert-info bg-info-subtle border-0 fs-2 py-2 mb-3">
+                            <i class="ti ti-info-circle me-1"></i> Format akan disimpan untuk: <strong>{{ $this->competitionCategories->firstWhere('id', $activeTab)?->full_name }}</strong>
+                        </div>
+                    @endif
+
                     <form wire:submit="addCategory">
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Nama Kategori</label>
@@ -478,6 +514,74 @@
                     <a href="{{ route('eventner.format-nilai.pdf') }}" target="_blank" class="btn btn-danger">
                         <i class="ti ti-file-type-pdf fs-5 me-1"></i> Cetak / Unduh PDF
                     </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal Copy Format --}}
+    <div wire:ignore.self class="modal fade" id="copyModal" tabindex="-1" aria-labelledby="copyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-secondary text-white">
+                    <h5 class="modal-title text-white fw-semibold" id="copyModalLabel">
+                        <i class="ti ti-copy me-1"></i> Salin Format dari Tingkat Lain
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" wire:click="closeCopyModal"></button>
+                </div>
+                <div class="modal-body">
+                    @if(empty($copyPreviewData))
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Pilih Tingkat Sumber</label>
+                            <select class="form-select" wire:model.live="copySourceId">
+                                <option value="">― Pilih Tingkat Sumber ―</option>
+                                @foreach($this->competitionCategories->where('id', '!=', $activeTab) as $cc)
+                                    <option value="{{ $cc->id }}">{{ $cc->full_name }}</option>
+                                @endforeach
+                            </select>
+                            <small class="form-text text-muted">Pilih tingkat lomba yang formatnya ingin disalin ke tingkat ini.</small>
+                        </div>
+                        <button class="btn btn-primary" wire:click="previewCopy(copySourceId)" {{ !$copySourceId ? 'disabled' : '' }}>
+                            <i class="ti ti-eye me-1"></i> Pratinjau Format
+                        </button>
+                    @else
+                        <div class="alert alert-success border-0 bg-success-subtle text-success mb-3">
+                            <i class="ti ti-check me-1"></i> Ditemukan {{ count($copyPreviewData) }} kategori penilaian dari tingkat sumber.
+                        </div>
+                        <h6 class="fw-semibold mb-2">Rincian format yang akan disalin:</h6>
+                        <div class="table-responsive mb-3">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Kategori Penilaian</th>
+                                        <th class="text-center">Sub Kategori</th>
+                                        <th class="text-center">Kriteria</th>
+                                        <th class="text-center">Kelompok Pengurangan</th>
+                                        <th class="text-center">Kriteria Pengurangan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($copyPreviewData as $cat)
+                                    <tr>
+                                        <td class="fw-semibold">{{ $cat['name'] }}</td>
+                                        <td class="text-center">{{ $cat['sub_count'] }}</td>
+                                        <td class="text-center">{{ $cat['criteria_count'] }}</td>
+                                        <td class="text-center">{{ $cat['deduction_count'] }}</td>
+                                        <td class="text-center">{{ $cat['deduction_criteria_count'] }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-secondary" wire:click="closeCopyModal">
+                                <i class="ti ti-arrow-left me-1"></i> Kembali
+                            </button>
+                            <button class="btn btn-success" wire:click="executeCopy">
+                                <i class="ti ti-copy me-1"></i> Konfirmasi Salin Format
+                            </button>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>

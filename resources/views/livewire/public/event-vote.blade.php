@@ -59,7 +59,12 @@
                             <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 mb-4">
                                 <span class="text-xs text-on-surface-variant font-medium block mb-1">Total Pembayaran</span>
                                 <h2 class="text-2xl font-extrabold text-emerald-600 leading-tight">Rp {{ number_format($paymentAmount, 0, ',', '.') }}</h2>
-                                <span class="text-[11px] text-on-surface-variant font-medium block mt-1">{{ $voteCount }} vote × Rp {{ number_format($eventner->vote_price ?? 1000, 0, ',', '.') }}</span>
+                                <span class="text-[11px] text-on-surface-variant font-medium block mt-1">{{ $voteCount }} transaksi × Rp {{ number_format($eventner->vote_price ?? 1000, 0, ',', '.') }}</span>
+                                @if($this->activeBooster)
+                                <span class="text-[10px] text-amber-600 font-bold block mt-1">
+                                    <i class="ti ti-bolt"></i> Booster {{ $this->activeBooster->vote_multiplier }}x aktif! = <strong>{{ $voteCount * $this->activeBooster->vote_multiplier }} vote</strong>
+                                </span>
+                                @endif
                             </div>
 
                             {{-- Timer --}}

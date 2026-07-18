@@ -40,7 +40,7 @@
                         <button wire:click="selectCategory({{ $cat->id }})"
                                 class="nav-link {{ $selectedCategoryId == $cat->id ? 'active bg-primary text-white' : '' }}"
                                 type="button" role="tab">
-                            <i class="ti ti-medal me-1"></i> {{ $cat->name }}
+                            <i class="ti ti-medal me-1"></i> {{ $cat->full_name }}
                             <span class="badge {{ $selectedCategoryId == $cat->id ? 'bg-white text-primary' : 'bg-primary-subtle text-primary' }} ms-1">{{ $cat->registrations_count }}</span>
                         </button>
                     </li>

@@ -184,8 +184,14 @@ class Index extends Component
         }
 
         // Validate that all criteria are filled
+        $compCategoryId = $this->selectedRegistration->competition_category_id ?? null;
+
         $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
             ->where('eventner_id', $this->eventner->id)
+            ->where(function ($q) use ($compCategoryId) {
+                $q->where('competition_category_id', $compCategoryId)
+                  ->orWhereNull('competition_category_id');
+            })
             ->whereHas('judges', function ($q) {
                 $q->where('judges.id', $this->selectedJudgeId);
             })
@@ -194,6 +200,10 @@ class Index extends Component
         if ($assessmentCategories->isEmpty()) {
             $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
                 ->where('eventner_id', $this->eventner->id)
+                ->where(function ($q) use ($compCategoryId) {
+                    $q->where('competition_category_id', $compCategoryId)
+                      ->orWhereNull('competition_category_id');
+                })
                 ->get();
         }
 
@@ -251,9 +261,17 @@ class Index extends Component
         $this->deductions = [];
         $this->deductionSaveStatus = '';
 
+        $compCategoryId = $this->selectedRegistration->competition_category_id ?? null;
+
         $this->deductionCategories = DeductionCategory::with('criterias')
             ->where('eventner_id', $this->eventner->id)
             ->whereNotNull('assessment_category_id')
+            ->whereHas('assessmentCategory', function ($q) use ($compCategoryId) {
+                $q->where(function ($sq) use ($compCategoryId) {
+                    $sq->where('competition_category_id', $compCategoryId)
+                       ->orWhereNull('competition_category_id');
+                });
+            })
             ->orderBy('sort_order')
             ->get();
 
@@ -320,9 +338,17 @@ class Index extends Component
         }
 
         if ($this->view === 'scoring' && $this->selectedRegistration) {
+            $compCategoryId = $this->selectedRegistration->competition_category_id ?? null;
+
+            $baseQuery = AssessmentCategory::with(['subCategories.criterias'])
+                ->where('eventner_id', $this->eventner->id)
+                ->where(function ($q) use ($compCategoryId) {
+                    $q->where('competition_category_id', $compCategoryId)
+                      ->orWhereNull('competition_category_id');
+                });
+
             if ($this->selectedJudgeId) {
-                $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
-                    ->where('eventner_id', $this->eventner->id)
+                $assessmentCategories = (clone $baseQuery)
                     ->whereHas('judges', function ($q) {
                         $q->where('judges.id', $this->selectedJudgeId);
                     })
@@ -330,9 +356,7 @@ class Index extends Component
             }
 
             if (!isset($assessmentCategories) || $assessmentCategories->isEmpty()) {
-                $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
-                    ->where('eventner_id', $this->eventner->id)
-                    ->get();
+                $assessmentCategories = $baseQuery->get();
             }
         }
 
@@ -370,7 +394,7 @@ class Index extends Component
         return view('livewire.eventner.scoring.index', [
             'participants' => $participants,
             'selectedCategory' => $selectedCategory,
-            'categories' => $this->eventner->competitionCategories->loadCount('registrations'),
+            'categories' => $this->eventner->competitionCategories()->whereNotNull('parent_id')->with('parent')->get()->loadCount('registrations'),
             'assessmentCategories' => $assessmentCategories,
             'judgeTotals' => $judgeTotals,
             'totalDeductions' => $totalDeductions,

@@ -141,7 +141,7 @@
                                             <input type="radio" wire:model.live="selectedCategory" value="{{ $cat->id }}" id="cat_{{ $cat->id }}" {{ $isFull ? 'disabled' : '' }} class="mt-1 h-5 w-5 accent-primary shrink-0 cursor-pointer">
 
                                             <div class="flex-1 min-w-0">
-                                                <label for="cat_{{ $cat->id }}" class="text-sm font-bold text-deep-slate cursor-pointer block hover:text-primary transition leading-tight">{{ $cat->name }}</label>
+                                                <label for="cat_{{ $cat->id }}" class="text-sm font-bold text-deep-slate cursor-pointer block hover:text-primary transition leading-tight">{{ $cat->full_name }}</label>
 
                                                 <div class="flex flex-wrap gap-2 mt-2">
                                                     <span class="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary border border-primary/20">
@@ -216,35 +216,20 @@
                                     @error('no_hp') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                                 </div>
                                 <div>
-                                    <label class="text-sm font-bold text-deep-slate block mb-1.5">Email Penanggung Jawab</label>
-                                    <input type="email" wire:model="school_email" placeholder="contoh@email.com" class="field-input w-full">
-                                    <span class="text-[10px] text-on-surface-variant font-medium mt-1 block leading-normal">Digunakan untuk verifikasi &amp; login magic link.</span>
+                                    <label class="text-sm font-bold text-deep-slate block mb-1.5">Email Penanggung Jawab <span class="text-red-500">*</span></label>
+                                    <input type="email" wire:model="school_email" placeholder="contoh@email.com" class="field-input w-full" required>
+                                    <span class="text-[10px] text-on-surface-variant font-medium mt-1 block leading-normal">Magic link dikirim ke email ini untuk akses dashboard kontingen.</span>
                                     @error('school_email') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                                 </div>
                                 <div>
-                                    <label class="text-sm font-bold text-deep-slate block mb-1.5">Nama Pelatih / Pembina</label>
-                                    <input type="text" wire:model="nama_pelatih" placeholder="Masukkan nama pelatih" class="field-input w-full">
+                                    <label class="text-sm font-bold text-deep-slate block mb-1.5">Nama Pelatih / Pembina <span class="text-red-500">*</span></label>
+                                    <input type="text" wire:model="nama_pelatih" placeholder="Masukkan nama pelatih" class="field-input w-full" required>
                                     @error('nama_pelatih') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                                 </div>
                                 <div>
                                     {{-- Spacing --}}
                                 </div>
 
-                                <div class="md:col-span-2 border-t border-outline-variant/30 pt-3">
-                                    <span class="text-xs text-on-surface-variant font-bold block mb-4 uppercase tracking-wider">Keamanan Akun</span>
-                                    <div class="grid gap-5 md:grid-cols-2">
-                                        <div>
-                                            <label class="text-sm font-bold text-deep-slate block mb-1.5">Password <span class="text-red-500">*</span></label>
-                                            <input type="password" wire:model="password" placeholder="Minimal 6 karakter" class="field-input w-full">
-                                            <span class="text-[10px] text-on-surface-variant font-medium mt-1 block leading-normal">Simpan untuk kelola data kontingen nanti.</span>
-                                            @error('password') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                        </div>
-                                        <div>
-                                            <label class="text-sm font-bold text-deep-slate block mb-1.5">Konfirmasi Password <span class="text-red-500">*</span></label>
-                                            <input type="password" wire:model="password_confirmation" placeholder="Ulangi password" class="field-input w-full">
-                                        </div>
-                                    </div>
-                                </div>
                             </div>
 
                             <div class="flex justify-between items-center mt-8 border-t border-outline-variant/30 pt-6">
@@ -303,7 +288,7 @@
                             @php $selectedCat = $categories->firstWhere('id', (int) $selectedCategory); @endphp
                             @if($selectedCat)
                                 <div class="flex items-center justify-between bg-surface-container-low border border-outline-variant/40 rounded-xl p-4 mb-6 text-sm">
-                                    <span class="font-bold text-deep-slate">{{ $selectedCat->name }}</span>
+                                    <span class="font-bold text-deep-slate">{{ $selectedCat->full_name }}</span>
                                     <span class="chip py-1 px-3 bg-primary/10 font-bold text-xs">
                                         {{ $teamCount ?? 1 }} pasukan
                                     </span>

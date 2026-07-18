@@ -204,11 +204,29 @@
           </li>
 
           {{-- ============================================ --}}
-          {{-- INTERAKSI --}}
+          {{-- VOTING --}}
           {{-- ============================================ --}}
           <li class="nav-small-cap">
             <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-            <span class="hide-menu">Interaksi</span>
+            <span class="hide-menu">Voting</span>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.vote-settings.*') ? 'active' : '' }}"
+              href="{{ route('eventner.vote-settings.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-settings"></i>
+              </span>
+              <span class="hide-menu">Pengaturan Vote</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.vote-booster.*') ? 'active' : '' }}"
+              href="{{ route('eventner.vote-booster.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-bolt"></i>
+              </span>
+              <span class="hide-menu">Vote Booster</span>
+            </a>
           </li>
           <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('eventner.vote-results.*') ? 'active' : '' }}"
@@ -228,13 +246,30 @@
               <span class="hide-menu">Transaksi Voting</span>
             </a>
           </li>
+
+          {{-- ============================================ --}}
+          {{-- TIKET --}}
+          {{-- ============================================ --}}
+          <li class="nav-small-cap">
+            <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+            <span class="hide-menu">Tiket</span>
+          </li>
           <li class="sidebar-item">
-            <a class="sidebar-link {{ request()->routeIs('eventner.tickets.*') ? 'active' : '' }}"
+            <a class="sidebar-link {{ request()->routeIs('eventner.tickets.settings') ? 'active' : '' }}"
+              href="{{ route('eventner.tickets.settings') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-settings"></i>
+              </span>
+              <span class="hide-menu">Pengaturan Tiket</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.tickets.index') && !request()->routeIs('eventner.tickets.settings') ? 'active' : '' }}"
               href="{{ route('eventner.tickets.index') }}" aria-expanded="false">
               <span>
                 <i class="ti ti-ticket"></i>
               </span>
-              <span class="hide-menu">Tiket Online</span>
+              <span class="hide-menu">Daftar Tiket</span>
             </a>
           </li>
 

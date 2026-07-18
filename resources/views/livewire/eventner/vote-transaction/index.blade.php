@@ -145,6 +145,11 @@
             ]) }}" class="btn btn-sm btn-primary">
                 <i class="ti ti-file-export me-1"></i> Export CSV
             </a>
+            <button class="btn btn-sm btn-warning" wire:click="syncPending" wire:loading.attr="disabled" onclick="return confirm('Sinkron semua transaksi PENDING dengan AutoGoPay?') || event.stopImmediatePropagation()">
+                <i class="ti ti-refresh me-1" wire:loading.remove wire:target="syncPending"></i>
+                <span wire:loading.remove wire:target="syncPending">Sinkron Status PENDING</span>
+                <span wire:loading wire:target="syncPending"><span class="spinner-border spinner-border-sm me-1"></span> Mengecek...</span>
+            </button>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">

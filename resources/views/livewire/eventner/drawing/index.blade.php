@@ -21,6 +21,26 @@
         </div>
     </div>
 
+    {{-- Drawing Code --}}
+    <div class="card w-100 mb-4">
+        <div class="card-body">
+            <form wire:submit="saveDrawingCode">
+                <div class="row align-items-end">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold"><i class="ti ti-lock me-1"></i> Kode Proteksi Halaman Spin Pengundian</label>
+                        <input type="text" class="form-control" wire:model="drawing_code" placeholder="Misal: 123456">
+                        <small class="form-text text-muted">Kosongkan jika tidak ingin diproteksi kode.</small>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-device-floppy me-1"></i> Simpan
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {{-- Flash Messages --}}
     @if(session('success'))
         <div class="alert alert-success border-0 bg-success-subtle text-success alert-dismissible fade show">

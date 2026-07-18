@@ -6,7 +6,6 @@ use App\Models\Eventner;
 use App\Models\Registration;
 use App\Models\CompetitionCategory;
 use App\Services\MailyService;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
@@ -34,8 +33,6 @@ class Create extends Component
     public $logo_sekolah;
     public $no_hp = '';
     public $school_email = '';
-    public $password = '';
-    public $password_confirmation = '';
 
     public function mount($slug)
     {
@@ -66,17 +63,16 @@ class Create extends Component
             $this->validate([
                 'npsn' => 'required|string|max:20',
                 'nama_sekolah' => 'required|string|max:255',
+                'nama_pelatih' => 'required|string|max:255',
                 'no_hp' => 'required|string|max:20',
-                'school_email' => 'nullable|email|max:255',
-                'password' => 'required|string|min:6|confirmed',
+                'school_email' => 'required|email|max:255',
             ], [
                 'npsn.required' => 'NPSN wajib diisi.',
                 'nama_sekolah.required' => 'Nama sekolah wajib diisi.',
+                'nama_pelatih.required' => 'Nama pelatih wajib diisi.',
                 'no_hp.required' => 'No HP wajib diisi.',
+                'school_email.required' => 'Email wajib diisi.',
                 'school_email.email' => 'Format email tidak valid.',
-                'password.required' => 'Password wajib diisi.',
-                'password.min' => 'Password minimal 6 karakter.',
-                'password.confirmed' => 'Konfirmasi password tidak cocok.',
             ]);
         }
 
@@ -99,9 +95,9 @@ class Create extends Component
         $this->validate([
             'npsn' => 'required|string|max:20',
             'nama_sekolah' => 'required|string|max:255',
+            'nama_pelatih' => 'required|string|max:255',
             'no_hp' => 'required|string|max:20',
             'school_email' => 'required|email|max:255',
-            'password' => 'required|string|min:6|confirmed',
         ]);
 
         $cat = CompetitionCategory::find($this->selectedCategory);
@@ -143,7 +139,6 @@ class Create extends Component
                 'no_hp' => strip_tags($this->no_hp),
                 'school_email' => $this->school_email ? strip_tags($this->school_email) : null,
                 'logo_sekolah' => $logoPath,
-                'password' => Hash::make($this->password),
                 'status_berkas' => 'booking',
             ]);
         }
@@ -169,7 +164,19 @@ class Create extends Component
 
     public function render()
     {
-        $categories = $this->eventner->competitionCategories()->withCount('registrations')->get();
+        $categories = $this->eventner->competitionCategories()
+            ->where(function ($q) {
+                // Child categories (hierarchy)
+                $q->whereNotNull('parent_id');
+                // OR: parent categories that have no children (old flat data)
+                $q->orWhere(function ($sq) {
+                    $sq->whereNull('parent_id')
+                       ->whereDoesntHave('children');
+                });
+            })
+            ->with('parent')
+            ->withCount('registrations')
+            ->get();
 
         return view('livewire.public.registration.create', [
             'categories' => $categories,

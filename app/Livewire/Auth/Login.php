@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 #[Layout('layouts.auth')]
-#[Title('Login - BARIS APP')]
+#[Title('Masuk')]
 class Login extends Component
 {
     public $login = '';

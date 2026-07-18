@@ -7,6 +7,7 @@ use App\Models\AssessmentCategory;
 use App\Models\AssessmentSubCategory;
 use App\Models\AssessmentCriteria;
 use App\Models\AssessmentScore;
+use App\Models\CompetitionCategory;
 use App\Models\DeductionCategory;
 use App\Models\DeductionCriteria;
 use App\Models\ScoreDeduction;
@@ -20,13 +21,20 @@ use Livewire\Attributes\Title;
 class Builder extends Component
 {
     public $eventnerId;
+    public $activeTab = ''; // '' = global/semua tingkat, child_id = specific
+    public $errorMessage = '';
+
+    // Copy format
+    public $showCopyModal = false;
+    public $copySourceId = null;
+    public $copyPreviewData = [];
 
     // State for inputs
     public $newCategoryName = '';
-    
+
     // Arrays to hold independent input states per item to avoid interfering with each other
     public $newSubCategoryNames = [];
-    
+
     public $newCriteriaNames = [];
     public $newCriteriaScores = []; // e.g. "50,60,70,80,90,100"
     public $newCriteriaWeights = []; // weight per criteria, default 1
@@ -75,12 +83,35 @@ class Builder extends Component
     }
 
     #[\Livewire\Attributes\Computed]
+    public function competitionCategories()
+    {
+        return CompetitionCategory::where('eventner_id', $this->eventnerId)
+            ->where(function ($q) {
+                // Child categories (hierarchy)
+                $q->whereNotNull('parent_id');
+                // OR: parent categories with no children (old flat data, backward compat)
+                $q->orWhere(function ($sq) {
+                    $sq->whereNull('parent_id')
+                       ->whereDoesntHave('children');
+                });
+            })
+            ->with('parent')
+            ->orderBy('name')
+            ->get();
+    }
+
+    #[\Livewire\Attributes\Computed]
     public function categories()
     {
-        return AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias'])
+        $query = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias', 'competitionCategory'])
                 ->where('eventner_id', $this->eventnerId)
-                ->orderBy('sort_order')
-                ->get();
+                ->orderBy('sort_order');
+
+        if ($this->activeTab !== '') {
+            $query->where('competition_category_id', $this->activeTab);
+        }
+
+        return $query->get();
     }
 
     public function addCategory()
@@ -91,6 +122,7 @@ class Builder extends Component
 
         AssessmentCategory::create([
             'eventner_id' => $this->eventnerId,
+            'competition_category_id' => $this->activeTab !== '' ? $this->activeTab : null,
             'name' => strip_tags($this->newCategoryName),
             'sort_order' => $maxOrder + 1,
         ]);
@@ -131,6 +163,7 @@ class Builder extends Component
         // Clone the category
         $newCategory = AssessmentCategory::create([
             'eventner_id' => $this->eventnerId,
+            'competition_category_id' => $original->competition_category_id,
             'name' => $original->name . ' (Salinan)',
             'sort_order' => $maxOrder + 1,
         ]);
@@ -700,6 +733,114 @@ class Builder extends Component
                 AssessmentCriteria::where('id', $critId)->update(['sort_order' => $order + 1]);
             }
         });
+    }
+
+    // ============================================================
+    // TABS & COPY FORMAT
+    // ============================================================
+
+    public function selectTab($id)
+    {
+        $this->activeTab = $id !== '' && $id !== null ? (string) $id : '';
+    }
+
+    public function previewCopy($sourceId)
+    {
+        if (!$sourceId) {
+            $this->copyPreviewData = [];
+            return;
+        }
+
+        $sourceCategories = AssessmentCategory::where('eventner_id', $this->eventnerId)
+            ->where('competition_category_id', $sourceId)
+            ->with(['subCategories.criterias', 'deductionCategories.criterias'])
+            ->get();
+
+        $this->copyPreviewData = $sourceCategories->map(fn($cat) => [
+            'name' => $cat->name,
+            'sub_count' => $cat->subCategories->count(),
+            'criteria_count' => $cat->subCategories->sum(fn($s) => $s->criterias->count()),
+            'deduction_count' => $cat->deductionCategories->count(),
+            'deduction_criteria_count' => $cat->deductionCategories->sum(fn($d) => $d->criterias->count()),
+        ])->toArray();
+    }
+
+    public function executeCopy()
+    {
+        if (!$this->copySourceId) {
+            session()->flash('error', 'Pilih tingkat sumber terlebih dahulu.');
+            return;
+        }
+
+        $sourceCategories = AssessmentCategory::where('eventner_id', $this->eventnerId)
+            ->where('competition_category_id', $this->copySourceId)
+            ->with(['subCategories.criterias', 'deductionCategories.criterias'])
+            ->get();
+
+        if ($sourceCategories->isEmpty()) {
+            session()->flash('error', 'Tingkat sumber tidak memiliki format penilaian.');
+            $this->closeCopyModal();
+            return;
+        }
+
+        $targetId = $this->activeTab !== '' ? $this->activeTab : null;
+
+        foreach ($sourceCategories as $cat) {
+            $maxOrder = AssessmentCategory::where('eventner_id', $this->eventnerId)->max('sort_order') ?? 0;
+
+            $newCat = AssessmentCategory::create([
+                'eventner_id' => $this->eventnerId,
+                'competition_category_id' => $targetId,
+                'name' => $cat->name,
+                'sort_order' => $maxOrder + 1,
+            ]);
+
+            foreach ($cat->subCategories as $subIndex => $sub) {
+                $newSub = AssessmentSubCategory::create([
+                    'assessment_category_id' => $newCat->id,
+                    'name' => $sub->name,
+                    'sort_order' => $subIndex + 1,
+                ]);
+
+                foreach ($sub->criterias as $crit) {
+                    AssessmentCriteria::create([
+                        'assessment_sub_category_id' => $newSub->id,
+                        'name' => $crit->name,
+                        'score_options' => $crit->score_options,
+                        'weight' => $crit->weight ?? 1,
+                        'sort_order' => $crit->sort_order,
+                    ]);
+                }
+            }
+
+            foreach ($cat->deductionCategories as $dedIndex => $dedCat) {
+                $newDed = DeductionCategory::create([
+                    'eventner_id' => $this->eventnerId,
+                    'assessment_category_id' => $newCat->id,
+                    'name' => $dedCat->name,
+                    'sort_order' => $dedIndex + 1,
+                ]);
+
+                foreach ($dedCat->criterias as $dedCrit) {
+                    DeductionCriteria::create([
+                        'deduction_category_id' => $newDed->id,
+                        'name' => $dedCrit->name,
+                        'deduction_options' => $dedCrit->deduction_options,
+                        'sort_order' => $dedCrit->sort_order,
+                    ]);
+                }
+            }
+        }
+
+        session()->flash('success', 'Format penilaian berhasil disalin (' . $sourceCategories->count() . ' kategori).');
+        $this->closeCopyModal();
+    }
+
+    public function closeCopyModal()
+    {
+        $this->showCopyModal = false;
+        $this->copySourceId = null;
+        $this->copyPreviewData = [];
     }
 
     // ============================================================

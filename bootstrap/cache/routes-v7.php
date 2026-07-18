@@ -51,7 +51,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::v81NFZp6xYkDvVlJ',
+            '_route' => 'generated::LQSVB1zuXj57NTHD',
           ),
           1 => NULL,
           2 => 
@@ -71,7 +71,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::NxXwdsDXIolnlLE6',
+            '_route' => 'generated::Aq3zLjnWIPgchhrC',
           ),
           1 => NULL,
           2 => 
@@ -91,7 +91,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::a1I7ve8ZK4aWlWsx',
+            '_route' => 'generated::H6ISpUYXYeVC5bbB',
           ),
           1 => NULL,
           2 => 
@@ -130,7 +130,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::jDBOnFlLKq3xNVxS',
+            '_route' => 'generated::bx97RX2f6mDVLngp',
           ),
           1 => NULL,
           2 => 
@@ -190,7 +190,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::zTsq1AylDBUW1d4u',
+            '_route' => 'generated::5qtE0P79EMKuIZXk',
           ),
           1 => NULL,
           2 => 
@@ -529,6 +529,46 @@ app('router')->setCompiledRoutes(
           0 => 
           array (
             '_route' => 'eventner.participants.index',
+          ),
+          1 => NULL,
+          2 => 
+          array (
+            'GET' => 0,
+            'HEAD' => 1,
+          ),
+          3 => NULL,
+          4 => false,
+          5 => false,
+          6 => NULL,
+        ),
+      ),
+      '/eventner/vote-settings' => 
+      array (
+        0 => 
+        array (
+          0 => 
+          array (
+            '_route' => 'eventner.vote-settings.index',
+          ),
+          1 => NULL,
+          2 => 
+          array (
+            'GET' => 0,
+            'HEAD' => 1,
+          ),
+          3 => NULL,
+          4 => false,
+          5 => false,
+          6 => NULL,
+        ),
+      ),
+      '/eventner/vote-booster' => 
+      array (
+        0 => 
+        array (
+          0 => 
+          array (
+            '_route' => 'eventner.vote-booster.index',
           ),
           1 => NULL,
           2 => 
@@ -938,7 +978,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::usCVV9zks120NBp6',
+            '_route' => 'generated::vK4dmvutL5DBDOVO',
           ),
           1 => 
           array (
@@ -961,7 +1001,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::5m3w6r9zXJ4BOSA0',
+            '_route' => 'generated::dNo6lPmrIWkar9ww',
           ),
           1 => 
           array (
@@ -984,7 +1024,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::OCTtWJMe7PBc8mP9',
+            '_route' => 'generated::6uzXQxlMgU3LUYvb',
           ),
           1 => 
           array (
@@ -1621,7 +1661,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::v81NFZp6xYkDvVlJ' => 
+    'generated::LQSVB1zuXj57NTHD' => 
     array (
       'methods' => 
       array (
@@ -1633,7 +1673,7 @@ app('router')->setCompiledRoutes(
       array (
         'uses' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@returnJavaScriptAsFile',
         'controller' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@returnJavaScriptAsFile',
-        'as' => 'generated::v81NFZp6xYkDvVlJ',
+        'as' => 'generated::LQSVB1zuXj57NTHD',
       ),
       'fallback' => false,
       'defaults' => 
@@ -1649,7 +1689,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::NxXwdsDXIolnlLE6' => 
+    'generated::Aq3zLjnWIPgchhrC' => 
     array (
       'methods' => 
       array (
@@ -1661,7 +1701,7 @@ app('router')->setCompiledRoutes(
       array (
         'uses' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@maps',
         'controller' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@maps',
-        'as' => 'generated::NxXwdsDXIolnlLE6',
+        'as' => 'generated::Aq3zLjnWIPgchhrC',
       ),
       'fallback' => false,
       'defaults' => 
@@ -1677,7 +1717,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::a1I7ve8ZK4aWlWsx' => 
+    'generated::H6ISpUYXYeVC5bbB' => 
     array (
       'methods' => 
       array (
@@ -1689,7 +1729,7 @@ app('router')->setCompiledRoutes(
       array (
         'uses' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@cspMaps',
         'controller' => 'Livewire\\Mechanisms\\FrontendAssets\\FrontendAssets@cspMaps',
-        'as' => 'generated::a1I7ve8ZK4aWlWsx',
+        'as' => 'generated::H6ISpUYXYeVC5bbB',
       ),
       'fallback' => false,
       'defaults' => 
@@ -1760,7 +1800,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::usCVV9zks120NBp6' => 
+    'generated::vK4dmvutL5DBDOVO' => 
     array (
       'methods' => 
       array (
@@ -1797,7 +1837,7 @@ app('router')->setCompiledRoutes(
                 $component.\'.js\',
             );
         }";s:5:"scope";s:51:"Livewire\\Features\\SupportJsModules\\SupportJsModules";s:4:"this";N;s:4:"self";s:32:"00000000000007560000000000000000";}}',
-        'as' => 'generated::usCVV9zks120NBp6',
+        'as' => 'generated::vK4dmvutL5DBDOVO',
       ),
       'fallback' => false,
       'defaults' => 
@@ -1813,7 +1853,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::5m3w6r9zXJ4BOSA0' => 
+    'generated::dNo6lPmrIWkar9ww' => 
     array (
       'methods' => 
       array (
@@ -1854,7 +1894,7 @@ app('router')->setCompiledRoutes(
                 \'text/css; charset=utf-8\',
             );
         }";s:5:"scope";s:53:"Livewire\\Features\\SupportCssModules\\SupportCssModules";s:4:"this";N;s:4:"self";s:32:"00000000000007580000000000000000";}}',
-        'as' => 'generated::5m3w6r9zXJ4BOSA0',
+        'as' => 'generated::dNo6lPmrIWkar9ww',
       ),
       'fallback' => false,
       'defaults' => 
@@ -1870,7 +1910,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::OCTtWJMe7PBc8mP9' => 
+    'generated::6uzXQxlMgU3LUYvb' => 
     array (
       'methods' => 
       array (
@@ -1908,7 +1948,7 @@ app('router')->setCompiledRoutes(
                 \'text/css; charset=utf-8\',
             );
         }";s:5:"scope";s:53:"Livewire\\Features\\SupportCssModules\\SupportCssModules";s:4:"this";N;s:4:"self";s:32:"000000000000075a0000000000000000";}}',
-        'as' => 'generated::OCTtWJMe7PBc8mP9',
+        'as' => 'generated::6uzXQxlMgU3LUYvb',
       ),
       'fallback' => false,
       'defaults' => 
@@ -1924,7 +1964,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::jDBOnFlLKq3xNVxS' => 
+    'generated::bx97RX2f6mDVLngp' => 
     array (
       'methods' => 
       array (
@@ -1961,7 +2001,7 @@ app('router')->setCompiledRoutes(
                         \'exception\' => $exception,
                     ]), status: $status);
                 }";s:5:"scope";s:54:"Illuminate\\Foundation\\Configuration\\ApplicationBuilder";s:4:"this";N;s:4:"self";s:32:"00000000000007d10000000000000000";}}',
-        'as' => 'generated::jDBOnFlLKq3xNVxS',
+        'as' => 'generated::bx97RX2f6mDVLngp',
       ),
       'fallback' => false,
       'defaults' => 
@@ -2200,7 +2240,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::zTsq1AylDBUW1d4u' => 
+    'generated::5qtE0P79EMKuIZXk' => 
     array (
       'methods' => 
       array (
@@ -2220,7 +2260,7 @@ app('router')->setCompiledRoutes(
         'where' => 
         array (
         ),
-        'as' => 'generated::zTsq1AylDBUW1d4u',
+        'as' => 'generated::5qtE0P79EMKuIZXk',
       ),
       'fallback' => false,
       'defaults' => 
@@ -3451,6 +3491,84 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
+    'eventner.vote-settings.index' => 
+    array (
+      'methods' => 
+      array (
+        0 => 'GET',
+        1 => 'HEAD',
+      ),
+      'uri' => 'eventner/vote-settings',
+      'action' => 
+      array (
+        'middleware' => 
+        array (
+          0 => 'web',
+          1 => 'auth',
+          2 => 'role:Eventner',
+        ),
+        'uses' => 'App\\Livewire\\Eventner\\VoteSettings\\Index@__invoke',
+        'controller' => 'App\\Livewire\\Eventner\\VoteSettings\\Index',
+        'namespace' => NULL,
+        'prefix' => 'eventner',
+        'where' => 
+        array (
+        ),
+        'as' => 'eventner.vote-settings.index',
+      ),
+      'fallback' => false,
+      'defaults' => 
+      array (
+      ),
+      'wheres' => 
+      array (
+      ),
+      'bindingFields' => 
+      array (
+      ),
+      'lockSeconds' => NULL,
+      'waitSeconds' => NULL,
+      'withTrashed' => false,
+    ),
+    'eventner.vote-booster.index' => 
+    array (
+      'methods' => 
+      array (
+        0 => 'GET',
+        1 => 'HEAD',
+      ),
+      'uri' => 'eventner/vote-booster',
+      'action' => 
+      array (
+        'middleware' => 
+        array (
+          0 => 'web',
+          1 => 'auth',
+          2 => 'role:Eventner',
+        ),
+        'uses' => 'App\\Livewire\\Eventner\\VoteBooster\\Index@__invoke',
+        'controller' => 'App\\Livewire\\Eventner\\VoteBooster\\Index',
+        'namespace' => NULL,
+        'prefix' => 'eventner',
+        'where' => 
+        array (
+        ),
+        'as' => 'eventner.vote-booster.index',
+      ),
+      'fallback' => false,
+      'defaults' => 
+      array (
+      ),
+      'wheres' => 
+      array (
+      ),
+      'bindingFields' => 
+      array (
+      ),
+      'lockSeconds' => NULL,
+      'waitSeconds' => NULL,
+      'withTrashed' => false,
+    ),
     'eventner.vote-results.index' => 
     array (
       'methods' => 
@@ -4241,7 +4359,7 @@ app('router')->setCompiledRoutes(
                         $config,
                         $isProduction
                     ))($request, $path);
-                }";s:5:"scope";s:47:"Illuminate\\Filesystem\\FilesystemServiceProvider";s:4:"this";N;s:4:"self";s:32:"00000000000008100000000000000000";}}',
+                }";s:5:"scope";s:47:"Illuminate\\Filesystem\\FilesystemServiceProvider";s:4:"this";N;s:4:"self";s:32:"00000000000008120000000000000000";}}',
         'as' => 'storage.local.upload',
       ),
       'fallback' => false,

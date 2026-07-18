@@ -11,11 +11,16 @@ class AssessmentCategory extends Model
 {
     use HasFactory, LogsActivity;
 
-    protected $fillable = ['eventner_id', 'name', 'sort_order'];
+    protected $fillable = ['eventner_id', 'competition_category_id', 'name', 'sort_order'];
 
     public function eventner()
     {
         return $this->belongsTo(Eventner::class);
+    }
+
+    public function competitionCategory()
+    {
+        return $this->belongsTo(CompetitionCategory::class, 'competition_category_id');
     }
 
     public function subCategories()

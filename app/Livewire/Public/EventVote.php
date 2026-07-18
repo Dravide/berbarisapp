@@ -5,6 +5,7 @@ namespace App\Livewire\Public;
 use App\Models\CompetitionCategory;
 use App\Models\Eventner;
 use App\Models\Registration;
+use App\Models\VoteBooster;
 use App\Models\VoteTransaction;
 use App\Services\AutoGoPay;
 use Illuminate\Support\Facades\Log;
@@ -103,7 +104,21 @@ class EventVote extends Component
 
         $this->validate();
 
-        $amount = $this->voteCount * ($this->eventner->vote_price ?? 1000);
+        $basePrice = $this->eventner->vote_price ?? 1000;
+        $multiplier = 1;
+
+        // Cek vote booster aktif
+        $activeBooster = VoteBooster::where('eventner_id', $this->eventner->id)
+            ->active()
+            ->orderByDesc('vote_multiplier')
+            ->first();
+
+        if ($activeBooster) {
+            $multiplier = $activeBooster->vote_multiplier;
+        }
+
+        $totalVotes = $this->voteCount * $multiplier;
+        $amount = $this->voteCount * $basePrice; // harga tetap per transaksi
 
         try {
             // Generate QRIS via AutoGoPay
@@ -124,7 +139,7 @@ class EventVote extends Component
                 'autogopay_transaction_id' => $data['transaction_id'],
                 'qr_url' => $data['qr_url'],
                 'amount' => $amount,
-                'votes_earned' => $this->voteCount,
+                'votes_earned' => $totalVotes,
                 'voter_name' => $this->voterName,
                 'voter_email' => $this->voterEmail,
                 'status' => 'PENDING',
@@ -209,6 +224,14 @@ class EventVote extends Component
         $this->paymentAmount = null;
         $this->paymentConfirmed = false;
         $this->view = 'participants';
+    }
+
+    public function getActiveBoosterProperty()
+    {
+        return VoteBooster::where('eventner_id', $this->eventner->id)
+            ->active()
+            ->orderByDesc('vote_multiplier')
+            ->first();
     }
 
     public function render()

@@ -48,7 +48,7 @@
                                     <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:56px;height:56px;">
                                         <i class="ti ti-medal fs-7"></i>
                                     </div>
-                                    <h5 class="fw-semibold text-dark mb-1">{{ $cat->name }}</h5>
+                                    <h5 class="fw-semibold text-dark mb-1">{{ $cat->full_name }}</h5>
                                     <p class="text-muted mb-3 fs-2">{{ $cat->registrations_count }} Peserta</p>
                                     <span class="btn btn-sm btn-primary">
                                         <i class="ti ti-edit me-1"></i> Input Nilai
@@ -69,7 +69,7 @@
                     <button wire:click="backToCategories" class="btn btn-sm btn-light">
                         <i class="ti ti-arrow-left"></i>
                     </button>
-                    <h5 class="mb-0 text-white fw-semibold">{{ $selectedCategory->name }} — Pilih Peserta</h5>
+                    <h5 class="mb-0 text-white fw-semibold">{{ $selectedCategory->full_name }} — Pilih Peserta</h5>
                 </div>
                 <a href="{{ route('eventner.scoring.csv', ['category_id' => $selectedCategoryId]) }}" class="btn btn-sm btn-light" target="_blank">
                     <i class="ti ti-file-type-csv text-success me-1"></i> Download CSV

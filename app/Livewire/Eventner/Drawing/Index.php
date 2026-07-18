@@ -17,6 +17,7 @@ class Index extends Component
     public $eventner;
     public $activeTab = '';
     public $categories = [];
+    public $drawing_code = '';
 
     // Manual input state
     public $manualRegistrationId = null;
@@ -31,10 +32,17 @@ class Index extends Component
         }
 
         $this->categories = $this->eventner->competitionCategories()->get()->toArray();
+        $this->drawing_code = $this->eventner->drawing_code ?? '';
 
         if (count($this->categories) > 0) {
             $this->activeTab = $this->categories[0]['id'];
         }
+    }
+
+    public function saveDrawingCode()
+    {
+        $this->eventner->update(['drawing_code' => $this->drawing_code ?: null]);
+        session()->flash('success', 'Kode proteksi pengundian berhasil disimpan.');
     }
 
     public function switchTab($categoryId)

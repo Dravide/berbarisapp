@@ -3,7 +3,9 @@
 namespace App\Livewire\Eventner\VoteTransaction;
 
 use App\Models\Registration;
+use App\Models\Ticket;
 use App\Models\VoteTransaction;
+use App\Services\AutoGoPay;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -61,6 +63,64 @@ class Index extends Component
     {
         $this->reset(['search', 'filterStatus', 'filterRegistration', 'dateFrom', 'dateTo']);
         $this->resetPage();
+    }
+
+    public function syncPending()
+    {
+        $eventner = auth()->user()->eventner;
+        abort_unless($eventner, 403);
+
+        $pending = VoteTransaction::where('eventner_id', $eventner->id)
+            ->where('status', 'PENDING')
+            ->whereNotNull('autogopay_transaction_id')
+            ->get();
+
+        $pendingTickets = Ticket::where('eventner_id', $eventner->id)
+            ->where('status', 'PENDING')
+            ->whereNotNull('autogopay_transaction_id')
+            ->get();
+
+        $service = new AutoGoPay();
+        $synced = 0;
+        $errors = 0;
+
+        // Sync vote transactions
+        foreach ($pending as $tx) {
+            try {
+                $result = $service->checkStatus($tx->autogopay_transaction_id);
+                $status = $result['data']['transaction_status'] ?? 'pending';
+
+                if ($status === 'settlement') {
+                    $tx->update(['status' => 'PAID', 'paid_at' => now()]);
+                    $synced++;
+                } elseif (in_array($status, ['expire', 'cancel'])) {
+                    $tx->update(['status' => strtoupper($status)]);
+                    $synced++;
+                }
+            } catch (\Exception $e) {
+                $errors++;
+            }
+        }
+
+        // Sync ticket transactions
+        foreach ($pendingTickets as $ticket) {
+            try {
+                $result = $service->checkStatus($ticket->autogopay_transaction_id);
+                $status = $result['data']['transaction_status'] ?? 'pending';
+
+                if ($status === 'settlement') {
+                    $ticket->update(['status' => 'PAID', 'paid_at' => now()]);
+                    $synced++;
+                } elseif (in_array($status, ['expire', 'cancel'])) {
+                    $ticket->update(['status' => strtoupper($status)]);
+                    $synced++;
+                }
+            } catch (\Exception $e) {
+                $errors++;
+            }
+        }
+
+        session()->flash('success', "Sinkron selesai: {$synced} transaksi diperbarui" . ($errors > 0 ? ", {$errors} gagal." : "."));
     }
 
     public function markAsPaid($id)
