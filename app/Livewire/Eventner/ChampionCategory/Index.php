@@ -269,7 +269,7 @@ class Index extends Component
             ->where('eventner_id', $this->eventner->id)
             ->get();
 
-        $competitionCategories = $this->eventner->competitionCategories()->withCount('registrations')->get();
+        $competitionCategories = $this->eventner->competitionCategories()->whereNotNull('parent_id')->withCount('registrations')->get();
 
         // Calculate rankings for each champion category
         $rankings = collect();
