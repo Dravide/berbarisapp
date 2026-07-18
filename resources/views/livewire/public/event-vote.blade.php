@@ -159,10 +159,20 @@
 
         {{-- ========== VIEW: NORMAL (CATEGORIES/PARTICIPANTS) ========== --}}
         @else
-            @if(!$eventner->vote_active)
+            @if($view === 'scheduled')
+                <div class="mb-6 p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-800 text-sm font-semibold flex items-center gap-2">
+                    <i class="ti ti-clock text-lg"></i>
+                    <span><strong>Voting Belum Dibuka.</strong> Voting akan dimulai pada {{ \Carbon\Carbon::parse($eventner->vote_start)->translatedFormat('d M Y, H:i') }} WIB.</span>
+                </div>
+            @elseif($view === 'closed')
                 <div class="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 text-sm font-semibold flex items-center gap-2">
                     <i class="ti ti-lock text-lg"></i>
-                    <span><strong>Voting Ditutup.</strong> Layanan voting berbayar telah berakhir. Berikut hasil akhir voting.</span>
+                    <span><strong>Voting Telah Berakhir.</strong> Layanan voting berbayar telah ditutup. Berikut hasil akhir voting.</span>
+                </div>
+            @elseif(!$eventner->vote_active)
+                <div class="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 text-sm font-semibold flex items-center gap-2">
+                    <i class="ti ti-lock text-lg"></i>
+                    <span><strong>Voting Ditutup.</strong> Layanan voting berbayar belum diaktifkan oleh panitia.</span>
                 </div>
             @endif
 

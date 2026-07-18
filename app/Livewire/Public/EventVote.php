@@ -51,8 +51,19 @@ class EventVote extends Component
             $q->withCount('registrations');
         }])->where('slug', $slug)->firstOrFail();
 
-        if (!$this->eventner->vote_active && in_array($this->view, ['payment', 'success'])) {
-            $this->view = $this->selectedCategoryId ? 'participants' : 'categories';
+        // Cek voting ditutup
+        if (!$this->eventner->vote_active) {
+            if (in_array($this->view, ['payment', 'success'])) {
+                $this->view = $this->selectedCategoryId ? 'participants' : 'categories';
+            }
+        }
+
+        // Cek jadwal
+        if ($this->eventner->vote_active && $this->eventner->vote_end && now()->gt($this->eventner->vote_end)) {
+            $this->view = 'closed';
+        }
+        if ($this->eventner->vote_active && $this->eventner->vote_start && now()->lt($this->eventner->vote_start)) {
+            $this->view = 'scheduled';
         }
 
         if ($this->selectedCategoryId) {

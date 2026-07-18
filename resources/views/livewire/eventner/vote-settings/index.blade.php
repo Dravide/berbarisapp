@@ -38,6 +38,20 @@
 
                 @if($vote_active)
                 <div class="border rounded p-4 mb-4">
+                    <h6 class="fw-semibold mb-3">Jadwal Voting</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Voting Mulai <span class="text-muted">(Opsional)</span></label>
+                            <input type="datetime-local" class="form-control" wire:model="vote_start">
+                            <small class="form-text text-muted">Kosongkan jika langsung aktif.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Voting Berakhir <span class="text-muted">(Opsional)</span></label>
+                            <input type="datetime-local" class="form-control" wire:model="vote_end">
+                            <small class="form-text text-muted">Kosongkan jika tidak ada batas akhir.</small>
+                        </div>
+                    </div>
+                    <hr>
                     <h6 class="fw-semibold mb-3">Harga Vote</h6>
                     <div class="row">
                         <div class="col-md-6">

@@ -13,6 +13,8 @@ class Index extends Component
 {
     public $vote_active = false;
     public $vote_price = 1000;
+    public $vote_start = '';
+    public $vote_end = '';
 
     public function mount()
     {
@@ -21,6 +23,8 @@ class Index extends Component
 
         $this->vote_active = (bool) $eventner->vote_active;
         $this->vote_price = $eventner->vote_price ?? 1000;
+        $this->vote_start = $eventner->vote_start?->format('Y-m-d\TH:i') ?? '';
+        $this->vote_end = $eventner->vote_end?->format('Y-m-d\TH:i') ?? '';
     }
 
     public function save()
@@ -29,6 +33,8 @@ class Index extends Component
         $eventner->update([
             'vote_active' => $this->vote_active,
             'vote_price' => $this->vote_price,
+            'vote_start' => $this->vote_start ?: null,
+            'vote_end' => $this->vote_end ?: null,
         ]);
         session()->flash('success', 'Pengaturan vote berhasil disimpan.');
     }
