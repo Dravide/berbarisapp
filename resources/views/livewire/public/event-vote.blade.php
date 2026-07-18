@@ -195,7 +195,7 @@
                                     <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary mb-3">
                                         <i class="ti ti-trophy text-2xl"></i>
                                     </div>
-                                    <h4 class="font-display text-sm font-bold text-deep-slate leading-tight mb-1 text-center truncate max-w-full" title="{{ $cat->name }}">{{ $cat->name }}</h4>
+                                    <h4 class="font-display text-sm font-bold text-deep-slate leading-tight mb-1 text-center truncate max-w-full" title="{{ $cat->full_name }}">{{ $cat->full_name }}</h4>
                                     <span class="text-xs text-on-surface-variant font-medium block mb-4">{{ $cat->registrations_count }} Kontingen</span>
                                     <span class="btn-ghost py-1.5 px-4 text-xs font-semibold leading-normal inline-flex items-center gap-1.5">
                                         Pilih Kategori <i class="ti ti-arrow-right text-[10px]"></i>
