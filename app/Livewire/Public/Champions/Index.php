@@ -35,6 +35,12 @@ class Index extends Component
         $this->calculateRankings();
     }
 
+    public function updatedSelectedCategoryId($value)
+    {
+        $this->selectedCategoryId = $value;
+        $this->calculateRankings();
+    }
+
     public function switchCategory($categoryId)
     {
         $this->selectedCategoryId = $categoryId;

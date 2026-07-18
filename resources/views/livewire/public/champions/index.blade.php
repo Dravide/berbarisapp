@@ -12,20 +12,18 @@
             </div>
         </div>
 
-        {{-- Category Tabs --}}
-        @if(count($categories) > 1)
-        <ul class="nav nav-tabs nav-fill mb-4" role="tablist">
-            @foreach($categories as $cat)
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link {{ $selectedCategoryId == $cat['id'] ? 'active bg-primary text-white' : '' }}"
-                        wire:click="switchCategory({{ $cat['id'] }})"
-                        type="button" role="tab">
-                        {{ $cat['name'] }}
-                    </button>
-                </li>
-            @endforeach
-        </ul>
-        @endif
+        {{-- Category Select --}}
+        <div class="mb-4">
+            <div class="input-group mx-auto" style="max-width: 400px;">
+                <span class="input-group-text bg-primary text-white"><i class="ti ti-category"></i></span>
+                <select class="form-select" wire:model.live="selectedCategoryId" wire:change="switchCategory(selectedCategoryId)">
+                    @foreach($categories as $cat)
+                        @php $label = !empty($cat['parent']) ? $cat['parent']['name'] . ' — ' . $cat['name'] : $cat['name']; @endphp
+                        <option value="{{ $cat['id'] }}">{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
 
         {{-- Champion Rankings --}}
         @forelse($allRankings as $group)

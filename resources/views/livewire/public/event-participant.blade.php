@@ -71,7 +71,7 @@
                         <div class="flex items-center justify-between bg-surface-container px-6 py-4 border-b border-outline-variant/40">
                             <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">
                                 <i class="ti ti-medal text-primary text-lg"></i>
-                                {{ $cat->name }}
+                                {{ $cat->full_name }}
                             </h3>
                             <span class="chip py-0.5 px-2.5 text-xs font-bold leading-normal bg-primary/10">{{ $cat->registrations->count() }} kontingen</span>
                         </div>
