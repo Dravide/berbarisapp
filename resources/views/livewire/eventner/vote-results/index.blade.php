@@ -66,25 +66,19 @@
                 </div>
             </div>
 
-            <!-- Tabs Kategori -->
-            <ul class="nav nav-tabs nav-fill mb-4" role="tablist">
-                @forelse ($categories as $category)
-                    <li class="nav-item" role="presentation">
-                        <button
-                            class="nav-link {{ $activeTab == $category->id ? 'active bg-primary text-white' : '' }}"
-                            wire:click="switchTab('{{ $category->id }}')"
-                            type="button"
-                            role="tab"
-                        >
-                            <i class="ti ti-medal me-2"></i> {{ $category->name }}
-                        </button>
-                    </li>
-                @empty
-                    <li class="nav-item">
-                        <span class="nav-link text-muted">Belum ada Kategori Lomba.</span>
-                    </li>
-                @endforelse
-            </ul>
+            <!-- Kategori Select -->
+            <div class="mb-4" style="max-width: 380px;">
+                <div class="input-group">
+                    <span class="input-group-text bg-primary text-white"><i class="ti ti-category"></i></span>
+                    <select class="form-select" wire:model.live="activeTab">
+                        @forelse ($categories as $category)
+                            <option value="{{ $category->id }}">{{ $category->full_name }}</option>
+                        @empty
+                            <option value="">Belum ada Kategori Lomba</option>
+                        @endforelse
+                    </select>
+                </div>
+            </div>
 
             <!-- Tab Content -->
             <div class="tab-content">

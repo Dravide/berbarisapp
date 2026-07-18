@@ -20,7 +20,10 @@ class Index extends Component
     {
         $eventner = auth()->user()->eventner;
         if ($eventner) {
-            $this->categories = $eventner->competitionCategories()->get();
+            $this->categories = $eventner->competitionCategories()
+                ->whereNotNull('parent_id')
+                ->with('parent')
+                ->get();
         }
 
         if ($this->categories->count() > 0) {
