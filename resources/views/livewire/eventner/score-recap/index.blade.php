@@ -33,19 +33,17 @@
                 @endif
             </div>
 
-            {{-- Tabs (Template Standard: nav-tabs nav-fill) --}}
-            <ul class="nav nav-tabs nav-fill mb-4" role="tablist">
-                @foreach($categories as $cat)
-                    <li class="nav-item" role="presentation">
-                        <button wire:click="selectCategory({{ $cat->id }})"
-                                class="nav-link {{ $selectedCategoryId == $cat->id ? 'active bg-primary text-white' : '' }}"
-                                type="button" role="tab">
-                            <i class="ti ti-medal me-1"></i> {{ $cat->full_name }}
-                            <span class="badge {{ $selectedCategoryId == $cat->id ? 'bg-white text-primary' : 'bg-primary-subtle text-primary' }} ms-1">{{ $cat->registrations_count }}</span>
-                        </button>
-                    </li>
-                @endforeach
-            </ul>
+            {{-- Kategori Select --}}
+            <div class="mb-4" style="max-width: 380px;">
+                <div class="input-group">
+                    <span class="input-group-text bg-primary text-white"><i class="ti ti-category"></i></span>
+                    <select class="form-select" wire:model.live="selectedCategoryId">
+                        @foreach($categories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->full_name }} ({{ $cat->registrations_count }})</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
 
             @if($selectedCategory)
                 {{-- Table Content --}}
