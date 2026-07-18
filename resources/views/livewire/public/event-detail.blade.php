@@ -114,6 +114,9 @@
         </div>
     </div>
 
+    {{-- ========== TAB: INFO ========== --}}
+    @if($tab === 'info')
+
     {{-- ========== QUICK INFO CARD ========== --}}
     @php
         $totalKuota = $eventner->competitionCategories->sum('kuota');
@@ -431,8 +434,6 @@
             </div>
         @endif
     </div>
-
-    @endif {{-- /tab-info --}}
 
     {{-- ========== TAB: PESERTA ========== --}}
     @if($tab === 'participants')
