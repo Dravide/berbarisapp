@@ -310,6 +310,21 @@
           </li>
           @endif
 
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.faq.*') ? 'active' : '' }}"
+              href="{{ route('eventner.faq.index') }}" aria-expanded="false">
+              <span><i class="ti ti-help-circle"></i></span>
+              <span class="hide-menu">FAQ</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.gallery.*') ? 'active' : '' }}"
+              href="{{ route('eventner.gallery.index') }}" aria-expanded="false">
+              <span><i class="ti ti-photo"></i></span>
+              <span class="hide-menu">Galeri</span>
+            </a>
+          </li>
+
           {{-- ============================================ --}}
           {{-- PARTNER & TENANT --}}
           {{-- ============================================ --}}

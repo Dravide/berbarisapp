@@ -235,6 +235,47 @@
                     </div>
                 </div>
 
+                {{-- Galeri Foto --}}
+                @php $galleries = \App\Models\EventGallery::where('eventner_id', $eventner->id)->orderBy('sort_order')->latest()->get(); @endphp
+                @if($galleries->isNotEmpty())
+                    <div class="surface-card p-6">
+                        <h3 class="font-display text-lg font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
+                            <i class="ti ti-photo text-primary"></i>
+                            Galeri Foto
+                        </h3>
+                        <div class="grid gap-2 grid-cols-3">
+                            @foreach($galleries->take(6) as $gal)
+                                <a href="{{ asset('storage/' . $gal->image) }}" target="_blank" class="rounded-lg overflow-hidden border border-outline-variant/30 hover:opacity-90 transition">
+                                    <img src="{{ asset('storage/' . $gal->image) }}" class="w-full h-24 object-cover" alt="{{ $gal->caption ?? 'Foto Event' }}" loading="lazy">
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                {{-- FAQ --}}
+                @php $faqs = \App\Models\EventFaq::where('eventner_id', $eventner->id)->orderBy('sort_order')->get(); @endphp
+                @if($faqs->isNotEmpty())
+                    <div class="surface-card p-6">
+                        <h3 class="font-display text-lg font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
+                            <i class="ti ti-help-circle text-primary"></i>
+                            Tanya Jawab (FAQ)
+                        </h3>
+                        <div class="flex flex-col gap-2">
+                            @foreach($faqs as $faq)
+                                <details class="group border border-outline-variant/30 rounded-xl p-4 hover:border-primary/30 transition">
+                                    <summary class="text-sm font-bold text-deep-slate cursor-pointer list-none flex justify-between items-center">
+                                        {{ $faq->question }}
+                                        <i class="ti ti-chevron-down text-on-surface-variant group-open:hidden"></i>
+                                        <i class="ti ti-chevron-up text-primary hidden group-open:inline"></i>
+                                    </summary>
+                                    <p class="text-sm text-on-surface-variant mt-3 leading-relaxed">{{ $faq->answer }}</p>
+                                </details>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Dewan Juri --}}
                 @if($eventner->judges->count() > 0)
                     <div class="surface-card p-6">
@@ -330,6 +371,28 @@
                                     <div>
                                         <span class="text-xs text-on-surface-variant font-medium block">Batas Pendaftaran</span>
                                         <span class="font-bold text-deep-slate leading-normal">{{ \Carbon\Carbon::parse($eventner->tanggal_pendaftaran)->translatedFormat('d F Y') }}</span>
+                                    </div>
+                                </div>
+                                {{-- Countdown pendaftaran --}}
+                                <div class="mt-3 rounded-lg bg-red-500/5 border border-red-500/20 p-3" x-data="countdown('{{ \Carbon\Carbon::parse($eventner->tanggal_pendaftaran)->endOfDay()->toIso8601String() }}')">
+                                    <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider block text-center mb-2">Pendaftaran Ditutup Dalam</span>
+                                    <div class="grid grid-cols-4 gap-1.5">
+                                        <div class="bg-red-500/10 rounded-lg p-1 text-center">
+                                            <span class="text-sm font-extrabold text-red-500 block leading-tight" x-text="days"></span>
+                                            <span class="text-[8px] text-red-400 font-bold uppercase">Hari</span>
+                                        </div>
+                                        <div class="bg-red-500/10 rounded-lg p-1 text-center">
+                                            <span class="text-sm font-extrabold text-red-500 block leading-tight" x-text="hours"></span>
+                                            <span class="text-[8px] text-red-400 font-bold uppercase">Jam</span>
+                                        </div>
+                                        <div class="bg-red-500/10 rounded-lg p-1 text-center">
+                                            <span class="text-sm font-extrabold text-red-500 block leading-tight" x-text="minutes"></span>
+                                            <span class="text-[8px] text-red-400 font-bold uppercase">Mnt</span>
+                                        </div>
+                                        <div class="bg-red-500/10 rounded-lg p-1 text-center">
+                                            <span class="text-sm font-extrabold text-red-500 block leading-tight" x-text="seconds"></span>
+                                            <span class="text-[8px] text-red-400 font-bold uppercase">Det</span>
+                                        </div>
                                     </div>
                                 </div>
                             @endif

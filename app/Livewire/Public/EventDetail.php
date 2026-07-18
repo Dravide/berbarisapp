@@ -39,6 +39,8 @@ class EventDetail extends Component
             'tenants' => function ($query) {
                 $query->where('is_active', true)->orderBy('sort_order')->latest();
             },
+            'children.judges',
+            'children.registrations',
         ])->where('slug', $slug)->firstOrFail();
 
         $this->registration_status = $this->eventner->registration_status ?? 'open';
