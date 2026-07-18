@@ -162,25 +162,61 @@
             <div class="md:col-span-2 flex flex-col gap-8">
                 {{-- Kuota Kategori --}}
                 @if($eventner->competitionCategories->count() > 0)
+                    @php
+                        $parents = $eventner->competitionCategories->whereNull('parent_id');
+                        $children = $eventner->competitionCategories->whereNotNull('parent_id');
+                    @endphp
                     <div class="surface-card p-6">
                         <h3 class="font-display text-lg font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
                             <i class="ti ti-chart-bar text-primary"></i>
                             Kuota Pendaftaran Kategori
                         </h3>
                         <div class="flex flex-col gap-4">
-                            @foreach($eventner->competitionCategories as $cat)
-                                <div>
-                                    <div class="flex justify-between items-center mb-1.5 text-sm font-semibold">
-                                        <span class="text-deep-slate">{{ $cat->name }}</span>
-                                        <span class="text-on-surface-variant">{{ $cat->registrations->count() }} / {{ $cat->kuota ?? '∞' }} Pasukan</span>
-                                    </div>
-                                    @if($cat->kuota)
-                                        @php $percent = min(100, round($cat->registrations->count() / $cat->kuota * 100)); @endphp
-                                        <div class="h-2.5 bg-surface-container rounded-full overflow-hidden">
-                                            <div class="h-full rounded-full transition-all duration-500 {{ $percent >= 100 ? 'bg-red-500' : ($percent >= 80 ? 'bg-amber-500' : 'bg-primary') }}" style="width: {{ $percent }}%"></div>
+                            @foreach($parents as $parent)
+                                <div class="border border-outline-variant/30 rounded-xl p-3">
+                                    <div class="text-sm font-extrabold text-deep-slate mb-3">{{ $parent->name }}</div>
+                                    @if($parent->children->isEmpty())
+                                        {{-- Old flat data — parent tanpa child --}}
+                                        @php $pct = $parent->kuota ? min(100, round($parent->registrations->count() / $parent->kuota * 100)) : 0; @endphp
+                                        <div class="flex justify-between items-center mb-1.5 text-xs font-semibold">
+                                            <span class="text-on-surface-variant">{{ $parent->name }}</span>
+                                            <span class="text-on-surface-variant">{{ $parent->registrations->count() }} / {{ $parent->kuota ?? '∞' }}</span>
+                                        </div>
+                                        <div class="h-2 bg-surface-container rounded-full overflow-hidden">
+                                            <div class="h-full rounded-full transition-all duration-500 {{ $pct >= 100 ? 'bg-red-500' : ($pct >= 80 ? 'bg-amber-500' : 'bg-primary') }}" style="width: {{ $pct }}%"></div>
                                         </div>
                                     @else
-                                        <div class="h-2.5 bg-surface-container rounded-full"></div>
+                                        @foreach($parent->children as $child)
+                                            @php $pct = $child->kuota ? min(100, round($child->registrations->count() / $child->kuota * 100)) : 0; @endphp
+                                            <div class="mb-2 last:mb-0">
+                                                <div class="flex justify-between items-center mb-1 text-xs font-semibold">
+                                                    <span class="text-on-surface-variant">{{ $child->name }}</span>
+                                                    <span class="text-on-surface-variant">{{ $child->registrations->count() }} / {{ $child->kuota ?? '∞' }}</span>
+                                                </div>
+                                                @if($child->kuota)
+                                                <div class="h-1.5 bg-surface-container rounded-full overflow-hidden">
+                                                    <div class="h-full rounded-full transition-all duration-500 {{ $pct >= 100 ? 'bg-red-500' : ($pct >= 80 ? 'bg-amber-500' : 'bg-primary') }}" style="width: {{ $pct }}%"></div>
+                                                </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    @endif
+                                </div>
+                            @endforeach
+
+                            {{-- Orphan children (data lama tanpa parent) --}}
+                            @php $orphans = $children->whereNotIn('parent_id', $parents->pluck('id')); @endphp
+                            @foreach($orphans as $orphan)
+                                @php $pct = $orphan->kuota ? min(100, round($orphan->registrations->count() / $orphan->kuota * 100)) : 0; @endphp
+                                <div>
+                                    <div class="flex justify-between items-center mb-1.5 text-sm font-semibold">
+                                        <span class="text-deep-slate">{{ $orphan->name }}</span>
+                                        <span class="text-on-surface-variant">{{ $orphan->registrations->count() }} / {{ $orphan->kuota ?? '∞' }}</span>
+                                    </div>
+                                    @if($orphan->kuota)
+                                    <div class="h-2.5 bg-surface-container rounded-full overflow-hidden">
+                                        <div class="h-full rounded-full transition-all duration-500 {{ $pct >= 100 ? 'bg-red-500' : ($pct >= 80 ? 'bg-amber-500' : 'bg-primary') }}" style="width: {{ $pct }}%"></div>
+                                    </div>
                                     @endif
                                 </div>
                             @endforeach
