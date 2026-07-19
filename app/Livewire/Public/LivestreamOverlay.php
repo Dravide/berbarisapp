@@ -17,12 +17,15 @@ class LivestreamOverlay extends Component
     public $categories = [];
     public $topVote = [];
     public $totalVoteCount = 0;
+    public $overlaySetting = null;
+    public $overlayComments = [];
+    public $currentCommentIndex = 0;
 
     protected $queryString = [
         'mode' => ['except' => 'full'],
     ];
 
-    protected $allowedModes = ['full', 'greenscreen', 'vote', 'kegiatan'];
+    protected $allowedModes = ['full', 'greenscreen', 'vote', 'kegiatan', 'custom'];
 
     public function mount($slug)
     {
@@ -44,16 +47,38 @@ class LivestreamOverlay extends Component
         }
 
         // Load vote data for modes that need it
-        if (in_array($this->mode, ['full', 'vote'])) {
+        if (in_array($this->mode, ['full', 'vote', 'custom'])) {
             $this->loadVoteData();
+        }
+
+        // Load custom overlay settings
+        if ($this->mode === 'custom') {
+            $this->overlaySetting = \App\Models\OverlaySetting::where('eventner_id', $this->eventner->id)->first();
+            $this->loadComments();
         }
     }
 
     public function refreshVoteData()
     {
-        if (in_array($this->mode, ['full', 'vote'])) {
+        if (in_array($this->mode, ['full', 'vote', 'custom'])) {
             $this->loadVoteData();
         }
+        if ($this->mode === 'custom') {
+            $this->loadComments();
+        }
+    }
+
+    private function loadComments()
+    {
+        $this->overlayComments = \App\Models\VoteTransaction::where('eventner_id', $this->eventner->id)
+            ->where('status', 'PAID')
+            ->whereNotNull('comment')
+            ->where('comment', '!=', '')
+            ->with('registration')
+            ->orderByDesc('paid_at')
+            ->limit(50)
+            ->get()
+            ->toArray();
     }
 
     private function loadVoteData()
@@ -88,6 +113,8 @@ class LivestreamOverlay extends Component
             'categoriesData' => $categoriesData,
             'topVoteData' => $topVoteData,
             'totalParticipants' => $totalParticipants,
+            'overlaySetting' => $this->overlaySetting,
+            'overlayComments' => $this->overlayComments,
         ])->title('Livestream Overlay - ' . $this->eventner->nama_event);
     }
 }

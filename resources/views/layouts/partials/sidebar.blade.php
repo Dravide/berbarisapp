@@ -310,6 +310,14 @@
           @endif
 
           <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.livestream.*') ? 'active' : '' }}"
+              href="{{ route('eventner.livestream.index') }}" aria-expanded="false">
+              <span><i class="ti ti-video"></i></span>
+              <span class="hide-menu">Livestream Overlay</span>
+            </a>
+          </li>
+
+          <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('eventner.faq.*') ? 'active' : '' }}"
               href="{{ route('eventner.faq.index') }}" aria-expanded="false">
               <span><i class="ti ti-info-circle"></i></span>

@@ -14,6 +14,10 @@
         $themeConfig = $eventner?->theme_config ?? [];
         $primaryColor = $themeConfig['primary_color'] ?? '#0062ff';
         $accentColor = $themeConfig['accent_color'] ?? '#a3e635';
+        // Convert hex to RGB for CSS variable use in rgba()
+        $hex2rgb = fn($hex) => implode(', ', sscanf($hex, '#%02x%02x%02x'));
+        $primaryRgb = $hex2rgb($primaryColor);
+        $accentRgb = $hex2rgb($accentColor);
     @endphp
     <style>
         :root {
@@ -21,6 +25,8 @@
             --event-accent: {{ $accentColor }};
             --color-primary: {{ $primaryColor }};
             --color-secondary: {{ $accentColor }};
+            --color-primary-rgb: {{ $primaryRgb }};
+            --color-accent-rgb: {{ $accentRgb }};
         }
     </style>
 
@@ -28,8 +34,9 @@
 
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-        html { width: 1920px; height: 1080px; overflow: hidden; }
-        body { width: 1920px; height: 1080px; overflow: hidden; }
+        html, body { width: 100%; height: 100%; overflow: hidden; }
+        .overlay-container { width: 1920px; height: 1080px; position: relative; transform-origin: top left; }
+        @media (max-width: 1920px) { .overlay-container { transform: scale(calc(100vw / 1920)); } }
     </style>
 
     @livewireStyles

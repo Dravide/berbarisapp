@@ -1,7 +1,7 @@
 <div class="min-h-screen bg-surface">
 
     {{-- ========== HERO ========== --}}
-    <div class="relative overflow-hidden bg-gradient-to-br from-primary via-[#0053da] to-tertiary text-white py-12 md:py-16">
+    <div class="relative overflow-hidden bg-primary text-white py-12 md:py-16">
         <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
         <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
 
@@ -169,7 +169,7 @@
                 <div class="w-full max-w-lg">
                     <div class="surface-card overflow-hidden">
                         {{-- Success Header --}}
-                        <div class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-8 text-center relative overflow-hidden">
+                        <div class="bg-emerald-600 text-white p-8 text-center relative overflow-hidden">
                             <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/5 blur-xl"></div>
                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 text-white shadow-sm mb-3 mx-auto">
                                 <i class="ti ti-circle-check text-3xl"></i>

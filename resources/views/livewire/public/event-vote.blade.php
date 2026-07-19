@@ -1,7 +1,7 @@
 <div class="min-h-screen bg-surface" x-data="{ showMobileForm: false }">
 
     {{-- ========== HERO ========== --}}
-    <div class="relative overflow-hidden bg-gradient-to-br from-primary via-[#0053da] to-tertiary text-white py-12 md:py-16">
+    <div class="relative overflow-hidden bg-primary text-white py-12 md:py-16">
         <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
         <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
 
@@ -135,7 +135,7 @@
                 <div class="w-full max-w-md">
                     <div class="surface-card overflow-hidden">
                         {{-- Success Header --}}
-                        <div class="bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-8 text-center relative overflow-hidden">
+                        <div class="bg-emerald-600 text-white p-8 text-center relative overflow-hidden">
                             <div class="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-white/5 blur-xl"></div>
                             <div class="flex h-14 w-14 items-center justify-center rounded-full bg-white/20 text-white shadow-sm mb-3 mx-auto">
                                 <i class="ti ti-heart-filled text-3xl text-white"></i>
@@ -155,8 +155,8 @@
                                     <p class="text-sm font-medium text-deep-slate mb-0 italic">"{{ $voterComment }}"</p>
                                 </div>
                             @endif
-                            <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-secondary py-3.5 px-6 font-bold text-sm w-full text-center text-decoration-none">
-                                <i class="ti ti-arrow-left"></i> Kembali Ke Detail Event
+                            <a href="{{ route('event.vote', $eventner->slug) }}{{ $selectedCategoryId ? '?selectedCategoryId='.$selectedCategoryId : '' }}" class="btn-secondary py-3.5 px-6 font-bold text-sm w-full text-center text-decoration-none">
+                                <i class="ti ti-arrow-left"></i> Kembali Ke Laman Vote
                             </a>
                         </div>
                     </div>
@@ -227,7 +227,7 @@
             @if(!in_array($view, ['scheduled', 'closed', 'payment', 'success']) && $eventner->vote_active)
                 @php $activeBooster = $this->activeBooster; $allBoosters = $this->allBoosters; @endphp
                 @if($activeBooster)
-                    <div class="mb-6 p-5 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/30 flex items-center gap-4 flex-wrap">
+                    <div class="mb-6 p-5 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-4 flex-wrap">
                         <div class="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500 text-white shrink-0">
                             <i class="ti ti-bolt text-2xl"></i>
                         </div>
@@ -367,7 +367,7 @@
                                                 <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank2->nama_sekolah }}</h4>
                                                 <span class="font-display font-extrabold text-primary text-sm mb-1">{{ number_format($rank2->total_votes ?? 0, 0, ',', '.') }}</span>
                                                 <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vote</span>
-                                                <div class="w-full bg-gradient-to-t from-slate-200 to-slate-100 border border-slate-200/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 80px;">
+                                                <div class="w-full bg-slate-200 border border-slate-200/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 80px;">
                                                     <span class="font-display text-3xl font-extrabold text-slate-400">2</span>
                                                 </div>
                                             </div>
@@ -395,7 +395,7 @@
                                                 <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank1->nama_sekolah }}</h4>
                                                 <span class="font-display font-extrabold text-primary text-base mb-1">{{ number_format($rank1->total_votes ?? 0, 0, ',', '.') }}</span>
                                                 <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vote</span>
-                                                <div class="w-full bg-gradient-to-t from-amber-300 to-amber-200 border border-amber-300/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 110px;">
+                                                <div class="w-full bg-amber-300 border border-amber-300/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 110px;">
                                                     <span class="font-display text-4xl font-extrabold text-amber-500/80">1</span>
                                                 </div>
                                             </div>
@@ -416,7 +416,7 @@
                                                 <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank3->nama_sekolah }}</h4>
                                                 <span class="font-display font-extrabold text-primary text-sm mb-1">{{ number_format($rank3->total_votes ?? 0, 0, ',', '.') }}</span>
                                                 <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vote</span>
-                                                <div class="w-full bg-gradient-to-t from-sky-200 to-sky-100 border border-sky-200/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 60px;">
+                                                <div class="w-full bg-sky-200 border border-sky-200/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 60px;">
                                                     <span class="font-display text-3xl font-extrabold text-sky-400/80">3</span>
                                                 </div>
                                             </div>
@@ -580,6 +580,13 @@
                         border-radius: 1rem 1rem 0 0; border: none;
                     }
                 }
+                @keyframes fadeSlide {
+                    from { opacity: 0; transform: translateX(10px); }
+                    to { opacity: 1; transform: translateX(0); }
+                }
+                .animate-fade-slide {
+                    animation: fadeSlide 0.3s ease-out both;
+                }
             </style>
 
             <button type="button" @click="open = !open" class="cw-btn"
@@ -593,6 +600,9 @@
                  x-transition:enter="transition ease-out duration-200"
                  x-transition:enter-start="opacity-0 translate-y-4"
                  x-transition:enter-end="opacity-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 translate-y-4"
                  class="cw-panel">
                 <div class="flex sm:hidden justify-center pt-2 pb-1 shrink-0">
                     <span class="w-10 h-1 rounded-full bg-gray-300"></span>
@@ -608,8 +618,8 @@
                 <div class="overflow-y-auto overflow-x-hidden flex-1 min-h-0" style="padding-bottom: env(safe-area-inset-bottom);">
                     @if($allComments->isNotEmpty())
                     <div class="divide-y divide-gray-200">
-                        @foreach($allComments as $c)
-                            <div class="px-5 py-4">
+                        @foreach($allComments as $idx => $c)
+                            <div class="px-5 py-4 animate-fade-slide" style="animation-delay: {{ $idx * 40 }}ms;">
                                 <div class="flex items-start gap-3">
                                     <span class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0 text-xs font-bold">
                                         {{ strtoupper(substr($c->voter_name, 0, 1)) }}

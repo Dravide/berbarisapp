@@ -1,7 +1,7 @@
 <div class="min-h-screen bg-surface">
 
     {{-- ========== HERO ========== --}}
-    <div class="relative overflow-hidden bg-gradient-to-br from-primary via-[#0053da] to-tertiary text-white py-12 md:py-16">
+    <div class="relative overflow-hidden bg-primary text-white py-12 md:py-16">
         <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
         <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
 
@@ -122,7 +122,7 @@
                                         </span>
                                     @endif
                                     <span class="font-display font-extrabold text-primary text-sm">{{ number_format($rank2['total'], 0) }}</span>
-                                    <div class="w-full bg-gradient-to-t from-slate-200 to-slate-100 border border-slate-200/80 rounded-t-xl mt-3 flex items-center justify-center" style="height: 80px;">
+                                    <div class="w-full bg-slate-200 border border-slate-200/80 rounded-t-xl mt-3 flex items-center justify-center" style="height: 80px;">
                                         <span class="font-display text-3xl font-extrabold text-slate-400">2</span>
                                     </div>
                                 @else
@@ -152,7 +152,7 @@
                                         </span>
                                     @endif
                                     <span class="font-display font-extrabold text-primary text-base">{{ number_format($rank1['total'], 0) }}</span>
-                                    <div class="w-full bg-gradient-to-t from-amber-300 to-amber-200 border border-amber-300/80 rounded-t-xl mt-3 flex items-center justify-center" style="height: 110px;">
+                                    <div class="w-full bg-amber-300 border border-amber-300/80 rounded-t-xl mt-3 flex items-center justify-center" style="height: 110px;">
                                         <span class="font-display text-4xl font-extrabold text-amber-500/80">1</span>
                                     </div>
                                 @endif
@@ -175,7 +175,7 @@
                                         </span>
                                     @endif
                                     <span class="font-display font-extrabold text-primary text-sm">{{ number_format($rank3['total'], 0) }}</span>
-                                    <div class="w-full bg-gradient-to-t from-sky-200 to-sky-100 border border-sky-200/80 rounded-t-xl mt-3 flex items-center justify-center" style="height: 60px;">
+                                    <div class="w-full bg-sky-200 border border-sky-200/80 rounded-t-xl mt-3 flex items-center justify-center" style="height: 60px;">
                                         <span class="font-display text-3xl font-extrabold text-sky-400/80">3</span>
                                     </div>
                                 @else

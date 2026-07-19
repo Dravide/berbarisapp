@@ -1,7 +1,7 @@
 <div class="min-h-screen bg-surface">
 
     {{-- ========== HERO ========== --}}
-    <div class="relative overflow-hidden bg-gradient-to-br from-primary via-[#0053da] to-tertiary text-white py-12 md:py-16">
+    <div class="relative overflow-hidden bg-primary text-white py-12 md:py-16">
         <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
         <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
 

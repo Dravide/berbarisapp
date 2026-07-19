@@ -155,6 +155,68 @@
         </div>
     </div>
 
+    {{-- ========== TOP VOTER PER KATEGORI (FADE CYCLING) ========== --}}
+    @php $leaderboardData = collect($this->voteLeaderboard())->filter(fn($item) => $item['top']->isNotEmpty())->values(); @endphp
+    @if($leaderboardData->isNotEmpty())
+        <div class="container-landing pt-6" x-data="{ li: 0 }" x-init="setInterval(() => { li = (li + 1) % {{ $leaderboardData->count() }} }, 5000)">
+            <div class="surface-card p-6 overflow-hidden relative">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-display text-lg font-bold text-deep-slate inline-flex items-center gap-2">
+                        <i class="ti ti-heart-filled text-primary"></i>
+                        Voter Tertinggi per Kategori
+                    </h3>
+                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider" x-text="'{{ $leaderboardData->count() }} kategori'"></span>
+                </div>
+
+                <div class="relative" style="min-height: 120px;">
+                    @foreach($leaderboardData as $idx => $item)
+                        @php $cat = $item['category']; $topReg = $item['top']->first(); @endphp
+                        <div x-show="li === {{ $idx }}"
+                             x-transition:enter="transition ease-out duration-500"
+                             x-transition:enter-start="opacity-0 translate-x-4"
+                             x-transition:enter-end="opacity-100 translate-x-0"
+                             x-transition:leave="transition ease-in duration-300"
+                             x-transition:leave-start="opacity-100 translate-x-0"
+                             x-transition:leave-end="opacity-0 -translate-x-4"
+                             class="absolute inset-0">
+                            @if($topReg)
+                                <div class="flex items-center gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
+                                    <div class="shrink-0 relative">
+                                        @if($topReg['logo_sekolah'])
+                                            <img src="{{ asset('storage/' . $topReg['logo_sekolah']) }}" class="h-16 w-16 rounded-full object-cover border-2 border-primary/20 shadow-sm">
+                                        @else
+                                            <span class="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary border-2 border-primary/20"><i class="ti ti-school text-2xl"></i></span>
+                                        @endif
+                                        <span class="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-amber-400 text-white text-[10px] font-extrabold shadow-sm" style="text-shadow: 0 1px 2px rgba(0,0,0,0.15);">
+                                            <i class="ti ti-crown-filled text-[11px]"></i>
+                                        </span>
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block mb-0.5">{{ $cat->full_name ?? $cat->name }}</span>
+                                        <h4 class="text-base font-extrabold text-deep-slate truncate">{{ $topReg['nama_sekolah'] }}</h4>
+                                        <div class="flex items-center gap-3 mt-1">
+                                            <span class="font-display text-lg font-extrabold text-primary">{{ number_format($topReg['total_votes'] ?? 0, 0, ',', '.') }}</span>
+                                            <span class="text-[11px] font-semibold text-on-surface-variant">suara</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Dot indicators --}}
+                <div class="flex justify-center gap-1.5 mt-3">
+                    @foreach($leaderboardData as $idx => $item)
+                        <button type="button" class="h-1.5 rounded-full transition-all duration-300 border-0 cursor-pointer"
+                                :class="li === {{ $idx }} ? 'w-4 bg-primary' : 'w-1.5 bg-outline-variant'"
+                                @click="li = {{ $idx }}"></button>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- ========== TAB CONTENT: INFO ========== --}}
     <div class="container-landing py-8">
         <div class="grid gap-8 md:grid-cols-3">

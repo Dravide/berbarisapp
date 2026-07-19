@@ -1,5 +1,5 @@
 {{-- Vote Form Header --}}
-<div class="bg-gradient-to-r from-primary to-tertiary text-white px-5 py-4 border-b border-outline-variant/30">
+<div class="bg-primary text-white px-5 py-4 border-b border-outline-variant/30">
     <h5 class="font-display text-sm font-bold text-white inline-flex items-center gap-1.5 mb-0">
         <i class="ti ti-heart-filled"></i>
         Formulir Dukungan Voting
