@@ -302,12 +302,18 @@ class EventVote extends Component
             ->limit(50)
             ->get();
 
+        // Total vote count across all participants
+        $totalEventVotes = \App\Models\VoteTransaction::where('eventner_id', $this->eventner->id)
+            ->where('status', 'PAID')
+            ->sum('votes_earned');
+
         return view('livewire.public.event-vote', [
             'participants' => $participants,
             'selectedCategory' => $selectedCategory,
             'categories' => $this->eventner->competitionCategories()->whereNotNull('parent_id')->with('parent')->get(),
             'recentComments' => $recentComments,
             'allComments' => $allComments ?? collect(),
+            'totalEventVotes' => $totalEventVotes ?? 0,
         ])->title('Vote Peserta - ' . $this->eventner->nama_event)
          ->layoutData(['eventner' => $this->eventner]);
     }

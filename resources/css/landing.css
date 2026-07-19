@@ -61,6 +61,21 @@
    Base
    ========================================================================= */
 @layer base {
+    @media (width >= 1024px) {
+        .lg\\:float-panel {
+            bottom: 6rem !important;
+            left: auto !important;
+            right: 1.5rem !important;
+            width: 24rem !important;
+            border-radius: 1rem !important;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
+            border: 1px solid #e5e7eb !important;
+            max-height: 500px !important;
+        }
+        .lg\\:float-btn {
+            right: 1.5rem !important;
+        }
+    }
     html { scroll-behavior: smooth; scroll-padding-top: 6rem; }
     body {
         @apply bg-surface text-on-surface font-sans antialiased;

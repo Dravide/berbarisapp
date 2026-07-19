@@ -486,19 +486,6 @@
                                         <div class="flex-1 min-w-0">
                                             <h4 class="text-sm font-bold text-deep-slate leading-tight mb-0.5 truncate">{{ $reg->nama_sekolah }}</h4>
                                             <span class="text-xs text-on-surface-variant block truncate">Pelatih: {{ $reg->nama_pelatih ?? '—' }}</span>
-                                            @php $comments = $recentComments->get($reg->id, collect()); @endphp
-                                            @if($comments->isNotEmpty())
-                                                <div class="mt-1.5 flex flex-col gap-0.5">
-                                                    @foreach($comments->take(2) as $comment)
-                                                        <span class="text-[10px] text-primary/70 italic leading-tight truncate block">
-                                                            <i class="ti ti-message text-[9px]"></i> {{ Str::limit($comment->comment, 60) }}
-                                                        </span>
-                                                    @endforeach
-                                                    @if($comments->count() > 2)
-                                                        <span class="text-[9px] text-on-surface-variant font-medium">+{{ $comments->count() - 2 }} komentar lainnya</span>
-                                                    @endif
-                                                </div>
-                                            @endif
                                         </div>
                                         <span class="chip py-1 px-3 !text-[11px] shrink-0 inline-flex items-center gap-1 bg-amber-500/10 !text-amber-700 font-bold" title="Total Vote Terkumpul">
                                             <i class="ti ti-heart-filled text-xs text-amber-600"></i> {{ number_format($reg->total_votes ?? 0, 0, ',', '.') }}
@@ -561,20 +548,56 @@
         </div>
     @endif
 
-    {{-- ========== FLOATING COMMENTS BUTTON ========== --}}
     @if(!in_array($view, ['payment', 'success', 'scheduled', 'closed']))
-        <div class="fixed bottom-6 right-6 z-50" x-data="{ open: false }">
-            <button type="button" @click="open = !open"
-                class="flex items-center gap-2 bg-primary text-on-primary px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all cursor-pointer border-none"
+        <div x-data="{ open: false }" id="comments-widget">
+            <style>
+                #comments-widget { position: fixed; z-index: 50; bottom: 1rem; right: 1rem; }
+                #comments-widget .cw-btn {
+                    display: flex; align-items: center; gap: 0.5rem;
+                    background: var(--color-primary, #0062ff); color: #fff;
+                    padding: 0.75rem 1.25rem; border-radius: 9999px;
+                    border: none; cursor: pointer;
+                    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+                    transition: all 0.2s; font-size: 0.875rem; font-weight: 700;
+                }
+                #comments-widget .cw-btn:hover { box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15); transform: translateY(-1px); }
+                #comments-widget .cw-panel {
+                    position: absolute; bottom: 100%; right: 0; margin-bottom: 0.75rem;
+                    width: 24rem; max-height: 500px;
+                    background: #fff; border-radius: 1rem;
+                    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+                    border: 1px solid #e5e7eb;
+                    overflow: hidden; display: flex; flex-direction: column;
+                }
+                @media (max-width: 1023px) {
+                    #comments-widget { left: 0; right: 0; bottom: 0; }
+                    #comments-widget .cw-btn {
+                        display: flex; position: fixed; bottom: 5.5rem; right: 1rem;
+                    }
+                    #comments-widget .cw-panel {
+                        position: fixed; bottom: 0; left: 0; right: 0; top: auto;
+                        width: 100%; max-height: 70vh; margin-bottom: 0;
+                        border-radius: 1rem 1rem 0 0; border: none;
+                    }
+                }
+            </style>
+
+            <button type="button" @click="open = !open" class="cw-btn"
                 :class="open ? 'scale-90 opacity-80' : ''">
                 <i class="ti ti-message text-lg"></i>
-                <span class="text-sm font-bold">{{ $allComments->count() }}</span>
+                <span>{{ $allComments->count() }}</span>
             </button>
 
-            <div x-show="open" @click.away="open = false" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0"
-                class="absolute bottom-16 right-0 w-80 sm:w-96 surface-card shadow-2xl rounded-2xl overflow-hidden border border-outline-variant/40"
-                style="max-height: 500px;">
-                <div class="bg-primary text-on-primary px-5 py-3.5 flex items-center justify-between">
+            <div x-show="open"
+                 @click.away="open = false"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 translate-y-4"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 class="cw-panel">
+                <div class="flex sm:hidden justify-center pt-2 pb-1 shrink-0">
+                    <span class="w-10 h-1 rounded-full bg-gray-300"></span>
+                </div>
+                <div class="bg-primary text-on-primary px-5 py-3.5 flex items-center justify-between shrink-0">
                     <h4 class="font-display text-sm font-bold text-on-primary inline-flex items-center gap-2 mb-0">
                         <i class="ti ti-heart-filled"></i> Pesan &amp; Dukungan
                     </h4>
@@ -582,21 +605,24 @@
                         <i class="ti ti-x"></i>
                     </button>
                 </div>
-                <div class="overflow-y-auto" style="max-height: 400px;">
+                <div class="overflow-y-auto overflow-x-hidden flex-1 min-h-0" style="padding-bottom: env(safe-area-inset-bottom);">
                     @if($allComments->isNotEmpty())
-                    <div class="divide-y divide-outline-variant/30">
+                    <div class="divide-y divide-gray-200">
                         @foreach($allComments as $c)
                             <div class="px-5 py-4">
                                 <div class="flex items-start gap-3">
                                     <span class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0 text-xs font-bold">
                                         {{ strtoupper(substr($c->voter_name, 0, 1)) }}
                                     </span>
-                                    <div class="flex-1 min-w-0">
+                                    <div class="flex-1 min-w-0" style="max-width: 100%;">
                                         <div class="flex items-center justify-between gap-2">
-                                            <span class="text-xs font-bold text-deep-slate truncate">{{ $c->voter_name }}</span>
-                                            <span class="text-[9px] text-on-surface-variant shrink-0">{{ $c->paid_at?->diffForHumans() }}</span>
+                                            <span class="text-xs font-bold text-gray-800 truncate">{{ $c->voter_name }}</span>
+                                            <span class="flex items-center gap-1.5 shrink-0">
+                                                <span class="text-[10px] font-bold text-amber-600"><i class="ti ti-heart-filled text-[9px]"></i> {{ number_format($c->votes_earned, 0, ',', '.') }}</span>
+                                                <span class="text-[9px] text-gray-500 whitespace-nowrap">{{ $c->paid_at?->diffForHumans() }}</span>
+                                            </span>
                                         </div>
-                                        <p class="text-xs text-on-surface-variant/90 mt-1 leading-relaxed mb-0">
+                                        <p class="text-xs text-gray-600 mt-1 leading-relaxed mb-0 break-words" style="word-break: break-word;">
                                             &ldquo;{{ $c->comment }}&rdquo;
                                         </p>
                                         @if($c->registration)
@@ -611,7 +637,7 @@
                     </div>
                     @else
                         <div class="p-8 text-center">
-                            <p class="text-sm text-on-surface-variant">Belum ada komentar.</p>
+                            <p class="text-sm text-gray-500">Belum ada komentar.</p>
                         </div>
                     @endif
                 </div>

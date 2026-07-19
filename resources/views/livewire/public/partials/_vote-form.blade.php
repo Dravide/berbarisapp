@@ -19,11 +19,12 @@
             </div>
 
             {{-- Quick select buttons --}}
-            <div class="grid grid-cols-4 gap-1.5 mt-2.5">
-                <button type="button" x-on:click="$wire.voteCount = 10" class="chip py-1.5 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">10</button>
-                <button type="button" x-on:click="$wire.voteCount = 50" class="chip py-1.5 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">50</button>
-                <button type="button" x-on:click="$wire.voteCount = 100" class="chip py-1.5 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">100</button>
-                <button type="button" x-on:click="$wire.voteCount = 500" class="chip py-1.5 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">500</button>
+            <div class="flex flex-wrap gap-1.5 mt-2.5">
+                <button type="button" x-on:click="$wire.voteCount = 10" class="chip py-1.5 px-3 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">10</button>
+                <button type="button" x-on:click="$wire.voteCount = 50" class="chip py-1.5 px-3 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">50</button>
+                <button type="button" x-on:click="$wire.voteCount = 100" class="chip py-1.5 px-3 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">100</button>
+                <button type="button" x-on:click="$wire.voteCount = 500" class="chip py-1.5 px-3 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">500</button>
+                <button type="button" x-on:click="$wire.voteCount = 1000" class="chip py-1.5 px-3 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">1000</button>
             </div>
             @error('voteCount') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
         </div>
