@@ -16,7 +16,10 @@ if (!function_exists('event_url')) {
             return $eventner->publicUrl($route, $params);
         }
         // Fallback: try slug property + default route
-        $slug = is_object($eventner) ? ($eventner->slug ?? '') : $eventner;
+        $slug = is_object($eventner) ? ($eventner->slug ?? null) : $eventner;
+        if (!$slug) {
+            return '#';
+        }
         return route("event.{$route}", array_merge([$slug], $params));
     }
 }
