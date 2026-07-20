@@ -56,11 +56,19 @@ class LandingPage extends Component
 
         $ticketEvents = Eventner::where('ticket_active', true)
             ->whereNotNull('ticket_price')
+            ->where(function ($q) {
+                $q->whereNull('ticket_end')
+                  ->orWhere('ticket_end', '>=', now());
+            })
             ->orderBy('created_at', 'desc')
             ->limit(8)
             ->get();
 
         $voteEvents = Eventner::where('vote_active', true)
+            ->where(function ($q) {
+                $q->whereNull('vote_end')
+                  ->orWhere('vote_end', '>=', now());
+            })
             ->orderBy('created_at', 'desc')
             ->limit(8)
             ->get();
