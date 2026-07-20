@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->group(base_path('routes/eventner.php'));
 
             Route::middleware(['web', 'subdomain'])
+                ->domain('{subdomain}.' . parse_url(config('app.url'), PHP_URL_HOST))
                 ->group(base_path('routes/subdomain.php'));
         },
     )

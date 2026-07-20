@@ -12,7 +12,12 @@ if (!function_exists('event_url')) {
      */
     function event_url($eventner, string $route = 'detail', array $params = []): string
     {
-        return $eventner->publicUrl($route, $params);
+        if (method_exists($eventner, 'publicUrl')) {
+            return $eventner->publicUrl($route, $params);
+        }
+        // Fallback: try slug property + default route
+        $slug = is_object($eventner) ? ($eventner->slug ?? '') : $eventner;
+        return route("event.{$route}", array_merge([$slug], $params));
     }
 }
 

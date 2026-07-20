@@ -235,7 +235,7 @@
                                         </div>
                                     @endif
                                     <div class="mt-3">
-                                        <a href="{{ event_url($eventner, 'detail') }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ $eventner->publicUrl('detail') }}" target="_blank" class="btn btn-sm btn-outline-primary">
                                             <i class="ti ti-external-link"></i> Link Pendaftaran Publik
                                         </a>
                                     </div>
