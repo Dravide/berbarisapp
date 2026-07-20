@@ -3,6 +3,7 @@
 namespace App\Livewire\Eventner\Ticket;
 
 use App\Models\Ticket;
+use App\Traits\FeatureGatedComponent;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
@@ -10,6 +11,10 @@ use Livewire\Attributes\Layout;
 #[Layout('layouts.admin')]
 class Index extends Component
 {
+    use FeatureGatedComponent;
+
+    protected string $requiredFeature = 'tickets';
+
     public $eventner;
     public $search = '';
     public $filterStatus = '';
@@ -19,6 +24,7 @@ class Index extends Component
 
     public function mount()
     {
+        $this->bootFeatureGate();
         $this->eventner = Auth::user()->eventner;
 
         if (!$this->eventner) {

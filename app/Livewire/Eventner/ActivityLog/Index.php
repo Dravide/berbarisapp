@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Eventner\ActivityLog;
 
+use App\Traits\FeatureGatedComponent;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Spatie\Activitylog\Models\Activity;
@@ -12,11 +13,19 @@ use Livewire\Attributes\Layout;
 class Index extends Component
 {
     use WithPagination;
+    use FeatureGatedComponent;
+
+    protected string $requiredFeature = 'activity_log';
 
     protected string $paginationTheme = 'bootstrap';
 
     public $search = '';
     public $filterEvent = '';
+
+    public function mount()
+    {
+        $this->bootFeatureGate();
+    }
 
     public function updatingSearch()
     {

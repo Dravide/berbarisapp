@@ -7,6 +7,7 @@ Route::get('/', App\Livewire\Public\LandingPage::class)->name('landing');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', App\Livewire\Auth\Login::class)->name('login');
+    Route::get('register/eventner', App\Livewire\Public\EventnerRegister::class)->name('register.eventner');
 });
 
 Route::get('/event/{slug}', App\Livewire\Public\EventDetail::class)->name('event.detail');

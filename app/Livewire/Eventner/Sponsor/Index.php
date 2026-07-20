@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Eventner\Sponsor;
 
+use App\Traits\FeatureGatedComponent;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\Sponsor;
@@ -14,6 +15,9 @@ use Livewire\Attributes\Computed;
 class Index extends Component
 {
     use WithFileUploads;
+    use FeatureGatedComponent;
+
+    protected string $requiredFeature = 'sponsors';
 
     public $name = '';
     public $type = 'sponsor'; // sponsor, medpart, partner, supporting
@@ -26,6 +30,11 @@ class Index extends Component
     public $editingId = null;
 
     protected $eventnerId;
+
+    public function mount()
+    {
+        $this->bootFeatureGate();
+    }
 
     public function boot()
     {

@@ -3,6 +3,7 @@
 namespace App\Livewire\Eventner\ChampionCategory;
 
 use App\Models\AssessmentCategory;
+use App\Traits\FeatureGatedComponent;
 use App\Models\AssessmentScore;
 use App\Models\ChampionCategory;
 use App\Models\ChampionRankTitle;
@@ -14,6 +15,10 @@ use Livewire\Attributes\Layout;
 #[Layout('layouts.admin')]
 class Index extends Component
 {
+    use FeatureGatedComponent;
+
+    protected string $requiredFeature = 'champion_categories';
+
     public $eventner;
     public $name = '';
     public $description = '';
@@ -36,6 +41,7 @@ class Index extends Component
 
     public function mount()
     {
+        $this->bootFeatureGate();
         $this->eventner = Auth::user()->eventner;
 
         if (!$this->eventner) {

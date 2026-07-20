@@ -42,6 +42,11 @@
                 <span wire:loading.remove>Masuk</span>
                 <span wire:loading>Memproses...</span>
               </button>
+              <div class="text-center mt-3">
+                <small class="text-muted">Eventner baru?
+                  <a href="{{ route('register.eventner') }}" class="fw-semibold text-primary text-decoration-none">Daftar di sini</a>
+                </small>
+              </div>
             </form>
           </div>
         </div>

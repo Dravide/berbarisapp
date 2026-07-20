@@ -3,6 +3,7 @@
 namespace App\Livewire\Eventner\VoteBooster;
 
 use App\Models\VoteBooster;
+use App\Traits\FeatureGatedComponent;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -12,12 +13,17 @@ use Illuminate\Support\Facades\Auth;
 #[Title('Vote Booster')]
 class Index extends Component
 {
+    use FeatureGatedComponent;
+
+    protected string $requiredFeature = 'vote_booster';
+
     public $starts_at = '';
     public $ends_at = '';
     public $vote_multiplier = 2;
 
     public function mount()
     {
+        $this->bootFeatureGate();
         if (!Auth::user()->eventner) abort(403);
     }
 

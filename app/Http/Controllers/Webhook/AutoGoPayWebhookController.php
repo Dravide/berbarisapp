@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Webhook;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\VoteTransaction;
+use App\Models\Eventner;
 use App\Services\AutoGoPay;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
@@ -51,8 +52,10 @@ class AutoGoPayWebhookController extends Controller
 
             if ($status === 'settlement') {
                 $this->handleSettlement($transactionId, $transaction);
+                $this->handleEventnerSettlement($transactionId);
             } elseif ($status === 'expire') {
                 $this->handleExpired($transactionId);
+                $this->handleEventnerExpired($transactionId);
             }
         }
 
@@ -127,6 +130,48 @@ class AutoGoPayWebhookController extends Controller
                 ]);
             }
         }
+    }
+
+    private function handleEventnerSettlement(string $transactionId): void
+    {
+        $eventner = Eventner::where('autogopay_transaction_id', $transactionId)->first();
+        if (!$eventner || $eventner->status === 'approved') {
+            return;
+        }
+
+        $eventner->update([
+            'status' => 'approved',
+            'approved_at' => now(),
+            'registration_paid_at' => now(),
+        ]);
+
+        $eventner->user->update(['is_active' => true]);
+
+        Log::info('Eventner registration auto-approved via webhook', [
+            'transaction_id' => $transactionId,
+            'eventner_id' => $eventner->id,
+        ]);
+
+        // Kirim email notifikasi
+        try {
+            app(\App\Services\MailyService::class)->sendEventnerApproved(
+                $eventner->user->email,
+                $eventner->user->name,
+                $eventner->nama_event
+            );
+        } catch (\Exception $e) {
+            Log::warning('Maily.id: sendEventnerApproved failed (webhook)', [
+                'error' => $e->getMessage(),
+                'eventner_id' => $eventner->id,
+            ]);
+        }
+    }
+
+    private function handleEventnerExpired(string $transactionId): void
+    {
+        Eventner::where('autogopay_transaction_id', $transactionId)
+            ->where('status', 'pending')
+            ->update(['status' => 'rejected', 'rejection_reason' => 'Pembayaran kadaluarsa']);
     }
 
     private function handleExpired(string $transactionId): void

@@ -25,6 +25,11 @@ class Dashboard extends Component
     public $recentRegistrations;
     public $ticketRevenue = 0;
 
+    // Trial & Feature gating
+    public $trialDaysLeft = 0;
+    public $isTrialExpired = false;
+    public $lockedFeatures = [];
+
     // Chart data
     public $selectedChartCategory = null;
     public $scoringProgress = [];
@@ -40,6 +45,11 @@ class Dashboard extends Component
         }
 
         $this->loadData();
+
+        // Trial & feature gate info
+        $this->trialDaysLeft = $this->eventner->trialDaysLeft();
+        $this->isTrialExpired = $this->eventner->isTrialExpired();
+        $this->lockedFeatures = $this->eventner->lockedFeatures();
     }
 
     public function loadData()

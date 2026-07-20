@@ -3,6 +3,7 @@
 namespace App\Livewire\Eventner\VoteResults;
 
 use App\Models\Registration;
+use App\Traits\FeatureGatedComponent;
 use App\Models\VoteTransaction;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -14,6 +15,9 @@ use Livewire\WithPagination;
 class Show extends Component
 {
     use WithPagination;
+    use FeatureGatedComponent;
+
+    protected string $requiredFeature = 'vote_results';
 
     protected string $paginationTheme = 'bootstrap';
 
@@ -26,6 +30,7 @@ class Show extends Component
 
     public function mount(Registration $registration)
     {
+        $this->bootFeatureGate();
         $eventner = auth()->user()->eventner;
         abort_unless($eventner, 403, 'Anda belum memiliki data Event terdaftar.');
 

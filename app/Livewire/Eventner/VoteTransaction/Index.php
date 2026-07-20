@@ -3,6 +3,7 @@
 namespace App\Livewire\Eventner\VoteTransaction;
 
 use App\Models\Registration;
+use App\Traits\FeatureGatedComponent;
 use App\Models\Ticket;
 use App\Models\VoteTransaction;
 use App\Services\AutoGoPay;
@@ -17,6 +18,9 @@ use Livewire\WithPagination;
 class Index extends Component
 {
     use WithPagination;
+    use FeatureGatedComponent;
+
+    protected string $requiredFeature = 'vote_transactions';
 
     protected string $paginationTheme = 'bootstrap';
 
@@ -33,6 +37,11 @@ class Index extends Component
         'dateFrom' => ['except' => ''],
         'dateTo' => ['except' => ''],
     ];
+
+    public function mount()
+    {
+        $this->bootFeatureGate();
+    }
 
     public function updatingSearch()
     {

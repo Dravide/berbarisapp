@@ -215,6 +215,20 @@
                     </div>
 
                     <div class="col-lg-4">
+                        {{-- Biaya Pendaftaran --}}
+                        <div class="card">
+                            <div class="card-body">
+                                <h5 class="card-title fw-semibold mb-4">Biaya Pendaftaran Eventner</h5>
+                                <div class="mb-3">
+                                    <label for="eventner_registration_fee" class="form-label">Biaya Paket Berbayar (Rp)</label>
+                                    <input type="number" class="form-control @error('eventner_registration_fee') is-invalid @enderror"
+                                        id="eventner_registration_fee" wire:model="eventner_registration_fee" min="0" step="1000">
+                                    @error('eventner_registration_fee') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <div class="form-text">Biaya pendaftaran untuk paket berbayar. Biaya 0 = gratis.</div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="card">
                             <div class="card-body">
                                 <h5 class="card-title fw-semibold mb-4">Aksi</h5>

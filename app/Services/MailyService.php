@@ -243,4 +243,137 @@ class MailyService
             return false;
         }
     }
+
+    /**
+     * Kirim notifikasi ke eventner bahwa pendaftaran disetujui.
+     */
+    public function sendEventnerApproved(string $toEmail, string $name, string $eventName): bool
+    {
+        $loginUrl = route('login');
+
+        $html = "
+        <div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);'>
+            <div style='background:linear-gradient(135deg,#0072FF,#0046b3);padding:32px 24px;text-align:center;'>
+                <h1 style='color:#fff;margin:0;font-size:22px;font-weight:700;'>Pendaftaran Disetujui!</h1>
+                <p style='color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;'>{$eventName}</p>
+            </div>
+            <div style='padding:28px 24px;'>
+                <p style='color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px;'>
+                    Yth. <strong>{$name}</strong>,
+                </p>
+                <p style='color:#6b7280;font-size:14px;line-height:1.6;margin:0 0 20px;'>
+                    Selamat! Pendaftaran event <strong>{$eventName}</strong> Anda telah disetujui oleh admin.
+                    Anda sekarang dapat masuk ke dashboard dan mulai mengelola event Anda.
+                </p>
+                <div style='text-align:center;margin-bottom:24px;'>
+                    <a href='{$loginUrl}' style='display:inline-block;background:linear-gradient(135deg,#0072FF,#0046b3);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,114,255,0.3);'>
+                        Masuk ke Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>";
+
+        return $this->send($toEmail, "Pendaftaran {$eventName} Disetujui", $html);
+    }
+
+    /**
+     * Kirim notifikasi ke eventner bahwa pendaftaran ditolak.
+     */
+    public function sendEventnerRejected(string $toEmail, string $name, string $eventName, string $reason): bool
+    {
+        $html = "
+        <div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);'>
+            <div style='background:linear-gradient(135deg,#dc3545,#b02a37);padding:32px 24px;text-align:center;'>
+                <h1 style='color:#fff;margin:0;font-size:22px;font-weight:700;'>Pendaftaran Ditolak</h1>
+                <p style='color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;'>{$eventName}</p>
+            </div>
+            <div style='padding:28px 24px;'>
+                <p style='color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px;'>
+                    Yth. <strong>{$name}</strong>,
+                </p>
+                <p style='color:#6b7280;font-size:14px;line-height:1.6;margin:0 0 20px;'>
+                    Mohon maaf, pendaftaran event <strong>{$eventName}</strong> Anda ditolak dengan alasan:
+                </p>
+                <div style='background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;margin-bottom:20px;'>
+                    <p style='color:#dc2626;font-size:14px;margin:0;'>{$reason}</p>
+                </div>
+                <p style='color:#6b7280;font-size:14px;line-height:1.6;'>
+                    Silakan daftar kembali dengan data yang benar atau hubungi admin jika ada pertanyaan.
+                </p>
+            </div>
+        </div>";
+
+        return $this->send($toEmail, "Pendaftaran {$eventName} Ditolak", $html);
+    }
+
+    /**
+     * Kirim peringatan trial akan berakhir.
+     */
+    public function sendTrialExpiring(string $toEmail, string $name, string $eventName, int $daysLeft): bool
+    {
+        $dashboardUrl = route('dashboard');
+
+        $html = "
+        <div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);'>
+            <div style='background:linear-gradient(135deg,#f59e0b,#d97706);padding:32px 24px;text-align:center;'>
+                <h1 style='color:#fff;margin:0;font-size:22px;font-weight:700;'>Masa Trial Hampir Berakhir</h1>
+                <p style='color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;'>{$eventName}</p>
+            </div>
+            <div style='padding:28px 24px;'>
+                <p style='color:#374151;font-size:15px;line-height:1.6;margin:0 0 16px;'>
+                    Yth. <strong>{$name}</strong>,
+                </p>
+                <p style='color:#6b7280;font-size:14px;line-height:1.6;margin:0 0 20px;'>
+                    Masa trial akun <strong>{$eventName}</strong> Anda akan berakhir dalam <strong>{$daysLeft} hari</strong>.
+                    Setelah masa trial berakhir, beberapa fitur premium akan terkunci.
+                </p>
+                <p style='color:#6b7280;font-size:14px;line-height:1.6;margin:0 0 20px;'>
+                    Upgrade ke paket berbayar untuk menikmati semua fitur tanpa batasan.
+                </p>
+                <div style='text-align:center;margin-bottom:24px;'>
+                    <a href='{$dashboardUrl}' style='display:inline-block;background:linear-gradient(135deg,#0072FF,#0046b3);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,114,255,0.3);'>
+                        Ke Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>";
+
+        return $this->send($toEmail, "Masa Trial {$eventName} Akan Berakhir", $html);
+    }
+
+    /**
+     * Helper — send raw email via Maily.id API.
+     */
+    private function send(string $toEmail, string $subject, string $html): bool
+    {
+        try {
+            $response = Http::withHeaders([
+                'X-API-Key' => $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->post($this->baseUrl, [
+                'from' => 'noreply@berbaris.app',
+                'to' => $toEmail,
+                'subject' => $subject,
+                'html' => $html,
+            ]);
+
+            if ($response->successful()) {
+                Log::info("Maily.id: Email sent to {$toEmail} — {$subject}");
+                return true;
+            }
+
+            Log::error("Maily.id: Failed to send email to {$toEmail}", [
+                'subject' => $subject,
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+            return false;
+        } catch (\Exception $e) {
+            Log::error("Maily.id: Exception sending email to {$toEmail}", [
+                'subject' => $subject,
+                'message' => $e->getMessage(),
+            ]);
+            return false;
+        }
+    }
 }

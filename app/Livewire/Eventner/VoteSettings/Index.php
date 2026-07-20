@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Eventner\VoteSettings;
 
+use App\Traits\FeatureGatedComponent;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -11,6 +12,10 @@ use Illuminate\Support\Facades\Auth;
 #[Title('Pengaturan Vote')]
 class Index extends Component
 {
+    use FeatureGatedComponent;
+
+    protected string $requiredFeature = 'vote_settings';
+
     public $vote_active = false;
     public $vote_price = 1000;
     public $vote_start = '';
@@ -18,6 +23,7 @@ class Index extends Component
 
     public function mount()
     {
+        $this->bootFeatureGate();
         $eventner = Auth::user()->eventner;
         if (!$eventner) abort(403);
 

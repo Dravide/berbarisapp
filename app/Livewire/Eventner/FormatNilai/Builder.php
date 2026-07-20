@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Eventner\FormatNilai;
 
+use App\Traits\FeatureGatedComponent;
 use Livewire\Component;
 use App\Models\AssessmentCategory;
 use App\Models\AssessmentSubCategory;
@@ -20,6 +21,10 @@ use Livewire\Attributes\Title;
 #[Title('Format Penilaian - BARIS APP')]
 class Builder extends Component
 {
+    use FeatureGatedComponent;
+
+    protected string $requiredFeature = 'format_nilai';
+
     public $eventnerId;
     public $activeTab = ''; // '' = global/semua tingkat, child_id = specific
     public $errorMessage = '';
@@ -38,6 +43,7 @@ class Builder extends Component
     public function mount()
     {
         // Get the active eventner ID from the authenticated user
+        $this->bootFeatureGate();
         $eventner = Auth::user()->eventner;
         if (!$eventner) {
             abort(403, 'Anda bukan Eventner yang sah.');

@@ -1,6 +1,66 @@
 <div>
     <div class="row">
         <div class="col-12">
+            {{-- Pending Approval Banner --}}
+            @if($eventner->status === 'pending')
+                <div class="alert alert-warning border-0 rounded-3 shadow-sm d-flex align-items-center gap-3 mb-4" role="alert">
+                    <i class="ti ti-hourglass-high fs-4 flex-shrink-0"></i>
+                    <div class="flex-grow-1">
+                        <strong>Akun Anda masih menunggu persetujuan.</strong>
+                        <span class="small">
+                            @if($eventner->plan === 'paid' && $eventner->qr_url)
+                                Lakukan pembayaran untuk mengaktifkan akun secara otomatis.
+                            @else
+                                Admin akan memverifikasi akun Anda. Anda akan mendapat notifikasi melalui email setelah disetujui.
+                            @endif
+                        </span>
+                    </div>
+                    @if($eventner->plan === 'paid' && $eventner->qr_url)
+                        <a href="{{ request()->url() }}" class="btn btn-primary btn-sm rounded-2 flex-shrink-0">Bayar Sekarang</a>
+                    @endif
+                </div>
+            @endif
+
+            {{-- Trial Banner --}}
+            @if($eventner->plan === 'free')
+                @if($isTrialExpired)
+                    <div class="alert alert-warning border-0 rounded-3 shadow-sm d-flex align-items-center gap-3 mb-4" role="alert">
+                        <i class="ti ti-clock-off fs-4 flex-shrink-0"></i>
+                        <div class="flex-grow-1">
+                            <strong>Masa trial Anda telah berakhir.</strong>
+                            <span class="small">Beberapa fitur premium tidak dapat diakses. Upgrade ke paket berbayar untuk mengaktifkan semua fitur.</span>
+                        </div>
+                    </div>
+                @elseif($trialDaysLeft > 0)
+                    <div class="alert alert-info border-0 rounded-3 shadow-sm d-flex align-items-center gap-3 mb-4" role="alert">
+                        <i class="ti ti-clock-hour-4 fs-4 flex-shrink-0"></i>
+                        <div class="flex-grow-1">
+                            <strong>Masa trial tersisa {{ $trialDaysLeft }} hari.</strong>
+                            <span class="small">Nikmati akses penuh ke semua fitur premium selama masa trial. Upgrade ke paket berbayar sebelum trial berakhir.</span>
+                        </div>
+                    </div>
+                @endif
+            @endif
+
+            {{-- Locked Features Panel --}}
+            @if($eventner->plan === 'free' && $isTrialExpired && !empty($lockedFeatures))
+                <div class="card border-warning-subtle bg-warning-subtle shadow-none mb-4">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="ti ti-lock text-warning-emphasis"></i>
+                            <h6 class="fw-semibold mb-0 text-warning-emphasis">Fitur Terkunci</h6>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach($lockedFeatures as $key => $label)
+                                <span class="badge bg-light text-muted border rounded-1 px-3 py-2">
+                                    <i class="ti ti-lock me-1"></i> {{ $label }}
+                                </span>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <!-- Header & Breadcrumb -->
             <div class="card bg-info-subtle shadow-none position-relative overflow-hidden mb-4">
                 <div class="card-body px-4 py-3">

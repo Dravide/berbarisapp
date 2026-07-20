@@ -3,6 +3,7 @@
 namespace App\Livewire\Eventner\Livestream;
 
 use App\Models\Eventner;
+use App\Traits\FeatureGatedComponent;
 use App\Models\OverlaySetting;
 use App\Models\VoteTransaction;
 use App\Models\Registration;
@@ -16,6 +17,10 @@ use Illuminate\Support\Facades\Auth;
 #[Title('Livestream Overlay')]
 class Manage extends Component
 {
+    use FeatureGatedComponent;
+
+    protected string $requiredFeature = 'livestream';
+
     public $eventner;
     public $overlaySetting;
     public $totalVoteCount = 0;
@@ -32,6 +37,7 @@ class Manage extends Component
 
     public function mount()
     {
+        $this->bootFeatureGate();
         $this->eventner = Auth::user()->eventner;
 
         if (!$this->eventner) {

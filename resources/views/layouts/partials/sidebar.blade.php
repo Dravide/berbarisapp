@@ -50,12 +50,25 @@
             <span class="hide-menu">Manajemen</span>
           </li>
           <li class="sidebar-item">
-            <a class="sidebar-link {{ request()->routeIs('admin.eventner.*') ? 'active' : '' }}"
+            <a class="sidebar-link {{ request()->routeIs('admin.eventner.pending') ? 'active' : '' }}"
+              href="{{ route('admin.eventner.pending') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-user-plus"></i>
+              </span>
+              <span class="hide-menu">Pendaftaran Eventner</span>
+              @php $pendingCount = \App\Models\Eventner::where('status', 'pending')->count(); @endphp
+              @if($pendingCount > 0)
+                <span class="badge bg-danger rounded-pill ms-auto">{{ $pendingCount }}</span>
+              @endif
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('admin.eventner.index') || request()->routeIs('admin.eventner.show') ? 'active' : '' }}"
               href="{{ route('admin.eventner.index') }}" aria-expanded="false">
               <span>
                 <i class="ti ti-building"></i>
               </span>
-              <span class="hide-menu">Eventner</span>
+              <span class="hide-menu">Eventner Aktif</span>
             </a>
           </li>
           <li class="sidebar-item">
@@ -105,6 +118,7 @@
         @endif
 
         @if(auth()->user()->role === 'Eventner')
+          @php $ev = auth()->user()->eventner; @endphp
           {{-- ============================================ --}}
           {{-- ACARA --}}
           {{-- ============================================ --}}
@@ -163,6 +177,7 @@
                 <i class="ti ti-arrows-shuffle"></i>
               </span>
               <span class="hide-menu">Drawing / Undian</span>
+              @if($ev && !$ev->canAccessFeature('drawing')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
 
@@ -180,6 +195,7 @@
                 <i class="ti ti-checklist"></i>
               </span>
               <span class="hide-menu">Format Penilaian</span>
+              @if($ev && !$ev->canAccessFeature('format_nilai')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
           <li class="sidebar-item">
@@ -207,6 +223,7 @@
                 <i class="ti ti-trophy"></i>
               </span>
               <span class="hide-menu">Kategori Juara</span>
+              @if($ev && !$ev->canAccessFeature('champion_categories')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
 
@@ -224,6 +241,7 @@
                 <i class="ti ti-settings"></i>
               </span>
               <span class="hide-menu">Pengaturan Vote</span>
+              @if($ev && !$ev->canAccessFeature('vote_settings')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
           <li class="sidebar-item">
@@ -233,6 +251,7 @@
                 <i class="ti ti-bolt"></i>
               </span>
               <span class="hide-menu">Vote Booster</span>
+              @if($ev && !$ev->canAccessFeature('vote_booster')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
           <li class="sidebar-item">
@@ -242,6 +261,7 @@
                 <i class="ti ti-chart-bar"></i>
               </span>
               <span class="hide-menu">Hasil Voting</span>
+              @if($ev && !$ev->canAccessFeature('vote_results')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
           <li class="sidebar-item">
@@ -251,6 +271,7 @@
                 <i class="ti ti-file-invoice"></i>
               </span>
               <span class="hide-menu">Transaksi Voting</span>
+              @if($ev && !$ev->canAccessFeature('vote_transactions')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
 
@@ -268,6 +289,7 @@
                 <i class="ti ti-ticket"></i>
               </span>
               <span class="hide-menu">Pengaturan Tiket</span>
+              @if($ev && !$ev->canAccessFeature('ticket_settings')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
           <li class="sidebar-item">
@@ -277,6 +299,7 @@
                 <i class="ti ti-receipt"></i>
               </span>
               <span class="hide-menu">Daftar Tiket</span>
+              @if($ev && !$ev->canAccessFeature('tickets')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
 
@@ -294,6 +317,7 @@
                 <i class="ti ti-video"></i>
               </span>
               <span class="hide-menu">Livestream Overlay</span>
+              @if($ev && !$ev->canAccessFeature('livestream')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
           @if(auth()->user()->eventner && auth()->user()->eventner->scoring_code)
@@ -331,6 +355,7 @@
                 <i class="ti ti-history"></i>
               </span>
               <span class="hide-menu">Activity Log</span>
+              @if($ev && !$ev->canAccessFeature('activity_log')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
           <li class="sidebar-item">
@@ -366,6 +391,7 @@
                 <i class="ti ti-affiliate"></i>
               </span>
               <span class="hide-menu">Sponsor & Partner</span>
+              @if($ev && !$ev->canAccessFeature('sponsors')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
           <li class="sidebar-item">
@@ -375,6 +401,7 @@
                 <i class="ti ti-building-store"></i>
               </span>
               <span class="hide-menu">Tenant / Stand</span>
+              @if($ev && !$ev->canAccessFeature('tenants')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
         @endif

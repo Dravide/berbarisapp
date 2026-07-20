@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Eventner\Ticket;
 
+use App\Traits\FeatureGatedComponent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -10,6 +11,10 @@ use Livewire\Attributes\Layout;
 #[Layout('layouts.admin')]
 class Settings extends Component
 {
+    use FeatureGatedComponent;
+
+    protected string $requiredFeature = 'ticket_settings';
+
     public $eventner;
     public $ticket_active = false;
     public $ticket_start = '';
@@ -20,6 +25,7 @@ class Settings extends Component
 
     public function mount()
     {
+        $this->bootFeatureGate();
         $this->eventner = Auth::user()->eventner;
 
         if (!$this->eventner) {

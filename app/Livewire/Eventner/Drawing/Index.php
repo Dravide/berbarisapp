@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Eventner\Drawing;
 
+use App\Traits\FeatureGatedComponent;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Registration;
@@ -13,6 +14,9 @@ use Livewire\Attributes\Layout;
 class Index extends Component
 {
     use WithPagination;
+    use FeatureGatedComponent;
+
+    protected string $requiredFeature = 'drawing';
 
     public $eventner;
     public $activeTab = '';
@@ -25,6 +29,7 @@ class Index extends Component
 
     public function mount()
     {
+        $this->bootFeatureGate();
         $this->eventner = Auth::user()->eventner;
 
         if (!$this->eventner) {

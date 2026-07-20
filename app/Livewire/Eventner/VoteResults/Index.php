@@ -3,6 +3,7 @@
 namespace App\Livewire\Eventner\VoteResults;
 
 use App\Models\CompetitionCategory;
+use App\Traits\FeatureGatedComponent;
 use App\Models\Registration;
 use App\Models\VoteTransaction;
 use Livewire\Component;
@@ -13,11 +14,16 @@ use Livewire\Attributes\Title;
 #[Title('Hasil Voting - BARIS APP')]
 class Index extends Component
 {
+    use FeatureGatedComponent;
+
+    protected string $requiredFeature = 'vote_results';
+
     public $activeTab = '';
     public $categories = [];
 
     public function mount()
     {
+        $this->bootFeatureGate();
         $eventner = auth()->user()->eventner;
         if ($eventner) {
             $this->categories = $eventner->competitionCategories()

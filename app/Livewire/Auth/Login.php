@@ -46,6 +46,32 @@ class Login extends Component
 
         if (Auth::attempt($credentials, $this->remember)) {
             RateLimiter::clear($throttleKey);
+
+            $user = Auth::user();
+
+            // Block rejected eventner accounts from logging in
+            // Pending users tetap bisa login — dashboard menampilkan status
+            if ($user->role === 'Eventner') {
+                $eventner = $user->eventner;
+
+                if (!$eventner) {
+                    Auth::logout();
+                    throw ValidationException::withMessages([
+                        'login' => 'Akun Eventner tidak ditemukan. Hubungi admin.',
+                    ]);
+                }
+
+                if ($eventner->status === 'rejected') {
+                    Auth::logout();
+                    $reason = $eventner->rejection_reason
+                        ? "Alasan: {$eventner->rejection_reason}"
+                        : 'Silakan daftar kembali dengan data yang benar.';
+                    throw ValidationException::withMessages([
+                        'login' => "Pendaftaran Anda ditolak. {$reason}",
+                    ]);
+                }
+            }
+
             session()->regenerate();
 
             return redirect()->intended('/dashboard');

@@ -8,9 +8,22 @@ use Illuminate\Database\Eloquent\Model;
 class Eventner extends Model
 {
     use HasFactory;
+    use \App\Traits\HasFeatureGates;
 
     protected $fillable = [
         'user_id',
+        'status',
+        'approved_at',
+        'approved_by',
+        'rejected_at',
+        'rejection_reason',
+        'plan',
+        'trial_ends_at',
+        'registration_source',
+        'autogopay_transaction_id',
+        'qr_url',
+        'qr_string',
+        'registration_paid_at',
         'nama_event',
         'diselenggarakan_oleh',
         'lokasi',
@@ -55,6 +68,10 @@ class Eventner extends Model
         'ticket_end' => 'datetime',
         'vote_start' => 'datetime',
         'vote_end' => 'datetime',
+        'approved_at' => 'datetime',
+        'rejected_at' => 'datetime',
+        'trial_ends_at' => 'datetime',
+        'registration_paid_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -147,5 +164,10 @@ class Eventner extends Model
     public function tenants()
     {
         return $this->hasMany(Tenant::class);
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by');
     }
 }

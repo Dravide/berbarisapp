@@ -42,8 +42,11 @@ class Index extends Component
     public function loadEventners()
     {
         $this->eventners = Eventner::with('user')
-            ->where('nama_event', 'like', '%' . $this->search . '%')
-            ->orWhere('diselenggarakan_oleh', 'like', '%' . $this->search . '%')
+            ->where('status', 'approved')
+            ->where(function ($q) {
+                $q->where('nama_event', 'like', '%' . $this->search . '%')
+                  ->orWhere('diselenggarakan_oleh', 'like', '%' . $this->search . '%');
+            })
             ->orderBy('id', 'desc')
             ->get();
     }
@@ -123,6 +126,10 @@ class Index extends Component
             // Create Eventner
             Eventner::create([
                 'user_id' => $user->id,
+                'status' => 'approved',
+                'plan' => 'paid',
+                'trial_ends_at' => null,
+                'registration_source' => 'admin',
                 'nama_event' => $this->nama_event,
                 'diselenggarakan_oleh' => $this->diselenggarakan_oleh,
                 'lokasi' => $this->lokasi,
