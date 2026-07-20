@@ -31,14 +31,14 @@ class ExportProposalDocx extends Command
         $section->addTextBreak(8);
 
         // Decorative line
-        $section->addText('━' . str_repeat('━', 60), ['size' => 6, 'color' => '0062FF'], ['align' => 'center']);
+        $section->addText('━' . str_repeat('═', 40), ['size' => 6, 'color' => '0062FF'], ['align' => 'center']);
         $section->addTextBreak(2);
 
         $section->addText('BARIS APP', ['size' => 32, 'bold' => true, 'color' => '0062FF', 'name' => 'Calibri Light'], ['align' => 'center']);
         $section->addTextBreak(1);
         $section->addText('Platform Manajemen Event & Kompetisi Terpadu', ['size' => 16, 'color' => '64748B', 'italic' => true], ['align' => 'center']);
         $section->addTextBreak(1);
-        $section->addText('━' . str_repeat('━', 60), ['size' => 6, 'color' => '0062FF'], ['align' => 'center']);
+        $section->addText('━' . str_repeat('═', 40), ['size' => 6, 'color' => '0062FF'], ['align' => 'center']);
         $section->addTextBreak(3);
         $section->addText('Proposal Aplikasi', ['size' => 18, 'bold' => true, 'color' => '1E293B'], ['align' => 'center']);
         $section->addTextBreak(6);
@@ -329,7 +329,7 @@ class ExportProposalDocx extends Command
         $section->addTextBreak(1);
 
         // Quote box
-        $section->addText('━' . str_repeat('━', 55), ['size' => 6, 'color' => '0062FF'], ['align' => 'center']);
+        $section->addText('━' . str_repeat('═', 40), ['size' => 6, 'color' => '0062FF'], ['align' => 'center']);
         $section->addTextBreak(1);
         $section->addText(
             '"BARIS APP — Bikin event kompetisimu profesional, modern, dan bebas ribet. '
@@ -339,7 +339,7 @@ class ExportProposalDocx extends Command
             ['align' => 'center', 'spaceAfter' => 100]
         );
         $section->addTextBreak(1);
-        $section->addText('━' . str_repeat('━', 55), ['size' => 6, 'color' => '0062FF'], ['align' => 'center']);
+        $section->addText('━' . str_repeat('═', 40), ['size' => 6, 'color' => '0062FF'], ['align' => 'center']);
 
         $section->addTextBreak(4);
         $section->addText('BARIS APP — Platform Manajemen Event & Kompetisi Terpadu', ['size' => 9, 'color' => '94A3B8'], ['align' => 'center']);
@@ -362,7 +362,7 @@ class ExportProposalDocx extends Command
     {
         $section->addTextBreak(1);
         $section->addText(
-            str_repeat('━', 55),
+            str_repeat('═', 40),
             ['size' => 4, 'color' => 'CBD5E1'],
             ['align' => 'center']
         );
@@ -381,7 +381,7 @@ class ExportProposalDocx extends Command
         $cell->addTextBreak(3);
 
         $section->addText(
-            str_repeat('━', 55),
+            str_repeat('═', 40),
             ['size' => 4, 'color' => 'CBD5E1'],
             ['align' => 'center']
         );
