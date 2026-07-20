@@ -212,7 +212,7 @@
                                 <span class="text-[10px] text-amber-600 font-bold uppercase tracking-wider block mt-1">Total Vote</span>
                             </div>
                             <div class="mt-6 text-center shrink-0">
-                                <a href="{{ route('event.vote', $registration->eventner->slug) }}" class="text-xs font-bold text-primary hover:underline inline-flex items-center gap-1 text-decoration-none">
+                                <a href="{{ event_url($registration->eventner, 'vote') }}" class="text-xs font-bold text-primary hover:underline inline-flex items-center gap-1 text-decoration-none">
                                     Lihat Klasemen Vote <i class="ti ti-arrow-right text-[10px]"></i>
                                 </a>
                             </div>

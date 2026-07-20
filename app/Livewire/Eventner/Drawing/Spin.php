@@ -24,10 +24,16 @@ class Spin extends Component
     public $inputCode = '';
     public $allDrawn = false;
 
-    public function mount($slug)
+    public function mount($slug = null)
     {
-        $this->slug = $slug;
-        $eventner = Eventner::where('slug', $slug)->firstOrFail();
+        $resolved = app('current_eventner');
+        if ($resolved) {
+            $this->slug = $resolved->slug;
+            $eventner = $resolved;
+        } else {
+            $this->slug = $slug;
+            $eventner = Eventner::where('slug', $slug)->firstOrFail();
+        }
         $this->eventnerId = $eventner->id;
 
         if (!$eventner->drawing_code) {

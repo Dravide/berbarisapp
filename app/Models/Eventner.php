@@ -24,6 +24,7 @@ class Eventner extends Model
         'qr_url',
         'qr_string',
         'registration_paid_at',
+        'subdomain',
         'nama_event',
         'diselenggarakan_oleh',
         'lokasi',
@@ -169,5 +170,20 @@ class Eventner extends Model
     public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Generate public URL with subdomain if set, fallback to slug route.
+     */
+    public function publicUrl(string $route = 'detail', array $params = []): string
+    {
+        if ($this->subdomain) {
+            $root = parse_url(config('app.url'), PHP_URL_HOST);
+            $scheme = parse_url(config('app.url'), PHP_URL_SCHEME) ?: 'http';
+            $path = route("subdomain.{$route}", $params, false);
+            return "{$scheme}://{$this->subdomain}.{$root}{$path}";
+        }
+
+        return route("event.{$route}", array_merge([$this->slug], $params));
     }
 }

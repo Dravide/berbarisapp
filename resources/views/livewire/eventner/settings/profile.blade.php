@@ -253,6 +253,31 @@
                         </div>
 
                         <hr class="my-4">
+                        <h6 class="fw-semibold mb-3"><i class="ti ti-globe me-1"></i> Subdomain Halaman Publik</h6>
+                        <p class="text-muted fs-3 mb-3">Akses halaman publik event melalui subdomain sendiri.</p>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Subdomain <small class="text-muted">(opsional)</small></label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control @error('subdomain') is-invalid @enderror"
+                                        wire:model.blur="subdomain" placeholder="contoh: kejurcabcianjur" maxlength="63"
+                                        pattern="^[a-z0-9]([a-z0-9-]*[a-z0-9])?$">
+                                    @php $rootDomain = parse_url(config('app.url'), PHP_URL_HOST); @endphp
+                                    <span class="input-group-text">.{{ $rootDomain }}</span>
+                                    @error('subdomain') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                </div>
+                                <div class="form-text">Huruf kecil, angka, dan tanda strip saja. Maksimal 63 karakter.</div>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end pb-3">
+                                @if($subdomain)
+                                    <a href="{{ event_url($eventnerObj ?? (object)['subdomain' => $subdomain, 'slug' => ''], 'detail') }}" target="_blank" class="text-decoration-none small">
+                                        <i class="ti ti-external-link"></i> {{ $subdomain }}.{{ $rootDomain }}
+                                    </a>
+                                @endif
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
                         <h6 class="fw-semibold mb-3"><i class="ti ti-palette me-1"></i> Tema & Tampilan Halaman Publik</h6>
                         <p class="text-muted fs-3 mb-3">Sesuaikan tampilan halaman publik event dengan warna khas acara Anda.</p>
 
@@ -442,7 +467,7 @@
                             @php
                                 use Illuminate\Support\Facades\Auth;
                                 $eventnerObj = Auth::user()->eventner;
-                                $baseOverlayUrl = $eventnerObj ? url('/event/' . $eventnerObj->slug . '/overlay') : '#';
+                                $baseOverlayUrl = $eventnerObj ? event_url($eventnerObj, 'overlay') : '#';
                             @endphp
 
                             <div class="table-responsive">

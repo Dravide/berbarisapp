@@ -109,7 +109,7 @@
                                         </div>
                                     @endif
                                     <div class="mt-3">
-                                        <a href="{{ route('event.detail', $eventner->slug) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ event_url($eventner, 'detail') }}" target="_blank" class="btn btn-sm btn-outline-primary">
                                             <i class="ti ti-external-link"></i> Lihat Laman Publik
                                         </a>
                                     </div>

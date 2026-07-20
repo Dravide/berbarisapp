@@ -34,10 +34,16 @@ class Create extends Component
     public $no_hp = '';
     public $school_email = '';
 
-    public function mount($slug)
+    public function mount($slug = null)
     {
-        $this->slug = $slug;
-        $this->eventner = Eventner::where('slug', $slug)->firstOrFail();
+        $resolved = app('current_eventner');
+        if ($resolved) {
+            $this->eventner = $resolved;
+            $this->slug = $resolved->slug;
+        } else {
+            $this->slug = $slug;
+            $this->eventner = Eventner::where('slug', $slug)->firstOrFail();
+        }
 
         if ($this->eventner->tanggal_pendaftaran && now()->isAfter($this->eventner->tanggal_pendaftaran)) {
             session()->flash('error', 'Pendaftaran sudah ditutup.');

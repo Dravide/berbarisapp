@@ -25,7 +25,7 @@
                 @php $slug = $eventner->slug; @endphp
 
                 <div class="col-6 col-lg-3">
-                    <a href="{{ route('event.overlay', $slug) }}?mode=full" target="_blank"
+                    <a href="{{ event_url($eventner, 'overlay') }}?mode=full" target="_blank"
                        class="d-block p-4 rounded-2xl text-center text-decoration-none transition"
                        style="background: #f0f4ff; border: 2px solid #dbe4f0;"
                        onmouseover="this.style.borderColor='#0062ff';this.style.background='#e8f0ff'"
@@ -39,7 +39,7 @@
                 </div>
 
                 <div class="col-6 col-lg-3">
-                    <a href="{{ route('event.overlay', $slug) }}?mode=vote" target="_blank"
+                    <a href="{{ event_url($eventner, 'overlay') }}?mode=vote" target="_blank"
                        class="d-block p-4 rounded-2xl text-center text-decoration-none transition"
                        style="background: #fef9f0; border: 2px solid #f5e6d0;"
                        onmouseover="this.style.borderColor='#f59e0b';this.style.background='#fff3e0'"
@@ -53,7 +53,7 @@
                 </div>
 
                 <div class="col-6 col-lg-3">
-                    <a href="{{ route('event.overlay', $slug) }}?mode=kegiatan" target="_blank"
+                    <a href="{{ event_url($eventner, 'overlay') }}?mode=kegiatan" target="_blank"
                        class="d-block p-4 rounded-2xl text-center text-decoration-none transition"
                        style="background: #f5fdf5; border: 2px solid #d0e6d0;"
                        onmouseover="this.style.borderColor='#22c55e';this.style.background='#eafaea'"
@@ -67,7 +67,7 @@
                 </div>
 
                 <div class="col-6 col-lg-3">
-                    <a href="{{ route('event.overlay', $slug) }}?mode=greenscreen" target="_blank"
+                    <a href="{{ event_url($eventner, 'overlay') }}?mode=greenscreen" target="_blank"
                        class="d-block p-4 rounded-2xl text-center text-decoration-none transition"
                        style="background: #f0faf0; border: 2px solid #c0e0c0;"
                        onmouseover="this.style.borderColor='#00FF00';this.style.background='#e0fae0'"
@@ -148,7 +148,7 @@
             <p class="text-xs text-on-surface-variant mb-4">Gunakan URL ini di OBS (Browser Source, 1920×1080).</p>
 
             @php
-                $overlayUrl = route('event.overlay', $slug) . '?mode=custom';
+                $overlayUrl = event_url($eventner, 'overlay') . '?mode=custom';
             @endphp
 
             <div class="d-flex align-items-center gap-2 flex-wrap">

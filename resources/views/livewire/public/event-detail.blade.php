@@ -520,11 +520,11 @@
                         Bagikan Event
                     </h3>
                     <div class="flex gap-2">
-                        <a href="https://wa.me/?text={{ urlencode($eventner->nama_event . ' - ' . url('/event/' . $eventner->slug)) }}"
+                        <a href="https://wa.me/?text={{ urlencode($eventner->nama_event . ' - ' . event_url($eventner, 'detail')) }}"
                             target="_blank" class="btn-ghost flex-1 py-2 px-3 text-xs font-bold leading-normal inline-flex items-center justify-center gap-1.5 text-decoration-none !text-emerald-600 !border-emerald-500/30 hover:!bg-emerald-50">
                             <i class="ti ti-brand-whatsapp text-base"></i> WhatsApp
                         </a>
-                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(url('/event/' . $eventner->slug)) }}"
+                        <a href="https://www.facebook.com/sharer/sharer.php?u={{ urlencode(event_url($eventner, 'detail')) }}"
                             target="_blank" class="btn-ghost flex-1 py-2 px-3 text-xs font-bold leading-normal inline-flex items-center justify-center gap-1.5 text-decoration-none !text-blue-600 !border-blue-500/30 hover:!bg-blue-50">
                             <i class="ti ti-brand-facebook text-base"></i> Facebook
                         </a>
@@ -579,7 +579,7 @@
     {{-- ========== FLOATING REGISTER CTA (Fixed Bottom) ========== --}}
     @if(($eventner->registration_status ?? 'open') != 'closed')
         <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-sm w-[calc(100%-2rem)]">
-            <a href="{{ route('event.register', $eventner->slug) }}" class="btn-primary py-3.5 px-6 font-bold text-sm w-full text-center shadow-lg hover:shadow-xl inline-flex justify-center text-decoration-none">
+            <a href="{{ event_url($eventner, 'register') }}" class="btn-primary py-3.5 px-6 font-bold text-sm w-full text-center shadow-lg hover:shadow-xl inline-flex justify-center text-decoration-none">
                 <i class="ti ti-clipboard-list text-base"></i>
                 {{ ($eventner->registration_status ?? 'open') == 'booking' ? 'Booking Slot Sekarang' : 'Daftar Sekarang' }}
             </a>

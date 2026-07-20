@@ -16,10 +16,10 @@
                                     <p class="fs-4 text-muted mb-0">Bagikan tautan ini kepada calon peserta untuk mempromosikan Event Anda.</p>
                                 </div>
                                 <div class="d-flex gap-2">
-                                    <a href="{{ route('event.detail', auth()->user()->eventner->slug) }}" target="_blank" class="btn btn-success d-flex align-items-center gap-2 px-4">
+                                    <a href="{{ event_url(auth()->user()->eventner, 'detail') }}" target="_blank" class="btn btn-success d-flex align-items-center gap-2 px-4">
                                         <i class="ti ti-external-link fs-5"></i> Lihat Halaman
                                     </a>
-                                    <button type="button" class="btn border-success text-success bg-white d-flex align-items-center gap-2 px-4 shadow-sm" onclick="navigator.clipboard.writeText('{{ route('event.detail', auth()->user()->eventner->slug) }}'); alert('Tautan publik berhasil disalin!');">
+                                    <button type="button" class="btn border-success text-success bg-white d-flex align-items-center gap-2 px-4 shadow-sm" onclick="navigator.clipboard.writeText('{{ event_url(auth()->user()->eventner, 'detail') }}'); alert('Tautan publik berhasil disalin!');">
                                         <i class="ti ti-copy fs-5"></i> Salin Link
                                     </button>
                                 </div>

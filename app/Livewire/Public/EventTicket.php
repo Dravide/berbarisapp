@@ -42,9 +42,14 @@ class EventTicket extends Component
         'quantity' => 'required|integer|min:1',
     ];
 
-    public function mount($slug)
+    public function mount($slug = null)
     {
-        $this->eventner = Eventner::where('slug', $slug)->firstOrFail();
+        $resolved = app('current_eventner');
+        if ($resolved) {
+            $this->eventner = $resolved;
+        } else {
+            $this->eventner = Eventner::where('slug', $slug)->firstOrFail();
+        }
 
         if (!$this->eventner->ticket_active || !$this->eventner->ticket_price) {
             abort(404, 'Tiket tidak tersedia untuk event ini.');

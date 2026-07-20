@@ -235,7 +235,7 @@
                                         </div>
                                     @endif
                                     <div class="mt-3">
-                                        <a href="{{ route('event.detail', $eventner->slug) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ event_url($eventner, 'detail') }}" target="_blank" class="btn btn-sm btn-outline-primary">
                                             <i class="ti ti-external-link"></i> Link Pendaftaran Publik
                                         </a>
                                     </div>
@@ -419,10 +419,10 @@
                             <a href="{{ route('eventner.vote-results.index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
                                 <i class="ti ti-chart-bar fs-5 me-2"></i> Hasil Voting
                             </a>
-                            <a href="{{ route('event.drawing.spin', $eventner->slug) }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center bg-primary-subtle">
+                            <a href="{{ event_url($eventner, 'drawing.spin') }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center bg-primary-subtle">
                                 <i class="ti ti-arrows-shuffle fs-5 me-2 text-primary"></i> <span class="fw-bold">Layar Pengundian (Spin)</span>
                             </a>
-                            <a href="{{ route('event.drawing.results', $eventner->slug) }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center bg-primary-subtle">
+                            <a href="{{ event_url($eventner, 'drawing.results') }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center bg-primary-subtle">
                                 <i class="ti ti-list-numbers fs-5 me-2 text-primary"></i> <span class="fw-bold">Lihat Hasil Undian</span>
                             </a>
                         </div>
@@ -436,7 +436,7 @@
                         </h5>
                         <div class="d-flex gap-2">
                             <a href="{{ route('eventner.drawing.index') }}" class="btn btn-sm btn-light">Kelola <i class="ti ti-arrow-right ms-1"></i></a>
-                            <a href="{{ route('event.drawing.spin', $eventner->slug) }}" target="_blank" class="btn btn-sm btn-primary">
+                            <a href="{{ event_url($eventner, 'drawing.spin') }}" target="_blank" class="btn btn-sm btn-primary">
                                 <i class="ti ti-arrows-shuffle me-1"></i> Layar Spin
                             </a>
                         </div>

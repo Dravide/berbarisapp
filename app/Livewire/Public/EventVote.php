@@ -46,11 +46,16 @@ class EventVote extends Component
         'voteCount' => 'required|integer|min:1',
     ];
 
-    public function mount($slug)
+    public function mount($slug = null)
     {
-        $this->eventner = Eventner::with(['competitionCategories' => function ($q) {
-            $q->whereNotNull('parent_id')->withCount('registrations');
-        }])->where('slug', $slug)->firstOrFail();
+        $resolved = app('current_eventner');
+        if ($resolved) {
+            $this->eventner = $resolved;
+        } else {
+            $this->eventner = Eventner::with(['competitionCategories' => function ($q) {
+                $q->whereNotNull('parent_id')->withCount('registrations');
+            }])->where('slug', $slug)->firstOrFail();
+        }
 
         // Cek voting ditutup
         if (!$this->eventner->vote_active) {

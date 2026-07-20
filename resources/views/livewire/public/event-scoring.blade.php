@@ -48,7 +48,7 @@
                                     </button>
                                     <div class="d-flex align-items-center justify-content-center">
                                         <p class="fs-4 mb-0 fw-medium">Bukan panitia?</p>
-                                        <a class="text-primary fw-medium ms-2" href="{{ route('event.detail', $eventner->slug) }}">Kembali ke Event</a>
+                                        <a class="text-primary fw-medium ms-2" href="{{ event_url($eventner, 'detail') }}">Kembali ke Event</a>
                                     </div>
                                 </form>
                             </div>
@@ -68,8 +68,8 @@
                         <h1 class="text-white fw-bolder fs-10 mb-2">Panel Input Nilai</h1>
                         <p class="text-white opacity-75 mb-4">Masukkan nilai peserta <strong class="text-secondary">{{ $eventner->nama_event }}</strong></p>
                         <div class="d-flex justify-content-center gap-2">
-                            <a href="{{ route('event.detail', $eventner->slug) }}" class="btn btn-outline-light rounded-pill px-4 text-white border-white"><i class="ti ti-info-circle me-1"></i> Info Event</a>
-                            <a href="{{ route('event.participant', $eventner->slug) }}" class="btn btn-outline-light rounded-pill px-4 text-white border-white"><i class="ti ti-users me-1"></i> Daftar Peserta</a>
+                            <a href="{{ event_url($eventner, 'detail') }}" class="btn btn-outline-light rounded-pill px-4 text-white border-white"><i class="ti ti-info-circle me-1"></i> Info Event</a>
+                            <a href="{{ event_url($eventner, 'participant') }}" class="btn btn-outline-light rounded-pill px-4 text-white border-white"><i class="ti ti-users me-1"></i> Daftar Peserta</a>
                         </div>
                     </div>
                 </div>

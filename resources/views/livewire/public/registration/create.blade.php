@@ -91,10 +91,10 @@
                         Mohon maaf, pendaftaran slot kontingen untuk event <strong>{{ $eventner->nama_event }}</strong> saat ini telah ditutup secara resmi oleh panitia.
                     </p>
                     <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                        <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-primary py-3 px-6 text-sm font-bold text-center text-decoration-none">
+                        <a href="{{ event_url($eventner, 'detail') }}" class="btn-primary py-3 px-6 text-sm font-bold text-center text-decoration-none">
                             Kembali Ke Event
                         </a>
-                        <a href="{{ route('event.participant', $eventner->slug) }}" class="btn-ghost py-3 px-6 text-sm font-bold text-center text-decoration-none">
+                        <a href="{{ event_url($eventner, 'participant') }}" class="btn-ghost py-3 px-6 text-sm font-bold text-center text-decoration-none">
                             Lihat Daftar Peserta
                         </a>
                     </div>

@@ -21,27 +21,32 @@ class EventDetail extends Component
         'tab' => ['except' => 'info'],
     ];
 
-    public function mount($slug)
+    public function mount($slug = null)
     {
-        $this->eventner = Eventner::with([
-            'competitionCategories.registrations' => function ($query) {
-                $query->withSum(['voteTransactions as total_votes' => function ($q) {
-                    $q->where('status', 'PAID');
-                }], 'votes_earned')
-                    ->where('status_berkas', '!=', 'dibatalkan')
-                    ->orderBy('urutan_tampil', 'asc');
-            },
-            'competitionCategories.registrations.participants',
-            'judges.assessmentCategories',
-            'sponsors' => function ($query) {
-                $query->where('is_active', true)->orderBy('sort_order')->latest();
-            },
-            'tenants' => function ($query) {
-                $query->where('is_active', true)->orderBy('sort_order')->latest();
-            },
-            'competitionCategories.children.judges',
-            'competitionCategories.children.registrations',
-        ])->where('slug', $slug)->firstOrFail();
+        $resolved = app('current_eventner');
+        if ($resolved) {
+            $this->eventner = $resolved;
+        } else {
+            $this->eventner = Eventner::with([
+                'competitionCategories.registrations' => function ($query) {
+                    $query->withSum(['voteTransactions as total_votes' => function ($q) {
+                        $q->where('status', 'PAID');
+                    }], 'votes_earned')
+                        ->where('status_berkas', '!=', 'dibatalkan')
+                        ->orderBy('urutan_tampil', 'asc');
+                },
+                'competitionCategories.registrations.participants',
+                'judges.assessmentCategories',
+                'sponsors' => function ($query) {
+                    $query->where('is_active', true)->orderBy('sort_order')->latest();
+                },
+                'tenants' => function ($query) {
+                    $query->where('is_active', true)->orderBy('sort_order')->latest();
+                },
+                'competitionCategories.children.judges',
+                'competitionCategories.children.registrations',
+            ])->where('slug', $slug)->firstOrFail();
+        }
 
         $this->registration_status = $this->eventner->registration_status ?? 'open';
 

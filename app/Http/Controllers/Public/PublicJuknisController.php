@@ -10,9 +10,14 @@ use Illuminate\Http\Request;
 
 class PublicJuknisController extends Controller
 {
-    public function downloadJuknis($slug)
+    public function downloadJuknis($slug = null)
     {
-        $eventner = Eventner::where('slug', $slug)->firstOrFail();
+        $resolved = app('current_eventner');
+        if ($resolved) {
+            $eventner = $resolved;
+        } else {
+            $eventner = Eventner::where('slug', $slug)->firstOrFail();
+        }
 
         $categories = AssessmentCategory::with(['subCategories.criterias'])
             ->where('eventner_id', $eventner->id)

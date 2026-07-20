@@ -138,7 +138,7 @@ class MailyService
 
         $eventner = $ticket->eventner;
         $eventName = $eventner->nama_event ?? 'Event';
-        $url = route('event.ticket', ['slug' => $eventner->slug, 'confirmOrder' => $ticket->order_code]);
+        $url = $eventner->publicUrl('ticket', ['confirmOrder' => $ticket->order_code]);
 
         // Embed QR inline sebagai data URI (kalau file ada)
         $qrSrc = '';

@@ -37,6 +37,8 @@ class Profile extends Component
     public $surat_tugas_required = true;
     public $kwitansi_required = true;
 
+    public $subdomain = '';
+
 
 
     public $logo;
@@ -88,6 +90,8 @@ class Profile extends Component
         $this->surat_tugas_required = (bool)($eventner->surat_tugas_required ?? true);
         $this->kwitansi_required = (bool)($eventner->kwitansi_required ?? true);
 
+        $this->subdomain = $eventner->subdomain ?? '';
+
 
         $this->logo = $eventner->logo_event;
         $this->poster = $eventner->poster;
@@ -125,6 +129,7 @@ class Profile extends Component
             'link_livestreaming' => 'nullable|url|max:255',
             'surat_tugas_required' => 'required|boolean',
             'kwitansi_required' => 'required|boolean',
+            'subdomain' => 'nullable|string|max:63|regex:/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/|unique:eventners,subdomain,' . $this->eventnerId,
 
             'newLogo' => 'nullable|image|max:2048',
             'newPoster' => 'nullable|image|max:3072', // allow up to 3MB for poster
@@ -200,6 +205,7 @@ class Profile extends Component
             'registration_status' => $this->registration_status,
             'surat_tugas_required' => $this->surat_tugas_required,
             'kwitansi_required' => $this->kwitansi_required,
+            'subdomain' => $this->subdomain ?: null,
 
             'logo_event' => $eventner->logo_event,
             'poster' => $eventner->poster,

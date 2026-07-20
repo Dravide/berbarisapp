@@ -17,7 +17,7 @@
                 Beli tiket online, bayar via QRIS otomatis, dan dapatkan QR code tiket masuk langsung di HP Anda.
             </p>
             <div class="mt-4">
-                <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-ghost !border-white/20 !text-white hover:!bg-white/10 text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
+                <a href="{{ event_url($eventner, 'detail') }}" class="btn-ghost !border-white/20 !text-white hover:!bg-white/10 text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
                     <i class="ti ti-arrow-left"></i> Kembali Ke Detail Event
                 </a>
             </div>
@@ -46,7 +46,7 @@
                         <p class="text-lg font-bold mt-2">{{ \Carbon\Carbon::parse($eventner->ticket_start)->translatedFormat('l, d M Y - H:i') }} WIB</p>
                     </div>
                     <div class="p-6 text-center">
-                        <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
+                        <a href="{{ event_url($eventner, 'detail') }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
                             <i class="ti ti-arrow-left"></i> Kembali ke Event
                         </a>
                     </div>
@@ -65,7 +65,7 @@
                         <p class="text-sm text-white/80">Periode penjualan tiket sudah ditutup.</p>
                     </div>
                     <div class="p-6 text-center">
-                        <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
+                        <a href="{{ event_url($eventner, 'detail') }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
                             <i class="ti ti-arrow-left"></i> Kembali ke Event
                         </a>
                     </div>
@@ -231,7 +231,7 @@
 
                             {{-- Action buttons --}}
                             <div class="flex flex-col gap-2">
-                                <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-secondary py-3 px-4 font-bold text-sm w-full text-center text-decoration-none">
+                                <a href="{{ event_url($eventner, 'detail') }}" class="btn-secondary py-3 px-4 font-bold text-sm w-full text-center text-decoration-none">
                                     <i class="ti ti-home"></i> Kembali Ke Detail Event
                                 </a>
                             </div>

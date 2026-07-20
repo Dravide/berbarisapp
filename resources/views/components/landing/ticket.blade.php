@@ -20,7 +20,7 @@
                 $tgl = $event->tanggal ? \Illuminate\Support\Carbon::parse($event->tanggal)->translatedFormat('d M Y') : null;
             @endphp
             <div class="surface-card surface-card-hover group flex flex-col overflow-hidden p-0">
-                <a href="{{ route('event.detail', $event->slug) }}" class="relative block aspect-[4/3] overflow-hidden">
+                <a href="{{ event_url($event, 'detail') }}" class="relative block aspect-[4/3] overflow-hidden">
                     @if($event->poster)
                         <img src="{{ Storage::url($event->poster) }}" alt="{{ $event->nama_event }}" class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
                     @else
@@ -52,7 +52,7 @@
                         @endif
                     </div>
 
-                    <a href="{{ route('event.ticket', $event->slug) }}" class="btn-primary mt-4 w-full">
+                    <a href="{{ event_url($event, 'ticket') }}" class="btn-primary mt-4 w-full">
                         <i class="ti ti-ticket"></i>
                         Beli Tiket
                     </a>

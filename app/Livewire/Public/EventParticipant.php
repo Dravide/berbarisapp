@@ -11,15 +11,20 @@ class EventParticipant extends Component
 {
     public $eventner;
 
-    public function mount($slug)
+    public function mount($slug = null)
     {
-        $this->eventner = Eventner::with(['competitionCategories' => function ($q) {
-            $q->whereNotNull('parent_id');
-        }, 'competitionCategories.registrations' => function ($q) {
-            $q->where('status_berkas', '!=', 'dibatalkan')
-              ->orderBy('urutan_tampil', 'asc');
-        }, 'competitionCategories.registrations.participants'])
-            ->where('slug', $slug)->firstOrFail();
+        $resolved = app('current_eventner');
+        if ($resolved) {
+            $this->eventner = $resolved;
+        } else {
+            $this->eventner = Eventner::with(['competitionCategories' => function ($q) {
+                $q->whereNotNull('parent_id');
+            }, 'competitionCategories.registrations' => function ($q) {
+                $q->where('status_berkas', '!=', 'dibatalkan')
+                  ->orderBy('urutan_tampil', 'asc');
+            }, 'competitionCategories.registrations.participants'])
+                ->where('slug', $slug)->firstOrFail();
+        }
     }
 
     public function render()

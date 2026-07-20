@@ -15,7 +15,7 @@
             @foreach($eventners as $eventner)
             <div class="surface-card surface-card-hover group flex flex-col overflow-hidden p-0">
                 {{-- Poster banner --}}
-                <a href="{{ route('event.detail', $eventner->slug) }}" class="relative block aspect-[4/3] overflow-hidden">
+                <a href="{{ event_url($eventner, 'detail') }}" class="relative block aspect-[4/3] overflow-hidden">
                     @if($eventner->poster)
                         <img src="{{ Storage::url($eventner->poster) }}" alt="{{ $eventner->nama_event }}" class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
                     @else
@@ -48,7 +48,7 @@
                         </span>
                     </div>
 
-                    <a href="{{ route('event.detail', $eventner->slug) }}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary transition group-hover:gap-2">
+                    <a href="{{ event_url($eventner, 'detail') }}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary transition group-hover:gap-2">
                         Lihat Event
                         <i class="ti ti-arrow-right"></i>
                     </a>

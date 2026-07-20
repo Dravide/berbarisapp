@@ -231,7 +231,7 @@
     {{-- Tanda Tangan --}}
     @php
         use chillerlan\QRCode\QRCode;
-        $qrData = url('/event/' . $eventner->slug);
+        $qrData = event_url($eventner, 'detail');
         $qrImage = (new QRCode)->render($qrData);
     @endphp
 

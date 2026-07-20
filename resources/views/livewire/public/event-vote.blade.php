@@ -17,7 +17,7 @@
                 Setiap vote sangat berarti untuk menentukan juara terfavorit di event <strong class="text-secondary font-semibold">{{ $eventner->nama_event }}</strong>.
             </p>
             <div class="mt-4">
-                <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-ghost !border-white/20 !text-white hover:!bg-white/10 text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
+                <a href="{{ event_url($eventner, 'detail') }}" class="btn-ghost !border-white/20 !text-white hover:!bg-white/10 text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
                     <i class="ti ti-arrow-left"></i> Kembali Ke Detail Event
                 </a>
             </div>
@@ -155,7 +155,7 @@
                                     <p class="text-sm font-medium text-deep-slate mb-0 italic">"{{ $voterComment }}"</p>
                                 </div>
                             @endif
-                            <a href="{{ route('event.vote', $eventner->slug) }}{{ $selectedCategoryId ? '?selectedCategoryId='.$selectedCategoryId : '' }}" class="btn-secondary py-3.5 px-6 font-bold text-sm w-full text-center text-decoration-none">
+                            <a href="{{ event_url($eventner, 'vote') }}{{ $selectedCategoryId ? '?selectedCategoryId='.$selectedCategoryId : '' }}" class="btn-secondary py-3.5 px-6 font-bold text-sm w-full text-center text-decoration-none">
                                 <i class="ti ti-arrow-left"></i> Kembali Ke Laman Vote
                             </a>
                         </div>
@@ -179,7 +179,7 @@
                         </div>
                         <div class="p-6 text-center">
                             <p class="text-sm text-on-surface-variant mb-6 leading-relaxed">Tim Anda sudah terdaftar dalam kategori di bawah. Voting baru bisa dilakukan setelah jadwal dibuka.</p>
-                            <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
+                            <a href="{{ event_url($eventner, 'detail') }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
                                 <i class="ti ti-arrow-left"></i> Kembali ke Event
                             </a>
                         </div>
@@ -197,7 +197,7 @@
                         </div>
                         <div class="p-6 text-center">
                             <p class="text-sm text-on-surface-variant mb-6 leading-relaxed">Berikut data peserta yang terdaftar di setiap kategori.</p>
-                            <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
+                            <a href="{{ event_url($eventner, 'detail') }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
                                 <i class="ti ti-arrow-left"></i> Kembali ke Event
                             </a>
                         </div>
@@ -215,7 +215,7 @@
                         </div>
                         <div class="p-6 text-center">
                             <p class="text-sm text-on-surface-variant mb-6 leading-relaxed">Berikut data peserta yang terdaftar di setiap kategori.</p>
-                            <a href="{{ route('event.detail', $eventner->slug) }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
+                            <a href="{{ event_url($eventner, 'detail') }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
                                 <i class="ti ti-arrow-left"></i> Kembali ke Event
                             </a>
                         </div>

@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware(['web', 'auth', 'role:Eventner'])
                 ->prefix('eventner')
                 ->group(base_path('routes/eventner.php'));
+
+            Route::middleware(['web', 'subdomain'])
+                ->group(base_path('routes/subdomain.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -27,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
+            'subdomain' => \App\Http\Middleware\ResolveEventnerSubdomain::class,
         ]);
     })
     ->withExceptions()

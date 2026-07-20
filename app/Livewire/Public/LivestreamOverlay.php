@@ -27,9 +27,14 @@ class LivestreamOverlay extends Component
 
     protected $allowedModes = ['full', 'greenscreen', 'vote', 'kegiatan', 'custom'];
 
-    public function mount($slug)
+    public function mount($slug = null)
     {
-        $this->eventner = Eventner::where('slug', $slug)->firstOrFail();
+        $resolved = app('current_eventner');
+        if ($resolved) {
+            $this->eventner = $resolved;
+        } else {
+            $this->eventner = Eventner::where('slug', $slug)->firstOrFail();
+        }
 
         // Validate mode
         if (!in_array($this->mode, $this->allowedModes)) {

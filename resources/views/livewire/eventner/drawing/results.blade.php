@@ -20,10 +20,10 @@
                         </p>
                     </div>
                     <div class="flex gap-2">
-                        <a href="{{ route('event.detail', $slug) }}" class="btn-ghost !border-white/20 !text-white hover:!bg-white/10 text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
+                        <a href="{{ event_url($eventner, 'detail') }}" class="btn-ghost !border-white/20 !text-white hover:!bg-white/10 text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
                             <i class="ti ti-arrow-left"></i> Kembali
                         </a>
-                        <a href="{{ route('event.drawing.spin', $slug) }}" class="btn-primary text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
+                        <a href="{{ event_url($eventner, 'drawing.spin') }}" class="btn-primary text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
                             <i class="ti ti-arrows-shuffle"></i> Spin
                         </a>
                     </div>

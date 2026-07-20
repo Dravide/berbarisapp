@@ -76,7 +76,7 @@
                                 <i class="ti ti-download me-1"></i> Unduh / Cetak
                             </a>
                         @endif
-                        <a href="{{ route('event.drawing.spin', $eventner->slug) }}" target="_blank" class="btn btn-sm btn-primary">
+                        <a href="{{ event_url($eventner, 'drawing.spin') }}" target="_blank" class="btn btn-sm btn-primary">
                             <i class="ti ti-arrows-shuffle me-1"></i> Layar Spin
                         </a>
                         <button class="btn btn-sm btn-outline-danger" wire:click="resetDrawing" onclick="return confirm('Yakin reset semua hasil undian kategori ini?')">
@@ -186,11 +186,11 @@
                     </h5>
                 </div>
                 <div class="list-group list-group-flush">
-                    <a href="{{ route('event.drawing.spin', $eventner->slug) }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center bg-primary-subtle">
+                    <a href="{{ event_url($eventner, 'drawing.spin') }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center bg-primary-subtle">
                         <i class="ti ti-arrows-shuffle fs-5 me-2 text-primary"></i>
                         <span class="fw-bold">Layar Pengundian (Spin)</span>
                     </a>
-                    <a href="{{ route('event.drawing.results', $eventner->slug) }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center">
+                    <a href="{{ event_url($eventner, 'drawing.results') }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center">
                         <i class="ti ti-list-numbers fs-5 me-2"></i> Lihat Hasil Undian (Publik)
                     </a>
                     <a href="{{ route('eventner.participants.index') }}" class="list-group-item list-group-item-action d-flex align-items-center">

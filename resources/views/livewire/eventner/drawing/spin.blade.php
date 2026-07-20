@@ -21,10 +21,10 @@
                         </p>
                     </div>
                     <div class="flex gap-2">
-                        <a href="{{ route('event.detail', $slug) }}" class="btn-ghost !border-white/20 !text-white hover:!bg-white/10 text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
+                        <a href="{{ event_url($eventner, 'detail') }}" class="btn-ghost !border-white/20 !text-white hover:!bg-white/10 text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
                             <i class="ti ti-arrow-left"></i> Kembali
                         </a>
-                        <a href="{{ route('event.drawing.results', $slug) }}" target="_blank" class="btn-primary text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
+                        <a href="{{ event_url($eventner, 'drawing.results') }}" target="_blank" class="btn-primary text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
                             <i class="ti ti-table"></i> Hasil
                         </a>
                     </div>
@@ -74,7 +74,7 @@
                                 </div>
                                 <h3 class="font-display text-lg font-bold text-emerald-600 mb-2">Pengundian Selesai!</h3>
                                 <p class="text-sm text-on-surface-variant mb-6">Semua sekolah telah mendapat nomor urut tampil.</p>
-                                <a href="{{ route('event.drawing.results', $slug) }}" class="btn-primary py-3 px-6 font-bold text-sm text-decoration-none">
+                                <a href="{{ event_url($eventner, 'drawing.results') }}" class="btn-primary py-3 px-6 font-bold text-sm text-decoration-none">
                                     <i class="ti ti-table me-1"></i> Lihat Hasil Lengkap
                                 </a>
                             @elseif($currentSchool)
