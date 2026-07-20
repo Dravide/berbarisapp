@@ -180,8 +180,24 @@ class Eventner extends Model
         if ($this->subdomain) {
             $root = parse_url(config('app.url'), PHP_URL_HOST);
             $scheme = parse_url(config('app.url'), PHP_URL_SCHEME) ?: 'http';
-            $path = route("subdomain.{$route}", $params, false);
-            return "{$scheme}://{$this->subdomain}.{$root}{$path}";
+            $paths = [
+                'detail' => '/',
+                'participant' => '/peserta',
+                'results' => '/hasil',
+                'vote' => '/vote',
+                'ticket' => '/tiket',
+                'register' => '/daftar',
+                'drawing.spin' => '/drawing',
+                'drawing.results' => '/hasil-drawing',
+                'overlay' => '/overlay',
+                'juknis' => '/juknis',
+            ];
+            $path = $paths[$route] ?? '/';
+
+            $nonPathParams = $params;
+            $query = $nonPathParams ? '?' . http_build_query($nonPathParams) : '';
+
+            return "{$scheme}://{$this->subdomain}.{$root}{$path}{$query}";
         }
 
         return route("event.{$route}", array_merge([$this->slug], $params));
