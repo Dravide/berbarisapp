@@ -12,7 +12,7 @@ class PublicJuknisController extends Controller
 {
     public function downloadJuknis($slug = null)
     {
-        $resolved = app('current_eventner');
+        $resolved = app()->bound('current_eventner') ? app('current_eventner') : null;
         if ($resolved) {
             $eventner = $resolved;
         } else {

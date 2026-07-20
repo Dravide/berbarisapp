@@ -44,7 +44,7 @@ class EventTicket extends Component
 
     public function mount($slug = null)
     {
-        $resolved = app('current_eventner');
+        $resolved = app()->bound('current_eventner') ? app('current_eventner') : null;
         if ($resolved) {
             $this->eventner = $resolved;
         } else {
