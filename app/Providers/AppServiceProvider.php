@@ -11,7 +11,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // Default binding: current_eventner = null (overridden by ResolveEventnerSubdomain middleware)
+        $this->app->instance('current_eventner', null);
     }
 
     /**
