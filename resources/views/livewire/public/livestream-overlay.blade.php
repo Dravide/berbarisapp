@@ -1,5 +1,5 @@
 <div class="overlay-container flex flex-col overflow-hidden"
-     style="background: #080b14;"
+     style="background: #f1f5f9;"
      x-data="clock"
      x-init="init()">
 <script>
@@ -27,23 +27,52 @@
 
 <style>
     @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-    @keyframes glowPulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.8; } }
+    @keyframes pulse-red { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.1); } }
     @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-    .animate-glow { animation: glowPulse 2s ease-in-out infinite; }
     .shimmer-effect::after {
         content: '';
         position: absolute; inset: 0;
         background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%);
         animation: shimmer 3s ease-in-out infinite;
     }
-    .leaderboard-scroll::-webkit-scrollbar { width: 3px; }
+    .leaderboard-scroll::-webkit-scrollbar { width: 4px; }
     .leaderboard-scroll::-webkit-scrollbar-track { background: transparent; }
-    .leaderboard-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 3px; }
+    .leaderboard-scroll::-webkit-scrollbar-thumb { background: #c2c6d9; border-radius: 10px; }
 </style>
 
     {{-- ============================================================ --}}
-    {{-- HEADER --}}
+    {{-- HEADER (Terra style for full mode, Dark for others) --}}
     {{-- ============================================================ --}}
+    @if($mode === 'full')
+    <header class="shrink-0 flex items-center gap-6 px-8 h-[64px]" style="background: #ffffff; border-bottom: 1px solid #c2c6d9;">
+        <div class="absolute top-0 left-8 right-8 h-0.5" style="background: var(--color-primary); opacity: 0.3; border-radius: 0 0 4px 4px;"></div>
+
+        @if($eventner->logo_event)
+            <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="h-9 w-9 rounded-lg object-cover border border-primary/20 shrink-0" style="box-shadow: 0 2px 8px rgba(var(--color-primary-rgb),0.1);">
+        @else
+            <span class="flex h-9 w-9 items-center justify-center rounded-lg shrink-0" style="background: var(--color-primary); opacity: 0.1; color: var(--color-primary);">
+                <i class="ti ti-calendar-event text-sm"></i>
+            </span>
+        @endif
+
+        <div class="flex-1 min-w-0">
+            <h1 class="font-display text-lg font-extrabold tracking-tight truncate" style="color: #191c1d;">
+                {{ $eventner->nama_event }}
+            </h1>
+        </div>
+
+        <div class="flex items-center gap-6 shrink-0">
+            <div class="flex items-center gap-3 px-4 py-1.5 rounded-full" style="background: #f3f4f5; border: 1px solid #c2c6d9;">
+                <span class="w-2.5 h-2.5 rounded-full" style="background: #ba1a1a; animation: pulse-red 2s infinite ease-in-out;"></span>
+                <span class="text-[10px] font-bold uppercase tracking-[0.12em]" style="color: #191c1d;">Live</span>
+            </div>
+            <div class="h-5 w-px" style="background: #c2c6d9;"></div>
+            <div class="flex items-center gap-2" style="background: rgba(var(--color-primary-rgb),0.08); padding: 2px 10px; border-radius: 6px;">
+                <span class="font-mono text-sm font-bold tracking-widest" style="color: var(--color-primary);" x-text="time"></span>
+            </div>
+        </div>
+    </header>
+    @else
     <header class="shrink-0 flex items-center gap-5 px-10 h-[70px] relative overflow-hidden"
             style="background: #090c17; border-bottom: 1px solid rgba(255,255,255,0.05);">
         <div class="absolute top-0 inset-x-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(var(--color-primary-rgb),0.3), transparent);"></div>
@@ -84,6 +113,7 @@
             </div>
         </div>
     </header>
+    @endif
 
     {{-- ============================================================ --}}
     {{-- GREENSCREEN MODE --}}
@@ -436,172 +466,125 @@
 
     {{-- ============================================================ --}}
     {{-- FULL MODE (default) --}}
-    {{-- ============================================================ --}}
+    {{-- FULL MODE (default) — Terra Organic Style --}}
     @else
-        <main class="flex-1 flex overflow-hidden" style="background: #090c14;">
-            {{-- LEFT: Greenscreen Area --}}
-            <div class="flex-1 bg-[#00FF00] relative overflow-hidden">
-                <div class="absolute inset-0 opacity-[0.025]" style="background-image: linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px); background-size: 60px 60px;"></div>
+        <main class="flex-1 flex overflow-hidden" style="background: #f8f9fa;" wire:poll.10s="refreshVoteData">
 
-                {{-- Corner accents --}}
-                <div class="absolute top-6 left-6 w-14 h-14 border-t-2 border-l-2 border-white/8 rounded-tl-xl"></div>
-                <div class="absolute top-6 right-6 w-14 h-14 border-t-2 border-r-2 border-white/8 rounded-tr-xl"></div>
-                <div class="absolute bottom-6 left-6 w-14 h-14 border-b-2 border-l-2 border-white/8 rounded-bl-xl"></div>
-                <div class="absolute bottom-6 right-6 w-14 h-14 border-b-2 border-r-2 border-white/8 rounded-br-xl"></div>
-
-                <div class="absolute inset-0 flex items-center justify-center">
-                    <div class="text-center">
-                        <div class="inline-flex items-center gap-3 px-8 py-4 rounded-2xl mb-3" style="background: rgba(0,0,0,0.22); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.05);">
-                            <i class="ti ti-camera text-xl" style="color: rgba(255,255,255,0.2);"></i>
-                            <span class="font-display text-sm font-semibold tracking-[0.15em] uppercase" style="color: rgba(255,255,255,0.2);">Chroma Key Area</span>
-                        </div>
-                        @if($eventner->logo_event)
-                            <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="h-12 w-12 mx-auto opacity-15 rounded-xl object-cover">
-                        @endif
-                    </div>
+            {{-- LEFT: Leaderboard Sidebar --}}
+            <aside class="w-[300px] shrink-0 flex flex-col mr-6" style="background: #ffffff; border: 1px solid #c2c6d9; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,98,255,0.06);">
+                <div class="shrink-0 flex items-center gap-2.5 px-5 py-4" style="border-bottom: 1px solid #c2c6d9;">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg" style="background: rgba(var(--color-primary-rgb),0.08); color: var(--color-primary);">
+                        <i class="ti ti-trophy text-sm"></i>
+                    </span>
+                    <span class="font-display text-sm font-bold" style="color: #191c1d;">Leaderboard</span>
+                    <span class="text-[9px] font-bold px-2 py-0.5 rounded-full ml-auto" style="background: rgba(var(--color-primary-rgb),0.08); color: var(--color-primary);">TOP 7</span>
                 </div>
-            </div>
 
-            {{-- RIGHT: Leaderboard Panel --}}
-            <aside class="w-[580px] shrink-0 flex flex-col overflow-hidden relative"
-                    style="background: #0b0f1c; border-left: 1px solid rgba(255,255,255,0.05);"
-                    wire:poll.10s="refreshVoteData">
-
-                <div class="absolute inset-y-0 left-0 w-px" style="background: linear-gradient(180deg, transparent, rgba(var(--color-primary-rgb),0.25), transparent);"></div>
-
-                {{-- Panel Header --}}
-                <div class="shrink-0 px-6 py-5 relative overflow-hidden"
-                     style="background: linear-gradient(180deg, rgba(17,24,39,1) 0%, rgba(17,24,39,0.5) 100%); border-bottom: 1px solid rgba(255,255,255,0.05);">
-                    <div class="absolute inset-0 opacity-15" style="background: radial-gradient(circle at 15% 50%, rgba(var(--color-primary-rgb),0.12) 0%, transparent 50%);"></div>
-                    <div class="relative flex items-center justify-between">
-                        <div class="flex items-center gap-3">
-                            <div class="flex h-10 w-10 items-center justify-center rounded-xl"
-                                 style="background: linear-gradient(135deg, #f472b6, #ec4899); box-shadow: 0 4px 18px rgba(244,114,182,0.2);">
-                                <i class="ti ti-heart-filled text-white text-lg"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-display text-base font-extrabold text-white leading-tight tracking-tight">Pimpinan Vote</h3>
-                                <p class="text-[10px] font-medium text-white/25 tracking-[0.1em] uppercase">{{ count($topVoteData) }} Kontingen</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <span class="font-display text-2xl font-extrabold text-white leading-none tabular-nums" style="font-family: 'Plus Jakarta Sans', sans-serif;">
-                                {{ number_format($totalVoteCount, 0, ',', '.') }}
+                @php $top7 = array_slice($topVoteData, 0, 7); @endphp
+                <div class="flex-1 overflow-y-auto p-3 gap-1 flex flex-col leaderboard-scroll"
+                     x-data="{ h: -1 }"
+                     x-init="setInterval(() => h = (h + 1) % {{ max(count($top7), 1) }}, 5000)">
+                    @forelse($top7 as $i => $reg)
+                        @php $rank = $i + 1; $votes = $reg['total_votes'] ?? 0; @endphp
+                        <div class="flex items-center gap-3 px-3 py-3 rounded-xl transition-colors duration-500"
+                             :style="h === {{ $i }}
+                                ? 'background: rgba(var(--color-primary-rgb), 0.08); border: 1px solid var(--color-primary);'
+                                : 'background: {{ $i % 2 === 0 ? 'transparent' : '#f3f4f5' }}; border: 1px solid transparent;'">
+                            <span class="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold"
+                                  style="{{ $rank === 1 ? 'background: var(--color-primary); color: #fff;' : 'background: #f3f4f5; color: #191c1d;' }}">
+                                @if($rank === 1)<i class="ti ti-crown-filled text-xs"></i>@else{{ $rank }}@endif
                             </span>
-                            <span class="text-[9px] font-bold text-white/25 uppercase tracking-[0.15em] block mt-0.5">Total Suara</span>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Leaderboard List --}}
-                <div class="flex-1 overflow-y-auto px-4 py-3 space-y-1.5 leaderboard-scroll"
-                     x-data="{ highlight: -1 }"
-                     x-init="setInterval(() => { highlight = (highlight + 1) % {{ max(count($topVoteData), 1) }} }, 4000)">
-                    @php $maxVotes = $topVoteData[0]['total_votes'] ?? 1; @endphp
-                    @forelse($topVoteData as $i => $reg)
-                        @php $rank = $i + 1; $votes = $reg['total_votes'] ?? 0; $barPct = $maxVotes > 0 ? min(($votes / $maxVotes) * 100, 100) : 0; @endphp
-                        <div class="relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-700"
-                             :class="highlight === {{ $i }} ? 'scale-[1.015]' : ''"
-                             :style="highlight === {{ $i }}
-                                ? 'background: rgba(var(--color-primary-rgb),0.08); border: 1px solid rgba(var(--color-primary-rgb),0.12); box-shadow: 0 0 20px rgba(var(--color-primary-rgb),0.04);'
-                                : 'background: rgba(255,255,255,0.015); border: 1px solid transparent;'">
-
-                            {{-- Progress bar --}}
-                            <div class="absolute inset-0 rounded-xl overflow-hidden opacity-25 pointer-events-none" x-cloak>
-                                <div class="h-full rounded-xl transition-all duration-1000 ease-out"
-                                     :style="highlight === {{ $i }}
-                                        ? 'width: {{ $barPct }}%; background: linear-gradient(90deg, rgba(var(--color-primary-rgb),0.12), rgba(var(--color-primary-rgb),0.03));'
-                                        : 'width: {{ $barPct }}%; background: linear-gradient(90deg, rgba(255,255,255,0.025), transparent);'"></div>
-                            </div>
-
-                            {{-- Rank badge --}}
-                            <div class="relative shrink-0 w-[34px] h-[34px] flex items-center justify-center">
-                                @if($rank === 1)
-                                    <div class="absolute inset-0 rounded-full animate-pulse" style="background: rgba(245,158,11,0.08); box-shadow: 0 0 12px rgba(245,158,11,0.1);"></div>
-                                    <span class="relative flex h-full w-full items-center justify-center rounded-full text-xs font-extrabold"
-                                          style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; box-shadow: 0 2px 12px rgba(245,158,11,0.3);">
-                                        <i class="ti ti-crown-filled text-[11px]"></i>
-                                    </span>
-                                @elseif($rank === 2)
-                                    <span class="flex h-full w-full items-center justify-center rounded-full text-xs font-bold"
-                                          style="background: linear-gradient(135deg, #94a3b8, #64748b); color: #fff; box-shadow: 0 2px 8px rgba(148,163,184,0.2);">{{ $rank }}</span>
-                                @elseif($rank === 3)
-                                    <span class="flex h-full w-full items-center justify-center rounded-full text-xs font-bold"
-                                          style="background: linear-gradient(135deg, #38bdf8, #0ea5e9); color: #fff; box-shadow: 0 2px 8px rgba(56,189,248,0.2);">{{ $rank }}</span>
-                                @else
-                                    <span class="flex h-full w-full items-center justify-center rounded-full text-[11px] font-bold"
-                                          style="background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.05);">{{ $rank }}</span>
-                                @endif
-                            </div>
-
-                            {{-- Logo --}}
-                            <div class="relative shrink-0">
-                                @if($reg['logo_sekolah'])
-                                    <img src="{{ asset('storage/' . $reg['logo_sekolah']) }}" class="h-9 w-9 rounded-lg object-cover border border-white/8">
-                                @else
-                                    <span class="flex h-9 w-9 items-center justify-center rounded-lg text-white/25" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05);">
-                                        <i class="ti ti-school text-sm"></i>
-                                    </span>
-                                @endif
-                            </div>
-
-                            {{-- Name --}}
-                            <div class="flex-1 min-w-0 relative">
-                                <p class="text-[13px] font-bold text-white/85 truncate leading-tight">{{ $reg['nama_sekolah'] }}</p>
-                            </div>
-
-                            {{-- Votes --}}
-                            <div class="relative shrink-0 min-w-[72px] text-right">
-                                <span class="font-display text-sm font-extrabold tabular-nums leading-none"
-                                      style="color: {{ $rank === 1 ? '#f59e0b' : ($rank === 2 ? '#94a3b8' : ($rank === 3 ? '#38bdf8' : 'var(--color-primary)')) }};">
-                                    {{ number_format($votes, 0, ',', '.') }}
-                                </span>
-                                <span class="text-[8px] font-medium text-white/20 block leading-tight">suara</span>
-                            </div>
+                            @if($reg['logo_sekolah'])
+                                <img src="{{ asset('storage/' . $reg['logo_sekolah']) }}" class="h-8 w-8 rounded-lg object-cover border border-primary/20 shrink-0">
+                            @else
+                                <span class="flex h-8 w-8 items-center justify-center rounded-lg shrink-0" style="background: #f3f4f5; color: #424656;"><i class="ti ti-school text-xs"></i></span>
+                            @endif
+                            <span class="flex-1 text-xs font-bold whitespace-nowrap truncate" style="color: #191c1d;">{{ $reg['nama_sekolah'] }}</span>
+                            <span class="shrink-0 text-xs font-bold tabular-nums" style="color: {{ $rank === 1 ? 'var(--color-primary)' : '#424656' }};">{{ number_format($votes, 0, ',', '.') }}</span>
                         </div>
                     @empty
-                        <div class="flex-1 flex items-center justify-center">
-                            <div class="text-center py-16">
-                                <div class="flex h-16 w-16 items-center justify-center rounded-2xl mx-auto mb-4" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03);">
-                                    <i class="ti ti-heart-off text-2xl text-white/15"></i>
-                                </div>
-                                <p class="text-xs font-semibold text-white/20">Belum ada data vote</p>
-                                <p class="text-[10px] text-white/12 mt-1">Menunggu dukungan masuk</p>
-                            </div>
-                        </div>
+                        <div class="flex-1 flex items-center justify-center py-12"><p class="text-xs font-medium" style="color: #424656;">Belum ada data</p></div>
                     @endforelse
                 </div>
+            </aside>
 
-                {{-- Kegiatan Footer --}}
-                <div class="shrink-0 relative overflow-hidden" style="background: #080c15; border-top: 1px solid rgba(255,255,255,0.05);">
-                    <div class="h-px" style="background: linear-gradient(90deg, transparent, rgba(var(--color-primary-rgb),0.35), transparent);"></div>
-                    <div class="px-5 py-3">
-                        <div class="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.15em] text-white/20 mb-2">
-                            <span class="h-1 w-1 rounded-full" style="background: var(--color-primary);"></span>
-                            Kategori Kegiatan
+            {{-- CENTER: Greenscreen --}}
+            <div class="flex-1 bg-[#00FF00] relative overflow-hidden">
+                <div class="absolute top-6 left-6 w-14 h-14 border-t border-l rounded-tl-lg" style="border-color: #c2c6d9;"></div>
+                <div class="absolute top-6 right-6 w-14 h-14 border-t border-r rounded-tr-lg" style="border-color: #c2c6d9;"></div>
+                <div class="absolute bottom-6 left-6 w-14 h-14 border-b border-l rounded-bl-lg" style="border-color: #c2c6d9;"></div>
+                <div class="absolute bottom-6 right-6 w-14 h-14 border-b border-r rounded-br-lg" style="border-color: #c2c6d9;"></div>
+                @if($eventner->logo_event)
+                    <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-20 w-20 opacity-[0.06] rounded-xl object-cover">
+                @endif
+            </div>
+
+            {{-- RIGHT: Comments Panel --}}
+            <aside class="w-[320px] shrink-0 flex flex-col ml-6" style="background: #ffffff; border: 1px solid #c2c6d9; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,98,255,0.06);">
+                <div class="shrink-0 flex items-center gap-2.5 px-5 py-4" style="border-bottom: 1px solid #c2c6d9;">
+                    <span class="flex items-center justify-center w-8 h-8 rounded-lg" style="background: rgba(var(--color-primary-rgb),0.08); color: var(--color-primary);">
+                        <i class="ti ti-message-circle text-sm"></i>
+                    </span>
+                    <span class="font-display text-sm font-bold" style="color: #191c1d;">Dukungan</span>
+                    <span class="text-[9px] font-bold ml-auto" style="color: var(--color-primary);">{{ number_format($totalVoteCount, 0, ',', '.') }} suara</span>
+                </div>
+
+                @php $coms3 = array_slice($this->overlayComments ?? [], 0, 5); @endphp
+                <div class="flex-1 overflow-y-auto p-4 space-y-3 leaderboard-scroll">
+                    @forelse($coms3 as $c)
+                        <div class="flex items-start gap-2.5">
+                            <span style="color: #ba1a1a; font-size: 14px; line-height: 1.3;">♥</span>
+                            <div class="flex-1 min-w-0">
+                                <span class="font-bold text-sm" style="color: var(--color-primary);">{{ $c['voter_name'] }}</span>
+                                <span class="block mt-0.5 text-xs leading-relaxed" style="color: #424656;">"{{ $c['comment'] }}"</span>
+                            </div>
+                            <span class="shrink-0 text-xs font-bold" style="color: #424656;">+{{ number_format($c['votes_earned'] ?? 0, 0, ',', '.') }}</span>
                         </div>
-                        <div class="flex flex-wrap gap-x-3 gap-y-1">
-                            @forelse($categoriesData as $cat)
-                                <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-[10px] font-medium"
-                                      style="background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.04); color: rgba(255,255,255,0.45);">
-                                    {{ $cat->full_name }}
-                                    <span class="font-bold" style="color: var(--color-primary);">{{ $cat->registrations_count ?? 0 }}</span>
-                                </span>
-                            @empty
-                                <span class="text-[10px] text-white/15 font-medium">Belum ada kategori</span>
-                            @endforelse
-                        </div>
-                    </div>
+                    @empty
+                        <div class="flex items-center justify-center py-12"><p class="text-sm" style="color: #424656;">Belum ada komentar</p></div>
+                    @endforelse
                 </div>
             </aside>
         </main>
+
+        {{-- BOTTOM BAR --}}
+        <div class="shrink-0 flex items-center h-[44px] px-8 gap-10" style="background: #ffffff; border-top: 1px solid #c2c6d9;">
+            @php $comsAll = $this->overlayComments ?? []; @endphp
+            @if(count($comsAll) > 0)
+            <div class="flex-1 min-w-0 relative h-full overflow-hidden"
+                 x-data="cFade({{ json_encode(array_map(fn($c) => ['n'=>$c['voter_name'],'t'=>$c['comment'],'v'=>$c['votes_earned']??0], $comsAll)) }})" x-init="init()">
+                <template x-for="(c,i) in items" :key="i">
+                    <div x-show="idx===i"
+                         x-transition:enter="transition ease-out duration-500"
+                         x-transition:enter-start="opacity-0 translate-y-3"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-300"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 -translate-y-3"
+                         class="absolute inset-0 flex items-center gap-2.5 px-2">
+                        <span style="color: #ba1a1a;">♥</span>
+                        <span class="text-xs font-bold truncate max-w-[140px]" style="color: var(--color-primary);" x-text="c.n"></span>
+                        <span class="text-xs italic truncate flex-1" style="color: #424656;" x-text="'— “'+c.t+'”'"></span>
+                        <span class="text-xs shrink-0 font-bold" style="color: #424656;" x-text="'+'+Number(c.v).toLocaleString('id-ID')"></span>
+                    </div>
+                </template>
+            </div>
+            @endif
+            <div class="shrink-0 flex items-center gap-4">
+                <span class="text-[10px] font-bold uppercase tracking-wider" style="color: #424656;">Kegiatan</span>
+                @foreach($categoriesData->take(4) as $cat)
+                    <span class="text-xs" style="color: #424656;">{{ $cat->full_name }}<span style="color: #737687;"> ({{ $cat->registrations_count ?? 0 }})</span></span>
+                @endforeach
+            </div>
+            <span class="text-[10px]" style="color: #424656;">Powered by <span class="font-bold" style="color: var(--color-primary);">BARIS APP</span></span>
+        </div>
     @endif
 
-    {{-- ============================================================ --}}
-    {{-- FOOTER --}}
-    {{-- ============================================================ --}}
+    {{-- FOOTER (Dark for non-full modes) --}}
+    @if($mode !== 'full')
     <footer class="shrink-0 flex items-center justify-center h-[30px] relative" style="background: #060912; border-top: 1px solid rgba(255,255,255,0.03);">
         <div class="absolute top-0 inset-x-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(var(--color-primary-rgb),0.15), transparent);"></div>
         <span class="text-[9px] font-medium tracking-[0.1em]" style="color: rgba(255,255,255,0.15);">Powered by <strong class="font-bold" style="color: rgba(255,255,255,0.3);">BARIS APP</strong></span>
     </footer>
+    @endif
 </div>

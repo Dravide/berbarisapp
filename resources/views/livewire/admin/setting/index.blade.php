@@ -59,6 +59,85 @@
                         <!-- Logo Settings -->
                         <div class="card">
                             <div class="card-body">
+                                <h5 class="card-title fw-semibold mb-4">Tema & Tampilan Landing Page</h5>
+                                <p class="text-muted fs-3 mb-3">Sesuaikan warna dan font untuk halaman utama BARIS APP.</p>
+
+                                {{-- Warna --}}
+                                <div class="row mb-3">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Warna Utama (Primary)</label>
+                                        <div class="input-group">
+                                            <input type="color" wire:model="site_primary_color" class="form-control form-control-color p-1" style="width: 44px; height: 38px; cursor: pointer;">
+                                            <input type="text" wire:model="site_primary_color" class="form-control" style="font-family: monospace; font-size: 13px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Warna Aksen (Accent)</label>
+                                        <div class="input-group">
+                                            <input type="color" wire:model="site_accent_color" class="form-control form-control-color p-1" style="width: 44px; height: 38px; cursor: pointer;">
+                                            <input type="text" wire:model="site_accent_color" class="form-control" style="font-family: monospace; font-size: 13px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="rounded-3 overflow-hidden border d-flex align-items-center" style="height: 38px;">
+                                            <div style="width: 60%; height: 100%; display: inline-block; background: {{ $site_primary_color }};"></div>
+                                            <div style="width: 40%; height: 100%; display: inline-block; background: {{ $site_accent_color }};"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Font --}}
+                                @php $fonts = $this->getAvailableFonts(); @endphp
+                                <div class="row mb-3">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Font Teks Isi (Body)</label>
+                                        <select wire:model="site_font_sans" class="form-select">
+                                            @foreach($fonts['sans'] as $f)
+                                                <option value="{{ $f['id'] }}">{{ $f['name'] }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Font Judul (Display)</label>
+                                        <select wire:model="site_font_display" class="form-select">
+                                            @foreach($fonts['display'] as $f)
+                                                <option value="{{ $f['id'] }}">{{ $f['name'] }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {{-- Preview --}}
+                                <div class="rounded-3 border p-4" style="background: #fafafa;">
+                                    <span class="text-muted small d-block mb-2">Pratinjau:</span>
+                                    <p class="mb-2" style="font-family: '{{ $site_font_sans }}', sans-serif; font-size: 16px; font-weight: 600;">
+                                        Body Text — The quick brown fox jumps over the lazy dog.
+                                    </p>
+                                    <p class="mb-2" style="font-family: '{{ $site_font_sans }}', sans-serif; font-size: 14px; font-weight: 400;">
+                                        Teks isi paragraf akan tampil seperti ini pada landing page utama.
+                                    </p>
+                                    <p class="mb-0" style="font-family: '{{ $site_font_display }}', sans-serif; font-size: 24px; font-weight: 700; color: {{ $site_primary_color }};">
+                                        Judul Besar Landing Page
+                                    </p>
+                                    <p class="mb-0" style="font-family: '{{ $site_font_display }}', sans-serif; font-size: 18px; font-weight: 600;">
+                                        Subjudul & Heading
+                                    </p>
+                                </div>
+
+                                {{-- Preview font loader --}}
+                                @php
+                                    $previewSans = collect($fonts['sans'])->firstWhere('id', $site_font_sans);
+                                    $previewDisplay = collect($fonts['display'])->firstWhere('id', $site_font_display);
+                                    $previewSansW = $previewSans['weights'] ?? 'wght@400;500;600;700';
+                                    $previewDisplayW = $previewDisplay['weights'] ?? 'wght@500;600;700;800';
+                                @endphp
+                                <link href="https://fonts.googleapis.com/css2?family={{ str_replace(' ', '+', $site_font_sans) }}:{{ $previewSansW }}&family={{ str_replace(' ', '+', $site_font_display) }}:{{ $previewDisplayW }}&display=swap" rel="stylesheet">
+                            </div>
+                        </div>
+
+                        <!-- Logo Settings -->
+                        <div class="card">
+                            <div class="card-body">
                                 <h5 class="card-title fw-semibold mb-4">Logo & Favicon</h5>
                                 <div class="row">
                                     <div class="col-md-6 mb-4">

@@ -73,6 +73,7 @@ class LandingPage extends Component
             ->layout('layouts.landing', [
                 'logoPath' => $this->logoPath,
                 'favicon' => $this->favicon,
+                'sectionsActive' => $this->sectionsActive,
             ])
             ->title(get_setting('site_title', 'BARIS APP'));
     }

@@ -15,15 +15,7 @@
 
     <meta name="description" content="{{ $eventner?->nama_event ?? get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu') }}">
 
-    {{-- Fonts (Plus Jakarta Sans + Inter) --}}
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-
-    {{-- Tabler Icons --}}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-
-    {{-- Dynamic Theme Colors (from Eventner profile) --}}
+    {{-- Dynamic Theme + Fonts (from Eventner profile) — define BEFORE font link --}}
     @php
         $themeConfig = $eventner?->theme_config ?? [];
         $primaryColor = $themeConfig['primary_color'] ?? '#0062ff';
@@ -31,32 +23,77 @@
         $bgType = $themeConfig['bg_type'] ?? 'solid';
         $bgImage = ($bgType === 'image' && !empty($themeConfig['bg_image'])) ? 'url(' . asset('storage/' . $themeConfig['bg_image']) . ')' : '';
 
+        // Fonts
+        $fontSans = $themeConfig['font_sans'] ?? 'Inter';
+        $fontDisplay = $themeConfig['font_display'] ?? 'Plus Jakarta Sans';
+        $fontWeights = [
+            'Inter' => 'wght@400;500;600;700',
+            'Bricolage Grotesque' => 'wght@400;500;600;700;800',
+            'DM Sans' => 'wght@400;500;700',
+            'Poppins' => 'wght@400;500;600;700;800',
+            'Nunito' => 'wght@400;500;600;700;800',
+            'Work Sans' => 'wght@400;500;600;700',
+            'Outfit' => 'wght@400;500;600;700;800',
+            'Onest' => 'wght@400;500;600;700;800',
+            'Plus Jakarta Sans' => 'wght@400;500;600;700;800',
+            'DM Serif Display' => 'wght@400',
+            'Playfair Display' => 'wght@400;500;600;700;800',
+            'Bebas Neue' => 'wght@400',
+        ];
+        $sansWeight = $fontWeights[$fontSans] ?? 'wght@400;500;600;700';
+        $displayWeight = $fontWeights[$fontDisplay] ?? 'wght@500;600;700;800';
+
         if ($bgType === 'image' && $bgImage) {
-            $htmlBg = "background: {$bgImage} no-repeat center center fixed; background-size: cover;";
-            $bodyBg = 'transparent';
+            $bgOverlay = "background-image: {$bgImage}; background-size: cover; background-position: center; background-attachment: fixed;";
         } elseif ($bgType === 'gradient') {
             $dir = $themeConfig['gradient_dir'] ?? 'to bottom right';
             $color2 = $themeConfig['gradient_color'] ?? '#0ea5e9';
-            $htmlBg = "background: linear-gradient({$dir}, {$primaryColor}, {$color2}) fixed;";
-            $bodyBg = 'transparent';
+            $bgOverlay = "background: linear-gradient({$dir}, {$primaryColor}, {$color2}) fixed; background-size: cover;";
         } else {
-            $htmlBg = "background: {$primaryColor};";
-            $bodyBg = '#f8f9fa';
+            $bgOverlay = '';
         }
     @endphp
+
+    {{-- Fonts (Dynamic) --}}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family={{ str_replace(' ', '+', $fontSans) }}:{{ $sansWeight }}&family={{ str_replace(' ', '+', $fontDisplay) }}:{{ $displayWeight }}&display=swap" rel="stylesheet">
+
+    {{-- Tabler Icons --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <style>
         :root {
             --event-primary: {{ $primaryColor }};
             --event-accent: {{ $accentColor }};
             --color-primary: {{ $primaryColor }};
             --color-secondary: {{ $accentColor }};
+            --font-sans: '{{ $fontSans }}', ui-sans-serif, system-ui, sans-serif;
+            --font-display: '{{ $fontDisplay }}', ui-sans-serif, system-ui, sans-serif;
         }
-        html { {{ $htmlBg }} }
-        body { background: transparent !important; }
+        @if($bgOverlay)
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            {{ $bgOverlay }}
+        }
+        @endif
     </style>
 
     {{-- CSS Assets (new Design System via landing.css) --}}
     @vite(['resources/css/landing.css', 'resources/js/app.js'])
+
+    {{-- Dynamic font override (must come after @vite to beat Tailwind @theme) --}}
+    <style>
+        body, .font-sans {
+            font-family: '{{ $fontSans }}', ui-sans-serif, system-ui, sans-serif !important;
+        }
+        .font-display, h1, h2, h3, h4, h5, h6,
+        [class*="font-display"] {
+            font-family: '{{ $fontDisplay }}', ui-sans-serif, system-ui, sans-serif !important;
+        }
+    </style>
 
     <title>{{ $title ?? ($eventner?->nama_event ?? 'BARIS APP') }}</title>
 

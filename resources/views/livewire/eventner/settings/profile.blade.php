@@ -372,6 +372,61 @@
                         </div>
                         @endif
 
+                        {{-- ===== FONT & TIPOGRAFI ===== --}}
+                        <hr class="my-4">
+                        <h6 class="fw-semibold mb-3"><i class="ti ti-typography me-1"></i> Font & Tipografi</h6>
+                        <p class="text-muted fs-3 mb-3">Pilih font untuk teks isi (body) dan judul (headings) pada halaman publik event.</p>
+
+                        @php $fonts = $this->getAvailableFonts(); @endphp
+                        <div class="row mb-3">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Font Teks Isi (Body / Sans)</label>
+                                <select wire:model="theme_font_sans" class="form-select">
+                                    @foreach($fonts['sans'] as $f)
+                                        <option value="{{ $f['id'] }}">{{ $f['name'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Font Judul (Display)</label>
+                                <select wire:model="theme_font_display" class="form-select">
+                                    @foreach($fonts['display'] as $f)
+                                        <option value="{{ $f['id'] }}">{{ $f['name'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        {{-- Font preview --}}
+                        <div class="rounded-3 border p-4 mb-3" style="background: #fafafa;">
+                            <span class="text-muted small d-block mb-2">Pratinjau Font:</span>
+                            <div>
+                                <p class="mb-2" style="font-family: '{{ $theme_font_sans }}', sans-serif; font-size: 16px; font-weight: 600;">
+                                    Body Text — The quick brown fox jumps over the lazy dog.
+                                </p>
+                                <p class="mb-2" style="font-family: '{{ $theme_font_sans }}', sans-serif; font-size: 14px; font-weight: 400;">
+                                    Teks isi paragraf akan tampil seperti ini. Silakan pilih font yang sesuai dengan karakter acara Anda.
+                                </p>
+                                <p class="mb-0" style="font-family: '{{ $theme_font_display }}', sans-serif; font-size: 24px; font-weight: 700;">
+                                    Judul Besar Acara
+                                </p>
+                                <p class="mb-0" style="font-family: '{{ $theme_font_display }}', sans-serif; font-size: 18px; font-weight: 600;">
+                                    Subjudul & Heading
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Preview font loader --}}
+                        @php
+                            $previewSans = collect($fonts['sans'])->firstWhere('id', $theme_font_sans);
+                            $previewDisplay = collect($fonts['display'])->firstWhere('id', $theme_font_display);
+                            $previewSansW = $previewSans['weights'] ?? 'wght@400;500;600;700';
+                            $previewDisplayW = $previewDisplay['weights'] ?? 'wght@500;600;700;800';
+                            $previewSansUrl = str_replace(' ', '+', $theme_font_sans);
+                            $previewDisplayUrl = str_replace(' ', '+', $theme_font_display);
+                        @endphp
+                        <link href="https://fonts.googleapis.com/css2?family={{ $previewSansUrl }}:{{ $previewSansW }}&family={{ $previewDisplayUrl }}:{{ $previewDisplayW }}&display=swap" rel="stylesheet">
+
                         {{-- ===== LIVESTREAM OVERLAY INFO ===== --}}
                         <hr class="my-4">
                         <div class="rounded-3 border border-warning-subtle bg-warning-subtle bg-opacity-10 p-4">

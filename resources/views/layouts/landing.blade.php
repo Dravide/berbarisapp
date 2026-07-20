@@ -15,16 +15,58 @@
         <link rel="shortcut icon" href="{{ asset('templates/zubaz/assets/images/favicon.ico') }}" type="image/x-icon">
     @endisset
 
-    {{-- Fonts: Plus Jakarta Sans (display) + Inter (body) --}}
+    {{-- Dynamic Theme + Fonts (from Admin Settings) — define BEFORE font link --}}
+    @php
+        $primaryColor = get_setting('site_primary_color', '#0062ff');
+        $accentColor = get_setting('site_accent_color', '#a3e635');
+        $fontSans = get_setting('site_font_sans', 'Inter');
+        $fontDisplay = get_setting('site_font_display', 'Plus Jakarta Sans');
+        $fontWeights = [
+            'Inter' => 'wght@400;500;600;700',
+            'Bricolage Grotesque' => 'wght@400;500;600;700;800',
+            'DM Sans' => 'wght@400;500;700',
+            'Poppins' => 'wght@400;500;600;700;800',
+            'Nunito' => 'wght@400;500;600;700;800',
+            'Work Sans' => 'wght@400;500;600;700',
+            'Outfit' => 'wght@400;500;600;700;800',
+            'Onest' => 'wght@400;500;600;700;800',
+            'Plus Jakarta Sans' => 'wght@400;500;600;700;800',
+            'DM Serif Display' => 'wght@400',
+            'Playfair Display' => 'wght@400;500;600;700;800',
+            'Bebas Neue' => 'wght@400',
+        ];
+        $sansWeight = $fontWeights[$fontSans] ?? 'wght@400;500;600;700';
+        $displayWeight = $fontWeights[$fontDisplay] ?? 'wght@600;700;800';
+    @endphp
+
+    <style>
+        :root {
+            --color-primary: {{ $primaryColor }};
+            --color-secondary: {{ $accentColor }};
+        }
+    </style>
+
+    {{-- Fonts (Dynamic) --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family={{ str_replace(' ', '+', $fontSans) }}:{{ $sansWeight }}&family={{ str_replace(' ', '+', $fontDisplay) }}:{{ $displayWeight }}&display=swap" rel="stylesheet">
 
     {{-- Tabler Icons (konsisten dgn app) --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 
     {{-- Tailwind v4 build (landing tokens) --}}
-    @vite(['resources/css/landing.css'])
+    @vite(['resources/css/landing.css', 'resources/js/app.js'])
+
+    {{-- Dynamic font override (must come after @vite to beat Tailwind @theme) --}}
+    <style>
+        body, .font-sans {
+            font-family: '{{ $fontSans }}', ui-sans-serif, system-ui, sans-serif !important;
+        }
+        .font-display, h1, h2, h3, h4, h5, h6,
+        [class*="font-display"] {
+            font-family: '{{ $fontDisplay }}', ui-sans-serif, system-ui, sans-serif !important;
+        }
+    </style>
 
     @livewireStyles
 </head>
@@ -46,15 +88,30 @@
                     @endif
                 </a>
 
-                {{-- Desktop nav --}}
-                <nav class="hidden items-center gap-8 lg:flex">
-                    <a href="#hero" class="text-sm font-medium text-on-surface-variant transition-colors duration-200 hover:text-primary">Beranda</a>
-                    <a href="#features" class="text-sm font-medium text-on-surface-variant transition-colors duration-200 hover:text-primary">Fitur</a>
-                    <a href="#about" class="text-sm font-medium text-on-surface-variant transition-colors duration-200 hover:text-primary">Tentang</a>
-                    <a href="#eventners" class="text-sm font-medium text-on-surface-variant transition-colors duration-200 hover:text-primary">Eventner</a>
-                    <a href="#testimonials" class="text-sm font-medium text-on-surface-variant transition-colors duration-200 hover:text-primary">Testimoni</a>
-                    <a href="#faq" class="text-sm font-medium text-on-surface-variant transition-colors duration-200 hover:text-primary">FAQ</a>
-                    <a href="#contact" class="text-sm font-medium text-on-surface-variant transition-colors duration-200 hover:text-primary">Kontak</a>
+                {{-- Desktop nav — dynamic based on active sections --}}
+                @php
+                    $sectionsActive = $sectionsActive ?? [];
+                    $navItems = [
+                        'hero' => 'Beranda',
+                        'features' => 'Fitur',
+                        'about' => 'Tentang',
+                        'eventners' => 'Eventner',
+                        'vote' => 'Vote',
+                        'ticket' => 'Tiket',
+                        'testimonials' => 'Testimoni',
+                        'faq' => 'FAQ',
+                        'contact' => 'Kontak',
+                    ];
+                @endphp
+                <nav class="hidden items-center gap-8 lg:flex" id="landing-desktop-nav">
+                    @foreach($navItems as $id => $label)
+                        @if(($sectionsActive[$id] ?? true) || $id === 'hero')
+                            <a href="#{{ $id }}" data-nav="{{ $id }}"
+                               class="text-sm font-medium transition-colors duration-200 text-on-surface-variant hover:text-primary">
+                                {{ $label }}
+                            </a>
+                        @endif
+                    @endforeach
                 </nav>
 
                 {{-- Desktop CTAs --}}
@@ -76,13 +133,11 @@
         {{-- Mobile menu --}}
         <div id="landing-mobile-menu" class="hidden border-t border-outline-variant/50 bg-white/95 backdrop-blur-xl lg:hidden">
             <nav class="container-landing flex flex-col gap-1 py-4">
-                <a href="#hero" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">Beranda</a>
-                <a href="#features" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">Fitur</a>
-                <a href="#about" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">Tentang</a>
-                <a href="#eventners" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">Eventner</a>
-                <a href="#testimonials" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">Testimoni</a>
-                <a href="#faq" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">FAQ</a>
-                <a href="#contact" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">Kontak</a>
+                @foreach($navItems as $id => $label)
+                    @if(($sectionsActive[$id] ?? true) || $id === 'hero')
+                        <a href="#{{ $id }}" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">{{ $label }}</a>
+                    @endif
+                @endforeach
                 <div class="mt-2 flex flex-col gap-2 border-t border-outline-variant/40 pt-3">
                     <a href="{{ route('login') }}" class="btn-ghost w-full">Login</a>
                     <a href="{{ route('login') }}" class="btn-primary w-full">Mulai Sekarang</a>
@@ -169,7 +224,7 @@
 
     @livewireScripts
 
-    {{-- Mobile menu toggle (vanilla, no jQuery) --}}
+    {{-- Mobile menu toggle + scroll spy (vanilla JS) --}}
     <script>
         (function () {
             var btn = document.getElementById('landing-menu-toggle');
@@ -190,6 +245,39 @@
                     if (icon) icon.className = 'ti ti-menu-2 text-2xl';
                 });
             });
+        })();
+
+        // Scroll spy — highlight active nav link
+        (function () {
+            var navLinks = document.querySelectorAll('#landing-desktop-nav a[data-nav]');
+            var sections = [];
+            navLinks.forEach(function (a) {
+                var el = document.getElementById(a.getAttribute('data-nav'));
+                if (el) sections.push({ id: a.getAttribute('data-nav'), el: el, link: a });
+            });
+            if (!sections.length) return;
+
+            function update() {
+                var scrollY = window.scrollY + 100;
+                var active = sections[0].id;
+                for (var i = 0; i < sections.length; i++) {
+                    if (scrollY >= sections[i].el.offsetTop) {
+                        active = sections[i].id;
+                    }
+                }
+                navLinks.forEach(function (a) {
+                    if (a.getAttribute('data-nav') === active) {
+                        a.classList.add('text-primary');
+                        a.classList.remove('text-on-surface-variant');
+                    } else {
+                        a.classList.remove('text-primary');
+                        a.classList.add('text-on-surface-variant');
+                    }
+                });
+            }
+
+            window.addEventListener('scroll', update, { passive: true });
+            update();
         })();
     </script>
 </body>

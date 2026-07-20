@@ -51,10 +51,14 @@ class LivestreamOverlay extends Component
             $this->loadVoteData();
         }
 
+        // Load comments for full + custom modes
+        if (in_array($this->mode, ['full', 'custom'])) {
+            $this->loadComments();
+        }
+
         // Load custom overlay settings
         if ($this->mode === 'custom') {
             $this->overlaySetting = \App\Models\OverlaySetting::where('eventner_id', $this->eventner->id)->first();
-            $this->loadComments();
         }
     }
 
@@ -63,7 +67,7 @@ class LivestreamOverlay extends Component
         if (in_array($this->mode, ['full', 'vote', 'custom'])) {
             $this->loadVoteData();
         }
-        if ($this->mode === 'custom') {
+        if (in_array($this->mode, ['full', 'custom'])) {
             $this->loadComments();
         }
     }

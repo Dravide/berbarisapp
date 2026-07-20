@@ -42,9 +42,9 @@
         </li>
 
         @if(auth()->user()->role === 'Admin')
-          <!-- ---------------------------------- -->
-          <!-- Admin Menu -->
-          <!-- ---------------------------------- -->
+          {{-- ============================================ --}}
+          {{-- MANAJEMEN UTAMA --}}
+          {{-- ============================================ --}}
           <li class="nav-small-cap">
             <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
             <span class="hide-menu">Manajemen</span>
@@ -53,7 +53,7 @@
             <a class="sidebar-link {{ request()->routeIs('admin.eventner.*') ? 'active' : '' }}"
               href="{{ route('admin.eventner.index') }}" aria-expanded="false">
               <span>
-                <i class="ti ti-users"></i>
+                <i class="ti ti-building"></i>
               </span>
               <span class="hide-menu">Eventner</span>
             </a>
@@ -62,7 +62,7 @@
             <a class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"
               href="{{ route('admin.users.index') }}" aria-expanded="false">
               <span>
-                <i class="ti ti-user-cog"></i>
+                <i class="ti ti-user-circle"></i>
               </span>
               <span class="hide-menu">Manajemen User</span>
             </a>
@@ -76,13 +76,21 @@
               <span class="hide-menu">Data Sekolah</span>
             </a>
           </li>
+
+          {{-- ============================================ --}}
+          {{-- PENGATURAN --}}
+          {{-- ============================================ --}}
+          <li class="nav-small-cap">
+            <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+            <span class="hide-menu">Pengaturan</span>
+          </li>
           <li class="sidebar-item">
-            <a class="sidebar-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}"
+            <a class="sidebar-link {{ request()->routeIs('admin.settings.index') && !request()->routeIs('admin.settings.landing-page') ? 'active' : '' }}"
               href="{{ route('admin.settings.index') }}" aria-expanded="false">
               <span>
                 <i class="ti ti-settings"></i>
               </span>
-              <span class="hide-menu">Pengaturan</span>
+              <span class="hide-menu">Pengaturan Situs</span>
             </a>
           </li>
           <li class="sidebar-item">
@@ -143,7 +151,7 @@
             <a class="sidebar-link {{ request()->routeIs('eventner.judges.*') ? 'active' : '' }}"
               href="{{ route('eventner.judges.index') }}" aria-expanded="false">
               <span>
-                <i class="ti ti-user"></i>
+                <i class="ti ti-user-check"></i>
               </span>
               <span class="hide-menu">Daftar Juri</span>
             </a>
@@ -178,7 +186,7 @@
             <a class="sidebar-link {{ request()->routeIs('eventner.scoring.*') ? 'active' : '' }}"
               href="{{ route('eventner.scoring.index') }}" aria-expanded="false">
               <span>
-                <i class="ti ti-clipboard-check"></i>
+                <i class="ti ti-pencil"></i>
               </span>
               <span class="hide-menu">Input Nilai</span>
             </a>
@@ -187,7 +195,7 @@
             <a class="sidebar-link {{ request()->routeIs('eventner.score-recap.*') ? 'active' : '' }}"
               href="{{ route('eventner.score-recap.index') }}" aria-expanded="false">
               <span>
-                <i class="ti ti-report-analytics"></i>
+                <i class="ti ti-chart-bar"></i>
               </span>
               <span class="hide-menu">Rekap Nilai</span>
             </a>
@@ -240,7 +248,7 @@
             <a class="sidebar-link {{ request()->routeIs('eventner.vote-transactions.*') ? 'active' : '' }}"
               href="{{ route('eventner.vote-transactions.index') }}" aria-expanded="false">
               <span>
-                <i class="ti ti-receipt"></i>
+                <i class="ti ti-file-invoice"></i>
               </span>
               <span class="hide-menu">Transaksi Voting</span>
             </a>
@@ -257,7 +265,7 @@
             <a class="sidebar-link {{ request()->routeIs('eventner.tickets.settings') ? 'active' : '' }}"
               href="{{ route('eventner.tickets.settings') }}" aria-expanded="false">
               <span>
-                <i class="ti ti-settings"></i>
+                <i class="ti ti-ticket"></i>
               </span>
               <span class="hide-menu">Pengaturan Tiket</span>
             </a>
@@ -266,26 +274,26 @@
             <a class="sidebar-link {{ request()->routeIs('eventner.tickets.index') && !request()->routeIs('eventner.tickets.settings') ? 'active' : '' }}"
               href="{{ route('eventner.tickets.index') }}" aria-expanded="false">
               <span>
-                <i class="ti ti-ticket"></i>
+                <i class="ti ti-receipt"></i>
               </span>
               <span class="hide-menu">Daftar Tiket</span>
             </a>
           </li>
 
           {{-- ============================================ --}}
-          {{-- LAINNYA --}}
+          {{-- OVERLAY --}}
           {{-- ============================================ --}}
           <li class="nav-small-cap">
             <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-            <span class="hide-menu">Lainnya</span>
+            <span class="hide-menu">Overlay</span>
           </li>
           <li class="sidebar-item">
-            <a class="sidebar-link {{ request()->routeIs('eventner.activity-log.*') ? 'active' : '' }}"
-              href="{{ route('eventner.activity-log.index') }}" aria-expanded="false">
+            <a class="sidebar-link {{ request()->routeIs('eventner.livestream.*') ? 'active' : '' }}"
+              href="{{ route('eventner.livestream.index') }}" aria-expanded="false">
               <span>
-                <i class="ti ti-history"></i>
+                <i class="ti ti-video"></i>
               </span>
-              <span class="hide-menu">Activity Log</span>
+              <span class="hide-menu">Livestream Overlay</span>
             </a>
           </li>
           @if(auth()->user()->eventner && auth()->user()->eventner->scoring_code)
@@ -309,25 +317,37 @@
           </li>
           @endif
 
+          {{-- ============================================ --}}
+          {{-- LAINNYA --}}
+          {{-- ============================================ --}}
+          <li class="nav-small-cap">
+            <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+            <span class="hide-menu">Lainnya</span>
+          </li>
           <li class="sidebar-item">
-            <a class="sidebar-link {{ request()->routeIs('eventner.livestream.*') ? 'active' : '' }}"
-              href="{{ route('eventner.livestream.index') }}" aria-expanded="false">
-              <span><i class="ti ti-video"></i></span>
-              <span class="hide-menu">Livestream Overlay</span>
+            <a class="sidebar-link {{ request()->routeIs('eventner.activity-log.*') ? 'active' : '' }}"
+              href="{{ route('eventner.activity-log.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-history"></i>
+              </span>
+              <span class="hide-menu">Activity Log</span>
             </a>
           </li>
-
           <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('eventner.faq.*') ? 'active' : '' }}"
               href="{{ route('eventner.faq.index') }}" aria-expanded="false">
-              <span><i class="ti ti-info-circle"></i></span>
+              <span>
+                <i class="ti ti-info-circle"></i>
+              </span>
               <span class="hide-menu">FAQ</span>
             </a>
           </li>
           <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('eventner.gallery.*') ? 'active' : '' }}"
               href="{{ route('eventner.gallery.index') }}" aria-expanded="false">
-              <span><i class="ti ti-photo"></i></span>
+              <span>
+                <i class="ti ti-photo"></i>
+              </span>
               <span class="hide-menu">Galeri</span>
             </a>
           </li>

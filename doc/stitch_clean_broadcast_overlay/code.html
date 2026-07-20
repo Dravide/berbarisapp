@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Elite Stream Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Literata:wght@400;600;700;800&amp;family=Nunito+Sans:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "primary-fixed": "#c8e8d0",
+                "tertiary-container": "#c4a66a",
+                "surface-variant": "#e4e0d8",
+                "on-primary": "#ffffff",
+                "background": "#faf6f0",
+                "outline-variant": "#c4c8bc",
+                "on-surface": "#2e3230",
+                "surface-dim": "#dbd7cf",
+                "on-tertiary-fixed-variant": "#554020",
+                "on-secondary-fixed-variant": "#4a4538",
+                "on-tertiary-container": "#554020",
+                "surface-container-low": "#f5f1ea",
+                "on-background": "#2e3230",
+                "surface-tint": "#4a7c59",
+                "surface-container-lowest": "#ffffff",
+                "on-primary-fixed-variant": "#2a6038",
+                "on-primary-fixed": "#002110",
+                "surface-container": "#f0ece4",
+                "surface-bright": "#faf6f0",
+                "outline": "#74796e",
+                "secondary-container": "#f0e8db",
+                "primary": "#4a7c59",
+                "on-error": "#ffffff",
+                "primary-fixed-dim": "#8ecf9e",
+                "error-container": "#ffdad8",
+                "surface-container-highest": "#e4e0d8",
+                "secondary-fixed": "#f0e8db",
+                "on-tertiary": "#ffffff",
+                "inverse-primary": "#8ecf9e",
+                "secondary-fixed-dim": "#d4ccbf",
+                "error": "#b83230",
+                "on-primary-container": "#d8f0de",
+                "surface": "#faf6f0",
+                "inverse-on-surface": "#f5f0e8",
+                "on-tertiary-fixed": "#221a05",
+                "on-surface-variant": "#4a4e4a",
+                "on-secondary-fixed": "#1e1a13",
+                "tertiary-fixed-dim": "#dcc48e",
+                "tertiary-fixed": "#f8e0a8",
+                "surface-container-high": "#eae6de",
+                "primary-container": "#78a886",
+                "inverse-surface": "#2e3230",
+                "tertiary": "#705c30",
+                "secondary": "#6b6358",
+                "on-secondary": "#ffffff",
+                "on-error-container": "#690005",
+                "on-secondary-container": "#5e5548"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.75rem",
+                "lg": "1rem",
+                "xl": "1.5rem",
+                "full": "9999px"
+        },
+        "fontFamily": {
+                "headline": ["Literata", "serif"],
+                "display": ["Literata", "serif"],
+                "body": ["Nunito Sans", "sans-serif"],
+                "label": ["Nunito Sans", "sans-serif"]
+        }
+      },
+    },
+  }
+</script>
+<style>
+        @keyframes pulse-red {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+        }
+        .animate-pulse-red { animation: pulse-red 2s infinite ease-in-out; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c4c8bc; border-radius: 10px; }
+
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .animate-marquee {
+            animation: marquee 30s linear infinite;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body overflow-hidden h-screen w-screen">
+<!-- Global Layout Container -->
+<div class="relative h-full w-full p-4 flex flex-col gap-4">
+<!-- TopAppBar Navigation Shell -->
+<header class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 py-3 bg-surface border-b border-outline-variant">
+<div class="flex items-center gap-6">
+<h1 class="font-display text-xl font-extrabold text-primary uppercase tracking-tighter">ELITE STREAM DASHBOARD</h1>
+<div class="flex items-center gap-3 bg-surface-container-high px-4 py-1.5 rounded-full border border-outline-variant">
+<span class="w-2.5 h-2.5 bg-error rounded-full animate-pulse-red"></span>
+<span class="font-label font-bold text-xs text-on-surface uppercase tracking-wider">LIVE</span>
+<div class="w-[1px] h-3 bg-outline-variant"></div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-secondary">visibility</span>
+<span class="font-body text-sm font-bold">12.4K</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-8">
+<div class="hidden md:flex items-center gap-6">
+<span class="font-label text-xs font-bold text-primary border-b-2 border-primary cursor-pointer py-1">OVERVIEW</span>
+<span class="font-label text-xs font-bold text-on-surface-variant/80 hover:text-primary transition-colors cursor-pointer py-1">RANKINGS</span>
+<span class="font-label text-xs font-bold text-on-surface-variant/80 hover:text-primary transition-colors cursor-pointer py-1">STATS</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-primary-fixed px-3 py-1 rounded border border-primary/20">
+<span class="material-symbols-outlined text-[18px] text-on-primary-fixed-variant">timer</span>
+<span class="font-body text-sm font-bold tracking-widest text-on-primary-fixed-variant" id="stream-timer">02:45:12</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors">settings</span>
+</div>
+</div>
+</header>
+<!-- Main Workspace -->
+<main class="relative flex-1 mt-16 flex justify-between pointer-events-none">
+<!-- Leaderboard Container -->
+<aside class="w-72 flex flex-col pointer-events-auto">
+<div class="bg-surface-container rounded-xl overflow-hidden flex flex-col h-fit border border-outline-variant shadow-sm">
+<div class="bg-primary/10 px-4 py-3 border-b border-outline-variant flex justify-between items-center">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">leaderboard</span>
+<span class="font-headline text-base font-bold text-on-surface tracking-tight">LEADERBOARD</span>
+</div>
+<span class="font-label text-[10px] text-on-surface-variant font-bold">S1 PRO SERIES</span>
+</div>
+<div class="flex flex-col p-2 gap-1.5">
+<!-- Rank 1 -->
+<div class="flex items-center gap-3 p-3 bg-surface-container-highest rounded-lg border border-primary/20 hover:border-primary/50 transition-colors duration-300 group">
+<div class="w-8 h-8 rounded bg-primary text-on-primary flex items-center justify-center font-bold text-sm">1</div>
+<img class="w-10 h-10 rounded-full border-2 border-primary/20" data-alt="A futuristic digital avatar portrait" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDpd_qcWBqJOvBvuMeSmDuSQkTp-JwORRWcJ00O-Irf6f-TkTpEklCTaqkh5zmjigWVc6PBivuXO6J_rfPsQQ81pzvI9MI3jjYg62YqYuwdiQHsz-Liqn5qsAcf2zLDRy9MiX2cVsM_Ocuwm3bMQgEtqfpf1PguoBeW-ZUCVpppoCInST-dW0mzbnsGpxysXpOOz4glhisobXDwEV8IN0PWw9aIiqts4ID6kLtRmuBHXTaEmz_OcdKI1dEBG0R6cy3jDXGa4-7pfPS-"/>
+<div class="flex-1 overflow-hidden">
+<div class="font-headline text-sm truncate text-on-surface">Viper_Striker</div>
+<div class="font-label text-[10px] text-primary font-bold">2,850 PTS</div>
+</div>
+</div>
+<!-- Rank 2 -->
+<div class="flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container-highest rounded-lg border border-outline-variant transition-all duration-300">
+<div class="w-8 h-8 rounded bg-surface-dim flex items-center justify-center font-bold text-on-surface text-sm">2</div>
+<img class="w-10 h-10 rounded-full border border-outline-variant" data-alt="Cyberpunk style digital avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAunhDh1X6v1y2ADWc1Ph8stHkC13MqRcfU_2H-R4aAJoS3WeQ-p-RnDv-Uo8jyO-lJRZyVGubZNsLcw0UEf4hzw2LsAMe3e2fcrmKOqqPJ58TFmH1ZtkSlNrFIVkUGIflwvHkCFB2NThIAJyCdf3artXRV3jHpti4cLag_N3RBfPe5unZqUlqZtlc5yHniB82qWbgSAJ0NZ2A5zgi-OO9gpCNZXvZvASXUQmUCFPu86Nb66CzjGTm_G0nlzLTFsnieHlJCuo0Q0ujE"/>
+<div class="flex-1 overflow-hidden">
+<div class="font-headline text-sm truncate text-on-surface">Ghost_Protocol</div>
+<div class="font-label text-[10px] text-on-surface-variant font-bold">2,710 PTS</div>
+</div>
+</div>
+<!-- Rank 3 -->
+<div class="flex items-center gap-3 p-3 bg-surface-container-low hover:bg-surface-container-highest rounded-lg border border-outline-variant transition-all duration-300">
+<div class="w-8 h-8 rounded bg-surface-dim flex items-center justify-center font-bold text-on-surface text-sm">3</div>
+<img class="w-10 h-10 rounded-full border border-outline-variant" data-alt="An abstract digital character avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFqPLOs6VonHth1R1LgdZpp0YAIcOlynfhm6F57BiyQli_3NPwTuI-gKYofRIP0tfmRxUW-lqhiQJq1NLFxR0ARijTLUz_qSqd_NHvRDkUuni2yD0LAwKQsk6jUwXNgPMRLs3BqTlCBaYxL1U_QJP6ZYRURsC_bCjp4FuL0pV-G2Ekj93pfU7ydlrngO9TYeggQLlwNVsKKkWVnATsM2C-hg_W_FVDhZ-CvKUPNX8NCZql0t7dTNEq1IgTTxcrqnuH_u3kheZ2cy7_"/>
+<div class="flex-1 overflow-hidden">
+<div class="font-headline text-sm truncate text-on-surface">Neon_Pulse</div>
+<div class="font-label text-[10px] text-on-surface-variant font-bold">2,645 PTS</div>
+</div>
+</div>
+<!-- Rank 4 -->
+<div class="flex items-center gap-3 p-3 bg-surface-container-low/50 rounded-lg border border-outline-variant/30 opacity-70">
+<div class="w-8 h-8 rounded bg-surface-dim flex items-center justify-center font-bold text-on-surface text-sm">4</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-highest border border-outline-variant"></div>
+<div class="flex-1 overflow-hidden">
+<div class="font-headline text-sm truncate text-on-surface-variant">Alpha_Zero</div>
+<div class="font-label text-[10px] text-on-surface-variant/60 font-bold">2,420 PTS</div>
+</div>
+</div>
+</div>
+<div class="mt-auto p-4 border-t border-outline-variant bg-surface-container-low">
+<button class="w-full py-2.5 bg-primary hover:bg-primary/90 text-on-primary font-label text-xs font-bold rounded-lg transition-colors border border-primary/20 uppercase tracking-widest cursor-pointer shadow-sm">View Full Rankings</button>
+</div>
+</div>
+</aside>
+<!-- Center transparent gap for video feed -->
+<div class="flex-1 mx-6 relative">
+<!-- Overlay elements -->
+<div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4 pointer-events-auto">
+<div class="bg-surface-container border border-outline-variant px-6 py-3 rounded-full flex items-center gap-4 shadow-md">
+<div class="flex flex-col items-center">
+<span class="font-label text-[10px] text-on-surface-variant font-bold">MATCH TIME</span>
+<span class="font-body text-xl font-extrabold text-on-surface">14:52</span>
+</div>
+<div class="w-[1px] h-8 bg-outline-variant"></div>
+<div class="flex items-center gap-4">
+<div class="text-right">
+<div class="font-headline text-sm text-on-surface font-bold">TEAM ALPHA</div>
+<div class="font-body text-lg font-extrabold text-primary">124</div>
+</div>
+<span class="font-label text-xs font-bold text-on-surface-variant">VS</span>
+<div>
+<div class="font-headline text-sm text-on-surface font-bold">TEAM OMEGA</div>
+<div class="font-body text-lg font-extrabold text-secondary">98</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Chat Module Shell -->
+<aside class="w-80 flex flex-col pointer-events-auto">
+<div class="bg-surface-container h-full rounded-xl flex flex-col overflow-hidden border border-outline-variant shadow-sm">
+<div class="p-4 border-b border-outline-variant flex items-center justify-between bg-surface-container-high">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">chat_bubble</span>
+<span class="font-headline text-base font-bold text-on-surface">LIVE CHAT</span>
+</div>
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-on-surface-variant text-sm cursor-pointer hover:text-on-surface">more_vert</span>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-surface-container-lowest" id="chat-container">
+<!-- Chat Messages -->
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="bg-secondary-container text-on-secondary-container text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase">MOD</span>
+<span class="font-label text-secondary text-[11px] font-bold">System_Bot</span>
+</div>
+<p class="text-body text-sm text-on-surface-variant leading-relaxed">Welcome to the ELITE PRO SERIES. Please follow the community guidelines.</p>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-[14px]">verified</span>
+<span class="font-label text-primary text-[11px] font-bold">Cyber_Knight</span>
+</div>
+<p class="text-body text-sm text-on-surface leading-relaxed font-semibold">That last play by Viper was absolutely insane! 🔥🔥🔥</p>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-label text-tertiary text-[11px] font-bold">GamerGirl_99</span>
+</div>
+<p class="text-body text-sm text-on-surface leading-relaxed">How did he even see that coming?</p>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="bg-primary-fixed text-on-primary-fixed-variant text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase">SUB</span>
+<span class="font-label text-primary text-[11px] font-bold">Pixel_Warrior</span>
+</div>
+<p class="text-body text-sm text-on-surface leading-relaxed">Let's goooo! Team Alpha is crushing it this round.</p>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-label text-secondary text-[11px] font-bold">FragMaster</span>
+</div>
+<p class="text-body text-sm text-on-surface leading-relaxed">Anyone knows what peripherals Viper is using?</p>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2">
+<span class="font-label text-on-primary-fixed-variant text-[11px] font-bold">The_Oracle</span>
+</div>
+<p class="text-body text-sm text-on-surface leading-relaxed">Stats showing a 85% win rate for Alpha on this map.</p>
+</div>
+</div>
+<div class="p-4 bg-surface-container-low border-t border-outline-variant">
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border-outline-variant text-sm py-2 px-3 pr-10 focus:ring-primary focus:border-primary placeholder-on-surface-variant/50 transition-all rounded-lg" placeholder="Send a message..." type="text"/>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-primary cursor-pointer hover:scale-110 transition-transform">send</span>
+</div>
+<div class="mt-2 flex justify-between items-center">
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-sm text-on-surface-variant cursor-pointer hover:text-primary">mood</span>
+<span class="material-symbols-outlined text-sm text-on-surface-variant cursor-pointer hover:text-primary">redeem</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant/70">250/250</span>
+</div>
+</div>
+</div>
+</aside>
+</main>
+<!-- Lower Third Ticker -->
+<footer class="fixed bottom-0 left-0 w-full bg-surface border-t border-outline-variant px-6 py-2.5 z-50">
+<div class="flex items-center gap-8 overflow-hidden whitespace-nowrap">
+<div class="flex items-center gap-2 shrink-0">
+<span class="bg-primary text-on-primary font-label text-[10px] font-bold px-2 py-0.5 rounded">BREAKING</span>
+</div>
+<div class="animate-marquee inline-block text-on-surface-variant font-label text-xs font-bold tracking-widest uppercase">
+                    Tournament Update: Semi-Finals scheduled for 20:00 UTC tomorrow • New sponsor announcement: CyberDrive Pro • Top donor of the hour: Pixel_King ($500) • Welcome 450 new subscribers this session! •
+                </div>
+</div>
+</footer>
+</div>
+<script>
+        // Timer Logic
+        let seconds = 9912; // 02:45:12
+        const timerElement = document.getElementById('stream-timer');
+        
+        setInterval(() => {
+            seconds++;
+            let h = Math.floor(seconds / 3600);
+            let m = Math.floor((seconds % 3600) / 60);
+            let s = seconds % 60;
+            timerElement.textContent = 
+                `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }, 1000);
+
+        // Auto-scroll chat to bottom
+        const chatContainer = document.getElementById('chat-container');
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        // Interactive states for hover effects
+        document.querySelectorAll('.material-symbols-outlined').forEach(icon => {
+            icon.classList.add('transition-all', 'duration-200', 'active:scale-90');
+        });
+    </script>
+</body></html>

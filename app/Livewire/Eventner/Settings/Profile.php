@@ -56,6 +56,10 @@ class Profile extends Component
     public $theme_bg_preview;
     public $theme_bg_url;
 
+    // Font
+    public $theme_font_sans = 'Inter';
+    public $theme_font_display = 'Plus Jakarta Sans';
+
     public function mount()
     {
         $eventner = Auth::user()->eventner;
@@ -97,6 +101,8 @@ class Profile extends Component
         $this->theme_gradient_dir = $theme['gradient_dir'] ?? 'to right';
         $this->theme_gradient_color = $theme['gradient_color'] ?? '#0ea5e9';
         $this->theme_bg_url = $theme['bg_image'] ?? '';
+        $this->theme_font_sans = $theme['font_sans'] ?? 'Inter';
+        $this->theme_font_display = $theme['font_display'] ?? 'Plus Jakarta Sans';
     }
 
     public function save()
@@ -205,6 +211,8 @@ class Profile extends Component
                 'gradient_dir' => $this->theme_gradient_dir,
                 'gradient_color' => $this->theme_gradient_color,
                 'bg_image' => $this->theme_bg_url,
+                'font_sans' => $this->theme_font_sans,
+                'font_display' => $this->theme_font_display,
             ],
         ]);
 
@@ -212,6 +220,33 @@ class Profile extends Component
         $this->newPoster = null; 
 
         session()->flash('success', 'Profil Event berhasil diperbarui!');
+    }
+
+    public function getAvailableFonts(): array
+    {
+        return [
+            'sans' => [
+                ['id' => 'Inter', 'name' => 'Inter', 'weights' => 'wght@400;500;600;700'],
+                ['id' => 'Bricolage Grotesque', 'name' => 'Bricolage Grotesque', 'weights' => 'wght@400;500;600;700;800'],
+                ['id' => 'DM Sans', 'name' => 'DM Sans', 'weights' => 'wght@400;500;700'],
+                ['id' => 'Poppins', 'name' => 'Poppins', 'weights' => 'wght@400;500;600;700;800'],
+                ['id' => 'Nunito', 'name' => 'Nunito', 'weights' => 'wght@400;500;600;700;800'],
+                ['id' => 'Work Sans', 'name' => 'Work Sans', 'weights' => 'wght@400;500;600;700'],
+                ['id' => 'Outfit', 'name' => 'Outfit', 'weights' => 'wght@400;500;600;700;800'],
+                ['id' => 'Onest', 'name' => 'Onest', 'weights' => 'wght@400;500;600;700;800'],
+                ['id' => 'Plus Jakarta Sans', 'name' => 'Plus Jakarta Sans', 'weights' => 'wght@400;500;600;700;800'],
+            ],
+            'display' => [
+                ['id' => 'Plus Jakarta Sans', 'name' => 'Plus Jakarta Sans', 'weights' => 'wght@500;600;700;800'],
+                ['id' => 'Bricolage Grotesque', 'name' => 'Bricolage Grotesque', 'weights' => 'wght@500;600;700;800'],
+                ['id' => 'Poppins', 'name' => 'Poppins', 'weights' => 'wght@500;600;700;800'],
+                ['id' => 'Onest', 'name' => 'Onest', 'weights' => 'wght@500;600;700;800'],
+                ['id' => 'Outfit', 'name' => 'Outfit', 'weights' => 'wght@500;600;700;800'],
+                ['id' => 'DM Serif Display', 'name' => 'DM Serif Display', 'weights' => 'wght@400'],
+                ['id' => 'Playfair Display', 'name' => 'Playfair Display', 'weights' => 'wght@400;500;600;700;800'],
+                ['id' => 'Bebas Neue', 'name' => 'Bebas Neue', 'weights' => 'wght@400'],
+            ],
+        ];
     }
 
     public function render()

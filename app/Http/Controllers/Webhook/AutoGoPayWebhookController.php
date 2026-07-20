@@ -50,7 +50,7 @@ class AutoGoPayWebhookController extends Controller
             }
 
             if ($status === 'settlement') {
-                $this->handleSettlement($transactionId);
+                $this->handleSettlement($transactionId, $transaction);
             } elseif ($status === 'expire') {
                 $this->handleExpired($transactionId);
             }
@@ -59,11 +59,23 @@ class AutoGoPayWebhookController extends Controller
         return response()->json(['success' => true]);
     }
 
-    private function handleSettlement(string $transactionId): void
+    private function handleSettlement(string $transactionId, array $transactionData = []): void
     {
         // Cek Vote Transaction (idempotent)
         $vote = VoteTransaction::where('autogopay_transaction_id', $transactionId)->first();
         if ($vote && $vote->status !== 'PAID') {
+            // Verifikasi amount: pastikan nominal dibayar sesuai database
+            $paidAmount = $transactionData['amount'] ?? null;
+            if ($paidAmount !== null && (int)$paidAmount !== (int)$vote->amount) {
+                Log::warning('Vote webhook: amount mismatch', [
+                    'transaction_id' => $transactionId,
+                    'vote_id' => $vote->id,
+                    'expected' => (int)$vote->amount,
+                    'paid' => (int)$paidAmount,
+                ]);
+                return;
+            }
+
             $vote->update([
                 'status' => 'PAID',
                 'paid_at' => now(),
@@ -76,6 +88,18 @@ class AutoGoPayWebhookController extends Controller
         // Cek Ticket (idempotent)
         $ticket = Ticket::where('autogopay_transaction_id', $transactionId)->first();
         if ($ticket && $ticket->status !== 'PAID') {
+            // Verifikasi amount: pastikan nominal dibayar sesuai database
+            $paidAmount = $transactionData['amount'] ?? null;
+            if ($paidAmount !== null && (int)$paidAmount !== (int)$ticket->total_amount) {
+                Log::warning('Ticket webhook: amount mismatch', [
+                    'transaction_id' => $transactionId,
+                    'ticket_id' => $ticket->id,
+                    'expected' => (int)$ticket->total_amount,
+                    'paid' => (int)$paidAmount,
+                ]);
+                return;
+            }
+
             // Generate QR tiket masuk (binary PNG)
             $options = new QROptions;
             $options->outputInterface = QRGdImagePNG::class;
