@@ -186,21 +186,92 @@
                     </div>
                 </div>
             @elseif($view === 'closed')
-                <div class="flex justify-center">
+                {{-- Header info closed --}}
+                <div class="flex justify-center mb-6">
                     <div class="w-full max-w-lg surface-card overflow-hidden">
-                        <div class="bg-error text-on-error p-8 text-center">
-                            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-on-error/20 shadow-sm mb-3 mx-auto">
+                        <div class="bg-error text-on-error p-6 text-center">
+                            <div class="flex h-12 w-12 items-center justify-center rounded-full bg-on-error/20 shadow-sm mb-3 mx-auto">
                                 <i class="ti ti-lock text-3xl"></i>
                             </div>
                             <h3 class="font-display text-lg font-bold text-on-error mb-1">Voting Telah Berakhir</h3>
-                            <p class="text-sm text-on-error/80">Periode voting sudah ditutup.</p>
+                            <p class="text-sm text-on-error/80">Berikut hasil akhir voting.</p>
                         </div>
-                        <div class="p-6 text-center">
-                            <p class="text-sm text-on-surface-variant mb-6 leading-relaxed">Berikut data peserta yang terdaftar di setiap kategori.</p>
-                            <a href="{{ event_url($eventner, 'detail') }}" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 text-decoration-none">
-                                <i class="ti ti-arrow-left"></i> Kembali ke Event
-                            </a>
-                        </div>
+                    </div>
+                </div>
+
+                {{-- Hasil voting per kategori --}}
+                <div class="container-landing pb-12">
+                    @php
+                        $allCategories = $this->eventner->competitionCategories()->whereNotNull('parent_id')->with('parent')->get();
+                    @endphp
+
+                    <div class="grid gap-6">
+                        @forelse($allCategories as $cat)
+                            @php
+                                $catParticipants = \App\Models\Registration::where('competition_category_id', $cat->id)
+                                    ->withSum(['voteTransactions as total_votes' => function($q) { $q->where('status', 'PAID'); }], 'votes_earned')
+                                    ->orderByDesc('total_votes')
+                                    ->get();
+                                $top = $catParticipants->take(3);
+                            @endphp
+
+                            <div class="surface-card border border-outline-variant/50 bg-white overflow-hidden rounded-xl">
+                                <div class="bg-primary text-white p-4 flex items-center gap-3">
+                                    <i class="ti ti-trophy text-xl"></i>
+                                    <div>
+                                        <h4 class="font-display font-bold">{{ $cat->full_name }}</h4>
+                                        <span class="text-xs text-white/70">{{ $catParticipants->count() }} kontingen</span>
+                                    </div>
+                                </div>
+
+                                @if($top->isNotEmpty())
+                                    <div class="p-4 space-y-2">
+                                        @foreach($top as $i => $p)
+                                            <div class="flex items-center gap-3 p-3 rounded-lg {{ $i === 0 ? 'bg-amber-50 border border-amber-200' : ($i === 1 ? 'bg-gray-50 border border-gray-200' : ($i === 2 ? 'bg-orange-50 border border-orange-200' : 'bg-white')) }}">
+                                                <div class="flex h-10 w-10 items-center justify-center rounded-full font-bold text-sm
+                                                    {{ $i === 0 ? 'bg-amber-500 text-white' : ($i === 1 ? 'bg-gray-400 text-white' : ($i === 2 ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-500')) }}">
+                                                    {{ $i + 1 }}
+                                                </div>
+                                                <div class="flex-1 min-w-0">
+                                                    <div class="font-semibold text-sm truncate">{{ $p->nama_sekolah }}</div>
+                                                    <div class="text-xs text-muted">{{ $p->nama_pelatih }}</div>
+                                                </div>
+                                                <div class="text-right">
+                                                    <div class="font-bold text-primary">{{ number_format($p->total_votes ?? 0) }}</div>
+                                                    <div class="text-xs text-muted">suara</div>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+
+                                    @if($catParticipants->count() > 3)
+                                        <details class="border-t border-outline-variant/30">
+                                            <summary class="p-3 text-sm font-semibold text-primary cursor-pointer hover:bg-primary/5 flex items-center gap-2">
+                                                <i class="ti ti-chevron-down text-xs"></i> Lihat semua {{ $catParticipants->count() }} kontingen
+                                            </summary>
+                                            <div class="p-3 pt-0 space-y-1">
+                                                @foreach($catParticipants->skip(3) as $p)
+                                                    <div class="flex items-center justify-between py-1.5 px-2 text-sm">
+                                                        <div class="flex items-center gap-2 min-w-0">
+                                                            <span class="text-muted text-xs w-5">{{ $loop->index + 4 }}.</span>
+                                                            <span class="truncate">{{ $p->nama_sekolah }}</span>
+                                                        </div>
+                                                        <span class="font-semibold text-xs">{{ number_format($p->total_votes ?? 0) }}</span>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </details>
+                                    @endif
+                                @else
+                                    <div class="p-6 text-center text-muted text-sm">Belum ada data voting.</div>
+                                @endif
+                            </div>
+                        @empty
+                            <div class="surface-card p-8 text-center text-muted">
+                                <i class="ti ti-inbox text-3xl d-block mb-2"></i>
+                                <p>Tidak ada kategori voting.</p>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
             @elseif(!$eventner->vote_active)
