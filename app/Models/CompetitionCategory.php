@@ -9,7 +9,7 @@ class CompetitionCategory extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['eventner_id', 'parent_id', 'name', 'tanggal_pelaksanaan', 'kuota', 'max_registrations_per_school', 'registration_fee'];
+    protected $fillable = ['eventner_id', 'parent_id', 'name', 'tanggal_pelaksanaan', 'kuota', 'max_registrations_per_school', 'registration_fee', 'sort_order'];
 
     protected function casts(): array
     {

@@ -27,6 +27,14 @@ class Index extends Component
 
     protected $eventnerId;
 
+    protected function getListeners()
+    {
+        return [
+            'updateParentSort' => 'updateParentSort',
+            'updateChildSort' => 'updateChildSort',
+        ];
+    }
+
     public function boot()
     {
         $eventner = Auth::user()->eventner;
@@ -36,13 +44,32 @@ class Index extends Component
         $this->eventnerId = $eventner->id;
     }
 
+    public function updateSortOrder($orderedIds)
+    {
+        foreach ($orderedIds as $index => $id) {
+            CompetitionCategory::where('eventner_id', $this->eventnerId)
+                ->where('id', $id)
+                ->update(['sort_order' => $index]);
+        }
+    }
+
+    public function updateParentSort($orderedIds)
+    {
+        $this->updateSortOrder($orderedIds);
+    }
+
+    public function updateChildSort($orderedIds)
+    {
+        $this->updateSortOrder($orderedIds);
+    }
+
     #[Computed]
     public function parentCategories()
     {
         return CompetitionCategory::whereNull('parent_id')
             ->where('eventner_id', $this->eventnerId)
-            ->with(['children' => fn($q) => $q->with('judges', 'registrations')])
-            ->latest()
+            ->with(['children' => fn($q) => $q->with('judges', 'registrations')->orderBy('sort_order')])
+            ->orderBy('sort_order')
             ->get();
     }
 
@@ -53,7 +80,7 @@ class Index extends Component
             ->where('eventner_id', $this->eventnerId)
             ->whereDoesntHave('parent', fn($q) => $q->where('eventner_id', $this->eventnerId))
             ->with('judges', 'registrations')
-            ->latest()
+            ->orderBy('sort_order')
             ->get();
     }
 
@@ -62,6 +89,7 @@ class Index extends Component
     {
         return CompetitionCategory::whereNull('parent_id')
             ->where('eventner_id', $this->eventnerId)
+            ->orderBy('sort_order')
             ->get();
     }
 
@@ -128,7 +156,14 @@ class Index extends Component
 
             session()->flash('success', 'Kategori Lomba berhasil diperbarui.');
         } else {
-            $cat = CompetitionCategory::create(array_merge($data, ['eventner_id' => $this->eventnerId]));
+            $maxOrder = CompetitionCategory::where('eventner_id', $this->eventnerId)
+                ->where('parent_id', $this->parentId)
+                ->max('sort_order') ?? -1;
+
+            $cat = CompetitionCategory::create(array_merge($data, [
+                'eventner_id' => $this->eventnerId,
+                'sort_order' => $maxOrder + 1,
+            ]));
 
             if (!$isParent) {
                 $cat->judges()->attach($this->selectedJudges);
@@ -138,6 +173,7 @@ class Index extends Component
         }
 
         $this->resetForm();
+        $this->dispatch('$refresh');
     }
 
     public function edit($id)

@@ -38,6 +38,7 @@
             <div class="card w-100 position-relative overflow-hidden">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 text-white fw-semibold">Struktur Jenis & Tingkat Lomba</h5>
+                    <small class="text-white/75"><i class="ti ti-drag-drop"></i> Drag &amp; drop untuk urutkan</small>
                 </div>
                 <div class="card-body p-4">
                     @if($this->parentCategories->isEmpty() && $this->orphanChildren->isEmpty())
@@ -46,99 +47,108 @@
                             <p>Tambahkan Jenis Lomba (Parent) terlebih dahulu, lalu tambahkan Tingkat di dalamnya.</p>
                         </div>
                     @else
-                        @foreach($this->parentCategories as $parent)
-                            <div class="mb-3">
-                                <div class="d-flex align-items-center bg-light p-3 rounded border">
-                                    <button class="btn btn-sm btn-link text-decoration-none text-dark me-2 p-0" wire:click="toggleExpand({{ $parent->id }})">
-                                        <i class="ti ti-{{ in_array($parent->id, $expandedParents) ? 'chevron-down' : 'chevron-right' }} fs-5"></i>
-                                    </button>
-                                    <div class="flex-grow-1">
-                                        <h6 class="fw-bold mb-0 text-primary">{{ $parent->name }}</h6>
-                                        <span class="text-muted fs-2">{{ $parent->children->count() }} tingkat lomba</span>
+                        <div id="parent-sortable" wire:ignore>
+                            @foreach($this->parentCategories as $parent)
+                                <div class="mb-3" data-id="{{ $parent->id }}">
+                                    <div class="d-flex align-items-center bg-light p-3 rounded border sortable-handle">
+                                        <i class="ti ti-grip-vertical text-muted me-2" style="cursor: grab;"></i>
+                                        <button class="btn btn-sm btn-link text-decoration-none text-dark me-2 p-0" wire:click="toggleExpand({{ $parent->id }})">
+                                            <i class="ti ti-{{ in_array($parent->id, $expandedParents) ? 'chevron-down' : 'chevron-right' }} fs-5"></i>
+                                        </button>
+                                        <div class="flex-grow-1">
+                                            <h6 class="fw-bold mb-0 text-primary">{{ $parent->name }}</h6>
+                                            <span class="text-muted fs-2">{{ $parent->children->count() }} tingkat lomba</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-primary p-1 me-1" wire:click="edit({{ $parent->id }})" title="Edit Jenis">
+                                            <i class="ti ti-edit fs-4"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $parent->id }})" title="Hapus Jenis Lomba"
+                                            onclick="return confirm('Hapus jenis lomba ini? Pastikan semua tingkat di dalamnya sudah dihapus.') || event.stopImmediatePropagation()">
+                                            <i class="ti ti-trash fs-4"></i>
+                                        </button>
                                     </div>
-                                    <button class="btn btn-sm btn-outline-primary p-1 me-1" wire:click="edit({{ $parent->id }})" title="Edit Jenis">
-                                        <i class="ti ti-edit fs-4"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $parent->id }})" title="Hapus Jenis Lomba"
-                                        onclick="return confirm('Hapus jenis lomba ini? Pastikan semua tingkat di dalamnya sudah dihapus.') || event.stopImmediatePropagation()">
-                                        <i class="ti ti-trash fs-4"></i>
-                                    </button>
-                                </div>
 
-                                @if(in_array($parent->id, $expandedParents))
-                                    <div class="ms-4 mt-2 border-start border-2 border-primary ps-3">
-                                        @if($parent->children->isEmpty())
-                                            <p class="text-muted fs-3 py-2"><i>Belum ada tingkat lomba. Gunakan form untuk menambahkan.</i></p>
-                                        @else
-                                            @foreach($parent->children as $child)
-                                                <div class="d-flex align-items-center py-2 border-bottom">
-                                                    <i class="ti ti-corner-down-right text-muted me-2"></i>
-                                                    <div class="flex-grow-1">
-                                                        <h6 class="fw-semibold mb-0">{{ $child->name }}</h6>
-                                                        <div class="d-flex flex-wrap gap-2 mt-1">
-                                                            @if($child->tanggal_pelaksanaan)
-                                                                <span class="badge bg-light-primary text-primary"><i class="ti ti-calendar"></i> {{ \Carbon\Carbon::parse($child->tanggal_pelaksanaan)->translatedFormat('d M Y') }}</span>
-                                                            @endif
-                                                            @if($child->kuota)
-                                                                <span class="badge bg-light-info text-info">{{ $child->registrations()->count() }} / {{ $child->kuota }}</span>
-                                                            @else
-                                                                <span class="badge bg-light text-muted">Tanpa Batas</span>
-                                                            @endif
-                                                            @if($child->registration_fee)
-                                                                <span class="badge bg-success-subtle text-success">Rp {{ number_format($child->registration_fee, 0, ',', '.') }}</span>
-                                                            @else
-                                                                <span class="badge bg-light text-muted border">Gratis</span>
-                                                            @endif
-                                                            <span class="badge bg-info-subtle text-info">Max {{ $child->max_registrations_per_school ?? 1 }} pasukan/sekolah</span>
-                                                        </div>
-                                                        @if($child->judges->isNotEmpty())
-                                                            <div class="d-flex flex-wrap gap-1 mt-1">
-                                                                @foreach($child->judges as $judge)
-                                                                    <span class="badge bg-secondary-subtle text-secondary border">{{ $judge->name }}</span>
-                                                                @endforeach
+                                    @if(in_array($parent->id, $expandedParents))
+                                        <div class="ms-4 mt-2 border-start border-2 border-primary ps-3">
+                                            @if($parent->children->isEmpty())
+                                                <p class="text-muted fs-3 py-2"><i>Belum ada tingkat lomba. Gunakan form untuk menambahkan.</i></p>
+                                            @else
+                                                <div class="child-sortable" data-parent="{{ $parent->id }}" wire:ignore>
+                                                    @foreach($parent->children as $child)
+                                                        <div class="d-flex align-items-center py-2 border-bottom" data-id="{{ $child->id }}">
+                                                            <i class="ti ti-grip-vertical text-muted me-2" style="cursor: grab;"></i>
+                                                            <i class="ti ti-corner-down-right text-muted me-2"></i>
+                                                            <div class="flex-grow-1">
+                                                                <h6 class="fw-semibold mb-0">{{ $child->name }}</h6>
+                                                                <div class="d-flex flex-wrap gap-2 mt-1">
+                                                                    @if($child->tanggal_pelaksanaan)
+                                                                        <span class="badge bg-light-primary text-primary"><i class="ti ti-calendar"></i> {{ \Carbon\Carbon::parse($child->tanggal_pelaksanaan)->translatedFormat('d M Y') }}</span>
+                                                                    @endif
+                                                                    @if($child->kuota)
+                                                                        <span class="badge bg-light-info text-info">{{ $child->registrations()->count() }} / {{ $child->kuota }}</span>
+                                                                    @else
+                                                                        <span class="badge bg-light text-muted">Tanpa Batas</span>
+                                                                    @endif
+                                                                    @if($child->registration_fee)
+                                                                        <span class="badge bg-success-subtle text-success">Rp {{ number_format($child->registration_fee, 0, ',', '.') }}</span>
+                                                                    @else
+                                                                        <span class="badge bg-light text-muted border">Gratis</span>
+                                                                    @endif
+                                                                    <span class="badge bg-info-subtle text-info">Max {{ $child->max_registrations_per_school ?? 1 }} pasukan/sekolah</span>
+                                                                </div>
+                                                                @if($child->judges->isNotEmpty())
+                                                                    <div class="d-flex flex-wrap gap-1 mt-1">
+                                                                        @foreach($child->judges as $judge)
+                                                                            <span class="badge bg-secondary-subtle text-secondary border">{{ $judge->name }}</span>
+                                                                        @endforeach
+                                                                    </div>
+                                                                @else
+                                                                    <span class="badge bg-warning-subtle text-warning fs-2 mt-1">Belum ada juri</span>
+                                                                @endif
                                                             </div>
-                                                        @else
-                                                            <span class="badge bg-warning-subtle text-warning fs-2 mt-1">Belum ada juri</span>
-                                                        @endif
-                                                    </div>
-                                                    <button class="btn btn-sm btn-outline-primary p-1 me-1" wire:click="edit({{ $child->id }})" title="Edit Tingkat">
-                                                        <i class="ti ti-edit fs-4"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $child->id }})" title="Hapus Tingkat"
-                                                        onclick="return confirm('Hapus tingkat lomba ini?') || event.stopImmediatePropagation()">
-                                                        <i class="ti ti-trash fs-4"></i>
-                                                    </button>
+                                                            <button class="btn btn-sm btn-outline-primary p-1 me-1" wire:click="edit({{ $child->id }})" title="Edit Tingkat">
+                                                                <i class="ti ti-edit fs-4"></i>
+                                                            </button>
+                                                            <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $child->id }})" title="Hapus Tingkat"
+                                                                onclick="return confirm('Hapus tingkat lomba ini?') || event.stopImmediatePropagation()">
+                                                                <i class="ti ti-trash fs-4"></i>
+                                                            </button>
+                                                        </div>
+                                                    @endforeach
                                                 </div>
-                                            @endforeach
-                                        @endif
-                                    </div>
-                                @endif
-                            </div>
-                        @endforeach
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
 
                         {{-- Orphan children (jika ada data lama tanpa parent) --}}
                         @if($this->orphanChildren->isNotEmpty())
                             <div class="mt-3 pt-3 border-top">
                                 <h6 class="fw-semibold text-muted mb-2"><i class="ti ti-alert-circle me-1"></i>Tingkat Lomba Tanpa Jenis (Data Lama)</h6>
-                                @foreach($this->orphanChildren as $orphan)
-                                    <div class="d-flex align-items-center py-2 border-bottom">
-                                        <div class="flex-grow-1">
-                                            <h6 class="fw-semibold mb-0">{{ $orphan->name }}</h6>
-                                            <div class="d-flex flex-wrap gap-2 mt-1">
-                                                @if($orphan->kuota)
-                                                    <span class="badge bg-light-info text-info">{{ $orphan->registrations()->count() }} / {{ $orphan->kuota }}</span>
-                                                @endif
+                                <div id="orphan-sortable" wire:ignore>
+                                    @foreach($this->orphanChildren as $orphan)
+                                        <div class="d-flex align-items-center py-2 border-bottom" data-id="{{ $orphan->id }}">
+                                            <i class="ti ti-grip-vertical text-muted me-2" style="cursor: grab;"></i>
+                                            <div class="flex-grow-1">
+                                                <h6 class="fw-semibold mb-0">{{ $orphan->name }}</h6>
+                                                <div class="d-flex flex-wrap gap-2 mt-1">
+                                                    @if($orphan->kuota)
+                                                        <span class="badge bg-light-info text-info">{{ $orphan->registrations()->count() }} / {{ $orphan->kuota }}</span>
+                                                    @endif
+                                                </div>
                                             </div>
+                                            <button class="btn btn-sm btn-outline-primary p-1 me-1" wire:click="edit({{ $orphan->id }})" title="Edit">
+                                                <i class="ti ti-edit fs-4"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $orphan->id }})" title="Hapus"
+                                                onclick="return confirm('Hapus kategori lomba ini?') || event.stopImmediatePropagation()">
+                                                <i class="ti ti-trash fs-4"></i>
+                                            </button>
                                         </div>
-                                        <button class="btn btn-sm btn-outline-primary p-1 me-1" wire:click="edit({{ $orphan->id }})" title="Edit">
-                                            <i class="ti ti-edit fs-4"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $orphan->id }})" title="Hapus"
-                                            onclick="return confirm('Hapus kategori lomba ini?') || event.stopImmediatePropagation()">
-                                            <i class="ti ti-trash fs-4"></i>
-                                        </button>
-                                    </div>
-                                @endforeach
+                                    @endforeach
+                                </div>
                             </div>
                         @endif
                     @endif
@@ -246,3 +256,64 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initSortables();
+    Livewire.hook('morph.added', () => initSortables());
+    Livewire.hook('morph.updated', () => initSortables());
+});
+
+function initSortables() {
+    // Parents
+    var parentEl = document.getElementById('parent-sortable');
+    if (parentEl && !parentEl._sortable) {
+        parentEl._sortable = new Sortable(parentEl, {
+            handle: '.sortable-handle',
+            animation: 200,
+            onEnd: function(evt) {
+                var ids = [];
+                parentEl.querySelectorAll(':scope > .mb-3').forEach(function(el) {
+                    ids.push(el.dataset.id);
+                });
+                Livewire.dispatch('updateParentSort', { orderedIds: ids });
+            }
+        });
+    }
+
+    // Children per parent
+    document.querySelectorAll('.child-sortable').forEach(function(el) {
+        if (!el._sortable) {
+            el._sortable = new Sortable(el, {
+                handle: '.ti-grip-vertical',
+                animation: 200,
+                onEnd: function(evt) {
+                    var ids = [];
+                    el.querySelectorAll(':scope > .d-flex').forEach(function(item) {
+                        ids.push(item.dataset.id);
+                    });
+                    Livewire.dispatch('updateChildSort', { orderedIds: ids });
+                }
+            });
+        }
+    });
+
+    // Orphans
+    var orphanEl = document.getElementById('orphan-sortable');
+    if (orphanEl && !orphanEl._sortable) {
+        orphanEl._sortable = new Sortable(orphanEl, {
+            handle: '.ti-grip-vertical',
+            animation: 200,
+            onEnd: function(evt) {
+                var ids = [];
+                orphanEl.querySelectorAll(':scope > .d-flex').forEach(function(item) {
+                    ids.push(item.dataset.id);
+                });
+                Livewire.dispatch('updateChildSort', { orderedIds: ids });
+            }
+        });
+    }
+}
+</script>
+@endpush
