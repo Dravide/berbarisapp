@@ -29,10 +29,9 @@ class EventQr extends Component
     {
         $url = $this->eventner->publicUrl('detail');
 
-        // Cari favicon — coba beberapa lokasi umum
-        $favicon = public_path('favicon.ico');
-        if (!file_exists($favicon)) $favicon = public_path('favicon.png');
-        if (!file_exists($favicon)) $favicon = public_path('images/favicon.png');
+        // Cari favicon
+        $favicon = public_path('templates/assets/images/logos/favicon.png');
+        if (!file_exists($favicon)) $favicon = public_path('favicon.ico');
         if (!file_exists($favicon)) $favicon = null;
 
         $options = new QROptions;
