@@ -101,12 +101,6 @@
                             <code class="d-block text-break small bg-white p-2 rounded border">{{ $eventner->publicUrl('detail') }}</code>
                         </div>
 
-                        {{-- Powered by --}}
-                        <div class="mt-4 pt-3 border-top d-flex align-items-center justify-content-center gap-2 text-muted">
-                            <span class="small">Powered by</span>
-                            <img src="{{ asset('templates/assets/images/logos/light-logo.svg') }}"
-                                 alt="BARIS APP" style="height: 18px; filter: brightness(0) saturate(100%) invert(40%) sepia(0%) saturate(0%) hue-rotate(0deg);">
-                        </div>
                     @else
                         <div class="text-center py-5 text-muted">
                             <i class="ti ti-square-rounded-x fs-9 d-block mb-2"></i>
