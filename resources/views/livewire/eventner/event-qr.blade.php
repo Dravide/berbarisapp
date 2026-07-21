@@ -19,35 +19,86 @@
     </div>
 
     <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-body text-center py-5">
-                    <h5 class="card-title fw-semibold mb-2">QR Code Halaman Event</h5>
-                    <p class="text-muted mb-4">
-                        Scan untuk membuka halaman publik
-                        <a href="{{ $eventner->publicUrl('detail') }}" target="_blank" class="text-decoration-none">
-                            {{ $eventner->subdomain ? $eventner->subdomain . '.' . parse_url(config('app.url'), PHP_URL_HOST) : $eventner->nama_event }}
-                            <i class="ti ti-external-link"></i>
-                        </a>
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm overflow-hidden">
+                {{-- Premium header gradient --}}
+                <div class="py-4 text-center position-relative" style="background: linear-gradient(135deg, #0062ff 0%, #7c3aed 100%);">
+                    <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.3) 0%, transparent 60%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.2) 0%, transparent 50%);"></div>
+                    <div class="position-relative">
+                        {{-- BARIS APP logo --}}
+                        <img src="{{ asset('templates/assets/images/logos/light-logo.svg') }}"
+                             alt="BARIS APP"
+                             class="mb-2"
+                             style="height: 32px; filter: brightness(0) invert(1);">
+                        <div class="d-flex align-items-center justify-content-center gap-2 mt-1">
+                            <span class="badge bg-white/20 text-white border-0 fs-2 px-3 py-1 rounded-pill">
+                                <i class="ti ti-qrcode me-1"></i> QR Event
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-body text-center py-5 px-4">
+                    <h5 class="fw-bold mb-1">{{ $eventner->nama_event }}</h5>
+                    <p class="text-muted small mb-4">
+                        Scan QR untuk buka halaman publik event
                     </p>
 
                     @if($qrDataUri)
-                        <div class="d-inline-block bg-white p-4 rounded-3 border shadow-sm">
-                            <img src="{{ $qrDataUri }}" alt="QR Event {{ $eventner->nama_event }}" class="img-fluid" style="max-width: 300px;">
+                        {{-- QR Card with decorative frame --}}
+                        <div class="d-inline-block p-3 rounded-4 position-relative"
+                             style="background: linear-gradient(135deg, #e8f0fe 0%, #f3e8ff 50%, #fff7ed 100%);">
+                            {{-- Decorative corner dots --}}
+                            <div class="position-absolute" style="top: 8px; left: 8px; width: 12px; height: 12px; border-top: 3px solid #0062ff; border-left: 3px solid #0062ff; border-radius: 4px 0 0 0;"></div>
+                            <div class="position-absolute" style="top: 8px; right: 8px; width: 12px; height: 12px; border-top: 3px solid #7c3aed; border-right: 3px solid #7c3aed; border-radius: 0 4px 0 0;"></div>
+                            <div class="position-absolute" style="bottom: 8px; left: 8px; width: 12px; height: 12px; border-bottom: 3px solid #7c3aed; border-left: 3px solid #7c3aed; border-radius: 0 0 0 4px;"></div>
+                            <div class="position-absolute" style="bottom: 8px; right: 8px; width: 12px; height: 12px; border-bottom: 3px solid #0062ff; border-right: 3px solid #0062ff; border-radius: 0 0 4px 0;"></div>
+
+                            <div class="bg-white p-3 rounded-3 shadow-sm">
+                                <img src="{{ $qrDataUri }}" alt="QR {{ $eventner->nama_event }}" class="img-fluid d-block mx-auto" style="max-width: 260px;">
+                            </div>
+
+                            {{-- Event name below QR --}}
+                            <div class="mt-3 text-center">
+                                <div class="d-inline-flex align-items-center gap-2 bg-white/80 rounded-pill px-3 py-1 shadow-sm">
+                                    @if($eventner->logo_event)
+                                        <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="rounded-circle" style="width: 20px; height: 20px; object-fit: cover;">
+                                    @else
+                                        <i class="ti ti-calendar-event text-primary"></i>
+                                    @endif
+                                    <span class="small fw-semibold text-dark">{{ $eventner->nama_event }}</span>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="mt-4 d-flex justify-content-center gap-2">
-                            <a href="{{ $qrDataUri }}" download="qr-{{ $eventner->slug ?? 'event' }}.png" class="btn btn-primary">
+                        {{-- Action buttons row --}}
+                        <div class="mt-4 d-flex justify-content-center gap-2 flex-wrap">
+                            <a href="{{ $qrDataUri }}" download="qr-{{ $eventner->slug ?? 'event' }}.png"
+                               class="btn btn-primary d-inline-flex align-items-center gap-2 px-4">
                                 <i class="ti ti-download"></i> Download QR
                             </a>
-                            <button class="btn btn-light" onclick="window.print()">
+                            <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 px-4" onclick="window.print()">
                                 <i class="ti ti-printer"></i> Cetak
+                            </button>
+                            <button class="btn btn-outline-primary d-inline-flex align-items-center gap-2 px-4" onclick="copyUrl()">
+                                <i class="ti ti-copy"></i> Salin Link
                             </button>
                         </div>
 
-                        <div class="mt-4 p-3 bg-light rounded-3 text-start">
-                            <label class="text-muted small fw-semibold mb-1">URL:</label>
-                            <code class="d-block text-break">{{ $eventner->publicUrl('detail') }}</code>
+                        {{-- URL Info --}}
+                        <div class="mt-4 p-3 bg-light rounded-3 text-start mx-auto" style="max-width: 400px;">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <i class="ti ti-link text-primary"></i>
+                                <label class="small fw-semibold text-muted mb-0">URL Event:</label>
+                            </div>
+                            <code class="d-block text-break small bg-white p-2 rounded border">{{ $eventner->publicUrl('detail') }}</code>
+                        </div>
+
+                        {{-- Powered by --}}
+                        <div class="mt-4 pt-3 border-top d-flex align-items-center justify-content-center gap-2 text-muted">
+                            <span class="small">Powered by</span>
+                            <img src="{{ asset('templates/assets/images/logos/light-logo.svg') }}"
+                                 alt="BARIS APP" style="height: 18px; filter: brightness(0) saturate(100%) invert(40%) sepia(0%) saturate(0%) hue-rotate(0deg);">
                         </div>
                     @else
                         <div class="text-center py-5 text-muted">
@@ -60,3 +111,16 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+function copyUrl() {
+    navigator.clipboard.writeText('{{ $eventner->publicUrl('detail') }}').then(function() {
+        var btn = event.target.closest('button');
+        var orig = btn.innerHTML;
+        btn.innerHTML = '<i class="ti ti-check"></i> Tersalin';
+        setTimeout(function() { btn.innerHTML = orig; }, 2000);
+    });
+}
+</script>
+@endpush
