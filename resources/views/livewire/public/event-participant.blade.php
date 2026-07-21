@@ -26,7 +26,7 @@
 
     {{-- ========== QUICK STATS ========== --}}
     @php
-        $_cats = $eventner->competitionCategories->filter(fn($c) => !is_null($c->parent_id))->values();
+        $_cats = $eventner->competitionCategories->filter(fn($c) => !is_null($c->parent_id))->sortBy('sort_order')->values();
         $totalKontingen = $_cats->sum(fn($c) => $c->registrations->count());
         $totalAnggota = $_cats->sum(fn($c) => $c->registrations->sum(fn($r) => $r->participants->count()));
         $totalVerified = $_cats->sum(fn($c) => $c->registrations->where('status_berkas', 'Terverifikasi')->count());

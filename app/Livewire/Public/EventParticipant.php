@@ -18,7 +18,7 @@ class EventParticipant extends Component
             $this->eventner = $resolved;
         } else {
             $this->eventner = Eventner::with(['competitionCategories' => function ($q) {
-                $q->whereNotNull('parent_id');
+                $q->whereNotNull('parent_id')->orderBy('sort_order');
             }, 'competitionCategories.registrations' => function ($q) {
                 $q->where('status_berkas', '!=', 'dibatalkan')
                   ->orderBy('urutan_tampil', 'asc');
