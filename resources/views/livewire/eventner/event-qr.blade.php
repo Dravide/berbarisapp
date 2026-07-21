@@ -21,14 +21,9 @@
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
             <div class="card border-0 shadow-sm overflow-hidden">
-                @php
-                    $tc = $eventner->theme_config ?? [];
-                    $pc = $tc['primary_color'] ?? '#0062ff';
-                    $ac = $tc['accent_color'] ?? '#7c3aed';
-                @endphp
 
                 {{-- Premium header gradient --}}
-                <div class="py-4 text-center position-relative" style="background: linear-gradient(135deg, {{ $pc }} 0%, {{ $ac }} 100%);">
+                <div class="py-4 text-center position-relative bg-primary">
                     <div class="position-absolute top-0 start-0 w-100 h-100 opacity-10" style="background-image: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.3) 0%, transparent 60%), radial-gradient(circle at 80% 20%, rgba(255,255,255,0.2) 0%, transparent 50%);"></div>
                     <div class="position-relative">
                         {{-- BARIS APP logo + teks --}}
@@ -59,12 +54,12 @@
                     @if($qrDataUri)
                         {{-- QR Card with decorative frame --}}
                         <div class="d-inline-block p-3 rounded-4 position-relative"
-                             style="background: linear-gradient(135deg, {{ $pc }}11 0%, {{ $ac }}11 50%, #fff7ed 100%);">
+                             style="background: linear-gradient(135deg, #e8f0fe 0%, #f3e8ff 50%, #fff7ed 100%);">
                             {{-- Decorative corner dots --}}
-                            <div class="position-absolute" style="top: 8px; left: 8px; width: 12px; height: 12px; border-top: 3px solid {{ $pc }}; border-left: 3px solid {{ $pc }}; border-radius: 4px 0 0 0;"></div>
-                            <div class="position-absolute" style="top: 8px; right: 8px; width: 12px; height: 12px; border-top: 3px solid {{ $ac }}; border-right: 3px solid {{ $ac }}; border-radius: 0 4px 0 0;"></div>
-                            <div class="position-absolute" style="bottom: 8px; left: 8px; width: 12px; height: 12px; border-bottom: 3px solid {{ $ac }}; border-left: 3px solid {{ $ac }}; border-radius: 0 0 0 4px;"></div>
-                            <div class="position-absolute" style="bottom: 8px; right: 8px; width: 12px; height: 12px; border-bottom: 3px solid {{ $pc }}; border-right: 3px solid {{ $pc }}; border-radius: 0 0 4px 0;"></div>
+                            <div class="position-absolute" style="top: 8px; left: 8px; width: 12px; height: 12px; border-top: 3px solid var(--bs-primary); border-left: 3px solid var(--bs-primary); border-radius: 4px 0 0 0;"></div>
+                            <div class="position-absolute" style="top: 8px; right: 8px; width: 12px; height: 12px; border-top: 3px solid var(--bs-primary); border-right: 3px solid var(--bs-primary); border-radius: 0 4px 0 0;"></div>
+                            <div class="position-absolute" style="bottom: 8px; left: 8px; width: 12px; height: 12px; border-bottom: 3px solid var(--bs-primary); border-left: 3px solid var(--bs-primary); border-radius: 0 0 0 4px;"></div>
+                            <div class="position-absolute" style="bottom: 8px; right: 8px; width: 12px; height: 12px; border-bottom: 3px solid var(--bs-primary); border-right: 3px solid var(--bs-primary); border-radius: 0 0 4px 0;"></div>
 
                             <div class="bg-white p-3 rounded-3 shadow-sm">
                                 <img src="{{ $qrDataUri }}" alt="QR {{ $eventner->nama_event }}" class="img-fluid d-block mx-auto" style="max-width: 260px;">
@@ -76,7 +71,7 @@
                                     @if($eventner->logo_event)
                                         <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="rounded-circle" style="width: 20px; height: 20px; object-fit: cover;">
                                     @else
-                                        <i class="ti ti-calendar-event" style="color: {{ $pc }};"></i>
+                                        <i class="ti ti-calendar-event text-primary"></i>
                                     @endif
                                     <span class="small fw-semibold text-dark">{{ $eventner->nama_event }}</span>
                                 </div>
@@ -86,16 +81,13 @@
                         {{-- Action buttons row --}}
                         <div class="mt-4 d-flex justify-content-center gap-2 flex-wrap">
                             <a href="{{ $qrDataUri }}" download="qr-{{ $eventner->slug ?? 'event' }}.png"
-                               class="btn d-inline-flex align-items-center gap-2 px-4"
-                               style="background: {{ $pc }}; border-color: {{ $pc }}; color: #fff;">
+                               class="btn btn-primary d-inline-flex align-items-center gap-2 px-4">
                                 <i class="ti ti-download"></i> Download QR
                             </a>
                             <button class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 px-4" onclick="window.print()">
                                 <i class="ti ti-printer"></i> Cetak
                             </button>
-                            <button class="btn d-inline-flex align-items-center gap-2 px-4"
-                                    style="border: 1px solid {{ $pc }}; color: {{ $pc }}; background: transparent;"
-                                    onclick="copyUrl()">
+                            <button class="btn btn-outline-primary d-inline-flex align-items-center gap-2 px-4" onclick="copyUrl()">
                                 <i class="ti ti-copy"></i> Salin Link
                             </button>
                         </div>
@@ -103,7 +95,7 @@
                         {{-- URL Info --}}
                         <div class="mt-4 p-3 bg-light rounded-3 text-start mx-auto" style="max-width: 400px;">
                             <div class="d-flex align-items-center gap-2 mb-1">
-                                <i class="ti ti-link" style="color: {{ $pc }};"></i>
+                                <i class="ti ti-link text-primary"></i>
                                 <label class="small fw-semibold text-muted mb-0">URL Event:</label>
                             </div>
                             <code class="d-block text-break small bg-white p-2 rounded border">{{ $eventner->publicUrl('detail') }}</code>
