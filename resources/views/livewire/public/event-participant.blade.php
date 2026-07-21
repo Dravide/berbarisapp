@@ -26,16 +26,17 @@
 
     {{-- ========== QUICK STATS ========== --}}
     @php
-        $totalKontingen = $eventner->competitionCategories->sum(fn($c) => $c->registrations->count());
-        $totalAnggota = $eventner->competitionCategories->sum(fn($c) => $c->registrations->sum(fn($r) => $r->participants->count()));
-        $totalVerified = $eventner->competitionCategories->sum(fn($c) => $c->registrations->where('status_berkas', 'Terverifikasi')->count());
+        $_cats = $eventner->competitionCategories->filter(fn($c) => !is_null($c->parent_id))->values();
+        $totalKontingen = $_cats->sum(fn($c) => $c->registrations->count());
+        $totalAnggota = $_cats->sum(fn($c) => $c->registrations->sum(fn($r) => $r->participants->count()));
+        $totalVerified = $_cats->sum(fn($c) => $c->registrations->where('status_berkas', 'Terverifikasi')->count());
     @endphp
     <div class="container-landing -mt-8 relative z-20">
         <div class="surface-card p-6">
             <div class="grid gap-6 grid-cols-2 md:grid-cols-4">
                 <div class="text-center">
                     <span class="text-3xl font-extrabold text-primary font-display block mb-1">
-                        {{ $eventner->competitionCategories->count() }}
+                        {{ $_cats->count() }}
                     </span>
                     <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Kategori Lomba</span>
                 </div>
@@ -65,13 +66,13 @@
     <div class="container-landing py-8">
         <div class="grid gap-8 lg:grid-cols-12">
             <div class="lg:col-span-8 flex flex-col gap-6">
-                @foreach($eventner->competitionCategories as $cat)
+                @foreach($_cats as $cat)
                     <div class="surface-card overflow-hidden">
                         {{-- Category Header --}}
                         <div class="flex items-center justify-between bg-surface-container px-6 py-4 border-b border-outline-variant/40">
                             <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">
                                 <i class="ti ti-medal text-primary text-lg"></i>
-                                {{ $cat->full_name }}
+                                {{ $cat->parent?->name ? $cat->parent->name . ' — ' . $cat->name : $cat->name }}
                             </h3>
                             <span class="chip py-0.5 px-2.5 text-xs font-bold leading-normal bg-primary/10">{{ $cat->registrations->count() }} kontingen</span>
                         </div>
