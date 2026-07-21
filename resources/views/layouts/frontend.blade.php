@@ -371,30 +371,6 @@
 
     @livewireScripts
     @stack('scripts')
-
-{{-- Poster Modal --}}
-<div id="posterModal" class="modal fade" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 bg-transparent shadow-none">
-            <div class="modal-body text-center p-0 position-relative">
-                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 z-1 m-2" aria-label="Close" onclick="closePosterModal()"></button>
-                <img id="posterModalImg" src="" alt="Poster" class="img-fluid rounded shadow">
-            </div>
-        </div>
-    </div>
-</div>
-<script>
-function openPosterModal(src) {
-    document.getElementById('posterModalImg').src = src;
-    var modal = new bootstrap.Modal(document.getElementById('posterModal'));
-    modal.show();
-}
-function closePosterModal() {
-    var modalEl = document.getElementById('posterModal');
-    var modal = bootstrap.Modal.getInstance(modalEl);
-    if (modal) modal.hide();
-}
-</script>
 </body>
 
 </html>

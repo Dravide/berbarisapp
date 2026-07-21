@@ -421,11 +421,12 @@
                             Poster Acara
                         </h3>
                         <div class="flex justify-center">
-                            <img src="{{ asset('storage/' . $eventner->poster) }}" alt="Poster {{ $eventner->nama_event }}"
-                                 class="w-full h-auto rounded-lg border border-outline-variant/30 shadow-sm cursor-pointer hover:shadow-md transition object-contain"
-                                 style="max-height: 280px;"
-                                 loading="lazy"
-                                 onclick="openPosterModal('{{ asset('storage/' . $eventner->poster) }}')">
+                            <a href="{{ asset('storage/' . $eventner->poster) }}" target="_blank">
+                                <img src="{{ asset('storage/' . $eventner->poster) }}" alt="Poster {{ $eventner->nama_event }}"
+                                     class="w-full h-auto rounded-lg border border-outline-variant/30 shadow-sm hover:shadow-md transition object-contain"
+                                     style="max-height: 280px;"
+                                     loading="lazy">
+                            </a>
                         </div>
                         <p class="text-[10px] text-on-surface-variant font-medium text-center mt-2">Klik untuk lihat full</p>
                     </div>
