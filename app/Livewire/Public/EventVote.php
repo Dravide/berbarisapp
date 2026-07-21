@@ -315,7 +315,7 @@ class EventVote extends Component
         return view('livewire.public.event-vote', [
             'participants' => $participants,
             'selectedCategory' => $selectedCategory,
-            'categories' => $this->eventner->competitionCategories()->whereNotNull('parent_id')->with('parent')->get(),
+            'categories' => $this->eventner->competitionCategories()->whereNotNull('parent_id')->with('parent')->orderBy('sort_order')->get(),
             'recentComments' => $recentComments,
             'allComments' => $allComments ?? collect(),
             'totalEventVotes' => $totalEventVotes ?? 0,
