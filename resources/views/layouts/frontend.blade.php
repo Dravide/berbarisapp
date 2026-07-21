@@ -51,45 +51,51 @@
     <meta name="twitter:description" content="{{ Str::limit($_evDesc, 200) }}">
     <meta name="twitter:image" content="{{ $_ogImage }}">
 
-    {{-- JSON-LD Structured Data (Event Schema) --}}
-    @if($_ev)
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "Event",
-        "name": "{{ $_ev->nama_event }}",
-        "description": {{ json_encode(Str::limit(strip_tags($_ev->deskripsi ?? ''), 400)) }},
-        @if($_ev->poster || $_ev->logo_event)
-        "image": {{ json_encode($_ogImage) }},
-        @endif
-        @if($_ev->tanggal)
-        "startDate": "{{ \Carbon\Carbon::parse($_ev->tanggal)->toIso8601String() }}",
-        @endif
-        @if($_ev->tanggal_pendaftaran)
-        "endDate": "{{ \Carbon\Carbon::parse($_ev->tanggal_pendaftaran)->toIso8601String() }}",
-        @endif
-        @if($_ev->lokasi)
-        "location": {
-            "@type": "Place",
-            "name": {{ json_encode($_ev->venue ?: $_ev->lokasi) }},
-            "address": {{ json_encode($_ev->lokasi) }}
-            @if($_ev->latitude && $_ev->longitude)
-            ,"geo": {
-                "@type": "GeoCoordinates",
-                "latitude": "{{ $_ev->latitude }}",
-                "longitude": "{{ $_ev->longitude }}"
+    {{-- JSON-LD Structured Data (Event Schema) — built in PHP to avoid Blade @if nesting in JSON braces --}}
+    @php
+        $_jsonLd = null;
+        if ($_ev) {
+            $_ld = [
+                '@context' => 'https://schema.org',
+                '@type' => 'Event',
+                'name' => $_ev->nama_event,
+                'description' => Str::limit(strip_tags($_ev->deskripsi ?? ''), 400),
+            ];
+            if ($_ev->poster || $_ev->logo_event) {
+                $_ld['image'] = $_ogImage;
             }
-            @endif
-        },
-        @endif
-        "organizer": {
-            "@type": "Organization",
-            "name": {{ json_encode($_ev->diselenggarakan_oleh ?: 'BARIS APP') }}
-        },
-        "eventStatus": "https://schema.org/EventScheduled",
-        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode"
-    }
-    </script>
+            if ($_ev->tanggal) {
+                $_ld['startDate'] = \Carbon\Carbon::parse($_ev->tanggal)->toIso8601String();
+            }
+            if ($_ev->tanggal_pendaftaran) {
+                $_ld['endDate'] = \Carbon\Carbon::parse($_ev->tanggal_pendaftaran)->toIso8601String();
+            }
+            if ($_ev->lokasi) {
+                $_loc = [
+                    '@type' => 'Place',
+                    'name' => $_ev->venue ?: $_ev->lokasi,
+                    'address' => $_ev->lokasi,
+                ];
+                if ($_ev->latitude && $_ev->longitude) {
+                    $_loc['geo'] = [
+                        '@type' => 'GeoCoordinates',
+                        'latitude' => $_ev->latitude,
+                        'longitude' => $_ev->longitude,
+                    ];
+                }
+                $_ld['location'] = $_loc;
+            }
+            $_ld['organizer'] = [
+                '@type' => 'Organization',
+                'name' => $_ev->diselenggarakan_oleh ?: 'BARIS APP',
+            ];
+            $_ld['eventStatus'] = 'https://schema.org/EventScheduled';
+            $_ld['eventAttendanceMode'] = 'https://schema.org/OfflineEventAttendanceMode';
+            $_jsonLd = json_encode($_ld, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        }
+    @endphp
+    @if($_jsonLd)
+    <script type="application/ld+json">{!! $_jsonLd !!}</script>
     @endif
 
     {{-- Dynamic Theme + Fonts (from Eventner profile) — define BEFORE font link --}}
