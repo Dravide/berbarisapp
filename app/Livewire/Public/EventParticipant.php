@@ -16,6 +16,15 @@ class EventParticipant extends Component
         $resolved = app()->bound('current_eventner') ? app('current_eventner') : null;
         if ($resolved) {
             $this->eventner = $resolved;
+            // Subdomain: load relasi if not yet loaded
+            if (!$this->eventner->relationLoaded('competitionCategories')) {
+                $this->eventner->load(['competitionCategories' => function ($q) {
+                    $q->whereNotNull('parent_id')->orderBy('sort_order');
+                }, 'competitionCategories.registrations' => function ($q) {
+                    $q->where('status_berkas', '!=', 'dibatalkan')
+                      ->orderBy('urutan_tampil', 'asc');
+                }, 'competitionCategories.registrations.participants']);
+            }
         } else {
             $this->eventner = Eventner::with(['competitionCategories' => function ($q) {
                 $q->whereNotNull('parent_id')->orderBy('sort_order');
