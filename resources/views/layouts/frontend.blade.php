@@ -375,51 +375,18 @@
 
 </html>
 
-{{-- Poster Modal — ViewerJS-style: zoom, drag, backdrop blur --}}
-<div id="posterModal" class="fixed inset-0 z-[9999] hidden bg-black/85 backdrop-blur-sm select-none" onclick="closePosterModal()">
-    {{-- Toolbar --}}
-    <div class="absolute top-0 inset-x-0 z-10 flex items-center justify-end gap-2 p-4">
-        <button type="button" onclick="zoomIn()" class="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg p-2 border-0 cursor-pointer transition" title="Perbesar">
-            <i class="ti ti-zoom-in text-xl"></i>
+{{-- Poster Modal — simple preview --}}
+<div id="posterModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/80 backdrop-blur-sm" onclick="closePosterModal()">
+    <div class="relative max-w-4xl w-full mx-4 max-h-[90vh] flex items-center justify-center" onclick="event.stopPropagation()">
+        <button type="button" onclick="closePosterModal()" class="absolute -top-10 right-0 text-white/80 hover:text-white text-2xl leading-none border-0 bg-transparent cursor-pointer z-10">
+            <i class="ti ti-x"></i>
         </button>
-        <button type="button" onclick="zoomOut()" class="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg p-2 border-0 cursor-pointer transition" title="Perkecil">
-            <i class="ti ti-zoom-out text-xl"></i>
-        </button>
-        <button type="button" onclick="resetZoom()" class="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg p-2 border-0 cursor-pointer transition" title="Reset">
-            <i class="ti ti-zoom-reset text-xl"></i>
-        </button>
-        <button type="button" onclick="closePosterModal()" class="text-white/70 hover:text-white bg-white/10 hover:bg-white/20 rounded-lg p-2 border-0 cursor-pointer transition" title="Tutup">
-            <i class="ti ti-x text-xl"></i>
-        </button>
-    </div>
-
-    {{-- Image container --}}
-    <div id="posterModalView" class="absolute inset-0 flex items-center justify-center overflow-hidden cursor-grab active:cursor-grabbing" onclick="event.stopPropagation()">
-        <img id="posterModalImg" src="" alt="Poster"
-             class="max-w-[95vw] max-h-[95vh] w-auto h-auto object-contain transition-transform duration-200 ease-out"
-             style="transform: scale(1);"
-             ondblclick="toggleZoom()">
-    </div>
-
-    {{-- Hint --}}
-    <div class="absolute bottom-4 inset-x-0 text-center">
-        <span class="inline-flex items-center gap-2 text-white/40 text-xs bg-black/30 rounded-full px-3 py-1">
-            <i class="ti ti-arrows-move"></i> Drag geser &middot; Scroll zoom &middot; Double klik zoom
-        </span>
+        <img id="posterModalImg" src="" alt="Poster" class="max-w-full max-h-[85vh] w-auto h-auto rounded-lg shadow-2xl object-contain">
     </div>
 </div>
 <script>
-var posterScale = 1;
-var posterPosX = 0, posterPosY = 0;
-var isDragging = false, dragStartX, dragStartY, dragOrigX, dragOrigY;
-
 function openPosterModal(src) {
-    var img = document.getElementById('posterModalImg');
-    img.src = src;
-    posterScale = 1;
-    posterPosX = 0;
-    posterPosY = 0;
-    applyTransform();
+    document.getElementById('posterModalImg').src = src;
     document.getElementById('posterModal').classList.remove('hidden');
     document.getElementById('posterModal').classList.add('flex');
     document.body.style.overflow = 'hidden';
@@ -429,56 +396,6 @@ function closePosterModal() {
     document.getElementById('posterModal').classList.remove('flex');
     document.body.style.overflow = '';
 }
-function zoomIn() { posterScale = Math.min(5, posterScale + 0.3); applyTransform(); }
-function zoomOut() { posterScale = Math.max(0.3, posterScale - 0.3); applyTransform(); }
-function resetZoom() { posterScale = 1; posterPosX = 0; posterPosY = 0; applyTransform(); }
-function toggleZoom() { posterScale = posterScale === 1 ? 2 : 1; posterPosX = 0; posterPosY = 0; applyTransform(); }
-function applyTransform() {
-    document.getElementById('posterModalImg').style.transform = 'translate(' + posterPosX + 'px, ' + posterPosY + 'px) scale(' + posterScale + ')';
-}
-
-// Mouse wheel zoom
-document.getElementById('posterModalView')?.addEventListener('wheel', function(e) {
-    e.preventDefault();
-    posterScale = Math.max(0.3, Math.min(5, posterScale + (e.deltaY > 0 ? -0.15 : 0.15)));
-    applyTransform();
-}, { passive: false });
-
-// Drag to pan
-document.getElementById('posterModalView')?.addEventListener('mousedown', function(e) {
-    isDragging = true;
-    dragStartX = e.clientX;
-    dragStartY = e.clientY;
-    dragOrigX = posterPosX;
-    dragOrigY = posterPosY;
-});
-document.addEventListener('mousemove', function(e) {
-    if (!isDragging) return;
-    posterPosX = dragOrigX + (e.clientX - dragStartX);
-    posterPosY = dragOrigY + (e.clientY - dragStartY);
-    applyTransform();
-});
-document.addEventListener('mouseup', function() { isDragging = false; });
-
-// Touch drag for mobile
-document.getElementById('posterModalView')?.addEventListener('touchstart', function(e) {
-    if (e.touches.length === 1) {
-        isDragging = true;
-        dragStartX = e.touches[0].clientX;
-        dragStartY = e.touches[0].clientY;
-        dragOrigX = posterPosX;
-        dragOrigY = posterPosY;
-    }
-}, { passive: true });
-document.addEventListener('touchmove', function(e) {
-    if (!isDragging || e.touches.length !== 1) return;
-    posterPosX = dragOrigX + (e.touches[0].clientX - dragStartX);
-    posterPosY = dragOrigY + (e.touches[0].clientY - dragStartY);
-    applyTransform();
-}, { passive: true });
-document.addEventListener('touchend', function() { isDragging = false; });
-
-// Keyboard
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closePosterModal();
 });
