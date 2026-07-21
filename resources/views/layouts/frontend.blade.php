@@ -371,9 +371,6 @@
 
     @livewireScripts
     @stack('scripts')
-</body>
-
-</html>
 
 {{-- Poster Modal --}}
 <div id="posterModal" class="modal fade" tabindex="-1" aria-hidden="true">
@@ -398,3 +395,6 @@ function closePosterModal() {
     if (modal) modal.hide();
 }
 </script>
+</body>
+
+</html>
