@@ -28,14 +28,18 @@ class EventQr extends Component
     public function generateQr()
     {
         $url = $this->eventner->publicUrl('detail');
-        $appLogo = get_setting('logo_dark')
-            ? Storage::disk('public')->path(get_setting('logo_dark'))
-            : public_path('templates/assets/images/logos/dark-logo.svg');
+
+        // Cari favicon — coba beberapa lokasi umum
+        $favicon = public_path('favicon.ico');
+        if (!file_exists($favicon)) $favicon = public_path('favicon.png');
+        if (!file_exists($favicon)) $favicon = public_path('images/favicon.png');
+        if (!file_exists($favicon)) $favicon = null;
 
         $options = new QROptions;
         $options->outputInterface = QRGdImagePNG::class;
         $options->outputBase64 = false;
         $options->scale = 12;
+        $options->eccLevel = 'H';
         $options->addLogoSpace = true;
         $options->logoSpaceWidth = 11;
         $options->logoSpaceHeight = 11;
@@ -53,7 +57,7 @@ class EventQr extends Component
         $qrW = imagesx($qrImg);
         $logoMax = (int)($qrW * 0.22);
 
-        $logoResource = $this->loadLogo($appLogo, $logoMax);
+        $logoResource = $favicon ? $this->loadLogo($favicon, $logoMax) : null;
         if ($logoResource) {
             $lw = imagesx($logoResource);
             $lh = imagesy($logoResource);
