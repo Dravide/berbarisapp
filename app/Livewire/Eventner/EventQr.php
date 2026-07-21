@@ -29,13 +29,22 @@ class EventQr extends Component
     {
         $url = $this->eventner->publicUrl('detail');
 
-        // Cari logo BARIS APP — fallback ke logo event
-        $favicon = public_path('templates/assets/images/logos/favicon.png');
-        if (!file_exists($favicon)) {
+        // Cari logo favicon dari admin settings — fallback ke logo event
+        $favicon = null;
+        $faviconPath = \App\Models\Setting::get('favicon');
+        if ($faviconPath) {
+            $favicon = Storage::disk('public')->path($faviconPath);
+            if (!file_exists($favicon)) $favicon = null;
+        }
+        if (!$favicon) {
             $favicon = $this->eventner->logo_event
                 ? Storage::disk('public')->path($this->eventner->logo_event)
                 : null;
             if ($favicon && !file_exists($favicon)) $favicon = null;
+        }
+        if (!$favicon) {
+            $favicon = public_path('templates/assets/images/logos/favicon.png');
+            if (!file_exists($favicon)) $favicon = null;
         }
 
         $options = new QROptions;
