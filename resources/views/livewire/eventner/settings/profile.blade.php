@@ -176,55 +176,31 @@
                                         <input type="text" class="form-control" wire:model="diselenggarakan_oleh" required>
                                         @error('diselenggarakan_oleh') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                                     </div>
-
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label">Deskripsi Event <span class="text-muted">(Opsional)</span></label>
                                         <textarea class="form-control" wire:model="deskripsi" rows="3" placeholder="Ceritakan singkat tentang acara Anda..."></textarea>
                                         @error('deskripsi') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                                     </div>
-
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label">Lokasi Lengkap <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control" wire:model="lokasi" required>
                                         @error('lokasi') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                                     </div>
-
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Venue (Opsional)</label>
                                         <input type="text" class="form-control" wire:model="venue" placeholder="Misal: GOR Siliwangi">
                                         @error('venue') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                                     </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Puncak Tanggal Pelaksanaan <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" wire:model="tanggal" required>
-                                        @error('tanggal') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Jadwal Pendaftaran Akhir (Opsional)</label>
-                                        <input type="date" class="form-control" wire:model="tanggal_pendaftaran">
-                                        @error('tanggal_pendaftaran') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                                    </div>
-
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label">Jadwal Technical Meeting (Opsional)</label>
-                                        <input type="datetime-local" class="form-control" wire:model="technical_meeting">
-                                        @error('technical_meeting') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                                    </div>
-
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label">Tingkat Perlombaan Global (Opsional)</label>
                                         <input type="text" class="form-control" wire:model="tingkat_perlombaan" placeholder="Misal: Se-Jawa Barat Terbuka">
                                         @error('tingkat_perlombaan') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                                     </div>
-
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Latitude <span class="text-muted">(Cth: -6.9147)</span></label>
                                         <input type="text" class="form-control" wire:model="latitude" placeholder="-6.9147">
                                         @error('latitude') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                                     </div>
-
                                     <div class="col-md-6 mb-4">
                                         <label class="form-label">Longitude <span class="text-muted">(Cth: 107.6098)</span></label>
                                         <input type="text" class="form-control" wire:model="longitude" placeholder="107.6098">
@@ -235,7 +211,37 @@
                         </div>
 
                         {{-- ==================== --}}
-                        {{-- C. BERKAS PERSYARATAN --}}
+                        {{-- C. JADWAL --}}
+                        {{-- ==================== --}}
+                        <div class="card border shadow-none mb-4">
+                            <div class="card-header bg-light py-3">
+                                <h6 class="fw-semibold mb-0">
+                                    <i class="ti ti-calendar text-primary me-1"></i> Jadwal & Tanggal Penting
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Puncak Tanggal Pelaksanaan <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" wire:model="tanggal" required>
+                                        @error('tanggal') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Jadwal Pendaftaran Akhir (Opsional)</label>
+                                        <input type="date" class="form-control" wire:model="tanggal_pendaftaran">
+                                        @error('tanggal_pendaftaran') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Jadwal Technical Meeting (Opsional)</label>
+                                        <input type="datetime-local" class="form-control" wire:model="technical_meeting">
+                                        @error('technical_meeting') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- ==================== --}}
+                        {{-- D. BERKAS PERSYARATAN --}}
                         {{-- ==================== --}}
                         <div class="card border shadow-none mb-4">
                             <div class="card-header bg-light py-3">
@@ -257,7 +263,7 @@
                         </div>
 
                         {{-- ==================== --}}
-                        {{-- D. TAUTAN TAMBAHAN --}}
+                        {{-- E. TAUTAN TAMBAHAN --}}
                         {{-- ==================== --}}
                         <div class="card border shadow-none mb-4">
                             <div class="card-header bg-light py-3">
@@ -295,7 +301,7 @@
                         </div>
 
                         {{-- ==================== --}}
-                        {{-- E. SUBDOMAIN --}}
+                        {{-- F. SUBDOMAIN --}}
                         {{-- ==================== --}}
                         <div class="card border shadow-none mb-4">
                             <div class="card-header bg-light py-3">
@@ -330,7 +336,7 @@
                         </div>
 
                         {{-- ==================== --}}
-                        {{-- F. TEMA & TAMPILAN --}}
+                        {{-- G. TEMA & TAMPILAN --}}
                         {{-- ==================== --}}
                         <div class="card border shadow-none mb-4">
                             <div class="card-header bg-light py-3">
@@ -459,7 +465,7 @@
                         </div>
 
                         {{-- ==================== --}}
-                        {{-- G. FONT & TIPOGRAFI --}}
+                        {{-- H. FONT & TIPOGRAFI --}}
                         {{-- ==================== --}}
                         <div class="card border shadow-none mb-4">
                             <div class="card-header bg-light py-3">
@@ -522,7 +528,7 @@
                         </div>
 
                         {{-- ==================== --}}
-                        {{-- H. OVERLAY --}}
+                        {{-- I. OVERLAY --}}
                         {{-- ==================== --}}
                         <div class="card border shadow-none mb-4">
                             <div class="card-header bg-light py-3">
