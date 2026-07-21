@@ -404,6 +404,32 @@
               @if($ev && !$ev->canAccessFeature('tenants')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
+
+          {{-- ============================================ --}}
+          {{-- KEUANGAN --}}
+          {{-- ============================================ --}}
+          <li class="nav-small-cap">
+            <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
+            <span class="hide-menu">Keuangan</span>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.finance.*') ? 'active' : '' }}"
+              href="{{ route('eventner.finance.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-wallet"></i>
+              </span>
+              <span class="hide-menu">Dashboard Keuangan</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.bank-accounts.*') ? 'active' : '' }}"
+              href="{{ route('eventner.bank-accounts.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-building-bank"></i>
+              </span>
+              <span class="hide-menu">Rekening Bank</span>
+            </a>
+          </li>
         @endif
       </ul>
     </nav>

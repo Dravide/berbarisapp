@@ -17,6 +17,7 @@ Route::get('vote-results/{registration}', App\Livewire\Eventner\VoteResults\Show
 Route::get('vote-transactions', App\Livewire\Eventner\VoteTransaction\Index::class)->name('eventner.vote-transactions.index');
 Route::get('vote-transactions/csv', [App\Http\Controllers\Eventner\VoteTransactionController::class, 'downloadCsv'])->name('eventner.vote-transactions.csv');
 Route::get('profile', App\Livewire\Eventner\Settings\Profile::class)->name('eventner.profile.index');
+Route::get('bank-accounts', App\Livewire\Eventner\Settings\BankAccount::class)->name('eventner.bank-accounts.index');
 Route::get('score-recap', App\Livewire\Eventner\ScoreRecap\Index::class)->name('eventner.score-recap.index');
 Route::get('scoring/csv', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadCsv'])->name('eventner.scoring.csv');
 Route::get('scoring/pdf-participant', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadParticipantPdf'])->name('eventner.scoring.pdf-participant');
@@ -33,3 +34,4 @@ Route::get('faq', App\Livewire\Eventner\Faq\Index::class)->name('eventner.faq.in
 Route::get('gallery', App\Livewire\Eventner\Gallery\Index::class)->name('eventner.gallery.index');
 Route::get('sponsors', App\Livewire\Eventner\Sponsor\Index::class)->name('eventner.sponsors.index');
 Route::get('tenants', App\Livewire\Eventner\Tenant\Index::class)->name('eventner.tenants.index');
+Route::get('finance', App\Livewire\Eventner\FinanceDashboard::class)->name('eventner.finance.index');

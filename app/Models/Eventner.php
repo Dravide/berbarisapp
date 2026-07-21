@@ -167,6 +167,16 @@ class Eventner extends Model
         return $this->hasMany(Tenant::class);
     }
 
+    public function bankAccounts()
+    {
+        return $this->hasMany(EventnerBankAccount::class);
+    }
+
+    public function activeBankAccounts()
+    {
+        return $this->hasMany(EventnerBankAccount::class)->where('is_active', true);
+    }
+
     public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by');

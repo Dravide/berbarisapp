@@ -24,6 +24,8 @@ class Dashboard extends Component
     public $totalJudges = 0;
     public $recentRegistrations;
     public $ticketRevenue = 0;
+    public $voteRevenue = 0;
+    public $feeRevenue = 0;
 
     // Trial & Feature gating
     public $trialDaysLeft = 0;
@@ -57,13 +59,23 @@ class Dashboard extends Component
         $eventnerId = $this->eventner->id;
 
         // Stats
-        $this->totalRevenue = VoteTransaction::where('eventner_id', $eventnerId)
+        $this->voteRevenue = VoteTransaction::where('eventner_id', $eventnerId)
             ->where('status', 'PAID')
             ->sum('amount');
 
         $this->ticketRevenue = Ticket::where('eventner_id', $eventnerId)
             ->whereIn('status', ['PAID', 'CHECKED_IN'])
             ->sum('total_amount');
+
+        $feeRevenue = Registration::where('eventner_id', $eventnerId)
+            ->where('payment_status', 'paid')
+            ->sum('total_fee');
+
+        $this->totalRevenue = $this->voteRevenue + $this->ticketRevenue + (float) $feeRevenue;
+
+        $feeRevenue = Registration::where('eventner_id', $eventnerId)
+            ->where('payment_status', 'paid')
+            ->sum('total_fee');
 
         $this->totalRegistrations = Registration::where('eventner_id', $eventnerId)->count();
         $this->totalCategories = $this->eventner->competitionCategories()->whereNotNull('parent_id')->count();
@@ -152,11 +164,16 @@ class Dashboard extends Component
                 ->whereDate('paid_at', $date)
                 ->sum('total_amount');
 
+            $feeRevenue = Registration::where('eventner_id', $eventnerId)
+                ->where('payment_status', 'paid')
+                ->whereDate('payment_verified_at', $date)
+                ->sum('total_fee');
+
             $this->revenueData[] = [
                 'date' => now()->subDays($i)->format('d M'),
                 'vote' => (int) $voteRevenue,
                 'ticket' => (int) $ticketRevenue,
-                'total' => (int) ($voteRevenue + $ticketRevenue),
+                'total' => (int) ($voteRevenue + $ticketRevenue + $feeRevenue),
             ];
         }
     }

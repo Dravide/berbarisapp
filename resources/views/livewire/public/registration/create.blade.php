@@ -179,6 +179,15 @@
                                                             <span class="inline-flex items-center gap-1 rounded-md bg-[#5a7d00]/10 px-2 py-0.5 text-[10px] font-bold text-[#5a7d00] border border-[#5a7d00]/20">
                                                                 Maks {{ $maxPerSchool }} per Sekolah
                                                             </span>
+                                                            @if($cat->registration_fee)
+                                                                <span class="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 border border-emerald-500/20">
+                                                                Rp {{ number_format($cat->registration_fee, 0, ',', '.') }}/pasukan
+                                                                </span>
+                                                            @else
+                                                                <span class="inline-flex items-center gap-1 rounded-md bg-surface-container px-2 py-0.5 text-[10px] font-bold text-on-surface-variant border">
+                                                                Gratis
+                                                                </span>
+                                                            @endif
                                                             @if($isFull)
                                                                 <span class="inline-flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-600 border border-red-500/20">Kuota Penuh</span>
                                                             @endif
@@ -351,6 +360,34 @@
                                     @endif
                                 @endforeach
                             </div>
+
+                            {{-- Fee Summary --}}
+                            @php
+                                $totalFee = 0;
+                                $hasFee = false;
+                                foreach($selectedCategories as $scId) {
+                                    $scCat = $categories->firstWhere('id', (int) $scId);
+                                    if ($scCat && $scCat->registration_fee) {
+                                        $totalFee += $scCat->registration_fee * ($teamCounts[$scCat->id] ?? 1);
+                                        $hasFee = true;
+                                    }
+                                }
+                            @endphp
+
+                            @if($hasFee)
+                                <div class="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 mb-6 flex gap-3 text-xs leading-normal">
+                                    <i class="ti ti-wallet text-emerald-500 text-lg shrink-0 mt-0.5"></i>
+                                    <div>
+                                        <p class="font-bold text-emerald-700 m-0">Ringkasan Biaya Pendaftaran</p>
+                                        <p class="text-on-surface-variant font-medium mt-1 mb-0">
+                                            Total biaya pendaftaran: <strong class="text-deep-slate">Rp {{ number_format($totalFee, 0, ',', '.') }}</strong>
+                                        </p>
+                                        <p class="text-on-surface-variant font-medium mt-0.5 mb-0">
+                                            Pembayaran akan dikonfirmasi setelah Anda upload bukti transfer melalui dashboard kontingen.
+                                        </p>
+                                    </div>
+                                </div>
+                            @endif
 
                             {{-- Informational Warning Box --}}
                             <div class="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 mb-6 flex gap-3 text-xs leading-normal">

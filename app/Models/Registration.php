@@ -30,7 +30,21 @@ class Registration extends Model
         'bukti_pendaftaran',
         'is_finalized',
         'urutan_tampil',
+        'total_fee',
+        'payment_status',
+        'payment_proof',
+        'payment_bank_account_id',
+        'payment_verified_at',
+        'payment_verified_by',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'total_fee' => 'decimal:2',
+            'payment_verified_at' => 'datetime',
+        ];
+    }
 
     protected $hidden = ['password'];
 
@@ -71,6 +85,36 @@ class Registration extends Model
     public function scoreDeductions()
     {
         return $this->hasMany(ScoreDeduction::class);
+    }
+
+    public function paymentBankAccount()
+    {
+        return $this->belongsTo(EventnerBankAccount::class, 'payment_bank_account_id');
+    }
+
+    public function paymentVerifiedBy()
+    {
+        return $this->belongsTo(User::class, 'payment_verified_by');
+    }
+
+    public function isUnpaid(): bool
+    {
+        return $this->payment_status === 'unpaid';
+    }
+
+    public function isPaymentPending(): bool
+    {
+        return $this->payment_status === 'pending_verification';
+    }
+
+    public function isPaid(): bool
+    {
+        return $this->payment_status === 'paid';
+    }
+
+    public function isFree(): bool
+    {
+        return $this->payment_status === 'free';
     }
 
     public function isBooking(): bool

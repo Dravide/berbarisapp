@@ -17,6 +17,7 @@ class Index extends Component
     public $tanggal_pelaksanaan = '';
     public $kuota = '';
     public $max_registrations_per_school = 1;
+    public $registration_fee = '';
     public $selectedJudges = [];
 
     public $isEditMode = false;
@@ -94,6 +95,7 @@ class Index extends Component
             $rules['kuota'] = 'nullable|integer|min:1';
             $rules['max_registrations_per_school'] = 'required|integer|min:1';
             $rules['tanggal_pelaksanaan'] = 'nullable|date';
+            $rules['registration_fee'] = 'nullable|numeric|min:0';
         }
 
         $this->validate($rules);
@@ -111,6 +113,7 @@ class Index extends Component
             $data['kuota'] = $this->kuota ?: null;
             $data['max_registrations_per_school'] = $this->max_registrations_per_school;
             $data['tanggal_pelaksanaan'] = $this->tanggal_pelaksanaan ?: null;
+            $data['registration_fee'] = $this->registration_fee !== '' ? $this->registration_fee : null;
         }
 
         if ($this->isEditMode && $this->editingId) {
@@ -147,6 +150,7 @@ class Index extends Component
         $this->kuota = $cat->kuota ?? '';
         $this->max_registrations_per_school = $cat->max_registrations_per_school ?? 1;
         $this->tanggal_pelaksanaan = $cat->tanggal_pelaksanaan ?? '';
+        $this->registration_fee = $cat->registration_fee ?? '';
         $this->selectedJudges = $cat->judges->pluck('id')->toArray();
     }
 
@@ -165,7 +169,7 @@ class Index extends Component
 
     public function resetForm()
     {
-        $this->reset(['name', 'parentId', 'kuota', 'max_registrations_per_school', 'tanggal_pelaksanaan', 'selectedJudges', 'isEditMode', 'editingId']);
+        $this->reset(['name', 'parentId', 'kuota', 'max_registrations_per_school', 'tanggal_pelaksanaan', 'registration_fee', 'selectedJudges', 'isEditMode', 'editingId']);
         $this->max_registrations_per_school = 1;
     }
 

@@ -258,9 +258,102 @@
                                 <i class="ti ti-users-group text-on-surface-variant"></i> {{ $registration->participants->count() }} Anggota
                             </span>
                         @endif
+                        @if($registration->total_fee && $registration->payment_status !== 'free')
+                            <span class="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-600 border border-emerald-500/20">
+                                Rp {{ number_format($registration->total_fee, 0, ',', '.') }}
+                            </span>
+                        @endif
                     </div>
                 </div>
             </div>
+
+            {{-- Payment Section --}}
+            @if($registration->total_fee > 0 || $registration->payment_status === 'unpaid' || $registration->payment_status === 'pending_verification')
+                <div class="surface-card overflow-hidden border-t-4 border-t-emerald-500">
+                    <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40">
+                        <h3 class="font-display text-sm font-bold text-deep-slate inline-flex items-center gap-2 mb-0">
+                            <i class="ti ti-wallet text-emerald-500"></i> Pembayaran Biaya Pendaftaran
+                        </h3>
+                    </div>
+                    <div class="p-5">
+                        @php
+                            $bankAccounts = $registration->eventner->activeBankAccounts;
+                        @endphp
+
+                        @if($registration->payment_status === 'paid')
+                            <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm font-semibold flex items-center gap-2">
+                                <i class="ti ti-circle-check-filled"></i>
+                                Pembayaran sudah diverifikasi panitia pada {{ $registration->payment_verified_at ? \Carbon\Carbon::parse($registration->payment_verified_at)->translatedFormat('d M Y H:i') : '—' }}.
+                            </div>
+                        @elseif($registration->payment_status === 'pending_verification')
+                            <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 text-sm font-semibold flex items-start gap-2">
+                                <i class="ti ti-clock-filled mt-0.5"></i>
+                                <div>
+                                    Bukti pembayaran Anda sudah diunggah. Menunggu verifikasi panitia.
+                                </div>
+                            </div>
+                        @elseif($registration->payment_status === 'unpaid')
+                            <div class="grid gap-5 md:grid-cols-2">
+                                <div>
+                                    <h4 class="text-sm font-bold text-deep-slate mb-3">Tagihan Pendaftaran</h4>
+                                    <div class="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-5 text-center">
+                                        <span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider block">Total Biaya Pendaftaran</span>
+                                        <h2 class="text-2xl font-extrabold text-emerald-600 m-0">Rp {{ number_format($registration->total_fee, 0, ',', '.') }}</h2>
+                                    </div>
+
+                                    @if($bankAccounts->isNotEmpty())
+                                        <div class="mt-4">
+                                            <h4 class="text-sm font-bold text-deep-slate mb-2">Transfer ke Rekening:</h4>
+                                            @foreach($bankAccounts as $bank)
+                                                <div class="bg-surface-container-low border border-outline-variant/40 rounded-xl p-3.5 mb-2 last:mb-0">
+                                                    <div class="flex justify-between items-center">
+                                                        <div>
+                                                            <span class="text-xs font-bold text-deep-slate block">{{ $bank->bank_name }}</span>
+                                                            <span class="text-sm font-mono font-extrabold text-deep-slate block mt-0.5">{{ $bank->account_number }}</span>
+                                                            <span class="text-[10px] text-on-surface-variant block">a.n. {{ $bank->account_name }}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div>
+                                    <h4 class="text-sm font-bold text-deep-slate mb-3">Upload Bukti Transfer</h4>
+                                    <p class="text-xs text-on-surface-variant font-medium mb-4 leading-normal">
+                                        Setelah melakukan transfer, upload bukti pembayaran untuk diverifikasi panitia.
+                                    </p>
+                                    <div wire:ignore x-data="{ pond: null }" x-init="
+                                        pond = FilePond.create($refs.paymentProof, {
+                                            credits: false,
+                                            labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
+                                            server: {
+                                                process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
+                                                    @this.upload('paymentProof', file, load, error, progress)
+                                                },
+                                                revert: (filename, load) => {
+                                                    @this.removeUpload('paymentProof', filename, load)
+                                                },
+                                            },
+                                        });
+                                    ">
+                                        <input type="file" x-ref="paymentProof" accept="image/*">
+                                    </div>
+                                    @error('paymentProof') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                                    @if($registration->payment_proof)
+                                        <span class="text-xs font-bold text-emerald-600 mt-2 block inline-flex items-center gap-1"><i class="ti ti-circle-check-filled"></i> Bukti pembayaran sudah diunggah</span>
+                                    @endif
+
+                                    <button wire:click="submitPaymentProof" class="btn-primary w-full mt-4 py-3 px-6 font-bold text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer">
+                                        <i class="ti ti-upload"></i> Kirim Bukti Pembayaran
+                                    </button>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
 
             {{-- BOOKING STATE: TM Info Box --}}
             @if($registration->status_berkas === 'booking')

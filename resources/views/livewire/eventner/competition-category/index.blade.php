@@ -84,6 +84,11 @@
                                                             @else
                                                                 <span class="badge bg-light text-muted">Tanpa Batas</span>
                                                             @endif
+                                                            @if($child->registration_fee)
+                                                                <span class="badge bg-success-subtle text-success">Rp {{ number_format($child->registration_fee, 0, ',', '.') }}</span>
+                                                            @else
+                                                                <span class="badge bg-light text-muted border">Gratis</span>
+                                                            @endif
                                                             <span class="badge bg-info-subtle text-info">Max {{ $child->max_registrations_per_school ?? 1 }} pasukan/sekolah</span>
                                                         </div>
                                                         @if($child->judges->isNotEmpty())
@@ -191,6 +196,16 @@
                                 <input type="number" class="form-control" wire:model="max_registrations_per_school" min="1" max="20">
                                 <small class="form-text text-muted">Berapa pasukan yang boleh didaftarkan 1 sekolah.</small>
                                 @error('max_registrations_per_school') <span class="text-danger fs-2 d-block mt-1">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Biaya Pendaftaran <span class="text-muted">(Opsional)</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text">Rp</span>
+                                    <input type="number" class="form-control" wire:model="registration_fee" placeholder="0" min="0" step="5000">
+                                </div>
+                                <small class="form-text text-muted">Kosongkan atau isi 0 jika pendaftaran gratis untuk kategori ini.</small>
+                                @error('registration_fee') <span class="text-danger fs-2 d-block mt-1">{{ $message }}</span> @enderror
                             </div>
 
                             <div class="alert alert-info bg-primary-subtle text-primary border-0 fs-2 py-2 mb-3">

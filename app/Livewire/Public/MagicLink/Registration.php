@@ -30,6 +30,7 @@ class Registration extends Component
     public $dantonFoto;
     public $namaPelatih = '';
 
+    public $paymentProof;
     public $participants = [];
 
     public function mount($token)
@@ -85,6 +86,24 @@ class Registration extends Component
         $this->fotoPelatih = null;
         $this->buktiPendaftaran = null;
         $this->dantonFoto = null;
+        $this->paymentProof = null;
+    }
+
+    public function submitPaymentProof()
+    {
+        $this->validate([
+            'paymentProof' => 'required|image|max:5120',
+        ]);
+
+        $path = $this->paymentProof->store('registrations/payment', 'public');
+        $this->registration->payment_proof = $path;
+        $this->registration->payment_status = 'pending_verification';
+        $this->registration->save();
+
+        $this->paymentProof = null;
+        $this->registration = $this->registration->fresh();
+
+        session()->flash('success', 'Bukti pembayaran berhasil diunggah. Menunggu verifikasi panitia.');
     }
 
     public function addParticipant()

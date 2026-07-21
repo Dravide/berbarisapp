@@ -164,6 +164,7 @@ class Create extends Component
 
             for ($i = 0; $i < $toCreate; $i++) {
                 $suffix = $toCreate > 1 ? ' (' . chr(65 + $i) . ')' : '';
+                $feeAmount = $cat->registration_fee;
                 $reg = Registration::create([
                     'eventner_id' => $this->eventner->id,
                     'competition_category_id' => $cat->id,
@@ -175,6 +176,8 @@ class Create extends Component
                     'logo_sekolah' => $logoPath,
                     'status_berkas' => 'booking',
                     'magic_token' => $sharedToken,
+                    'total_fee' => $feeAmount,
+                    'payment_status' => $feeAmount ? 'unpaid' : 'free',
                 ]);
 
                 if (!$firstRegistration) {
