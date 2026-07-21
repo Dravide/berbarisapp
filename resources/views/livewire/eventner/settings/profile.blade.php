@@ -88,6 +88,37 @@
                                 <small class="d-block text-muted mt-2">Format: JPG/PNG. Maks: 3MB.</small>
                             </div>
                         </div>
+
+                        {{-- HEADER BANNER --}}
+                        <div class="mt-4">
+                            <h6 class="fw-semibold mb-3">Header Banner <span class="text-muted fw-normal fs-2">(opsional — landscape lebar)</span></h6>
+                            <div class="mb-3">
+                                @if ($newHeaderBanner)
+                                    <img src="{{ $newHeaderBanner->temporaryUrl() }}" class="img-fluid rounded border p-1" style="max-height: 200px; width: 100%; object-fit: cover;">
+                                @elseif ($header_banner)
+                                    <img src="{{ asset('storage/' . $header_banner) }}" class="img-fluid rounded border p-1" style="max-height: 200px; width: 100%; object-fit: cover;">
+                                @else
+                                    <div class="bg-light rounded border d-flex align-items-center justify-content-center p-4 mx-auto" style="height: 150px;">
+                                        <div class="text-muted text-center">
+                                            <i class="ti ti-photo-plus fs-6 d-block mb-1"></i>
+                                            <small>Upload banner landscape</small>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="mb-3">
+                                <label for="newHeaderBanner" class="btn btn-outline-info btn-sm w-100">
+                                    <i class="ti ti-photo me-1"></i> Pilih Gambar Header Banner
+                                </label>
+                                <input type="file" id="newHeaderBanner" wire:model="newHeaderBanner" class="d-none" accept="image/jpeg, image/png, image/jpg, image/webp">
+                                @error('newHeaderBanner') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                <div wire:loading wire:target="newHeaderBanner" class="text-info fs-2 mt-2">
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Mengunggah...
+                                </div>
+                                <small class="d-block text-muted mt-2">Format: JPG/PNG/WebP. Maks: 5MB. Rasio ideal 3:1 (1200×400px).</small>
+                            </div>
+                        </div>
+
                     </div>
 
                     {{-- ============================ --}}

@@ -35,6 +35,7 @@ class Eventner extends Model
         'tingkat_perlombaan',
         'logo_event',
         'poster',
+        'header_banner',
         'link_instagram',
         'link_tiktok',
         'link_whatsapp',

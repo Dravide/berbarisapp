@@ -1,8 +1,13 @@
 <div class="min-h-screen bg-surface">
 
-    {{-- ========== COVER BANNER / FALLBACK GRADIENT ========== --}}
+    {{-- ========== HEADER BANNER — landscape wide image, separate from A4 poster ========== --}}
     <div class="container-landing pt-6">
-        @if($eventner->poster)
+        @if($eventner->header_banner)
+            <div class="relative w-full aspect-[21/9] md:aspect-[3/1] rounded-2xl overflow-hidden shadow-md border border-outline-variant/30 bg-black/5">
+                <img src="{{ asset('storage/' . $eventner->header_banner) }}" alt="Banner {{ $eventner->nama_event }}" class="w-full h-full object-cover">
+            </div>
+        @elseif($eventner->poster)
+            {{-- Fallback: pakai poster A4 — masih bisa diklik buka asli --}}
             <div class="relative w-full aspect-[21/9] md:aspect-[3/1] rounded-2xl overflow-hidden shadow-md border border-outline-variant/30 bg-black/5">
                 <a href="{{ asset('storage/' . $eventner->poster) }}" target="_blank">
                     <img src="{{ asset('storage/' . $eventner->poster) }}" alt="Poster {{ $eventner->nama_event }}" class="w-full h-full object-cover">

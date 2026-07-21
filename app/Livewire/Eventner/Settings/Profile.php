@@ -46,6 +46,8 @@ class Profile extends Component
 
     public $poster;
     public $newPoster;
+    public $header_banner;
+    public $newHeaderBanner;
 
     // Theme
     public $theme_preset = 'ocean';
@@ -95,6 +97,7 @@ class Profile extends Component
 
         $this->logo = $eventner->logo_event;
         $this->poster = $eventner->poster;
+        $this->header_banner = $eventner->header_banner;
 
         // Load theme config
         $theme = $eventner->theme_config ?? [];
@@ -133,6 +136,7 @@ class Profile extends Component
 
             'newLogo' => 'nullable|image|max:2048',
             'newPoster' => 'nullable|image|max:3072', // allow up to 3MB for poster
+            'newHeaderBanner' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120', // 5MB for banner
             'theme_bg' => 'nullable|image|max:2048',
         ]);
 
@@ -176,6 +180,15 @@ class Profile extends Component
             $path = $this->newPoster->store('posters', 'public');
             $eventner->poster = $path;
             $this->poster = $path;
+        }
+
+        if ($this->newHeaderBanner) {
+            if ($eventner->header_banner && Storage::disk('public')->exists($eventner->header_banner)) {
+                Storage::disk('public')->delete($eventner->header_banner);
+            }
+            $path = $this->newHeaderBanner->store('banners', 'public');
+            $eventner->header_banner = $path;
+            $this->header_banner = $path;
         }
 
         if ($this->theme_bg) {
