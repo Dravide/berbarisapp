@@ -307,21 +307,6 @@
                 {{-- Galeri Foto --}}
                 @php $galleries = \App\Models\EventGallery::where('eventner_id', $eventner->id)->orderBy('sort_order')->latest()->get(); @endphp
 
-                {{-- Poster A4 Card (kalo ada) — tampil sebagai card terpisah, klik modal --}}
-                @if($eventner->poster)
-                    <div class="surface-card p-6">
-                        <h3 class="font-display text-lg font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
-                            <i class="ti ti-file-text text-primary"></i>
-                            Poster Acara
-                        </h3>
-                        <div class="flex justify-center">
-                            <a href="javascript:void(0)" onclick="openPosterModal('{{ asset('storage/' . $eventner->poster) }}')" class="inline-block max-w-sm w-full rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition shadow-sm">
-                                <img src="{{ asset('storage/' . $eventner->poster) }}" alt="Poster {{ $eventner->nama_event }}" class="w-full h-auto object-contain" loading="lazy">
-                            </a>
-                        </div>
-                    </div>
-                @endif
-
                 @if($galleries->isNotEmpty())
                     <div class="surface-card p-6">
                         <h3 class="font-display text-lg font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
@@ -428,6 +413,24 @@
 
             {{-- Sidebar Column --}}
             <div class="flex flex-col gap-8">
+                {{-- Poster Acara Card — small, sidebar, klik buka ViewerJS --}}
+                @if($eventner->poster)
+                    <div class="surface-card p-4">
+                        <h3 class="font-display text-sm font-bold text-deep-slate inline-flex items-center gap-2 mb-3">
+                            <i class="ti ti-file-text text-primary"></i>
+                            Poster Acara
+                        </h3>
+                        <div class="flex justify-center">
+                            <img src="{{ asset('storage/' . $eventner->poster) }}" alt="Poster {{ $eventner->nama_event }}"
+                                 class="w-full h-auto rounded-lg border border-outline-variant/30 shadow-sm cursor-pointer hover:shadow-md transition object-contain"
+                                 style="max-height: 280px;"
+                                 loading="lazy"
+                                 onclick="openPosterModal('{{ asset('storage/' . $eventner->poster) }}')">
+                        </div>
+                        <p class="text-[10px] text-on-surface-variant font-medium text-center mt-2">Klik untuk lihat full</p>
+                    </div>
+                @endif
+
                 {{-- Informasi Jadwal & TM --}}
                 @if($eventner->lokasi || $eventner->technical_meeting)
                     <div class="surface-card p-6">
