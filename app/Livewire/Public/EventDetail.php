@@ -84,12 +84,11 @@ class EventDetail extends Component
         return $perCategory;
     }
 
-    #[Title('Detail Event')]
     public function render()
     {
         return view('livewire.public.event-detail', [
             'eventner' => $this->eventner,
-        ])->title($this->eventner->nama_event . ' - BARIS APP')
+        ])->title($this->eventner->nama_event . ' - ' . ($this->eventner->diselenggarakan_oleh ?: 'BARIS APP'))
             ->layoutData(['eventner' => $this->eventner]);
     }
 }

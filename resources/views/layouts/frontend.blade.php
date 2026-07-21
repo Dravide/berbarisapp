@@ -7,13 +7,90 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     {{-- Favicon --}}
-    @isset($eventner?->logo_event)
-        <link rel="shortcut icon" type="image/png" href="{{ asset('storage/' . $eventner->logo_event) }}">
+    @php
+        $_ev = $eventner ?? $subdomainEventner ?? null;
+        $_evTitle = $_ev?->nama_event ?? get_setting('site_title', 'BARIS APP');
+        $_evDesc = $_ev?->deskripsi ? strip_tags($_ev->deskripsi) : ($_ev?->nama_event ?? get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu'));
+        $_evPoster = $_ev?->poster ? asset('storage/' . $_ev->poster) : null;
+        $_evLogo = $_ev?->logo_event ? asset('storage/' . $_ev->logo_event) : null;
+        $_ogImage = $_evPoster ?? $_evLogo ?? asset('templates/zubaz/assets/images/favicon.ico');
+        $_currentUrl = url()->current();
+    @endphp
+
+    @isset($_ev?->logo_event)
+        <link rel="shortcut icon" type="image/png" href="{{ asset('storage/' . $_ev->logo_event) }}">
     @else
         <link rel="shortcut icon" type="image/png" href="{{ asset('templates/zubaz/assets/images/favicon.ico') }}">
     @endisset
 
-    <meta name="description" content="{{ $eventner?->nama_event ?? get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu') }}">
+    {{-- Meta SEO --}}
+    <meta name="description" content="{{ Str::limit($_evDesc, 160) }}">
+    <meta name="keywords" content="{{ $_ev?->nama_event }}, {{ $_ev?->diselenggarakan_oleh }}, lomba, kompetisi, event, {{ $_ev?->lokasi }}, {{ $_ev?->tingkat_perlombaan }}">
+    <link rel="canonical" href="{{ $_currentUrl }}">
+
+    {{-- Open Graph / Facebook --}}
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ get_setting('site_title', 'BARIS APP') }}">
+    <meta property="og:title" content="{{ $_evTitle }}">
+    <meta property="og:description" content="{{ Str::limit($_evDesc, 200) }}">
+    <meta property="og:url" content="{{ $_currentUrl }}">
+    <meta property="og:image" content="{{ $_ogImage }}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="id_ID">
+    @if($_ev?->tanggal)
+        <meta property="article:published_time" content="{{ \Carbon\Carbon::parse($_ev->tanggal)->toIso8601String() }}">
+    @endif
+    @if($_ev?->updated_at)
+        <meta property="article:modified_time" content="{{ $_ev->updated_at->toIso8601String() }}">
+    @endif
+
+    {{-- Twitter Card --}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $_evTitle }}">
+    <meta name="twitter:description" content="{{ Str::limit($_evDesc, 200) }}">
+    <meta name="twitter:image" content="{{ $_ogImage }}">
+
+    {{-- JSON-LD Structured Data (Event Schema) --}}
+    @if($_ev)
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Event",
+        "name": "{{ $_ev->nama_event }}",
+        "description": {{ json_encode(Str::limit(strip_tags($_ev->deskripsi ?? ''), 400)) }},
+        @if($_ev->poster || $_ev->logo_event)
+        "image": {{ json_encode($_ogImage) }},
+        @endif
+        @if($_ev->tanggal)
+        "startDate": "{{ \Carbon\Carbon::parse($_ev->tanggal)->toIso8601String() }}",
+        @endif
+        @if($_ev->tanggal_pendaftaran)
+        "endDate": "{{ \Carbon\Carbon::parse($_ev->tanggal_pendaftaran)->toIso8601String() }}",
+        @endif
+        @if($_ev->lokasi)
+        "location": {
+            "@type": "Place",
+            "name": {{ json_encode($_ev->venue ?: $_ev->lokasi) }},
+            "address": {{ json_encode($_ev->lokasi) }}
+            @if($_ev->latitude && $_ev->longitude)
+            ,"geo": {
+                "@type": "GeoCoordinates",
+                "latitude": "{{ $_ev->latitude }}",
+                "longitude": "{{ $_ev->longitude }}"
+            }
+            @endif
+        },
+        @endif
+        "organizer": {
+            "@type": "Organization",
+            "name": {{ json_encode($_ev->diselenggarakan_oleh ?: 'BARIS APP') }}
+        },
+        "eventStatus": "https://schema.org/EventScheduled",
+        "eventAttendanceMode": "https://schema.org/OfflineEventAttendanceMode"
+    }
+    </script>
+    @endif
 
     {{-- Dynamic Theme + Fonts (from Eventner profile) — define BEFORE font link --}}
     @php
