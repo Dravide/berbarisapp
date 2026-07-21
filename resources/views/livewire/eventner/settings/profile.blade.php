@@ -29,6 +29,9 @@
         <div class="card-body">
             <form wire:submit="save">
                 <div class="row">
+                    {{-- ============================ --}}
+                    {{-- KOLOM KIRI — Logo & Poster --}}
+                    {{-- ============================ --}}
                     <div class="col-md-4 mb-4 text-center">
                         <div class="mb-4">
                             <h6 class="fw-semibold mb-3">Logo Event</h6>
@@ -78,7 +81,7 @@
                                     <i class="ti ti-photo me-1"></i> Pilih Gambar Poster
                                 </label>
                                 <input type="file" id="newPoster" wire:model="newPoster" class="d-none" accept="image/jpeg, image/png, image/jpg">
-                                @error('newPoster') <span class="text-danger fs-2 d-block mt-1">{{ $message }}</span> @enderror
+                                @error('newPoster') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                                 <div wire:loading wire:target="newPoster" class="text-info fs-2 mt-2">
                                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Mengunggah...
                                 </div>
@@ -87,128 +90,160 @@
                         </div>
                     </div>
 
+                    {{-- ============================ --}}
+                    {{-- KOLOM KANAN — Form --}}
+                    {{-- ============================ --}}
                     <div class="col-md-8">
-                        <h6 class="fw-semibold mb-3">Informasi Acara</h6>
-                        
-                        <div class="mb-4">
-                            <label class="form-label fw-bold d-block">Status Pendaftaran <small class="text-muted fw-normal">(Otomatis berdasarkan tanggal)</small></label>
-                            @php
-                                $now = now();
-                                $tm = $technical_meeting ? \Carbon\Carbon::parse($technical_meeting) : null;
-                                $tglPendaftaran = $tanggal_pendaftaran ? \Carbon\Carbon::parse($tanggal_pendaftaran) : null;
-                                $tglEvent = $tanggal ? \Carbon\Carbon::parse($tanggal) : null;
 
-                                if ($tglPendaftaran && $now->gt($tglPendaftaran)) {
-                                    $computedStatus = 'closed';
-                                } elseif ($tglEvent && $now->gt($tglEvent)) {
-                                    $computedStatus = 'closed';
-                                } elseif ($tm && $now->lt($tm)) {
-                                    $computedStatus = 'booking';
-                                } else {
-                                    $computedStatus = 'open';
-                                }
-                            @endphp
-                            <div class="d-flex align-items-center gap-3 mt-2">
-                                @if($computedStatus === 'open')
-                                    <span class="badge bg-success fs-4 px-3 py-2 rounded-pill">
-                                        <i class="ti ti-circle-check me-1"></i> Open Registration
-                                    </span>
-                                    <small class="text-muted">Peserta dapat mendaftar dan mengisi data lengkap.</small>
-                                @elseif($computedStatus === 'booking')
-                                    <span class="badge bg-primary fs-4 px-3 py-2 rounded-pill">
-                                        <i class="ti ti-bookmark me-1"></i> Booking Only
-                                    </span>
-                                    <small class="text-muted">Menunggu Technical Meeting. Hanya booking slot yang diperbolehkan.</small>
-                                @else
-                                    <span class="badge bg-danger fs-4 px-3 py-2 rounded-pill">
-                                        <i class="ti ti-lock me-1"></i> Tutup (Closed)
-                                    </span>
-                                    <small class="text-muted">Pendaftaran telah ditutup.</small>
-                                @endif
+                        {{-- ==================== --}}
+                        {{-- A. STATUS PENDAFTARAN --}}
+                        {{-- ==================== --}}
+                        <div class="card border shadow-none mb-4">
+                            <div class="card-header bg-light py-3">
+                                <h6 class="fw-semibold mb-0">
+                                    <i class="ti ti-toggle-left text-primary me-1"></i> Status Pendaftaran
+                                </h6>
                             </div>
-                            <div class="mt-2 p-3 bg-light rounded-3 border small">
-                                <div class="d-flex flex-wrap gap-4">
-                                    <div>
-                                        <span class="text-muted">TM (Booking berakhir):</span>
-                                        <strong>{{ $technical_meeting ? \Carbon\Carbon::parse($technical_meeting)->translatedFormat('d M Y, H:i') : 'Belum diset' }}</strong>
-                                    </div>
-                                    <div>
-                                        <span class="text-muted">Deadline Pendaftaran:</span>
-                                        <strong>{{ $tanggal_pendaftaran ? \Carbon\Carbon::parse($tanggal_pendaftaran)->translatedFormat('d M Y') : 'Belum diset' }}</strong>
+                            <div class="card-body">
+                                <label class="form-label fw-bold d-block">Status Pendaftaran <small class="text-muted fw-normal">(Otomatis berdasarkan tanggal)</small></label>
+                                @php
+                                    $now = now();
+                                    $tm = $technical_meeting ? \Carbon\Carbon::parse($technical_meeting) : null;
+                                    $tglPendaftaran = $tanggal_pendaftaran ? \Carbon\Carbon::parse($tanggal_pendaftaran) : null;
+                                    $tglEvent = $tanggal ? \Carbon\Carbon::parse($tanggal) : null;
+
+                                    if ($tglPendaftaran && $now->gt($tglPendaftaran)) {
+                                        $computedStatus = 'closed';
+                                    } elseif ($tglEvent && $now->gt($tglEvent)) {
+                                        $computedStatus = 'closed';
+                                    } elseif ($tm && $now->lt($tm)) {
+                                        $computedStatus = 'booking';
+                                    } else {
+                                        $computedStatus = 'open';
+                                    }
+                                @endphp
+                                <div class="d-flex align-items-center gap-3 mt-2">
+                                    @if($computedStatus === 'open')
+                                        <span class="badge bg-success fs-4 px-3 py-2 rounded-pill">
+                                            <i class="ti ti-circle-check me-1"></i> Open Registration
+                                        </span>
+                                        <small class="text-muted">Peserta dapat mendaftar dan mengisi data lengkap.</small>
+                                    @elseif($computedStatus === 'booking')
+                                        <span class="badge bg-primary fs-4 px-3 py-2 rounded-pill">
+                                            <i class="ti ti-bookmark me-1"></i> Booking Only
+                                        </span>
+                                        <small class="text-muted">Menunggu Technical Meeting. Hanya booking slot yang diperbolehkan.</small>
+                                    @else
+                                        <span class="badge bg-danger fs-4 px-3 py-2 rounded-pill">
+                                            <i class="ti ti-lock me-1"></i> Tutup (Closed)
+                                        </span>
+                                        <small class="text-muted">Pendaftaran telah ditutup.</small>
+                                    @endif
+                                </div>
+                                <div class="mt-2 p-3 bg-light rounded-3 border small">
+                                    <div class="d-flex flex-wrap gap-4">
+                                        <div>
+                                            <span class="text-muted">TM (Booking berakhir):</span>
+                                            <strong>{{ $technical_meeting ? \Carbon\Carbon::parse($technical_meeting)->translatedFormat('d M Y, H:i') : 'Belum diset' }}</strong>
+                                        </div>
+                                        <div>
+                                            <span class="text-muted">Deadline Pendaftaran:</span>
+                                            <strong>{{ $tanggal_pendaftaran ? \Carbon\Carbon::parse($tanggal_pendaftaran)->translatedFormat('d M Y') : 'Belum diset' }}</strong>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Nama Event <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model="nama_event" required>
-                                @error('nama_event') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Penyelenggara <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model="diselenggarakan_oleh" required>
-                                @error('diselenggarakan_oleh') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
 
-                            <div class="col-md-12 mb-3">
-                                <label class="form-label">Deskripsi Event <span class="text-muted">(Opsional)</span></label>
-                                <textarea class="form-control" wire:model="deskripsi" rows="3" placeholder="Ceritakan singkat tentang acara Anda..."></textarea>
-                                @error('deskripsi') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                        {{-- ==================== --}}
+                        {{-- B. INFORMASI ACARA --}}
+                        {{-- ==================== --}}
+                        <div class="card border shadow-none mb-4">
+                            <div class="card-header bg-light py-3">
+                                <h6 class="fw-semibold mb-0">
+                                    <i class="ti ti-info-circle text-primary me-1"></i> Informasi Acara
+                                </h6>
                             </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Nama Event <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" wire:model="nama_event" required>
+                                        @error('nama_event') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Penyelenggara <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" wire:model="diselenggarakan_oleh" required>
+                                        @error('diselenggarakan_oleh') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
 
-                            <div class="col-md-12 mb-3">
-                                <label class="form-label">Lokasi Lengkap <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model="lokasi" required>
-                                @error('lokasi') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">Deskripsi Event <span class="text-muted">(Opsional)</span></label>
+                                        <textarea class="form-control" wire:model="deskripsi" rows="3" placeholder="Ceritakan singkat tentang acara Anda..."></textarea>
+                                        @error('deskripsi') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
+
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">Lokasi Lengkap <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" wire:model="lokasi" required>
+                                        @error('lokasi') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Venue (Opsional)</label>
+                                        <input type="text" class="form-control" wire:model="venue" placeholder="Misal: GOR Siliwangi">
+                                        @error('venue') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Puncak Tanggal Pelaksanaan <span class="text-danger">*</span></label>
+                                        <input type="date" class="form-control" wire:model="tanggal" required>
+                                        @error('tanggal') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Jadwal Pendaftaran Akhir (Opsional)</label>
+                                        <input type="date" class="form-control" wire:model="tanggal_pendaftaran">
+                                        @error('tanggal_pendaftaran') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Jadwal Technical Meeting (Opsional)</label>
+                                        <input type="datetime-local" class="form-control" wire:model="technical_meeting">
+                                        @error('technical_meeting') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
+
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">Tingkat Perlombaan Global (Opsional)</label>
+                                        <input type="text" class="form-control" wire:model="tingkat_perlombaan" placeholder="Misal: Se-Jawa Barat Terbuka">
+                                        @error('tingkat_perlombaan') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
+
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Latitude <span class="text-muted">(Cth: -6.9147)</span></label>
+                                        <input type="text" class="form-control" wire:model="latitude" placeholder="-6.9147">
+                                        @error('latitude') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
+
+                                    <div class="col-md-6 mb-4">
+                                        <label class="form-label">Longitude <span class="text-muted">(Cth: 107.6098)</span></label>
+                                        <input type="text" class="form-control" wire:model="longitude" placeholder="107.6098">
+                                        @error('longitude') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
                             </div>
+                        </div>
 
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Venue (Opsional)</label>
-                                <input type="text" class="form-control" wire:model="venue" placeholder="Misal: GOR Siliwangi">
-                                @error('venue') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                        {{-- ==================== --}}
+                        {{-- C. BERKAS PERSYARATAN --}}
+                        {{-- ==================== --}}
+                        <div class="card border shadow-none mb-4">
+                            <div class="card-header bg-light py-3">
+                                <h6 class="fw-semibold mb-0">
+                                    <i class="ti ti-file-text text-primary me-1"></i> Berkas Pendaftaran Wajib
+                                </h6>
                             </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Puncak Tanggal Pelaksanaan <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" wire:model="tanggal" required>
-                                @error('tanggal') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Jadwal Pendaftaran Akhir (Opsional)</label>
-                                <input type="date" class="form-control" wire:model="tanggal_pendaftaran">
-                                @error('tanggal_pendaftaran') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Jadwal Technical Meeting (Opsional)</label>
-                                <input type="datetime-local" class="form-control" wire:model="technical_meeting">
-                                @error('technical_meeting') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="col-md-12 mb-3">
-                                <label class="form-label">Tingkat Perlombaan Global (Opsional)</label>
-                                <input type="text" class="form-control" wire:model="tingkat_perlombaan" placeholder="Misal: Se-Jawa Barat Terbuka">
-                                @error('tingkat_perlombaan') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label">Latitude <span class="text-muted">(Cth: -6.9147)</span></label>
-                                <input type="text" class="form-control" wire:model="latitude" placeholder="-6.9147">
-                                @error('latitude') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
-
-                            <div class="col-md-6 mb-4">
-                                <label class="form-label">Longitude <span class="text-muted">(Cth: 107.6098)</span></label>
-                                <input type="text" class="form-control" wire:model="longitude" placeholder="107.6098">
-                                @error('longitude') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
-
-                        <div class="col-md-12 mb-4">
-                            <div class="alert alert-light border fs-3 py-3">
-                                <h6 class="fw-semibold mb-2"><i class="ti ti-file-text"></i> Berkas Pendaftaran Wajib</h6>
+                            <div class="card-body">
                                 <small class="d-block text-muted mb-3">Nonaktifkan toggle untuk menghilangkan field upload di form publik pendaftaran. Berkas yang sudah diunggah tetap tersimpan.</small>
                                 <div class="form-check form-switch mb-2">
                                     <input class="form-check-input" type="checkbox" wire:model.live="surat_tugas_required" id="suratTugasRequired">
@@ -221,305 +256,344 @@
                             </div>
                         </div>
 
-                        </div>
-
-                        <hr class="my-4">
-                        <h6 class="fw-semibold mb-3">Tautan Tambahan <small class="text-muted">(Semua Opsional)</small></h6>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="ti ti-brand-instagram text-danger me-1"></i>Link Instagram</label>
-                                <input type="url" class="form-control" wire:model="link_instagram" placeholder="https://instagram.com/...">
-                                @error('link_instagram') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                        {{-- ==================== --}}
+                        {{-- D. TAUTAN TAMBAHAN --}}
+                        {{-- ==================== --}}
+                        <div class="card border shadow-none mb-4">
+                            <div class="card-header bg-light py-3">
+                                <h6 class="fw-semibold mb-0">
+                                    <i class="ti ti-link text-primary me-1"></i> Tautan Tambahan
+                                </h6>
                             </div>
-                            
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="ti ti-brand-tiktok text-dark me-1"></i>Link TikTok</label>
-                                <input type="url" class="form-control" wire:model="link_tiktok" placeholder="https://tiktok.com/@...">
-                                @error('link_tiktok') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"><i class="ti ti-brand-instagram text-danger me-1"></i>Link Instagram</label>
+                                        <input type="url" class="form-control" wire:model="link_instagram" placeholder="https://instagram.com/...">
+                                        @error('link_instagram') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
 
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="ti ti-brand-whatsapp text-success me-1"></i>No. / Link WhatsApp Contact Person</label>
-                                <input type="text" class="form-control" wire:model="link_whatsapp" placeholder="https://wa.me/628...">
-                                @error('link_whatsapp') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"><i class="ti ti-brand-tiktok text-dark me-1"></i>Link TikTok</label>
+                                        <input type="url" class="form-control" wire:model="link_tiktok" placeholder="https://tiktok.com/@...">
+                                        @error('link_tiktok') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
 
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="ti ti-video text-primary me-1"></i>Link Live Streaming (Youtube/dsb)</label>
-                                <input type="url" class="form-control" wire:model="link_livestreaming" placeholder="https://youtube.com/live/...">
-                                @error('link_livestreaming') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
-                        </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"><i class="ti ti-brand-whatsapp text-success me-1"></i>No. / Link WhatsApp Contact Person</label>
+                                        <input type="text" class="form-control" wire:model="link_whatsapp" placeholder="https://wa.me/628...">
+                                        @error('link_whatsapp') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
 
-                        <hr class="my-4">
-                        <h6 class="fw-semibold mb-3"><i class="ti ti-globe me-1"></i> Subdomain Halaman Publik</h6>
-                        <p class="text-muted fs-3 mb-3">Akses halaman publik event melalui subdomain sendiri.</p>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Subdomain <small class="text-muted">(opsional)</small></label>
-                                <div class="input-group">
-                                    <input type="text" class="form-control @error('subdomain') is-invalid @enderror"
-                                        wire:model.blur="subdomain" placeholder="contoh: kejurcabcianjur" maxlength="63"
-                                        pattern="^[a-z0-9]([a-z0-9-]*[a-z0-9])?$">
-                                    @php $rootDomain = parse_url(config('app.url'), PHP_URL_HOST); @endphp
-                                    <span class="input-group-text">.{{ $rootDomain }}</span>
-                                    @error('subdomain') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label"><i class="ti ti-video text-primary me-1"></i>Link Live Streaming (Youtube/dsb)</label>
+                                        <input type="url" class="form-control" wire:model="link_livestreaming" placeholder="https://youtube.com/live/...">
+                                        @error('link_livestreaming') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                    </div>
                                 </div>
-                                <div class="form-text">Huruf kecil, angka, dan tanda strip saja. Maksimal 63 karakter.</div>
-                            </div>
-                            <div class="col-md-6 d-flex align-items-end pb-3">
-                                @if($subdomain)
-                                    <a href="{{ event_url($eventnerObj ?? (object)['subdomain' => $subdomain, 'slug' => ''], 'detail') }}" target="_blank" class="text-decoration-none small">
-                                        <i class="ti ti-external-link"></i> {{ $subdomain }}.{{ $rootDomain }}
-                                    </a>
-                                @endif
                             </div>
                         </div>
 
-                        <hr class="my-4">
-                        <h6 class="fw-semibold mb-3"><i class="ti ti-palette me-1"></i> Tema & Tampilan Halaman Publik</h6>
-                        <p class="text-muted fs-3 mb-3">Sesuaikan tampilan halaman publik event dengan warna khas acara Anda.</p>
-
-                        {{-- Background Image --}}
-                        <div class="row mb-4">
-                            <div class="col-md-12">
-                                <label class="form-label fw-semibold">Gambar Latar Halaman Publik (Opsional)</label>
-                                <input type="file" wire:model="theme_bg" class="form-control form-control-sm" accept="image/*">
-                                <small class="text-muted d-block mt-1">Rekomendasi: 1920×1080, format JPG/PNG. Maks 2MB.</small>
-                                @if($theme_bg_preview)
-                                    <img src="{{ $theme_bg_preview }}" class="img-fluid rounded mt-2 border" style="max-height:120px;">
-                                @elseif($theme_bg_url)
-                                    <img src="{{ asset('storage/' . $theme_bg_url) }}" class="img-fluid rounded mt-2 border" style="max-height:120px;">
-                                @endif
+                        {{-- ==================== --}}
+                        {{-- E. SUBDOMAIN --}}
+                        {{-- ==================== --}}
+                        <div class="card border shadow-none mb-4">
+                            <div class="card-header bg-light py-3">
+                                <h6 class="fw-semibold mb-0">
+                                    <i class="ti ti-globe text-primary me-1"></i> Subdomain Halaman Publik
+                                </h6>
                             </div>
-                        </div>
-
-                        {{-- Presets --}}
-                        <div class="row mb-3">
-                            <div class="col-12">
-                                <label class="form-label fw-semibold mb-2">Pilih Preset Tema</label>
-                                <div class="d-flex flex-wrap gap-2">
-                                    @php
-                                        $presets = [
-                                            ['id' => 'ocean', 'name' => 'Ocean', 'primary' => '#0062ff', 'accent' => '#00D4AA'],
-                                            ['id' => 'sunset', 'name' => 'Sunset', 'primary' => '#f97316', 'accent' => '#ef4444'],
-                                            ['id' => 'emerald', 'name' => 'Emerald', 'primary' => '#059669', 'accent' => '#06b6d4'],
-                                            ['id' => 'royal', 'name' => 'Royal', 'primary' => '#7c3aed', 'accent' => '#ec4899'],
-                                            ['id' => 'crimson', 'name' => 'Crimson', 'primary' => '#dc2626', 'accent' => '#fbbf24'],
-                                            ['id' => 'midnight', 'name' => 'Midnight', 'primary' => '#1e293b', 'accent' => '#38bdf8'],
-                                            ['id' => 'forest', 'name' => 'Forest', 'primary' => '#166534', 'accent' => '#84cc16'],
-                                            ['id' => 'cherry', 'name' => 'Cherry', 'primary' => '#be123c', 'accent' => '#f472b6'],
-                                            ['id' => 'tropical', 'name' => 'Tropical', 'primary' => '#0d9488', 'accent' => '#fcd34d'],
-                                            ['id' => 'nebula', 'name' => 'Nebula', 'primary' => '#4338ca', 'accent' => '#c084fc'],
-                                            ['id' => 'mono', 'name' => 'Mono', 'primary' => '#111827', 'accent' => '#6b7280'],
-                                            ['id' => 'rose', 'name' => 'Rose', 'primary' => '#e11d48', 'accent' => '#fda4af'],
-                                        ];
-                                    @endphp
-                                    @foreach($presets as $p)
-                                    <button type="button" wire:click="$set('theme_preset', '{{ $p['id'] }}'); $set('theme_primary', '{{ $p['primary'] }}'); $set('theme_accent', '{{ $p['accent'] }}')"
-                                        class="btn {{ $theme_preset === $p['id'] ? 'border-2 border-dark' : 'border' }} rounded-3 p-0 overflow-hidden"
-                                        style="width: 82px; height: 56px; position: relative; {{ $theme_preset === $p['id'] ? 'box-shadow: 0 0 0 2px ' . $p['primary'] . ';' : '' }}">
-                                        <div style="width: 100%; height: 70%; background: {{ $p['primary'] }};"></div>
-                                        <div style="width: 100%; height: 30%; background: {{ $p['accent'] }};"></div>
-                                        <span style="position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 600; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); white-space:nowrap;">{{ $p['name'] }}</span>
-                                        @if($theme_preset === $p['id'])
-                                        <i class="ti ti-check" style="position: absolute; top: 2px; right: 4px; font-size: 14px; color: #fff;"></i>
+                            <div class="card-body">
+                                <p class="text-muted fs-3 mb-3">Akses halaman publik event melalui subdomain sendiri.</p>
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Subdomain <small class="text-muted">(opsional)</small></label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control @error('subdomain') is-invalid @enderror"
+                                                wire:model.blur="subdomain" placeholder="contoh: kejurcabcianjur" maxlength="63"
+                                                pattern="^[a-z0-9]([a-z0-9-]*[a-z0-9])?$">
+                                            @php $rootDomain = parse_url(config('app.url'), PHP_URL_HOST); @endphp
+                                            <span class="input-group-text">.{{ $rootDomain }}</span>
+                                            @error('subdomain') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                        </div>
+                                        <div class="form-text">Huruf kecil, angka, dan tanda strip saja. Maksimal 63 karakter.</div>
+                                    </div>
+                                    <div class="col-md-6 d-flex align-items-end pb-3">
+                                        @if($subdomain)
+                                            <a href="{{ event_url($eventnerObj ?? (object)['subdomain' => $subdomain, 'slug' => ''], 'detail') }}" target="_blank" class="text-decoration-none small">
+                                                <i class="ti ti-external-link"></i> {{ $subdomain }}.{{ $rootDomain }}
+                                            </a>
                                         @endif
-                                    </button>
-                                    @endforeach
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Custom Colors --}}
-                        <div class="row mb-4">
-                            <div class="col-md-4 mb-2">
-                                <label class="form-label">Warna Utama (Primary)</label>
-                                <div class="input-group">
-                                    <input type="color" wire:model="theme_primary" class="form-control form-control-color p-1" style="width: 44px; height: 38px; cursor: pointer;">
-                                    <input type="text" wire:model="theme_primary" class="form-control" style="font-family: monospace; font-size: 13px;">
-                                </div>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label class="form-label">Warna Aksen (Accent)</label>
-                                <div class="input-group">
-                                    <input type="color" wire:model="theme_accent" class="form-control form-control-color p-1" style="width: 44px; height: 38px; cursor: pointer;">
-                                    <input type="text" wire:model="theme_accent" class="form-control" style="font-family: monospace; font-size: 13px;">
-                                </div>
-                            </div>
-                            <div class="col-md-4 mb-2">
-                                <label class="form-label">Preview</label>
-                                <div class="rounded-3 overflow-hidden border d-flex align-items-center" style="height: 38px;">
-                                    <div style="width: 60%; height: 100%; display: inline-block; background: {{ $theme_primary }};"></div>
-                                    <div style="width: 40%; height: 100%; display: inline-block; background: {{ $theme_accent }};"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Background Type --}}
-                        <div class="row mb-4">
-                            <div class="col-md-12">
-                                <label class="form-label fw-semibold mb-2">Jenis Latar Halaman</label>
-                                <div class="d-flex gap-3 flex-wrap">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" wire:model="theme_bg_type" value="solid" id="bgSolid">
-                                        <label class="form-check-label" for="bgSolid">Solid</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" wire:model="theme_bg_type" value="gradient" id="bgGradient">
-                                        <label class="form-check-label" for="bgGradient">Gradient</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" wire:model="theme_bg_type" value="image" id="bgImage">
-                                        <label class="form-check-label" for="bgImage">Gambar</label>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Gradient Picker (show only if gradient selected) --}}
-                        @if($theme_bg_type === 'gradient')
-                        <div class="row mb-4">
-                            <div class="col-md-6 mb-2">
-                                <label class="form-label">Gradient Arah</label>
-                                <select wire:model="theme_gradient_dir" class="form-select form-select-sm">
-                                    <option value="to right">Kiri → Kanan</option>
-                                    <option value="to bottom">Atas → Bawah</option>
-                                    <option value="to bottom right">Diagonal ↘</option>
-                                    <option value="135deg">135°</option>
-                                </select>
+                        {{-- ==================== --}}
+                        {{-- F. TEMA & TAMPILAN --}}
+                        {{-- ==================== --}}
+                        <div class="card border shadow-none mb-4">
+                            <div class="card-header bg-light py-3">
+                                <h6 class="fw-semibold mb-0">
+                                    <i class="ti ti-palette text-primary me-1"></i> Tema & Tampilan Halaman Publik
+                                </h6>
                             </div>
-                            <div class="col-md-3 mb-2">
-                                <label class="form-label">Gradient Warna 2</label>
-                                <input type="color" wire:model="theme_gradient_color" class="form-control form-control-color p-1" style="width:100%;height:38px;cursor:pointer;">
+                            <div class="card-body">
+                                <p class="text-muted fs-3 mb-3">Sesuaikan tampilan halaman publik event dengan warna khas acara Anda.</p>
+
+                                {{-- Background Image --}}
+                                <div class="row mb-4">
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-semibold">Gambar Latar Halaman Publik (Opsional)</label>
+                                        <input type="file" wire:model="theme_bg" class="form-control form-control-sm" accept="image/*">
+                                        <small class="text-muted d-block mt-1">Rekomendasi: 1920×1080, format JPG/PNG. Maks 2MB.</small>
+                                        @if($theme_bg_preview)
+                                            <img src="{{ $theme_bg_preview }}" class="img-fluid rounded mt-2 border" style="max-height:120px;">
+                                        @elseif($theme_bg_url)
+                                            <img src="{{ asset('storage/' . $theme_bg_url) }}" class="img-fluid rounded mt-2 border" style="max-height:120px;">
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- Presets --}}
+                                <div class="row mb-3">
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold mb-2">Pilih Preset Tema</label>
+                                        <div class="d-flex flex-wrap gap-2">
+                                            @php
+                                                $presets = [
+                                                    ['id' => 'ocean', 'name' => 'Ocean', 'primary' => '#0062ff', 'accent' => '#00D4AA'],
+                                                    ['id' => 'sunset', 'name' => 'Sunset', 'primary' => '#f97316', 'accent' => '#ef4444'],
+                                                    ['id' => 'emerald', 'name' => 'Emerald', 'primary' => '#059669', 'accent' => '#06b6d4'],
+                                                    ['id' => 'royal', 'name' => 'Royal', 'primary' => '#7c3aed', 'accent' => '#ec4899'],
+                                                    ['id' => 'crimson', 'name' => 'Crimson', 'primary' => '#dc2626', 'accent' => '#fbbf24'],
+                                                    ['id' => 'midnight', 'name' => 'Midnight', 'primary' => '#1e293b', 'accent' => '#38bdf8'],
+                                                    ['id' => 'forest', 'name' => 'Forest', 'primary' => '#166534', 'accent' => '#84cc16'],
+                                                    ['id' => 'cherry', 'name' => 'Cherry', 'primary' => '#be123c', 'accent' => '#f472b6'],
+                                                    ['id' => 'tropical', 'name' => 'Tropical', 'primary' => '#0d9488', 'accent' => '#fcd34d'],
+                                                    ['id' => 'nebula', 'name' => 'Nebula', 'primary' => '#4338ca', 'accent' => '#c084fc'],
+                                                    ['id' => 'mono', 'name' => 'Mono', 'primary' => '#111827', 'accent' => '#6b7280'],
+                                                    ['id' => 'rose', 'name' => 'Rose', 'primary' => '#e11d48', 'accent' => '#fda4af'],
+                                                ];
+                                            @endphp
+                                            @foreach($presets as $p)
+                                            <button type="button" wire:click="$set('theme_preset', '{{ $p['id'] }}'); $set('theme_primary', '{{ $p['primary'] }}'); $set('theme_accent', '{{ $p['accent'] }}')"
+                                                class="btn {{ $theme_preset === $p['id'] ? 'border-2 border-dark' : 'border' }} rounded-3 p-0 overflow-hidden"
+                                                style="width: 82px; height: 56px; position: relative; {{ $theme_preset === $p['id'] ? 'box-shadow: 0 0 0 2px ' . $p['primary'] . ';' : '' }}">
+                                                <div style="width: 100%; height: 70%; background: {{ $p['primary'] }};"></div>
+                                                <div style="width: 100%; height: 30%; background: {{ $p['accent'] }};"></div>
+                                                <span style="position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 600; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.6); white-space:nowrap;">{{ $p['name'] }}</span>
+                                                @if($theme_preset === $p['id'])
+                                                <i class="ti ti-check" style="position: absolute; top: 2px; right: 4px; font-size: 14px; color: #fff;"></i>
+                                                @endif
+                                            </button>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Custom Colors --}}
+                                <div class="row mb-4">
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label">Warna Utama (Primary)</label>
+                                        <div class="input-group">
+                                            <input type="color" wire:model="theme_primary" class="form-control form-control-color p-1" style="width: 44px; height: 38px; cursor: pointer;">
+                                            <input type="text" wire:model="theme_primary" class="form-control" style="font-family: monospace; font-size: 13px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label">Warna Aksen (Accent)</label>
+                                        <div class="input-group">
+                                            <input type="color" wire:model="theme_accent" class="form-control form-control-color p-1" style="width: 44px; height: 38px; cursor: pointer;">
+                                            <input type="text" wire:model="theme_accent" class="form-control" style="font-family: monospace; font-size: 13px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 mb-2">
+                                        <label class="form-label">Preview</label>
+                                        <div class="rounded-3 overflow-hidden border d-flex align-items-center" style="height: 38px;">
+                                            <div style="width: 60%; height: 100%; display: inline-block; background: {{ $theme_primary }};"></div>
+                                            <div style="width: 40%; height: 100%; display: inline-block; background: {{ $theme_accent }};"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {{-- Background Type --}}
+                                <div class="row mb-4">
+                                    <div class="col-md-12">
+                                        <label class="form-label fw-semibold mb-2">Jenis Latar Halaman</label>
+                                        <div class="d-flex gap-3 flex-wrap">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" wire:model="theme_bg_type" value="solid" id="bgSolid">
+                                                <label class="form-check-label" for="bgSolid">Solid</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" wire:model="theme_bg_type" value="gradient" id="bgGradient">
+                                                <label class="form-check-label" for="bgGradient">Gradient</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" wire:model="theme_bg_type" value="image" id="bgImage">
+                                                <label class="form-check-label" for="bgImage">Gambar</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @if($theme_bg_type === 'gradient')
+                                <div class="row mb-4">
+                                    <div class="col-md-6 mb-2">
+                                        <label class="form-label">Gradient Arah</label>
+                                        <select wire:model="theme_gradient_dir" class="form-select form-select-sm">
+                                            <option value="to right">Kiri → Kanan</option>
+                                            <option value="to bottom">Atas → Bawah</option>
+                                            <option value="to bottom right">Diagonal ↘</option>
+                                            <option value="135deg">135°</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 mb-2">
+                                        <label class="form-label">Gradient Warna 2</label>
+                                        <input type="color" wire:model="theme_gradient_color" class="form-control form-control-color p-1" style="width:100%;height:38px;cursor:pointer;">
+                                    </div>
+                                </div>
+                                @endif
                             </div>
                         </div>
-                        @endif
 
-                        {{-- ===== FONT & TIPOGRAFI ===== --}}
-                        <hr class="my-4">
-                        <h6 class="fw-semibold mb-3"><i class="ti ti-typography me-1"></i> Font & Tipografi</h6>
-                        <p class="text-muted fs-3 mb-3">Pilih font untuk teks isi (body) dan judul (headings) pada halaman publik event.</p>
-
-                        @php $fonts = $this->getAvailableFonts(); @endphp
-                        <div class="row mb-3">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Font Teks Isi (Body / Sans)</label>
-                                <select wire:model="theme_font_sans" class="form-select">
-                                    @foreach($fonts['sans'] as $f)
-                                        <option value="{{ $f['id'] }}">{{ $f['name'] }}</option>
-                                    @endforeach
-                                </select>
+                        {{-- ==================== --}}
+                        {{-- G. FONT & TIPOGRAFI --}}
+                        {{-- ==================== --}}
+                        <div class="card border shadow-none mb-4">
+                            <div class="card-header bg-light py-3">
+                                <h6 class="fw-semibold mb-0">
+                                    <i class="ti ti-typography text-primary me-1"></i> Font & Tipografi
+                                </h6>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Font Judul (Display)</label>
-                                <select wire:model="theme_font_display" class="form-select">
-                                    @foreach($fonts['display'] as $f)
-                                        <option value="{{ $f['id'] }}">{{ $f['name'] }}</option>
-                                    @endforeach
-                                </select>
+                            <div class="card-body">
+                                <p class="text-muted fs-3 mb-3">Pilih font untuk teks isi (body) dan judul (headings) pada halaman publik event.</p>
+
+                                @php $fonts = $this->getAvailableFonts(); @endphp
+                                <div class="row mb-3">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Font Teks Isi (Body / Sans)</label>
+                                        <select wire:model="theme_font_sans" class="form-select">
+                                            @foreach($fonts['sans'] as $f)
+                                                <option value="{{ $f['id'] }}">{{ $f['name'] }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-semibold">Font Judul (Display)</label>
+                                        <select wire:model="theme_font_display" class="form-select">
+                                            @foreach($fonts['display'] as $f)
+                                                <option value="{{ $f['id'] }}">{{ $f['name'] }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {{-- Font preview --}}
+                                <div class="rounded-3 border p-4 mb-3" style="background: #fafafa;">
+                                    <span class="text-muted small d-block mb-2">Pratinjau Font:</span>
+                                    <div>
+                                        <p class="mb-2" style="font-family: '{{ $theme_font_sans }}', sans-serif; font-size: 16px; font-weight: 600;">
+                                            Body Text — The quick brown fox jumps over the lazy dog.
+                                        </p>
+                                        <p class="mb-2" style="font-family: '{{ $theme_font_sans }}', sans-serif; font-size: 14px; font-weight: 400;">
+                                            Teks isi paragraf akan tampil seperti ini. Silakan pilih font yang sesuai dengan karakter acara Anda.
+                                        </p>
+                                        <p class="mb-0" style="font-family: '{{ $theme_font_display }}', sans-serif; font-size: 24px; font-weight: 700;">
+                                            Judul Besar Acara
+                                        </p>
+                                        <p class="mb-0" style="font-family: '{{ $theme_font_display }}', sans-serif; font-size: 18px; font-weight: 600;">
+                                            Subjudul & Heading
+                                        </p>
+                                    </div>
+                                </div>
+
+                                @php
+                                    $previewSans = collect($fonts['sans'])->firstWhere('id', $theme_font_sans);
+                                    $previewDisplay = collect($fonts['display'])->firstWhere('id', $theme_font_display);
+                                    $previewSansW = $previewSans['weights'] ?? 'wght@400;500;600;700';
+                                    $previewDisplayW = $previewDisplay['weights'] ?? 'wght@500;600;700;800';
+                                    $previewSansUrl = str_replace(' ', '+', $theme_font_sans);
+                                    $previewDisplayUrl = str_replace(' ', '+', $theme_font_display);
+                                @endphp
+                                <link href="https://fonts.googleapis.com/css2?family={{ $previewSansUrl }}:{{ $previewSansW }}&family={{ $previewDisplayUrl }}:{{ $previewDisplayW }}&display=swap" rel="stylesheet">
                             </div>
                         </div>
 
-                        {{-- Font preview --}}
-                        <div class="rounded-3 border p-4 mb-3" style="background: #fafafa;">
-                            <span class="text-muted small d-block mb-2">Pratinjau Font:</span>
-                            <div>
-                                <p class="mb-2" style="font-family: '{{ $theme_font_sans }}', sans-serif; font-size: 16px; font-weight: 600;">
-                                    Body Text — The quick brown fox jumps over the lazy dog.
-                                </p>
-                                <p class="mb-2" style="font-family: '{{ $theme_font_sans }}', sans-serif; font-size: 14px; font-weight: 400;">
-                                    Teks isi paragraf akan tampil seperti ini. Silakan pilih font yang sesuai dengan karakter acara Anda.
-                                </p>
-                                <p class="mb-0" style="font-family: '{{ $theme_font_display }}', sans-serif; font-size: 24px; font-weight: 700;">
-                                    Judul Besar Acara
-                                </p>
-                                <p class="mb-0" style="font-family: '{{ $theme_font_display }}', sans-serif; font-size: 18px; font-weight: 600;">
-                                    Subjudul & Heading
-                                </p>
+                        {{-- ==================== --}}
+                        {{-- H. OVERLAY --}}
+                        {{-- ==================== --}}
+                        <div class="card border shadow-none mb-4">
+                            <div class="card-header bg-light py-3">
+                                <h6 class="fw-semibold mb-0">
+                                    <i class="ti ti-video text-danger me-1"></i> Livestream Overlay
+                                </h6>
                             </div>
-                        </div>
+                            <div class="card-body">
+                                <p class="text-muted small mb-3">
+                                    Gunakan URL di bawah sebagai <strong>Browser Source</strong> di OBS Studio / Streamlabs dengan ukuran <code>1920×1080</code>.
+                                    Background hijau (<code>#00FF00</code>) adalah chroma key untuk tangkapan kamera.
+                                    Halaman akan auto-refresh data vote setiap 10 detik.
+                                </p>
 
-                        {{-- Preview font loader --}}
-                        @php
-                            $previewSans = collect($fonts['sans'])->firstWhere('id', $theme_font_sans);
-                            $previewDisplay = collect($fonts['display'])->firstWhere('id', $theme_font_display);
-                            $previewSansW = $previewSans['weights'] ?? 'wght@400;500;600;700';
-                            $previewDisplayW = $previewDisplay['weights'] ?? 'wght@500;600;700;800';
-                            $previewSansUrl = str_replace(' ', '+', $theme_font_sans);
-                            $previewDisplayUrl = str_replace(' ', '+', $theme_font_display);
-                        @endphp
-                        <link href="https://fonts.googleapis.com/css2?family={{ $previewSansUrl }}:{{ $previewSansW }}&family={{ $previewDisplayUrl }}:{{ $previewDisplayW }}&display=swap" rel="stylesheet">
+                                @php
+                                    use Illuminate\Support\Facades\Auth;
+                                    $eventnerObj = Auth::user()->eventner;
+                                    $baseOverlayUrl = $eventnerObj ? event_url($eventnerObj, 'overlay') : '#';
+                                @endphp
 
-                        {{-- ===== LIVESTREAM OVERLAY INFO ===== --}}
-                        <hr class="my-4">
-                        <div class="rounded-3 border border-warning-subtle bg-warning-subtle bg-opacity-10 p-4">
-                            <h6 class="fw-semibold mb-3 text-dark">
-                                <i class="ti ti-video text-danger me-1"></i> 🔴 Livestream Overlay
-                            </h6>
-                            <p class="text-muted small mb-3">
-                                Gunakan URL di bawah sebagai <strong>Browser Source</strong> di OBS Studio / Streamlabs dengan ukuran <code>1920×1080</code>.
-                                Background hijau (<code>#00FF00</code>) adalah chroma key untuk tangkapan kamera.
-                                Halaman akan auto-refresh data vote setiap 10 detik.
-                            </p>
-
-                            @php
-                                use Illuminate\Support\Facades\Auth;
-                                $eventnerObj = Auth::user()->eventner;
-                                $baseOverlayUrl = $eventnerObj ? event_url($eventnerObj, 'overlay') : '#';
-                            @endphp
-
-                            <div class="table-responsive">
-                                <table class="table table-sm table-borderless align-middle mb-0">
-                                    <thead>
-                                        <tr class="small text-muted">
-                                            <th style="width: 100px;">Mode</th>
-                                            <th>URL</th>
-                                            <th style="width: 80px;"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php
-                                            $modes = [
-                                                ['mode' => 'full', 'label' => 'Default', 'desc' => 'Greenscreen + Vote + Kegiatan'],
-                                                ['mode' => 'greenscreen', 'label' => 'Greenscreen', 'desc' => 'Chroma key full layar'],
-                                                ['mode' => 'vote', 'label' => 'Vote', 'desc' => 'Leaderboard vote fullscreen'],
-                                                ['mode' => 'kegiatan', 'label' => 'Kegiatan', 'desc' => 'Daftar kategori lomba'],
-                                            ];
-                                        @endphp
-                                        @foreach($modes as $m)
-                                            <tr>
-                                                <td>
-                                                    <span class="badge bg-dark text-white rounded-pill px-2">{{ $m['label'] }}</span>
-                                                </td>
-                                                <td>
-                                                    <code class="text-dark small" style="word-break: break-all;" id="overlay-url-{{ $m['mode'] }}">
-                                                        {{ $baseOverlayUrl }}?mode={{ $m['mode'] }}
-                                                    </code>
-                                                    <div class="text-muted small mt-0">{{ $m['desc'] }}</div>
-                                                </td>
-                                                <td>
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2"
-                                                        onclick="navigator.clipboard.writeText('{{ $baseOverlayUrl }}?mode={{ $m['mode'] }}'); alert('URL berhasil disalin!');">
-                                                        <i class="ti ti-copy fs-4"></i>
-                                                    </button>
-                                                </td>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-borderless align-middle mb-0">
+                                        <thead>
+                                            <tr class="small text-muted">
+                                                <th style="width: 100px;">Mode</th>
+                                                <th>URL</th>
+                                                <th style="width: 80px;"></th>
                                             </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            @php
+                                                $modes = [
+                                                    ['mode' => 'full', 'label' => 'Default', 'desc' => 'Greenscreen + Vote + Kegiatan'],
+                                                    ['mode' => 'greenscreen', 'label' => 'Greenscreen', 'desc' => 'Chroma key full layar'],
+                                                    ['mode' => 'vote', 'label' => 'Vote', 'desc' => 'Leaderboard vote fullscreen'],
+                                                    ['mode' => 'kegiatan', 'label' => 'Kegiatan', 'desc' => 'Daftar kategori lomba'],
+                                                ];
+                                            @endphp
+                                            @foreach($modes as $m)
+                                                <tr>
+                                                    <td>
+                                                        <span class="badge bg-dark text-white rounded-pill px-2">{{ $m['label'] }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <code class="text-dark small" style="word-break: break-all;" id="overlay-url-{{ $m['mode'] }}">
+                                                            {{ $baseOverlayUrl }}?mode={{ $m['mode'] }}
+                                                        </code>
+                                                        <div class="text-muted small mt-0">{{ $m['desc'] }}</div>
+                                                    </td>
+                                                    <td>
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                                            onclick="navigator.clipboard.writeText('{{ $baseOverlayUrl }}?mode={{ $m['mode'] }}'); alert('URL berhasil disalin!');">
+                                                            <i class="ti ti-copy fs-4"></i>
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="{{ $baseOverlayUrl }}?mode=full" target="_blank" class="btn btn-sm btn-danger px-3">
+                                        <i class="ti ti-external-link me-1"></i> Buka Halaman Overlay
+                                    </a>
+                                </div>
                             </div>
-
-                            <div class="mt-3">
-                                <a href="{{ $baseOverlayUrl }}?mode=full" target="_blank" class="btn btn-sm btn-danger px-3">
-                                    <i class="ti ti-external-link me-1"></i> Buka Halaman Overlay
-                                </a>
-                            </div>
-                        </div>
-                        </div>
                         </div>
 
+                        {{-- ==================== --}}
+                        {{-- TOMBOL SIMPAN --}}
+                        {{-- ==================== --}}
                         <div class="d-flex justify-content-end mt-2">
                             <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" wire:target="save">
                                 <i class="ti ti-device-floppy me-1"></i> Simpan Perubahan
