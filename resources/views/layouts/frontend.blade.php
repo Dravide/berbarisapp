@@ -375,28 +375,26 @@
 
 </html>
 
-{{-- Poster Modal — simple preview --}}
-<div id="posterModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/80 backdrop-blur-sm" onclick="closePosterModal()">
-    <div class="relative max-w-4xl w-full mx-4 max-h-[90vh] flex items-center justify-center" onclick="event.stopPropagation()">
-        <button type="button" onclick="closePosterModal()" class="absolute -top-10 right-0 text-white/80 hover:text-white text-2xl leading-none border-0 bg-transparent cursor-pointer z-10">
-            <i class="ti ti-x"></i>
-        </button>
-        <img id="posterModalImg" src="" alt="Poster" class="max-w-full max-h-[85vh] w-auto h-auto rounded-lg shadow-2xl object-contain">
+{{-- Poster Modal --}}
+<div id="posterModal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 bg-transparent shadow-none">
+            <div class="modal-body text-center p-0 position-relative">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 z-1 m-2" aria-label="Close" onclick="closePosterModal()"></button>
+                <img id="posterModalImg" src="" alt="Poster" class="img-fluid rounded shadow">
+            </div>
+        </div>
     </div>
 </div>
 <script>
 function openPosterModal(src) {
     document.getElementById('posterModalImg').src = src;
-    document.getElementById('posterModal').classList.remove('hidden');
-    document.getElementById('posterModal').classList.add('flex');
-    document.body.style.overflow = 'hidden';
+    var modal = new bootstrap.Modal(document.getElementById('posterModal'));
+    modal.show();
 }
 function closePosterModal() {
-    document.getElementById('posterModal').classList.add('hidden');
-    document.getElementById('posterModal').classList.remove('flex');
-    document.body.style.overflow = '';
+    var modalEl = document.getElementById('posterModal');
+    var modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) modal.hide();
 }
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closePosterModal();
-});
 </script>
