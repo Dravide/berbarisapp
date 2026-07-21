@@ -47,7 +47,7 @@
                             <p>Tambahkan Jenis Lomba (Parent) terlebih dahulu, lalu tambahkan Tingkat di dalamnya.</p>
                         </div>
                     @else
-                        <div id="parent-sortable" wire:ignore>
+                        <div id="parent-sortable">
                             @foreach($this->parentCategories as $parent)
                                 <div class="mb-3" data-id="{{ $parent->id }}">
                                     <div class="d-flex align-items-center bg-light p-3 rounded border sortable-handle">
@@ -73,7 +73,7 @@
                                             @if($parent->children->isEmpty())
                                                 <p class="text-muted fs-3 py-2"><i>Belum ada tingkat lomba. Gunakan form untuk menambahkan.</i></p>
                                             @else
-                                                <div class="child-sortable" data-parent="{{ $parent->id }}" wire:ignore>
+                                                <div class="child-sortable" data-parent="{{ $parent->id }}">
                                                     @foreach($parent->children as $child)
                                                         <div class="d-flex align-items-center py-2 border-bottom" data-id="{{ $child->id }}">
                                                             <i class="ti ti-grip-vertical text-muted me-2" style="cursor: grab;"></i>
@@ -259,16 +259,25 @@
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    initSortables();
-    Livewire.hook('morph.added', () => initSortables());
-    Livewire.hook('morph.updated', () => initSortables());
-});
-
 function initSortables() {
+    // Destroy existing before re-create
+    ['parent-sortable', 'orphan-sortable'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el && el._sortable) {
+            el._sortable.destroy();
+            delete el._sortable;
+        }
+    });
+    document.querySelectorAll('.child-sortable').forEach(function(el) {
+        if (el._sortable) {
+            el._sortable.destroy();
+            delete el._sortable;
+        }
+    });
+
     // Parents
     var parentEl = document.getElementById('parent-sortable');
-    if (parentEl && !parentEl._sortable) {
+    if (parentEl) {
         parentEl._sortable = new Sortable(parentEl, {
             handle: '.sortable-handle',
             animation: 200,
@@ -284,24 +293,22 @@ function initSortables() {
 
     // Children per parent
     document.querySelectorAll('.child-sortable').forEach(function(el) {
-        if (!el._sortable) {
-            el._sortable = new Sortable(el, {
-                handle: '.ti-grip-vertical',
-                animation: 200,
-                onEnd: function(evt) {
-                    var ids = [];
-                    el.querySelectorAll(':scope > .d-flex').forEach(function(item) {
-                        ids.push(item.dataset.id);
-                    });
-                    Livewire.dispatch('updateChildSort', { orderedIds: ids });
-                }
-            });
-        }
+        el._sortable = new Sortable(el, {
+            handle: '.ti-grip-vertical',
+            animation: 200,
+            onEnd: function(evt) {
+                var ids = [];
+                el.querySelectorAll(':scope > .d-flex').forEach(function(item) {
+                    ids.push(item.dataset.id);
+                });
+                Livewire.dispatch('updateChildSort', { orderedIds: ids });
+            }
+        });
     });
 
     // Orphans
     var orphanEl = document.getElementById('orphan-sortable');
-    if (orphanEl && !orphanEl._sortable) {
+    if (orphanEl) {
         orphanEl._sortable = new Sortable(orphanEl, {
             handle: '.ti-grip-vertical',
             animation: 200,
@@ -315,5 +322,11 @@ function initSortables() {
         });
     }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    initSortables();
+    Livewire.hook('morph.added', () => initSortables());
+    Livewire.hook('morph.updated', () => initSortables());
+});
 </script>
 @endpush
