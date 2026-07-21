@@ -306,6 +306,22 @@
 
                 {{-- Galeri Foto --}}
                 @php $galleries = \App\Models\EventGallery::where('eventner_id', $eventner->id)->orderBy('sort_order')->latest()->get(); @endphp
+
+                {{-- Poster A4 Card (kalo ada) — tampil sebagai card terpisah, klik modal --}}
+                @if($eventner->poster)
+                    <div class="surface-card p-6">
+                        <h3 class="font-display text-lg font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
+                            <i class="ti ti-file-text text-primary"></i>
+                            Poster Acara
+                        </h3>
+                        <div class="flex justify-center">
+                            <a href="javascript:void(0)" onclick="openPosterModal('{{ asset('storage/' . $eventner->poster) }}')" class="inline-block max-w-sm w-full rounded-xl overflow-hidden border border-outline-variant/30 hover:shadow-lg transition shadow-sm">
+                                <img src="{{ asset('storage/' . $eventner->poster) }}" alt="Poster {{ $eventner->nama_event }}" class="w-full h-auto object-contain" loading="lazy">
+                            </a>
+                        </div>
+                    </div>
+                @endif
+
                 @if($galleries->isNotEmpty())
                     <div class="surface-card p-6">
                         <h3 class="font-display text-lg font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
@@ -620,3 +636,30 @@ document.addEventListener('alpine:init', () => {
     }));
 });
 </script>
+
+{{-- Poster Modal --}}
+<div id="posterModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-black/80 backdrop-blur-sm" onclick="closePosterModal()">
+    <div class="relative max-w-4xl w-full mx-4 max-h-[90vh] flex items-center justify-center" onclick="event.stopPropagation()">
+        <button type="button" onclick="closePosterModal()" class="absolute -top-10 right-0 text-white/80 hover:text-white text-2xl leading-none border-0 bg-transparent cursor-pointer z-10">
+            <i class="ti ti-x"></i>
+        </button>
+        <img id="posterModalImg" src="" alt="Poster" class="max-w-full max-h-[85vh] w-auto h-auto rounded-lg shadow-2xl object-contain">
+    </div>
+</div>
+<script>
+function openPosterModal(src) {
+    document.getElementById('posterModalImg').src = src;
+    document.getElementById('posterModal').classList.remove('hidden');
+    document.getElementById('posterModal').classList.add('flex');
+    document.body.style.overflow = 'hidden';
+}
+function closePosterModal() {
+    document.getElementById('posterModal').classList.add('hidden');
+    document.getElementById('posterModal').classList.remove('flex');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closePosterModal();
+});
+</script>
+</div>
