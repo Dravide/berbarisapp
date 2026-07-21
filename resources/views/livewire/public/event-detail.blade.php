@@ -232,7 +232,7 @@
                 {{-- Kuota Kategori --}}
                 @if($eventner->competitionCategories->count() > 0)
                     @php
-                        $parents = $eventner->competitionCategories->whereNull('parent_id');
+                        $parents = $eventner->competitionCategories->whereNull('parent_id')->sortBy('sort_order');
                         $children = $eventner->competitionCategories->whereNotNull('parent_id');
                     @endphp
                     <div class="surface-card p-6">
@@ -255,7 +255,7 @@
                                             <div class="h-full rounded-full transition-all duration-500 {{ $pct >= 100 ? 'bg-red-500' : ($pct >= 80 ? 'bg-amber-500' : 'bg-primary') }}" style="width: {{ $pct }}%"></div>
                                         </div>
                                     @else
-                                        @foreach($parent->children as $child)
+                                        @foreach($parent->children->sortBy('sort_order') as $child)
                                             @php $pct = $child->kuota ? min(100, round($child->registrations->count() / $child->kuota * 100)) : 0; @endphp
                                             <div class="mb-2 last:mb-0">
                                                 <div class="flex justify-between items-center mb-1 text-xs font-semibold">
