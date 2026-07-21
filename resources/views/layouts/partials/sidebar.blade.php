@@ -135,6 +135,15 @@
               <span class="hide-menu">Profil Event</span>
             </a>
           </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.event-qr.*') ? 'active' : '' }}"
+              href="{{ route('eventner.event-qr.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-qrcode"></i>
+              </span>
+              <span class="hide-menu">QR Link Event</span>
+            </a>
+          </li>
 
           {{-- ============================================ --}}
           {{-- PESERTA --}}

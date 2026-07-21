@@ -35,3 +35,4 @@ Route::get('gallery', App\Livewire\Eventner\Gallery\Index::class)->name('eventne
 Route::get('sponsors', App\Livewire\Eventner\Sponsor\Index::class)->name('eventner.sponsors.index');
 Route::get('tenants', App\Livewire\Eventner\Tenant\Index::class)->name('eventner.tenants.index');
 Route::get('finance', App\Livewire\Eventner\FinanceDashboard::class)->name('eventner.finance.index');
+Route::get('event-qr', App\Livewire\Eventner\EventQr::class)->name('eventner.event-qr.index');
