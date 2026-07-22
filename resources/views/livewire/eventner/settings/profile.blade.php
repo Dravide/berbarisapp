@@ -252,11 +252,11 @@
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <div class="col-md-6 mb-3">
+                                    <div class="col-12 mb-3">
                                         <label class="form-label">Puncak Tanggal Pelaksanaan <span class="text-danger">*</span></label>
                                         <div class="d-flex align-items-center gap-2">
                                             <input type="date" class="form-control" wire:model="tanggal" required>
-                                            <span class="text-muted">s.d.</span>
+                                            <span class="text-muted fw-medium">s.d.</span>
                                             <input type="date" class="form-control" wire:model="tanggal_akhir">
                                         </div>
                                         @error('tanggal') <span class="text-danger fs-2">{{ $message }}</span> @enderror
