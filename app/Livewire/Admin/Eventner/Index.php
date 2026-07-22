@@ -65,6 +65,9 @@ class Index extends Component
 
     public function save()
     {
+        // Convert empty string to null for nullable date fields
+        $this->tanggal_akhir = $this->tanggal_akhir ?: null;
+
         $rules = [
             'nama_event' => 'required|string|max:255',
             'diselenggarakan_oleh' => 'required|string|max:255',
@@ -108,7 +111,7 @@ class Index extends Component
                 'lokasi' => $this->lokasi,
                 'venue' => $this->venue,
                 'tanggal' => $this->tanggal,
-                'tanggal_akhir' => $this->tanggal_akhir,
+                'tanggal_akhir' => $this->tanggal_akhir ?: null,
                 'tanggal_pendaftaran' => $this->tanggal_pendaftaran,
                 'technical_meeting' => $this->technical_meeting,
                 'tingkat_perlombaan' => $this->tingkat_perlombaan,
@@ -137,7 +140,7 @@ class Index extends Component
                 'lokasi' => $this->lokasi,
                 'venue' => $this->venue,
                 'tanggal' => $this->tanggal,
-                'tanggal_akhir' => $this->tanggal_akhir,
+                'tanggal_akhir' => $this->tanggal_akhir ?: null,
                 'tanggal_pendaftaran' => $this->tanggal_pendaftaran,
                 'technical_meeting' => $this->technical_meeting,
                 'tingkat_perlombaan' => $this->tingkat_perlombaan,

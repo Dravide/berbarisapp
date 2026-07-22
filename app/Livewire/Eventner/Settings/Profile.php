@@ -116,6 +116,9 @@ class Profile extends Component
 
     public function save()
     {
+        // Convert empty string to null so DB saves null, not ''
+        $this->tanggal_akhir = $this->tanggal_akhir ?: null;
+
         $this->validate([
             'nama_event' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
@@ -212,7 +215,7 @@ class Profile extends Component
             'lokasi' => strip_tags($this->lokasi),
             'venue' => strip_tags($this->venue),
             'tanggal' => $this->tanggal,
-            'tanggal_akhir' => $this->tanggal_akhir,
+            'tanggal_akhir' => $this->tanggal_akhir ?: null,
             'tanggal_pendaftaran' => strip_tags($this->tanggal_pendaftaran),
             'technical_meeting' => strip_tags($this->technical_meeting),
             'tingkat_perlombaan' => strip_tags($this->tingkat_perlombaan),
