@@ -30,6 +30,7 @@ class Eventner extends Model
         'lokasi',
         'venue',
         'tanggal',
+        'tanggal_akhir',
         'tanggal_pendaftaran',
         'technical_meeting',
         'tingkat_perlombaan',
