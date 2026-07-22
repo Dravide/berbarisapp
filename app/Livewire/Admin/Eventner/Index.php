@@ -23,6 +23,7 @@ class Index extends Component
     public $lokasi = '';
     public $venue = '';
     public $tanggal = '';
+    public $tanggal_akhir = '';
     public $tanggal_pendaftaran = '';
     public $technical_meeting = '';
     public $tingkat_perlombaan = '';
@@ -107,6 +108,7 @@ class Index extends Component
                 'lokasi' => $this->lokasi,
                 'venue' => $this->venue,
                 'tanggal' => $this->tanggal,
+                'tanggal_akhir' => $this->tanggal_akhir,
                 'tanggal_pendaftaran' => $this->tanggal_pendaftaran,
                 'technical_meeting' => $this->technical_meeting,
                 'tingkat_perlombaan' => $this->tingkat_perlombaan,
@@ -135,6 +137,7 @@ class Index extends Component
                 'lokasi' => $this->lokasi,
                 'venue' => $this->venue,
                 'tanggal' => $this->tanggal,
+                'tanggal_akhir' => $this->tanggal_akhir,
                 'tanggal_pendaftaran' => $this->tanggal_pendaftaran,
                 'technical_meeting' => $this->technical_meeting,
                 'tingkat_perlombaan' => $this->tingkat_perlombaan,
@@ -160,6 +163,7 @@ class Index extends Component
         $this->lokasi = $eventner->lokasi;
         $this->venue = $eventner->venue;
         $this->tanggal = $eventner->tanggal;
+        $this->tanggal_akhir = $eventner->tanggal_akhir;
         $this->tanggal_pendaftaran = $eventner->tanggal_pendaftaran;
         $this->technical_meeting = $eventner->technical_meeting;
         $this->tingkat_perlombaan = $eventner->tingkat_perlombaan;

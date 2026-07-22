@@ -254,8 +254,14 @@
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Puncak Tanggal Pelaksanaan <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control" wire:model="tanggal" required>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <input type="date" class="form-control" wire:model="tanggal" required>
+                                            <span class="text-muted">s.d.</span>
+                                            <input type="date" class="form-control" wire:model="tanggal_akhir">
+                                        </div>
                                         @error('tanggal') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                        @error('tanggal_akhir') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                        <small class="text-muted">Kosongkan akhir jika hanya 1 hari</small>
                                     </div>
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label">Jadwal Pendaftaran Akhir (Opsional)</label>

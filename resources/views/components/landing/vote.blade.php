@@ -17,7 +17,11 @@
         <div class="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             @foreach($events as $event)
             @php
-                $tgl = $event->tanggal ? \Illuminate\Support\Carbon::parse($event->tanggal)->translatedFormat('d M Y') : null;
+                $tgl = $event->tanggal
+                    ? ($event->tanggal_akhir
+                        ? \Illuminate\Support\Carbon::parse($event->tanggal)->translatedFormat('d M') . ' - ' . \Illuminate\Support\Carbon::parse($event->tanggal_akhir)->translatedFormat('d M Y')
+                        : \Illuminate\Support\Carbon::parse($event->tanggal)->translatedFormat('d M Y'))
+                    : null;
             @endphp
             <div class="surface-card surface-card-hover group flex flex-col overflow-hidden p-0">
                 <a href="{{ event_url($event, 'detail') }}" class="relative block aspect-[4/3] overflow-hidden">

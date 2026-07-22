@@ -66,9 +66,9 @@
             }
             if ($_ev->tanggal) {
                 $_ld['startDate'] = \Carbon\Carbon::parse($_ev->tanggal)->toIso8601String();
-            }
-            if ($_ev->tanggal_pendaftaran) {
-                $_ld['endDate'] = \Carbon\Carbon::parse($_ev->tanggal_pendaftaran)->toIso8601String();
+                $_ld['endDate'] = $_ev->tanggal_akhir
+                    ? \Carbon\Carbon::parse($_ev->tanggal_akhir)->toIso8601String()
+                    : \Carbon\Carbon::parse($_ev->tanggal)->toIso8601String();
             }
             if ($_ev->lokasi) {
                 $_loc = [

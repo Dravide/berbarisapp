@@ -126,7 +126,13 @@
                                         </li>
                                         <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                                             <span class="text-muted">Tanggal Pelaksanaan</span>
-                                            <span class="fw-bold">{{ \Carbon\Carbon::parse($eventner->tanggal)->format('d F Y') }}</span>
+                                            <span class="fw-bold">
+                                                @if($eventner->tanggal_akhir)
+                                                    {{ \Carbon\Carbon::parse($eventner->tanggal)->format('d M') }} - {{ \Carbon\Carbon::parse($eventner->tanggal_akhir)->format('d F Y') }}
+                                                @else
+                                                    {{ \Carbon\Carbon::parse($eventner->tanggal)->format('d F Y') }}
+                                                @endif
+                                            </span>
                                         </li>
                                         <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                                             <span class="text-muted">Batas Pendaftaran</span>

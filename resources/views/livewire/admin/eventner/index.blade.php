@@ -75,7 +75,15 @@
                                     <span class="text-muted fs-2">{{ $eventner->venue ?? '-' }}</span>
                                 </td>
                                 <td>
-                                    {{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d F Y') }}
+                                    @php
+                                        $tgl = \Carbon\Carbon::parse($eventner->tanggal);
+                                    @endphp
+                                    {{ $tgl->translatedFormat('d M') }}
+                                    @if($eventner->tanggal_akhir)
+                                        - {{ \Carbon\Carbon::parse($eventner->tanggal_akhir)->translatedFormat('d M Y') }}
+                                    @else
+                                        {{ $tgl->translatedFormat('Y') }}
+                                    @endif
                                 </td>
                                 <td>
                                     <span
@@ -159,6 +167,15 @@
                                 <input type="date" class="form-control @error('tanggal') is-invalid @enderror"
                                     id="tanggal" wire:model="tanggal">
                                 @error('tanggal') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" for="tanggal_akhir">Tanggal Akhir Event <span
+                                        class="text-secondary">(Opsional)</span></label>
+                                <input type="date"
+                                    class="form-control @error('tanggal_akhir') is-invalid @enderror"
+                                    id="tanggal_akhir" wire:model="tanggal_akhir">
+                                @error('tanggal_akhir') <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label" for="tanggal_pendaftaran">Batas Pendaftaran <span

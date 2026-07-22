@@ -23,6 +23,7 @@ class Profile extends Component
     public $lokasi;
     public $venue;
     public $tanggal;
+    public $tanggal_akhir;
     public $tanggal_pendaftaran;
     public $technical_meeting;
     public $tingkat_perlombaan;
@@ -78,6 +79,7 @@ class Profile extends Component
         $this->lokasi = $eventner->lokasi;
         $this->venue = $eventner->venue;
         $this->tanggal = $eventner->tanggal;
+        $this->tanggal_akhir = $eventner->tanggal_akhir;
         $this->tanggal_pendaftaran = $eventner->tanggal_pendaftaran;
         $this->technical_meeting = $eventner->technical_meeting;
         $this->tingkat_perlombaan = $eventner->tingkat_perlombaan;
@@ -121,6 +123,7 @@ class Profile extends Component
             'lokasi' => 'required|string|max:255',
             'venue' => 'nullable|string|max:255',
             'tanggal' => 'required|date',
+            'tanggal_akhir' => 'nullable|date|after_or_equal:tanggal',
             'tanggal_pendaftaran' => 'nullable|string|max:255',
             'technical_meeting' => 'nullable|string|max:255',
             'tingkat_perlombaan' => 'nullable|string|max:255',
@@ -145,10 +148,13 @@ class Profile extends Component
         $tm = $this->technical_meeting ? \Carbon\Carbon::parse($this->technical_meeting) : null;
         $tglPendaftaran = $this->tanggal_pendaftaran ? \Carbon\Carbon::parse($this->tanggal_pendaftaran) : null;
         $tglEvent = $this->tanggal ? \Carbon\Carbon::parse($this->tanggal) : null;
+        $tglEventAkhir = $this->tanggal_akhir ? \Carbon\Carbon::parse($this->tanggal_akhir) : null;
 
         if ($tglPendaftaran && $now->gt($tglPendaftaran)) {
             $this->registration_status = 'closed';
         } elseif ($tglEvent && $now->gt($tglEvent)) {
+            $this->registration_status = 'closed';
+        } elseif ($tglEventAkhir && $now->gt($tglEventAkhir)) {
             $this->registration_status = 'closed';
         } elseif ($tm && $now->lt($tm)) {
             $this->registration_status = 'booking';
@@ -206,6 +212,7 @@ class Profile extends Component
             'lokasi' => strip_tags($this->lokasi),
             'venue' => strip_tags($this->venue),
             'tanggal' => $this->tanggal,
+            'tanggal_akhir' => $this->tanggal_akhir,
             'tanggal_pendaftaran' => strip_tags($this->tanggal_pendaftaran),
             'technical_meeting' => strip_tags($this->technical_meeting),
             'tingkat_perlombaan' => strip_tags($this->tingkat_perlombaan),

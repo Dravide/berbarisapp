@@ -27,7 +27,7 @@
             <img src="{{ public_path('storage/' . $eventner->logo_event) }}" alt="Logo">
         @endif
         <h1>{{ $eventner->nama_event }}</h1>
-        <p>{{ $eventner->diselenggarakan_oleh }} &bull; {{ $eventner->tanggal ? \Carbon\Carbon::parse($eventner->tanggal)->format('d M Y') : '' }}</p>
+        <p>{{ $eventner->diselenggarakan_oleh }} &bull; {{ $eventner->tanggal ? \Carbon\Carbon::parse($eventner->tanggal)->format('d M Y') : '' }}@if($eventner->tanggal_akhir) - {{ \Carbon\Carbon::parse($eventner->tanggal_akhir)->format('d M Y') }}@endif</p>
     </div>
 
     <h2 style="font-size: 13px; font-weight: 700; color: #1a1a2e; margin-bottom: 10px;">PETUNJUK PENILAIAN (JUKNIS)</h2>

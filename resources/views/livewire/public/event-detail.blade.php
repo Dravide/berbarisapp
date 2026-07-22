@@ -75,8 +75,8 @@
             </div>
 
             {{-- Countdown Timer --}}
-            @if($eventner->tanggal && \Carbon\Carbon::parse($eventner->tanggal)->isFuture())
-                <div class="md:col-span-1" x-data="countdown('{{ \Carbon\Carbon::parse($eventner->tanggal)->toIso8601String() }}')">
+            @if($eventner->tanggal && \Carbon\Carbon::parse($eventner->tanggal_akhir ?? $eventner->tanggal)->isFuture())
+                <div class="md:col-span-1" x-data="countdown('{{ \Carbon\Carbon::parse($eventner->tanggal_akhir ?? $eventner->tanggal)->toIso8601String() }}')">
                     <div class="surface-card p-4 border border-outline-variant/40 bg-white">
                         <span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider block text-center mb-3">Menuju Hari H Perlombaan</span>
                         <div class="grid grid-cols-4 gap-2 max-w-[280px] mx-auto">
@@ -118,7 +118,13 @@
                         </div>
                         <div>
                             <span class="overline !text-[10px] block">Tanggal</span>
-                            <span class="text-sm font-bold text-deep-slate">{{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d F Y') }}</span>
+                            <span class="text-sm font-bold text-deep-slate">
+                                @if($eventner->tanggal_akhir)
+                                    {{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d M') }} - {{ \Carbon\Carbon::parse($eventner->tanggal_akhir)->translatedFormat('d F Y') }}
+                                @else
+                                    {{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d F Y') }}
+                                @endif
+                            </span>
                         </div>
                     </div>
                 @endif

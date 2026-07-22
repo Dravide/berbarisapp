@@ -247,7 +247,9 @@
                 <div class="md:col-span-1">
                     @php
                         $tanggalLabel = $eventner->tanggal
-                            ? \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('l, d F Y')
+                            ? ($eventner->tanggal_akhir
+                                ? \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d M') . ' - ' . \Carbon\Carbon::parse($eventner->tanggal_akhir)->translatedFormat('d F Y')
+                                : \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('l, d F Y'))
                             : null;
                     @endphp
                     <div class="surface-card overflow-hidden sticky top-24">
