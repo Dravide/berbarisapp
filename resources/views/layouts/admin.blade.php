@@ -76,6 +76,17 @@
   <script src="{{ asset('templates/assets/libs/jquery/dist/jquery.min.js') }}"></script>
   <script src="{{ asset('templates/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
   <script src="{{ asset('templates/assets/libs/simplebar/dist/simplebar.min.js') }}"></script>
+  <script>
+    // Auto-scroll sidebar ke item aktif
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(function() {
+        const active = document.querySelector('.sidebar-link.active');
+        if (active) {
+          active.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+      }, 300);
+    });
+  </script>
   <script src="{{ asset('templates/assets/js/theme/app.init.js') }}"></script>
   <script src="{{ asset('templates/assets/js/theme/theme.js') }}"></script>
   <script src="{{ asset('templates/assets/js/theme/app.min.js') }}"></script>
