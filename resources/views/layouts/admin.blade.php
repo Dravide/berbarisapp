@@ -68,29 +68,7 @@
   </div>
 
   <!-- Search Modal -->
-  <div class="modal fade" id="exampleModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-scrollable modal-lg modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header border-bottom">
-          <input type="search" class="form-control fs-3" placeholder="Search here" id="search" />
-          <a href="javascript:void(0)" data-bs-dismiss="modal" class="lh-1">
-            <i class="ti ti-x fs-5 ms-3"></i>
-          </a>
-        </div>
-        <div class="modal-body message-body" data-simplebar>
-          <h5 class="mb-0 fs-5 p-1">Quick Page Links</h5>
-          <ul class="list list-unstyled p-2" id="search-results">
-            <li class="p-1 mb-1 bg-hover-light-black">
-              <a href="{{ route('dashboard') }}">
-                <span class="d-block">Dashboard</span>
-                <span class="text-muted d-block">/dashboard</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
+  <livewire:search-links />
 
   <div class="dark-transparent sidebartoggler"></div>
 
