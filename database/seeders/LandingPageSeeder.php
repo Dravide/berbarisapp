@@ -21,7 +21,7 @@ class LandingPageSeeder extends Seeder
         // Sections order & visibility
         Setting::set('landing_sections_order', json_encode([
             'hero', 'features', 'about', 'statistics', 'eventners', 'ticket', 'vote',
-            'testimonials', 'faq', 'gallery', 'cta', 'contact',
+            'schedule', 'testimonials', 'faq', 'gallery', 'cta', 'contact',
         ]));
 
         Setting::set('landing_sections_active', json_encode([
@@ -32,6 +32,7 @@ class LandingPageSeeder extends Seeder
             'eventners' => true,
             'ticket' => true,
             'vote' => true,
+            'schedule' => true,
             'testimonials' => true,
             'faq' => true,
             'gallery' => true,
@@ -42,14 +43,14 @@ class LandingPageSeeder extends Seeder
         // Hero
         Setting::set('landing_hero', json_encode([
             'heading' => 'Kelola Event & Kompetisi dengan Mudah',
-            'subheading' => 'Platform all-in-one untuk penyelenggara event. Pendaftaran digital, penilaian real-time, voting online, e-tiket, live scoreboard — semua dalam satu dashboard.',
+            'subheading' => 'Platform all-in-one untuk penyelenggara event. Pendaftaran digital, penilaian real-time, voting online, e-tiket, sertifikat, live scoreboard — semua dalam satu dashboard.',
             'cta_text' => 'Mulai Sekarang',
             'cta_url' => '/register/eventner',
             'video_url' => '',
             'background_image' => '',
         ]));
 
-        // Features
+        // Features — 9 fitur
         Setting::set('landing_features', json_encode([
             'title' => 'Fitur Lengkap untuk Event Sukses',
             'items' => [
@@ -83,13 +84,28 @@ class LandingPageSeeder extends Seeder
                     'title' => 'Drawing & Undian',
                     'description' => 'Sistem undian digital untuk menentukan urutan tampil. Animasi spin interaktif, hasil langsung tampil di layar.',
                 ],
+                [
+                    'icon' => 'icon9.png',
+                    'title' => 'Sertifikat Digital',
+                    'description' => 'Buat dan cetak sertifikat otomatis untuk juara dan peserta. Template kustom dengan data dinamis dari hasil penilaian.',
+                ],
+                [
+                    'icon' => 'icon10.png',
+                    'title' => 'Livestream Overlay',
+                    'description' => 'Overlay live streaming untuk tampil profesional di YouTube/Facebook. Tampilkan skor, nama peserta, dan sponsor real-time.',
+                ],
+                [
+                    'icon' => 'icon11.png',
+                    'title' => 'Sponsor & Tenant',
+                    'description' => 'Kelola sponsor event dan tenant stand. Tampilkan logo sponsor di overlay livestream dan halaman publik.',
+                ],
             ],
         ]));
 
         // About
         Setting::set('landing_about', json_encode([
             'heading' => 'Platform Event & Kompetisi Terpadu',
-            'description' => 'BARIS APP hadir untuk menyederhanakan manajemen event dan kompetisi dari awal hingga akhir. Dari pendaftaran peserta, penilaian juri, voting publik, hingga pencetakan sertifikat — semua terintegrasi dalam satu platform yang mudah digunakan.',
+            'description' => 'BARIS APP hadir untuk menyederhanakan manajemen event dan kompetisi dari awal hingga akhir. Dari pendaftaran peserta, penilaian juri, voting publik, pencetakan sertifikat, hingga overlay livestream — semua terintegrasi dalam satu platform yang mudah digunakan.',
             'image' => '',
             'points' => [
                 ['title' => '100+ Event Sukses', 'text' => 'Telah dipercaya oleh ratusan penyelenggara untuk event skala lokal dan nasional.'],
@@ -106,6 +122,34 @@ class LandingPageSeeder extends Seeder
                 ['value' => '50', 'label' => 'Penyelenggara Aktif', 'suffix' => 'K'],
                 ['value' => '1', 'label' => 'Peserta Terdaftar', 'suffix' => 'jt+'],
                 ['value' => '99.9', 'label' => 'Uptime Server', 'suffix' => '%'],
+            ],
+        ]));
+
+        // Schedule
+        Setting::set('landing_schedule', json_encode([
+            'title' => 'Rangkaian Acara Demo',
+            'items' => [
+                [
+                    'date' => '23 Jul',
+                    'time' => '08:00 - 09:30',
+                    'title' => 'Pembukaan & Technical Meeting',
+                    'description' => 'Briefing teknis untuk seluruh peserta dan juri. Pembagian nomor undian.',
+                    'location' => 'Aula Utama',
+                ],
+                [
+                    'date' => '24 Jul',
+                    'time' => '09:00 - 16:00',
+                    'title' => 'Babak Penyisihan',
+                    'description' => 'Seluruh peserta tampil di depan juri. Skor real-time via live scoreboard.',
+                    'location' => 'Panggung Utama',
+                ],
+                [
+                    'date' => '25 Jul',
+                    'time' => '13:00 - 17:00',
+                    'title' => 'Grand Final & Pengumuman Juara',
+                    'description' => 'Finalis terbaik bertanding. Pengumuman juara dan penyerahan sertifikat digital.',
+                    'location' => 'Panggung Utama',
+                ],
             ],
         ]));
 
@@ -148,6 +192,13 @@ class LandingPageSeeder extends Seeder
                     'rating' => 5,
                     'avatar' => '',
                 ],
+                [
+                    'name' => 'Sari Nirmala',
+                    'role' => 'Koordinator Livestream',
+                    'text' => 'Overlay livestream bikin siaran kami terlihat profesional. Sponsor senang karena logonya tampil jelas di layar.',
+                    'rating' => 5,
+                    'avatar' => '',
+                ],
             ],
         ]));
 
@@ -157,7 +208,7 @@ class LandingPageSeeder extends Seeder
             'items' => [
                 [
                     'question' => 'Apa itu BARIS APP?',
-                    'answer' => 'BARIS APP adalah platform digital untuk manajemen event dan kompetisi. Kami menyediakan tools lengkap: pendaftaran online, penilaian digital, voting publik, e-tiket, live scoreboard, drawing undian, dan sertifikat — semua terintegrasi.',
+                    'answer' => 'BARIS APP adalah platform digital untuk manajemen event dan kompetisi. Kami menyediakan tools lengkap: pendaftaran online, penilaian digital, voting publik, e-tiket, live scoreboard, drawing undian, sertifikat, dan livestream overlay — semua terintegrasi.',
                 ],
                 [
                     'question' => 'Berapa biaya untuk menggunakan BARIS APP?',
@@ -176,8 +227,12 @@ class LandingPageSeeder extends Seeder
                     'answer' => 'Ya. Kami menggunakan enkripsi SSL, penyimpanan data terpusat di server aman, dan backup berkala. Data Anda hanya bisa diakses oleh Anda dan tim yang Anda beri izin.',
                 ],
                 [
-                    'question' => 'Bisakah format penilaian dikustomisasi?',
-                    'answer' => 'Ya. Anda bisa membuat format penilaian dengan kriteria dan bobot yang fleksibel, menyesuaikan dengan jenis lomba yang Anda selenggarakan.',
+                    'question' => 'Bagaimana cara membuat sertifikat?',
+                    'answer' => 'Buka menu Sertifikat di dashboard, buat template dengan drag-and-drop editor, lalu klik Generate. Sertifikat otomatis terisi data juara dari hasil penilaian. Bisa langsung download PDF.',
+                ],
+                [
+                    'question' => 'Apakah ada fitur overlay untuk live streaming?',
+                    'answer' => 'Ya, BARIS APP menyediakan fitur Livestream Overlay. Anda bisa menampilkan skor, nama peserta, logo sponsor, dan info event langsung di siaran YouTube atau Facebook.',
                 ],
             ],
         ]));
@@ -217,10 +272,12 @@ class LandingPageSeeder extends Seeder
             'facebook' => '',
         ]));
 
-        // Schedule (contact page section)
-        Setting::set('landing_schedule', json_encode([]));
-
         // Contact
-        Setting::set('landing_contact', json_encode([]));
+        Setting::set('landing_contact', json_encode([
+            'phone' => '+62 812-3456-7890',
+            'email' => 'halo@berbaris.local',
+            'address' => 'Jl. Teknologi No. 42, Jakarta Selatan, Indonesia',
+            'map_embed_url' => '',
+        ]));
     }
 }
