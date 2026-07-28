@@ -1,6 +1,7 @@
 @php
     $data = json_decode($section?->content ?? 'null', true) ?? $defaults ?? [];
     $image = $data['image'] ?? '';
+    $video = $data['video'] ?? '';
     $heading = $data['heading'] ?? 'Platform Event & Kompetisi Terpadu';
     $description = $data['description'] ?? 'BARIS APP menyediakan solusi lengkap untuk menyelenggarakan event dan kompetisi. Dari pendaftaran peserta hingga pengumuman pemenang, semuanya terintegrasi dalam satu platform.';
     $points = $data['points'] ?? [
@@ -15,7 +16,11 @@
             {{-- Visual --}}
             <div class="relative">
                 <div class="overflow-hidden rounded-2xl border border-outline-variant/60 shadow-[0_8px_30px_rgba(0,98,255,0.06)]">
-                    @if($image)
+                    @if($video)
+                        <video autoplay muted loop playsinline class="aspect-[4/3] w-full object-cover">
+                            <source src="{{ $video }}" type="video/mp4">
+                        </video>
+                    @elseif($image)
                         <img src="{{ Storage::url($image) }}" alt="Tentang BARIS APP" class="h-full w-full object-cover">
                     @else
                         <div class="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-primary/10 via-surface-container-lowest to-tertiary/10">

@@ -107,6 +107,7 @@ class LandingPageSeeder extends Seeder
             'heading' => 'Platform Event & Kompetisi Terpadu',
             'description' => 'BARIS APP hadir untuk menyederhanakan manajemen event dan kompetisi dari awal hingga akhir. Dari pendaftaran peserta, penilaian juri, voting publik, pencetakan sertifikat, hingga overlay livestream — semua terintegrasi dalam satu platform yang mudah digunakan.',
             'image' => '',
+            'video' => 'https://videos.pexels.com/video-files/3209259/3209259-hd_1920_1080_25fps.mp4',
             'points' => [
                 ['title' => '100+ Event Sukses', 'text' => 'Telah dipercaya oleh ratusan penyelenggara untuk event skala lokal dan nasional.'],
                 ['title' => 'Keamanan Terjamin', 'text' => 'Data peserta, nilai, dan transaksi keuangan dienkripsi dengan standar keamanan terkini.'],

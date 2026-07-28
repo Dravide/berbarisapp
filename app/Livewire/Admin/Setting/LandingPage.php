@@ -40,6 +40,7 @@ class LandingPage extends Component
     public $about_description;
     public $about_image;
     public $about_image_current;
+    public $about_video;
     public $about_points = [];
 
     // CTA fields
@@ -104,6 +105,7 @@ class LandingPage extends Component
         $this->about_heading = $about['heading'] ?? 'Platform Event & Kompetisi Terpadu';
         $this->about_description = $about['description'] ?? '';
         $this->about_image_current = $about['image'] ?? '';
+        $this->about_video = $about['video'] ?? '';
         $this->about_points = $about['points'] ?? [];
 
         // Load CTA
@@ -292,6 +294,7 @@ class LandingPage extends Component
             'heading' => $this->about_heading,
             'description' => $this->about_description,
             'image' => $aboutImage,
+            'video' => $this->about_video,
             'points' => $this->about_points,
         ]));
 
