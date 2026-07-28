@@ -159,7 +159,7 @@
                 <div class="lg:col-span-1">
                     <a href="{{ url('/') }}" class="mb-4 flex items-center gap-2">
                         @if(($logoPath ?? null) && is_string($logoPath))
-                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" class="h-9 w-auto" style="max-height: 40px; object-fit: contain; filter: brightness(0) invert(1);">
+                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" class="h-9 w-auto" style="max-height: 40px; object-fit: contain;">
                         @else
                             <span class="font-display text-lg font-extrabold tracking-tight text-white">
                                 {{ get_setting('site_title', 'BARIS APP') }}
