@@ -217,7 +217,7 @@
 
             <div class="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs sm:flex-row">
                 <p>&copy; {{ date('Y') }} {{ get_setting('site_title', 'BARIS APP') }}. All Rights Reserved.</p>
-                <p>Powered by <span class="font-semibold text-secondary">BARIS APP</span></p>
+                <p>Powered by <span class="font-semibold text-secondary">{{ get_setting('site_title', 'BARIS APP') }}</span></p>
             </div>
         </div>
     </footer>
