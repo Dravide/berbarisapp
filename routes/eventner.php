@@ -36,3 +36,6 @@ Route::get('sponsors', App\Livewire\Eventner\Sponsor\Index::class)->name('eventn
 Route::get('tenants', App\Livewire\Eventner\Tenant\Index::class)->name('eventner.tenants.index');
 Route::get('finance', App\Livewire\Eventner\FinanceDashboard::class)->name('eventner.finance.index');
 Route::get('event-qr', App\Livewire\Eventner\EventQr::class)->name('eventner.event-qr.index');
+Route::get('certificate', App\Livewire\Eventner\Certificate\Templates::class)->name('eventner.certificate.index');
+Route::get('certificate/{template}/editor', App\Livewire\Eventner\Certificate\Editor::class)->name('eventner.certificate.editor');
+Route::get('certificate/pdf', [App\Http\Controllers\Eventner\CertificateController::class, 'downloadPdf'])->name('eventner.certificate.pdf');

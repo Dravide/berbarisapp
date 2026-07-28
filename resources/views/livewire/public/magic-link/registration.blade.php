@@ -147,13 +147,9 @@
                             <p class="text-xs text-on-surface-variant font-medium mb-4 leading-normal">Penilaian juri telah selesai dan difinalisasi.</p>
 
                             @php
-                                $finalScores = \App\Models\AssessmentScore::where('registration_id', $registration->id)
-                                    ->where('is_finalized', true)
-                                    ->with(['judge', 'assessmentCriteria.subCategory.category'])
-                                    ->get();
-
-                                $categories = \App\Models\AssessmentCategory::where('eventner_id', $registration->eventner_id)->get();
-                                $judges = \App\Models\Judge::whereIn('id', $finalScores->pluck('judge_id')->unique())->get();
+                                $finalScores = $this->finalScores;
+                                $categories = $this->scoreCategories;
+                                $judges = $this->scoreJudges;
 
                                 $scoreTable = [];
                                 foreach($finalScores as $score) {

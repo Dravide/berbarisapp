@@ -261,6 +261,18 @@ class EventVote extends Component
             ->get();
     }
 
+    public function getClosedVoteResultsProperty()
+    {
+        return $this->eventner->competitionCategories()
+            ->whereNotNull('parent_id')
+            ->with(['registrations' => function ($q) {
+                $q->withSum(['voteTransactions as total_votes' => function ($q) {
+                    $q->where('status', 'PAID');
+                }])->orderByDesc('total_votes');
+            }])
+            ->get();
+    }
+
     public function render()
     {
         $participants = collect();

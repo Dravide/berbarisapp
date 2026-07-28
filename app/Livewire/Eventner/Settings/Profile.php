@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\Eventner;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -67,10 +68,13 @@ class Profile extends Component
 
     public function mount()
     {
+        /** @var Eventner|null $eventner */
         $eventner = Auth::user()->eventner;
         if (!$eventner) {
             abort(403);
         }
+
+        Gate::authorize('manage', $eventner);
 
         $this->eventnerId = $eventner->id;
         $this->nama_event = $eventner->nama_event;

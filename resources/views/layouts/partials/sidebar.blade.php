@@ -235,6 +235,16 @@
               @if($ev && !$ev->canAccessFeature('champion_categories')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.certificate.*') ? 'active' : '' }}"
+              href="{{ route('eventner.certificate.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-certificate"></i>
+              </span>
+              <span class="hide-menu">Sertifikat</span>
+              @if($ev && !$ev->canAccessFeature('certificate')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
+            </a>
+          </li>
 
           {{-- ============================================ --}}
           {{-- VOTING --}}

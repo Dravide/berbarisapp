@@ -51,6 +51,14 @@ class Index extends Component
     {
         $this->allRankings = [];
 
+        $cacheKey = "champions:{$this->eventner->scoringCode}:cat:{$this->selectedCategoryId}";
+
+        $cached = cache()->get($cacheKey);
+        if ($cached !== null) {
+            $this->allRankings = $cached;
+            return;
+        }
+
         $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias'])
             ->where('eventner_id', $this->eventner->id)
             ->get();
@@ -174,6 +182,8 @@ class Index extends Component
                 ];
             }
         }
+
+        cache()->put($cacheKey, $this->allRankings, 300);
     }
 
     public function render()

@@ -62,4 +62,8 @@ return [
         'label' => 'Tenant / Stand',
         'locked_free' => true,
     ],
+    'certificate' => [
+        'label' => 'Sertifikat',
+        'locked_free' => true,
+    ],
 ];

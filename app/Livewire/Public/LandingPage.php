@@ -49,9 +49,9 @@ class LandingPage extends Component
 
     public function render()
     {
-        $eventners = Eventner::with('registrations')
-            ->withCount('registrations')
+        $eventners = Eventner::withCount('registrations')
             ->orderBy('created_at', 'desc')
+            ->limit(12)
             ->get();
 
         $ticketEvents = Eventner::where('ticket_active', true)

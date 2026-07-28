@@ -202,16 +202,13 @@
                 {{-- Hasil voting per kategori --}}
                 <div class="container-landing pb-12">
                     @php
-                        $allCategories = $this->eventner->competitionCategories()->whereNotNull('parent_id')->with('parent')->get();
+                        $allCategories = $this->closedVoteResults;
                     @endphp
 
                     <div class="grid gap-6">
                         @forelse($allCategories as $cat)
                             @php
-                                $catParticipants = \App\Models\Registration::where('competition_category_id', $cat->id)
-                                    ->withSum(['voteTransactions as total_votes' => function($q) { $q->where('status', 'PAID'); }], 'votes_earned')
-                                    ->orderByDesc('total_votes')
-                                    ->get();
+                                $catParticipants = $cat->registrations;
                                 $top = $catParticipants->take(3);
                             @endphp
 

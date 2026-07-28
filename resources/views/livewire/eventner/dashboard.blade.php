@@ -291,9 +291,9 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($eventner->competitionCategories as $category)
+                                        @foreach($categories as $category)
                                             @php
-                                                $regCount = $category->registrations()->count();
+                                                $regCount = $category->registrations_count;
                                                 $kuota = $category->kuota ?: 0;
                                                 $percent = $kuota > 0 ? ($regCount / $kuota) * 100 : 0;
                                             @endphp
@@ -450,17 +450,7 @@
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             @php
-                                $drawingData = [];
-                                foreach($eventner->competitionCategories as $cat) {
-                                    $drawn = \App\Models\Registration::where('eventner_id', $eventner->id)
-                                        ->where('competition_category_id', $cat->id)
-                                        ->whereNotNull('urutan_tampil')
-                                        ->count();
-                                    $total = \App\Models\Registration::where('eventner_id', $eventner->id)
-                                        ->where('competition_category_id', $cat->id)
-                                        ->count();
-                                    $drawingData[] = ['name' => $cat->full_name, 'drawn' => $drawn, 'total' => $total];
-                                }
+                                $drawingData = $this->drawingData;
                             @endphp
                             <table class="table align-middle mb-0">
                                 <thead class="table-light">

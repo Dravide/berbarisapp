@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class Registration extends Model
 {
+    use HasFactory;
     use LogsActivity;
 
     protected $fillable = [
@@ -130,6 +132,33 @@ class Registration extends Model
     public function isVerified(): bool
     {
         return $this->status_berkas === 'Terverifikasi';
+    }
+
+    /**
+     * Resolve a certificate text field value for this registration.
+     */
+    public function resolveCertificateField(string $fieldKey, array $context = []): string
+    {
+        $eventner = $context['eventner'] ?? $this->eventner;
+        $winner = $context['winner'] ?? null;
+        $championCategory = $context['championCategory'] ?? null;
+        $competitionCategory = $context['competitionCategory'] ?? null;
+
+        return match ($fieldKey) {
+            'nama_sekolah'  => $this->nama_sekolah,
+            'gelar_juara'   => $winner['title'] ?? ($winner['rank'] ?? ''),
+            'kategori_juara' => $championCategory?->name ?? '',
+            'kategori_lomba' => $competitionCategory?->name ?? $this->competitionCategory?->name ?? '',
+            'nama_event'    => $eventner?->nama_event ?? '',
+            'tanggal'       => $eventner?->tanggal
+                ? \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d F Y')
+                : '',
+            'venue'         => $eventner?->venue ?? '',
+            'nama_pelatih'  => $this->nama_pelatih ?? '',
+            'nama_peserta'  => $this->participants->pluck('nama')->join(', '),
+            'diselenggarakan_oleh' => $eventner?->diselenggarakan_oleh ?? '',
+            default         => '',
+        };
     }
 
     public function getActivitylogOptions(): LogOptions

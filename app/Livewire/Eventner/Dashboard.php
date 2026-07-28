@@ -147,33 +147,45 @@ class Dashboard extends Component
     public function loadRevenueData()
     {
         $eventnerId = $this->eventner->id;
+        $startDate = now()->subDays(29)->format('Y-m-d');
 
-        // Last 30 days revenue
+        // Single GROUP BY queries instead of 90 per-day queries
+        $voteRevenues = VoteTransaction::where('eventner_id', $eventnerId)
+            ->where('status', 'PAID')
+            ->where('paid_at', '>=', $startDate)
+            ->selectRaw('DATE(paid_at) as date, SUM(amount) as total')
+            ->groupBy('date')
+            ->pluck('total', 'date');
+
+        $ticketRevenues = Ticket::where('eventner_id', $eventnerId)
+            ->whereIn('status', ['PAID', 'CHECKED_IN'])
+            ->where('paid_at', '>=', $startDate)
+            ->selectRaw('DATE(paid_at) as date, SUM(total_amount) as total')
+            ->groupBy('date')
+            ->pluck('total', 'date');
+
+        $feeRevenues = Registration::where('eventner_id', $eventnerId)
+            ->where('payment_status', 'paid')
+            ->where('payment_verified_at', '>=', $startDate)
+            ->selectRaw('DATE(payment_verified_at) as date, SUM(total_fee) as total')
+            ->groupBy('date')
+            ->pluck('total', 'date');
+
         $this->revenueData = [];
 
         for ($i = 29; $i >= 0; $i--) {
             $date = now()->subDays($i)->format('Y-m-d');
+            $displayDate = now()->subDays($i)->format('d M');
 
-            $voteRevenue = VoteTransaction::where('eventner_id', $eventnerId)
-                ->where('status', 'PAID')
-                ->whereDate('paid_at', $date)
-                ->sum('amount');
-
-            $ticketRevenue = Ticket::where('eventner_id', $eventnerId)
-                ->whereIn('status', ['PAID', 'CHECKED_IN'])
-                ->whereDate('paid_at', $date)
-                ->sum('total_amount');
-
-            $feeRevenue = Registration::where('eventner_id', $eventnerId)
-                ->where('payment_status', 'paid')
-                ->whereDate('payment_verified_at', $date)
-                ->sum('total_fee');
+            $vote = (int) ($voteRevenues[$date] ?? 0);
+            $ticket = (int) ($ticketRevenues[$date] ?? 0);
+            $fee = (int) ($feeRevenues[$date] ?? 0);
 
             $this->revenueData[] = [
-                'date' => now()->subDays($i)->format('d M'),
-                'vote' => (int) $voteRevenue,
-                'ticket' => (int) $ticketRevenue,
-                'total' => (int) ($voteRevenue + $ticketRevenue + $feeRevenue),
+                'date' => $displayDate,
+                'vote' => $vote,
+                'ticket' => $ticket,
+                'total' => (int) ($vote + $ticket + $fee),
             ];
         }
     }
@@ -181,6 +193,25 @@ class Dashboard extends Component
     public function updatedSelectedChartCategory()
     {
         $this->loadTopParticipants();
+    }
+
+    public function getDrawingDataProperty()
+    {
+        $eventnerId = $this->eventner->id;
+        $categories = $this->eventner->competitionCategories()->withCount([
+            'registrations',
+            'registrations as drawn_count' => function ($q) {
+                $q->whereNotNull('urutan_tampil');
+            },
+        ])->get();
+
+        return $categories->map(function ($cat) {
+            return [
+                'name' => $cat->full_name,
+                'drawn' => $cat->drawn_count,
+                'total' => $cat->registrations_count,
+            ];
+        });
     }
 
     public function loadTopParticipants()

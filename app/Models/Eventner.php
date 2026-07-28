@@ -169,6 +169,11 @@ class Eventner extends Model
         return $this->hasMany(Tenant::class);
     }
 
+    public function certificateTemplates()
+    {
+        return $this->hasMany(CertificateTemplate::class);
+    }
+
     public function bankAccounts()
     {
         return $this->hasMany(EventnerBankAccount::class);

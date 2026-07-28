@@ -305,6 +305,28 @@ class Registration extends Component
             ->exists();
     }
 
+    public function getFinalScoresProperty()
+    {
+        return \App\Models\AssessmentScore::where('registration_id', $this->activeRegId)
+            ->where('is_finalized', true)
+            ->with(['judge', 'assessmentCriteria.subCategory.category'])
+            ->get();
+    }
+
+    public function getScoreCategoriesProperty()
+    {
+        return \App\Models\AssessmentCategory::where('eventner_id', $this->registration->eventner_id)->get();
+    }
+
+    public function getScoreJudgesProperty()
+    {
+        $finalScores = $this->finalScores;
+        $judgeIds = $finalScores->pluck('judge_id')->unique();
+        return $judgeIds->isNotEmpty()
+            ? \App\Models\Judge::whereIn('id', $judgeIds)->get()
+            : collect();
+    }
+
     public function render()
     {
         return view('livewire.public.magic-link.registration')
