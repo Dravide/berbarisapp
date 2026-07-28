@@ -127,28 +127,35 @@ class LandingPageSeeder extends Seeder
 
         // Schedule
         Setting::set('landing_schedule', json_encode([
-            'title' => 'Rangkaian Acara Demo',
+            'title' => 'Langkah Memulai Event Anda',
             'items' => [
                 [
-                    'date' => '23 Jul',
-                    'time' => '08:00 - 09:30',
-                    'title' => 'Pembukaan & Technical Meeting',
-                    'description' => 'Briefing teknis untuk seluruh peserta dan juri. Pembagian nomor undian.',
-                    'location' => 'Aula Utama',
+                    'date' => '1',
+                    'time' => '',
+                    'title' => 'Daftar Akun Eventner',
+                    'description' => 'Buat akun Eventner gratis. Isi data event, pilih kategori lomba, dan atur jadwal pelaksanaan.',
+                    'location' => '',
                 ],
                 [
-                    'date' => '24 Jul',
-                    'time' => '09:00 - 16:00',
-                    'title' => 'Babak Penyisihan',
-                    'description' => 'Seluruh peserta tampil di depan juri. Skor real-time via live scoreboard.',
-                    'location' => 'Panggung Utama',
+                    'date' => '2',
+                    'time' => '',
+                    'title' => 'Buka Pendaftaran Peserta',
+                    'description' => 'Sebarkan link pendaftaran ke calon peserta. Kelola berkas, verifikasi administrasi, dan pantau kuota.',
+                    'location' => '',
                 ],
                 [
-                    'date' => '25 Jul',
-                    'time' => '13:00 - 17:00',
-                    'title' => 'Grand Final & Pengumuman Juara',
-                    'description' => 'Finalis terbaik bertanding. Pengumuman juara dan penyerahan sertifikat digital.',
-                    'location' => 'Panggung Utama',
+                    'date' => '3',
+                    'time' => '',
+                    'title' => 'Hari-H — Penilaian & Voting',
+                    'description' => 'Juri menginput nilai secara digital. Publik mem-voting peserta favorit. Semua berjalan paralel dan real-time.',
+                    'location' => '',
+                ],
+                [
+                    'date' => '4',
+                    'time' => '',
+                    'title' => 'Grand Final & Sertifikat',
+                    'description' => 'Skor otomatis direkap. Pemenang langsung terlihat di live scoreboard. Undi turnamen, cetak sertifikat, dan umumkan juara.',
+                    'location' => '',
                 ],
             ],
         ]));
