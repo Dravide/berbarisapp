@@ -62,11 +62,20 @@ class EventDetail extends Component
 
     /**
      * Leaderboard voting: top kontingen per kategori lomba.
-     * Keyed by competition_category_id, value: top 5 registrasi dengan vote PAID tertinggi.
+     * Hanya tampil kalau vote sudah dimulai — atau sudah selesai (vote_end terlewat).
      */
     #[Computed]
     public function voteLeaderboard()
     {
+        $now = now();
+        $voteStart = $this->eventner->vote_start ? \Carbon\Carbon::parse($this->eventner->vote_start) : null;
+        $voteEnd = $this->eventner->vote_end ? \Carbon\Carbon::parse($this->eventner->vote_end) : null;
+
+        // Sembunyikan kalau vote_start belum sampai
+        if ($voteStart && $now->lt($voteStart)) {
+            return collect();
+        }
+
         $perCategory = [];
 
         foreach ($this->eventner->competitionCategories->whereNotNull('parent_id') as $cat) {
@@ -81,7 +90,7 @@ class EventDetail extends Component
             ];
         }
 
-        return $perCategory;
+        return empty($perCategory) ? collect() : $perCategory;
     }
 
     public function render()
