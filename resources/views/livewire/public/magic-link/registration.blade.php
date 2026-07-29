@@ -418,10 +418,7 @@
                                             @if($registration->surat_tugas)
                                                 <a href="{{ asset('storage/' . $registration->surat_tugas) }}" target="_blank" class="btn-ghost py-1.5 px-3 text-xs leading-normal font-bold inline-flex items-center gap-1 text-decoration-none"><i class="ti ti-file-text"></i> Surat Tugas</a>
                                             @endif
-                                            @if($registration->bukti_pendaftaran)
-                                                <a href="{{ asset('storage/' . $registration->bukti_pendaftaran) }}" target="_blank" class="btn-ghost py-1.5 px-3 text-xs leading-normal font-bold inline-flex items-center gap-1 text-decoration-none"><i class="ti ti-receipt"></i> Kwitansi</a>
-                                            @endif
-                                        </div>
+                                            </div>
                                     </td>
                                 </tr>
                                 <tr>
@@ -529,9 +526,6 @@
                                         <li>Logo sekolah resmi (format JPG/PNG)</li>
                                         @if($registration->eventner->surat_tugas_required)
                                             <li>Surat Tugas / Rekomendasi Kepala Sekolah (format PDF/JPG)</li>
-                                        @endif
-                                        @if($registration->eventner->kwitansi_required)
-                                            <li>Bukti/Kwitansi Pembayaran Slot (format JPG/PNG)</li>
                                         @endif
                                     </ul>
                                 </div>
@@ -691,38 +685,9 @@
                                             @endif
                                         </div>
                                     @endif
-
-                                    {{-- Bukti Pendaftaran / Kwitansi --}}
-                                    @if($registration->eventner->kwitansi_required)
-                                        <div>
-                                            <label class="text-sm font-bold text-deep-slate block mb-1.5">Bukti Kwitansi Pembayaran Slot</label>
-                                            <div wire:ignore x-data="{ pond: null }" x-init="
-                                                pond = FilePond.create($refs.input, {
-                                                    credits: false,
-                                                    labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
-                                                    server: {
-                                                        process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
-                                                            @this.upload('buktiPendaftaran', file, load, error, progress)
-                                                        },
-                                                        revert: (filename, load) => {
-                                                            @this.removeUpload('buktiPendaftaran', filename, load)
-                                                        },
-                                                    },
-                                                });
-                                            ">
-                                                <input type="file" x-ref="input" accept="image/*">
-                                            </div>
-                                            @error('buktiPendaftaran') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                            @if($registration->bukti_pendaftaran)
-                                                <span class="text-xs font-bold text-emerald-600 mt-2 block inline-flex items-center gap-1"><i class="ti ti-circle-check-filled"></i> Bukti pembayaran berhasil diunggah</span>
-                                            @endif
-                                        </div>
-                                    @endif
                                 </div>
                             </div>
                         </div>
-
-                        {{-- Danton Details Card --}}
                         <div class="surface-card overflow-hidden">
                             <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40">
                                 <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">

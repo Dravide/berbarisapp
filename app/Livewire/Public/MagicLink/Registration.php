@@ -185,7 +185,6 @@ class Registration extends Component
             'logoSekolah' => 'nullable|image|max:3072',
             'suratTugas' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
             'fotoPelatih' => 'nullable|image|max:3072',
-            'buktiPendaftaran' => 'nullable|image|max:3072',
             'dantonNama' => 'required|string|max:255',
             'dantonNisn' => 'nullable|string|max:20',
             'dantonFoto' => 'nullable|image|max:3072',
@@ -198,9 +197,6 @@ class Registration extends Component
         if ($isFinal) {
             if ($reg->eventner->surat_tugas_required) {
                 $rules['suratTugas'] = 'required_without:registration.surat_tugas|file|mimes:pdf,jpg,png|max:5120';
-            }
-            if ($reg->eventner->kwitansi_required) {
-                $rules['buktiPendaftaran'] = 'required_without:registration.bukti_pendaftaran|image|max:3072';
             }
         }
 
@@ -226,9 +222,6 @@ class Registration extends Component
         }
         if ($this->fotoPelatih) {
             $reg->foto_pelatih = $this->fotoPelatih->store('registrations/pelatih', 'public');
-        }
-        if ($this->buktiPendaftaran) {
-            $reg->bukti_pendaftaran = $this->buktiPendaftaran->store('registrations/kwitansi', 'public');
         }
 
         $reg->nama_pelatih = strip_tags($this->namaPelatih);
