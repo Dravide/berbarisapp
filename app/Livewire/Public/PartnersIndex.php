@@ -6,10 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Registration;
 use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-
-#[Layout('layouts.frontend')]
 #[Title('Mitra Sekolah - BARIS APP')]
 class PartnersIndex extends Component
 {
@@ -72,6 +69,8 @@ class PartnersIndex extends Component
 
         return view('livewire.public.partners-index', [
             'schools' => $schools,
-        ]);
+        ])
+            ->layout('layouts.frontend')
+            ->title('Mitra Sekolah - ' . get_setting('site_title', 'BARIS APP'));
     }
 }
