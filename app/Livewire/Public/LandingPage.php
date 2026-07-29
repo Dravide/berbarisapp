@@ -89,7 +89,7 @@ class LandingPage extends Component
             ->where('logo_sekolah', '!=', '')
             ->select('logo_sekolah')
             ->distinct()
-            ->limit(30)
+            ->limit(8)
             ->pluck('logo_sekolah');
 
         return view('livewire.public.landing-page', [

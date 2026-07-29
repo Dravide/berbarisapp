@@ -216,6 +216,7 @@
                 @else
                     <a href="{{ url('/') }}#features" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Fitur</a>
                     <a href="{{ url('/') }}#eventners" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Event</a>
+                    <a href="{{ route('partners') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary {{ request()->routeIs('partners') ? 'text-primary' : '' }}">Mitra</a>
                     <a href="{{ url('/') }}#contact" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Kontak</a>
                 @endisset
             </nav>
@@ -253,6 +254,7 @@
                 @else
                     <a href="{{ url('/') }}#features" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5">Fitur</a>
                     <a href="{{ url('/') }}#eventners" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5">Event</a>
+                    <a href="{{ route('partners') }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 {{ request()->routeIs('partners') ? 'text-primary bg-primary/5' : '' }}">Mitra</a>
                     <a href="{{ url('/') }}#contact" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5">Kontak</a>
                     <a href="{{ route('login') }}" class="btn-ghost text-center mt-2 py-2.5">Login</a>
                     <a href="{{ route('login') }}" class="btn-primary text-center mt-1 py-2.5">Mulai Sekarang</a>

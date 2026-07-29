@@ -20,6 +20,13 @@
                 </div>
             @endforeach
         </div>
+
+        <div class="text-center mt-10">
+            <a href="{{ route('partners') }}" class="btn-ghost inline-flex items-center gap-2">
+                Lihat Semua Mitra
+                <i class="ti ti-arrow-right"></i>
+            </a>
+        </div>
     </div>
 </section>
 @endif
