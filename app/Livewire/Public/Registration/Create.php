@@ -5,6 +5,7 @@ namespace App\Livewire\Public\Registration;
 use App\Models\Eventner;
 use App\Models\Registration;
 use App\Models\CompetitionCategory;
+use App\Models\School;
 use App\Services\MailyService;
 use Illuminate\Support\Str;
 use Livewire\Component;
@@ -47,6 +48,18 @@ class Create extends Component
 
         if ($this->eventner->tanggal_pendaftaran && now()->isAfter($this->eventner->tanggal_pendaftaran)) {
             session()->flash('error', 'Pendaftaran sudah ditutup.');
+        }
+    }
+
+    public function updatedNpsn()
+    {
+        if (empty($this->npsn)) return;
+
+        $school = School::find($this->npsn);
+        if ($school) {
+            $this->nama_sekolah = $school->nama_sekolah;
+            $this->no_hp = $school->no_hp;
+            $this->school_email = $school->school_email;
         }
     }
 
@@ -163,12 +176,13 @@ class Create extends Component
             }
 
             for ($i = 0; $i < $toCreate; $i++) {
-                $suffix = $toCreate > 1 ? ' (' . chr(65 + $i) . ')' : '';
+                $label = $toCreate > 1 ? chr(65 + $i) : null;
                 $feeAmount = $cat->registration_fee;
                 $reg = Registration::create([
                     'eventner_id' => $this->eventner->id,
                     'competition_category_id' => $cat->id,
-                    'nama_sekolah' => strip_tags($this->nama_sekolah) . $suffix,
+                    'label_pasukan' => $label,
+                    'nama_sekolah' => strip_tags($this->nama_sekolah),
                     'npsn' => strip_tags($this->npsn),
                     'nama_pelatih' => $this->nama_pelatih ? strip_tags($this->nama_pelatih) : null,
                     'no_hp' => strip_tags($this->no_hp),
@@ -184,6 +198,17 @@ class Create extends Component
                     $firstRegistration = $reg;
                 }
             }
+
+            // Sync/update School data (1× per kategori, tidak perlu per iterasi)
+            School::updateOrCreate(
+                ['npsn' => strip_tags($this->npsn)],
+                [
+                    'nama_sekolah' => strip_tags($this->nama_sekolah),
+                    'logo_sekolah' => $logoPath,
+                    'no_hp' => strip_tags($this->no_hp),
+                    'school_email' => $this->school_email ? strip_tags($this->school_email) : null,
+                ]
+            );
 
             $createdCategories[] = [
                 'name' => $cat->full_name,

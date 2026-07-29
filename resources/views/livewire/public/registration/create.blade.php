@@ -264,7 +264,7 @@
                             <div class="grid gap-5 md:grid-cols-2">
                                 <div>
                                     <label class="text-sm font-bold text-deep-slate block mb-1.5">NPSN <span class="text-red-500">*</span></label>
-                                    <input type="text" wire:model="npsn" placeholder="Masukkan Nomor Pokok Sekolah Nasional" maxlength="20" class="field-input w-full">
+                                    <input type="text" wire:model.blur="npsn" placeholder="Masukkan Nomor Pokok Sekolah Nasional" maxlength="20" class="field-input w-full">
                                     @error('npsn') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                                 </div>
                                 <div>
