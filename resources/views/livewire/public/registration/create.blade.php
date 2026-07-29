@@ -2,9 +2,9 @@
 
     {{-- ========== COVER BANNER / FALLBACK GRADIENT ========== --}}
     <div class="container-landing pt-6">
-        @if($eventner->poster)
+        @if($eventner->header_banner)
             <div class="relative w-full aspect-[21/9] md:aspect-[3/1] rounded-2xl overflow-hidden shadow-md border border-outline-variant/30 bg-black/5">
-                <img src="{{ asset('storage/' . $eventner->poster) }}" alt="Poster {{ $eventner->nama_event }}" class="w-full h-full object-cover">
+                <img src="{{ asset('storage/' . $eventner->header_banner) }}" alt="Banner {{ $eventner->nama_event }}" class="w-full h-full object-cover">
             </div>
         @else
             <div class="relative overflow-hidden bg-gradient-to-br from-primary via-[#0053da] to-tertiary rounded-2xl h-36 md:h-48">
