@@ -566,7 +566,7 @@
             </div>
         </div>
 
-        {{-- Sponsor grid (Full width di bawah) --}}
+        {{-- Sponsor & Media Partner (1 card, tiered logo size) --}}
         @if($eventner->sponsors->count() > 0)
             @php
                 $sGrouped = $eventner->sponsors->groupBy('type');
@@ -580,30 +580,50 @@
                     'partner' => 'Event Partner',
                     'supporting' => 'Supporting'
                 ];
+                $tierSizes = [
+                    'sponsor' => 'h-20 md:h-24',
+                    'gold' => 'h-16 md:h-20',
+                    'silver' => 'h-14 md:h-16',
+                    'bronze' => 'h-12 md:h-14',
+                    'medpart' => 'h-10 md:h-12',
+                    'partner' => 'h-10 md:h-12',
+                    'supporting' => 'h-8 md:h-10',
+                ];
             @endphp
-            <div class="mt-8 flex flex-col gap-6">
-                @foreach($typeOrders as $t)
-                    @if(isset($sGrouped[$t]) && $sGrouped[$t]->count() > 0)
-                        <div class="surface-card p-6">
-                            <span class="overline mb-4">{{ $typeLabels[$t] ?? $t }}</span>
-                            <div class="flex flex-wrap items-center justify-center gap-8 md:gap-12 mt-2">
-                                @foreach($sGrouped[$t] as $sponsor)
-                                    @if($sponsor->link)
-                                        <a href="{{ $sponsor->link }}" target="_blank" class="transition hover:opacity-85">
-                                    @endif
-                                    @if($sponsor->logo)
-                                        <img src="{{ asset('storage/' . $sponsor->logo) }}" class="h-14 md:h-16 w-auto object-contain max-w-[180px]" alt="{{ $sponsor->name }}" loading="lazy">
-                                    @else
-                                        <span class="text-sm font-bold text-on-surface-variant uppercase tracking-wider">{{ $sponsor->name }}</span>
-                                    @endif
-                                    @if($sponsor->link)
-                                        </a>
-                                    @endif
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-                @endforeach
+            <div class="mt-8">
+                <div class="surface-card p-8">
+                    <div class="text-center mb-8">
+                        <h3 class="font-display text-lg font-bold text-deep-slate">Sponsor & Media Partner</h3>
+                        <p class="text-sm text-on-surface-variant mt-1">Terimakasih kepada para sponsor dan media partner yang telah mendukung acara ini.</p>
+                    </div>
+                    <div class="flex flex-col items-center gap-8">
+                        @foreach($typeOrders as $t)
+                            @if(isset($sGrouped[$t]) && $sGrouped[$t]->count() > 0)
+                                <div class="w-full">
+                                    <span class="overline block text-center mb-4">{{ $typeLabels[$t] ?? $t }}</span>
+                                    <div class="flex flex-wrap items-center justify-center gap-8 md:gap-12">
+                                        @foreach($sGrouped[$t] as $sponsor)
+                                            @if($sponsor->link)
+                                                <a href="{{ $sponsor->link }}" target="_blank" class="transition hover:opacity-80">
+                                            @endif
+                                            @if($sponsor->logo)
+                                                <img src="{{ asset('storage/' . $sponsor->logo) }}" class="{{ $tierSizes[$t] ?? 'h-12' }} w-auto object-contain max-w-[200px]" alt="{{ $sponsor->name }}" loading="lazy">
+                                            @else
+                                                <span class="text-sm font-bold text-on-surface-variant uppercase tracking-wider">{{ $sponsor->name }}</span>
+                                            @endif
+                                            @if($sponsor->link)
+                                                </a>
+                                            @endif
+                                        @endforeach
+                                    </div>
+                                </div>
+                                @if(!$loop->last)
+                                    <hr class="w-24 border-outline-variant/30">
+                                @endif
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
             </div>
         @endif
     </div>
