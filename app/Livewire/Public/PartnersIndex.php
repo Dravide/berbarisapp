@@ -70,7 +70,7 @@ class PartnersIndex extends Component
         return view('livewire.public.partners-index', [
             'schools' => $schools,
         ])
-            ->layout('layouts.frontend')
+            ->layout('layouts.frontend', ['eventner' => null])
             ->title('Mitra Sekolah - ' . get_setting('site_title', 'BARIS APP'));
     }
 }
