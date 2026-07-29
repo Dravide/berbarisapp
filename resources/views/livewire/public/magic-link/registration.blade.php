@@ -67,17 +67,16 @@
     </div>
 
     {{-- ========== SHARE LINK BAR ========== --}}
-    @php $currentUrl = url()->current(); @endphp
     <div class="container-landing pt-4">
         <div class="max-w-4xl mx-auto">
             <div class="surface-card p-3 flex items-center justify-between gap-3 border border-outline-variant/30">
                 <div class="flex items-center gap-2 min-w-0 flex-1">
                     <i class="ti ti-link text-primary shrink-0"></i>
                     <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider hidden sm:inline">Link Portal:</span>
-                    <input type="text" value="{{ $currentUrl }}" readonly class="w-full bg-transparent border-0 text-sm font-mono text-deep-slate outline-none truncate min-w-0" onclick="this.select()">
+                    <input type="text" value="{{ $portalUrl }}" readonly class="w-full bg-transparent border-0 text-sm font-mono text-deep-slate outline-none truncate min-w-0" onclick="this.select()">
                 </div>
                 <div x-data="{ copied: false }">
-                    <button type="button" x-on:click="navigator.clipboard.writeText('{{ $currentUrl }}').then(() => { copied = true; setTimeout(() => copied = false, 2000); })" class="btn-secondary py-1.5 px-3 text-xs font-bold leading-none whitespace-nowrap flex items-center gap-1.5">
+                    <button type="button" x-on:click="navigator.clipboard.writeText('{{ $portalUrl }}').then(() => { copied = true; setTimeout(() => copied = false, 2000); })" class="btn-secondary py-1.5 px-3 text-xs font-bold leading-none whitespace-nowrap flex items-center gap-1.5">
                         <template x-if="!copied"><i class="ti ti-copy"></i></template>
                         <template x-if="copied"><i class="ti ti-check"></i></template>
                         <span x-text="copied ? 'Tersalin' : 'Salin'">Salin</span>

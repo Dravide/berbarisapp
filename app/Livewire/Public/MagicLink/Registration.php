@@ -14,6 +14,7 @@ class Registration extends Component
     use WithFileUploads;
 
     public $token;
+    public $portalUrl;
     public $registration;
     public $siblingRegistrations;
 
@@ -35,6 +36,7 @@ class Registration extends Component
 
     public function mount($token)
     {
+        $this->portalUrl = url()->current();
         $this->registration = RegistrationModel::with(['eventner', 'competitionCategory', 'participants'])
             ->where('magic_token', $token)
             ->firstOrFail();
@@ -322,7 +324,9 @@ class Registration extends Component
 
     public function render()
     {
-        return view('livewire.public.magic-link.registration')
+        return view('livewire.public.magic-link.registration', [
+            'portalUrl' => $this->portalUrl,
+        ])
             ->title('Kelola Pendaftaran - ' . $this->registration->eventner->nama_event)
             ->layoutData(['eventner' => $this->registration->eventner]);
     }
