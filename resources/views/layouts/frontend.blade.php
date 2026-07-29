@@ -216,7 +216,6 @@
                 @else
                     <a href="{{ url('/') }}#features" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Fitur</a>
                     <a href="{{ url('/') }}#eventners" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Event</a>
-                    <a href="{{ route('partners') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary {{ request()->routeIs('partners') ? 'text-primary' : '' }}">Mitra</a>
                     <a href="{{ url('/') }}#contact" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Kontak</a>
                 @endisset
             </nav>

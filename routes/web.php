@@ -37,9 +37,6 @@ Route::get('/privacy', App\Livewire\Public\PrivacyPolicy::class)->name('privacy'
 Route::get('/terms', App\Livewire\Public\TermsConditions::class)->name('terms');
 Route::get('/help', App\Livewire\Public\HelpSupport::class)->name('help');
 
-// Partners page
-Route::get('/partners', App\Livewire\Public\PartnersIndex::class)->name('partners');
-
 Route::middleware(['auth:web'])->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('dashboard', App\Livewire\Dashboard\Index::class)->name('dashboard');

@@ -36,6 +36,7 @@
     32 => 'Termwind\\Laravel\\TermwindServiceProvider',
     33 => 'Spatie\\Activitylog\\ActivitylogServiceProvider',
     34 => 'App\\Providers\\AppServiceProvider',
+    35 => 'App\\Providers\\AuthServiceProvider',
   ),
   'eager' => 
   array (
@@ -60,6 +61,7 @@
     18 => 'Termwind\\Laravel\\TermwindServiceProvider',
     19 => 'Spatie\\Activitylog\\ActivitylogServiceProvider',
     20 => 'App\\Providers\\AppServiceProvider',
+    21 => 'App\\Providers\\AuthServiceProvider',
   ),
   'deferred' => 
   array (
