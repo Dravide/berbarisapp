@@ -27,11 +27,13 @@ class Index extends Component
     public function loadSchools()
     {
         $query = Registration::query()
-            ->select('npsn', 'nama_sekolah', 'logo_sekolah',
+            ->select('npsn',
+                DB::raw('MAX(nama_sekolah) as nama_sekolah'),
+                DB::raw('MAX(logo_sekolah) as logo_sekolah'),
                 DB::raw('COUNT(*) as total_registrations'),
                 DB::raw('SUM(CASE WHEN status_berkas = \'Terverifikasi\' THEN 1 ELSE 0 END) as verified_count')
             )
-            ->groupBy('npsn', 'nama_sekolah', 'logo_sekolah');
+            ->groupBy('npsn');
 
         if ($this->search) {
             $query->where(function ($q) {
