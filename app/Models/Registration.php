@@ -15,6 +15,7 @@ class Registration extends Model
     protected $fillable = [
         'eventner_id',
         'competition_category_id',
+        'label_pasukan',
         'nama_sekolah',
         'npsn',
         'nama_pelatih',
@@ -62,6 +63,11 @@ class Registration extends Model
                 $model->status_berkas = 'booking';
             }
         });
+    }
+
+    public function school()
+    {
+        return $this->belongsTo(School::class, 'npsn', 'npsn');
     }
 
     public function eventner()

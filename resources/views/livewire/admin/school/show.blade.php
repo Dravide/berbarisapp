@@ -43,13 +43,16 @@
                     <div class="d-flex align-items-center gap-2 mb-1">
                         <h4 class="fw-semibold mb-0">{{ $schoolInfo['nama_sekolah'] }}</h4>
                         <span class="badge bg-dark rounded-1">NPSN {{ $schoolInfo['npsn'] }}</span>
+                        <a href="{{ route('admin.schools.edit', $schoolInfo['npsn']) }}" class="btn btn-sm btn-warning ms-auto">
+                            <i class="ti ti-edit me-1"></i> Edit
+                        </a>
                     </div>
                     <div class="d-flex flex-wrap gap-3 text-muted" style="font-size: 0.85rem;">
-                        @if($schoolInfo['nama_pelatih'])
-                            <span><i class="ti ti-user me-1"></i> {{ $schoolInfo['nama_pelatih'] }}</span>
-                        @endif
                         @if($schoolInfo['no_hp'])
                             <span><i class="ti ti-phone me-1"></i> {{ $schoolInfo['no_hp'] }}</span>
+                        @endif
+                        @if($schoolInfo['school_email'])
+                            <span><i class="ti ti-mail me-1"></i> {{ $schoolInfo['school_email'] }}</span>
                         @endif
                     </div>
                 </div>
@@ -133,6 +136,7 @@
                         <tr>
                             <th class="fw-semibold">Event</th>
                             <th class="fw-semibold">Kategori</th>
+                            <th class="fw-semibold">Pasukan</th>
                             <th class="fw-semibold">Peserta</th>
                             <th class="fw-semibold">Status</th>
                             <th class="fw-semibold">Final</th>
@@ -150,6 +154,13 @@
                                     <span class="badge bg-secondary-subtle text-secondary rounded-1 px-2 py-1">
                                         {{ $reg->competitionCategory->nama ?? '-' }}
                                     </span>
+                                </td>
+                                <td>
+                                    @if($reg->label_pasukan)
+                                        <span class="badge bg-dark rounded-1 px-2 py-1">Pasukan {{ $reg->label_pasukan }}</span>
+                                    @else
+                                        <span class="text-muted" style="font-size: 0.8rem;">—</span>
+                                    @endif
                                 </td>
                                 <td>
                                     <div class="d-flex flex-wrap gap-1">

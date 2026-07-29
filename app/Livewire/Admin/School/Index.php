@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\School;
 
 use Livewire\Component;
+use App\Models\School;
 use App\Models\Registration;
 use App\Models\Eventner;
 use Illuminate\Support\Facades\DB;
@@ -26,14 +27,19 @@ class Index extends Component
 
     public function loadSchools()
     {
-        $query = Registration::query()
-            ->select('npsn',
-                DB::raw('MAX(nama_sekolah) as nama_sekolah'),
-                DB::raw('MAX(logo_sekolah) as logo_sekolah'),
-                DB::raw('COUNT(*) as total_registrations'),
-                DB::raw('SUM(CASE WHEN status_berkas = \'Terverifikasi\' THEN 1 ELSE 0 END) as verified_count')
+        $query = School::query()
+            ->select('npsn', 'nama_sekolah', 'logo_sekolah')
+            ->selectSub(
+                Registration::whereColumn('npsn', 'schools.npsn')
+                    ->selectRaw('COUNT(*)'),
+                'total_registrations'
             )
-            ->groupBy('npsn');
+            ->selectSub(
+                Registration::whereColumn('npsn', 'schools.npsn')
+                    ->where('status_berkas', 'Terverifikasi')
+                    ->selectRaw('COUNT(*)'),
+                'verified_count'
+            );
 
         if ($this->search) {
             $query->where(function ($q) {
@@ -43,17 +49,17 @@ class Index extends Component
         }
 
         if ($this->filterEvent) {
-            $query->where('eventner_id', $this->filterEvent);
+            $query->whereExists(function ($q) {
+                $q->select(DB::raw(1))
+                    ->from('registrations')
+                    ->whereColumn('registrations.npsn', 'schools.npsn')
+                    ->where('registrations.eventner_id', $this->filterEvent);
+            });
         }
 
         $this->schools = $query->orderBy('nama_sekolah')->get();
 
-        // Strip suffix pasukan (A), (B), (C) etc from nama_sekolah di index
-        $this->schools->each(function ($school) {
-            $school->nama_sekolah = preg_replace('/\s*\([A-Z]+\)$/', '', $school->nama_sekolah);
-        });
-
-        // Load participant counts per school via join
+        // Load participant counts per school
         $npsns = $this->schools->pluck('npsn')->toArray();
 
         if (!empty($npsns)) {

@@ -6,8 +6,7 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Setting;
 use App\Models\Eventner;
-use App\Models\Registration;
-use Illuminate\Support\Facades\DB;
+use App\Models\School;
 use Illuminate\Support\Facades\Storage;
 
 class LandingPage extends Component
@@ -84,13 +83,12 @@ class LandingPage extends Component
             ->limit(8)
             ->get();
 
-        // Logo sekolah yang terdata — untuk section partners, 1 logo per NPSN
-        $schoolLogos = Registration::query()
+        // Logo sekolah yang terdata — untuk section partners
+        $schoolLogos = School::query()
             ->whereNotNull('logo_sekolah')
             ->where('logo_sekolah', '!=', '')
-            ->select('npsn', DB::raw('MAX(logo_sekolah) as logo'))
-            ->groupBy('npsn')
-            ->pluck('logo');
+            ->orderBy('nama_sekolah')
+            ->pluck('logo_sekolah');
 
         return view('livewire.public.landing-page', [
             'eventners' => $eventners,
