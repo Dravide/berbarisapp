@@ -40,6 +40,9 @@
             @case('contact')
                 @include('components.landing.contact', ['section' => (object)['content' => $section['content']]])
                 @break
+            @case('partners')
+                @include('components.landing.partners', ['section' => (object)['content' => $section['content']], 'logos' => $schoolLogos])
+                @break
         @endswitch
     @endforeach
 </div>
