@@ -268,7 +268,7 @@ class EventVote extends Component
             ->with(['registrations' => function ($q) {
                 $q->withSum(['voteTransactions as total_votes' => function ($q) {
                     $q->where('status', 'PAID');
-                }])->orderByDesc('total_votes');
+                }], 'votes_earned')->orderByDesc('total_votes');
             }])
             ->get();
     }
