@@ -48,6 +48,11 @@ class Index extends Component
 
         $this->schools = $query->orderBy('nama_sekolah')->get();
 
+        // Strip suffix pasukan (A), (B), (C) etc from nama_sekolah di index
+        $this->schools->each(function ($school) {
+            $school->nama_sekolah = preg_replace('/\s*\([A-Z]+\)$/', '', $school->nama_sekolah);
+        });
+
         // Load participant counts per school via join
         $npsns = $this->schools->pluck('npsn')->toArray();
 
