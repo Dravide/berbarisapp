@@ -36,7 +36,7 @@ class MailyService
 
         $html = "
         <div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);'>
-            <div style='background:linear-gradient(135deg,#0072FF,#0046b3);padding:32px 24px;text-align:center;'>
+            <div style='background:linear-gradient(135deg,#0062FF,#004dcc);padding:32px 24px;text-align:center;'>
                 <h1 style='color:#fff;margin:0;font-size:22px;font-weight:700;'>Booking Berhasil!</h1>
                 <p style='color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;'>{$eventName}</p>
             </div>
@@ -69,8 +69,8 @@ class MailyService
                     </tbody>
                 </table>
 
-                <div style='background:rgba(0,114,255,0.06);border:1px solid rgba(0,114,255,0.15);border-radius:10px;padding:16px;margin-bottom:24px;'>
-                    <p style='font-weight:600;color:#0072FF;margin:0 0 8px;font-size:14px;'>Langkah Selanjutnya:</p>
+                <div style='background:rgba(0,98,255,0.06);border:1px solid rgba(0,98,255,0.15);border-radius:10px;padding:16px;margin-bottom:24px;'>
+                    <p style='font-weight:600;color:#0062FF;margin:0 0 8px;font-size:14px;'>Langkah Selanjutnya:</p>
                     <ol style='color:#374151;font-size:13px;line-height:1.7;margin:0;padding-left:18px;'>
                         <li>Klik tombol <strong>Kelola Pendaftaran</strong> di bawah untuk masuk ke halaman manajemen pasukan.</li>
                         <li>Upload berkas yang diperlukan: logo sekolah, surat tugas, foto pelatih, dan foto peserta.</li>
@@ -80,7 +80,7 @@ class MailyService
                 </div>
 
                 <div style='text-align:center;margin-bottom:24px;'>
-                    <a href='{$magicLink}' style='display:inline-block;background:linear-gradient(135deg,#0072FF,#0046b3);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,114,255,0.3);'>
+                    <a href='{$magicLink}' style='display:inline-block;background:linear-gradient(135deg,#0062FF,#004dcc);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,98,255,0.3);'>
                         Kelola Pendaftaran
                     </a>
                     <p style='color:#9ca3af;font-size:12px;margin:10px 0 0;'>Simpan email ini untuk akses kapan saja ke halaman manajemen pasukan Anda.</p>
@@ -163,7 +163,7 @@ class MailyService
 
         $html = "
         <div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);'>
-            <div style='background:linear-gradient(135deg,#0072FF,#0046b3);padding:32px 24px;text-align:center;'>
+            <div style='background:linear-gradient(135deg,#0062FF,#004dcc);padding:32px 24px;text-align:center;'>
                 <h1 style='color:#fff;margin:0;font-size:22px;font-weight:700;'>Tiket Anda Sudah Aktif!</h1>
                 <p style='color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;'>{$eventName}</p>
             </div>
@@ -188,8 +188,8 @@ class MailyService
 
                 {$qrBlock}
 
-                <div style='background:rgba(0,114,255,0.06);border:1px solid rgba(0,114,255,0.15);border-radius:10px;padding:16px;margin-bottom:24px;'>
-                    <p style='font-weight:600;color:#0072FF;margin:0 0 8px;font-size:14px;'>Cara Masuk Event:</p>
+                <div style='background:rgba(0,98,255,0.06);border:1px solid rgba(0,98,255,0.15);border-radius:10px;padding:16px;margin-bottom:24px;'>
+                    <p style='font-weight:600;color:#0062FF;margin:0 0 8px;font-size:14px;'>Cara Masuk Event:</p>
                     <ol style='color:#374151;font-size:13px;line-height:1.7;margin:0;padding-left:18px;'>
                         <li>Simpan atau screenshot email ini.</li>
                         <li>Datang ke lokasi event pada hari H.</li>
@@ -199,7 +199,7 @@ class MailyService
                 </div>
 
                 <div style='text-align:center;margin-bottom:24px;'>
-                    <a href='{$url}' style='display:inline-block;background:linear-gradient(135deg,#0072FF,#0046b3);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,114,255,0.3);'>
+                    <a href='{$url}' style='display:inline-block;background:linear-gradient(135deg,#0062FF,#004dcc);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,98,255,0.3);'>
                         Lihat Tiket
                     </a>
                     <p style='color:#9ca3af;font-size:12px;margin:10px 0 0;'>Akses ulang tiket Anda kapan saja melalui tombol di atas.</p>
@@ -253,7 +253,7 @@ class MailyService
 
         $html = "
         <div style='font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.08);'>
-            <div style='background:linear-gradient(135deg,#0072FF,#0046b3);padding:32px 24px;text-align:center;'>
+            <div style='background:linear-gradient(135deg,#0062FF,#004dcc);padding:32px 24px;text-align:center;'>
                 <h1 style='color:#fff;margin:0;font-size:22px;font-weight:700;'>Pendaftaran Disetujui!</h1>
                 <p style='color:rgba(255,255,255,0.85);margin:8px 0 0;font-size:14px;'>{$eventName}</p>
             </div>
@@ -266,7 +266,7 @@ class MailyService
                     Anda sekarang dapat masuk ke dashboard dan mulai mengelola event Anda.
                 </p>
                 <div style='text-align:center;margin-bottom:24px;'>
-                    <a href='{$loginUrl}' style='display:inline-block;background:linear-gradient(135deg,#0072FF,#0046b3);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,114,255,0.3);'>
+                    <a href='{$loginUrl}' style='display:inline-block;background:linear-gradient(135deg,#0062FF,#004dcc);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,98,255,0.3);'>
                         Masuk ke Dashboard
                     </a>
                 </div>
@@ -331,7 +331,7 @@ class MailyService
                     Upgrade ke paket berbayar untuk menikmati semua fitur tanpa batasan.
                 </p>
                 <div style='text-align:center;margin-bottom:24px;'>
-                    <a href='{$dashboardUrl}' style='display:inline-block;background:linear-gradient(135deg,#0072FF,#0046b3);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,114,255,0.3);'>
+                    <a href='{$dashboardUrl}' style='display:inline-block;background:linear-gradient(135deg,#0062FF,#004dcc);color:#ffffff;text-decoration:none;padding:14px 36px;border-radius:10px;font-weight:700;font-size:15px;box-shadow:0 4px 14px rgba(0,98,255,0.3);'>
                         Ke Dashboard
                     </a>
                 </div>
