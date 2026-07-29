@@ -285,7 +285,7 @@
                         <span class="font-display text-base font-bold tracking-tight text-white">{{ $eventner?->nama_event ?? get_setting('site_title', 'BARIS APP') }}</span>
                     </a>
                     <p class="text-sm text-white/60 leading-relaxed">
-                        {{ $eventner?->deskripsi ? Str::limit(strip_tags($eventner->deskripsi), 120) : 'Platform manajemen event dan kompetisi terpadu.' }}
+                        {{ ($eventner?->deskripsi ?? null) ? Str::limit(strip_tags($eventner->deskripsi), 120) : 'Platform manajemen event dan kompetisi terpadu.' }}
                     </p>
                 </div>
 
