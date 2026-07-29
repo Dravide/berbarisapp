@@ -46,6 +46,15 @@ class LandingPage extends Component
                 'content' => $content,
             ];
         }
+
+        // Partners selalu tampil — tidak bergantung DB setting agar selalu muncul
+        $partnersActive = $this->sectionsActive['partners'] ?? true;
+        if ($partnersActive && !in_array('partners', array_column($this->sections, 'type'))) {
+            $this->sections[] = [
+                'type' => 'partners',
+                'content' => Setting::get('landing_partners'),
+            ];
+        }
     }
 
     public function render()
