@@ -15,7 +15,7 @@
 
         <div class="flex flex-wrap justify-center items-center gap-8">
             @foreach($logos as $logo)
-                <div class="w-16 h-16 flex items-center justify-center">
+                <div class="w-16 h-16 rounded-xl bg-white flex items-center justify-center p-2 border border-outline-variant/10">
                     <img src="{{ Storage::url($logo) }}" alt="Logo Sekolah" class="max-w-full max-h-full object-contain grayscale hover:grayscale-0 opacity-60 hover:opacity-100 transition-all duration-300">
                 </div>
             @endforeach
