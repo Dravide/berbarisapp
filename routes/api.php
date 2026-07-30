@@ -53,6 +53,7 @@ Route::prefix('v1')->group(function () {
         Route::put('/registration', [PortalController::class, 'update']);
         Route::post('/confirm', [PortalController::class, 'confirm']);
         Route::get('/participants', [PortalController::class, 'participants']);
+        Route::put('/participants/{id}', [PortalController::class, 'updateParticipant']);
 
         // Uploads
         Route::post('/upload/logo', [UploadController::class, 'logo']);

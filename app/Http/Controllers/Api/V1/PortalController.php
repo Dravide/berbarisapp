@@ -85,6 +85,27 @@ class PortalController extends Controller
         return response()->json(['data' => $reg->participants]);
     }
 
+    public function updateParticipant(Request $request, $id)
+    {
+        $reg = $this->getRegistration($request);
+        $participant = $reg->participants()->findOrFail($id);
+
+        if ($reg->status_berkas === 'Terverifikasi') {
+            return response()->json(['message' => 'Data sudah terverifikasi, tidak bisa diubah.'], 400);
+        }
+
+        $request->validate([
+            'nama' => 'nullable|string|max:255',
+            'nisn' => 'nullable|string|max:20',
+        ]);
+
+        if ($request->nama) $participant->nama = strip_tags($request->nama);
+        if ($request->nisn) $participant->nisn = strip_tags($request->nisn);
+        $participant->save();
+
+        return response()->json(['message' => 'Data peserta berhasil disimpan.']);
+    }
+
     public function scores(Request $request)
     {
         $reg = $this->getRegistration($request);
