@@ -4,13 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
 class Registration extends Model
 {
-    use HasFactory;
-    use LogsActivity;
+    use HasApiTokens, HasFactory, LogsActivity;
 
     protected $fillable = [
         'eventner_id',
