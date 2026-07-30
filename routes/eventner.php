@@ -9,6 +9,8 @@ Route::get('judges', App\Livewire\Eventner\Judge\Index::class)->name('eventner.j
 Route::get('competition-categories', App\Livewire\Eventner\CompetitionCategory\Index::class)->name('eventner.competition-categories.index');
 Route::get('participants', App\Livewire\Eventner\Participant\Index::class)->name('eventner.participants.index');
 Route::get('participants/{registration}/pdf', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadPdf'])->name('eventner.participants.pdf');
+Route::get('participants/{registration}/qr', [App\Http\Controllers\Eventner\ParticipantController::class, 'qrCode'])->name('eventner.participants.qr');
+Route::get('participants/qr-batch', [App\Http\Controllers\Eventner\ParticipantController::class, 'qrCodeBatch'])->name('eventner.participants.qr-batch');
 Route::get('vote-settings', App\Livewire\Eventner\VoteSettings\Index::class)->name('eventner.vote-settings.index');
 Route::get('vote-booster', App\Livewire\Eventner\VoteBooster\Index::class)->name('eventner.vote-booster.index');
 Route::get('vote-results', App\Livewire\Eventner\VoteResults\Index::class)->name('eventner.vote-results.index');

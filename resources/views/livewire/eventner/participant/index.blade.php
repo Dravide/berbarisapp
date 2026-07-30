@@ -104,6 +104,9 @@
                     </select>
                 </div>
                 <div class="d-flex gap-2">
+                    <a href="{{ route('eventner.participants.qr-batch', ['category_id' => $activeTab]) }}" target="_blank" class="btn btn-sm btn-outline-dark d-flex align-items-center gap-1" title="Cetak QR Semua Peserta">
+                        <i class="ti ti-qrcode fs-4"></i> QR
+                    </a>
                     <span class="badge bg-light text-dark d-flex align-items-center px-3">{{ $registrations->count() }} peserta</span>
                     <button wire:click="openModal(activeTab)" class="btn btn-primary btn-sm">
                         <i class="ti ti-plus me-1"></i> Tambah
@@ -179,8 +182,11 @@
                                                     </a>
                                                 @endif
 
-                                                <button 
-                                                    type="button" 
+                                                <a href="{{ route('eventner.participants.qr', $reg->id) }}" target="_blank" class="btn btn-sm btn-outline-dark d-flex align-items-center gap-1" title="Cetak QR">
+                                                    <i class="ti ti-qrcode fs-4"></i>
+                                                </a>
+                                                <button
+                                                    type="button"
                                                     class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
                                                     onclick="navigator.clipboard.writeText('{{ url('/reg/' . $reg->magic_token) }}'); alert('Magic Link berhasil disalin!\n\n{{ url('/reg/' . $reg->magic_token) }}');"
                                                     title="Salin Magic Link"

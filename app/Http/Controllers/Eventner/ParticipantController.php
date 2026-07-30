@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Registration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 
 class ParticipantController extends Controller
 {
@@ -34,5 +36,54 @@ class ParticipantController extends Controller
             'registration' => $registration,
             'participants' => $registration->participants,
         ]);
+    }
+
+    public function qrCode(Registration $registration)
+    {
+        $eventner = Auth::user()->eventner;
+        if (!$eventner || $registration->eventner_id !== $eventner->id) {
+            abort(403);
+        }
+
+        $qrToken = $registration->qr_token;
+        $schoolName = $registration->nama_sekolah;
+        $category = $registration->competitionCategory?->full_name ?? '-';
+
+        $options = new QROptions([
+            'outputType' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
+            'scale' => 10,
+            'imageTransparent' => false,
+        ]);
+        $qrCode = (new QRCode($options))->render($qrToken);
+
+        return view('eventner.participant.print_qr', compact('qrToken', 'schoolName', 'category', 'registration', 'qrCode'));
+    }
+
+    public function qrCodeBatch(Request $request)
+    {
+        $eventner = Auth::user()->eventner;
+        if (!$eventner) abort(403);
+
+        $categoryId = $request->category_id;
+        $registrations = Registration::where('eventner_id', $eventner->id)
+            ->where('competition_category_id', $categoryId)
+            ->get();
+
+        $items = [];
+        foreach ($registrations as $reg) {
+            $options = new QROptions([
+                'outputType' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
+                'scale' => 8,
+                'imageTransparent' => false,
+            ]);
+            $items[] = [
+                'qrCode' => (new QRCode($options))->render($reg->qr_token),
+                'schoolName' => $reg->nama_sekolah,
+                'category' => $reg->competitionCategory?->full_name ?? '-',
+                'qrToken' => $reg->qr_token,
+            ];
+        }
+
+        return view('eventner.participant.print_qr_batch', compact('items'));
     }
 }
