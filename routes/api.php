@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\EventController;
+use App\Http\Controllers\Api\V1\TicketController;
 use App\Http\Controllers\Api\V1\VoteController;
 use App\Http\Controllers\Api\V1\QrController;
 use App\Http\Controllers\Api\V1\PortalController;
@@ -31,6 +32,10 @@ Route::prefix('v1')->group(function () {
     Route::post('/vote/calculate', [VoteController::class, 'calculate']);
     Route::get('/vote/status/{transactionId}', [VoteController::class, 'status']);
     Route::get('/vote/comments', [VoteController::class, 'comments']);
+
+    // ─── Public: Ticket ───────────────────────────────────────
+    Route::post('/ticket/purchase', [TicketController::class, 'purchase']);
+    Route::get('/ticket/status/{orderCode}', [TicketController::class, 'status']);
 
     // ─── Public: Scoreboard & Champions ──────────────────────
     Route::get('/scoreboard/{scoringCode}', [ScoreboardController::class, 'index']);
