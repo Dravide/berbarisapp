@@ -64,7 +64,7 @@ class EventController extends Controller
             ->firstOrFail();
 
         $query = Registration::where('eventner_id', $event->id)
-            ->whereIn('status_berkas', ['confirmed', 'Terverifikasi'])
+            // tampilkan semua status — dari booking sampai terverifikasi
             ->withSum(['voteTransactions as total_votes' => function ($q) {
                 $q->where('status', 'PAID');
             }], 'votes_earned')
