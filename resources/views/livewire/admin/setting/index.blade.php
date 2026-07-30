@@ -44,14 +44,16 @@
                                     @error('site_title') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                 </div>
                                 <div class="mb-4">
-                                    <label for="meta_description" class="form-label">Deskripsi Situs (SEO)</label>
-                                    <textarea class="form-control @error('meta_description') is-invalid @enderror" id="meta_description" rows="3" wire:model="meta_description"></textarea>
+                                    <label for="meta_description" class="form-label">Deskripsi Situs (Meta Description)</label>
+                                    <textarea class="form-control @error('meta_description') is-invalid @enderror" id="meta_description" rows="3" wire:model="meta_description" placeholder="Platform manajemen event dan kompetisi terpadu..."></textarea>
                                     @error('meta_description') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <div class="form-text">Direkomendasikan 120-160 karakter. Deskripsi ini akan muncul di hasil pencarian Google.</div>
                                 </div>
                                 <div class="mb-0">
-                                    <label for="meta_keywords" class="form-label">Keywords (SEO)</label>
-                                    <input type="text" class="form-control @error('meta_keywords') is-invalid @enderror" id="meta_keywords" wire:model="meta_keywords" placeholder="keyword1, keyword2, ...">
+                                    <label for="meta_keywords" class="form-label">Kata Kunci (Meta Keywords)</label>
+                                    <input type="text" class="form-control @error('meta_keywords') is-invalid @enderror" id="meta_keywords" wire:model="meta_keywords" placeholder="event, kompetisi, lomba, pendaftaran, manajemen event">
                                     @error('meta_keywords') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <div class="form-text">Pisahkan dengan koma. Maksimal 10-15 kata kunci relevan.</div>
                                 </div>
                             </div>
                         </div>

@@ -18,6 +18,8 @@ class Index extends Component
     public $site_title;
     public $meta_description;
     public $meta_keywords;
+    public $site_description;
+    public $site_tagline;
     
     public $new_logo_dark;
     public $new_logo_light;
@@ -39,8 +41,8 @@ class Index extends Component
     public function mount()
     {
         $this->site_title = Setting::get('site_title', 'BARIS APP');
-        $this->meta_description = Setting::get('meta_description', '');
-        $this->meta_keywords = Setting::get('meta_keywords', '');
+        $this->meta_description = Setting::get('meta_description', 'Platform manajemen event dan kompetisi terpadu. Solusi lengkap untuk penyelenggara event, lomba, dan kompetisi di Indonesia.');
+        $this->meta_keywords = Setting::get('meta_keywords', 'event, kompetisi, lomba, pendaftaran, manajemen event, platform kompetisi, penyelenggara event, penilaian juri, voting online');
 
         $this->logo_dark_path = Setting::get('logo_dark');
         $this->logo_light_path = Setting::get('logo_light');

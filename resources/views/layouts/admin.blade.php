@@ -12,11 +12,24 @@
   
   <meta name="description" content="{{ get_setting('meta_description') }}" />
   <meta name="keywords" content="{{ get_setting('meta_keywords') }}" />
+  <link rel="canonical" href="{{ url()->current() }}" />
+
+  {{-- Open Graph --}}
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ get_setting('site_title', 'BARIS APP') }}">
+  <meta property="og:title" content="{{ $title ?? get_setting('site_title', 'BARIS APP') . ' - Dashboard' }}">
+  <meta property="og:description" content="{{ get_setting('meta_description', 'Dashboard panel BARIS APP') }}">
+  <meta property="og:url" content="{{ url()->current() }}">
+  <meta property="og:locale" content="id_ID">
+
+  {{-- Twitter Card --}}
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="{{ $title ?? get_setting('site_title', 'BARIS APP') . ' - Dashboard' }}">
 
   <!-- Core Css -->
   <link rel="stylesheet" href="{{ asset('templates/assets/css/styles.css') }}" />
 
-  <title>{{ $title ?? get_setting('site_title', 'BARIS APP') . ' - Dashboard' }}</title>
+  <title>@yield('title', ($title ?? get_setting('site_title', 'BARIS APP')) . ' - Dashboard')</title>
   <!-- Owl Carousel  -->
   <link rel="stylesheet" href="{{ asset('templates/assets/libs/owl.carousel/dist/assets/owl.carousel.min.css') }}" />
 

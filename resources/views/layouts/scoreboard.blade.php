@@ -4,7 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="shortcut icon" type="image/png" href="{{ asset('templates/assets/images/logos/favicon.png') }}" />
-    <title>Live Scoreboard - {{ $eventner->nama_event ?? 'BARIS APP' }}</title>
+    <meta name="description" content="Live scoreboard - {{ $eventner?->nama_event ?? 'BARIS APP' }}. Pantau skor dan peringkat peserta secara real-time.">
+    <meta name="keywords" content="live scoreboard, skor langsung, {{ $eventner?->nama_event ?? 'kompetisi' }}, papan skor, hasil lomba">
+    <link rel="canonical" href="{{ url()->current() }}">
+    <meta name="robots" content="noindex, follow">
+    <title>{{ $eventner?->nama_event ?? 'BARIS APP' }} - Live Scoreboard</title>
     <link rel="stylesheet" href="{{ asset('templates/assets/css/styles.css') }}" />
     @livewireStyles
 </head>

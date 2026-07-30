@@ -2,7 +2,9 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8" />
-    <title>{{ $title ?? 'Overlay - BARIS APP' }}</title>
+    <meta name="description" content="{{ $eventner?->nama_event ? 'Live streaming ' . $eventner->nama_event : 'BARIS APP - Platform manajemen event' }}">
+    <meta name="robots" content="noindex, nofollow">
+    <title>{{ $title ? $title . ' - ' . get_setting('site_title', 'BARIS APP') : ($eventner?->nama_event ?? get_setting('site_title', 'BARIS APP')) . ' - Live' }}</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 

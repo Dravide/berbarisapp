@@ -6,8 +6,24 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="shortcut icon" type="image/png" href="{{ asset('templates/assets/images/logos/favicon.png') }}" />
+    <meta name="description" content="{{ get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu') }}">
+    <meta name="keywords" content="{{ get_setting('meta_keywords', 'event, kompetisi, lomba, baris, pendaftaran, panitia') }}">
+    <link rel="canonical" href="{{ url()->current() }}">
+
+    {{-- Open Graph --}}
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ get_setting('site_title', 'BARIS APP') }}">
+    <meta property="og:title" content="{{ $title ?? 'Login - ' . get_setting('site_title', 'BARIS APP') }}">
+    <meta property="og:description" content="{{ get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu') }}">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:locale" content="id_ID">
+
+    {{-- Twitter Card --}}
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{{ $title ?? 'Login - ' . get_setting('site_title', 'BARIS APP') }}">
+
     <link rel="stylesheet" href="{{ asset('templates/assets/css/styles.css') }}" />
-    <title>{{ $title ?? 'Akses Panitia - BARIS APP' }}</title>
+    <title>{{ $title ?? get_setting('site_title', 'BARIS APP') . ' - Masuk' }}</title>
     @livewireStyles
 </head>
 

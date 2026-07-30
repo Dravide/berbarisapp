@@ -6,9 +6,25 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>{{ $title ?? get_setting('site_title', 'BARIS APP') }}</title>
-    <meta name="description" content="{{ get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu') }}">
-    <meta name="keywords" content="{{ get_setting('meta_keywords', 'event, kompetisi, lomba, baris, pendaftaran') }}">
+    <title>{{ $title ?? get_setting('site_title', 'BARIS APP') }} - Platform Manajemen Event & Kompetisi</title>
+    <meta name="description" content="{{ get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu. Solusi lengkap untuk penyelenggara event, lomba, dan kompetisi di Indonesia.') }}">
+    <meta name="keywords" content="{{ get_setting('meta_keywords', 'event, kompetisi, lomba, baris, pendaftaran, manajemen event, platform kompetisi, penyelenggara event') }}">
+    <link rel="canonical" href="{{ url()->current() }}">
+
+    {{-- Open Graph --}}
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="{{ get_setting('site_title', 'BARIS APP') }}">
+    <meta property="og:title" content="{{ $title ?? get_setting('site_title', 'BARIS APP') }}">
+    <meta property="og:description" content="{{ get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu.') }}">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:locale" content="id_ID">
+    @if(($logoPath ?? null) && is_string($logoPath))
+    <meta property="og:image" content="{{ $logoPath }}">
+    @endif
+
+    {{-- Twitter Card --}}
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $title ?? get_setting('site_title', 'BARIS APP') }}">
 
     @isset($favicon)
         <link rel="shortcut icon" href="{{ $favicon }}" type="image/x-icon">

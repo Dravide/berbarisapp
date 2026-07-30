@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', 'Dashboard - BARIS APP')
+@section('title', 'Dashboard - ' . get_setting('site_title', 'BARIS APP'))
 
 @section('content')
 <div class="row">
