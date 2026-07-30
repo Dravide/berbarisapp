@@ -62,6 +62,9 @@ class Registration extends Model
             if (!$model->status_berkas) {
                 $model->status_berkas = 'booking';
             }
+            if (!$model->qr_token) {
+                $model->qr_token = strtoupper(\Illuminate\Support\Str::random(8));
+            }
         });
     }
 
