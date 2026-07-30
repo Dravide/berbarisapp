@@ -15,6 +15,13 @@ class ParticipantResource extends JsonResource
             'logo_sekolah' => $this->logo_sekolah ? asset('storage/' . $this->logo_sekolah) : null,
             'total_votes' => (int) ($this->total_votes ?? 0),
             'status_berkas' => $this->status_berkas,
+            'status_label' => match ($this->status_berkas) {
+                'booking' => 'Booking',
+                'confirmed' => 'Confirmed',
+                'Terverifikasi' => 'Terverifikasi',
+                'Ditolak' => 'Ditolak',
+                default => $this->status_berkas,
+            },
             'kategori' => $this->whenLoaded('competitionCategory', fn () => [
                 'id' => $this->competitionCategory->id,
                 'name' => $this->competitionCategory->full_name,
