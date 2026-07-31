@@ -12,6 +12,7 @@
   
   <meta name="description" content="{{ get_setting('meta_description') }}" />
   <meta name="keywords" content="{{ get_setting('meta_keywords') }}" />
+  <meta name="google-adsense-account" content="ca-pub-5071798385516247" />
   <link rel="canonical" href="{{ url()->current() }}" />
 
   {{-- Open Graph --}}

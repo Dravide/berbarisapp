@@ -28,6 +28,9 @@
     <meta name="keywords" content="{{ $_ev?->nama_event }}, {{ $_ev?->diselenggarakan_oleh }}, lomba, kompetisi, event, {{ $_ev?->lokasi }}, {{ $_ev?->tingkat_perlombaan }}">
     <link rel="canonical" href="{{ $_currentUrl }}">
 
+    {{-- Google AdSense --}}
+    <meta name="google-adsense-account" content="ca-pub-5071798385516247">
+
     {{-- Open Graph / Facebook --}}
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="{{ get_setting('site_title', 'BARIS APP') }}">

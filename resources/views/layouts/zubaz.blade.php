@@ -11,6 +11,9 @@
     <meta name="keywords" content="{{ get_setting('meta_keywords', 'event, kompetisi, lomba, baris, pendaftaran, manajemen event, platform kompetisi, penyelenggara event') }}">
     <link rel="canonical" href="{{ url()->current() }}">
 
+    {{-- Google AdSense --}}
+    <meta name="google-adsense-account" content="ca-pub-5071798385516247">
+
     {{-- Open Graph --}}
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="{{ get_setting('site_title', 'BARIS APP') }}">
