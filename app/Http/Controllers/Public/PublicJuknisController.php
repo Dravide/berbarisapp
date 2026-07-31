@@ -16,7 +16,7 @@ class PublicJuknisController extends Controller
         if ($resolved) {
             $eventner = $resolved;
         } else {
-            $eventner = Eventner::where('slug', $slug)->firstOrFail();
+            $eventner = Eventner::approved()->where('slug', $slug)->firstOrFail();
         }
 
         $categories = AssessmentCategory::with(['subCategories.criterias'])

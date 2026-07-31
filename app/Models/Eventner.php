@@ -119,6 +119,11 @@ class Eventner extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function scopeApproved($query)
+    {
+        return $query->where('status', 'approved');
+    }
+
     public function competitionCategories()
     {
         return $this->hasMany(CompetitionCategory::class);

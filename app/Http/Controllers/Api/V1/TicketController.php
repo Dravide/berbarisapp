@@ -27,7 +27,7 @@ class TicketController extends Controller
         }
         RateLimiter::hit('api-ticket:' . $request->ip(), 60);
 
-        $event = Eventner::where('slug', $request->event_slug)->firstOrFail();
+        $event = Eventner::approved()->where('slug', $request->event_slug)->firstOrFail();
 
         if (!$event->ticket_active) {
             return response()->json(['message' => 'Fitur tiket sedang tidak aktif.'], 400);
@@ -124,9 +124,14 @@ class TicketController extends Controller
         }
     }
 
-    public function status($orderCode)
+    public function status(Request $request, $orderCode)
     {
-        $ticket = Ticket::where('order_code', $orderCode)->firstOrFail();
+        // Scope by event_slug — cegah enumerasi order/buyer event lain.
+        $event = Eventner::approved()->where('slug', $request->query('event_slug', ''))->firstOrFail();
+
+        $ticket = Ticket::where('eventner_id', $event->id)
+            ->where('order_code', $orderCode)
+            ->firstOrFail();
 
         return response()->json([
             'data' => [

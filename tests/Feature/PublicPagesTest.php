@@ -97,12 +97,13 @@ class PublicPagesTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_pending_event_accessible_via_slug()
+    public function test_pending_event_not_accessible_via_slug()
     {
         $eventner = Eventner::factory()->pending()->create(['nama_event' => 'Pending Test']);
 
+        // Pending event harus 404 — tidak boleh live sebelum disetujui.
         $response = $this->get("/event/{$eventner->slug}");
-        $response->assertStatus(200);
+        $response->assertStatus(404);
     }
 
     public function test_ticket_page_loads()

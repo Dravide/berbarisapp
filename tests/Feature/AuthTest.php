@@ -120,7 +120,7 @@ class AuthTest extends TestCase
         $response->assertStatus(404);
     }
 
-    public function test_pending_event_accessible_via_slug()
+    public function test_pending_event_not_accessible_via_slug()
     {
         $eventner = Eventner::factory()->pending()->create([
             'nama_event' => 'Pending Event Test',
@@ -128,9 +128,8 @@ class AuthTest extends TestCase
 
         $response = $this->get("/event/{$eventner->slug}");
 
-        // No status filter on EventDetail mount() — pending event still loads
-        $response->assertStatus(200);
-        $response->assertSee('Pending Event Test');
+        // Pending event harus 404 — tidak boleh live sebelum disetujui.
+        $response->assertStatus(404);
     }
 
     public function test_participant_page_accessible()

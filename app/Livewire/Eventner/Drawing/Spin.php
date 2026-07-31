@@ -5,6 +5,7 @@ namespace App\Livewire\Eventner\Drawing;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Locked;
 use App\Models\Registration;
 
 use App\Models\Eventner;
@@ -14,13 +15,20 @@ use App\Models\Eventner;
 class Spin extends Component
 {
     public $slug;
+
+    // Dikunci server-side — client tidak boleh mutasi ke tenant lain.
+    #[Locked]
     public $eventnerId;
+
+    // Dikunci — cuma verifyCode() yang bisa set true.
+    #[Locked]
+    public $isAuthenticated = false;
+
     public $activeTab = '';
     public $categories = [];
     public $currentSchool = null;
     public $spinResult = null;
     public $isSpinning = false;
-    public $isAuthenticated = false;
     public $inputCode = '';
     public $allDrawn = false;
 
@@ -77,6 +85,7 @@ class Spin extends Component
 
     public function spin()
     {
+        if (!$this->isAuthenticated) return;
         if (!$this->currentSchool || $this->isSpinning) return;
 
         // Hitung nomor urut yang belum terpakai
@@ -86,7 +95,8 @@ class Spin extends Component
             ->pluck('urutan_tampil')
             ->toArray();
 
-        $category = \App\Models\CompetitionCategory::find($this->activeTab);
+        $category = \App\Models\CompetitionCategory::where('eventner_id', $this->eventnerId)
+            ->find($this->activeTab);
         $totalInCategory = $category->kuota ?? Registration::where('eventner_id', $this->eventnerId)
             ->where('competition_category_id', $this->activeTab)
             ->count();
@@ -101,6 +111,7 @@ class Spin extends Component
 
     public function saveResult()
     {
+        if (!$this->isAuthenticated) return;
         if (!$this->currentSchool || !$this->spinResult) return;
 
         $this->currentSchool->update([
@@ -114,6 +125,8 @@ class Spin extends Component
 
     public function resetDrawing()
     {
+        if (!$this->isAuthenticated) return;
+
         Registration::where('eventner_id', $this->eventnerId)
             ->where('competition_category_id', $this->activeTab)
             ->update(['urutan_tampil' => null]);
@@ -142,7 +155,8 @@ class Spin extends Component
                 ->orderBy('urutan_tampil')
                 ->get();
 
-        $category = \App\Models\CompetitionCategory::find($this->activeTab);
+        $category = \App\Models\CompetitionCategory::where('eventner_id', $eventner->id)
+            ->find($this->activeTab);
         $totalSchools = $category->kuota ?? Registration::where('eventner_id', $eventner->id)
                 ->where('competition_category_id', $this->activeTab)
                 ->count();

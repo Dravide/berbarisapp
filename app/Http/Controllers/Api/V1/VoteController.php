@@ -18,7 +18,7 @@ class VoteController extends Controller
     {
         $request->validate([
             'event_slug' => 'required|string',
-            'registration_id' => 'required|exists:registrations,id',
+            'registration_id' => 'required|integer',
             'vote_count' => 'required|integer|min:1',
             'voter_name' => 'required|string|max:255',
             'voter_email' => 'required|email|max:255',
@@ -30,7 +30,15 @@ class VoteController extends Controller
         }
         RateLimiter::hit('api-vote:' . $request->ip(), 60);
 
-        $event = Eventner::where('slug', $request->event_slug)->firstOrFail();
+        $event = Eventner::approved()->where('slug', $request->event_slug)->firstOrFail();
+
+        // Pastikan registration_id milik event ini, bukan registrasi tenant lain.
+        $registration = Registration::where('eventner_id', $event->id)
+            ->find($request->registration_id);
+
+        if (!$registration) {
+            return response()->json(['message' => 'Peserta tidak ditemukan pada event ini.'], 422);
+        }
 
         if (!$event->vote_active) {
             return response()->json(['message' => 'Fitur Vote sudah ditutup.'], 400);
@@ -101,9 +109,13 @@ class VoteController extends Controller
         }
     }
 
-    public function status($transactionId)
+    public function status(Request $request, $transactionId)
     {
-        $transaction = VoteTransaction::findOrFail($transactionId);
+        // Scope by event_slug — cegah baca status transaksi event lain.
+        $event = Eventner::approved()->where('slug', $request->query('event_slug', ''))->firstOrFail();
+
+        $transaction = VoteTransaction::where('eventner_id', $event->id)
+            ->findOrFail($transactionId);
 
         return response()->json([
             'data' => [
@@ -118,7 +130,7 @@ class VoteController extends Controller
     {
         $request->validate(['event_slug' => 'required|string']);
 
-        $event = Eventner::where('slug', $request->event_slug)->firstOrFail();
+        $event = Eventner::approved()->where('slug', $request->event_slug)->firstOrFail();
 
         $comments = VoteTransaction::with('registration:id,nama_sekolah')
             ->where('eventner_id', $event->id)

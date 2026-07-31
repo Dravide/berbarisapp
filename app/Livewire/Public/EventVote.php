@@ -54,7 +54,7 @@ class EventVote extends Component
         } else {
             $this->eventner = Eventner::with(['competitionCategories' => function ($q) {
                 $q->whereNotNull('parent_id')->withCount('registrations');
-            }])->where('slug', $slug)->firstOrFail();
+            }])->approved()->where('slug', $slug)->firstOrFail();
         }
 
         // Cek voting ditutup

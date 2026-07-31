@@ -43,7 +43,7 @@ class Create extends Component
             $this->slug = $resolved->slug;
         } else {
             $this->slug = $slug;
-            $this->eventner = Eventner::where('slug', $slug)->firstOrFail();
+            $this->eventner = Eventner::approved()->where('slug', $slug)->firstOrFail();
         }
 
         if ($this->eventner->tanggal_pendaftaran && now()->isAfter($this->eventner->tanggal_pendaftaran)) {

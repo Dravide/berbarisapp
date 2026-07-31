@@ -9,6 +9,7 @@ use App\Models\Eventner;
 use App\Models\Registration;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
+use Livewire\Attributes\Locked;
 
 class EventScoring extends Component
 {
@@ -19,6 +20,9 @@ class EventScoring extends Component
     public $selectedRegistrationId;
     public $selectedRegistration;
     public $scoringCodeInput = '';
+
+    // Dikunci — hanya authenticate() yang bisa set true.
+    #[Locked]
     public $authenticated = false;
     public $scores = []; // [criteria_id => 'score_value']
     public $saveStatus = ''; // '', 'saved', 'error'
@@ -30,7 +34,7 @@ class EventScoring extends Component
 
     public function mount($slug)
     {
-        $this->eventner = Eventner::where('slug', $slug)->firstOrFail();
+        $this->eventner = Eventner::approved()->where('slug', $slug)->firstOrFail();
 
         if ($this->selectedCategoryId) {
             $this->view = 'participants';
@@ -77,8 +81,13 @@ class EventScoring extends Component
 
     public function selectParticipant($id)
     {
+        if (!$this->authenticated) return;
+
         $this->selectedRegistrationId = $id;
-        $this->selectedRegistration = Registration::with('competitionCategory')->find($id);
+        // Scoping ke eventner sendiri — cegah IDOR ke registrasi tenant lain.
+        $this->selectedRegistration = Registration::where('eventner_id', $this->eventner->id)
+            ->with('competitionCategory')
+            ->findOrFail($id);
         $this->view = 'scoring';
         
         // Load existing scores for this participant
@@ -107,6 +116,8 @@ class EventScoring extends Component
 
     public function saveScores()
     {
+        if (!$this->authenticated) return;
+
         if (RateLimiter::tooManyAttempts('scoring-submit:' . request()->ip(), $maxAttempts = 10)) {
             session()->flash('scoring_error', 'Terlalu banyak permintaan. Silakan coba lagi nanti.');
             return;
@@ -144,9 +155,12 @@ class EventScoring extends Component
         $assessmentCategories = collect();
 
         if ($this->selectedCategoryId) {
-            $selectedCategory = CompetitionCategory::find($this->selectedCategoryId);
+            // Scoping ke eventner sendiri.
+            $selectedCategory = CompetitionCategory::where('eventner_id', $this->eventner->id)
+                ->find($this->selectedCategoryId);
 
-            $query = Registration::where('competition_category_id', $this->selectedCategoryId);
+            $query = Registration::where('eventner_id', $this->eventner->id)
+                ->where('competition_category_id', $this->selectedCategoryId);
 
             if ($this->search) {
                 $query->where(function ($q) {

@@ -30,7 +30,7 @@ class EventParticipant extends Component
                 $q->where('status_berkas', '!=', 'dibatalkan')
                   ->orderBy('urutan_tampil', 'asc');
             }, 'competitionCategories.registrations.participants'])
-                ->where('slug', $slug)->firstOrFail();
+                ->approved()->where('slug', $slug)->firstOrFail();
         }
     }
 

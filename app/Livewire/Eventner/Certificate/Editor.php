@@ -166,7 +166,10 @@ class Editor extends Component
                 'x', 'y' => round((float) $value, 1),
                 default => $value,
             };
-            CertificateTextField::where('id', $id)->update([$key => $updateVal]);
+            // Scope ke template milik eventner sendiri — cegah update field tenant lain.
+            CertificateTextField::where('certificate_template_id', $this->templateId)
+                ->where('id', $id)
+                ->update([$key => $updateVal]);
 
             $idx = collect($this->textFields)->search(fn($f) => $f['id'] == $id);
             if ($idx !== false) {

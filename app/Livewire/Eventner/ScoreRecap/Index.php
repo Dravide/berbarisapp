@@ -57,9 +57,12 @@ class Index extends Component
             ->get();
 
         if ($this->selectedCategoryId) {
-            $selectedCategory = CompetitionCategory::find($this->selectedCategoryId);
+            // Scoping ke eventner sendiri — cegah baca data kategori/registrasi tenant lain.
+            $selectedCategory = CompetitionCategory::where('eventner_id', $this->eventner->id)
+                ->find($this->selectedCategoryId);
 
-            $participants = Registration::where('competition_category_id', $this->selectedCategoryId)
+            $participants = Registration::where('eventner_id', $this->eventner->id)
+                ->where('competition_category_id', $this->selectedCategoryId)
                 ->orderBy('nama_sekolah')
                 ->get();
 

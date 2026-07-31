@@ -20,8 +20,8 @@ trait FeatureGatedComponent
         }
 
         if (!$eventner->canAccessFeature($this->requiredFeature)) {
-            $this->redirect(route('eventner.dashboard'), navigate: true);
             session()->flash('error', 'Fitur ini hanya tersedia untuk paket berbayar. Trial Anda telah berakhir.');
+            abort(403);
         }
     }
 }

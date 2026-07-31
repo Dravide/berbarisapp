@@ -48,7 +48,7 @@ class EventTicket extends Component
         if ($resolved) {
             $this->eventner = $resolved;
         } else {
-            $this->eventner = Eventner::where('slug', $slug)->firstOrFail();
+            $this->eventner = Eventner::approved()->where('slug', $slug)->firstOrFail();
         }
 
         if (!$this->eventner->ticket_active || !$this->eventner->ticket_price) {

@@ -74,7 +74,10 @@ class Index extends Component
     public function selectParticipant($id)
     {
         $this->selectedRegistrationId = $id;
-        $this->selectedRegistration = Registration::with('competitionCategory')->find($id);
+        // Scoping ke eventner sendiri — cegah IDOR ke registrasi tenant lain.
+        $this->selectedRegistration = Registration::where('eventner_id', $this->eventner->id)
+            ->with('competitionCategory')
+            ->findOrFail($id);
         $this->view = 'scoring';
 
         // Load judges for this competition category
@@ -323,9 +326,12 @@ class Index extends Component
         $assessmentCategories = collect();
 
         if ($this->selectedCategoryId) {
-            $selectedCategory = CompetitionCategory::find($this->selectedCategoryId);
+            // Scoping ke eventner sendiri — cegah enumerasi kategori/registrasi tenant lain.
+            $selectedCategory = CompetitionCategory::where('eventner_id', $this->eventner->id)
+                ->find($this->selectedCategoryId);
 
-            $query = Registration::where('competition_category_id', $this->selectedCategoryId);
+            $query = Registration::where('eventner_id', $this->eventner->id)
+                ->where('competition_category_id', $this->selectedCategoryId);
 
             if ($this->search) {
                 $query->where(function ($q) {

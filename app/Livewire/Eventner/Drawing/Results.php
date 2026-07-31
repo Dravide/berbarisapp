@@ -5,6 +5,7 @@ namespace App\Livewire\Eventner\Drawing;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Locked;
 use App\Models\Registration;
 
 use App\Models\Eventner;
@@ -14,7 +15,11 @@ use App\Models\Eventner;
 class Results extends Component
 {
     public $slug;
+
+    // Dikunci server-side — client tidak boleh ganti eventner.
+    #[Locked]
     public $eventnerId;
+
     public $activeTab = '';
     public $categories = [];
 
@@ -58,7 +63,8 @@ class Results extends Component
                 ->orderBy('urutan_tampil')
                 ->get();
 
-        $category = \App\Models\CompetitionCategory::find($this->activeTab);
+        $category = \App\Models\CompetitionCategory::where('eventner_id', $eventner->id)
+            ->find($this->activeTab);
         $totalSchools = $category->kuota ?? Registration::where('eventner_id', $eventner->id)
                 ->where('competition_category_id', $this->activeTab)
                 ->count();

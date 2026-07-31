@@ -6,11 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\RegistrationResource;
 use App\Models\Registration;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 
 class QrController extends Controller
 {
     public function scan(Request $request)
     {
+        // Throttle brute-force QR token (8 char uppercase, ruang kunci kecil).
+        if (RateLimiter::tooManyAttempts('api-qr-scan:' . $request->ip(), 10)) {
+            return response()->json(['message' => 'Terlalu banyak percobaan. Silakan coba lagi nanti.'], 429);
+        }
+        RateLimiter::hit('api-qr-scan:' . $request->ip(), 60);
+
         $request->validate([
             'qr_token' => 'required|string|size:8',
         ]);

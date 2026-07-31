@@ -23,7 +23,7 @@ class EventResult extends Component
         if ($resolved) {
             $this->eventner = $resolved;
         } else {
-            $this->eventner = Eventner::where('slug', $slug)->firstOrFail();
+            $this->eventner = Eventner::approved()->where('slug', $slug)->firstOrFail();
         }
 
         $this->categories = $this->eventner->competitionCategories()

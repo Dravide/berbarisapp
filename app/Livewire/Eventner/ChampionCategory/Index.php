@@ -134,7 +134,10 @@ class Index extends Component
 
     public function toggleCategory($categoryId)
     {
-        $category = AssessmentCategory::with('subCategories')->find($categoryId);
+        // Scoping ke eventner sendiri — cegah baca struktur penilaian tenant lain.
+        $category = AssessmentCategory::with('subCategories')
+            ->where('eventner_id', $this->eventner->id)
+            ->find($categoryId);
         if (!$category) return;
 
         $subIds = $category->subCategories->pluck('id')->map(fn($id) => (string) $id)->toArray();
@@ -155,7 +158,10 @@ class Index extends Component
 
     public function toggleTiebreakCategory($categoryId)
     {
-        $category = AssessmentCategory::with('subCategories')->find($categoryId);
+        // Scoping ke eventner sendiri — cegah baca struktur penilaian tenant lain.
+        $category = AssessmentCategory::with('subCategories')
+            ->where('eventner_id', $this->eventner->id)
+            ->find($categoryId);
         if (!$category) return;
 
         $subIds = $category->subCategories->pluck('id')->map(fn($id) => (string) $id)->toArray();
@@ -227,7 +233,10 @@ class Index extends Component
             ->max('sort_order') ?? 0;
 
         if ($this->editingRankTitleId) {
-            $rankTitle = ChampionRankTitle::findOrFail($this->editingRankTitleId);
+            // Scoping ke eventner sendiri — cegah update rank title tenant lain via payload.
+            $rankTitle = ChampionRankTitle::whereHas('championCategory', fn($q) =>
+                $q->where('eventner_id', $this->eventner->id)
+            )->findOrFail($this->editingRankTitleId);
             $rankTitle->update([
                 'title' => strip_tags($this->rankTitle),
                 'rank_start' => $this->rankStart,
@@ -281,7 +290,9 @@ class Index extends Component
         $rankings = collect();
         $rankTitleMap = collect();
         if ($this->selectedCompetitionCategoryId) {
-            $participants = \App\Models\Registration::where('competition_category_id', $this->selectedCompetitionCategoryId)
+            // Scoping ke eventner sendiri — cegah baca registrasi tenant lain.
+            $participants = \App\Models\Registration::where('eventner_id', $this->eventner->id)
+                ->where('competition_category_id', $this->selectedCompetitionCategoryId)
                 ->orderBy('nama_sekolah')
                 ->get();
 

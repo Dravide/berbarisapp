@@ -51,7 +51,7 @@ class Index extends Component
     {
         $this->allRankings = [];
 
-        $cacheKey = "champions:{$this->eventner->scoringCode}:cat:{$this->selectedCategoryId}";
+        $cacheKey = "champions:{$this->eventner->id}:cat:{$this->selectedCategoryId}";
 
         $cached = cache()->get($cacheKey);
         if ($cached !== null) {

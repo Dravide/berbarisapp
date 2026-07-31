@@ -36,6 +36,11 @@ class ResolveEventnerSubdomain
             abort(404, 'Event tidak ditemukan.');
         }
 
+        // Event belum disetujui tidak boleh live.
+        if ($eventner->status !== 'approved') {
+            abort(404, 'Event tidak ditemukan.');
+        }
+
         // Bind to container for components to pick up
         app()->instance('current_eventner', $eventner);
 

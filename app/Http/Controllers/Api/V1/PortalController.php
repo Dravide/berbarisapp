@@ -16,6 +16,10 @@ class PortalController extends Controller
     {
         $token = PersonalAccessToken::findToken($request->bearerToken());
         abort_unless($token, 401);
+
+        // Token harus milik model Registration — cegah token model lain dipakai sebagai ID registration.
+        abort_unless($token->tokenable_type === \App\Models\Registration::class, 403);
+
         return Registration::with([
             'eventner',
             'competitionCategory',
@@ -215,8 +219,9 @@ class PortalController extends Controller
     {
         $reg = $this->getRegistration($request);
 
-        // Cari semua peserta di kategori yang sama
-        $allRegs = Registration::where('competition_category_id', $reg->competition_category_id)
+        // Cari semua peserta di kategori yang sama (dalam event yang sama — cegah bocor tenant lain)
+        $allRegs = Registration::where('eventner_id', $reg->eventner_id)
+            ->where('competition_category_id', $reg->competition_category_id)
             ->whereIn('status_berkas', ['confirmed', 'Terverifikasi'])
             ->pluck('id');
 

@@ -45,7 +45,7 @@ class EventDetail extends Component
                 },
                 'competitionCategories.children.judges',
                 'competitionCategories.children.registrations',
-            ])->where('slug', $slug)->firstOrFail();
+            ])->approved()->where('slug', $slug)->firstOrFail();
         }
 
         $this->registration_status = $this->eventner->registration_status ?? 'open';
