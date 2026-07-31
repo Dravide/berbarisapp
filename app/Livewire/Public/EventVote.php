@@ -215,15 +215,19 @@ class EventVote extends Component
             $status = $result['data']['transaction_status'] ?? 'pending';
 
             if ($status === 'settlement') {
-                // Update di database
-                if ($tx && $tx->status !== 'PAID') {
-                    $tx->update(['status' => 'PAID', 'paid_at' => now()]);
+                // Atomic claim — siapa yang duluan update PENDING → PAID yang menang.
+                if ($tx) {
+                    VoteTransaction::where('id', $tx->id)
+                        ->where('status', 'PENDING')
+                        ->update(['status' => 'PAID', 'paid_at' => now()]);
                 }
                 $this->paymentConfirmed = true;
                 $this->view = 'success';
             } elseif ($status === 'expire') {
-                if ($tx && $tx->status !== 'EXPIRED') {
-                    $tx->update(['status' => 'EXPIRED']);
+                if ($tx) {
+                    VoteTransaction::where('id', $tx->id)
+                        ->where('status', 'PENDING')
+                        ->update(['status' => 'EXPIRED']);
                 }
                 $this->view = 'participants';
                 session()->flash('error', 'Pembayaran kedaluwarsa. Silakan coba lagi.');

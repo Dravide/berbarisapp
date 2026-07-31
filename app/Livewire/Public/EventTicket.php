@@ -179,32 +179,38 @@ class EventTicket extends Component
             $status = $result['data']['transaction_status'] ?? 'pending';
 
             if ($status === 'settlement') {
-                if ($ticket && $ticket->status !== 'PAID') {
-                    // Generate QR tiket masuk
+                if ($ticket) {
+                    // Generate QR tiket masuk — idempoten (overwrite path yang sama)
                     $qrPath = $this->generateTicketQr($ticket);
 
-                    $ticket->update([
-                        'status' => 'PAID',
-                        'paid_at' => now(),
-                        'qr_code_path' => $qrPath,
-                    ]);
-
-                    // Kirim email notifikasi (idempoten via cache)
-                    try {
-                        app(\App\Services\MailyService::class)->sendTicketConfirmation($ticket->fresh());
-                    } catch (\Exception $e) {
-                        Log::warning('Maily.id: sendTicketConfirmation failed (polling)', [
-                            'error' => $e->getMessage(),
-                            'order' => $ticket->order_code,
+                    // Atomic claim — hanya pemenang (PENDING → PAID) yang lanjut kirim email.
+                    $claimed = Ticket::where('id', $ticket->id)
+                        ->where('status', 'PENDING')
+                        ->update([
+                            'status' => 'PAID',
+                            'paid_at' => now(),
+                            'qr_code_path' => $qrPath,
                         ]);
+
+                    if ($claimed) {
+                        try {
+                            app(\App\Services\MailyService::class)->sendTicketConfirmation($ticket->fresh());
+                        } catch (\Exception $e) {
+                            Log::warning('Maily.id: sendTicketConfirmation failed (polling)', [
+                                'error' => $e->getMessage(),
+                                'order' => $ticket->order_code,
+                            ]);
+                        }
                     }
                 }
                 $this->paymentConfirmed = true;
                 $this->confirmOrder = $ticket->order_code;
                 $this->view = 'confirmation';
             } elseif ($status === 'expire') {
-                if ($ticket && $ticket->status !== 'EXPIRED') {
-                    $ticket->update(['status' => 'EXPIRED']);
+                if ($ticket) {
+                    Ticket::where('id', $ticket->id)
+                        ->where('status', 'PENDING')
+                        ->update(['status' => 'EXPIRED']);
                 }
                 $this->view = 'form';
                 session()->flash('error', 'Pembayaran kedaluwarsa. Silakan coba lagi.');

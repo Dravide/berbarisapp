@@ -100,11 +100,21 @@ class Index extends Component
                 $status = $result['data']['transaction_status'] ?? 'pending';
 
                 if ($status === 'settlement') {
-                    $tx->update(['status' => 'PAID', 'paid_at' => now()]);
-                    $synced++;
+                    $claimed = VoteTransaction::where('id', $tx->id)
+                        ->where('status', 'PENDING')
+                        ->update(['status' => 'PAID', 'paid_at' => now()]);
+
+                    if ($claimed) {
+                        $synced++;
+                    }
                 } elseif (in_array($status, ['expire', 'cancel'])) {
-                    $tx->update(['status' => strtoupper($status)]);
-                    $synced++;
+                    $claimed = VoteTransaction::where('id', $tx->id)
+                        ->where('status', 'PENDING')
+                        ->update(['status' => strtoupper($status)]);
+
+                    if ($claimed) {
+                        $synced++;
+                    }
                 }
             } catch (\Exception $e) {
                 $errors++;
@@ -118,11 +128,21 @@ class Index extends Component
                 $status = $result['data']['transaction_status'] ?? 'pending';
 
                 if ($status === 'settlement') {
-                    $ticket->update(['status' => 'PAID', 'paid_at' => now()]);
-                    $synced++;
+                    $claimed = Ticket::where('id', $ticket->id)
+                        ->where('status', 'PENDING')
+                        ->update(['status' => 'PAID', 'paid_at' => now()]);
+
+                    if ($claimed) {
+                        $synced++;
+                    }
                 } elseif (in_array($status, ['expire', 'cancel'])) {
-                    $ticket->update(['status' => strtoupper($status)]);
-                    $synced++;
+                    $claimed = Ticket::where('id', $ticket->id)
+                        ->where('status', 'PENDING')
+                        ->update(['status' => strtoupper($status)]);
+
+                    if ($claimed) {
+                        $synced++;
+                    }
                 }
             } catch (\Exception $e) {
                 $errors++;

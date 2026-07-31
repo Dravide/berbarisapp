@@ -64,9 +64,10 @@ class AutoGoPayWebhookController extends Controller
 
     private function handleSettlement(string $transactionId, array $transactionData = []): void
     {
-        // Cek Vote Transaction (idempotent)
+        // Vote Transaction — atomic claim. Cuma satu yang berhasil (webhook vs polling):
+        // yang pertama update status PENDING → PAID jadi pemenang, sisanya dapat 0 affected & skip.
         $vote = VoteTransaction::where('autogopay_transaction_id', $transactionId)->first();
-        if ($vote && $vote->status !== 'PAID') {
+        if ($vote) {
             // Verifikasi amount: pastikan nominal dibayar sesuai database
             $paidAmount = $transactionData['amount'] ?? null;
             if ($paidAmount !== null && (int)$paidAmount !== (int)$vote->amount) {
@@ -79,18 +80,20 @@ class AutoGoPayWebhookController extends Controller
                 return;
             }
 
-            $vote->update([
-                'status' => 'PAID',
-                'paid_at' => now(),
-            ]);
-            Log::info('Vote payment confirmed via webhook', ['transaction_id' => $transactionId, 'vote_id' => $vote->id]);
+            $claimed = VoteTransaction::where('id', $vote->id)
+                ->where('status', 'PENDING')
+                ->update(['status' => 'PAID', 'paid_at' => now()]);
+
+            if ($claimed) {
+                Log::info('Vote payment confirmed via webhook', ['transaction_id' => $transactionId, 'vote_id' => $vote->id]);
+            }
 
             return;
         }
 
-        // Cek Ticket (idempotent)
+        // Ticket — atomic claim sama seperti di atas.
         $ticket = Ticket::where('autogopay_transaction_id', $transactionId)->first();
-        if ($ticket && $ticket->status !== 'PAID') {
+        if ($ticket) {
             // Verifikasi amount: pastikan nominal dibayar sesuai database
             $paidAmount = $transactionData['amount'] ?? null;
             if ($paidAmount !== null && (int)$paidAmount !== (int)$ticket->total_amount) {
@@ -103,7 +106,7 @@ class AutoGoPayWebhookController extends Controller
                 return;
             }
 
-            // Generate QR tiket masuk (binary PNG)
+            // Generate QR tiket masuk (binary PNG) — hanya untuk pemenang claim
             $options = new QROptions;
             $options->outputInterface = QRGdImagePNG::class;
             $options->outputBase64 = false;
@@ -113,21 +116,26 @@ class AutoGoPayWebhookController extends Controller
             $qrImage = (new QRCode($options))->render($ticket->order_code);
             Storage::disk('public')->put($qrPath, $qrImage);
 
-            $ticket->update([
-                'status' => 'PAID',
-                'paid_at' => now(),
-                'qr_code_path' => $qrPath,
-            ]);
-            Log::info('Ticket payment confirmed via webhook', ['transaction_id' => $transactionId, 'ticket_id' => $ticket->id]);
-
-            // Kirim email notifikasi ke buyer
-            try {
-                app(\App\Services\MailyService::class)->sendTicketConfirmation($ticket->fresh());
-            } catch (\Exception $e) {
-                Log::warning('Maily.id: sendTicketConfirmation failed (webhook)', [
-                    'error' => $e->getMessage(),
-                    'order' => $ticket->order_code,
+            $claimed = Ticket::where('id', $ticket->id)
+                ->where('status', 'PENDING')
+                ->update([
+                    'status' => 'PAID',
+                    'paid_at' => now(),
+                    'qr_code_path' => $qrPath,
                 ]);
+
+            if ($claimed) {
+                Log::info('Ticket payment confirmed via webhook', ['transaction_id' => $transactionId, 'ticket_id' => $ticket->id]);
+
+                // Kirim email notifikasi ke buyer
+                try {
+                    app(\App\Services\MailyService::class)->sendTicketConfirmation($ticket->fresh());
+                } catch (\Exception $e) {
+                    Log::warning('Maily.id: sendTicketConfirmation failed (webhook)', [
+                        'error' => $e->getMessage(),
+                        'order' => $ticket->order_code,
+                    ]);
+                }
             }
         }
     }

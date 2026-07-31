@@ -29,13 +29,23 @@ class SyncPendingTransactions extends Command
                 $result = $service->checkStatus($tx->autogopay_transaction_id);
                 $status = $result['data']['transaction_status'] ?? null;
 
-                if ($status === 'settlement' && $tx->status === 'PENDING') {
-                    $tx->update(['status' => 'PAID', 'paid_at' => now()]);
-                    $synced++;
-                    Log::info("Sync: Vote {$tx->autogopay_transaction_id} → PAID");
-                } elseif (in_array($status, ['expire', 'cancel']) && $tx->status === 'PENDING') {
-                    $tx->update(['status' => strtoupper($status)]);
-                    $synced++;
+                if ($status === 'settlement') {
+                    $claimed = VoteTransaction::where('id', $tx->id)
+                        ->where('status', 'PENDING')
+                        ->update(['status' => 'PAID', 'paid_at' => now()]);
+
+                    if ($claimed) {
+                        $synced++;
+                        Log::info("Sync: Vote {$tx->autogopay_transaction_id} → PAID");
+                    }
+                } elseif (in_array($status, ['expire', 'cancel'])) {
+                    $claimed = VoteTransaction::where('id', $tx->id)
+                        ->where('status', 'PENDING')
+                        ->update(['status' => strtoupper($status)]);
+
+                    if ($claimed) {
+                        $synced++;
+                    }
                 }
             } catch (\Exception $e) {
                 // skip — will retry next tick
@@ -53,13 +63,23 @@ class SyncPendingTransactions extends Command
                 $result = $service->checkStatus($ticket->autogopay_transaction_id);
                 $status = $result['data']['transaction_status'] ?? null;
 
-                if ($status === 'settlement' && $ticket->status === 'PENDING') {
-                    $ticket->update(['status' => 'PAID', 'paid_at' => now()]);
-                    $synced++;
-                    Log::info("Sync: Ticket {$ticket->autogopay_transaction_id} → PAID");
-                } elseif (in_array($status, ['expire', 'cancel']) && $ticket->status === 'PENDING') {
-                    $ticket->update(['status' => strtoupper($status)]);
-                    $synced++;
+                if ($status === 'settlement') {
+                    $claimed = Ticket::where('id', $ticket->id)
+                        ->where('status', 'PENDING')
+                        ->update(['status' => 'PAID', 'paid_at' => now()]);
+
+                    if ($claimed) {
+                        $synced++;
+                        Log::info("Sync: Ticket {$ticket->autogopay_transaction_id} → PAID");
+                    }
+                } elseif (in_array($status, ['expire', 'cancel'])) {
+                    $claimed = Ticket::where('id', $ticket->id)
+                        ->where('status', 'PENDING')
+                        ->update(['status' => strtoupper($status)]);
+
+                    if ($claimed) {
+                        $synced++;
+                    }
                 }
             } catch (\Exception $e) {
                 // skip
