@@ -70,9 +70,8 @@ class Index extends Component
         $eventner = Auth::user()->eventner;
 
         return view('livewire.eventner.notification.index', [
+            // Peserta yang sudah register device token FCM (scan QR) — apa pun status berkasnya.
             'registrations' => Registration::where('eventner_id', $eventner->id)
-                ->whereIn('status_berkas', ['confirmed', 'Terverifikasi'])
-                // Hanya peserta yang sudah register device token FCM (scan QR) yang bisa dikirimi.
                 ->whereHas('deviceTokens')
                 ->orderBy('nama_sekolah')
                 ->get(['id', 'nama_sekolah', 'label_pasukan']),
