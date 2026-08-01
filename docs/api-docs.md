@@ -23,6 +23,7 @@ GET /events?search=&lokasi=&page=1
       "id": 1,
       "nama_event": "Lomba PBB se-Jawa Barat 2026",
       "slug": "lomba-pbb-abc12",
+      "scoring_code": "ABC123",
       "subdomain": "pbb2026",
       "deskripsi": "Deskripsi event...",
       "poster": "https://berbaris.com/storage/events/poster.jpg",
@@ -73,6 +74,8 @@ GET /events/{slug}
 ```
 
 **Response (200):** Sama struktur dengan item di atas.
+
+> **`scoring_code`:** `null` kalau event belum punya kode scoring (scoreboard belum aktif). App menangani `null` → "Scoreboard belum tersedia".
 
 **Response (404):**
 ```json

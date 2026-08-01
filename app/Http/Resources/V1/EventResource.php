@@ -13,6 +13,7 @@ class EventResource extends JsonResource
             'id' => $this->id,
             'nama_event' => $this->nama_event,
             'slug' => $this->slug,
+            'scoring_code' => $this->scoring_code,
             'subdomain' => $this->subdomain,
             'deskripsi' => $this->deskripsi,
             'poster' => $this->poster ? asset('storage/' . $this->poster) : null,
