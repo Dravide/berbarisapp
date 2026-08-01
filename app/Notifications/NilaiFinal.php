@@ -7,9 +7,18 @@ use App\Services\FcmService;
 
 class NilaiFinal
 {
-    public function __construct(
-        private Registration $registration,
-    ) {}
+    private Registration $registration;
+
+    public function __construct(?Registration $registration = null)
+    {
+        $this->registration = $registration;
+    }
+
+    public function construct(Registration $registration): static
+    {
+        $this->registration = $registration;
+        return $this;
+    }
 
     public function send(): int
     {

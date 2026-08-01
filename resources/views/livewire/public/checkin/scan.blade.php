@@ -1,21 +1,77 @@
 <div class="min-h-screen bg-surface">
 
-    {{-- ========== HERO ========== --}}
-    <div class="relative overflow-hidden bg-gradient-to-br from-primary via-[#0053da] to-tertiary text-white py-8 md:py-10">
-        <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
-        <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
+    {{-- ========== HEADER BANNER ========== --}}
+    <div class="container-landing pt-6">
+        @if($eventner->header_banner)
+            <div class="relative w-full aspect-[21/9] md:aspect-[3/1] rounded-2xl overflow-hidden shadow-md border border-outline-variant/30 bg-black/5">
+                <img src="{{ asset('storage/' . $eventner->header_banner) }}" alt="Banner {{ $eventner->nama_event }}" class="w-full h-full object-cover">
+            </div>
+        @elseif($eventner->poster)
+            <div class="relative w-full aspect-[21/9] md:aspect-[3/1] rounded-2xl overflow-hidden shadow-md border border-outline-variant/30 bg-black/5">
+                <a href="{{ asset('storage/' . $eventner->poster) }}" target="_blank">
+                    <img src="{{ asset('storage/' . $eventner->poster) }}" alt="Poster {{ $eventner->nama_event }}" class="w-full h-full object-cover">
+                </a>
+            </div>
+        @else
+            <div class="relative overflow-hidden bg-gradient-to-br from-primary via-[#0053da] to-tertiary rounded-2xl h-36 md:h-48">
+                <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
+                <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
+            </div>
+        @endif
+    </div>
 
-        <div class="container-landing relative z-10 flex flex-col items-center text-center">
-            <span class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-md border border-white/10 mb-3">
-                <i class="ti ti-qrcode"></i>
-                Check-in Tiket
-            </span>
-            <h1 class="font-display text-xl font-extrabold tracking-tight sm:text-2xl max-w-2xl leading-tight">
-                {{ $eventner->nama_event }}
-            </h1>
-            <p class="mt-2 text-xs font-medium text-white/80 md:text-sm max-w-xl">
-                Scan QR Code tiket peserta untuk check-in masuk area event
-            </p>
+    {{-- ========== HEADER INFO BLOCK ========== --}}
+    <div class="container-landing pt-6">
+        <div class="grid gap-6 md:grid-cols-3 items-center">
+            <div class="md:col-span-2 flex items-start gap-4">
+                @if($eventner->logo_event)
+                    <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="h-16 w-16 md:h-20 md:w-20 rounded-2xl object-cover shadow-sm border border-outline-variant/30 shrink-0" alt="{{ $eventner->nama_event }}">
+                @else
+                    <div class="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-outline-variant/30 shrink-0">
+                        <i class="ti ti-calendar-event text-3xl"></i>
+                    </div>
+                @endif
+                <div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/20">
+                            <i class="ti ti-qrcode"></i>
+                            Check-in Tiket
+                        </span>
+                    </div>
+                    <h1 class="font-display text-2xl font-extrabold tracking-tight text-deep-slate leading-tight sm:text-3xl">
+                        {{ $eventner->nama_event }}
+                    </h1>
+                    <p class="mt-2 text-sm font-semibold text-on-surface-variant">
+                        <i class="ti ti-building-skyscraper text-primary me-1"></i> Diselenggarakan oleh: <span class="text-primary font-bold">{{ $eventner->diselenggarakan_oleh }}</span>
+                    </p>
+                    <div class="flex flex-wrap items-center gap-3 mt-2 text-xs font-semibold text-on-surface-variant">
+                        @if($eventner->venue)
+                            <span><i class="ti ti-map-pin text-primary me-1"></i> {{ $eventner->venue }}</span>
+                        @endif
+                        @if($eventner->tanggal)
+                            <span><i class="ti ti-calendar text-primary me-1"></i> {{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('l, d F Y') }}</span>
+                        @endif
+                        @if($eventner->link_livestreaming)
+                            <a href="{{ $eventner->link_livestreaming }}" target="_blank" class="badge-live text-decoration-none transition hover:bg-secondary/25">Live Streaming</a>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- Scan status card --}}
+            <div class="md:col-span-1">
+                <div class="surface-card p-4 border border-outline-variant/40 bg-white">
+                    <span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider block text-center mb-3">Mode Check-in</span>
+                    <div class="flex flex-col items-center gap-2">
+                        <span class="flex h-3 w-3 relative">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-400"></span>
+                        </span>
+                        <span class="text-xs font-bold text-deep-slate">Scanner Aktif</span>
+                        <span class="text-[10px] text-on-surface-variant text-center">Arahkan kamera ke QR tiket, atau gunakan input manual di bawah.</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -39,10 +95,6 @@
                         </h3>
                         <span class="text-[10px] text-on-primary/80 block mt-0.5">Arahkan kamera ke QR Code tiket</span>
                     </div>
-                    <span class="flex h-3 w-3 relative">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-400"></span>
-                    </span>
                 </div>
                 <div id="qr-reader" class="w-full bg-black" style="min-height: 280px;"></div>
             </div>

@@ -105,8 +105,10 @@ class Index extends Component
             'is_public' => $this->isPublic,
         ];
 
+        $wasPublic = false;
         if ($this->editingId) {
             $champion = ChampionCategory::where('eventner_id', $this->eventner->id)->findOrFail($this->editingId);
+            $wasPublic = (bool) $champion->is_public;
             $champion->update($data);
         } else {
             $champion = ChampionCategory::create($data);
@@ -115,8 +117,35 @@ class Index extends Component
         $champion->assessmentSubCategories()->sync($this->selectedSubCategories);
         $champion->tiebreakSubCategories()->sync($this->selectedTiebreakSubCategories);
 
+        // Juara baru diumumkan (transisi non-public → public): kirim notifikasi FCM ke semua pemenang.
+        if ($this->isPublic && !$wasPublic) {
+            try {
+                $this->notifyChampions($champion);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('FCM champion notification failed', [
+                    'champion_category_id' => $champion->id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         $this->resetForm();
         session()->flash('success', $this->editingId ? 'Kategori juara berhasil diperbarui.' : 'Kategori juara berhasil ditambahkan.');
+    }
+
+    private function notifyChampions(ChampionCategory $champion): void
+    {
+        [$eventner, $category, $winners] = app(\App\Services\ChampionCalculator::class)->winners($champion);
+
+        $fcm = app(\App\Services\FcmService::class);
+
+        foreach ($winners as $winner) {
+            $registration = $winner['registration'];
+            $label = $winner['title'] ?? ('Juara ' . $winner['rank']);
+            app(\App\Notifications\JuaraDiumumkan::class)
+                ->construct($registration, $label)
+                ->send();
+        }
     }
 
     public function delete($id)

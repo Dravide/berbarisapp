@@ -240,7 +240,42 @@ class Index extends Component
 
         $this->isFinalized = true;
         $this->saveStatus = 'finalized';
+
+        // Jika semua judge untuk registration ini sudah final → nilai selesai semua, kirim notif.
+        $this->notifyIfAllJudgesFinalized();
+
         session()->flash('success', 'Penilaian berhasil difinalisasi dan dikunci.');
+    }
+
+    private function notifyIfAllJudgesFinalized(): void
+    {
+        $registration = Registration::find($this->selectedRegistrationId);
+        if (!$registration) return;
+
+        $category = $registration->competitionCategory;
+        $judgeIds = $category ? $category->judges()->pluck('judges.id') : collect();
+        if ($judgeIds->isEmpty()) {
+            $judgeIds = $this->eventner->judges()->pluck('id');
+        }
+        if ($judgeIds->isEmpty()) return;
+
+        $finalizedJudgeIds = AssessmentScore::where('registration_id', $registration->id)
+            ->where('eventner_id', $this->eventner->id)
+            ->where('is_finalized', true)
+            ->distinct()
+            ->pluck('judge_id');
+
+        $allFinalized = $judgeIds->diff($finalizedJudgeIds)->isEmpty();
+        if (!$allFinalized) return;
+
+        try {
+            app(\App\Notifications\NilaiFinal::class)->construct($registration)->send();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('FCM nilai_final notification failed', [
+                'registration_id' => $registration->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     public function resetScores()

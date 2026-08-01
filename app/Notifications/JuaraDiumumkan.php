@@ -7,10 +7,21 @@ use App\Services\FcmService;
 
 class JuaraDiumumkan
 {
-    public function __construct(
-        private Registration $registration,
-        private string $juaraLabel, // e.g. "Juara 1", "Juara 2"
-    ) {}
+    private Registration $registration;
+    private string $juaraLabel;
+
+    public function __construct(?Registration $registration = null, ?string $juaraLabel = null)
+    {
+        $this->registration = $registration;
+        $this->juaraLabel = $juaraLabel ?? '';
+    }
+
+    public function construct(Registration $registration, string $juaraLabel): static
+    {
+        $this->registration = $registration;
+        $this->juaraLabel = $juaraLabel;
+        return $this;
+    }
 
     public function send(): int
     {

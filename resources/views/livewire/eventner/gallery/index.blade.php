@@ -14,15 +14,15 @@
         <div class="col-lg-4">
             <div class="card"><div class="card-body">
                 <h5 class="card-title fw-semibold mb-3">Upload Foto</h5>
-                <form wire:submit="upload">
+                <form wire:submit="upload" wire:confirm="Unggah foto ini?">
                     <div class="mb-3">
-                        <input type="file" wire:model="newImage" class="form-control" accept="image/*" required>
+                        <input type="file" wire:model="newImage" class="form-control" accept="image/*">
                         @error('newImage')<span class="text-danger small">{{ $message }}</span>@enderror
                         <div wire:loading wire:target="newImage" class="text-info small mt-1">Mengunggah...</div>
                         @if($newImage)<img src="{{ $newImage->temporaryUrl() }}" class="img-fluid rounded mt-2" style="max-height: 150px;">@endif
                     </div>
                     <div class="mb-3"><input class="form-control" wire:model="caption" placeholder="Keterangan (opsional)"></div>
-                    <button class="btn btn-primary w-100"><i class="ti ti-upload me-1"></i> Upload</button>
+                    <button class="btn btn-primary w-100" wire:loading.attr="disabled" wire:target="newImage"><i class="ti ti-upload me-1"></i> Upload</button>
                 </form>
             </div></div>
         </div>
