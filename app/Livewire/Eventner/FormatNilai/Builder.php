@@ -876,6 +876,13 @@ class Builder extends Component
         $this->closeCopyModal();
     }
 
+    public function openCopyModal()
+    {
+        $this->showCopyModal = true;
+        $this->copySourceId = null;
+        $this->copyPreviewData = [];
+    }
+
     public function closeCopyModal()
     {
         $this->showCopyModal = false;

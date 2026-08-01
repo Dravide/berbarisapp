@@ -38,7 +38,7 @@
             <span class="text-primary fw-semibold">
                 <i class="ti ti-check me-1"></i> Format untuk: {{ $this->competitionCategories->firstWhere('id', $activeTab)?->full_name }}
             </span>
-            <button wire:click="$toggle('showCopyModal')" class="btn btn-outline-secondary btn-sm ms-auto" data-bs-toggle="modal" data-bs-target="#copyModal">
+            <button wire:click="openCopyModal" class="btn btn-outline-secondary btn-sm ms-auto">
                 <i class="ti ti-copy me-1"></i> Salin dari Tingkat Lain
             </button>
         </div>
@@ -484,14 +484,15 @@
     </div>
 
     {{-- Modal Copy Format --}}
-    <div wire:ignore.self class="modal fade" id="copyModal" tabindex="-1" aria-labelledby="copyModalLabel" aria-hidden="true">
+    @if($showCopyModal)
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,.5); z-index: 1050;">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-secondary text-white">
-                    <h5 class="modal-title text-white fw-semibold" id="copyModalLabel">
+                    <h5 class="modal-title text-white fw-semibold">
                         <i class="ti ti-copy me-1"></i> Salin Format dari Tingkat Lain
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" wire:click="closeCopyModal"></button>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closeCopyModal"></button>
                 </div>
                 <div class="modal-body">
                     @if(empty($copyPreviewData))
@@ -550,6 +551,7 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
 
 <!-- Modal Kriteria (Nama + Bobot + Label Groups) -->
