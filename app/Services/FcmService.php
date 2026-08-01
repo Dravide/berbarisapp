@@ -50,6 +50,21 @@ class FcmService
         return $this->sendRaw($tokens, $title, $body, $data);
     }
 
+    /**
+     * Kirim notifikasi ke semua device token peserta (Registration) sebuah event.
+     */
+    public function sendToEvent(\App\Models\Eventner $eventner, string $title, string $body, array $data = []): int
+    {
+        $tokens = DeviceToken::whereIn(
+            'registration_id',
+            \App\Models\Registration::where('eventner_id', $eventner->id)->pluck('id')
+        )->pluck('token')->toArray();
+
+        if (empty($tokens)) return 0;
+
+        return $this->sendRaw($tokens, $title, $body, $data);
+    }
+
     private function sendRaw(array $tokens, string $title, string $body, array $data): int
     {
         $message = CloudMessage::withNotification([

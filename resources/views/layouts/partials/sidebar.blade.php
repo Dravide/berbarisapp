@@ -395,6 +395,15 @@
               <span class="hide-menu">Galeri</span>
             </a>
           </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.notification.*') ? 'active' : '' }}"
+              href="{{ route('eventner.notification.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-bell"></i>
+              </span>
+              <span class="hide-menu">Kirim Notifikasi</span>
+            </a>
+          </li>
 
           {{-- ============================================ --}}
           {{-- PARTNER & TENANT --}}
