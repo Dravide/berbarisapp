@@ -140,6 +140,7 @@ class TicketController extends Controller
                 'total_amount' => $ticket->total_amount,
                 'quantity' => $ticket->quantity,
                 'paid_at' => $ticket->paid_at,
+                'checked_in_at' => $ticket->checked_in_at,
                 'buyer_name' => $ticket->buyer_name,
             ],
         ]);

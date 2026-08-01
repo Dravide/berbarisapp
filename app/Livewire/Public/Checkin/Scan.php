@@ -68,7 +68,7 @@ class Scan extends Component
             'PENDING' => ['kind' => 'pending', 'ticket' => $ticket],
             'EXPIRED' => ['kind' => 'expired', 'ticket' => $ticket],
             'CHECKED_IN' => ['kind' => 'already', 'ticket' => $ticket],
-            'PAID' => ['kind' => 'ready', 'ticket' => $ticket],
+            'PAID', 'ACTIVE' => ['kind' => 'ready', 'ticket' => $ticket],
             default => ['kind' => 'not_found', 'code' => $ticket->order_code],
         };
     }
@@ -77,7 +77,7 @@ class Scan extends Component
     {
         $ticket = Ticket::where('eventner_id', $this->eventner->id)->findOrFail($ticketId);
 
-        if ($ticket->status !== 'PAID') {
+        if (!in_array($ticket->status, ['PAID', 'ACTIVE'])) {
             $this->result = ['kind' => 'not_ready', 'ticket' => $ticket];
             return;
         }

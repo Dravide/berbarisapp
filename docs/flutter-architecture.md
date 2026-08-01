@@ -61,7 +61,9 @@ API endpoint **sama persis** kayak desain sebelumnya. Baca `android-architecture
 | `GET /api/v1/events/{slug}/scoreboard` | Public | - |
 | `GET /api/v1/events/{slug}/champions` | Public | - |
 | `POST /api/v1/vote/calculate` | Public | - |
-| `GET /api/v1/vote/status/{id}` | Public | - |
+| `GET /api/v1/vote/status/{id}?event_slug=X` | Public | - |
+| `POST /api/v1/ticket/purchase` | Public | - |
+| `GET /api/v1/ticket/status/{orderCode}?event_slug=X` | Public | - |
 | `POST /api/v1/qr/scan` | Public (QR) | Return token |
 | `GET /api/v1/portal/...` | Private | Bearer token |
 | `POST /api/v1/portal/upload/...` | Private | Bearer token + multipart |

@@ -289,6 +289,85 @@ GET /events/{slug}/drawing-results
 
 ---
 
+### A4h. Beli Tiket (Public)
+
+**Request — Berbayar & Gratis:**
+```
+POST /ticket/purchase
+Content-Type: application/json
+
+{
+  "event_slug": "lomba-pbb-abc12",
+  "buyer_name": "Budi Santoso",
+  "buyer_email": "budi@email.com",
+  "buyer_phone": "081234567890",   (opsional)
+  "quantity": 2
+}
+```
+
+**Response (200) — Berbayar (PENDING):**
+```json
+{
+  "data": {
+    "order_code": "TKT-ABC123XYZ",
+    "quantity": 2,
+    "total_amount": 100000,
+    "qr_url": "https://api.autogopay.id/qr/xxx.png",
+    "qr_string": "000201010212...",
+    "expiry_time": "2026-08-01T00:05:00Z",
+    "autogopay_transaction_id": "AGP-xxx-yyy",
+    "ticket_id": 12,
+    "status": "PENDING"
+  }
+}
+```
+
+**Response (200) — Gratis (`ticket_price=0`, langsung ACTIVE tanpa pembayaran):**
+```json
+{
+  "data": {
+    "order_code": "TKT-ABC123XYZ",
+    "quantity": 1,
+    "total_amount": 0,
+    "status": "ACTIVE",
+    "ticket_id": 13
+  }
+}
+```
+
+**Response (400):**
+```json
+{ "message": "Fitur tiket sedang tidak aktif." }
+{ "message": "Pembelian tiket belum dibuka." }
+{ "message": "Masa pembelian tiket sudah berakhir." }
+```
+
+**Cek Status:**
+```
+GET /ticket/status/{orderCode}?event_slug=lomba-pbb-abc12
+```
+
+**Response (200):**
+```json
+{
+  "data": {
+    "order_code": "TKT-ABC123XYZ",
+    "status": "PENDING",
+    "total_amount": 100000,
+    "quantity": 2,
+    "paid_at": null,
+    "checked_in_at": null,
+    "buyer_name": "Budi Santoso"
+  }
+}
+```
+
+`Status values:` `PENDING → PAID / EXPIRED`, atau `ACTIVE` (tiket gratis) → `CHECKED_IN`.
+
+⚠️ **`event_slug` wajib** di `status` — query param. Tanpa itu → 404.
+
+---
+
 ### A5. Vote — Generate QRIS
 
 **Request:**
@@ -869,6 +948,8 @@ GET /portal/ticket
 | GET | /scoreboard/{code} | ✅ | - | ✅ | - | - | - |
 | GET | /scoreboard/{code}/cat/{id} | ✅ | - | ✅ | - | - | - |
 | GET | /champions/{code} | ✅ | - | ✅ | - | - | - |
+| POST | /ticket/purchase | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| GET | /ticket/status/{orderCode} | ✅ | - | ✅ | - | - | - |
 | POST | /qr/scan | ✅ | - | ✅ | ✅ | - | - |
 | GET | /portal/registration | ✅ | - | - | - | - | - |
 | PUT | /portal/registration | ✅ | ✅ | - | - | - | - |
