@@ -29,10 +29,15 @@ class Builder extends Component
     public $activeTab = ''; // '' = global/semua tingkat, child_id = specific
     public $errorMessage = '';
 
-    // Copy format
+    // Copy format (lama)
     public $showCopyModal = false;
     public $copySourceId = null;
     public $copyPreviewData = [];
+
+    // Salin Ke (baru) — dari kategori sumber ke tingkat target
+    public $showCopyToModal = false;
+    public $copyToSourceCategoryId = null;
+    public $copyToTargetCompetitionCategoryId = null;
 
     // State for inputs
     public $newCategoryName = '';
@@ -220,6 +225,96 @@ class Builder extends Component
         }
 
         session()->flash('success', 'Kategori berhasil diduplikat.');
+    }
+
+    public function openCopyToModal($sourceCategoryId)
+    {
+        $this->copyToSourceCategoryId = (int) $sourceCategoryId;
+        $this->copyToTargetCompetitionCategoryId = null;
+        $this->showCopyToModal = true;
+    }
+
+    public function closeCopyToModal()
+    {
+        $this->showCopyToModal = false;
+        $this->copyToSourceCategoryId = null;
+        $this->copyToTargetCompetitionCategoryId = null;
+    }
+
+    /**
+     * Salin seluruh struktur kategori sumber ke tingkat (competition_category) target.
+     * Buat kategori baru di tingkat target + clone sub-kategori, kriteria, pengurangan, juri.
+     */
+    public function executeCopyTo()
+    {
+        $sourceId = $this->copyToSourceCategoryId;
+        $targetCompetitionCategoryId = $this->copyToTargetCompetitionCategoryId;
+
+        if (!$sourceId || !$targetCompetitionCategoryId) {
+            session()->flash('error', 'Pilih tingkat tujuan terlebih dahulu.');
+            return;
+        }
+
+        $original = AssessmentCategory::with(['subCategories.criterias', 'judges', 'deductionCategories.criterias'])
+            ->where('eventner_id', $this->eventnerId)
+            ->findOrFail($sourceId);
+
+        // Validasi target tingkat milik eventner ini
+        CompetitionCategory::where('eventner_id', $this->eventnerId)
+            ->findOrFail($targetCompetitionCategoryId);
+
+        $maxOrder = AssessmentCategory::where('eventner_id', $this->eventnerId)->max('sort_order') ?? 0;
+
+        $newCategory = AssessmentCategory::create([
+            'eventner_id' => $this->eventnerId,
+            'competition_category_id' => $targetCompetitionCategoryId,
+            'name' => $original->name,
+            'sort_order' => $maxOrder + 1,
+        ]);
+
+        if ($original->judges->isNotEmpty()) {
+            $newCategory->judges()->sync($original->judges->pluck('id'));
+        }
+
+        foreach ($original->subCategories as $subIndex => $sub) {
+            $newSub = AssessmentSubCategory::create([
+                'assessment_category_id' => $newCategory->id,
+                'name' => $sub->name,
+                'sort_order' => $subIndex + 1,
+            ]);
+
+            foreach ($sub->criterias as $crit) {
+                AssessmentCriteria::create([
+                    'assessment_sub_category_id' => $newSub->id,
+                    'name' => $crit->name,
+                    'score_options' => $crit->score_options,
+                    'weight' => $crit->weight ?? 1,
+                    'sort_order' => $crit->sort_order,
+                ]);
+            }
+        }
+
+        foreach ($original->deductionCategories as $dedIndex => $dedCat) {
+            $newDedCat = DeductionCategory::create([
+                'eventner_id' => $this->eventnerId,
+                'assessment_category_id' => $newCategory->id,
+                'name' => $dedCat->name,
+                'sort_order' => $dedIndex + 1,
+            ]);
+
+            foreach ($dedCat->criterias as $dedCrit) {
+                DeductionCriteria::create([
+                    'deduction_category_id' => $newDedCat->id,
+                    'name' => $dedCrit->name,
+                    'deduction_options' => $dedCrit->deduction_options,
+                    'sort_order' => $dedCrit->sort_order,
+                ]);
+            }
+        }
+
+        $targetName = CompetitionCategory::find($targetCompetitionCategoryId)?->full_name ?? 'Tingkat tujuan';
+        $this->closeCopyToModal();
+        session()->flash('success', "Kategori '{$original->name}' berhasil disalin ke {$targetName}.");
     }
 
     public function addSubCategory($categoryId)
