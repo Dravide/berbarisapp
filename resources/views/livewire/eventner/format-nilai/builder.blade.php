@@ -41,9 +41,6 @@
             <span class="text-primary fw-semibold">
                 <i class="ti ti-check me-1"></i> Format untuk: {{ $this->competitionCategories->firstWhere('id', $activeTab)?->full_name }}
             </span>
-            <button wire:click="openCopyModal" class="btn btn-outline-secondary btn-sm ms-auto">
-                <i class="ti ti-copy me-1"></i> Salin dari Tingkat Lain
-            </button>
         </div>
         @endif
     </div>
@@ -99,6 +96,22 @@
                                         <button class="btn btn-sm btn-outline-danger border-0" wire:click="deleteCategory({{ $category->id }})" title="Hapus Kategori" onclick="return confirm('Yakin hapus Kategori ini beserta SELURUH Sub-kategorinya?') || event.stopImmediatePropagation()">
                                             <i class="ti ti-trash"></i>
                                         </button>
+                                        @if($showCopyToModal && $copyToSourceCategoryId == $category->id)
+                                        <div class="d-flex align-items-center gap-2 px-3 py-2 flex-grow-1" style="max-width:420px;">
+                                            <select class="form-select form-select-sm" wire:model="copyToTargetCompetitionCategoryId">
+                                                <option value="">Salin ke tingkat...</option>
+                                                @foreach($this->competitionCategories as $cc)
+                                                    @if($cc->id != $category->competition_category_id)
+                                                        <option value="{{ $cc->id }}">{{ $cc->full_name }}</option>
+                                                    @endif
+                                                @endforeach
+                                            </select>
+                                            <button class="btn btn-sm btn-success" wire:click="executeCopyTo" {{ !$copyToTargetCompetitionCategoryId ? 'disabled' : '' }}>
+                                                <i class="ti ti-copy me-1"></i> Salin
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-secondary" wire:click="closeCopyToModal"><i class="ti ti-x"></i></button>
+                                        </div>
+                                        @endif
                                     @endif
                                 </h2>
 
@@ -489,122 +502,7 @@
         </div>
     </div>
 
-    {{-- Modal Salin Ke (baru) --}}
-    @if($showCopyToModal)
-    <div style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.5); z-index:1050; display:flex; align-items:center; justify-content:center; padding:1rem;">
-        <div style="background:#fff; border-radius:8px; width:100%; max-width:500px; max-height:90vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,.3);">
-            <div style="background:#198754; color:#fff; padding:1rem; display:flex; justify-content:space-between; align-items:center;">
-                <h5 style="margin:0; font-weight:600; font-size:1.1rem;">
-                    <i class="ti ti-arrow-right-circle me-1"></i> Salin Ke Tingkat Lain
-                </h5>
-                <button type="button" class="btn-close btn-close-white" wire:click="closeCopyToModal"></button>
-            </div>
-            <div style="padding:1.25rem;">
-                @php
-                    $sourceCat = $this->categories->firstWhere('id', $copyToSourceCategoryId);
-                @endphp
-                @if($sourceCat)
-                    <div class="alert alert-success border-0 bg-success-subtle text-success mb-3">
-                        <i class="ti ti-check me-1"></i> Sumber: <strong>{{ $sourceCat->name }}</strong>
-                        @if($sourceCat->competitionCategory)
-                            <span class="badge bg-success-subtle text-success ms-1">{{ $sourceCat->competitionCategory->full_name }}</span>
-                        @endif
-                    </div>
-                @endif
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Salin ke Tingkat</label>
-                    <select class="form-select" wire:model.live="copyToTargetCompetitionCategoryId">
-                        <option value="">― Pilih Tingkat Tujuan ―</option>
-                        @foreach($this->competitionCategories as $cc)
-                            @if($cc->id != ($sourceCat?->competition_category_id))
-                                <option value="{{ $cc->id }}">{{ $cc->full_name }}</option>
-                            @endif
-                        @endforeach
-                    </select>
-                    <small class="form-text text-muted">Struktur rubrik ini akan disalin sebagai kategori baru di tingkat tujuan.</small>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-secondary" wire:click="closeCopyToModal">
-                        <i class="ti ti-x me-1"></i> Batal
-                    </button>
-                    <button class="btn btn-success" wire:click="executeCopyTo" {{ !$copyToTargetCompetitionCategoryId ? 'disabled' : '' }}>
-                        <i class="ti ti-copy me-1"></i> Salin
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
 
-    {{-- Modal Copy Format --}}
-    @if($showCopyModal)
-    <div style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.5); z-index:1050; display:flex; align-items:center; justify-content:center; padding:1rem;">
-        <div style="background:#fff; border-radius:8px; width:100%; max-width:700px; max-height:90vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,.3);">
-            <div style="background:#6c757d; color:#fff; padding:1rem; display:flex; justify-content:space-between; align-items:center;">
-                <h5 style="margin:0; font-weight:600; font-size:1.1rem;">
-                    <i class="ti ti-copy me-1"></i> Salin Format dari Tingkat Lain
-                </h5>
-                <button type="button" class="btn-close btn-close-white" wire:click="closeCopyModal"></button>
-            </div>
-                <div style="padding:1.25rem;">
-                    @if(empty($copyPreviewData))
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Pilih Tingkat Sumber</label>
-                            <select class="form-select" wire:model.live="copySourceId">
-                                <option value="">― Pilih Tingkat Sumber ―</option>
-                                @foreach($this->competitionCategories->where('id', '!=', $activeTab) as $cc)
-                                    <option value="{{ $cc->id }}">{{ $cc->full_name }}</option>
-                                @endforeach
-                            </select>
-                            <small class="form-text text-muted">Pilih tingkat lomba yang formatnya ingin disalin ke tingkat ini.</small>
-                        </div>
-                        <button class="btn btn-primary" wire:click="previewCopy($copySourceId)" {{ !$copySourceId ? 'disabled' : '' }}>
-                            <i class="ti ti-eye me-1"></i> Pratinjau Format
-                        </button>
-                    @else
-                        <div class="alert alert-success border-0 bg-success-subtle text-success mb-3">
-                            <i class="ti ti-check me-1"></i> Ditemukan {{ count($copyPreviewData) }} kategori penilaian dari tingkat sumber.
-                        </div>
-                        <h6 class="fw-semibold mb-2">Rincian format yang akan disalin:</h6>
-                        <div class="table-responsive mb-3">
-                            <table class="table table-sm table-bordered">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Kategori Penilaian</th>
-                                        <th class="text-center">Sub Kategori</th>
-                                        <th class="text-center">Kriteria</th>
-                                        <th class="text-center">Kelompok Pengurangan</th>
-                                        <th class="text-center">Kriteria Pengurangan</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($copyPreviewData as $cat)
-                                    <tr>
-                                        <td class="fw-semibold">{{ $cat['name'] }}</td>
-                                        <td class="text-center">{{ $cat['sub_count'] }}</td>
-                                        <td class="text-center">{{ $cat['criteria_count'] }}</td>
-                                        <td class="text-center">{{ $cat['deduction_count'] }}</td>
-                                        <td class="text-center">{{ $cat['deduction_criteria_count'] }}</td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-secondary" wire:click="closeCopyModal">
-                                <i class="ti ti-arrow-left me-1"></i> Kembali
-                            </button>
-                            <button class="btn btn-success" wire:click="executeCopy">
-                                <i class="ti ti-copy me-1"></i> Konfirmasi Salin Format
-                            </button>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
-</div>
 
 <!-- Modal Kriteria (Nama + Bobot + Label Groups) -->
 @if($showCriteriaModal)
