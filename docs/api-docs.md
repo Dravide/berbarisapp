@@ -150,6 +150,145 @@ GET /events/{slug}/participants?category_id=2&search=
 
 ---
 
+### A4b. Galeri Foto
+
+**Request:**
+```
+GET /events/{slug}/gallery
+```
+
+**Response (200):**
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "image": "https://berbaris.com/storage/events/gallery/abc.jpg",
+      "caption": "Pembukaan lomba",
+      "sort_order": 1
+    }
+  ]
+}
+```
+
+---
+
+### A4c. FAQ
+
+**Request:**
+```
+GET /events/{slug}/faq
+```
+
+**Response (200):**
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "question": "Kapan technical meeting?",
+      "answer": "H-1 sebelum lomba, jam 09.00 WIB."
+    }
+  ]
+}
+```
+
+---
+
+### A4d. Sponsor
+
+**Request:**
+```
+GET /events/{slug}/sponsors
+```
+
+**Response (200):**
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Bank Jabar",
+      "logo": "https://berbaris.com/storage/sponsors/logo.png",
+      "link": "https://bankjabar.co.id",
+      "type": "sponsor"
+    }
+  ]
+}
+```
+
+`type` values: `sponsor`, `medpart`, `partner`, `supporting`.
+
+---
+
+### A4e. Tenant / Bazar
+
+**Request:**
+```
+GET /events/{slug}/tenants
+```
+
+**Response (200):**
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Baso Aci Mang Udin",
+      "logo": "https://berbaris.com/storage/tenants/logo.png",
+      "description": "Bakso aci original Bandung.",
+      "type": "food"
+    }
+  ]
+}
+```
+
+`type` values: `food`, `beverage`, `bazaar`, `souvenir`, `other`.
+
+---
+
+### A4f. Juknis PDF
+
+**Request:**
+```
+GET /events/{slug}/juknis
+```
+
+**Response (200):** Streaming PDF (application/pdf). Header `Content-Disposition: attachment; filename=Juknis_*.pdf`.
+
+**Response (404):**
+```json
+{ "message": "Juknis belum tersedia untuk event ini." }
+```
+
+---
+
+### A4g. Hasil Pengundian (Nomor Urut Tampil)
+
+**Request:**
+```
+GET /events/{slug}/drawing-results
+```
+
+**Response (200):**
+```json
+{
+  "data": [
+    {
+      "category_id": 2,
+      "name": "PBB Putra — Regu Inti",
+      "total_peserta": 12,
+      "results": [
+        { "urutan": 1, "nama_sekolah": "SMA N 1 Bandung", "label_pasukan": "Regu Inti" },
+        { "urutan": 2, "nama_sekolah": "MAN 2 Bogor", "label_pasukan": "Regu Utama" }
+      ]
+    }
+  ]
+}
+```
+
+---
+
 ### A5. Vote — Generate QRIS
 
 **Request:**
@@ -718,6 +857,12 @@ GET /portal/ticket
 | GET | /events/{slug} | ✅ | - | ✅ | - | - | - |
 | GET | /events/{slug}/categories | ✅ | - | ✅ | - | - | - |
 | GET | /events/{slug}/participants | ✅ | - | ✅ | - | - | - |
+| GET | /events/{slug}/gallery | ✅ | - | ✅ | - | - | - |
+| GET | /events/{slug}/faq | ✅ | - | ✅ | - | - | - |
+| GET | /events/{slug}/sponsors | ✅ | - | ✅ | - | - | - |
+| GET | /events/{slug}/tenants | ✅ | - | ✅ | - | - | - |
+| GET | /events/{slug}/juknis | ✅ | - | ✅ | - | - | - |
+| GET | /events/{slug}/drawing-results | ✅ | - | ✅ | - | - | - |
 | POST | /vote/calculate | ✅ | ✅ | - | ✅ | ✅ | ✅ |
 | GET | /vote/status/{id} | ✅ | - | ✅ | - | - | - |
 | GET | /vote/comments | ✅ | - | - | ✅ | - | - |

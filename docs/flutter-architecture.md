@@ -52,6 +52,12 @@ API endpoint **sama persis** kayak desain sebelumnya. Baca `android-architecture
 | `GET /api/v1/events` | Public | - |
 | `GET /api/v1/events/{slug}` | Public | - |
 | `GET /api/v1/events/{slug}/participants?category_id=X` | Public | - |
+| `GET /api/v1/events/{slug}/gallery` | Public | - |
+| `GET /api/v1/events/{slug}/faq` | Public | - |
+| `GET /api/v1/events/{slug}/sponsors` | Public | - |
+| `GET /api/v1/events/{slug}/tenants` | Public | - |
+| `GET /api/v1/events/{slug}/juknis` | Public | - |
+| `GET /api/v1/events/{slug}/drawing-results` | Public | - |
 | `GET /api/v1/events/{slug}/scoreboard` | Public | - |
 | `GET /api/v1/events/{slug}/champions` | Public | - |
 | `POST /api/v1/vote/calculate` | Public | - |

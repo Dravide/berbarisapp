@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\PortalController;
 use App\Http\Controllers\Api\V1\UploadController;
 use App\Http\Controllers\Api\V1\ScoreboardController;
 use App\Http\Controllers\Api\V1\ChampionController;
+use App\Http\Controllers\Api\V1\EventContentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +28,14 @@ Route::prefix('v1')->group(function () {
     Route::get('/events/{slug}', [EventController::class, 'show']);
     Route::get('/events/{slug}/categories', [EventController::class, 'categories']);
     Route::get('/events/{slug}/participants', [EventController::class, 'participants']);
+
+    // ─── Public: Konten Event ────────────────────────────────
+    Route::get('/events/{slug}/gallery', [EventContentController::class, 'gallery']);
+    Route::get('/events/{slug}/faq', [EventContentController::class, 'faq']);
+    Route::get('/events/{slug}/sponsors', [EventContentController::class, 'sponsors']);
+    Route::get('/events/{slug}/tenants', [EventContentController::class, 'tenants']);
+    Route::get('/events/{slug}/juknis', [EventContentController::class, 'juknis']);
+    Route::get('/events/{slug}/drawing-results', [EventContentController::class, 'drawingResults']);
 
     // ─── Public: Vote ────────────────────────────────────────
     Route::post('/vote/calculate', [VoteController::class, 'calculate']);
