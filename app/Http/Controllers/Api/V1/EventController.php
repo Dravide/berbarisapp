@@ -15,7 +15,7 @@ class EventController extends Controller
     {
         $query = Eventner::query()
             ->where('status', 'approved')
-            ->select(['id', 'nama_event', 'slug', 'poster', 'venue', 'tanggal', 'tanggal_akhir', 'logo_event', 'subdomain', 'lokasi', 'link_instagram', 'link_tiktok', 'link_whatsapp', 'deskripsi'])
+            ->select(['id', 'nama_event', 'slug', 'scoring_code', 'poster', 'venue', 'tanggal', 'tanggal_akhir', 'logo_event', 'subdomain', 'lokasi', 'link_instagram', 'link_tiktok', 'link_whatsapp', 'deskripsi'])
             ->orderByDesc('tanggal');
 
         if ($request->search) {
