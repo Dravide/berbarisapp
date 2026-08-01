@@ -72,6 +72,8 @@ class Index extends Component
         return view('livewire.eventner.notification.index', [
             'registrations' => Registration::where('eventner_id', $eventner->id)
                 ->whereIn('status_berkas', ['confirmed', 'Terverifikasi'])
+                // Hanya peserta yang sudah register device token FCM (scan QR) yang bisa dikirimi.
+                ->whereHas('deviceTokens')
                 ->orderBy('nama_sekolah')
                 ->get(['id', 'nama_sekolah', 'label_pasukan']),
         ])->title('Kirim Notifikasi - BARIS APP');
