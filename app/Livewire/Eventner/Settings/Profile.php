@@ -40,6 +40,8 @@ class Profile extends Component
     public $kwitansi_required = true;
 
     public $subdomain = '';
+    public $scoring_code = '';
+    public $drawing_code = '';
 
 
 
@@ -99,6 +101,8 @@ class Profile extends Component
         $this->kwitansi_required = (bool)($eventner->kwitansi_required ?? true);
 
         $this->subdomain = $eventner->subdomain ?? '';
+        $this->scoring_code = $eventner->scoring_code ?? '';
+        $this->drawing_code = $eventner->drawing_code ?? '';
 
 
         $this->logo = $eventner->logo_event;
@@ -143,6 +147,8 @@ class Profile extends Component
             'surat_tugas_required' => 'required|boolean',
             'kwitansi_required' => 'required|boolean',
             'subdomain' => 'nullable|string|max:63|regex:/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/|unique:eventners,subdomain,' . $this->eventnerId,
+            'scoring_code' => 'nullable|string|max:50|regex:/^[A-Za-z0-9-]+$/',
+            'drawing_code' => 'nullable|string|max:50|regex:/^[A-Za-z0-9-]+$/',
 
             'newLogo' => 'nullable|image|max:2048',
             'newPoster' => 'nullable|image|max:3072', // allow up to 3MB for poster
@@ -233,6 +239,8 @@ class Profile extends Component
             'surat_tugas_required' => $this->surat_tugas_required,
             'kwitansi_required' => $this->kwitansi_required,
             'subdomain' => $this->subdomain ?: null,
+            'scoring_code' => $this->scoring_code ?: null,
+            'drawing_code' => $this->drawing_code ?: null,
 
             'logo_event' => $eventner->logo_event,
             'poster' => $eventner->poster,
@@ -249,10 +257,15 @@ class Profile extends Component
             ],
         ]);
 
-        $this->newLogo = null; 
-        $this->newPoster = null; 
+        $this->newLogo = null;
+        $this->newPoster = null;
 
         session()->flash('success', 'Profil Event berhasil diperbarui!');
+    }
+
+    public function generateScoringCode()
+    {
+        $this->scoring_code = strtoupper(\Illuminate\Support\Str::random(6));
     }
 
     public function getAvailableFonts(): array

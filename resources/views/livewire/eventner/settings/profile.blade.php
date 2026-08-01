@@ -373,6 +373,42 @@
                         </div>
 
                         {{-- ==================== --}}
+                        {{-- F. KODE AKSES (SCORING & DRAWING) --}}
+                        {{-- ==================== --}}
+                        <div class="card border shadow-none mb-4">
+                            <div class="card-header bg-light py-3">
+                                <h6 class="fw-semibold mb-0">
+                                    <i class="ti ti-code text-primary me-1"></i> Kode Akses Publik
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted fs-3 mb-3">Kode untuk mengakses halaman publik Scoreboard & Hasil Pengundian di aplikasi.</p>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Kode Scoreboard</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control @error('scoring_code') is-invalid @enderror"
+                                                wire:model.blur="scoring_code" placeholder="contoh: PBB2026" maxlength="50"
+                                                pattern="^[A-Za-z0-9-]+$">
+                                            <button type="button" class="btn btn-outline-secondary" wire:click="generateScoringCode"
+                                                title="Generate otomatis"><i class="ti ti-refresh"></i></button>
+                                            @error('scoring_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                        </div>
+                                        <div class="form-text">Huruf, angka, strip. Dipakai di URL <code>/scoreboard/{kode}</code> & <code>/champions/{kode}</code>.</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">Kode Pengundian</label>
+                                        <input type="text" class="form-control @error('drawing_code') is-invalid @enderror"
+                                            wire:model.blur="drawing_code" placeholder="contoh: UNDIAN2026" maxlength="50"
+                                            pattern="^[A-Za-z0-9-]+$">
+                                        @error('drawing_code') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                        <div class="form-text">Huruf, angka, strip.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- ==================== --}}
                         {{-- G. TEMA & TAMPILAN --}}
                         {{-- ==================== --}}
                         <div class="card border shadow-none mb-4">
