@@ -485,16 +485,15 @@
 
     {{-- Modal Copy Format --}}
     @if($showCopyModal)
-    <div class="modal fade show d-block" tabindex="-1" style="display:block; background-color: rgba(0,0,0,.5); z-index: 1050;">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-secondary text-white">
-                    <h5 class="modal-title text-white fw-semibold">
-                        <i class="ti ti-copy me-1"></i> Salin Format dari Tingkat Lain
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" wire:click="closeCopyModal"></button>
-                </div>
-                <div class="modal-body">
+    <div style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.5); z-index:1050; display:flex; align-items:center; justify-content:center; padding:1rem;">
+        <div style="background:#fff; border-radius:8px; width:100%; max-width:700px; max-height:90vh; overflow-y:auto; box-shadow:0 10px 40px rgba(0,0,0,.3);">
+            <div style="background:#6c757d; color:#fff; padding:1rem; display:flex; justify-content:space-between; align-items:center;">
+                <h5 style="margin:0; font-weight:600; font-size:1.1rem;">
+                    <i class="ti ti-copy me-1"></i> Salin Format dari Tingkat Lain
+                </h5>
+                <button type="button" class="btn-close btn-close-white" wire:click="closeCopyModal"></button>
+            </div>
+                <div style="padding:1.25rem;">
                     @if(empty($copyPreviewData))
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Pilih Tingkat Sumber</label>
@@ -506,7 +505,7 @@
                             </select>
                             <small class="form-text text-muted">Pilih tingkat lomba yang formatnya ingin disalin ke tingkat ini.</small>
                         </div>
-                        <button class="btn btn-primary" wire:click="previewCopy(copySourceId)" {{ !$copySourceId ? 'disabled' : '' }}>
+                        <button class="btn btn-primary" wire:click="previewCopy($copySourceId)" {{ !$copySourceId ? 'disabled' : '' }}>
                             <i class="ti ti-eye me-1"></i> Pratinjau Format
                         </button>
                     @else
