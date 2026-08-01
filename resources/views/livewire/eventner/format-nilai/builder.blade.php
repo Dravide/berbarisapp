@@ -485,7 +485,7 @@
 
     {{-- Modal Copy Format --}}
     @if($showCopyModal)
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,.5); z-index: 1050;">
+    <div class="modal fade show d-block" tabindex="-1" style="display:block; background-color: rgba(0,0,0,.5); z-index: 1050;">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-secondary text-white">
@@ -556,7 +556,7 @@
 
 <!-- Modal Kriteria (Nama + Bobot + Label Groups) -->
 @if($showCriteriaModal)
-<div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,.5); z-index: 1050;">
+<div class="modal fade show d-block" tabindex="-1" style="display:block; background-color: rgba(0,0,0,.5); z-index: 1050;">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
