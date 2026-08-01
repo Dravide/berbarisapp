@@ -43,11 +43,14 @@
                         </select>
                         @error('registrationId')<span class="text-danger small">{{ $message }}</span>@enderror
                     </div>
-                    <button class="btn btn-primary w-100" wire:loading.attr="disabled" wire:target="send">
-                        <span wire:loading.remove wire:target="send"><i class="ti ti-send me-1"></i> Kirim</span>
-                        <span wire:loading wire:target="send" class="d-inline-flex align-items-center gap-2">
-                            <span class="spinner-border spinner-border-sm"></span> Mengirim...
-                        </span>
+                    <button type="submit" class="btn btn-primary w-100" @disabled($sending)>
+                        @if($sending)
+                            <span class="d-inline-flex align-items-center gap-2">
+                                <span class="spinner-border spinner-border-sm"></span> Mengirim...
+                            </span>
+                        @else
+                            <span><i class="ti ti-send me-1"></i> Kirim</span>
+                        @endif
                     </button>
                 </form>
             </div></div>
