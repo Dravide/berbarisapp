@@ -110,8 +110,7 @@ class Registration extends Model
 
     public function deviceTokens()
     {
-        return $this->hasMany(DeviceToken::class, 'tokenable_id')
-            ->where('tokenable_type', Registration::class);
+        return $this->hasMany(DeviceToken::class, 'registration_id');
     }
 
     public function isUnpaid(): bool

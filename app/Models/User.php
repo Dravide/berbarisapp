@@ -38,7 +38,6 @@ class User extends Authenticatable
 
     public function deviceTokens()
     {
-        return $this->hasMany(DeviceToken::class, 'tokenable_id')
-            ->where('tokenable_type', User::class);
+        return $this->hasMany(DeviceToken::class, 'user_id');
     }
 }
