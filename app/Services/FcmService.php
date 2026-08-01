@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\DeviceToken;
 use Illuminate\Support\Facades\Log;
-use Kreait\Firebase\Messaging;
+use Kreait\Firebase\Contract\Messaging;
 use Kreait\Firebase\Messaging\CloudMessage;
 
 class FcmService
