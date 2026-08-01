@@ -245,9 +245,9 @@ class Builder extends Component
      * Salin seluruh struktur kategori sumber ke tingkat (competition_category) target.
      * Buat kategori baru di tingkat target + clone sub-kategori, kriteria, pengurangan, juri.
      */
-    public function executeCopyTo()
+    public function executeCopyTo($sourceId = null)
     {
-        $sourceId = $this->copyToSourceCategoryId;
+        $sourceId = $sourceId ?: $this->copyToSourceCategoryId;
         $targetCompetitionCategoryId = $this->copyToTargetCompetitionCategoryId;
 
         if (!$sourceId || !$targetCompetitionCategoryId) {

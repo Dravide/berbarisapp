@@ -91,8 +91,10 @@
                                             <i class="ti ti-copy"></i>
                                         </button>
                                         <button class="btn btn-sm btn-outline-success border-0"
-                                            wire:click="openCopyToModal({{ $category->id }})"
-                                            onclick="event.stopPropagation(); document.getElementById('bbOffcanvasSalinKe').style.display='flex';"
+                                            type="button"
+                                            data-copy-source-id="{{ $category->id }}"
+                                            data-copy-source-name="{{ $category->name }}"
+                                            onclick="event.stopPropagation(); openCopyToOffcanvas(this);"
                                             title="Salin ke Tingkat Lain">
                                             <i class="ti ti-arrow-right-circle"></i> Salin Ke
                                         </button>
@@ -610,23 +612,16 @@
         <button type="button" class="btn-close btn-close-white" onclick="document.getElementById('bbOffcanvasSalinKe').style.display='none'; document.getElementById('bbOffcanvasBackdrop').style.display='none';"></button>
     </div>
     <div class="bb-offcanvas-body">
-        @php $sourceCat = $this->categories->firstWhere('id', $copyToSourceCategoryId); @endphp
-        @if($sourceCat)
-            <div class="alert alert-success border-0 bg-success-subtle text-success mb-3">
-                <i class="ti ti-check me-1"></i> Sumber: <strong>{{ $sourceCat->name }}</strong>
-                @if($sourceCat->competitionCategory)
-                    <span class="badge bg-success-subtle text-success ms-1">{{ $sourceCat->competitionCategory->full_name }}</span>
-                @endif
-            </div>
-        @endif
+        <input type="hidden" id="bbCopySourceId">
+        <div id="bbCopySourceInfo" class="alert alert-success border-0 bg-success-subtle text-success mb-3" style="display:none;">
+            <i class="ti ti-check me-1"></i> Sumber: <strong id="bbCopySourceName"></strong>
+        </div>
         <div class="mb-3">
             <label class="form-label fw-semibold">Salin ke Tingkat</label>
             <select class="form-select" wire:model.live="copyToTargetCompetitionCategoryId">
                 <option value="">― Pilih Tingkat Tujuan ―</option>
                 @foreach($this->competitionCategories as $cc)
-                    @if($cc->id != ($sourceCat?->competition_category_id))
-                        <option value="{{ $cc->id }}">{{ $cc->full_name }}</option>
-                    @endif
+                    <option value="{{ $cc->id }}">{{ $cc->full_name }}</option>
                 @endforeach
             </select>
             <small class="form-text text-muted">Struktur rubrik ini akan disalin sebagai kategori baru di tingkat tujuan.</small>
@@ -635,12 +630,27 @@
             <button class="btn btn-secondary" onclick="document.getElementById('bbOffcanvasSalinKe').style.display='none'; document.getElementById('bbOffcanvasBackdrop').style.display='none';">
                 <i class="ti ti-x me-1"></i> Batal
             </button>
-            <button class="btn btn-success" wire:click="executeCopyTo" {{ !$copyToTargetCompetitionCategoryId ? 'disabled' : '' }}>
+            <button type="button" class="btn btn-success" id="bbBtnSalin" {{ !$copyToTargetCompetitionCategoryId ? 'disabled' : '' }} onclick="bbSalinKe()">
                 <i class="ti ti-copy me-1"></i> Salin
             </button>
         </div>
     </div>
 </div>
+<script>
+function openCopyToOffcanvas(btn) {
+    document.getElementById('bbCopySourceId').value = btn.getAttribute('data-copy-source-id');
+    document.getElementById('bbCopySourceName').textContent = btn.getAttribute('data-copy-source-name');
+    document.getElementById('bbCopySourceInfo').style.display = 'block';
+    document.getElementById('bbOffcanvasSalinKe').style.display = 'flex';
+    document.getElementById('bbOffcanvasBackdrop').style.display = 'block';
+}
+function bbSalinKe() {
+    var sid = document.getElementById('bbCopySourceId').value;
+    if (!sid) return;
+    var comp = window.Livewire && (Livewire.find('{{ $this->getId() }}') || Livewire.first());
+    if (comp) comp.call('executeCopyTo', sid);
+}
+</script>
 
 <style>
     .cursor-grab { cursor: grab; }
