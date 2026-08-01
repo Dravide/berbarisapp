@@ -167,15 +167,13 @@
                         {{-- Pilih Jenis Lomba (Parent) --}}
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Jenis Lomba <span class="text-muted">(Parent)</span></label>
-                            <select class="form-select" wire:model="parentId" {{ $isEditMode ? 'disabled' : '' }}>
+                            <select class="form-select" wire:model="parentId">
                                 <option value="">― Tidak ada (Jenis Lomba Utama) ―</option>
                                 @foreach($this->allParents as $p)
                                     <option value="{{ $p->id }}">{{ $p->name }}</option>
                                 @endforeach
                             </select>
-                            @if($isEditMode && $parentId)
-                                <input type="hidden" wire:model="parentId">
-                            @endif
+                            <small class="form-text text-muted">Saat edit, kamu bisa pindahkan kategori ini ke bawah Jenis Lomba lain (menjadi Tingkat/child).</small>
                             <small class="form-text text-muted">Pilih "Tidak ada" untuk membuat jenis lomba baru, atau pilih jenis yang sudah ada untuk menambahkan tingkat.</small>
                             @error('parentId') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                         </div>
