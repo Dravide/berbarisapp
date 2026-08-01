@@ -49,6 +49,12 @@ class Builder extends Component
             abort(403, 'Anda bukan Eventner yang sah.');
         }
         $this->eventnerId = $eventner->id;
+
+        // Auto-select tingkat pertama agar toolbar (Salin dari Tingkat Lain) langsung tampil.
+        $first = $this->competitionCategories->first();
+        if ($first) {
+            $this->activeTab = (string) $first->id;
+        }
     }
 
     /**
