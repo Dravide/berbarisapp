@@ -67,16 +67,18 @@ class FcmService
 
     private function sendRaw(array $tokens, string $title, string $body, array $data): int
     {
-        $message = CloudMessage::withNotification([
-            'title' => $title,
-            'body' => $body,
-        ])->withData($data);
+        $message = CloudMessage::new()
+            ->withNotification([
+                'title' => $title,
+                'body' => $body,
+            ])
+            ->withData($data);
 
         $sent = 0;
         foreach (array_chunk($tokens, 500) as $chunk) {
             try {
                 $report = $this->messaging->sendAll(
-                    array_map(fn ($t) => $message->withTarget('token', $t), $chunk)
+                    array_map(fn ($t) => $message->withToken($t), $chunk)
                 );
                 $sent += $report->successes()->count();
 
