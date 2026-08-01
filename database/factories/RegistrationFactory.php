@@ -26,7 +26,8 @@ class RegistrationFactory extends Factory
             'school_email' => fake()->safeEmail(),
             'status_berkas' => 'confirmed',
             'payment_status' => 'free',
-            'magic_token' => fake()->unique()->sha1(),
+            // magic_token kolom varchar(32) — gunakan random 16 char (konsisten dgn Registration::boot)
+            'magic_token' => \Illuminate\Support\Str::random(16),
         ];
     }
 
