@@ -108,6 +108,12 @@ class Registration extends Model
         return $this->belongsTo(User::class, 'payment_verified_by');
     }
 
+    public function deviceTokens()
+    {
+        return $this->hasMany(DeviceToken::class, 'tokenable_id')
+            ->where('tokenable_type', Registration::class);
+    }
+
     public function isUnpaid(): bool
     {
         return $this->payment_status === 'unpaid';

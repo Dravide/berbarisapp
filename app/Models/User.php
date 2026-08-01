@@ -35,4 +35,10 @@ class User extends Authenticatable
     {
         return $this->hasOne(Eventner::class);
     }
+
+    public function deviceTokens()
+    {
+        return $this->hasMany(DeviceToken::class, 'tokenable_id')
+            ->where('tokenable_type', User::class);
+    }
 }

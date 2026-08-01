@@ -7,6 +7,7 @@ use App\Http\Resources\V1\RegistrationResource;
 use App\Models\Registration;
 use App\Models\AssessmentScore;
 use App\Models\AssessmentCategory;
+use App\Models\DeviceToken;
 use Laravel\Sanctum\PersonalAccessToken;
 use Illuminate\Http\Request;
 
@@ -288,5 +289,25 @@ class PortalController extends Controller
                 'status_berkas' => $reg->status_berkas,
             ],
         ]);
+    }
+
+    public function registerDeviceToken(Request $request)
+    {
+        $reg = $this->getRegistration($request);
+
+        $request->validate([
+            'token' => 'required|string|max:255',
+            'platform' => 'nullable|string|max:20',
+        ]);
+
+        DeviceToken::updateOrCreate(
+            [
+                'registration_id' => $reg->id,
+                'token' => $request->token,
+            ],
+            ['platform' => $request->platform]
+        );
+
+        return response()->json(['message' => 'Token device berhasil disimpan.']);
     }
 }

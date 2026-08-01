@@ -64,6 +64,9 @@ Route::prefix('v1')->group(function () {
         Route::get('/participants', [PortalController::class, 'participants']);
         Route::put('/participants/{id}', [PortalController::class, 'updateParticipant']);
 
+        // Device tokens (FCM)
+        Route::post('/device-token', [PortalController::class, 'registerDeviceToken']);
+
         // Uploads
         Route::post('/upload/logo', [UploadController::class, 'logo']);
         Route::post('/upload/participant-photo', [UploadController::class, 'participantPhoto']);
