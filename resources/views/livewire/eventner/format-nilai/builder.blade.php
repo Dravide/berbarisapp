@@ -90,7 +90,10 @@
                                         <button class="btn btn-sm btn-outline-info border-0" wire:click="duplicateCategory({{ $category->id }})" title="Duplikat Kategori">
                                             <i class="ti ti-copy"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-outline-success border-0" wire:click="openCopyToModal({{ $category->id }})" title="Salin ke Tingkat Lain">
+                                        <button class="btn btn-sm btn-outline-success border-0"
+                                            wire:click="openCopyToModal({{ $category->id }})"
+                                            onclick="event.stopPropagation(); document.getElementById('bbOffcanvasSalinKe').style.display='flex';"
+                                            title="Salin ke Tingkat Lain">
                                             <i class="ti ti-arrow-right-circle"></i> Salin Ke
                                         </button>
                                         <button class="btn btn-sm btn-outline-danger border-0" wire:click="deleteCategory({{ $category->id }})" title="Hapus Kategori" onclick="return confirm('Yakin hapus Kategori ini beserta SELURUH Sub-kategorinya?') || event.stopImmediatePropagation()">
@@ -597,15 +600,14 @@
 </div>
 @endif
 
-{{-- Offcanvas Salin Ke --}}
-@if($showCopyToModal)
-<div class="bb-offcanvas-backdrop" wire:click="closeCopyToModal"></div>
-<div class="bb-offcanvas">
+{{-- Offcanvas Salin Ke — selalu dirender, dibuka via JS native (tanpa Livewire buat open) --}}
+<div class="bb-offcanvas-backdrop" id="bbOffcanvasBackdrop" style="display:none;" onclick="document.getElementById('bbOffcanvasSalinKe').style.display='none'; document.getElementById('bbOffcanvasBackdrop').style.display='none';"></div>
+<div class="bb-offcanvas" id="bbOffcanvasSalinKe" style="display:none;">
     <div class="bb-offcanvas-header">
         <h5 style="margin:0; font-weight:600; font-size:1.05rem;">
             <i class="ti ti-arrow-right-circle me-1"></i> Salin Ke Tingkat Lain
         </h5>
-        <button type="button" class="btn-close btn-close-white" wire:click="closeCopyToModal"></button>
+        <button type="button" class="btn-close btn-close-white" onclick="document.getElementById('bbOffcanvasSalinKe').style.display='none'; document.getElementById('bbOffcanvasBackdrop').style.display='none';"></button>
     </div>
     <div class="bb-offcanvas-body">
         @php $sourceCat = $this->categories->firstWhere('id', $copyToSourceCategoryId); @endphp
@@ -630,7 +632,7 @@
             <small class="form-text text-muted">Struktur rubrik ini akan disalin sebagai kategori baru di tingkat tujuan.</small>
         </div>
         <div class="d-flex gap-2">
-            <button class="btn btn-secondary" wire:click="closeCopyToModal">
+            <button class="btn btn-secondary" onclick="document.getElementById('bbOffcanvasSalinKe').style.display='none'; document.getElementById('bbOffcanvasBackdrop').style.display='none';">
                 <i class="ti ti-x me-1"></i> Batal
             </button>
             <button class="btn btn-success" wire:click="executeCopyTo" {{ !$copyToTargetCompetitionCategoryId ? 'disabled' : '' }}>
@@ -639,7 +641,6 @@
         </div>
     </div>
 </div>
-@endif
 
 <style>
     .cursor-grab { cursor: grab; }
