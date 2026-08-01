@@ -607,7 +607,7 @@
 <div class="bb-offcanvas" id="bbOffcanvasSalinKe" style="display:none;">
     <div class="bb-offcanvas-header">
         <h5 style="margin:0; font-weight:600; font-size:1.05rem;">
-            <i class="ti ti-arrow-right-circle me-1"></i> Salin Ke Tingkat Lain
+            <i class="ti ti-arrow-right-circle me-1"></i> Salin Rubrik ke Tingkat Lain
         </h5>
         <button type="button" class="btn-close btn-close-white" onclick="document.getElementById('bbOffcanvasSalinKe').style.display='none'; document.getElementById('bbOffcanvasBackdrop').style.display='none';"></button>
     </div>

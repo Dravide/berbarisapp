@@ -272,10 +272,7 @@ class Builder extends Component
             'sort_order' => $maxOrder + 1,
         ]);
 
-        if ($original->judges->isNotEmpty()) {
-            $newCategory->judges()->sync($original->judges->pluck('id'));
-        }
-
+        // Copy by rubrik: hanya sub-kategori + kriteria (bobot, skor). Tanpa juri & kelompok pengurangan.
         foreach ($original->subCategories as $subIndex => $sub) {
             $newSub = AssessmentSubCategory::create([
                 'assessment_category_id' => $newCategory->id,
@@ -294,27 +291,9 @@ class Builder extends Component
             }
         }
 
-        foreach ($original->deductionCategories as $dedIndex => $dedCat) {
-            $newDedCat = DeductionCategory::create([
-                'eventner_id' => $this->eventnerId,
-                'assessment_category_id' => $newCategory->id,
-                'name' => $dedCat->name,
-                'sort_order' => $dedIndex + 1,
-            ]);
-
-            foreach ($dedCat->criterias as $dedCrit) {
-                DeductionCriteria::create([
-                    'deduction_category_id' => $newDedCat->id,
-                    'name' => $dedCrit->name,
-                    'deduction_options' => $dedCrit->deduction_options,
-                    'sort_order' => $dedCrit->sort_order,
-                ]);
-            }
-        }
-
         $targetName = CompetitionCategory::find($targetCompetitionCategoryId)?->full_name ?? 'Tingkat tujuan';
         $this->closeCopyToModal();
-        session()->flash('success', "Kategori '{$original->name}' berhasil disalin ke {$targetName}.");
+        session()->flash('success', "Rubrik '{$original->name}' berhasil disalin ke {$targetName}.");
     }
 
     public function addSubCategory($categoryId)
