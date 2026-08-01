@@ -96,22 +96,6 @@
                                         <button class="btn btn-sm btn-outline-danger border-0" wire:click="deleteCategory({{ $category->id }})" title="Hapus Kategori" onclick="return confirm('Yakin hapus Kategori ini beserta SELURUH Sub-kategorinya?') || event.stopImmediatePropagation()">
                                             <i class="ti ti-trash"></i>
                                         </button>
-                                        @if($showCopyToModal && $copyToSourceCategoryId == $category->id)
-                                        <div class="d-flex align-items-center gap-2 px-3 py-2 flex-grow-1" style="max-width:420px;">
-                                            <select class="form-select form-select-sm" wire:model="copyToTargetCompetitionCategoryId">
-                                                <option value="">Salin ke tingkat...</option>
-                                                @foreach($this->competitionCategories as $cc)
-                                                    @if($cc->id != $category->competition_category_id)
-                                                        <option value="{{ $cc->id }}">{{ $cc->full_name }}</option>
-                                                    @endif
-                                                @endforeach
-                                            </select>
-                                            <button class="btn btn-sm btn-success" wire:click="executeCopyTo" {{ !$copyToTargetCompetitionCategoryId ? 'disabled' : '' }}>
-                                                <i class="ti ti-copy me-1"></i> Salin
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-secondary" wire:click="closeCopyToModal"><i class="ti ti-x"></i></button>
-                                        </div>
-                                        @endif
                                     @endif
                                 </h2>
 
@@ -613,9 +597,71 @@
 </div>
 @endif
 
+{{-- Offcanvas Salin Ke --}}
+@if($showCopyToModal)
+<div class="bb-offcanvas-backdrop" wire:click="closeCopyToModal"></div>
+<div class="bb-offcanvas">
+    <div class="bb-offcanvas-header">
+        <h5 style="margin:0; font-weight:600; font-size:1.05rem;">
+            <i class="ti ti-arrow-right-circle me-1"></i> Salin Ke Tingkat Lain
+        </h5>
+        <button type="button" class="btn-close btn-close-white" wire:click="closeCopyToModal"></button>
+    </div>
+    <div class="bb-offcanvas-body">
+        @php $sourceCat = $this->categories->firstWhere('id', $copyToSourceCategoryId); @endphp
+        @if($sourceCat)
+            <div class="alert alert-success border-0 bg-success-subtle text-success mb-3">
+                <i class="ti ti-check me-1"></i> Sumber: <strong>{{ $sourceCat->name }}</strong>
+                @if($sourceCat->competitionCategory)
+                    <span class="badge bg-success-subtle text-success ms-1">{{ $sourceCat->competitionCategory->full_name }}</span>
+                @endif
+            </div>
+        @endif
+        <div class="mb-3">
+            <label class="form-label fw-semibold">Salin ke Tingkat</label>
+            <select class="form-select" wire:model.live="copyToTargetCompetitionCategoryId">
+                <option value="">― Pilih Tingkat Tujuan ―</option>
+                @foreach($this->competitionCategories as $cc)
+                    @if($cc->id != ($sourceCat?->competition_category_id))
+                        <option value="{{ $cc->id }}">{{ $cc->full_name }}</option>
+                    @endif
+                @endforeach
+            </select>
+            <small class="form-text text-muted">Struktur rubrik ini akan disalin sebagai kategori baru di tingkat tujuan.</small>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-secondary" wire:click="closeCopyToModal">
+                <i class="ti ti-x me-1"></i> Batal
+            </button>
+            <button class="btn btn-success" wire:click="executeCopyTo" {{ !$copyToTargetCompetitionCategoryId ? 'disabled' : '' }}>
+                <i class="ti ti-copy me-1"></i> Salin
+            </button>
+        </div>
+    </div>
+</div>
+@endif
+
 <style>
     .cursor-grab { cursor: grab; }
     .cursor-grab:active { cursor: grabbing; }
     [wire\:sort\:item] { transition: transform 0.15s ease, box-shadow 0.15s ease; }
     [wire\:sort\:item].sortable-ghost { opacity: 0.5; }
+
+    /* Offcanvas custom — bukan Bootstrap offcanvas (di-disable template admin) */
+    .bb-offcanvas-backdrop {
+        position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1050;
+    }
+    .bb-offcanvas {
+        position: fixed; top: 0; right: 0; height: 100%; width: 100%;
+        max-width: 480px; background: #fff; z-index: 1051;
+        box-shadow: -8px 0 30px rgba(0,0,0,.2);
+        display: flex; flex-direction: column;
+        animation: bbSlideIn .25s ease-out;
+    }
+    .bb-offcanvas-header {
+        background: #198754; color: #fff; padding: 1rem;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .bb-offcanvas-body { padding: 1.25rem; overflow-y: auto; flex: 1; }
+    @keyframes bbSlideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
 </style>
