@@ -87,7 +87,7 @@
   <div class="dark-transparent sidebartoggler"></div>
 
   <!-- Import Js Files -->
-  <script src="{{ asset('templates/assets/libs/jquery/dist/jquery.min.js') }}"></script>
+  <script src="{{ asset('templates/assets/js/vendor.min.js') }}"></script>
   <script src="{{ asset('templates/assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
   <script src="{{ asset('templates/assets/libs/simplebar/dist/simplebar.min.js') }}"></script>
   <script>
