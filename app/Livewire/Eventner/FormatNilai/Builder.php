@@ -245,6 +245,26 @@ class Builder extends Component
      * Salin seluruh struktur kategori sumber ke tingkat (competition_category) target.
      * Buat kategori baru di tingkat target + clone sub-kategori, kriteria, pengurangan, juri.
      */
+    public function confirmCopyTo()
+    {
+        $targetCompetitionCategoryId = $this->copyToTargetCompetitionCategoryId;
+
+        if (!$this->copyToSourceCategoryId || !$targetCompetitionCategoryId) {
+            session()->flash('error', 'Pilih tingkat tujuan terlebih dahulu.');
+            return;
+        }
+
+        $target = CompetitionCategory::where('eventner_id', $this->eventnerId)
+            ->find($targetCompetitionCategoryId);
+        $source = AssessmentCategory::where('eventner_id', $this->eventnerId)
+            ->find($this->copyToSourceCategoryId);
+
+        $this->dispatch('copy:confirm', [
+            'source_name' => $source?->name ?? '',
+            'target_name' => $target?->full_name ?? '',
+        ]);
+    }
+
     public function executeCopyTo($sourceId = null)
     {
         $sourceId = $sourceId ?: $this->copyToSourceCategoryId;
@@ -255,13 +275,18 @@ class Builder extends Component
             return;
         }
 
-        $original = AssessmentCategory::with(['subCategories.criterias', 'judges', 'deductionCategories.criterias'])
-            ->where('eventner_id', $this->eventnerId)
-            ->findOrFail($sourceId);
+        try {
+            $original = AssessmentCategory::with(['subCategories.criterias', 'judges', 'deductionCategories.criterias'])
+                ->where('eventner_id', $this->eventnerId)
+                ->findOrFail($sourceId);
 
-        // Validasi target tingkat milik eventner ini
-        CompetitionCategory::where('eventner_id', $this->eventnerId)
-            ->findOrFail($targetCompetitionCategoryId);
+            // Validasi target tingkat milik eventner ini
+            CompetitionCategory::where('eventner_id', $this->eventnerId)
+                ->findOrFail($targetCompetitionCategoryId);
+        } catch (\Throwable $e) {
+            $this->dispatch('copy:done', ['success' => false, 'message' => 'Kategori atau tingkat tujuan tidak ditemukan.']);
+            return;
+        }
 
         $maxOrder = AssessmentCategory::where('eventner_id', $this->eventnerId)->max('sort_order') ?? 0;
 
@@ -293,7 +318,7 @@ class Builder extends Component
 
         $targetName = CompetitionCategory::find($targetCompetitionCategoryId)?->full_name ?? 'Tingkat tujuan';
         $this->closeCopyToModal();
-        session()->flash('success', "Rubrik '{$original->name}' berhasil disalin ke {$targetName}.");
+        $this->dispatch('copy:done', ['success' => true, 'message' => "Rubrik '{$original->name}' berhasil disalin ke {$targetName}."]);
     }
 
     public function addSubCategory($categoryId)

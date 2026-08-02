@@ -641,7 +641,7 @@
                 <button class="btn btn-secondary" wire:click="closeCopyToModal">
                     <i class="ti ti-x me-1"></i> Batal
                 </button>
-                <button class="btn btn-success" wire:click="executeCopyTo" {{ !$copyToTargetCompetitionCategoryId ? 'disabled' : '' }}>
+                <button class="btn btn-success" wire:click="confirmCopyTo" {{ !$copyToTargetCompetitionCategoryId ? 'disabled' : '' }}>
                     <i class="ti ti-copy me-1"></i> Salin Rubrik
                 </button>
             </div>
@@ -656,3 +656,38 @@
     [wire\:sort\:item] { transition: transform 0.15s ease, box-shadow 0.15s ease; }
     [wire\:sort\:item].sortable-ghost { opacity: 0.5; }
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+// Konfirmasi salin rubrik via SweetAlert
+document.addEventListener('livewire:init', () => {
+    window.addEventListener('copy:confirm', (event) => {
+        const d = event.detail || {};
+        Swal.fire({
+            title: 'Salin Rubrik?',
+            html: 'Rubrik <strong>' + (d.source_name || '') + '</strong> akan disalin ke <strong>' + (d.target_name || '') + '</strong>.<br><small>Sub-kategori & kriteria (bobot, skor) ikut disalin.</small>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Salin',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#198754',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const comp = Livewire.find('{{ $this->getId() }}');
+                if (comp) comp.call('executeCopyTo');
+            }
+        });
+    });
+
+    window.addEventListener('copy:done', (event) => {
+        const d = event.detail || {};
+        if (d.success) {
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: d.message, confirmButtonColor: '#198754', timer: 2500, timerProgressBar: true });
+        } else {
+            Swal.fire({ icon: 'error', title: 'Gagal', text: d.message, confirmButtonColor: '#dc3545' });
+        }
+    });
+});
+</script>
