@@ -34,11 +34,11 @@
                 </p>
             @endif
 
-            <form method="POST" action="{{ route('eventner.format-nilai.copy-execute', $source->id) }}">
+            <form method="POST" action="{{ route('eventner.format-nilai.copy-execute', $source->id) }}" id="copyForm">
                 @csrf
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Salin ke Tingkat</label>
-                    <select name="target_competition_category_id" class="form-select @error('target_competition_category_id') is-invalid @enderror" required>
+                    <select name="target_competition_category_id" id="targetSelect" class="form-select @error('target_competition_category_id') is-invalid @enderror" required>
                         <option value="">― Pilih Tingkat Tujuan ―</option>
                         @foreach($targets as $t)
                             <option value="{{ $t->id }}">{{ $t->full_name }}</option>
@@ -51,12 +51,50 @@
                     <a href="{{ route('eventner.format-nilai.builder') }}" class="btn btn-secondary">
                         <i class="ti ti-x me-1"></i> Batal
                     </a>
-                    <button type="submit" class="btn btn-success">
+                    <button type="submit" class="btn btn-success" id="btnSalin">
                         <i class="ti ti-copy me-1"></i> Salin Rubrik
                     </button>
                 </div>
             </form>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+    // Konfirmasi sebelum salin
+    document.getElementById('copyForm').addEventListener('submit', function (e) {
+        var target = document.getElementById('targetSelect');
+        if (!target.value) {
+            e.preventDefault();
+            Swal.fire({ icon: 'warning', title: 'Pilih Tingkat Tujuan', text: 'Pilih tingkat tujuan terlebih dahulu.', confirmButtonColor: '#198754' });
+            return;
+        }
+        e.preventDefault();
+        var targetName = target.options[target.selectedIndex].text;
+        Swal.fire({
+            title: 'Salin Rubrik?',
+            html: 'Rubrik <strong>{{ $source->name }}</strong> akan disalin ke <strong>' + targetName + '</strong>.<br><small>Sub-kategori & kriteria (bobot, skor) ikut disalin.</small>',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Salin',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#198754',
+            cancelButtonColor: '#6c757d',
+            reverseButtons: true,
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                document.getElementById('copyForm').submit();
+            }
+        });
+    });
+
+    // Feedback success/error via session flash
+    @if(session('success'))
+    Swal.fire({ icon: 'success', title: 'Berhasil!', text: "{{ session('success') }}", confirmButtonColor: '#198754', timer: 2500, timerProgressBar: true });
+    @endif
+    @if(session('error'))
+    Swal.fire({ icon: 'error', title: 'Gagal', text: "{{ session('error') }}", confirmButtonColor: '#dc3545' });
+    @endif
+    </script>
 </body>
 </html>
