@@ -186,6 +186,9 @@ class EventnerSeeder extends Seeder
                     'payment_status' => 'paid',
                     'total_fee' => 150000,
                     'payment_verified_at' => now()->subDays(2),
+                    // Eksplisit — karena WithoutModelEvents (via DatabaseSeeder) mematikan boot creating
+                    'magic_token' => Str::random(16),
+                    'qr_token' => strtoupper(Str::random(8)),
                 ]
             );
 
