@@ -94,7 +94,7 @@
                                             type="button"
                                             data-copy-source-id="{{ $category->id }}"
                                             data-copy-source-name="{{ $category->name }}"
-                                            onclick="event.stopPropagation(); document.getElementById('bbCopySourceId').value=this.getAttribute('data-copy-source-id'); document.getElementById('bbCopySourceName').textContent=this.getAttribute('data-copy-source-name'); document.getElementById('bbCopySourceInfo').style.display='block'; document.getElementById('bbOffcanvasSalinKe').style.display='flex'; document.getElementById('bbOffcanvasBackdrop').style.display='block';"
+                                            onclick="event.stopPropagation(); bbOpenCopyModal(this);"
                                             title="Salin ke Tingkat Lain">
                                             <i class="ti ti-arrow-right-circle"></i> Salin Ke
                                         </button>
@@ -602,47 +602,53 @@
 </div>
 @endif
 
-{{-- Offcanvas Salin Ke — selalu dirender, dibuka via JS native (tanpa Livewire buat open) --}}
-<div class="bb-offcanvas-backdrop" id="bbOffcanvasBackdrop" style="display:none;" onclick="document.getElementById('bbOffcanvasSalinKe').style.display='none'; document.getElementById('bbOffcanvasBackdrop').style.display='none';"></div>
-<div class="bb-offcanvas" id="bbOffcanvasSalinKe" style="display:none;">
-    <div class="bb-offcanvas-header">
-        <h5 style="margin:0; font-weight:600; font-size:1.05rem;">
-            <i class="ti ti-arrow-right-circle me-1"></i> Salin Rubrik ke Tingkat Lain
-        </h5>
-        <button type="button" class="btn-close btn-close-white" onclick="document.getElementById('bbOffcanvasSalinKe').style.display='none'; document.getElementById('bbOffcanvasBackdrop').style.display='none';"></button>
-    </div>
-    <div class="bb-offcanvas-body">
-        <input type="hidden" id="bbCopySourceId">
-        <div id="bbCopySourceInfo" class="alert alert-success border-0 bg-success-subtle text-success mb-3" style="display:none;">
-            <i class="ti ti-check me-1"></i> Sumber: <strong id="bbCopySourceName"></strong>
+{{-- Modal Salin Rubrik — selalu dirender, dibuka via JS native --}}
+<div class="bb-modal-backdrop" id="bbCopyModalBackdrop" style="display:none;" onclick="bbCloseCopyModal()"></div>
+<div class="bb-modal-wrap" id="bbCopyModal" style="display:none;">
+    <div class="bb-modal">
+        <div class="bb-modal-header">
+            <h5 style="margin:0; font-weight:600; font-size:1.05rem;">
+                <i class="ti ti-arrow-right-circle me-1"></i> Salin Rubrik ke Tingkat Lain
+            </h5>
+            <button type="button" class="btn-close btn-close-white" onclick="bbCloseCopyModal()"></button>
         </div>
-        <div class="mb-3">
-            <label class="form-label fw-semibold">Salin ke Tingkat</label>
-            <select class="form-select" wire:model.live="copyToTargetCompetitionCategoryId">
-                <option value="">― Pilih Tingkat Tujuan ―</option>
-                @foreach($this->competitionCategories as $cc)
-                    <option value="{{ $cc->id }}">{{ $cc->full_name }}</option>
-                @endforeach
-            </select>
-            <small class="form-text text-muted">Struktur rubrik ini akan disalin sebagai kategori baru di tingkat tujuan.</small>
-        </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-secondary" onclick="document.getElementById('bbOffcanvasSalinKe').style.display='none'; document.getElementById('bbOffcanvasBackdrop').style.display='none';">
-                <i class="ti ti-x me-1"></i> Batal
-            </button>
-            <button type="button" class="btn btn-success" id="bbBtnSalin" {{ !$copyToTargetCompetitionCategoryId ? 'disabled' : '' }} onclick="bbSalinKe()">
-                <i class="ti ti-copy me-1"></i> Salin
-            </button>
+        <div class="bb-modal-body">
+            <input type="hidden" id="bbCopySourceId">
+            <div id="bbCopySourceInfo" class="alert alert-success border-0 bg-success-subtle text-success mb-3" style="display:none;">
+                <i class="ti ti-check me-1"></i> Sumber: <strong id="bbCopySourceName"></strong>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Salin ke Tingkat</label>
+                <select class="form-select" wire:model.live="copyToTargetCompetitionCategoryId">
+                    <option value="">― Pilih Tingkat Tujuan ―</option>
+                    @foreach($this->competitionCategories as $cc)
+                        <option value="{{ $cc->id }}">{{ $cc->full_name }}</option>
+                    @endforeach
+                </select>
+                <small class="form-text text-muted">Struktur rubrik ini akan disalin sebagai kategori baru di tingkat tujuan.</small>
+            </div>
+            <div class="d-flex gap-2">
+                <button class="btn btn-secondary" onclick="bbCloseCopyModal()">
+                    <i class="ti ti-x me-1"></i> Batal
+                </button>
+                <button type="button" class="btn btn-success" id="bbBtnSalin" {{ !$copyToTargetCompetitionCategoryId ? 'disabled' : '' }} onclick="bbSalinKe()">
+                    <i class="ti ti-copy me-1"></i> Salin
+                </button>
+            </div>
         </div>
     </div>
 </div>
 <script>
-function openCopyToOffcanvas(btn) {
+function bbOpenCopyModal(btn) {
     document.getElementById('bbCopySourceId').value = btn.getAttribute('data-copy-source-id');
     document.getElementById('bbCopySourceName').textContent = btn.getAttribute('data-copy-source-name');
     document.getElementById('bbCopySourceInfo').style.display = 'block';
-    document.getElementById('bbOffcanvasSalinKe').style.display = 'flex';
-    document.getElementById('bbOffcanvasBackdrop').style.display = 'block';
+    document.getElementById('bbCopyModal').style.display = 'flex';
+    document.getElementById('bbCopyModalBackdrop').style.display = 'block';
+}
+function bbCloseCopyModal() {
+    document.getElementById('bbCopyModal').style.display = 'none';
+    document.getElementById('bbCopyModalBackdrop').style.display = 'none';
 }
 function bbSalinKe() {
     var sid = document.getElementById('bbCopySourceId').value;
@@ -658,21 +664,21 @@ function bbSalinKe() {
     [wire\:sort\:item] { transition: transform 0.15s ease, box-shadow 0.15s ease; }
     [wire\:sort\:item].sortable-ghost { opacity: 0.5; }
 
-    /* Offcanvas custom — bukan Bootstrap offcanvas (di-disable template admin) */
-    .bb-offcanvas-backdrop {
+    /* Modal custom — bukan Bootstrap .modal (display:none di template) */
+    .bb-modal-backdrop {
         position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 1050;
     }
-    .bb-offcanvas {
-        position: fixed; top: 0; right: 0; height: 100%; width: 100%;
-        max-width: 480px; background: #fff; z-index: 1051;
-        box-shadow: -8px 0 30px rgba(0,0,0,.2);
-        display: flex; flex-direction: column;
-        animation: bbSlideIn .25s ease-out;
+    .bb-modal-wrap {
+        position: fixed; inset: 0; z-index: 1051;
+        display: flex; align-items: center; justify-content: center; padding: 1rem;
     }
-    .bb-offcanvas-header {
+    .bb-modal {
+        background: #fff; border-radius: 8px; width: 100%; max-width: 500px;
+        max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,.3);
+    }
+    .bb-modal-header {
         background: #198754; color: #fff; padding: 1rem;
         display: flex; justify-content: space-between; align-items: center;
     }
-    .bb-offcanvas-body { padding: 1.25rem; overflow-y: auto; flex: 1; }
-    @keyframes bbSlideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    .bb-modal-body { padding: 1.25rem; }
 </style>
