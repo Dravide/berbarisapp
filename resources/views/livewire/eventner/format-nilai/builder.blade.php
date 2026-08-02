@@ -94,7 +94,7 @@
                                             type="button"
                                             data-copy-source-id="{{ $category->id }}"
                                             data-copy-source-name="{{ $category->name }}"
-                                            onclick="event.stopPropagation(); openCopyToOffcanvas(this);"
+                                            onclick="event.stopPropagation(); document.getElementById('bbCopySourceId').value=this.getAttribute('data-copy-source-id'); document.getElementById('bbCopySourceName').textContent=this.getAttribute('data-copy-source-name'); document.getElementById('bbCopySourceInfo').style.display='block'; document.getElementById('bbOffcanvasSalinKe').style.display='flex'; document.getElementById('bbOffcanvasBackdrop').style.display='block';"
                                             title="Salin ke Tingkat Lain">
                                             <i class="ti ti-arrow-right-circle"></i> Salin Ke
                                         </button>
