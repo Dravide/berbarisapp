@@ -90,11 +90,12 @@
                                         <button class="btn btn-sm btn-outline-info border-0" wire:click="duplicateCategory({{ $category->id }})" title="Duplikat Kategori">
                                             <i class="ti ti-copy"></i>
                                         </button>
-                                        <a class="btn btn-sm btn-outline-success border-0"
-                                            href="{{ route('eventner.format-nilai.copy-form', $category->id) }}"
+                                        <button class="btn btn-sm btn-outline-success border-0"
+                                            type="button"
+                                            wire:click="openCopyToModal({{ $category->id }})"
                                             title="Salin ke Tingkat Lain">
                                             <i class="ti ti-arrow-right-circle"></i> Salin Ke
-                                        </a>
+                                        </button>
                                         <button class="btn btn-sm btn-outline-danger border-0" wire:click="deleteCategory({{ $category->id }})" title="Hapus Kategori" onclick="return confirm('Yakin hapus Kategori ini beserta SELURUH Sub-kategorinya?') || event.stopImmediatePropagation()">
                                             <i class="ti ti-trash"></i>
                                         </button>
@@ -592,6 +593,56 @@
                 <button class="btn btn-light" wire:click="closeCriteriaModal">Batal</button>
                 <button class="btn btn-primary" wire:click="saveCriteriaModal">
                     <i class="ti ti-check me-1"></i> {{ $criteriaModalTargetId ? 'Simpan Perubahan' : 'Tambah Kriteria' }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
+<!-- Modal Salin Rubrik -->
+@if($showCopyToModal)
+<div class="modal fade show d-block" tabindex="-1" style="display:block; background-color: rgba(0,0,0,.5); z-index: 1050;">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title text-white fw-semibold">
+                    <i class="ti ti-arrow-right-circle me-1"></i> Salin Rubrik ke Tingkat Lain
+                </h5>
+                <button type="button" class="btn-close btn-close-white" wire:click="closeCopyToModal"></button>
+            </div>
+            <div class="modal-body">
+                @php
+                    $copySourceCat = $this->categories->firstWhere('id', $copyToSourceCategoryId);
+                @endphp
+                @if($copySourceCat)
+                    <div class="alert alert-success border-0 bg-success-subtle text-success mb-3">
+                        <i class="ti ti-check me-1"></i> Sumber: <strong>{{ $copySourceCat->name }}</strong>
+                        @if($copySourceCat->competitionCategory)
+                            <span class="badge bg-success-subtle text-success ms-1">{{ $copySourceCat->competitionCategory->full_name }}</span>
+                        @endif
+                    </div>
+                @endif
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Salin ke Tingkat</label>
+                    <select class="form-select" wire:model.live="copyToTargetCompetitionCategoryId">
+                        <option value="">― Pilih Tingkat Tujuan ―</option>
+                        @foreach($this->competitionCategories as $cc)
+                            @if($cc->id != ($copySourceCat?->competition_category_id))
+                                <option value="{{ $cc->id }}">{{ $cc->full_name }}</option>
+                            @endif
+                        @endforeach
+                    </select>
+                    <small class="form-text text-muted">Struktur rubrik (sub-kategori & kriteria) disalin sebagai kategori baru di tingkat tujuan.</small>
+                </div>
+                @if(session('error'))<div class="alert alert-danger py-2">{{ session('error') }}</div>@endif
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" wire:click="closeCopyToModal">
+                    <i class="ti ti-x me-1"></i> Batal
+                </button>
+                <button class="btn btn-success" wire:click="executeCopyTo" {{ !$copyToTargetCompetitionCategoryId ? 'disabled' : '' }}>
+                    <i class="ti ti-copy me-1"></i> Salin Rubrik
                 </button>
             </div>
         </div>
