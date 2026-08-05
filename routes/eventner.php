@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('dashboard', App\Livewire\Eventner\Dashboard::class)->name('eventner.dashboard');
 Route::get('format-nilai', App\Livewire\Eventner\FormatNilai\Builder::class)->name('eventner.format-nilai.builder');
+Route::get('format-nilai/unduh', App\Livewire\Eventner\FormatNilai\Download::class)->name('eventner.format-nilai.download');
+Route::get('format-nilai/unduh/pdf', [App\Http\Controllers\Eventner\FormatNilaiController::class, 'unduhPdf'])->name('eventner.format-nilai.download-pdf');
 Route::get('format-nilai/copy/{categoryId}', [App\Http\Controllers\Eventner\FormatNilaiController::class, 'copyForm'])->name('eventner.format-nilai.copy-form');
 Route::post('format-nilai/copy/{categoryId}', [App\Http\Controllers\Eventner\FormatNilaiController::class, 'copyExecute'])->name('eventner.format-nilai.copy-execute');
 Route::get('format-nilai/pdf', [App\Http\Controllers\Eventner\FormatNilaiController::class, 'downloadPdf'])->name('eventner.format-nilai.pdf');

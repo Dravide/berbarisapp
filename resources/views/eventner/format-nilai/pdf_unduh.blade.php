@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Rubrik Penilaian - {{ $eventner->nama_event }}</title>
+    <title>Lembar Format Penilaian - {{ $eventner->nama_event }}</title>
     <style>
         @font-face {
             font-family: 'PJ';
@@ -59,6 +59,13 @@
         table.ded th { background: #fdf2f2; padding: 4px 8px; font-size: 7px; font-weight: bold; text-transform: uppercase; color: #b00020; text-align: left; border: 1px solid #f5c6c6; }
         table.ded td { padding: 4px 8px; border: 1px solid #f5c6c6; font-size: 10px; }
 
+        /* TABEL DAFTAR PESERTA */
+        table.daftar { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
+        table.daftar th { background: #2c3e50; color: #fff; padding: 6px 8px; font-size: 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid #2c3e50; }
+        table.daftar td { padding: 6px 8px; border: 1px solid #ddd; font-size: 10px; }
+        table.daftar .no { text-align: center; width: 45px; font-weight: bold; }
+        table.daftar .undian { text-align: center; width: 60px; }
+
         /* FOOTER */
         .foot { margin-top: 18px; padding-top: 6px; border-top: 1px solid #ddd; text-align: center; font-size: 7px; color: #aaa; }
 
@@ -71,8 +78,8 @@
 
         /* PAGE FLOW */
         .cat-section { margin-bottom: 14px; }
-        table.krit thead, table.ded thead { display: table-header-group; }
-        table.krit tr, table.ded tr { page-break-inside: avoid; }
+        table.krit thead, table.ded thead, table.daftar thead { display: table-header-group; }
+        table.krit tr, table.ded tr, table.daftar tr { page-break-inside: avoid; }
     </style>
 </head>
 <body>
@@ -93,38 +100,73 @@
         </table>
     </div>
 
-    <div class="judul">Format Penilaian</div>
+    <div class="judul">
+        @if($mode === 'daftar')
+            Daftar Peserta Lomba
+        @elseif($mode === 'peserta')
+            Lembar Penilaian Peserta
+        @else
+            Lembar Penilaian
+        @endif
+    </div>
     <div class="subjudul">
         @if(!empty($judgeName))
             Juri: {{ $judgeName }} &bull;
-        @elseif(!empty($childName))
+        @endif
+        @if(!empty($childName))
             Tingkat: {{ $childName }} &bull;
         @endif
         Dicetak: {{ now()->translatedFormat('d F Y H:i') }} WIB
     </div>
 
-    <table class="info">
-        <tr>
-            <td class="lbl">Kegiatan</td>
-            <td class="val">{{ $eventner->nama_event }}</td>
-            <td class="lbl">Penyelenggara</td>
-            <td>{{ $eventner->diselenggarakan_oleh }}</td>
-        </tr>
-        <tr>
-            <td class="lbl">Tingkat</td>
-            <td>{{ !empty($childName) ? $childName : 'Semua Tingkat' }}</td>
-            <td class="lbl">Tanggal Cetak</td>
-            <td>{{ now()->translatedFormat('d F Y') }}</td>
-        </tr>
-    </table>
+    @if($mode === 'peserta' && $registration)
+        <table class="info">
+            <tr>
+                <td class="lbl">No. Urut</td>
+                <td class="val">{{ $registration->urutan_tampil ? '#' . $registration->urutan_tampil : '-' }}</td>
+                <td class="lbl">Nama Kontingen</td>
+                <td class="val">{{ $registration->nama_sekolah }}</td>
+            </tr>
+            <tr>
+                <td class="lbl">Pelatih</td>
+                <td>{{ $registration->nama_pelatih }}</td>
+                <td class="lbl">Tingkat Lomba</td>
+                <td>{{ $registration->competitionCategory->full_name ?? '-' }}</td>
+            </tr>
+        </table>
+    @endif
 
-    @if($categories->isEmpty())
-        <p style="text-align:center; color:#888;">Belum ada format penilaian yang dibangun.</p>
+    @if($mode === 'daftar')
+        @if($registrations->isEmpty())
+            <p style="text-align:center; color:#888;">Belum ada peserta terdaftar.</p>
+        @else
+            <table class="daftar">
+                <thead>
+                    <tr>
+                        <th class="no">No</th>
+                        <th class="undian">No. Urut</th>
+                        <th>Nama Kontingen / Sekolah</th>
+                        <th>Pelatih</th>
+                        <th>Tingkat Lomba</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($registrations as $i => $reg)
+                        <tr>
+                            <td class="no">{{ $i + 1 }}</td>
+                            <td class="undian">{{ $reg->urutan_tampil ?: '-' }}</td>
+                            <td>{{ $reg->nama_sekolah }}</td>
+                            <td>{{ $reg->nama_pelatih }}</td>
+                            <td>{{ $reg->competitionCategory->full_name ?? '-' }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
     @else
         @include('eventner.format-nilai._rubrik_body', ['categories' => $categories])
     @endif
 
-    {{-- TANDA TANGAN --}}
     @php
         use chillerlan\QRCode\QRCode;
         $qrData = event_url($eventner, 'detail');
@@ -140,10 +182,20 @@
                     <div style="margin-top:6px; font-weight:bold; font-size:9px;">{{ $eventner->diselenggarakan_oleh }}</div>
                 </td>
                 <td style="text-align:center; width:50%; vertical-align:top; padding-top:10px;">
-                    <div class="role" style="margin-bottom:8px;">Koordinator Juri</div>
+                    <div class="role" style="margin-bottom:8px;">
+                        @if($mode === 'peserta' && $registration)
+                            Pelatih
+                        @else
+                            Koordinator Juri
+                        @endif
+                    </div>
                     <br><br><br>
                     <span class="line"></span><br>
-                    <small>___________________</small>
+                    @if($mode === 'peserta' && $registration)
+                        <small>{{ $registration->nama_pelatih }}</small>
+                    @else
+                        <small>___________________</small>
+                    @endif
                 </td>
             </tr>
         </table>

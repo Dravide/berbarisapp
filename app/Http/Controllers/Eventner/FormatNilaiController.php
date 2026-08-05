@@ -9,6 +9,7 @@ use App\Models\AssessmentSubCategory;
 use App\Models\AssessmentCriteria;
 use App\Models\CompetitionCategory;
 use App\Models\Judge;
+use App\Models\Registration;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -116,6 +117,94 @@ class FormatNilaiController extends Controller
             ->setPaper('a4', 'portrait');
 
         return $pdf->download('Format_Penilaian_' . str_replace(['/', '\\'], '_', $judge->name) . '.pdf');
+    }
+
+    /**
+     * Unduh lembar format penilaian dengan 3 mode:
+     *  - kosong  : rubrik tanpa nama peserta
+     *  - peserta : rubrik + header No.Urut & Nama untuk satu peserta
+     *  - daftar  : daftar No.Urut & Nama semua peserta (tanpa rubrik)
+     * Filter opsional: judge_id (kategori juri) dan level_id (tingkat lomba).
+     */
+    public function unduhPdf(Request $request)
+    {
+        $eventner = Auth::user()->eventner;
+        if (!$eventner) {
+            abort(403, 'Anda bukan Eventner yang sah.');
+        }
+
+        $mode = $request->query('mode', 'kosong');
+        if (!in_array($mode, ['kosong', 'peserta', 'daftar'], true)) {
+            $mode = 'kosong';
+        }
+
+        $judgeId  = $request->query('judge_id');
+        $levelId  = $request->query('level_id');
+        $regId    = $request->query('registration_id');
+
+        // ---- Kategori (rubrik) sesuai filter ----
+        $q = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias'])
+            ->where('eventner_id', $eventner->id);
+
+        if ($levelId) {
+            CompetitionCategory::where('eventner_id', $eventner->id)->findOrFail($levelId);
+            $q->where('competition_category_id', $levelId);
+        }
+
+        if ($judgeId) {
+            Judge::where('eventner_id', $eventner->id)->findOrFail($judgeId);
+            $q->whereHas('judges', fn($j) => $j->where('judges.id', $judgeId));
+        }
+
+        $categories = $q->orderBy('sort_order')->get();
+
+        if ($categories->isEmpty()) {
+            abort(422, 'Tidak ada format penilaian yang cocok dengan filter.');
+        }
+
+        // ---- Data penunjang per mode ----
+        $data = [
+            'eventner'   => $eventner,
+            'categories' => $categories,
+            'mode'       => $mode,
+            'judgeName'  => $judgeId ? Judge::where('eventner_id', $eventner->id)->find($judgeId)->name : null,
+            'childName'  => $levelId ? CompetitionCategory::where('eventner_id', $eventner->id)->find($levelId)->full_name : null,
+            'registration' => null,
+            'registrations' => [],
+        ];
+
+        if ($mode === 'peserta') {
+            $registration = Registration::with('competitionCategory')
+                ->where('eventner_id', $eventner->id)
+                ->findOrFail($regId);
+            if ($levelId && $registration->competition_category_id != $levelId) {
+                abort(422, 'Peserta tidak berada pada tingkat terpilih.');
+            }
+            $data['registration'] = $registration;
+        } elseif ($mode === 'daftar') {
+            $qReg = Registration::with('competitionCategory')
+                ->where('eventner_id', $eventner->id);
+            if ($levelId) {
+                $qReg->where('competition_category_id', $levelId);
+            }
+            $data['registrations'] = $qReg
+                ->orderByRaw('COALESCE(urutan_tampil, 999999)')
+                ->orderBy('nama_sekolah')
+                ->get();
+        }
+
+        $pdf = Pdf::loadView('eventner.format-nilai.pdf_unduh', $data)
+            ->setPaper('a4', 'portrait');
+
+        $label = match ($mode) {
+            'peserta' => 'Peserta_' . str_replace(['/', '\\', ' '], '_', $data['registration']->nama_sekolah),
+            'daftar'  => 'Daftar_Peserta',
+            default   => 'Format_Kosong',
+        };
+        $suffix = $levelId ? '_' . str_replace(['/', '\\', ' '], '_', $data['childName']) : '';
+        $judgeSuffix = $judgeId ? '_' . str_replace(['/', '\\', ' '], '_', $data['judgeName']) : '';
+
+        return $pdf->download('Lembar_' . $label . $suffix . $judgeSuffix . '.pdf');
     }
 
     public function copyForm($categoryId)

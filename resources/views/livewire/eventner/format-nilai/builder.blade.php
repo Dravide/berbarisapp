@@ -45,9 +45,15 @@
                target="_blank" class="btn btn-danger btn-sm">
                 <i class="ti ti-file-type-pdf me-1"></i> Unduh PDF {{ $activeTab !== '' ? 'Tingkat' : 'Semua' }}
             </a>
+            <a href="{{ route('eventner.format-nilai.download') }}" class="btn btn-warning btn-sm">
+                <i class="ti ti-download me-1"></i> Unduh Per Juri / Peserta
+            </a>
             @else
             <a href="{{ route('eventner.format-nilai.pdf') }}" target="_blank" class="btn btn-danger btn-sm ms-auto">
                 <i class="ti ti-file-type-pdf me-1"></i> Unduh PDF Semua
+            </a>
+            <a href="{{ route('eventner.format-nilai.download') }}" class="btn btn-warning btn-sm ms-1">
+                <i class="ti ti-download me-1"></i> Unduh Per Juri / Peserta
             </a>
             @endif
         </div>
