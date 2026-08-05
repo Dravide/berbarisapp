@@ -46,10 +46,6 @@
 
         .sub-head { background: #ecf0f1; padding: 4px 10px; font-size: 8px; font-weight: bold; color: #2c3e50; text-transform: uppercase; letter-spacing: 0.5px; border-left: 1px solid #ddd; border-right: 1px solid #ddd; }
 
-        /* LEGENDA LABEL */
-        .label-legend { margin: 6px 8px 0; padding: 5px 8px; background: #f3f6f9; border: 1px solid #ddd; border-radius: 4px; font-size: 9px; }
-        .legend-item { margin-right: 14px; color: #2c3e50; }
-
         /* TABEL KRITERIA */
         table.krit { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
         table.krit th { background: #f8f9fa; padding: 4px 8px; font-size: 7px; font-weight: bold; text-transform: uppercase; color: #888; text-align: left; border: 1px solid #ddd; }
@@ -138,17 +134,16 @@
 
                 @if($subcat->criterias->isNotEmpty())
                     @php
-                        // Kumpulkan label group dari semua kriteria sub-kategori.
-                        $labelHeader = [];
+                        // Urutan label unik → jadi kolom "SKOR PENILAIAN" (KURANG | CUKUP | BAIK | ...).
+                        $labelCols = [];
                         foreach($subcat->criterias as $crit) {
                             foreach($crit->score_options ?? [] as $o) {
                                 if (is_array($o) && !empty($o['label'])) {
-                                    $labelHeader[$o['label']][] = (int) $o['score'];
+                                    $labelCols[] = $o['label'];
                                 }
                             }
                         }
-                        // Urutan label unik → jadi kolom "SKOR PENILAIAN" (KURANG | CUKUP | BAIK | ...).
-                        $labelCols = array_keys($labelHeader);
+                        $labelCols = array_values(array_unique($labelCols));
                         $hasLabels = count($labelCols) > 0;
                         // Tiap skor jadi sel sendiri; colspan header = jumlah skor TERBESAR
                         // pada label itu antar semua kriteria (baris lebih pendek tetap muat).
@@ -164,14 +159,6 @@
                                 ->max() ?? 1;
                         }
                     @endphp
-                    @if($hasLabels)
-                        <div class="label-legend">
-                            @foreach($labelHeader as $label => $scores)
-                                @php $vals = array_values(array_unique($scores)); sort($vals); $range = implode(', ', $vals); @endphp
-                                <span class="legend-item"><strong>{{ $label }}</strong>: {{ $range }}</span>
-                            @endforeach
-                        </div>
-                    @endif
                     <table class="krit">
                         <thead>
                             <tr>
