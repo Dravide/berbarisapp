@@ -145,8 +145,11 @@
                                 }
                             }
                         }
+                        // Urutan label unik → jadi kolom "SKOR PENILAIAN" (KURANG | CUKUP | BAIK | ...).
+                        $labelCols = array_keys($labelHeader);
+                        $hasLabels = count($labelCols) > 0;
                     @endphp
-                    @if(!empty($labelHeader))
+                    @if($hasLabels)
                         <div class="label-legend">
                             @foreach($labelHeader as $label => $scores)
                                 @php $vals = array_values(array_unique($scores)); sort($vals); $range = count($vals) > 1 ? min($vals) . ' – ' . max($vals) : $vals[0]; @endphp
@@ -158,8 +161,14 @@
                         <thead>
                             <tr>
                                 <th width="45%">Kriteria Penilaian</th>
-                                <th width="15%" style="text-align:center;">Bobot</th>
-                                <th width="40%" style="text-align:center;">Skor Penilaian</th>
+                                <th width="12%" style="text-align:center;">Bobot</th>
+                                @if($hasLabels)
+                                    @foreach($labelCols as $label)
+                                        <th style="text-align:center;">{{ $label }}</th>
+                                    @endforeach
+                                @else
+                                    <th width="43%" style="text-align:center;">Skor Penilaian</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -167,12 +176,26 @@
                             <tr>
                                 <td class="cn">{{ $crit->name }}</td>
                                 <td class="sv">{{ $crit->weight ?? 1 }}x</td>
-                                <td class="sv">
-                                    @foreach($crit->score_options as $score)
-                                        @php $sv = is_array($score) ? ($score['score'] ?? '') : $score; @endphp
-                                        <span>{{ $sv }}</span>@if(!$loop->last) &nbsp;@endif
+                                @if($hasLabels)
+                                    @foreach($labelCols as $label)
+                                        @php
+                                            // Skor yang masuk grup label ini (mis. semua opsi "Kurang").
+                                            $cellScores = collect($crit->score_options ?? [])
+                                                ->filter(fn($o) => is_array($o) && ($o['label'] ?? null) === $label)
+                                                ->map(fn($o) => $o['score'] ?? null)
+                                                ->filter(fn($v) => $v !== null)
+                                                ->values();
+                                        @endphp
+                                        <td class="sv">{{ $cellScores->isEmpty() ? '&nbsp;' : implode(' / ', $cellScores->all()) }}</td>
                                     @endforeach
-                                </td>
+                                @else
+                                    <td class="sv">
+                                        @foreach($crit->score_options as $score)
+                                            @php $sv = is_array($score) ? ($score['score'] ?? '') : $score; @endphp
+                                            <span>{{ $sv }}</span>@if(!$loop->last) &nbsp;@endif
+                                        @endforeach
+                                    </td>
+                                @endif
                             </tr>
                             @endforeach
                         </tbody>
