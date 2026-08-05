@@ -151,9 +151,6 @@
                                                 <div class="form-check mb-2">
                                                     <input class="form-check-input" type="checkbox" wire:model="selectedCategories" value="{{ $cat->id }}" id="cat_{{ $cat->id }}">
                                                     <label class="form-check-label fw-medium" for="cat_{{ $cat->id }}">
-                                                        @if($cat->competitionCategory && $cat->competitionCategory->parent)
-                                                            <span class="text-muted">{{ $cat->competitionCategory->parent->name }} — </span>
-                                                        @endif
                                                         {{ $cat->name }}
                                                     </label>
                                                 </div>

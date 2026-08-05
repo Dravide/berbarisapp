@@ -54,9 +54,11 @@ class Index extends Component
     }
 
     /**
-     * Kategori dikelompokkan per jenjang/tingkat (parent competition_category,
-     * mis. SD vs SMP). Kunci grup = id parent, atau id kategori itu sendiri bila
-     * kategori menunjuk langsung ke tingkat induk (parent).
+     * Kategori dikelompokkan per tingkat/kelas kompetisi (competition_category),
+     * contoh parent "LOBB" dengan child "U13", "U16". Kunci grup = id
+     * competition_category (child), label = full_name ("LOBB — U13") sehingga
+     * U13 dan U16 tampil terpisah meski induknya sama. Kategori yang menunjuk
+     * langsung ke induk (parent, tanpa child) tetap jadi grup sendiri.
      */
     #[Computed]
     public function availableCategoriesGrouped()
@@ -65,13 +67,16 @@ class Index extends Component
         foreach ($this->availableCategories as $cat) {
             $cc = $cat->competitionCategory;
             if (!$cc) {
-                $grouped['Lainnya'][] = $cat;
+                $grouped['Lainnya'] = [
+                    'name' => 'Lainnya',
+                    'items' => ($grouped['Lainnya']['items'] ?? []) + [$cat->id => $cat],
+                ];
                 continue;
             }
-            $parent = $cc->parent ?: $cc;
-            $grouped[$parent->id] = [
-                'name' => $parent->name,
-                'items' => ($grouped[$parent->id]['items'] ?? []) + [$cat->id => $cat],
+            // grup per competition_category itu sendiri (child jika ada, atau induk)
+            $grouped[$cc->id] = [
+                'name' => $cc->full_name,
+                'items' => ($grouped[$cc->id]['items'] ?? []) + [$cat->id => $cat],
             ];
         }
         return collect($grouped)->sortBy('name');
