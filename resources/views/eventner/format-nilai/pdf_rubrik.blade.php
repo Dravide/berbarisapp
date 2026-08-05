@@ -56,6 +56,7 @@
         table.krit td { padding: 4px 8px; border: 1px solid #ddd; font-size: 10px; }
         table.krit .cn { font-weight: bold; color: #2c3e50; }
         table.krit .sv { text-align: center; font-weight: bold; font-size: 11px; }
+        table.krit .score-sep { display: inline-block; width: 0; height: 12px; margin: 0 5px; border-left: 1px solid #2c3e50; vertical-align: middle; }
 
         /* PENGURANGAN */
         .deduction-head { background: #fde8e8; padding: 4px 10px; font-size: 8px; font-weight: bold; color: #b00020; text-transform: uppercase; letter-spacing: 0.5px; border-left: 1px solid #f5c6c6; border-right: 1px solid #f5c6c6; }
@@ -186,7 +187,18 @@
                                                 ->filter(fn($v) => $v !== null)
                                                 ->values();
                                         @endphp
-                                        <td class="sv">{{ $cellScores->isEmpty() ? '&nbsp;' : implode(' / ', $cellScores->all()) }}</td>
+                                        <td class="sv">
+                                            @if($cellScores->isEmpty())
+                                                &nbsp;
+                                            @else
+                                                @foreach($cellScores as $i => $cs)
+                                                    @if($i > 0)
+                                                        <span class="score-sep"></span>
+                                                    @endif
+                                                    <span>{{ $cs }}</span>
+                                                @endforeach
+                                            @endif
+                                        </td>
                                     @endforeach
                                 @else
                                     <td class="sv">
