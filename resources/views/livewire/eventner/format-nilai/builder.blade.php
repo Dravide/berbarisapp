@@ -494,9 +494,9 @@
 
 <!-- Modal Kriteria (Nama + Bobot + Label Groups)
      Selalu dirender sebagai Bootstrap modal. Tombol "Tambah Kriteria" membukanya
-     langsung via data-bs-toggle tanpa menunggu round-trip Livewire, sehingga modal
-     pasti tampil. Untuk Edit, openCriteriaModal mengisi data lalu mem-buka modal. -->
-<div class="modal fade" id="criteriaModal" tabindex="-1" aria-hidden="true">
+     via prepareAddCriteria lalu dispatch JS. wire:ignore.self menjaga class .show
+     agar re-render Livewire (addLabelRow/fillLabelPreset) tidak menutup modal. -->
+<div class="modal fade" id="criteriaModal" tabindex="-1" aria-hidden="true" wire:ignore.self>
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
