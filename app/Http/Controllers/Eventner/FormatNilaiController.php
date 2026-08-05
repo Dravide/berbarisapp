@@ -28,10 +28,41 @@ class FormatNilaiController extends Controller
         $data = [
             'eventner' => $eventner,
             'categories' => $categories,
+            'childName' => null,
         ];
 
         $pdf = Pdf::loadView('eventner.format-nilai.pdf_rubrik', $data);
         return $pdf->download('Format_Penilaian_Event.pdf');
+    }
+
+    /**
+     * Unduh format penilaian PDF khusus satu child/tingkat (competition_category).
+     * Hanya kategori format yang menunjuk ke child tersebut yang diikutsertakan.
+     */
+    public function downloadPdfByChild($competitionCategoryId)
+    {
+        $eventner = Auth::user()->eventner;
+        if (!$eventner) {
+            abort(403, 'Anda bukan Eventner yang sah.');
+        }
+
+        $child = CompetitionCategory::where('eventner_id', $eventner->id)
+            ->findOrFail($competitionCategoryId);
+
+        $categories = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias'])
+                ->where('eventner_id', $eventner->id)
+                ->where('competition_category_id', $child->id)
+                ->orderBy('sort_order')
+                ->get();
+
+        $data = [
+            'eventner' => $eventner,
+            'categories' => $categories,
+            'childName' => $child->full_name,
+        ];
+
+        $pdf = Pdf::loadView('eventner.format-nilai.pdf_rubrik', $data);
+        return $pdf->download('Format_Penilaian_' . str_replace(['/', '\\'], '_', $child->full_name) . '.pdf');
     }
 
     public function copyForm($categoryId)

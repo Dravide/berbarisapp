@@ -32,6 +32,9 @@
 
     <h2>FORMAT PENILAIAN</h2>
     <h4>Kegiatan: {{ $eventner->nama_event }} - {{ $eventner->diselenggarakan_oleh }}</h4>
+    @if(!empty($childName))
+        <h4>Tingkat: {{ $childName }}</h4>
+    @endif
     <hr>
 
     @if($categories->isEmpty())
@@ -60,7 +63,8 @@
                                     <td class="options">{{ $crit->weight ?? 1 }}x</td>
                                     <td class="options">
                                         @foreach($crit->score_options as $score)
-                                            <span class="circle">{{ $score }}</span>
+                                            @php $sv = is_array($score) ? ($score['score'] ?? '') : $score; $lb = is_array($score) ? ($score['label'] ?? null) : null; @endphp
+                                            <span class="circle">{{ $sv }}@if($lb) ({{ $lb }})@endif</span>
                                         @endforeach
                                     </td>
                                 </tr>

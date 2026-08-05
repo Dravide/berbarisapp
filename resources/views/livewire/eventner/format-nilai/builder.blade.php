@@ -36,13 +36,21 @@
                 </select>
             </div>
         </div>
-        @if($activeTab !== '')
-        <div class="col-md-7 d-flex align-items-center gap-2">
-            <span class="text-primary fw-semibold">
+        <div class="col-md-7 d-flex align-items-center justify-content-end gap-2">
+            @if($activeTab !== '')
+            <span class="text-primary fw-semibold me-auto">
                 <i class="ti ti-check me-1"></i> Format untuk: {{ $this->competitionCategories->firstWhere('id', $activeTab)?->full_name }}
             </span>
+            <a href="{{ $activeTab !== '' ? route('eventner.format-nilai.pdf-child', $activeTab) : route('eventner.format-nilai.pdf') }}"
+               target="_blank" class="btn btn-danger btn-sm">
+                <i class="ti ti-file-type-pdf me-1"></i> Unduh PDF {{ $activeTab !== '' ? 'Tingkat' : 'Semua' }}
+            </a>
+            @else
+            <a href="{{ route('eventner.format-nilai.pdf') }}" target="_blank" class="btn btn-danger btn-sm ms-auto">
+                <i class="ti ti-file-type-pdf me-1"></i> Unduh PDF Semua
+            </a>
+            @endif
         </div>
-        @endif
     </div>
 
     <div class="row">
