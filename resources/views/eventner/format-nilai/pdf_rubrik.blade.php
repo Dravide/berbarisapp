@@ -56,7 +56,6 @@
         table.krit td { padding: 4px 8px; border: 1px solid #ddd; font-size: 10px; }
         table.krit .cn { font-weight: bold; color: #2c3e50; }
         table.krit .sv { text-align: center; font-weight: bold; font-size: 11px; }
-        table.krit .score-sep { display: inline-block; width: 0; height: 12px; margin: 0 5px; border-left: 1px solid #2c3e50; vertical-align: middle; }
 
         /* PENGURANGAN */
         .deduction-head { background: #fde8e8; padding: 4px 10px; font-size: 8px; font-weight: bold; color: #b00020; text-transform: uppercase; letter-spacing: 0.5px; border-left: 1px solid #f5c6c6; border-right: 1px solid #f5c6c6; }
@@ -149,6 +148,17 @@
                         // Urutan label unik → jadi kolom "SKOR PENILAIAN" (KURANG | CUKUP | BAIK | ...).
                         $labelCols = array_keys($labelHeader);
                         $hasLabels = count($labelCols) > 0;
+                        // Tiap skor jadi sel sendiri; hitung berapa kolom per label (colspan header).
+                        $labelSpan = [];
+                        foreach($labelCols as $label) {
+                            $labelSpan[$label] = collect($subcat->criterias)
+                                ->flatMap(fn($c) => collect($c->score_options ?? [])
+                                    ->filter(fn($o) => is_array($o) && ($o['label'] ?? null) === $label)
+                                    ->map(fn($o) => $o['score'] ?? null)
+                                    ->filter(fn($v) => $v !== null))
+                                ->unique()
+                                ->count();
+                        }
                     @endphp
                     @if($hasLabels)
                         <div class="label-legend">
@@ -165,7 +175,7 @@
                                 <th width="12%" style="text-align:center;">Bobot</th>
                                 @if($hasLabels)
                                     @foreach($labelCols as $label)
-                                        <th style="text-align:center;">{{ $label }}</th>
+                                        <th colspan="{{ $labelSpan[$label] }}" style="text-align:center;">{{ $label }}</th>
                                     @endforeach
                                 @else
                                     <th width="43%" style="text-align:center;">Skor Penilaian</th>
@@ -180,25 +190,19 @@
                                 @if($hasLabels)
                                     @foreach($labelCols as $label)
                                         @php
-                                            // Skor yang masuk grup label ini (mis. semua opsi "Kurang").
-                                            $cellScores = collect($crit->score_options ?? [])
-                                                ->filter(fn($o) => is_array($o) && ($o['label'] ?? null) === $label)
-                                                ->map(fn($o) => $o['score'] ?? null)
-                                                ->filter(fn($v) => $v !== null)
+                                            // Skor unik grup label ini (mis. "12" dan "16"), tiap satu jadi satu sel.
+                                            $cellScores = collect($subcat->criterias)
+                                                ->flatMap(fn($c) => collect($c->score_options ?? [])
+                                                    ->filter(fn($o) => is_array($o) && ($o['label'] ?? null) === $label)
+                                                    ->map(fn($o) => $o['score'] ?? null)
+                                                    ->filter(fn($v) => $v !== null))
+                                                ->unique()
                                                 ->values();
                                         @endphp
-                                        <td class="sv">
-                                            @if($cellScores->isEmpty())
-                                                &nbsp;
-                                            @else
-                                                @foreach($cellScores as $i => $cs)
-                                                    @if($i > 0)
-                                                        <span class="score-sep"></span>
-                                                    @endif
-                                                    <span>{{ $cs }}</span>
-                                                @endforeach
-                                            @endif
-                                        </td>
+                                        @for($span = 0; $span < $labelSpan[$label]; $span++)
+                                            @php $sval = $cellScores->get($span); @endphp
+                                            <td class="sv">{{ $sval ?? '&nbsp;' }}</td>
+                                        @endfor
                                     @endforeach
                                 @else
                                     <td class="sv">
