@@ -48,7 +48,33 @@ class Index extends Component
     #[Computed]
     public function availableCategories()
     {
-        return AssessmentCategory::where('eventner_id', $this->eventnerId)->get();
+        return AssessmentCategory::with('competitionCategory.parent')
+            ->where('eventner_id', $this->eventnerId)
+            ->get();
+    }
+
+    /**
+     * Kategori dikelompokkan per jenjang/tingkat (parent competition_category,
+     * mis. SD vs SMP). Kunci grup = id parent, atau id kategori itu sendiri bila
+     * kategori menunjuk langsung ke tingkat induk (parent).
+     */
+    #[Computed]
+    public function availableCategoriesGrouped()
+    {
+        $grouped = [];
+        foreach ($this->availableCategories as $cat) {
+            $cc = $cat->competitionCategory;
+            if (!$cc) {
+                $grouped['Lainnya'][] = $cat;
+                continue;
+            }
+            $parent = $cc->parent ?: $cc;
+            $grouped[$parent->id] = [
+                'name' => $parent->name,
+                'items' => ($grouped[$parent->id]['items'] ?? []) + [$cat->id => $cat],
+            ];
+        }
+        return collect($grouped)->sortBy('name');
     }
 
     public function save()

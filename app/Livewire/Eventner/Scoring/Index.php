@@ -100,14 +100,21 @@ class Index extends Component
 
     public function loadJudges()
     {
+        // Hanya juri yang ditugaskan (Tugaskan Kategori) ke format penilaian
+        // kategori kompetisi ini, via assessment_category_judge.
         $category = $this->selectedRegistration->competitionCategory;
         if ($category) {
-            $this->judges = $category->judges()->get();
-        }
-
-        // Fallback: if no judges assigned to category, get all event judges
-        if (empty($this->judges) || count($this->judges) === 0) {
-            $this->judges = $this->eventner->judges()->get();
+            $this->judges = Judge::where('eventner_id', $this->eventner->id)
+                ->whereHas('assessmentCategories', function ($q) use ($category) {
+                    $q->where('assessment_categories.eventner_id', $this->eventner->id)
+                        ->where(function ($sq) use ($category) {
+                            $sq->where('assessment_categories.competition_category_id', $category->id)
+                               ->orWhereNull('assessment_categories.competition_category_id');
+                        });
+                })
+                ->get();
+        } else {
+            $this->judges = [];
         }
     }
 
@@ -253,10 +260,17 @@ class Index extends Component
         if (!$registration) return;
 
         $category = $registration->competitionCategory;
-        $judgeIds = $category ? $category->judges()->pluck('judges.id') : collect();
-        if ($judgeIds->isEmpty()) {
-            $judgeIds = $this->eventner->judges()->pluck('id');
-        }
+        $judgeIds = $category
+            ? Judge::where('eventner_id', $this->eventner->id)
+                ->whereHas('assessmentCategories', function ($q) use ($category) {
+                    $q->where('assessment_categories.eventner_id', $this->eventner->id)
+                        ->where(function ($sq) use ($category) {
+                            $sq->where('assessment_categories.competition_category_id', $category->id)
+                               ->orWhereNull('assessment_categories.competition_category_id');
+                        });
+                })
+                ->pluck('judges.id')
+            : collect();
         if ($judgeIds->isEmpty()) return;
 
         $finalizedJudgeIds = AssessmentScore::where('registration_id', $registration->id)

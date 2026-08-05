@@ -141,16 +141,26 @@
                             @if($this->availableCategories->isEmpty())
                                 <p class="text-muted fs-2"><i>Belum ada format nilai. Silakan buat format penilaian terlebih dahulu.</i></p>
                             @else
-                                <div class="bg-light p-3 rounded border">
-                                    @foreach($this->availableCategories as $cat)
-                                        <div class="form-check mb-2">
-                                            <input class="form-check-input" type="checkbox" wire:model="selectedCategories" value="{{ $cat->id }}" id="cat_{{ $cat->id }}">
-                                            <label class="form-check-label fw-medium" for="cat_{{ $cat->id }}">
-                                                {{ $cat->name }}
-                                            </label>
+                                @foreach($this->availableCategoriesGrouped as $group)
+                                    <div class="mb-3">
+                                        <div class="fw-semibold text-primary mb-2">
+                                            <i class="ti ti-school me-1"></i> {{ $group['name'] }}
                                         </div>
-                                    @endforeach
-                                </div>
+                                        <div class="bg-light p-3 rounded border">
+                                            @foreach($group['items'] as $cat)
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" wire:model="selectedCategories" value="{{ $cat->id }}" id="cat_{{ $cat->id }}">
+                                                    <label class="form-check-label fw-medium" for="cat_{{ $cat->id }}">
+                                                        @if($cat->competitionCategory && $cat->competitionCategory->parent)
+                                                            <span class="text-muted">{{ $cat->competitionCategory->parent->name }} — </span>
+                                                        @endif
+                                                        {{ $cat->name }}
+                                                    </label>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endforeach
                             @endif
                             @error('selectedCategories') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                         </div>
