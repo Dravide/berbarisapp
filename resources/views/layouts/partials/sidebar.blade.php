@@ -198,12 +198,22 @@
             <span class="hide-menu">Penilaian</span>
           </li>
           <li class="sidebar-item">
-            <a class="sidebar-link {{ request()->routeIs('eventner.format-nilai.*') ? 'active' : '' }}"
+            <a class="sidebar-link {{ request()->routeIs(['eventner.format-nilai.builder','eventner.format-nilai.copy-form','eventner.format-nilai.copy-execute','eventner.format-nilai.pdf','eventner.format-nilai.pdf-child']) ? 'active' : '' }}"
               href="{{ route('eventner.format-nilai.builder') }}" aria-expanded="false">
               <span>
                 <i class="ti ti-checklist"></i>
               </span>
               <span class="hide-menu">Format Penilaian</span>
+              @if($ev && !$ev->canAccessFeature('format_nilai')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.format-nilai.download') ? 'active' : '' }}"
+              href="{{ route('eventner.format-nilai.download') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-file-download"></i>
+              </span>
+              <span class="hide-menu">Unduh Format Penilaian</span>
               @if($ev && !$ev->canAccessFeature('format_nilai')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
