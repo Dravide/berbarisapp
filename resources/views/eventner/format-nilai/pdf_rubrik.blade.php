@@ -165,7 +165,7 @@
                     @if($hasLabels)
                         <div class="label-legend">
                             @foreach($labelHeader as $label => $scores)
-                                @php $vals = array_values(array_unique($scores)); sort($vals); $range = count($vals) > 1 ? min($vals) . ' – ' . max($vals) : $vals[0]; @endphp
+                                @php $vals = array_values(array_unique($scores)); sort($vals); $range = implode(', ', $vals); @endphp
                                 <span class="legend-item"><strong>{{ $label }}</strong>: {{ $range }}</span>
                             @endforeach
                         </div>
