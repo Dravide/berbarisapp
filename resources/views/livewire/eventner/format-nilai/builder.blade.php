@@ -489,7 +489,7 @@
             </div>
         </div>
     </div>
-
+</div>
 
 
 <!-- Modal Kriteria (Nama + Bobot + Label Groups)
