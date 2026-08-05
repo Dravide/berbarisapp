@@ -55,8 +55,17 @@ class Builder extends Component
         }
         $this->eventnerId = $eventner->id;
 
-        // Auto-select tingkat pertama agar toolbar (Salin dari Tingkat Lain) langsung tampil.
-        $first = $this->competitionCategories->first();
+        // Auto-select tingkat pertama yang memiliki format penilaian agar konten & tombol
+        // "Tambah Kriteria" langsung tampil. Fallback ke tingkat pertama jika tak ada.
+        $idsWithFormat = AssessmentCategory::where('eventner_id', $this->eventnerId)
+            ->whereNotNull('competition_category_id')
+            ->pluck('competition_category_id')
+            ->all();
+
+        $first = $this->competitionCategories->first(
+            fn($cc) => in_array($cc->id, $idsWithFormat)
+        ) ?? $this->competitionCategories->first();
+
         if ($first) {
             $this->activeTab = (string) $first->id;
         }
