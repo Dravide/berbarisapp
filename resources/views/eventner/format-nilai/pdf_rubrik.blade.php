@@ -150,16 +150,18 @@
                         // Urutan label unik → jadi kolom "SKOR PENILAIAN" (KURANG | CUKUP | BAIK | ...).
                         $labelCols = array_keys($labelHeader);
                         $hasLabels = count($labelCols) > 0;
-                        // Tiap skor jadi sel sendiri; hitung berapa kolom per label (colspan header).
+                        // Tiap skor jadi sel sendiri; colspan header = jumlah skor TERBESAR
+                        // pada label itu antar semua kriteria (baris lebih pendek tetap muat).
                         $labelSpan = [];
                         foreach($labelCols as $label) {
                             $labelSpan[$label] = collect($subcat->criterias)
-                                ->flatMap(fn($c) => collect($c->score_options ?? [])
+                                ->map(fn($c) => collect($c->score_options ?? [])
                                     ->filter(fn($o) => is_array($o) && ($o['label'] ?? null) === $label)
                                     ->map(fn($o) => $o['score'] ?? null)
-                                    ->filter(fn($v) => $v !== null))
-                                ->unique()
-                                ->count();
+                                    ->filter(fn($v) => $v !== null)
+                                    ->unique()
+                                    ->count())
+                                ->max() ?? 1;
                         }
                     @endphp
                     @if($hasLabels)
@@ -192,12 +194,11 @@
                                 @if($hasLabels)
                                     @foreach($labelCols as $label)
                                         @php
-                                            // Skor unik grup label ini (mis. "12" dan "16"), tiap satu jadi satu sel.
-                                            $cellScores = collect($subcat->criterias)
-                                                ->flatMap(fn($c) => collect($c->score_options ?? [])
-                                                    ->filter(fn($o) => is_array($o) && ($o['label'] ?? null) === $label)
-                                                    ->map(fn($o) => $o['score'] ?? null)
-                                                    ->filter(fn($v) => $v !== null))
+                                            // Skor unik MILIK kriteria ini saja pada label tsb (mis. "12" dan "16").
+                                            $cellScores = collect($crit->score_options ?? [])
+                                                ->filter(fn($o) => is_array($o) && ($o['label'] ?? null) === $label)
+                                                ->map(fn($o) => $o['score'] ?? null)
+                                                ->filter(fn($v) => $v !== null)
                                                 ->unique()
                                                 ->values();
                                         @endphp
