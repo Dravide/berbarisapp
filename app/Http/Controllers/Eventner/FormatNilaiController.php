@@ -31,7 +31,9 @@ class FormatNilaiController extends Controller
             'childName' => null,
         ];
 
-        $pdf = Pdf::loadView('eventner.format-nilai.pdf_rubrik', $data);
+        $pdf = Pdf::loadView('eventner.format-nilai.pdf_rubrik', $data)
+            ->setPaper('a4', 'portrait');
+
         return $pdf->download('Format_Penilaian_Event.pdf');
     }
 
@@ -61,7 +63,9 @@ class FormatNilaiController extends Controller
             'childName' => $child->full_name,
         ];
 
-        $pdf = Pdf::loadView('eventner.format-nilai.pdf_rubrik', $data);
+        $pdf = Pdf::loadView('eventner.format-nilai.pdf_rubrik', $data)
+            ->setPaper('a4', 'portrait');
+
         return $pdf->download('Format_Penilaian_' . str_replace(['/', '\\'], '_', $child->full_name) . '.pdf');
     }
 
