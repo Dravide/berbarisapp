@@ -27,10 +27,13 @@
 
     <div class="row">
         <!-- Panel List Juri -->
-        <div class="col-lg-8">
+        <div class="col-lg-12">
             <div class="card w-100 position-relative overflow-hidden">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 text-white fw-semibold">Daftar Juri</h5>
+                    <button type="button" class="btn btn-light btn-sm fw-semibold" wire:click="openCreate">
+                        <i class="ti ti-plus me-1"></i> Tambah Juri
+                    </button>
                 </div>
                 <div class="card-body p-4">
                     @if($this->judges->isEmpty())
@@ -99,11 +102,19 @@
             </div>
         </div>
 
-        <!-- Panel Form -->
-        <div class="col-lg-4">
-            <div class="card w-100">
-                <div class="card-body">
-                    <h5 class="card-title fw-semibold mb-4">{{ $isEditMode ? 'Edit Data Juri' : 'Tambah Juri Baru' }}</h5>
+    </div>
+
+    <!-- Modal Tambah/Edit Juri (Bootstrap, selalu dirender) -->
+    <div class="modal fade" id="judgeModal" tabindex="-1" aria-hidden="true" wire:ignore.self>
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title text-white fw-semibold">
+                        <i class="ti ti-user me-1"></i>{{ $isEditMode ? 'Edit Data Juri' : 'Tambah Juri Baru' }}
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
                     <form wire:submit="save">
                         <!-- Foto Profile -->
                         <div class="mb-3">
@@ -137,7 +148,7 @@
 
                         <hr>
                         <h6 class="fw-semibold mb-3">Tugaskan Kategori (Checklist):</h6>
-                        <div class="mb-4">
+                        <div class="mb-3">
                             @if($this->availableCategories->isEmpty())
                                 <p class="text-muted fs-2"><i>Belum ada format nilai. Silakan buat format penilaian terlebih dahulu.</i></p>
                             @else
@@ -163,9 +174,7 @@
                         </div>
 
                         <div class="d-flex gap-2">
-                            @if($isEditMode)
-                                <button type="button" class="btn btn-secondary flex-fill" wire:click="resetForm">Batal</button>
-                            @endif
+                            <button type="button" class="btn btn-secondary flex-fill" data-bs-dismiss="modal">Batal</button>
                             <button type="submit" class="btn btn-primary flex-fill" wire:loading.attr="disabled">
                                 <i class="ti ti-{{ $isEditMode ? 'device-floppy' : 'plus' }}"></i> {{ $isEditMode ? 'Simpan' : 'Tambahkan' }}
                             </button>
@@ -176,3 +185,16 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('livewire:init', () => {
+    window.addEventListener('open-judge-modal', () => {
+        const el = document.getElementById('judgeModal');
+        if (el && window.bootstrap) bootstrap.Modal.getOrCreateInstance(el).show();
+    });
+    window.addEventListener('close-judge-modal', () => {
+        const el = document.getElementById('judgeModal');
+        if (el && window.bootstrap) bootstrap.Modal.getOrCreateInstance(el).hide();
+    });
+});
+</script>

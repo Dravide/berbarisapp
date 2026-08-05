@@ -129,6 +129,15 @@ class Index extends Component
         $this->resetForm();
     }
 
+    /**
+     * Siapkan form mode tambah (reset semua) lalu buka modal lewat JS.
+     */
+    public function openCreate()
+    {
+        $this->reset(['name', 'phone_number', 'photo', 'currentPhotoPath', 'selectedCategories', 'isEditMode', 'editingId']);
+        $this->dispatch('open-judge-modal');
+    }
+
     public function edit($id)
     {
         $judge = Judge::where('eventner_id', $this->eventnerId)->findOrFail($id);
@@ -138,6 +147,9 @@ class Index extends Component
         $this->phone_number = $judge->phone_number ?? '';
         $this->currentPhotoPath = $judge->photo;
         $this->selectedCategories = $judge->assessmentCategories->pluck('id')->toArray();
+
+        // Buka modal setelah re-render selesai (dispatch diproses pasca-morph)
+        $this->dispatch('open-judge-modal');
     }
 
     public function delete($id)
@@ -153,6 +165,7 @@ class Index extends Component
     public function resetForm()
     {
         $this->reset(['name', 'phone_number', 'photo', 'currentPhotoPath', 'selectedCategories', 'isEditMode', 'editingId']);
+        $this->dispatch('close-judge-modal');
     }
 
     public function render()
