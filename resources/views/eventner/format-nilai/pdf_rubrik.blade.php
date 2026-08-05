@@ -16,16 +16,18 @@
         th, td { border: 1px solid #ccc; padding: 6px; }
         th { background: #f9f9f9; text-align: left; }
         .options { text-align: center; }
-        .circle { 
-            display: inline-block; 
-            width: 25px; 
-            height: 25px; 
-            line-height: 25px; 
-            border: 1px solid #aaa; 
-            border-radius: 50%; 
+        .circle {
+            display: inline-block;
+            width: 25px;
+            height: 25px;
+            line-height: 25px;
+            border: 1px solid #aaa;
+            border-radius: 50%;
             margin: 0 2px;
             font-size: 10px;
         }
+        .label-legend { margin: 6px 0 2px; padding: 5px 8px; background: #f3f6f9; border: 1px solid #ddd; border-radius: 4px; font-size: 10px; }
+        .legend-item { margin-right: 14px; color: #2c3e50; }
     </style>
 </head>
 <body>
@@ -48,6 +50,26 @@
                     <div class="subcategory-title">{{ $subcat->name }}</div>
 
                     @if($subcat->criterias->isNotEmpty())
+                        @php
+                            // Kumpulkan label group dari semua kriteria sub-kategori.
+                            // Tampilkan rentang (mis. "26 – 50") jika skor >1, atau skor tunggal.
+                            $labelHeader = [];
+                            foreach($subcat->criterias as $crit) {
+                                foreach($crit->score_options ?? [] as $o) {
+                                    if (is_array($o) && !empty($o['label'])) {
+                                        $labelHeader[$o['label']][] = (int) $o['score'];
+                                    }
+                                }
+                            }
+                        @endphp
+                        @if(!empty($labelHeader))
+                            <div class="label-legend">
+                                @foreach($labelHeader as $label => $scores)
+                                    @php $vals = array_values(array_unique($scores)); sort($vals); $range = count($vals) > 1 ? min($vals) . ' – ' . max($vals) : $vals[0]; @endphp
+                                    <span class="legend-item"><strong>{{ $label }}</strong>: {{ $range }}</span>
+                                @endforeach
+                            </div>
+                        @endif
                         <table>
                             <thead>
                                 <tr>
@@ -63,8 +85,8 @@
                                     <td class="options">{{ $crit->weight ?? 1 }}x</td>
                                     <td class="options">
                                         @foreach($crit->score_options as $score)
-                                            @php $sv = is_array($score) ? ($score['score'] ?? '') : $score; $lb = is_array($score) ? ($score['label'] ?? null) : null; @endphp
-                                            <span class="circle">{{ $sv }}@if($lb) ({{ $lb }})@endif</span>
+                                            @php $sv = is_array($score) ? ($score['score'] ?? '') : $score; @endphp
+                                            <span class="circle">{{ $sv }}</span>
                                         @endforeach
                                     </td>
                                 </tr>
