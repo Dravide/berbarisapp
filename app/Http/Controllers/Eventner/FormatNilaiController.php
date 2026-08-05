@@ -8,6 +8,7 @@ use App\Models\AssessmentCategory;
 use App\Models\AssessmentSubCategory;
 use App\Models\AssessmentCriteria;
 use App\Models\CompetitionCategory;
+use App\Models\Judge;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -29,6 +30,7 @@ class FormatNilaiController extends Controller
             'eventner' => $eventner,
             'categories' => $categories,
             'childName' => null,
+            'judgeName' => null,
         ];
 
         $pdf = Pdf::loadView('eventner.format-nilai.pdf_rubrik', $data)
@@ -61,12 +63,46 @@ class FormatNilaiController extends Controller
             'eventner' => $eventner,
             'categories' => $categories,
             'childName' => $child->full_name,
+            'judgeName' => null,
         ];
 
         $pdf = Pdf::loadView('eventner.format-nilai.pdf_rubrik', $data)
             ->setPaper('a4', 'portrait');
 
         return $pdf->download('Format_Penilaian_' . str_replace(['/', '\\'], '_', $child->full_name) . '.pdf');
+    }
+
+    /**
+     * Unduh format penilaian PDF khusus satu juri: hanya kategori penilaian
+     * yang ditugaskan ke juri tersebut yang diikutsertakan.
+     */
+    public function downloadPdfByJudge($judgeId)
+    {
+        $eventner = Auth::user()->eventner;
+        if (!$eventner) {
+            abort(403, 'Anda bukan Eventner yang sah.');
+        }
+
+        $judge = Judge::where('eventner_id', $eventner->id)
+            ->with('assessmentCategories')
+            ->findOrFail($judgeId);
+
+        $categories = $judge->assessmentCategories
+            ->loadMissing(['subCategories.criterias', 'deductionCategories.criterias'])
+            ->sortBy('sort_order')
+            ->values();
+
+        $data = [
+            'eventner' => $eventner,
+            'categories' => $categories,
+            'childName' => null,
+            'judgeName' => $judge->name,
+        ];
+
+        $pdf = Pdf::loadView('eventner.format-nilai.pdf_rubrik', $data)
+            ->setPaper('a4', 'portrait');
+
+        return $pdf->download('Format_Penilaian_' . str_replace(['/', '\\'], '_', $judge->name) . '.pdf');
     }
 
     public function copyForm($categoryId)

@@ -99,7 +99,9 @@
 
     <div class="judul">Format Penilaian</div>
     <div class="subjudul">
-        @if(!empty($childName))
+        @if(!empty($judgeName))
+            Juri: {{ $judgeName }} &bull;
+        @elseif(!empty($childName))
             Tingkat: {{ $childName }} &bull;
         @endif
         Dicetak: {{ now()->translatedFormat('d F Y H:i') }} WIB

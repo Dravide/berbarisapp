@@ -9,6 +9,7 @@ Route::post('format-nilai/copy/{categoryId}', [App\Http\Controllers\Eventner\For
 Route::get('format-nilai/pdf', [App\Http\Controllers\Eventner\FormatNilaiController::class, 'downloadPdf'])->name('eventner.format-nilai.pdf');
 Route::get('format-nilai/pdf/{competitionCategoryId}', [App\Http\Controllers\Eventner\FormatNilaiController::class, 'downloadPdfByChild'])->name('eventner.format-nilai.pdf-child');
 Route::get('judges', App\Livewire\Eventner\Judge\Index::class)->name('eventner.judges.index');
+Route::get('judges/{judge}/format-pdf', [App\Http\Controllers\Eventner\FormatNilaiController::class, 'downloadPdfByJudge'])->name('eventner.judges.format-pdf');
 Route::get('competition-categories', App\Livewire\Eventner\CompetitionCategory\Index::class)->name('eventner.competition-categories.index');
 Route::get('participants', App\Livewire\Eventner\Participant\Index::class)->name('eventner.participants.index');
 Route::get('participants/{registration}/pdf', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadPdf'])->name('eventner.participants.pdf');

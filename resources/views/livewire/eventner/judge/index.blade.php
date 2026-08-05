@@ -85,6 +85,9 @@
                                                 </div>
                                             </td>
                                             <td class="text-end">
+                                                <a href="{{ route('eventner.judges.format-pdf', $judge->id) }}" target="_blank" class="btn btn-sm btn-outline-secondary p-1 me-1" title="Unduh Format Penilaian Juri">
+                                                    <i class="ti ti-file-type-pdf fs-4"></i>
+                                                </a>
                                                 <button class="btn btn-sm btn-outline-primary p-1 me-1" wire:click="edit({{ $judge->id }})" title="Edit Juri">
                                                     <i class="ti ti-edit fs-4"></i>
                                                 </button>
