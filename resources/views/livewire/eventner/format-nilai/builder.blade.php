@@ -176,7 +176,7 @@
                                                                             </td>
                                                                             <td class="text-center">
                                                                                 <div class="d-flex justify-content-center gap-1">
-                                                                                    <button class="btn btn-sm btn-outline-primary p-1" wire:click="openCriteriaModal({{ $subCat->id }}, {{ $crit->id }})" title="Edit Kriteria">
+                                                                                    <button class="btn btn-sm btn-outline-primary p-1" wire:click="openCriteriaModal({{ $subCat->id }}, {{ $crit->id }})" title="Edit Kriteria" data-criteria-edit>
                                                                                         <i class="ti ti-pencil"></i>
                                                                                     </button>
                                                                                     <button class="btn btn-sm btn-outline-danger p-1" wire:click="deleteCriteria({{ $crit->id }})" title="Hapus">
@@ -193,9 +193,10 @@
                                                         <p class="text-muted fs-3 mb-3"><i>Belum ada kriteria di sub-kategori ini.</i></p>
                                                     @endif
 
-                                                    {{-- Tambah Kriteria — satu tombol buka modal --}}
+                                                    {{-- Tambah Kriteria — reset form + set sub-kategori via Livewire, lalu buka modal lewat JS --}}
                                                     <div class="bg-light p-3 border border-dashed text-center">
-                                                        <button class="btn btn-primary btn-sm" wire:click="openCriteriaModal({{ $subCat->id }})">
+                                                        <button class="btn btn-primary btn-sm" type="button"
+                                                            wire:click="prepareAddCriteria({{ $subCat->id }})">
                                                             <i class="ti ti-plus me-1"></i>Tambah Kriteria
                                                         </button>
                                                         <small class="d-block text-muted mt-2">Nama, skor, bobot, dan label diatur dalam satu modal.</small>
@@ -491,16 +492,18 @@
 
 
 
-<!-- Modal Kriteria (Nama + Bobot + Label Groups) -->
-@if($showCriteriaModal)
-<div class="modal fade show d-block" tabindex="-1" style="display:block; background-color: rgba(0,0,0,.5); z-index: 1050;">
+<!-- Modal Kriteria (Nama + Bobot + Label Groups)
+     Selalu dirender sebagai Bootstrap modal. Tombol "Tambah Kriteria" membukanya
+     langsung via data-bs-toggle tanpa menunggu round-trip Livewire, sehingga modal
+     pasti tampil. Untuk Edit, openCriteriaModal mengisi data lalu mem-buka modal. -->
+<div class="modal fade" id="criteriaModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
                 <h5 class="modal-title text-white fw-semibold">
                     <i class="ti ti-edit me-2"></i>{{ $criteriaModalTargetId ? 'Edit' : 'Tambah' }} Kriteria
                 </h5>
-                <button type="button" class="btn-close btn-close-white" wire:click="closeCriteriaModal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 @if(session()->has('error_criteria_modal'))
@@ -590,15 +593,14 @@
                 @endif
             </div>
             <div class="modal-footer">
-                <button class="btn btn-light" wire:click="closeCriteriaModal">Batal</button>
-                <button class="btn btn-primary" wire:click="saveCriteriaModal">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" wire:click="saveCriteriaModal">
                     <i class="ti ti-check me-1"></i> {{ $criteriaModalTargetId ? 'Simpan Perubahan' : 'Tambah Kriteria' }}
                 </button>
             </div>
         </div>
     </div>
 </div>
-@endif
 
 <!-- Modal Salin Rubrik -->
 @if($showCopyToModal)
@@ -689,5 +691,29 @@ document.addEventListener('livewire:init', () => {
             Swal.fire({ icon: 'error', title: 'Gagal', text: d.message, confirmButtonColor: '#dc3545' });
         }
     });
+
+    // Modal Kriteria (Bootstrap). openCriteriaModal mengisi data lalu mem-buka modal.
+    window.addEventListener('open-criteria-modal', () => {
+        const modalEl = document.getElementById('criteriaModal');
+        if (modalEl && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+    });
+    window.addEventListener('close-criteria-modal', () => {
+        const modalEl = document.getElementById('criteriaModal');
+        if (modalEl && window.bootstrap) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+        }
+    });
+
+    // Saat modal ditutup (Batal / X), pastikan state Livewire di-reset agar
+    // modal Edit berikutnya tidak mewarisi data lama.
+    const criteriaModal = document.getElementById('criteriaModal');
+    if (criteriaModal) {
+        criteriaModal.addEventListener('hidden.bs.modal', () => {
+            const comp = Livewire.find('{{ $this->getId() }}');
+            if (comp) comp.call('closeCriteriaModal');
+        });
+    }
 });
 </script>

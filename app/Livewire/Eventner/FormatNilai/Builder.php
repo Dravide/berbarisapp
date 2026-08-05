@@ -442,7 +442,6 @@ class Builder extends Component
     // ============================================================
     // KRITERIA MODAL (Tambah & Edit — Nama, Bobot, Label Groups)
     // ============================================================
-    public $showCriteriaModal = false;
     public $criteriaModalSubCategoryId = null;
     public $criteriaModalTargetId = null; // null = new, int = editing
     public $criteriaModalName = '';
@@ -494,13 +493,32 @@ class Builder extends Component
             $this->labelGroups[] = ['label' => '', 'scores' => ''];
         }
 
-        $this->showCriteriaModal = true;
+        // Modal kini selalu dirender di DOM (Bootstrap). Buka lewat JS agar tampil
+        // tanpa bergantung pada render ulang Livewire untuk kondisi @if.
+        $this->dispatch('open-criteria-modal');
     }
 
     public function closeCriteriaModal()
     {
-        $this->reset('showCriteriaModal', 'criteriaModalSubCategoryId', 'criteriaModalTargetId',
+        $this->reset('criteriaModalSubCategoryId', 'criteriaModalTargetId',
             'criteriaModalName', 'criteriaModalWeight', 'labelGroups');
+        $this->dispatch('close-criteria-modal');
+    }
+
+    /**
+     * Siapkan modal untuk mode "Tambah Kriteria": simpan sub-kategori target dan
+     * reset form. Modal dibuka langsung via Bootstrap (data-bs-toggle), bukan lewat
+     * render ulang @if — sehingga tampil bahkan jika request Livewire bermasalah.
+     */
+    public function prepareAddCriteria($subCategoryId)
+    {
+        $this->reset('criteriaModalTargetId', 'criteriaModalName', 'criteriaModalWeight', 'labelGroups');
+        $this->criteriaModalSubCategoryId = (int) $subCategoryId;
+        $this->labelGroups = [['label' => '', 'scores' => '']];
+
+        // Buka modal setelah re-render selesai (dispatch diproses pasca-morph),
+        // sehingga class Bootstrap .show tidak hilang oleh Livewire re-render.
+        $this->dispatch('open-criteria-modal');
     }
 
     public function addLabelRow()
