@@ -25,6 +25,9 @@ class Index extends Component
     public $isEditMode = false;
     public $editingId = null;
 
+    public $selectedJudgeId = null;
+    public $selectedJudgePdfLevel = '';
+
     protected $eventnerId;
 
     public function boot()
@@ -51,6 +54,34 @@ class Index extends Component
         return AssessmentCategory::with('competitionCategory.parent')
             ->where('eventner_id', $this->eventnerId)
             ->get();
+    }
+
+    /**
+     * Tingkat lomba yang ditugaskan ke juri terpilih (via kategori penilaiannya),
+     * untuk filter PDF per juri.
+     */
+    #[Computed]
+    public function judgePdfLevels()
+    {
+        if (!$this->selectedJudgeId) {
+            return collect();
+        }
+
+        $judge = $this->judges->firstWhere('id', $this->selectedJudgeId);
+        if (!$judge) {
+            return collect();
+        }
+
+        return $judge->assessmentCategories
+            ->map(fn($cat) => $cat->competitionCategory)
+            ->filter()
+            ->map(fn($cc) => [
+                'id' => $cc->id,
+                'full_name' => $cc->full_name,
+            ])
+            ->unique('id')
+            ->sortBy('full_name')
+            ->values();
     }
 
     /**
@@ -138,6 +169,12 @@ class Index extends Component
         $this->dispatch('open-judge-modal');
     }
 
+    public function selectJudgeForPdf($id)
+    {
+        $this->selectedJudgeId = $id;
+        $this->selectedJudgePdfLevel = '';
+    }
+
     public function edit($id)
     {
         $judge = Judge::where('eventner_id', $this->eventnerId)->findOrFail($id);
@@ -166,6 +203,23 @@ class Index extends Component
     {
         $this->reset(['name', 'phone_number', 'photo', 'currentPhotoPath', 'selectedCategories', 'isEditMode', 'editingId']);
         $this->dispatch('close-judge-modal');
+    }
+
+    /**
+     * Reset state filter PDF saat juri baru dipilih di dropdown.
+     */
+    public function updatedSelectedJudgeId()
+    {
+        $this->selectedJudgePdfLevel = '';
+    }
+
+    /**
+     * Reset state filter PDF saat dropdown ditutup (batal).
+     */
+    public function cancelPdfFilter()
+    {
+        $this->selectedJudgeId = null;
+        $this->selectedJudgePdfLevel = '';
     }
 
     public function render()

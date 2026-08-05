@@ -85,9 +85,9 @@
                                                 </div>
                                             </td>
                                             <td class="text-end">
-                                                <a href="{{ route('eventner.judges.format-pdf', $judge->id) }}" target="_blank" class="btn btn-sm btn-outline-secondary p-1 me-1" title="Unduh Format Penilaian Juri">
+                                                <button class="btn btn-sm btn-outline-secondary p-1 me-1" wire:click="selectJudgeForPdf({{ $judge->id }})" title="Unduh Format Penilaian Juri">
                                                     <i class="ti ti-file-type-pdf fs-4"></i>
-                                                </a>
+                                                </button>
                                                 <button class="btn btn-sm btn-outline-primary p-1 me-1" wire:click="edit({{ $judge->id }})" title="Edit Juri">
                                                     <i class="ti ti-edit fs-4"></i>
                                                 </button>
@@ -106,6 +106,47 @@
         </div>
 
     </div>
+
+    <!-- Modal Pilih Tingkat untuk Unduh Format PDF Juri -->
+    @if($selectedJudgeId)
+    <div class="modal fade show d-block" tabindex="-1" style="display:block; background-color: rgba(0,0,0,.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title text-white fw-semibold">
+                        <i class="ti ti-file-type-pdf me-1"></i> Unduh Format Penilaian Juri
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" wire:click="cancelPdfFilter"></button>
+                </div>
+                <div class="modal-body">
+                    @php $pdfJudge = $this->judges->firstWhere('id', $selectedJudgeId); @endphp
+                    <div class="alert alert-danger border-0 bg-danger-subtle text-danger mb-3">
+                        <i class="ti ti-user me-1"></i> Juri: <strong>{{ $pdfJudge?->name }}</strong>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Pilih Tingkat Lomba</label>
+                        <select class="form-select" wire:model.live="selectedJudgePdfLevel">
+                            <option value="">— Semua Tingkat —</option>
+                            @foreach($this->judgePdfLevels as $level)
+                                <option value="{{ $level['id'] }}">{{ $level['full_name'] }}</option>
+                            @endforeach
+                        </select>
+                        <small class="form-text text-muted">PDF hanya memuat kategori penilaian juri pada tingkat terpilih.</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" wire:click="cancelPdfFilter">
+                        <i class="ti ti-x me-1"></i> Batal
+                    </button>
+                    <a href="{{ route('eventner.judges.format-pdf', ['judge' => $selectedJudgeId, 'competitionCategoryId' => $selectedJudgePdfLevel]) }}"
+                       target="_blank" class="btn btn-danger">
+                        <i class="ti ti-file-type-pdf me-1"></i> Unduh PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Modal Tambah/Edit Juri (Bootstrap, selalu dirender) -->
     <div class="modal fade" id="judgeModal" tabindex="-1" aria-hidden="true" wire:ignore.self>

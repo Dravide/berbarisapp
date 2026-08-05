@@ -74,9 +74,10 @@ class FormatNilaiController extends Controller
 
     /**
      * Unduh format penilaian PDF khusus satu juri: hanya kategori penilaian
-     * yang ditugaskan ke juri tersebut yang diikutsertakan.
+     * yang ditugaskan ke juri tersebut yang diikutsertakan. Bila
+     * $competitionCategoryId diberikan, hanya kategori pada tingkat/child itu.
      */
-    public function downloadPdfByJudge($judgeId)
+    public function downloadPdfByJudge($judgeId, $competitionCategoryId = null)
     {
         $eventner = Auth::user()->eventner;
         if (!$eventner) {
@@ -88,14 +89,26 @@ class FormatNilaiController extends Controller
             ->findOrFail($judgeId);
 
         $categories = $judge->assessmentCategories
-            ->loadMissing(['subCategories.criterias', 'deductionCategories.criterias'])
-            ->sortBy('sort_order')
-            ->values();
+            ->loadMissing(['subCategories.criterias', 'deductionCategories.criterias']);
+
+        if ($competitionCategoryId) {
+            // Validasi tingkat milik eventner ini.
+            CompetitionCategory::where('eventner_id', $eventner->id)
+                ->findOrFail($competitionCategoryId);
+
+            $categories = $categories->filter(fn($cat) =>
+                $cat->competition_category_id == $competitionCategoryId
+            );
+        }
+
+        $categories = $categories->sortBy('sort_order')->values();
 
         $data = [
             'eventner' => $eventner,
             'categories' => $categories,
-            'childName' => null,
+            'childName' => $competitionCategoryId
+                ? CompetitionCategory::where('eventner_id', $eventner->id)->find($competitionCategoryId)->full_name
+                : null,
             'judgeName' => $judge->name,
         ];
 
