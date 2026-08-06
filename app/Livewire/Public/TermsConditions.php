@@ -2,13 +2,18 @@
 
 namespace App\Livewire\Public;
 
-use Livewire\Component;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
 
+#[Layout('layouts.landing')]
+#[Title('Syarat & Ketentuan - BARIS APP')]
 class TermsConditions extends Component
 {
     public $logoPath = null;
+
     public $favicon = null;
 
     public function mount()
@@ -27,10 +32,6 @@ class TermsConditions extends Component
     public function render()
     {
         return view('livewire.public.terms-conditions')
-            ->layout('layouts.zubaz', [
-                'logoPath' => $this->logoPath,
-                'favicon' => $this->favicon,
-            ])
-            ->title('Syarat & Ketentuan - ' . get_setting('site_title', 'BARIS APP'));
+            ->title('Syarat & Ketentuan - '.get_setting('site_title', 'BARIS APP'));
     }
 }

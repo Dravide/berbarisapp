@@ -2,14 +2,23 @@
 
 namespace App\Livewire\Public;
 
-use Livewire\Component;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
 
+#[Layout('layouts.landing')]
+#[Title('Bantuan & Support - BARIS APP')]
 class HelpSupport extends Component
 {
     public $logoPath = null;
+
     public $favicon = null;
+
+    public $contact = [];
+
+    public $social = [];
 
     public function mount()
     {
@@ -22,15 +31,14 @@ class HelpSupport extends Component
         $this->favicon = $faviconSetting
             ? Storage::disk('public')->url($faviconSetting)
             : null;
+
+        $this->contact = Setting::get('landing_contact', []);
+        $this->social = Setting::get('landing_social_links', []);
     }
 
     public function render()
     {
         return view('livewire.public.help-support')
-            ->layout('layouts.zubaz', [
-                'logoPath' => $this->logoPath,
-                'favicon' => $this->favicon,
-            ])
-            ->title('Bantuan & Support - ' . get_setting('site_title', 'BARIS APP'));
+            ->title('Bantuan & Support - '.get_setting('site_title', 'BARIS APP'));
     }
 }
