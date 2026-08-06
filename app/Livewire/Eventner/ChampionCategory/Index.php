@@ -3,14 +3,22 @@
 namespace App\Livewire\Eventner\ChampionCategory;
 
 use App\Models\AssessmentCategory;
-use App\Traits\FeatureGatedComponent;
+use App\Models\AssessmentCriteria;
 use App\Models\AssessmentScore;
+use App\Models\AssessmentSubCategory;
 use App\Models\ChampionCategory;
 use App\Models\ChampionRankTitle;
 use App\Models\CompetitionCategory;
+use App\Models\Registration;
+use App\Models\ScoreDeduction;
+use App\Notifications\JuaraDiumumkan;
+use App\Services\ChampionCalculator;
+use App\Services\FcmService;
+use App\Traits\FeatureGatedComponent;
 use Illuminate\Support\Facades\Auth;
-use Livewire\Component;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
+use Livewire\Component;
 
 #[Layout('layouts.admin')]
 class Index extends Component
@@ -20,23 +28,38 @@ class Index extends Component
     protected string $requiredFeature = 'champion_categories';
 
     public $eventner;
+
     public $name = '';
+
     public $description = '';
+
     public $quantity = 1;
+
     public $isPublic = false;
+
     public $selectedSubCategories = [];
+
     public $selectedTiebreakSubCategories = [];
+
     public $editingId = null;
+
     public $showForm = false;
+
     public $selectedCompetitionCategoryId;
+
     public $expandedChampionId = null;
 
     // Rank title management
     public $rankTitleChampionId = null;
+
     public $rankTitle = '';
+
     public $rankStart = '';
+
     public $rankEnd = '';
+
     public $showRankTitleForm = false;
+
     public $editingRankTitleId = null;
 
     public function mount()
@@ -44,7 +67,7 @@ class Index extends Component
         $this->bootFeatureGate();
         $this->eventner = Auth::user()->eventner;
 
-        if (!$this->eventner) {
+        if (! $this->eventner) {
             abort(403, 'Anda belum memiliki data Event terdaftar.');
         }
 
@@ -79,8 +102,8 @@ class Index extends Component
         $this->description = $champion->description ?? '';
         $this->quantity = $champion->quantity ?? 1;
         $this->isPublic = $champion->is_public ?? false;
-        $this->selectedSubCategories = $champion->assessmentSubCategories()->pluck('assessment_sub_categories.id')->map(fn($id) => (string) $id)->toArray();
-        $this->selectedTiebreakSubCategories = $champion->tiebreakSubCategories()->pluck('assessment_sub_categories.id')->map(fn($id) => (string) $id)->toArray();
+        $this->selectedSubCategories = $champion->assessmentSubCategories()->pluck('assessment_sub_categories.id')->map(fn ($id) => (string) $id)->toArray();
+        $this->selectedTiebreakSubCategories = $champion->tiebreakSubCategories()->pluck('assessment_sub_categories.id')->map(fn ($id) => (string) $id)->toArray();
         $this->showForm = true;
     }
 
@@ -118,11 +141,11 @@ class Index extends Component
         $champion->tiebreakSubCategories()->sync($this->selectedTiebreakSubCategories);
 
         // Juara baru diumumkan (transisi non-public → public): kirim notifikasi FCM ke semua pemenang.
-        if ($this->isPublic && !$wasPublic) {
+        if ($this->isPublic && ! $wasPublic) {
             try {
                 $this->notifyChampions($champion);
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('FCM champion notification failed', [
+                Log::warning('FCM champion notification failed', [
                     'champion_category_id' => $champion->id,
                     'error' => $e->getMessage(),
                 ]);
@@ -135,14 +158,14 @@ class Index extends Component
 
     private function notifyChampions(ChampionCategory $champion): void
     {
-        [$eventner, $category, $winners] = app(\App\Services\ChampionCalculator::class)->winners($champion);
+        [$eventner, $category, $winners] = app(ChampionCalculator::class)->winners($champion);
 
-        $fcm = app(\App\Services\FcmService::class);
+        $fcm = app(FcmService::class);
 
         foreach ($winners as $winner) {
             $registration = $winner['registration'];
-            $label = $winner['title'] ?? ('Juara ' . $winner['rank']);
-            app(\App\Notifications\JuaraDiumumkan::class)
+            $label = $winner['title'] ?? ('Juara '.$winner['rank']);
+            app(JuaraDiumumkan::class)
                 ->construct($registration, $label)
                 ->send();
         }
@@ -167,10 +190,14 @@ class Index extends Component
         $category = AssessmentCategory::with('subCategories')
             ->where('eventner_id', $this->eventner->id)
             ->find($categoryId);
-        if (!$category) return;
+        if (! $category) {
+            return;
+        }
 
-        $subIds = $category->subCategories->pluck('id')->map(fn($id) => (string) $id)->toArray();
-        if (empty($subIds)) return;
+        $subIds = $category->subCategories->pluck('id')->map(fn ($id) => (string) $id)->toArray();
+        if (empty($subIds)) {
+            return;
+        }
 
         // Check if all are currently selected
         $selectedCount = count(array_intersect($subIds, $this->selectedSubCategories));
@@ -191,10 +218,14 @@ class Index extends Component
         $category = AssessmentCategory::with('subCategories')
             ->where('eventner_id', $this->eventner->id)
             ->find($categoryId);
-        if (!$category) return;
+        if (! $category) {
+            return;
+        }
 
-        $subIds = $category->subCategories->pluck('id')->map(fn($id) => (string) $id)->toArray();
-        if (empty($subIds)) return;
+        $subIds = $category->subCategories->pluck('id')->map(fn ($id) => (string) $id)->toArray();
+        if (empty($subIds)) {
+            return;
+        }
 
         $selectedCount = count(array_intersect($subIds, $this->selectedTiebreakSubCategories));
         $allSelected = $selectedCount === count($subIds);
@@ -229,8 +260,7 @@ class Index extends Component
 
     public function editRankTitle($id)
     {
-        $rankTitle = ChampionRankTitle::whereHas('championCategory', fn($q) =>
-            $q->where('eventner_id', $this->eventner->id)
+        $rankTitle = ChampionRankTitle::whereHas('championCategory', fn ($q) => $q->where('eventner_id', $this->eventner->id)
         )->findOrFail($id);
 
         $this->editingRankTitleId = $id;
@@ -263,8 +293,7 @@ class Index extends Component
 
         if ($this->editingRankTitleId) {
             // Scoping ke eventner sendiri — cegah update rank title tenant lain via payload.
-            $rankTitle = ChampionRankTitle::whereHas('championCategory', fn($q) =>
-                $q->where('eventner_id', $this->eventner->id)
+            $rankTitle = ChampionRankTitle::whereHas('championCategory', fn ($q) => $q->where('eventner_id', $this->eventner->id)
             )->findOrFail($this->editingRankTitleId);
             $rankTitle->update([
                 'title' => strip_tags($this->rankTitle),
@@ -287,8 +316,7 @@ class Index extends Component
 
     public function deleteRankTitle($id)
     {
-        ChampionRankTitle::whereHas('championCategory', fn($q) =>
-            $q->where('eventner_id', $this->eventner->id)
+        ChampionRankTitle::whereHas('championCategory', fn ($q) => $q->where('eventner_id', $this->eventner->id)
         )->findOrFail($id)->delete();
 
         session()->flash('success', 'Gelar juara berhasil dihapus.');
@@ -309,9 +337,43 @@ class Index extends Component
             ->where('eventner_id', $this->eventner->id)
             ->get();
 
-        $assessmentCategories = AssessmentCategory::with('subCategories.criterias')
+        $assessmentCategories = AssessmentCategory::with(['subCategories.criterias', 'competitionCategory.parent'])
             ->where('eventner_id', $this->eventner->id)
             ->get();
+
+        // Filter rubrik mengikuti tingkat lomba yang dipilih di filter halaman.
+        // Rubrik global (competition_category_id null) ikut tampil. Bila tingkat
+        // terpilih belum punya rubrik, tampilkan semua (fallback agar tidak kosong).
+        $filteredAssessmentCategories = $assessmentCategories->filter(function ($cat) {
+            if ($cat->competition_category_id === null) {
+                return true; // rubrik global selalu tampil
+            }
+
+            return (string) $cat->competition_category_id === (string) $this->selectedCompetitionCategoryId;
+        });
+
+        if ($filteredAssessmentCategories->isEmpty()) {
+            $filteredAssessmentCategories = $assessmentCategories;
+        }
+
+        // Kelompokkan rubrik per tingkat lomba (competition_category) agar tidak
+        // tampil duplikat identik. Rubrik "global" (competition_category_id null)
+        // dimasukkan ke grup tersendiri.
+        $rubrikByLevel = collect();
+        foreach ($filteredAssessmentCategories->groupBy('competition_category_id') as $ccId => $cats) {
+            $level = null;
+            if ($ccId) {
+                $level = CompetitionCategory::where('eventner_id', $this->eventner->id)
+                    ->with('parent')
+                    ->find($ccId);
+            }
+            $rubrikByLevel->push([
+                'id' => $ccId,
+                'level_name' => $level ? $level->full_name : 'Semua Tingkat (Global)',
+                'categories' => $cats->values(),
+            ]);
+        }
+        $rubrikByLevel = $rubrikByLevel->sortBy('level_name')->values();
 
         $competitionCategories = $this->eventner->competitionCategories()->whereNotNull('parent_id')->withCount('registrations')->get();
 
@@ -320,7 +382,7 @@ class Index extends Component
         $rankTitleMap = collect();
         if ($this->selectedCompetitionCategoryId) {
             // Scoping ke eventner sendiri — cegah baca registrasi tenant lain.
-            $participants = \App\Models\Registration::where('eventner_id', $this->eventner->id)
+            $participants = Registration::where('eventner_id', $this->eventner->id)
                 ->where('competition_category_id', $this->selectedCompetitionCategoryId)
                 ->orderBy('nama_sekolah')
                 ->get();
@@ -331,16 +393,16 @@ class Index extends Component
                 ->groupBy('registration_id');
 
             // Ambil data deduction
-            $allDeductions = \App\Models\ScoreDeduction::where('eventner_id', $this->eventner->id)
+            $allDeductions = ScoreDeduction::where('eventner_id', $this->eventner->id)
                 ->get()
                 ->groupBy('registration_id');
 
             // Ambil semua kriteria beserta bobotnya untuk menghitung other_total
-            $allCriteriaWeightMap = \App\Models\AssessmentCriteria::whereIn(
+            $allCriteriaWeightMap = AssessmentCriteria::whereIn(
                 'assessment_sub_category_id',
-                \App\Models\AssessmentSubCategory::whereIn(
+                AssessmentSubCategory::whereIn(
                     'assessment_category_id',
-                    \App\Models\AssessmentCategory::where('eventner_id', $this->eventner->id)->pluck('id')
+                    AssessmentCategory::where('eventner_id', $this->eventner->id)->pluck('id')
                 )->pluck('id')
             )->pluck('weight', 'id')->toArray();
 
@@ -411,6 +473,7 @@ class Index extends Component
                     if ($a['deduction'] !== $b['deduction']) {
                         return $a['deduction'] <=> $b['deduction'];
                     }
+
                     return $a['urutan_tampil'] <=> $b['urutan_tampil'];
                 });
 
@@ -440,9 +503,10 @@ class Index extends Component
         return view('livewire.eventner.champion-category.index', [
             'championCategories' => $championCategories,
             'assessmentCategories' => $assessmentCategories,
+            'rubrikByLevel' => $rubrikByLevel,
             'competitionCategories' => $competitionCategories,
             'rankings' => $rankings,
             'rankTitleMap' => $rankTitleMap,
-        ])->title('Kategori Juara - ' . $this->eventner->nama_event);
+        ])->title('Kategori Juara - '.$this->eventner->nama_event);
     }
 }
