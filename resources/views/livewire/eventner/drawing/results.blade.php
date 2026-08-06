@@ -1,116 +1,117 @@
 <div wire:poll.3s>
-    {{-- HERO --}}
-    <div class="min-h-screen bg-surface">
-        <div class="relative overflow-hidden bg-gradient-to-br from-primary via-[#0053da] to-tertiary text-white py-10 md:py-14">
-            <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
-            <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
 
-            <div class="container-landing relative z-10">
-                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-md border border-white/10 mb-3">
-                            <i class="ti ti-table"></i>
-                            Hasil Undian Live
-                        </span>
-                        <h1 class="font-display text-xl font-extrabold tracking-tight sm:text-2xl leading-tight">
-                            Hasil Pengundian Urutan Tampil
-                        </h1>
-                        <p class="mt-1.5 text-xs font-medium text-white/80 md:text-sm">
-                            Event: <strong class="text-secondary">{{ $eventner->nama_event }}</strong>
-                        </p>
-                    </div>
-                    <div class="flex gap-2">
-                        <a href="{{ event_url($eventner, 'detail') }}" class="btn-ghost !border-white/20 !text-white hover:!bg-white/10 text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
-                            <i class="ti ti-arrow-left"></i> Kembali
-                        </a>
-                        <a href="{{ event_url($eventner, 'drawing.spin') }}" class="btn-primary text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
-                            <i class="ti ti-arrows-shuffle"></i> Spin
-                        </a>
-                    </div>
+            {{-- Header --}}
+            <div class="card bg-warning-subtle shadow-none position-relative overflow-hidden mb-4">
+                <div class="card-body px-4 py-4 text-center">
+                    <h2 class="fw-bold mb-2">
+                        <i class="ti ti-table text-warning me-2"></i>
+                        Hasil Pengundian
+                    </h2>
+                    <p class="text-muted fs-3 mb-0">{{ $eventner->nama_event }}</p>
                 </div>
             </div>
-        </div>
-
-        <div class="container-landing py-6">
-            {{-- Select Kategori --}}
-            @if(count($categories) > 0)
-            <div class="mb-6">
-                <div class="mx-auto" style="max-width: 420px;">
-                    <select wire:model.live="activeTab" wire:change="switchTab"
-                        class="w-full appearance-none bg-white border border-outline-variant/40 rounded-xl px-5 py-3.5 text-sm font-bold text-deep-slate shadow-sm cursor-pointer
-                               focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition">
-                        @foreach($categories as $cat)
-                            @php $label = !empty($cat['parent']) ? $cat['parent']['name'] . ' — ' . $cat['name'] : $cat['name']; @endphp
-                            <option value="{{ $cat['id'] }}">{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-            @endif
 
             {{-- Info Bar --}}
-            <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
-                <div class="flex items-center gap-3">
-                    <span class="inline-flex items-center gap-1.5 rounded-full bg-error/10 text-error px-3.5 py-1.5 text-xs font-bold border border-error/20">
-                        <span class="flex h-2 w-2 rounded-full bg-error animate-pulse"></span>
-                        LIVE
-                    </span>
-                    <span class="text-xs text-on-surface-variant font-medium">Update otomatis</span>
-                </div>
-                <span class="chip py-1.5 px-4 text-xs font-bold">{{ $results->count() }} / {{ $totalSchools }} Ditentukan</span>
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                <span class="badge bg-danger-subtle text-danger border border-danger rounded-pill px-3 py-2 fs-3">
+                    <i class="ti ti-player-play me-1"></i> LIVE
+                    <small class="ms-1 opacity-75">Update otomatis</small>
+                </span>
+                <span class="badge bg-primary-subtle text-primary border border-primary rounded-pill px-3 py-2 fs-3">
+                    {{ $results->count() }} / {{ $totalSchools }} Ditentukan
+                </span>
             </div>
 
+            {{-- Category Select --}}
+            @if(count($categories) > 1)
+                <div class="mb-4">
+                    <div class="input-group mx-auto" style="max-width: 400px;">
+                        <span class="input-group-text bg-primary text-white"><i class="ti ti-category"></i></span>
+                        <select class="form-select" wire:model.live="activeTab" wire:change="switchTab($event.target.value)">
+                            @foreach($categories as $cat)
+                                @php $label = !empty($cat['parent']) ? $cat['parent']['name'] . ' — ' . $cat['name'] : $cat['name']; @endphp
+                                <option value="{{ $cat['id'] }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            @endif
+
             {{-- Results Table --}}
-            <div class="surface-card overflow-hidden">
-                @if($results->count() > 0)
-                    <div class="overflow-x-auto">
-                        <table class="w-full border-collapse text-left">
-                            <thead>
-                                <tr class="bg-primary text-on-primary">
-                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider w-20">Urutan</th>
-                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider w-20">Logo</th>
-                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider">Nama Sekolah</th>
-                                    <th class="px-6 py-4 text-xs font-bold uppercase tracking-wider w-40">NPSN</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-outline-variant/30">
-                                @foreach($results as $reg)
-                                    <tr class="transition hover:bg-surface-container-lowest {{ $loop->last ? 'bg-emerald-500/5' : '' }}">
-                                        <td class="px-6 py-5">
-                                            <span class="flex items-center justify-center h-10 w-10 rounded-full text-white font-bold text-base shadow-sm {{ $loop->last ? 'bg-emerald-500' : 'bg-primary' }}">
-                                                {{ $reg->urutan_tampil }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-5">
-                                            @if($reg->logo_sekolah)
-                                                <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" class="h-12 w-12 rounded-xl border border-outline-variant/30 p-1 object-cover bg-white">
-                                            @else
-                                                <div class="h-12 w-12 rounded-xl bg-surface-container flex items-center justify-center border border-outline-variant/30">
-                                                    <i class="ti ti-school text-xl text-on-surface-variant"></i>
-                                                </div>
-                                            @endif
-                                        </td>
-                                        <td class="px-6 py-5">
-                                            <h5 class="font-display text-sm font-bold text-deep-slate mb-0">{{ $reg->nama_sekolah }}</h5>
-                                        </td>
-                                        <td class="px-6 py-5">
-                                            <span class="text-sm font-semibold text-on-surface-variant">{{ $reg->npsn }}</span>
-                                        </td>
+            <div class="card mb-4">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="card-title fw-semibold mb-0">
+                        <i class="ti ti-list-numbers text-warning me-2"></i> Urutan Tampil
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    @if($results->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="border-bottom-0 text-center" width="80px">
+                                            <h6 class="fw-semibold mb-0">Urutan</h6>
+                                        </th>
+                                        <th class="border-bottom-0" width="70px">
+                                            <h6 class="fw-semibold mb-0">Logo</h6>
+                                        </th>
+                                        <th class="border-bottom-0">
+                                            <h6 class="fw-semibold mb-0">Sekolah</h6>
+                                        </th>
+                                        <th class="border-bottom-0" width="140px">
+                                            <h6 class="fw-semibold mb-0">NPSN</h6>
+                                        </th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <div class="py-20 text-center">
-                        <div class="flex h-20 w-20 items-center justify-center rounded-full bg-primary/5 text-primary mx-auto mb-6">
-                            <i class="ti ti-hourglass-empty text-4xl"></i>
+                                </thead>
+                                <tbody>
+                                    @foreach($results as $reg)
+                                        <tr class="{{ $loop->last ? 'table-success' : '' }}">
+                                            <td class="text-center">
+                                                <span class="badge bg-primary text-white rounded-pill px-3 py-2 fs-4">{{ $reg->urutan_tampil }}</span>
+                                            </td>
+                                            <td>
+                                                @if($reg->logo_sekolah)
+                                                    <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" class="rounded-circle border" width="40" height="40" style="object-fit:cover;" alt="">
+                                                @else
+                                                    <div class="bg-primary bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center" style="width:40px;height:40px;">
+                                                        <i class="ti ti-school text-primary"></i>
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <span class="fw-semibold">{{ $reg->nama_sekolah }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="text-muted">{{ $reg->npsn }}</span>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
-                        <h4 class="font-display text-base font-bold text-deep-slate mb-2">Menunggu Pengundian...</h4>
-                        <p class="text-sm text-on-surface-variant">Hasil akan muncul otomatis saat pengundian dilakukan.</p>
-                    </div>
-                @endif
+                    @else
+                        <div class="text-center py-5">
+                            <i class="ti ti-hourglass-empty fs-10 text-muted d-block mb-3"></i>
+                            <h5 class="fw-semibold text-muted">Menunggu Pengundian...</h5>
+                            <p class="text-muted">Hasil akan muncul otomatis saat pengundian dilakukan.</p>
+                        </div>
+                    @endif
+                </div>
             </div>
+
+            {{-- Footer --}}
+            <div class="text-center mt-3 mb-4">
+                <a href="{{ event_url($eventner, 'detail') }}" class="btn btn-sm btn-outline-primary px-3 me-1">
+                    <i class="ti ti-arrow-left me-1"></i> Detail Event
+                </a>
+                <a href="{{ event_url($eventner, 'drawing.spin') }}" class="btn btn-sm btn-primary px-3">
+                    <i class="ti ti-arrows-shuffle me-1"></i> Layar Spin
+                </a>
+            </div>
+
         </div>
     </div>
 </div>

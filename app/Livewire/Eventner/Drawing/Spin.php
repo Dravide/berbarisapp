@@ -10,7 +10,7 @@ use App\Models\Registration;
 
 use App\Models\Eventner;
 
-#[Layout('layouts.frontend')]
+#[Layout('layouts.scoreboard')]
 #[Title('Pengundian Urutan Tampil - BARIS APP')]
 class Spin extends Component
 {

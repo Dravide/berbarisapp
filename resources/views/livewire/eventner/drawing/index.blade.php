@@ -8,9 +8,10 @@
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item">
-                                <a class="text-muted text-decoration-none" href="{{ route('dashboard') }}">Dashboard</a>
+                                <a class="text-muted text-decoration-none" href="{{ route('dashboard') }}">Home</a>
                             </li>
-                            <li class="breadcrumb-item active" aria-current="page">Drawing</li>
+                            <li class="breadcrumb-item" aria-current="page">Pengundian</li>
+                            <li class="breadcrumb-item active" aria-current="page">Hasil Pengundian</li>
                         </ol>
                     </nav>
                 </div>
@@ -23,11 +24,14 @@
 
     {{-- Drawing Code --}}
     <div class="card w-100 mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0 text-white fw-semibold"><i class="ti ti-lock me-1"></i> Kode Proteksi Pengundian</h5>
+        </div>
         <div class="card-body">
             <form wire:submit="saveDrawingCode">
                 <div class="row align-items-end">
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold"><i class="ti ti-lock me-1"></i> Kode Proteksi Halaman Spin Pengundian</label>
+                        <label class="form-label fw-semibold">Kode Proteksi Halaman Spin Pengundian</label>
                         <input type="text" class="form-control" wire:model="drawing_code" placeholder="Misal: 123456">
                         <small class="form-text text-muted">Kosongkan jika tidak ingin diproteksi kode.</small>
                     </div>
@@ -44,7 +48,14 @@
     {{-- Flash Messages --}}
     @if(session('success'))
         <div class="alert alert-success border-0 bg-success-subtle text-success alert-dismissible fade show">
-            {{ session('success') }}
+            <i class="ti ti-check me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger border-0 bg-danger-subtle text-danger alert-dismissible fade show">
+            <i class="ti ti-alert-circle me-2"></i> {{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
@@ -66,8 +77,8 @@
         {{-- Results Table --}}
         <div class="col-lg-8">
             <div class="card">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="card-title fw-semibold mb-0">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title fw-semibold mb-0 text-white">
                         <i class="ti ti-list-numbers me-2"></i> Hasil Undian
                     </h5>
                     <div class="d-flex gap-2">
@@ -76,7 +87,7 @@
                                 <i class="ti ti-download me-1"></i> Unduh / Cetak
                             </a>
                         @endif
-                        <a href="{{ event_url($eventner, 'drawing.spin') }}" target="_blank" class="btn btn-sm btn-primary">
+                        <a href="{{ event_url($eventner, 'drawing.spin') }}" target="_blank" class="btn btn-sm btn-light">
                             <i class="ti ti-arrows-shuffle me-1"></i> Layar Spin
                         </a>
                         <button class="btn btn-sm btn-outline-danger" wire:click="resetDrawing" onclick="return confirm('Yakin reset semua hasil undian kategori ini?')">
