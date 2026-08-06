@@ -76,6 +76,9 @@
         .ttd .role { font-weight: bold; }
         .ttd .line { display: inline-block; width: 130px; border-top: 1px solid #333; }
 
+        /* CATATAN JURI */
+        .catatan-box { width: 90%; height: 80px; border: 1px solid #bbb; border-radius: 4px; margin-top: 6px; }
+
         /* PAGE FLOW */
         .cat-section { margin-bottom: 14px; }
         table.krit thead, table.ded thead, table.daftar thead { display: table-header-group; }
@@ -174,31 +177,49 @@
     @endphp
 
     <div class="ttd">
-        <table>
-            <tr>
-                <td style="text-align:center; width:50%; vertical-align:top; padding-top:10px;">
-                    <div class="role" style="margin-bottom:8px;">Ketua Panitia</div>
-                    <img src="{{ $qrImage }}" style="width:80px; height:80px; margin:0 auto; display:block;" alt="QR">
-                    <div style="margin-top:6px; font-weight:bold; font-size:9px;">{{ $eventner->diselenggarakan_oleh }}</div>
-                </td>
-                <td style="text-align:center; width:50%; vertical-align:top; padding-top:10px;">
-                    <div class="role" style="margin-bottom:8px;">
+        @if($mode === 'peserta' && $registration)
+            {{-- Lembar juri: tanda tangan juri + catatan juri saja --}}
+            <table>
+                <tr>
+                    <td style="text-align:center; width:50%; vertical-align:top; padding-top:10px;">
+                        <div class="role" style="margin-bottom:8px;">Tanda Tangan Juri</div>
+                        <br><br><br>
+                        <span class="line"></span><br>
+                        <small>{{ $judgeName ?: '___________________' }}</small>
+                    </td>
+                    <td style="text-align:left; width:50%; vertical-align:top; padding-top:10px;">
+                        <div class="role" style="margin-bottom:4px;">Catatan Juri</div>
+                        <div class="catatan-box"></div>
+                    </td>
+                </tr>
+            </table>
+        @else
+            <table>
+                <tr>
+                    <td style="text-align:center; width:50%; vertical-align:top; padding-top:10px;">
+                        <div class="role" style="margin-bottom:8px;">Ketua Panitia</div>
+                        <img src="{{ $qrImage }}" style="width:80px; height:80px; margin:0 auto; display:block;" alt="QR">
+                        <div style="margin-top:6px; font-weight:bold; font-size:9px;">{{ $eventner->diselenggarakan_oleh }}</div>
+                    </td>
+                    <td style="text-align:center; width:50%; vertical-align:top; padding-top:10px;">
+                        <div class="role" style="margin-bottom:8px;">
+                            @if($mode === 'peserta' && $registration)
+                                Pelatih
+                            @else
+                                Koordinator Juri
+                            @endif
+                        </div>
+                        <br><br><br>
+                        <span class="line"></span><br>
                         @if($mode === 'peserta' && $registration)
-                            Pelatih
+                            <small>{{ $registration->nama_pelatih }}</small>
                         @else
-                            Koordinator Juri
+                            <small>___________________</small>
                         @endif
-                    </div>
-                    <br><br><br>
-                    <span class="line"></span><br>
-                    @if($mode === 'peserta' && $registration)
-                        <small>{{ $registration->nama_pelatih }}</small>
-                    @else
-                        <small>___________________</small>
-                    @endif
-                </td>
-            </tr>
-        </table>
+                    </td>
+                </tr>
+            </table>
+        @endif
     </div>
 
     <div class="foot">

@@ -259,8 +259,9 @@ class Import extends Component
         $this->reset('showPreview', 'previewData', 'previewMeta', 'rowErrors', 'fileName');
         $this->file = null;
 
-        $this->dispatch('import:done');
-        session()->flash('success', "Import berhasil: {$rubrikCount} kategori rubrik, {$criteriaCount} kriteria, {$dedGroupCount} kelompok pengurangan ({$dedCount} kriteria).");
+        $message = "Import berhasil: {$rubrikCount} kategori rubrik, {$criteriaCount} kriteria, {$dedGroupCount} kelompok pengurangan ({$dedCount} kriteria).";
+        $this->dispatch('import:done', message: $message);
+        session()->flash('success', $message);
     }
 
     private function forgetSessionPreview()

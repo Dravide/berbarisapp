@@ -135,13 +135,28 @@
 </div>
 
 <script>
-// Tutup modal import setelah sukses disimpan. Hasil import sudah dirender ulang
-// oleh Builder (event import:done) — tidak perlu refresh halaman.
+// Tutup modal import setelah sukses disimpan, lalu tampilkan toast SweetAlert2.
+// Hasil import sudah dirender ulang oleh Builder (event import:done) — tanpa refresh.
 document.addEventListener('livewire:init', () => {
-    Livewire.on('import:done', () => {
+    Livewire.on('import:done', (event) => {
         const modalEl = document.getElementById('importExcelModal');
         if (modalEl && window.bootstrap) {
             bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+        }
+
+        const d = (event && event.detail) || {};
+        const message = typeof d === 'string' ? d : (d.message || 'Import berhasil.');
+        if (window.Swal) {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: message,
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                toastClass: 'border-start border-4 border-success',
+            });
         }
     });
 });
