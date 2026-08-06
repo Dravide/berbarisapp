@@ -32,6 +32,10 @@ class TermsConditions extends Component
     public function render()
     {
         return view('livewire.public.terms-conditions')
+            ->layout('layouts.landing', [
+                'logoPath' => $this->logoPath,
+                'favicon' => $this->favicon,
+            ])
             ->title('Syarat & Ketentuan - '.get_setting('site_title', 'BARIS APP'));
     }
 }

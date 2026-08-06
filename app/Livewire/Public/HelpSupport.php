@@ -58,6 +58,10 @@ class HelpSupport extends Component
     public function render()
     {
         return view('livewire.public.help-support')
+            ->layout('layouts.landing', [
+                'logoPath' => $this->logoPath,
+                'favicon' => $this->favicon,
+            ])
             ->title('Bantuan & Support - '.get_setting('site_title', 'BARIS APP'));
     }
 }
