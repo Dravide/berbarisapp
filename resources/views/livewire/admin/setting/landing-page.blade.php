@@ -62,6 +62,8 @@
                                             'gallery' => 'Galeri',
                                             'ticket' => 'Tiket',
                                             'vote' => 'Vote',
+                                            'contact' => 'Kontak',
+                                            'schedule' => 'Jadwal',
                                             'social' => 'Sosial Media',
                                         ] as $key => $label)
                                         <li class="nav-item">
@@ -294,11 +296,44 @@
                                     @if($activeTab === 'statistics')
                                     <div wire:key="tab-statistics">
                                         <h5 class="fw-semibold mb-3"><i class="ti ti-chart-bar me-2"></i>Statistics Section</h5>
+
+                                        <div class="border rounded p-3 mb-3 bg-light">
+                                            <div class="form-check form-switch mb-2">
+                                                <input class="form-check-input" type="checkbox" role="switch"
+                                                    wire:model="statistics_auto" id="statAuto" wire:change="toggleStatAuto">
+                                                <label class="form-check-label fw-semibold" for="statAuto">
+                                                    Hitung Otomatis dari Data
+                                                </label>
+                                            </div>
+                                            <small class="text-muted d-block mb-2">
+                                                Ambil angka real dari database (event, pendaftaran, sekolah, transaksi). Matikan untuk angka manual.
+                                            </small>
+                                            @if($statistics_auto)
+                                                <div class="d-flex flex-wrap gap-3">
+                                                    @foreach([
+                                                        'events' => 'Event Diselenggarakan',
+                                                        'registrations' => 'Pendaftaran',
+                                                        'schools' => 'Sekolah Bergabung',
+                                                        'votes' => 'Vote / Transaksi',
+                                                    ] as $metricKey => $metricLabel)
+                                                        <div class="form-check">
+                                                            <input class="form-check-input" type="checkbox"
+                                                                wire:model="statistics_auto_metrics" value="{{ $metricKey }}"
+                                                                id="stat_metric_{{ $metricKey }}">
+                                                            <label class="form-check-label" for="stat_metric_{{ $metricKey }}">{{ $metricLabel }}</label>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        @if(!$statistics_auto)
                                         <div class="d-flex justify-content-end mb-2">
                                             <button type="button" class="btn btn-sm btn-outline-primary" wire:click="addStatisticItem">
                                                 <i class="ti ti-plus me-1"></i> Tambah Statistik
                                             </button>
                                         </div>
+                                        @endif
                                         @foreach($statistics_items as $i => $item)
                                         <div class="border rounded p-3 mb-2" wire:key="stat-{{ $i }}">
                                             <div class="row">
@@ -433,6 +468,83 @@
                                                 <textarea class="form-control" wire:model="vote_subtitle" rows="2" placeholder="Deskripsi singkat section vote"></textarea>
                                             </div>
                                         </div>
+                                    </div>
+                                    @endif
+
+                                    {{-- ==================== CONTACT TAB ==================== --}}
+                                    @if($activeTab === 'contact')
+                                    <div wire:key="tab-contact">
+                                        <h5 class="fw-semibold mb-3"><i class="ti ti-phone me-2"></i>Kontak</h5>
+                                        <p class="text-muted mb-3">Kontak ini dipakai di halaman <strong>Bantuan & Support</strong> dan section Kontak landing page.</p>
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label"><i class="ti ti-phone me-1 text-success"></i>Telepon / WhatsApp</label>
+                                                <input type="text" class="form-control" wire:model="contact_phone" placeholder="+62 812-3456-7890">
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label class="form-label"><i class="ti ti-mail me-1 text-primary"></i>Email</label>
+                                                <input type="email" class="form-control" wire:model="contact_email" placeholder="halo@berbaris.local">
+                                            </div>
+                                            <div class="col-12 mb-3">
+                                                <label class="form-label"><i class="ti ti-map-pin me-1 text-danger"></i>Alamat</label>
+                                                <input type="text" class="form-control" wire:model="contact_address" placeholder="Jl. Teknologi No. 42, Jakarta Selatan">
+                                            </div>
+                                            <div class="col-12 mb-3">
+                                                <label class="form-label"><i class="ti ti-map me-1"></i>Google Maps Embed URL (opsional)</label>
+                                                <input type="text" class="form-control" wire:model="contact_map_embed_url" placeholder="https://www.google.com/maps/embed?pb=...">
+                                                <small class="text-muted">Link embed dari Google Maps (bagian "Bagikan" → "Tempelkan peta").</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    {{-- ==================== SCHEDULE TAB ==================== --}}
+                                    @if($activeTab === 'schedule')
+                                    <div wire:key="tab-schedule">
+                                        <h5 class="fw-semibold mb-3"><i class="ti ti-calendar-event me-2"></i>Jadwal Acara</h5>
+                                        <div class="row g-3 mb-4">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Judul Section</label>
+                                                <input type="text" class="form-control" wire:model="schedule_title" placeholder="Jadwal Acara">
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex justify-content-end mb-2">
+                                            <button type="button" class="btn btn-sm btn-outline-primary" wire:click="addScheduleItem">
+                                                <i class="ti ti-plus me-1"></i> Tambah Jadwal
+                                            </button>
+                                        </div>
+                                        @foreach($schedule_items as $i => $item)
+                                        <div class="border rounded p-3 mb-2" wire:key="sched-{{ $i }}">
+                                            <div class="row">
+                                                <div class="col-md-2 mb-2">
+                                                    <label class="form-label small">Tanggal</label>
+                                                    <input type="text" class="form-control form-control-sm" wire:model="schedule_items.{{ $i }}.date" placeholder="12 Jul">
+                                                </div>
+                                                <div class="col-md-2 mb-2">
+                                                    <label class="form-label small">Waktu</label>
+                                                    <input type="text" class="form-control form-control-sm" wire:model="schedule_items.{{ $i }}.time" placeholder="09:00 WIB">
+                                                </div>
+                                                <div class="col-md-4 mb-2">
+                                                    <label class="form-label small">Judul</label>
+                                                    <input type="text" class="form-control form-control-sm" wire:model="schedule_items.{{ $i }}.title" placeholder="Upacara Pembukaan">
+                                                </div>
+                                                <div class="col-md-3 mb-2">
+                                                    <label class="form-label small">Lokasi</label>
+                                                    <input type="text" class="form-control form-control-sm" wire:model="schedule_items.{{ $i }}.location" placeholder="Lapangan Utama">
+                                                </div>
+                                                <div class="col-md-1 d-flex align-items-end">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" wire:click="removeScheduleItem({{ $i }})">
+                                                        <i class="ti ti-trash"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="col-12">
+                                                    <label class="form-label small">Deskripsi</label>
+                                                    <textarea class="form-control form-control-sm" wire:model="schedule_items.{{ $i }}.description" rows="2" placeholder="Keterangan singkat acara"></textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endforeach
                                     </div>
                                     @endif
 

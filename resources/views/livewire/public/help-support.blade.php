@@ -69,28 +69,17 @@
             </div>
 
             <div class="mx-auto mt-10 max-w-3xl space-y-3">
-                @php
-                    $faqs = [
-                        ['q' => 'Bagaimana cara mendaftar di sebuah event?', 'a' => 'Buka halaman event yang ingin Anda ikuti, klik tombol "Booking Pendaftaran". Pilih kategori lomba, isi data sekolah, lalu konfirmasi booking. Anda akan menerima link magic untuk mengelola data pasukan selanjutnya.'],
-                        ['q' => 'Bagaimana cara voting digital?', 'a' => 'Masuk ke halaman voting event, pilih kategori lomba, pilih kontingen yang ingin didukung, tentukan jumlah vote, lalu lakukan pembayaran via QRIS.'],
-                        ['q' => 'Bagaimana cara membeli tiket event?', 'a' => 'Klik tombol "Beli Tiket" di halaman event. Isi data pembeli, tentukan jumlah tiket, lalu bayar via QRIS. QR code tiket akan langsung tersedia setelah pembayaran berhasil.'],
-                        ['q' => 'Saya lupa password, bagaimana cara reset?', 'a' => 'Gunakan link magic yang dikirim saat booking pendaftaran. Jika link sudah kadaluarsa, hubungi penyelenggara event atau tim support kami via WhatsApp untuk bantuan reset password.'],
-                        ['q' => 'Apakah bisa membatalkan pendaftaran?', 'a' => 'Pendaftaran dapat dibatalkan oleh penyelenggara event atau melalui permintaan ke tim support. Status pendaftaran akan berubah menjadi "Dibatalkan". Pengembalian dana voting/tiket mengikuti kebijakan masing-masing event.'],
-                        ['q' => 'Bagaimana cara melihat hasil kompetisi?', 'a' => 'Hasil kompetisi ditampilkan di halaman event setelah penyelenggara mempublikasikannya. Anda juga dapat melihat rekapitulasi penilaian dan peringkat peserta jika fitur tersebut diaktifkan oleh penyelenggara.'],
-                        ['q' => 'Apakah data saya aman?', 'a' => 'Ya, kami menggunakan enkripsi SSL/TLS dan menyimpan password dalam bentuk hash. Data Anda dilindungi sesuai Kebijakan Privasi kami. Akses data dibatasi hanya untuk pihak yang berkepentingan.'],
-                    ];
-                @endphp
                 @foreach($faqs as $index => $faq)
                 <details class="surface-card group overflow-hidden p-0" wire:key="help-faq-{{ $index }}">
                     <summary class="flex cursor-pointer list-none items-center justify-between gap-4 p-5 font-semibold text-deep-slate transition hover:bg-surface-container-low">
-                        <span>{{ $faq['q'] }}</span>
+                        <span>{{ $faq['question'] ?? '' }}</span>
                         <span class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary transition group-open:rotate-180">
                             <i class="ti ti-chevron-down"></i>
                         </span>
                     </summary>
                     <div class="px-5 pb-5 text-sm leading-relaxed text-on-surface-variant">
-                        {{ $faq['a'] }}
-                        @if($index === 6)
+                        {{ $faq['answer'] ?? '' }}
+                        @if(str_contains(($faq['answer'] ?? ''), 'Kebijakan Privasi'))
                             <a href="{{ route('privacy') }}" class="text-primary font-bold hover:underline">Kebijakan Privasi</a>
                         @endif
                     </div>

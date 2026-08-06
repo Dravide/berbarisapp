@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Admin\Setting;
 
-use Livewire\Component;
-use Livewire\WithFileUploads;
 use App\Models\Setting;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-use Illuminate\Support\Facades\Storage;
+use Livewire\Component;
+use Livewire\WithFileUploads;
 
 #[Layout('layouts.admin')]
 #[Title('Pengaturan Landing Page - BARIS APP')]
@@ -20,64 +20,109 @@ class LandingPage extends Component
 
     // Section order & visibility
     public $sectionsOrder = [];
+
     public $sectionsActive = [];
 
     // Hero fields
     public $hero_heading;
+
     public $hero_subheading;
+
     public $hero_cta_text;
+
     public $hero_cta_url;
+
     public $hero_video_url;
+
     public $hero_background_image;
+
     public $hero_bg_current;
 
     // Features fields
     public $features_title;
+
     public $features_items = [];
 
     // About fields
     public $about_heading;
+
     public $about_description;
+
     public $about_image;
+
     public $about_image_current;
+
     public $about_video;
+
     public $about_points = [];
 
     // CTA fields
     public $cta_heading;
+
     public $cta_description;
+
     public $cta_button_text;
+
     public $cta_button_url;
+
     public $cta_image;
+
     public $cta_image_current;
 
     // Testimonials fields
     public $testimonials_title;
+
     public $testimonials_items = [];
 
     // Statistics fields
     public $statistics_items = [];
 
+    // Statistics auto mode
+    public $statistics_auto = false;
+
+    public $statistics_auto_metrics = [];
+
+    // Contact fields
+    public $contact_phone;
+
+    public $contact_email;
+
+    public $contact_address;
+
+    public $contact_map_embed_url;
+
+    // Schedule fields
+    public $schedule_title;
+
+    public $schedule_items = [];
+
     // FAQ fields
     public $faq_title;
+
     public $faq_items = [];
 
     // Gallery fields
     public $gallery_title;
+
     public $gallery_items = [];
 
     // Ticket section (live data; admin sets heading only)
     public $ticket_title;
+
     public $ticket_subtitle;
 
     // Vote section (live data; admin sets heading only)
     public $vote_title;
+
     public $vote_subtitle;
 
     // Social links
     public $social_instagram;
+
     public $social_tiktok;
+
     public $social_youtube;
+
     public $social_facebook;
 
     public function mount()
@@ -124,6 +169,20 @@ class LandingPage extends Component
         // Load Statistics
         $statistics = json_decode(Setting::get('landing_statistics', '{}'), true) ?? [];
         $this->statistics_items = $statistics['items'] ?? [];
+        $this->statistics_auto = (bool) ($statistics['auto'] ?? false);
+        $this->statistics_auto_metrics = $statistics['metrics'] ?? ['events', 'registrations', 'schools'];
+
+        // Load Contact
+        $contact = json_decode(Setting::get('landing_contact', '{}'), true) ?? [];
+        $this->contact_phone = $contact['phone'] ?? '';
+        $this->contact_email = $contact['email'] ?? '';
+        $this->contact_address = $contact['address'] ?? '';
+        $this->contact_map_embed_url = $contact['map_embed_url'] ?? '';
+
+        // Load Schedule
+        $schedule = json_decode(Setting::get('landing_schedule', '{}'), true) ?? [];
+        $this->schedule_title = $schedule['title'] ?? 'Jadwal Acara';
+        $this->schedule_items = $schedule['items'] ?? [];
 
         // Load FAQ
         $faq = json_decode(Setting::get('landing_faq', '{}'), true) ?? [];
@@ -160,7 +219,7 @@ class LandingPage extends Component
 
     public function toggleSection($type)
     {
-        $this->sectionsActive[$type] = !($this->sectionsActive[$type] ?? true);
+        $this->sectionsActive[$type] = ! ($this->sectionsActive[$type] ?? true);
     }
 
     public function moveSectionUp($index)
@@ -229,6 +288,26 @@ class LandingPage extends Component
         $this->statistics_items = array_values($this->statistics_items);
     }
 
+    public function toggleStatAuto()
+    {
+        $this->statistics_auto = ! $this->statistics_auto;
+        if ($this->statistics_auto && empty($this->statistics_auto_metrics)) {
+            $this->statistics_auto_metrics = ['events', 'registrations', 'schools'];
+        }
+    }
+
+    // -- Schedule item management --
+    public function addScheduleItem()
+    {
+        $this->schedule_items[] = ['date' => '', 'time' => '', 'title' => '', 'description' => '', 'location' => ''];
+    }
+
+    public function removeScheduleItem($index)
+    {
+        unset($this->schedule_items[$index]);
+        $this->schedule_items = array_values($this->schedule_items);
+    }
+
     // -- FAQ item management --
     public function addFaqItem()
     {
@@ -250,7 +329,7 @@ class LandingPage extends Component
     public function removeGalleryItem($index)
     {
         // Delete image if exists
-        if (!empty($this->gallery_items[$index]['image'])) {
+        if (! empty($this->gallery_items[$index]['image'])) {
             Storage::disk('public')->delete($this->gallery_items[$index]['image']);
         }
         unset($this->gallery_items[$index]);
@@ -266,7 +345,9 @@ class LandingPage extends Component
         // Save Hero
         $heroBg = $this->hero_bg_current;
         if ($this->hero_background_image) {
-            if ($heroBg) Storage::disk('public')->delete($heroBg);
+            if ($heroBg) {
+                Storage::disk('public')->delete($heroBg);
+            }
             $heroBg = $this->hero_background_image->store('landing', 'public');
         }
         Setting::set('landing_hero', json_encode([
@@ -287,7 +368,9 @@ class LandingPage extends Component
         // Save About
         $aboutImage = $this->about_image_current;
         if ($this->about_image) {
-            if ($aboutImage) Storage::disk('public')->delete($aboutImage);
+            if ($aboutImage) {
+                Storage::disk('public')->delete($aboutImage);
+            }
             $aboutImage = $this->about_image->store('landing', 'public');
         }
         Setting::set('landing_about', json_encode([
@@ -301,7 +384,9 @@ class LandingPage extends Component
         // Save CTA
         $ctaImage = $this->cta_image_current;
         if ($this->cta_image) {
-            if ($ctaImage) Storage::disk('public')->delete($ctaImage);
+            if ($ctaImage) {
+                Storage::disk('public')->delete($ctaImage);
+            }
             $ctaImage = $this->cta_image->store('landing', 'public');
         }
         Setting::set('landing_cta', json_encode([
@@ -320,7 +405,23 @@ class LandingPage extends Component
 
         // Save Statistics
         Setting::set('landing_statistics', json_encode([
+            'auto' => (bool) $this->statistics_auto,
+            'metrics' => array_values($this->statistics_auto_metrics),
             'items' => $this->statistics_items,
+        ]));
+
+        // Save Contact
+        Setting::set('landing_contact', json_encode([
+            'phone' => $this->contact_phone,
+            'email' => $this->contact_email,
+            'address' => $this->contact_address,
+            'map_embed_url' => $this->contact_map_embed_url,
+        ]));
+
+        // Save Schedule
+        Setting::set('landing_schedule', json_encode([
+            'title' => $this->schedule_title,
+            'items' => $this->schedule_items,
         ]));
 
         // Save FAQ
@@ -333,7 +434,7 @@ class LandingPage extends Component
         $galleryItems = $this->gallery_items;
         foreach ($galleryItems as $i => &$item) {
             if (isset($item['image_upload']) && $item['image_upload']) {
-                if (!empty($item['image'])) {
+                if (! empty($item['image'])) {
                     Storage::disk('public')->delete($item['image']);
                 }
                 $item['image'] = $item['image_upload']->store('landing/gallery', 'public');
