@@ -41,21 +41,39 @@
             <span class="text-primary fw-semibold me-auto">
                 <i class="ti ti-check me-1"></i> Format untuk: {{ $this->competitionCategories->firstWhere('id', $activeTab)?->full_name }}
             </span>
-            <a href="{{ $activeTab !== '' ? route('eventner.format-nilai.pdf-child', $activeTab) : route('eventner.format-nilai.pdf') }}"
-               target="_blank" class="btn btn-danger btn-sm">
-                <i class="ti ti-file-type-pdf me-1"></i> Unduh PDF {{ $activeTab !== '' ? 'Tingkat' : 'Semua' }}
-            </a>
-            <a href="{{ route('eventner.format-nilai.download') }}" class="btn btn-warning btn-sm">
-                <i class="ti ti-download me-1"></i> Unduh Per Juri / Peserta
-            </a>
-            @else
-            <a href="{{ route('eventner.format-nilai.pdf') }}" target="_blank" class="btn btn-danger btn-sm ms-auto">
-                <i class="ti ti-file-type-pdf me-1"></i> Unduh PDF Semua
-            </a>
-            <a href="{{ route('eventner.format-nilai.download') }}" class="btn btn-warning btn-sm ms-1">
-                <i class="ti ti-download me-1"></i> Unduh Per Juri / Peserta
-            </a>
             @endif
+
+            {{-- Dropdown: semua aksi unduh & import --}}
+            <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ti ti-menu-2 me-1"></i> Unduh &amp; Import
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                        <a class="dropdown-item" href="{{ $activeTab !== '' ? route('eventner.format-nilai.pdf-child', $activeTab) : route('eventner.format-nilai.pdf') }}" target="_blank">
+                            <i class="ti ti-file-type-pdf me-1"></i> Unduh PDF {{ $activeTab !== '' ? 'Tingkat' : 'Semua' }}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('eventner.format-nilai.download') }}">
+                            <i class="ti ti-download me-1"></i> Unduh Per Juri / Peserta
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" href="{{ route('eventner.format-nilai.template') }}">
+                            <i class="ti ti-download me-1"></i> Unduh Template Excel
+                        </a>
+                    </li>
+                    <li>
+                        <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#importExcelModal">
+                            <i class="ti ti-file-import me-1"></i> Import Excel
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <livewire:eventner.format-nilai.import :activeTab="$activeTab" :key="'import-'.$activeTab" />
         </div>
     </div>
 

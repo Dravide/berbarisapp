@@ -2,20 +2,22 @@
 
 namespace App\Livewire\Eventner\FormatNilai;
 
-use App\Traits\FeatureGatedComponent;
-use Livewire\Component;
 use App\Models\AssessmentCategory;
-use App\Models\AssessmentSubCategory;
 use App\Models\AssessmentCriteria;
 use App\Models\AssessmentScore;
+use App\Models\AssessmentSubCategory;
 use App\Models\CompetitionCategory;
 use App\Models\DeductionCategory;
 use App\Models\DeductionCriteria;
 use App\Models\ScoreDeduction;
+use App\Traits\FeatureGatedComponent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
+use Livewire\Component;
 
 #[Layout('layouts.admin')]
 #[Title('Format Penilaian - BARIS APP')]
@@ -26,17 +28,23 @@ class Builder extends Component
     protected string $requiredFeature = 'format_nilai';
 
     public $eventnerId;
+
     public $activeTab = ''; // '' = global/semua tingkat, child_id = specific
+
     public $errorMessage = '';
 
     // Copy format (lama)
     public $showCopyModal = false;
+
     public $copySourceId = null;
+
     public $copyPreviewData = [];
 
     // Salin Ke (baru) — dari kategori sumber ke tingkat target
     public $showCopyToModal = false;
+
     public $copyToSourceCategoryId = null;
+
     public $copyToTargetCompetitionCategoryId = null;
 
     // State for inputs
@@ -50,7 +58,7 @@ class Builder extends Component
         // Get the active eventner ID from the authenticated user
         $this->bootFeatureGate();
         $eventner = Auth::user()->eventner;
-        if (!$eventner) {
+        if (! $eventner) {
             abort(403, 'Anda bukan Eventner yang sah.');
         }
         $this->eventnerId = $eventner->id;
@@ -63,7 +71,7 @@ class Builder extends Component
             ->all();
 
         $first = $this->competitionCategories->first(
-            fn($cc) => in_array($cc->id, $idsWithFormat)
+            fn ($cc) => in_array($cc->id, $idsWithFormat)
         ) ?? $this->competitionCategories->first();
 
         if ($first) {
@@ -104,7 +112,7 @@ class Builder extends Component
         return $ids->isNotEmpty() && ScoreDeduction::whereIn('deduction_criteria_id', $ids)->exists();
     }
 
-    #[\Livewire\Attributes\Computed]
+    #[Computed]
     public function competitionCategories()
     {
         return CompetitionCategory::where('eventner_id', $this->eventnerId)
@@ -114,7 +122,7 @@ class Builder extends Component
                 // OR: parent categories with no children (old flat data, backward compat)
                 $q->orWhere(function ($sq) {
                     $sq->whereNull('parent_id')
-                       ->whereDoesntHave('children');
+                        ->whereDoesntHave('children');
                 });
             })
             ->with('parent')
@@ -122,18 +130,28 @@ class Builder extends Component
             ->get();
     }
 
-    #[\Livewire\Attributes\Computed]
+    #[Computed]
     public function categories()
     {
         $query = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias', 'competitionCategory'])
-                ->where('eventner_id', $this->eventnerId)
-                ->orderBy('sort_order');
+            ->where('eventner_id', $this->eventnerId)
+            ->orderBy('sort_order');
 
         if ($this->activeTab !== '') {
             $query->where('competition_category_id', $this->activeTab);
         }
 
         return $query->get();
+    }
+
+    /**
+     * Setelah import Excel sukses (dari komponen Import), reset cache computed
+     * agar kategori hasil import langsung tampil tanpa refresh halaman.
+     */
+    #[On('import:done')]
+    public function refreshAfterImport()
+    {
+        unset($this->categories);
     }
 
     public function addCategory()
@@ -162,12 +180,14 @@ class Builder extends Component
 
         if ($this->anyCriteriaHasScores($criteriaIds)) {
             session()->flash('error', 'Tidak bisa menghapus kategori: sudah ada nilai yang masuk. Hapus/lck format sebelum penilaian dimulai.');
+
             return;
         }
 
         $deductionCriteriaIds = $category->deductionCategories->flatMap->criterias->pluck('id');
         if ($this->anyDeductionHasScores($deductionCriteriaIds)) {
             session()->flash('error', 'Tidak bisa menghapus kategori: sudah ada nilai pengurangan yang masuk.');
+
             return;
         }
 
@@ -186,7 +206,7 @@ class Builder extends Component
         $newCategory = AssessmentCategory::create([
             'eventner_id' => $this->eventnerId,
             'competition_category_id' => $original->competition_category_id,
-            'name' => $original->name . ' (Salinan)',
+            'name' => $original->name.' (Salinan)',
             'sort_order' => $maxOrder + 1,
         ]);
 
@@ -258,8 +278,9 @@ class Builder extends Component
     {
         $targetCompetitionCategoryId = $this->copyToTargetCompetitionCategoryId;
 
-        if (!$this->copyToSourceCategoryId || !$targetCompetitionCategoryId) {
+        if (! $this->copyToSourceCategoryId || ! $targetCompetitionCategoryId) {
             session()->flash('error', 'Pilih tingkat tujuan terlebih dahulu.');
+
             return;
         }
 
@@ -279,8 +300,9 @@ class Builder extends Component
         $sourceId = $sourceId ?: $this->copyToSourceCategoryId;
         $targetCompetitionCategoryId = $this->copyToTargetCompetitionCategoryId;
 
-        if (!$sourceId || !$targetCompetitionCategoryId) {
+        if (! $sourceId || ! $targetCompetitionCategoryId) {
             session()->flash('error', 'Pilih tingkat tujuan terlebih dahulu.');
+
             return;
         }
 
@@ -294,6 +316,7 @@ class Builder extends Component
                 ->findOrFail($targetCompetitionCategoryId);
         } catch (\Throwable $e) {
             $this->dispatch('copy:done', ['success' => false, 'message' => 'Kategori atau tingkat tujuan tidak ditemukan.']);
+
             return;
         }
 
@@ -337,7 +360,7 @@ class Builder extends Component
 
         $name = $this->newSubCategoryNames[$categoryId] ?? '';
 
-        if(empty(trim($name))) {
+        if (empty(trim($name))) {
             return;
         }
 
@@ -361,6 +384,7 @@ class Builder extends Component
 
         if ($this->anyCriteriaHasScores($sub->criterias->pluck('id'))) {
             session()->flash('error', 'Tidak bisa menghapus sub-kategori: sudah ada nilai yang masuk.');
+
             return;
         }
 
@@ -376,6 +400,7 @@ class Builder extends Component
 
         if ($this->criteriaHasScores($id)) {
             session()->flash('error', 'Tidak bisa menghapus kriteria: sudah ada nilai yang masuk.');
+
             return;
         }
 
@@ -386,6 +411,7 @@ class Builder extends Component
     // EDIT: Category
     // ============================================================
     public $editingCategoryId = null;
+
     public $editCategoryName = '';
 
     public function startEditCategory($id)
@@ -413,6 +439,7 @@ class Builder extends Component
     // EDIT: Sub Category
     // ============================================================
     public $editingSubCategoryId = null;
+
     public $editSubCategoryName = '';
 
     public function startEditSubCategory($id)
@@ -443,9 +470,13 @@ class Builder extends Component
     // KRITERIA MODAL (Tambah & Edit — Nama, Bobot, Label Groups)
     // ============================================================
     public $criteriaModalSubCategoryId = null;
+
     public $criteriaModalTargetId = null; // null = new, int = editing
+
     public $criteriaModalName = '';
+
     public $criteriaModalWeight = 1;
+
     public $labelGroups = []; // [ ['label' => 'Kurang', 'scores' => '23,30'], ... ]
 
     public function openCriteriaModal($subCategoryId, $criteriaId = null)
@@ -466,15 +497,15 @@ class Builder extends Component
             // Load existing label groups from score_options
             $grouped = [];
             foreach ($crit->score_options ?? [] as $opt) {
-                if (is_array($opt) && !empty($opt['label'])) {
+                if (is_array($opt) && ! empty($opt['label'])) {
                     $label = $opt['label'];
-                    if (!isset($grouped[$label])) {
+                    if (! isset($grouped[$label])) {
                         $grouped[$label] = ['label' => $label, 'scores' => []];
                     }
                     $grouped[$label]['scores'][] = $opt['score'];
                 } else {
                     $score = is_array($opt) ? ($opt['score'] ?? '') : $opt;
-                    if (!isset($grouped[''])) {
+                    if (! isset($grouped[''])) {
                         $grouped[''] = ['label' => '', 'scores' => []];
                     }
                     $grouped['']['scores'][] = $score;
@@ -558,9 +589,11 @@ class Builder extends Component
 
             $scoresStr = str_replace([' – ', ' - ', '–', ';'], ',', $scoresRaw);
             $parts = array_map('trim', explode(',', $scoresStr));
-            $parts = array_filter($parts, fn($v) => $v !== '');
+            $parts = array_filter($parts, fn ($v) => $v !== '');
 
-            if (!empty($label)) $hasLabels = true;
+            if (! empty($label)) {
+                $hasLabels = true;
+            }
 
             foreach ($parts as $part) {
                 if (empty($label)) {
@@ -573,18 +606,19 @@ class Builder extends Component
 
         if (empty($allScores)) {
             session()->flash('error_criteria_modal', 'Minimal satu skor harus diisi.');
+
             return;
         }
 
         // Normalize
         if ($hasLabels) {
             $scoreOptions = array_values(array_map(
-                fn($s) => is_array($s) ? $s : ['score' => $s, 'label' => ''],
+                fn ($s) => is_array($s) ? $s : ['score' => $s, 'label' => ''],
                 $allScores
             ));
         } else {
             $scoreOptions = array_values(array_map(
-                fn($s) => is_array($s) ? $s['score'] : $s,
+                fn ($s) => is_array($s) ? $s['score'] : $s,
                 $allScores
             ));
         }
@@ -624,7 +658,9 @@ class Builder extends Component
     // ============================================================
 
     public $newDeductionCategoryNames = [];
+
     public $newDeductionCriteriaNames = [];
+
     public $newDeductionCriteriaOptions = [];
 
     public function addDeductionCategory($assessmentCategoryId)
@@ -636,6 +672,7 @@ class Builder extends Component
 
         if (trim($name) === '') {
             session()->flash("error_dedcat_{$assessmentCategoryId}", 'Nama kategori pengurangan wajib diisi.');
+
             return;
         }
 
@@ -659,6 +696,7 @@ class Builder extends Component
 
         if ($this->anyDeductionHasScores($category->criterias->pluck('id'))) {
             session()->flash('error', 'Tidak bisa menghapus kategori pengurangan: sudah ada nilai pengurangan yang masuk.');
+
             return;
         }
 
@@ -677,7 +715,7 @@ class Builder extends Component
         }
 
         $options = array_map('trim', explode(',', $optionsStr));
-        $options = array_filter($options, fn($v) => $v !== '');
+        $options = array_filter($options, fn ($v) => $v !== '');
 
         if (empty($options)) {
             return;
@@ -685,14 +723,16 @@ class Builder extends Component
 
         // Ensure all values are numeric (allow negatives)
         foreach ($options as $opt) {
-            if (!is_numeric($opt)) {
+            if (! is_numeric($opt)) {
                 session()->flash('error', 'Semua opsi pengurangan harus berupa angka.');
+
                 return;
             }
         }
 
         if (count($options) > self::MAX_OPTIONS) {
-            session()->flash('error', 'Maksimal ' . self::MAX_OPTIONS . ' opsi pengurangan per kriteria.');
+            session()->flash('error', 'Maksimal '.self::MAX_OPTIONS.' opsi pengurangan per kriteria.');
+
             return;
         }
 
@@ -717,6 +757,7 @@ class Builder extends Component
 
         if (ScoreDeduction::where('deduction_criteria_id', $id)->exists()) {
             session()->flash('error', 'Tidak bisa menghapus kriteria pengurangan: sudah ada nilai pengurangan yang masuk.');
+
             return;
         }
 
@@ -725,6 +766,7 @@ class Builder extends Component
 
     // Edit Deduction Category
     public $editingDeductionCategoryId = null;
+
     public $editDeductionCategoryName = '';
 
     public function startEditDeductionCategory($id)
@@ -750,7 +792,9 @@ class Builder extends Component
 
     // Edit Deduction Criteria
     public $editingDeductionCriteriaId = null;
+
     public $editDeductionCriteriaName = '';
+
     public $editDeductionCriteriaOptions = '';
 
     public function startEditDeductionCriteria($id)
@@ -770,21 +814,23 @@ class Builder extends Component
             'editDeductionCriteriaOptions' => 'required|string',
         ]);
 
-        $options = array_filter(array_map('trim', explode(',', $this->editDeductionCriteriaOptions)), fn($v) => $v !== '');
+        $options = array_filter(array_map('trim', explode(',', $this->editDeductionCriteriaOptions)), fn ($v) => $v !== '');
 
         if (empty($options)) {
             return;
         }
 
         foreach ($options as $opt) {
-            if (!is_numeric($opt)) {
+            if (! is_numeric($opt)) {
                 session()->flash('error', 'Semua opsi pengurangan harus berupa angka.');
+
                 return;
             }
         }
 
         if (count($options) > self::MAX_OPTIONS) {
-            session()->flash('error', 'Maksimal ' . self::MAX_OPTIONS . ' opsi pengurangan per kriteria.');
+            session()->flash('error', 'Maksimal '.self::MAX_OPTIONS.' opsi pengurangan per kriteria.');
+
             return;
         }
 
@@ -918,8 +964,9 @@ class Builder extends Component
 
     public function previewCopy($sourceId)
     {
-        if (!$sourceId) {
+        if (! $sourceId) {
             $this->copyPreviewData = [];
+
             return;
         }
 
@@ -928,19 +975,20 @@ class Builder extends Component
             ->with(['subCategories.criterias', 'deductionCategories.criterias'])
             ->get();
 
-        $this->copyPreviewData = $sourceCategories->map(fn($cat) => [
+        $this->copyPreviewData = $sourceCategories->map(fn ($cat) => [
             'name' => $cat->name,
             'sub_count' => $cat->subCategories->count(),
-            'criteria_count' => $cat->subCategories->sum(fn($s) => $s->criterias->count()),
+            'criteria_count' => $cat->subCategories->sum(fn ($s) => $s->criterias->count()),
             'deduction_count' => $cat->deductionCategories->count(),
-            'deduction_criteria_count' => $cat->deductionCategories->sum(fn($d) => $d->criterias->count()),
+            'deduction_criteria_count' => $cat->deductionCategories->sum(fn ($d) => $d->criterias->count()),
         ])->toArray();
     }
 
     public function executeCopy()
     {
-        if (!$this->copySourceId) {
+        if (! $this->copySourceId) {
             session()->flash('error', 'Pilih tingkat sumber terlebih dahulu.');
+
             return;
         }
 
@@ -952,6 +1000,7 @@ class Builder extends Component
         if ($sourceCategories->isEmpty()) {
             session()->flash('error', 'Tingkat sumber tidak memiliki format penilaian.');
             $this->closeCopyModal();
+
             return;
         }
 
@@ -1004,7 +1053,7 @@ class Builder extends Component
             }
         }
 
-        session()->flash('success', 'Format penilaian berhasil disalin (' . $sourceCategories->count() . ' kategori).');
+        session()->flash('success', 'Format penilaian berhasil disalin ('.$sourceCategories->count().' kategori).');
         $this->closeCopyModal();
     }
 
