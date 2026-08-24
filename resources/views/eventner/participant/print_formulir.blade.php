@@ -7,10 +7,10 @@
     <style>
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-size: 13px;
+            font-size: 12px;
             color: #333;
-            line-height: 1.5;
-            padding: 20px;
+            line-height: 1.3;
+            padding: 15px;
             margin: 0;
         }
 
@@ -68,13 +68,13 @@
 
         /* SECTION */
         .section-title {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
             text-transform: uppercase;
             border-bottom: 2px solid #1a1a2e;
-            padding-bottom: 4px;
-            margin-top: 25px;
-            margin-bottom: 12px;
+            padding-bottom: 3px;
+            margin-top: 14px;
+            margin-bottom: 8px;
             color: #1a1a2e;
         }
 
@@ -85,7 +85,7 @@
             margin-bottom: 15px;
         }
         .table-detail td {
-            padding: 8px 12px;
+            padding: 5px 10px;
             border: 1px solid #ddd;
             vertical-align: middle;
         }
@@ -98,8 +98,8 @@
 
         /* FOTO FRAME */
         .foto-container {
-            width: 90px;
-            height: 120px;
+            width: 48px;
+            height: 64px;
             border: 1px dashed #bbb;
             text-align: center;
             display: inline-block;
@@ -131,7 +131,7 @@
         .table-member th {
             background-color: #1a1a2e;
             color: #fff;
-            padding: 8px 12px;
+            padding: 6px 8px;
             font-weight: bold;
             text-align: left;
             border: 1px solid #1a1a2e;
@@ -139,7 +139,7 @@
             text-transform: uppercase;
         }
         .table-member td {
-            padding: 6px 12px;
+            padding: 4px 8px;
             border: 1px solid #ddd;
             vertical-align: middle;
         }
@@ -150,7 +150,7 @@
         /* SIGNATURE */
         .signature-table {
             width: 100%;
-            margin-top: 40px;
+            margin-top: 20px;
             border: none;
         }
         .signature-table td {
@@ -161,7 +161,7 @@
             padding: 10px;
         }
         .signature-space {
-            height: 70px;
+            height: 40px;
         }
         .signature-name {
             font-weight: bold;
@@ -372,19 +372,7 @@
         </table>
         @endif
 
-        <!-- PAGE BREAK UNTUK ANGGOTA -->
-        <div class="page-break"></div>
-
-        <!-- KOP HALAMAN 2 -->
-        <div class="kop" style="margin-top: 20px;">
-            @if($eventner->logo_event)
-                <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="kop-logo">
-            @endif
-            <div class="kop-text">
-                <h1 class="kop-title">{{ $eventner->nama_event }}</h1>
-                <p class="kop-sub">Daftar Anggota Pasukan — {{ $registration->nama_sekolah }} ({{ $participants->count() }} Anggota)</p>
-            </div>
-        </div>
+        <!-- PAGE BREAK UNTUK ANGGOTA (1 halaman → lanjut saja tanpa pecah) -->
 
         <div class="section-title">IV. Daftar Anggota Pasukan</div>
         <table class="table-member">
@@ -426,7 +414,7 @@
             $qrData = route('magic.link', $registration->magic_token);
             $qrImage = (new QRCode)->render($qrData);
         @endphp
-        <div class="section-title" style="margin-top: 30px;">V. Pengesahan</div>
+        <div class="section-title" style="margin-top: 18px;">V. Pengesahan</div>
         <table class="signature-table">
             <tr>
                 <td>
