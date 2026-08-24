@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Registration;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Barryvdh\DomPDF\Facade\Pdf;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 
@@ -48,12 +49,15 @@ class ParticipantController extends Controller
     private function renderFormulir(Registration $registration)
     {
         $eventner = $registration->eventner;
+        $filename = 'Formulir_' . $registration->nama_sekolah . '.pdf';
 
-        return view('eventner.participant.print_formulir', [
+        return Pdf::loadView('eventner.participant.pdf_formulir', [
             'eventner' => $eventner,
             'registration' => $registration,
             'participants' => $registration->participants,
-        ]);
+        ])
+            ->setPaper('a4', 'portrait')
+            ->download($filename);
     }
 
     public function qrCode(Registration $registration)

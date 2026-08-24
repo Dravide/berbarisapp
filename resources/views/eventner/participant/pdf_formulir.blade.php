@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <title>Formulir Pendaftaran - {{ $registration->nama_sekolah }}</title>
     <style>
+        @page {
+            size: A4 portrait;
+            margin: 12mm;
+        }
         body {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 11px;
@@ -14,11 +18,12 @@
         .kop {
             border-bottom: 2px solid #333;
             padding-bottom: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 14px;
         }
         .kop table {
             width: 100%;
             border: none;
+            border-collapse: collapse;
         }
         .kop td {
             border: none;
@@ -26,9 +31,9 @@
             padding: 0;
         }
         .kop-logo {
-            width: 65px;
-            height: 65px;
-            border-radius: 4px;
+            width: 62px;
+            height: 62px;
+            object-fit: contain;
         }
         .kop-title {
             font-size: 16px;
@@ -36,43 +41,41 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: #1a1a2e;
+            margin: 0;
         }
         .kop-sub {
             font-size: 11px;
             color: #555;
             margin-top: 2px;
         }
-
         /* JUDUL */
         .title {
             text-align: center;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
             text-transform: uppercase;
             background-color: #f2f2f2;
             padding: 6px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             border: 1px solid #ddd;
             letter-spacing: 1px;
         }
-
-        /* SECTION TITLE */
+        /* SECTION */
         .section-title {
             font-size: 11px;
             font-weight: bold;
             text-transform: uppercase;
             border-bottom: 1px solid #1a1a2e;
             padding-bottom: 3px;
-            margin-top: 15px;
-            margin-bottom: 8px;
+            margin-top: 12px;
+            margin-bottom: 7px;
             color: #1a1a2e;
         }
-
         /* DETAIL TABLE */
         .table-detail {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .table-detail td {
             padding: 5px 8px;
@@ -84,59 +87,63 @@
             font-weight: bold;
             width: 25%;
         }
-
         /* FOTO FRAME */
         .foto-container {
-            width: 75px;
-            height: 100px;
+            width: 58px;
+            height: 78px;
             border: 1px dashed #999;
             text-align: center;
-            vertical-align: middle;
             display: inline-block;
             background-color: #fafafa;
         }
         .foto-img {
-            width: 75px;
-            height: 100px;
+            width: 100%;
+            height: 100%;
             object-fit: cover;
         }
         .foto-placeholder {
             font-size: 8px;
             color: #888;
-            padding-top: 40px;
+            padding-top: 30px;
             font-weight: bold;
         }
-
-        /* MEMBER TABLE */
-        .table-member {
+        /* MEMBER GRID (3 per baris pakai table) */
+        .member-grid {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 5px;
+            margin-top: 4px;
         }
-        .table-member th {
-            background-color: #1a1a2e;
-            color: #fff;
-            padding: 5px 8px;
-            font-weight: bold;
-            text-align: left;
-            border: 1px solid #1a1a2e;
-            font-size: 10px;
-            text-transform: uppercase;
-        }
-        .table-member td {
-            padding: 4px 8px;
+        .member-grid td {
+            width: 33.33%;
             border: 1px solid #ddd;
-            vertical-align: middle;
-        }
-        .table-member .center {
+            padding: 8px 4px;
             text-align: center;
+            vertical-align: top;
         }
-
+        .member-info {
+            font-size: 11px;
+            margin-top: 4px;
+        }
+        .member-info strong {
+            display: block;
+            font-size: 11px;
+        }
+        .member-info span {
+            font-size: 9px;
+            color: #666;
+        }
         /* SIGNATURE */
+        .pernyataan {
+            text-align: justify;
+            margin: 8px 0 18px 0;
+            font-size: 11px;
+            line-height: 1.6;
+        }
         .signature-table {
             width: 100%;
-            margin-top: 30px;
+            margin-top: 18px;
             border: none;
+            border-collapse: collapse;
         }
         .signature-table td {
             width: 50%;
@@ -145,43 +152,36 @@
             vertical-align: top;
         }
         .signature-space {
-            height: 55px;
+            height: 58px;
         }
         .signature-name {
             font-weight: bold;
             text-decoration: underline;
-        }
-
-        .page-break {
-            page-break-before: always;
         }
     </style>
 </head>
 <body>
 
     @php
-        $safeLogoPath = null;
+        $safeLogo = null;
         if ($eventner->logo_event) {
-            $fullPath = public_path('storage/' . $eventner->logo_event);
-            if (file_exists($fullPath) && is_file($fullPath)) {
-                $safeLogoPath = $fullPath;
-            }
+            $p = public_path('storage/' . $eventner->logo_event);
+            if (file_exists($p) && is_file($p)) $safeLogo = $p;
         }
-
+        $safeSekolah = null;
+        if ($registration->logo_sekolah) {
+            $p = public_path('storage/' . $registration->logo_sekolah);
+            if (file_exists($p) && is_file($p)) $safeSekolah = $p;
+        }
         $safeFotoPelatih = null;
         if ($registration->foto_pelatih) {
-            $fullPath = public_path('storage/' . $registration->foto_pelatih);
-            if (file_exists($fullPath) && is_file($fullPath)) {
-                $safeFotoPelatih = $fullPath;
-            }
+            $p = public_path('storage/' . $registration->foto_pelatih);
+            if (file_exists($p) && is_file($p)) $safeFotoPelatih = $p;
         }
-
         $safeFotoDanton = null;
         if ($registration->danton_foto) {
-            $fullPath = public_path('storage/' . $registration->danton_foto);
-            if (file_exists($fullPath) && is_file($fullPath)) {
-                $safeFotoDanton = $fullPath;
-            }
+            $p = public_path('storage/' . $registration->danton_foto);
+            if (file_exists($p) && is_file($p)) $safeFotoDanton = $p;
         }
     @endphp
 
@@ -189,14 +189,19 @@
     <div class="kop">
         <table>
             <tr>
-                @if($safeLogoPath)
-                    <td style="width: 75px;">
-                        <img src="{{ $safeLogoPath }}" class="kop-logo">
-                    </td>
-                @endif
+                <td style="width: 65px;">
+                    @if($safeLogo)
+                        <img src="{{ $safeLogo }}" class="kop-logo">
+                    @endif
+                </td>
                 <td style="padding-left: 10px;">
                     <div class="kop-title">{{ $eventner->nama_event }}</div>
                     <div class="kop-sub">Diselenggarakan oleh: {{ $eventner->diselenggarakan_oleh }}</div>
+                </td>
+                <td style="width: 65px; text-align: right;">
+                    @if($safeSekolah)
+                        <img src="{{ $safeSekolah }}" class="kop-logo">
+                    @endif
                 </td>
             </tr>
         </table>
@@ -205,7 +210,7 @@
     <!-- TITLE -->
     <div class="title">Formulir Pendaftaran Pasukan</div>
 
-    <!-- DATA KONTINGEN -->
+    <!-- I. IDENTITAS -->
     <div class="section-title">I. Identitas Kontingen / Sekolah</div>
     <table class="table-detail">
         <tr>
@@ -216,34 +221,27 @@
         </tr>
         <tr>
             <td class="lbl">Kategori Lomba</td>
-            <td>{{ $registration->competitionCategory->name ?? '-' }}</td>
-            <td class="lbl">No. HP / WhatsApp</td>
+            <td><strong>{{ $registration->competitionCategory->full_name ?? '-' }}</strong></td>
+            <td class="lbl">Kontak (HP / WA)</td>
             <td>{{ $registration->no_hp }}</td>
-        </tr>
-        <tr>
-            <td class="lbl">Email Sekolah</td>
-            <td>{{ $registration->school_email ?? '-' }}</td>
-            <td class="lbl">Status Verifikasi</td>
-            <td style="color: green; font-weight: bold;">TERVERIFIKASI</td>
         </tr>
     </table>
 
-    <!-- STRUKTUR PASUKAN -->
-    <div class="section-title">II. Struktur Official & Danton</div>
+    <!-- II. STRUKTUR -->
+    <div class="section-title">II. Struktur Official &amp; Danton</div>
     <table class="table-detail">
         <tr>
-            <td class="lbl" style="width: 20%;">Pelatih / Official</td>
-            <td style="width: 30%;">
+            <td class="lbl" style="width:18%;">Pelatih / Official</td>
+            <td style="width:32%;">
                 <strong>{{ $registration->nama_pelatih ?? '-' }}</strong>
-                <p style="margin: 5px 0 0 0; font-size: 9px; color: #666;">Pelatih Utama / Penanggung Jawab Pasukan</p>
             </td>
-            <td class="lbl" style="width: 20%; text-align: center;">Foto Pelatih</td>
-            <td style="width: 30%; text-align: center;">
+            <td class="lbl" style="width:18%; text-align: center;">Foto Pelatih</td>
+            <td style="width:32%; text-align: center;">
                 <div class="foto-container">
                     @if($safeFotoPelatih)
                         <img src="{{ $safeFotoPelatih }}" class="foto-img">
                     @else
-                        <div class="foto-placeholder">FOTO 3X4</div>
+                        <div class="foto-placeholder">Foto 3x4</div>
                     @endif
                 </div>
             </td>
@@ -252,7 +250,7 @@
             <td class="lbl">Komandan Ton (Danton)</td>
             <td>
                 <strong>{{ $registration->danton_nama ?? '-' }}</strong>
-                <p style="margin: 3px 0 0 0;">NISN: {{ $registration->danton_nisn ?? '-' }}</p>
+                <p style="margin:2px 0 0 0; font-size:10px;">NISN: {{ $registration->danton_nisn ?? '-' }}</p>
             </td>
             <td class="lbl" style="text-align: center;">Foto Danton</td>
             <td style="text-align: center;">
@@ -260,81 +258,80 @@
                     @if($safeFotoDanton)
                         <img src="{{ $safeFotoDanton }}" class="foto-img">
                     @else
-                        <div class="foto-placeholder">FOTO 3X4</div>
+                        <div class="foto-placeholder">Foto 3x4</div>
                     @endif
                 </div>
             </td>
         </tr>
     </table>
 
-    <!-- TANDA TANGAN KONTINGEN & PANITIA -->
+    <!-- III. DAFTAR ANGGOTA -->
+    <div class="section-title">III. Daftar Anggota Pasukan</div>
+    @php
+        $rows = $participants->chunk(3);
+        $photoOf = function ($participant) {
+            if ($participant->foto) {
+                $p = public_path('storage/' . $participant->foto);
+                if (file_exists($p) && is_file($p)) return $p;
+            }
+            return null;
+        };
+    @endphp
+    @if($participants->isNotEmpty())
+        @foreach($rows as $chunk)
+            <table class="member-grid">
+                <tr>
+                    @foreach($chunk as $participant)
+                        @php $fp = $photoOf($participant); @endphp
+                        <td>
+                            <div class="foto-container">
+                                @if($fp)
+                                    <img src="{{ $fp }}" class="foto-img" style="width:56px; height:74px;">
+                                @else
+                                    <div class="foto-placeholder">Foto</div>
+                                @endif
+                            </div>
+                            <div class="member-info">
+                                <strong>{{ $participant->nama }}</strong>
+                                <span>NISN: {{ $participant->nisn ?: '-' }}</span>
+                            </div>
+                        </td>
+                    @endforeach
+                </tr>
+            </table>
+        @endforeach
+    @else
+        <div style="text-align:center; padding:20px; color:#888; border:1px solid #ddd;">Belum ada anggota pasukan yang didaftarkan.</div>
+    @endif
+
+    <!-- IV. PENGESAHAN -->
+    <div class="section-title" style="margin-top:16px;">IV. Pengesahan</div>
+    <p class="pernyataan">
+        Dengan ini menyatakan bahwa data pasukan pada formulir ini adalah benar dan
+        sesuai dengan keadaan yang sebenarnya. Apabila di kemudian hari ditemukan
+        ketidaksesuaian data, maka pihak sekolah bersedia menerima konsekuensinya.
+    </p>
+
+    @php
+        use chillerlan\QRCode\QRCode;
+        $qrImage = (new QRCode)->render(route('magic.link', $registration->magic_token));
+    @endphp
     <table class="signature-table">
         <tr>
             <td>
-                <p>Pelatih / Official,</p>
+                <p><strong>Pelatih / Official</strong></p>
                 <div class="signature-space"></div>
                 <p class="signature-name">{{ $registration->nama_pelatih ?? '............................' }}</p>
             </td>
             <td>
-                <p>Panitia Pelaksana,</p>
-                <div class="signature-space"></div>
-                <p class="signature-name">Verifikator BARIS APP</p>
-                <p style="font-size: 9px; margin-top: 2px;">(Sistem Terverifikasi Otomatis)</p>
+                <p><strong>Ketua Panitia</strong></p>
+                <div style="text-align:center;">
+                    <img src="{{ $qrImage }}" style="width:72px; height:72px;">
+                </div>
+                <p style="font-size:9px; margin:2px 0;">Scan untuk verifikasi data</p>
+                <p class="signature-name">{{ $eventner->diselenggarakan_oleh }}</p>
             </td>
         </tr>
-    </table>
-
-    <!-- ANGGOTA PASUKAN (PAGE BREAK) -->
-    <div class="page-break"></div>
-
-    <div class="kop">
-        <table>
-            <tr>
-                @if($safeLogoPath)
-                    <td style="width: 75px;">
-                        <img src="{{ $safeLogoPath }}" class="kop-logo">
-                    </td>
-                @endif
-                <td style="padding-left: 10px;">
-                    <div class="kop-title">{{ $eventner->nama_event }}</div>
-                    <div class="kop-sub">Daftar Anggota Pasukan - {{ $registration->nama_sekolah }}</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="section-title">III. Daftar Anggota Pasukan</div>
-    <table class="table-member">
-        <thead>
-            <tr>
-                <th style="width: 5%; text-align: center;">No</th>
-                <th style="width: 50%;">Nama Lengkap</th>
-                <th style="width: 25%;">NISN</th>
-                <th style="width: 20%; text-align: center;">Foto 3x4</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($participantsData as $index => $participant)
-                <tr>
-                    <td class="center">{{ $index + 1 }}</td>
-                    <td><strong>{{ $participant['nama'] }}</strong></td>
-                    <td>{{ $participant['nisn'] }}</td>
-                    <td class="center" style="padding: 5px 0;">
-                        <div class="foto-container" style="width: 45px; height: 60px;">
-                            @if($participant['foto_path'])
-                                <img src="{{ $participant['foto_path'] }}" class="foto-img" style="width: 45px; height: 60px;">
-                            @else
-                                <div class="foto-placeholder" style="padding-top: 22px; font-size: 7px;">FOTO</div>
-                            @endif
-                        </div>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="4" class="center" style="padding: 20px; color: #888;">Belum ada anggota pasukan yang didaftarkan.</td>
-                </tr>
-            @endforelse
-        </tbody>
     </table>
 
 </body>
