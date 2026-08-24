@@ -1,48 +1,94 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
-    <meta charset="utf-8">
-    <title>QR Semua Peserta</title>
+    <meta charset="UTF-8">
+    <title>QR Peserta</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
+        @page {
+            size: A4 portrait;
+            margin: 10mm;
         }
-        .card {
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            padding: 16px;
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10px;
+            color: #222;
+            line-height: 1.2;
+        }
+        .head {
             text-align: center;
-            page-break-inside: avoid;
+            border-bottom: 2px solid #222;
+            padding-bottom: 6px;
+            margin-bottom: 10px;
         }
-        .card img { width: 180px; height: 180px; image-rendering: pixelated; }
-        .name { font-size: 14px; font-weight: 700; margin-top: 8px; }
-        .cat { font-size: 11px; color: #666; }
-        .token { font-size: 12px; font-weight: 700; color: #2563eb; margin-top: 4px; letter-spacing: 2px; }
-        @media print {
-            body { padding: 0; }
-            .grid { gap: 10px; }
-            .card { border: 1px solid #ccc; }
+        .head h2 {
+            margin: 0;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-        @media print {
-            @page { margin: 10mm; }
+        .head p {
+            margin: 2px 0 0 0;
+            color: #555;
+            font-size: 10px;
+        }
+        table.grid {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table.grid td {
+            width: 33.33%;
+            height: 62mm;
+            vertical-align: middle;
+            text-align: center;
+            border: 1px solid #ddd;
+            padding: 6px;
+        }
+        .qr-img {
+            width: 150px;
+            height: 150px;
+        }
+        .nm {
+            font-weight: bold;
+            font-size: 11px;
+            margin-top: 2px;
+        }
+        .cat {
+            font-size: 9px;
+            color: #666;
+        }
+        .tk {
+            font-size: 10px;
+            font-weight: bold;
+            color: #1d4ed8;
+            letter-spacing: 2px;
+            margin-top: 2px;
         }
     </style>
 </head>
 <body>
-    <div class="grid">
-        @foreach($items as $item)
-        <div class="card">
-            <img src="{{ $item['qrCode'] }}" alt="QR">
-            <div class="name">{{ $item['schoolName'] }}</div>
-            <div class="cat">{{ $item['category'] }}</div>
-            <div class="token">{{ $item['qrToken'] }}</div>
-        </div>
-        @endforeach
+
+    <div class="head">
+        <h2>QR Code Peserta</h2>
+        <p>Barcode verifikasi data - {{ $items[0]['category'] ?? '' }}</p>
     </div>
-    <script>window.print();</script>
+
+    @php
+        $rows = collect($items)->chunk(3);
+    @endphp
+    @foreach($rows as $row)
+        <table class="grid">
+            <tr>
+                @foreach($row as $item)
+                    <td>
+                        <img src="{{ $item['qrCode'] }}" class="qr-img">
+                        <div class="nm">{{ $item['schoolName'] }}</div>
+                        <div class="cat">{{ $item['category'] }}</div>
+                        <div class="tk">{{ $item['qrToken'] }}</div>
+                    </td>
+                @endforeach
+            </tr>
+        </table>
+    @endforeach
+
 </body>
 </html>

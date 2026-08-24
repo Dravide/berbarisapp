@@ -108,6 +108,13 @@ class ParticipantController extends Controller
             ];
         }
 
-        return view('eventner.participant.print_qr_batch', compact('items'));
+        ini_set('memory_limit', '512M');
+
+        $filename = 'QR_Peserta.pdf';
+
+        return Pdf::loadView('eventner.participant.print_qr_batch', compact('items'))
+            ->setPaper('a4', 'portrait')
+            ->setOption('defaultFont', 'sans-serif')
+            ->download($filename);
     }
 }
