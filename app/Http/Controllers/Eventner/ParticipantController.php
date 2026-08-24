@@ -48,6 +48,8 @@ class ParticipantController extends Controller
 
     private function renderFormulir(Registration $registration)
     {
+        ini_set('memory_limit', '512M');
+
         $eventner = $registration->eventner;
         $filename = 'Formulir_' . $registration->nama_sekolah . '.pdf';
 
