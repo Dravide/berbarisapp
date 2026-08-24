@@ -268,6 +268,9 @@
                 <h1 class="kop-title">{{ $eventner->nama_event }}</h1>
                 <p class="kop-sub">Diselenggarakan oleh: {{ $eventner->diselenggarakan_oleh }}</p>
             </div>
+            @if($registration->logo_sekolah)
+                <img src="{{ asset('storage/' . $registration->logo_sekolah) }}" class="kop-logo" style="margin-left:15px; margin-right:0;">
+            @endif
         </div>
 
         <!-- TITLE -->
