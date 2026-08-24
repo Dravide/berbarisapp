@@ -501,6 +501,9 @@
                         <i class="ti ti-circle-check-filled"></i> DATA TERVERIFIKASI PANITIA
                     </span>
                     <p class="text-xs font-semibold text-on-surface-variant mt-2 leading-normal">Data di atas adalah data resmi yang dikunci dan akan digunakan pada saat perlombaan.</p>
+                    <a href="{{ route('magic.link.formulir', $registration->magic_token) }}" target="_blank" class="btn-primary inline-flex items-center justify-center gap-1.5 mt-4 px-6 py-3 font-bold text-sm cursor-pointer">
+                        <i class="ti ti-file-download"></i> Unduh Formulir Pendaftaran
+                    </a>
                 </div>
             @else
 

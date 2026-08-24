@@ -28,8 +28,26 @@ class ParticipantController extends Controller
             abort(403, 'Formulir hanya dapat diakses jika status pendaftaran telah Terverifikasi.');
         }
 
-        // Eager load data
-        $registration->load(['participants', 'competitionCategory', 'eventner']);
+        return $this->renderFormulir($registration);
+    }
+
+    public function downloadFormulir(string $token)
+    {
+        $registration = Registration::with(['participants', 'competitionCategory', 'eventner'])
+            ->where('magic_token', $token)
+            ->firstOrFail();
+
+        // Hanya bisa diunduh sekolah setelah berkas terverifikasi panitia
+        if ($registration->status_berkas !== 'Terverifikasi') {
+            abort(403, 'Formulir hanya dapat diunduh setelah pendaftaran Terverifikasi.');
+        }
+
+        return $this->renderFormulir($registration);
+    }
+
+    private function renderFormulir(Registration $registration)
+    {
+        $eventner = $registration->eventner;
 
         return view('eventner.participant.print_formulir', [
             'eventner' => $eventner,

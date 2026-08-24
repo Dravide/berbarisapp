@@ -24,6 +24,7 @@ Route::get('/event/{slug}/drawing', App\Livewire\Eventner\Drawing\Spin::class)->
 Route::get('/event/{slug}/drawing-results', App\Livewire\Eventner\Drawing\Results::class)->name('event.drawing.results');
 
 Route::get('/reg/{token}', App\Livewire\Public\MagicLink\Registration::class)->name('magic.link');
+Route::get('/reg/{token}/pdf', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadFormulir'])->name('magic.link.formulir');
 Route::get('/scoreboard/{scoringCode}', App\Livewire\Public\Scoreboard\Index::class)->name('public.scoreboard');
 Route::get('/scoreboard/{scoringCode}/category/{competitionCategoryId}', App\Livewire\Public\Scoreboard\Index::class)->name('public.scoreboard.category');
 Route::get('/scoreboard/{scoringCode}/champion/{championCategoryId}', App\Livewire\Public\Scoreboard\Index::class)->name('public.scoreboard.champion');
