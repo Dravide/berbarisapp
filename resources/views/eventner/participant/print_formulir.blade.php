@@ -147,6 +147,45 @@
             text-align: center;
         }
 
+        /* MEMBER GRID (kartu 3 per baris) */
+        .member-grid {
+            margin-top: 10px;
+        }
+        .member-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        .member-row::after {
+            content: "";
+            flex: auto;
+        }
+        .member-card {
+            flex: 1 1 0;
+            min-width: 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+        }
+        .member-card .foto-container {
+            display: block;
+            margin: 0 auto 6px auto;
+            width: 72px;
+            height: 96px;
+        }
+        .member-info {
+            line-height: 1.35;
+        }
+        .member-info strong {
+            display: block;
+            font-size: 12px;
+        }
+        .member-info span {
+            font-size: 10px;
+            color: #666;
+        }
+
         /* SIGNATURE */
         .signature-table {
             width: 100%;
@@ -333,38 +372,27 @@
 
         <!-- DAFTAR ANGGOTA PASUKAN -->
         <div class="section-title">III. Daftar Anggota Pasukan</div>
-        <table class="table-member">
-            <thead>
-                <tr>
-                    <th style="width: 6%; text-align: center;">No</th>
-                    <th style="width: 17%; text-align: center;">Foto</th>
-                    <th style="width: 42%;">Nama Lengkap</th>
-                    <th style="width: 35%;">NISN</th>
-                </tr>
-            </thead>
-            <tbody>
+        <div class="member-grid">
                 @forelse($participants as $index => $participant)
-                    <tr>
-                        <td class="center">{{ $index + 1 }}.</td>
-                        <td class="center" style="padding: 4px 0;">
-                            <div class="foto-container" style="width: 45px; height: 60px;">
-                                @if($participant->foto)
-                                    <img src="{{ asset('storage/' . $participant->foto) }}" class="foto-img" style="width: 45px; height: 60px;">
-                                @else
-                                    <div class="foto-placeholder" style="font-size:7px;">FOTO</div>
-                                @endif
-                            </div>
-                        </td>
-                        <td><strong>{{ $participant->nama }}</strong></td>
-                        <td>{{ $participant->nisn ?: '-' }}</td>
-                    </tr>
+                    @if($index % 3 === 0) <div class="member-row"> @endif
+                    <div class="member-card">
+                        <div class="foto-container">
+                            @if($participant->foto)
+                                <img src="{{ asset('storage/' . $participant->foto) }}" class="foto-img">
+                            @else
+                                <div class="foto-placeholder">Foto</div>
+                            @endif
+                        </div>
+                        <div class="member-info">
+                            <strong>{{ $participant->nama }}</strong>
+                            <span>NISN: {{ $participant->nisn ?: '-' }}</span>
+                        </div>
+                    </div>
+                    @if($index % 3 === 2 || $loop->last) </div> @endif
                 @empty
-                    <tr>
-                        <td colspan="4" class="center" style="padding: 30px; color: #888;">Belum ada anggota pasukan yang didaftarkan.</td>
-                    </tr>
+                    <div style="text-align:center; padding:30px; color:#888;">Belum ada anggota pasukan yang didaftarkan.</div>
                 @endforelse
-            </tbody>
-        </table>
+            </div>
     </div><!-- /container halaman 1 -->
 
     <!-- HALAMAN PENGESAHAN (Laman Terpisah) -->
