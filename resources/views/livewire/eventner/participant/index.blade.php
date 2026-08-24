@@ -390,8 +390,8 @@
                         <div class="col-md-4 p-3 border-bottom">
                             <div class="d-flex align-items-start gap-3">
                                 <div class="flex-shrink-0">
-                                    @if($selectedRegistration->bukti_pendaftaran)
-                                        <img src="{{ asset('storage/' . $selectedRegistration->bukti_pendaftaran) }}" class="rounded-3 border" style="width:60px;height:60px;object-fit:cover;">
+                                    @if($selectedRegistration->bukti_pendaftaran || $selectedRegistration->payment_proof)
+                                        <img src="{{ asset('storage/' . ($selectedRegistration->bukti_pendaftaran ?: $selectedRegistration->payment_proof)) }}" class="rounded-3 border" style="width:60px;height:60px;object-fit:cover;">
                                     @else
                                         <div class="rounded-3 d-flex align-items-center justify-content-center border {{ $selectedRegistration->eventner->kwitansi_required ? 'bg-danger bg-opacity-10 border-danger border-opacity-25' : 'bg-light text-muted' }}" style="width:60px;height:60px;">
                                             <i class="ti ti-receipt-off fs-4 {{ $selectedRegistration->eventner->kwitansi_required ? 'text-danger' : 'text-muted' }}"></i>
@@ -400,8 +400,8 @@
                                 </div>
                                 <div>
                                     <h6 class="fw-bold mb-0">Kwitansi</h6>
-                                    @if($selectedRegistration->bukti_pendaftaran)
-                                        <a href="{{ asset('storage/' . $selectedRegistration->bukti_pendaftaran) }}" target="_blank" class="small text-primary"><i class="ti ti-external-link"></i> Lihat</a>
+                                    @if($selectedRegistration->bukti_pendaftaran || $selectedRegistration->payment_proof)
+                                        <a href="{{ asset('storage/' . ($selectedRegistration->bukti_pendaftaran ?: $selectedRegistration->payment_proof)) }}" target="_blank" class="small text-primary"><i class="ti ti-external-link"></i> Lihat</a>
                                         <span class="badge bg-success-subtle text-success ms-2"><i class="ti ti-check"></i></span>
                                     @else
                                         @if($selectedRegistration->eventner->kwitansi_required)
@@ -521,7 +521,7 @@
                             // Surat tugas
                             if($selectedRegistration->eventner->surat_tugas_required) { $totalChecks++; if($selectedRegistration->surat_tugas) $checkCount++; }
                             // Kwitansi
-                            if($selectedRegistration->eventner->kwitansi_required) { $totalChecks++; if($selectedRegistration->bukti_pendaftaran) $checkCount++; }
+                            if($selectedRegistration->eventner->kwitansi_required) { $totalChecks++; if($selectedRegistration->bukti_pendaftaran || $selectedRegistration->payment_proof) $checkCount++; }
                             // Pelatih
                             $totalChecks++; if($selectedRegistration->nama_pelatih) $checkCount++;
                             // Danton

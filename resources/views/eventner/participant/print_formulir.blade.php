@@ -361,7 +361,7 @@
                 @if($eventner->kwitansi_required)
                 <td class="lbl" style="width:18%;">Kwitansi</td>
                 <td style="width:32%;">
-                    @if($registration->bukti_pendaftaran)
+                    @if($registration->bukti_pendaftaran || $registration->payment_proof)
                         <span style="color:green; font-weight:bold;">✓ Terlampir</span>
                     @else
                         <span style="color:red;">✗ Belum diunggah</span>
