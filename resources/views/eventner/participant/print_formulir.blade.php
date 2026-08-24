@@ -393,8 +393,7 @@
                     <th style="width: 6%; text-align: center;">No</th>
                     <th style="width: 17%; text-align: center;">Foto</th>
                     <th style="width: 42%;">Nama Lengkap</th>
-                    <th style="width: 20%;">NISN</th>
-                    <th style="width: 15%; text-align: center;">Tanda Tangan</th>
+                    <th style="width: 35%;">NISN</th>
                 </tr>
             </thead>
             <tbody>
@@ -412,11 +411,10 @@
                         </td>
                         <td><strong>{{ $participant->nama }}</strong></td>
                         <td>{{ $participant->nisn ?: '-' }}</td>
-                        <td></td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="center" style="padding: 30px; color: #888;">Belum ada anggota pasukan yang didaftarkan.</td>
+                        <td colspan="4" class="center" style="padding: 30px; color: #888;">Belum ada anggota pasukan yang didaftarkan.</td>
                     </tr>
                 @endforelse
             </tbody>
