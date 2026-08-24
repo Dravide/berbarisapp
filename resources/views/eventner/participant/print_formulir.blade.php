@@ -279,40 +279,15 @@
             <tr>
                 <td class="lbl" style="width:18%;">Nama Sekolah</td>
                 <td style="width:32%;">{{ $registration->nama_sekolah }}</td>
-                <td class="lbl" style="width:18%;">Logo</td>
-                <td style="width:32%; text-align:center;">
-                    @if($registration->logo_sekolah)
-                        <img src="{{ asset('storage/' . $registration->logo_sekolah) }}" style="max-height:50px; max-width:100px;">
-                    @else
-                        <span style="color:#888; font-size:11px;">Tidak tersedia</span>
-                    @endif
-                </td>
+                <td class="lbl" style="width:18%;">NPSN</td>
+                <td style="width:32%;">{{ $registration->npsn }}</td>
             </tr>
             <tr>
-                <td class="lbl">NPSN</td>
-                <td>{{ $registration->npsn }}</td>
                 <td class="lbl">Kategori Lomba</td>
                 <td><strong>{{ $registration->competitionCategory->full_name ?? '-' }}</strong></td>
-            </tr>
-            <tr>
-                <td class="lbl">No. HP / WA</td>
+                <td class="lbl">Kontak (HP / WA)</td>
                 <td>{{ $registration->no_hp }}</td>
-                <td class="lbl">Email Sekolah</td>
-                <td>{{ $registration->school_email ?? '-' }}</td>
             </tr>
-            @if($registration->urutan_tampil)
-            <tr>
-                <td class="lbl">Urutan Tampil</td>
-                <td><strong>#{{ str_pad($registration->urutan_tampil, 2, '0', STR_PAD_LEFT) }}</strong></td>
-                <td class="lbl">Status Verifikasi</td>
-                <td style="color: green; font-weight: bold;">{{ $registration->status_berkas }}</td>
-            </tr>
-            @else
-            <tr>
-                <td class="lbl">Status Verifikasi</td>
-                <td colspan="3" style="color: green; font-weight: bold;">{{ $registration->status_berkas }}</td>
-            </tr>
-            @endif
         </table>
 
         <!-- STRUKTUR PASUKAN -->
@@ -353,37 +328,8 @@
             </tr>
         </table>
 
-        {{-- Berkas Lampiran --}}
-        @if($eventner->surat_tugas_required || $eventner->kwitansi_required)
-        <div class="section-title">III. Berkas Persyaratan</div>
-        <table class="table-detail">
-            <tr>
-                @if($eventner->surat_tugas_required)
-                <td class="lbl" style="width:18%;">Surat Tugas</td>
-                <td style="width:32%;">
-                    @if($registration->surat_tugas)
-                        <span style="color:green; font-weight:bold;">✓ Terlampir</span>
-                    @else
-                        <span style="color:red;">✗ Belum diunggah</span>
-                    @endif
-                </td>
-                @endif
-                @if($eventner->kwitansi_required)
-                <td class="lbl" style="width:18%;">Kwitansi</td>
-                <td style="width:32%;">
-                    @if($registration->bukti_pendaftaran || $registration->payment_proof)
-                        <span style="color:green; font-weight:bold;">✓ Terlampir</span>
-                    @else
-                        <span style="color:red;">✗ Belum diunggah</span>
-                    @endif
-                </td>
-                @endif
-            </tr>
-        </table>
-        @endif
-
         <!-- DAFTAR ANGGOTA PASUKAN -->
-        <div class="section-title">IV. Daftar Anggota Pasukan</div>
+        <div class="section-title">III. Daftar Anggota Pasukan</div>
         <table class="table-member">
             <thead>
                 <tr>
@@ -431,7 +377,7 @@
             </div>
         </div>
 
-        <div class="section-title">V. Pengesahan</div>
+        <div class="section-title">IV. Pengesahan</div>
 
         <p class="pernyataan">
             Dengan ini menyatakan bahwa data pasukan pada formulir ini adalah benar dan
