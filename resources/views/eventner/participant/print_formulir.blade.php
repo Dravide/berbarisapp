@@ -395,22 +395,9 @@
                     <div style="text-align:center; padding:30px; color:#888;">Belum ada anggota pasukan yang didaftarkan.</div>
                 @endforelse
             </div>
-    </div><!-- /container halaman 1 -->
 
-    <!-- HALAMAN PENGESAHAN (Laman Terpisah) -->
-    <div class="page-break"></div>
-    <div class="container pengesahan-page">
-        <div class="kop">
-            @if($eventner->logo_event)
-                <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="kop-logo">
-            @endif
-            <div class="kop-text">
-                <h1 class="kop-title">{{ $eventner->nama_event }}</h1>
-                <p class="kop-sub">Formulir Pendaftaran Pasukan - Halaman Pengesahan</p>
-            </div>
-        </div>
-
-        <div class="section-title">IV. Pengesahan</div>
+        <!-- PENGESAHAN -->
+        <div class="section-title" style="margin-top:20px;">IV. Pengesahan</div>
 
         <p class="pernyataan">
             Dengan ini menyatakan bahwa data pasukan pada formulir ini adalah benar dan
