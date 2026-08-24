@@ -147,26 +147,28 @@
             text-align: center;
         }
 
-        /* MEMBER GRID (kartu 3 per baris) */
+        /* MEMBER GRID (kartu 3 per baris, memenuhi lebar) */
         .member-grid {
             margin-top: 10px;
         }
         .member-row {
             display: flex;
-            gap: 12px;
-            margin-bottom: 14px;
-        }
-        .member-row::after {
-            content: "";
-            flex: auto;
+            margin-bottom: 0;
         }
         .member-card {
             flex: 1 1 0;
             min-width: 0;
             border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 10px;
+            border-right: none;
+            border-radius: 0;
+            padding: 10px 4px;
             text-align: center;
+        }
+        .member-card:last-child {
+            border-right: 1px solid #ddd;
+        }
+        .member-row + .member-row .member-card {
+            border-top: none;
         }
         .member-card .foto-container {
             display: block;
