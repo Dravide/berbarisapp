@@ -150,7 +150,7 @@
         /* SIGNATURE */
         .signature-table {
             width: 100%;
-            margin-top: 20px;
+            margin-top: 30px;
             border: none;
         }
         .signature-table td {
@@ -161,12 +161,22 @@
             padding: 10px;
         }
         .signature-space {
-            height: 40px;
+            height: 80px;
         }
         .signature-name {
             font-weight: bold;
             text-decoration: underline;
             margin: 0;
+        }
+
+        /* NOTA PENGESAHAN */
+        .pernyataan {
+            text-align: center;
+            margin: 30px auto 10px auto;
+            max-width: 700px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #333;
         }
 
         /* PRINT CONFIG */
@@ -372,8 +382,7 @@
         </table>
         @endif
 
-        <!-- PAGE BREAK UNTUK ANGGOTA (1 halaman → lanjut saja tanpa pecah) -->
-
+        <!-- DAFTAR ANGGOTA PASUKAN -->
         <div class="section-title">IV. Daftar Anggota Pasukan</div>
         <table class="table-member">
             <thead>
@@ -407,14 +416,34 @@
                 @endforelse
             </tbody>
         </table>
+    </div><!-- /container halaman 1 -->
 
-        <!-- TANDA TANGAN -->
+    <!-- HALAMAN PENGESAHAN (Laman Terpisah) -->
+    <div class="page-break"></div>
+    <div class="container pengesahan-page">
+        <div class="kop">
+            @if($eventner->logo_event)
+                <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="kop-logo">
+            @endif
+            <div class="kop-text">
+                <h1 class="kop-title">{{ $eventner->nama_event }}</h1>
+                <p class="kop-sub">Formulir Pendaftaran Pasukan - Halaman Pengesahan</p>
+            </div>
+        </div>
+
+        <div class="section-title">V. Pengesahan</div>
+
+        <p class="pernyataan">
+            Dengan ini menyatakan bahwa data pasukan pada formulir ini adalah benar dan
+            sesuai dengan keadaan yang sebenarnya. Apabila di kemudian hari ditemukan
+            ketidaksesuaian data, maka pihak sekolah bersedia menerima konsekuensinya.
+        </p>
+
         @php
             use chillerlan\QRCode\QRCode;
             $qrData = route('magic.link', $registration->magic_token);
             $qrImage = (new QRCode)->render($qrData);
         @endphp
-        <div class="section-title" style="margin-top: 18px;">V. Pengesahan</div>
         <table class="signature-table">
             <tr>
                 <td>
