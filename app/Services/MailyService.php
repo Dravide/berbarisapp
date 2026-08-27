@@ -140,11 +140,30 @@ class MailyService
         $eventName = $eventner->nama_event ?? 'Event';
         $url = $eventner->publicUrl('ticket', ['confirmOrder' => $ticket->order_code]);
 
-        // Embed QR inline sebagai data URI (kalau file ada)
+        // QR via URL publik — webmail (Gmail dkk) menstrip gambar data:URI,
+        // jadi jangan embed base64 langsung.
+        //
+        // APP_URL lokal (.local/localhost/.test/127.0.0.1) menghasilkan URL
+        // storage yang tidak bisa dimuat penerima eksternal — kalau event
+        // punya origin publik (subdomain/domain), pakai itu untuk /storage/.
         $qrSrc = '';
         if ($ticket->qr_code_path && Storage::disk('public')->exists($ticket->qr_code_path)) {
-            $bin = Storage::disk('public')->get($ticket->qr_code_path);
-            $qrSrc = 'data:image/png;base64,' . base64_encode($bin);
+            $storageUrl = Storage::disk('public')->url($ticket->qr_code_path);
+            $host = parse_url($storageUrl, PHP_URL_HOST) ?: '';
+            $isLocalHost = (bool) preg_match('/(\.local$|^localhost$|\.test$|127\.0\.0\.1)/i', $host);
+
+            try {
+                $publicBase = $eventner?->publicUrl('detail');
+                $publicOrigin = $publicBase ? preg_replace('/\/event\/[^\/]+\/?$/', '', $publicBase) : null;
+            } catch (\Throwable $e) {
+                $publicOrigin = null;
+            }
+
+            if ($isLocalHost && $publicOrigin) {
+                $qrSrc = rtrim($publicOrigin, '/') . '/storage/' . ltrim($ticket->qr_code_path, '/');
+            } else {
+                $qrSrc = $storageUrl;
+            }
         }
 
         $total = number_format($ticket->total_amount, 0, ',', '.');
