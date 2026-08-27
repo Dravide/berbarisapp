@@ -30,6 +30,9 @@
                             <strong>Masa trial Anda telah berakhir.</strong>
                             <span class="small">Beberapa fitur premium tidak dapat diakses. Upgrade ke paket berbayar untuk mengaktifkan semua fitur.</span>
                         </div>
+                        <a href="{{ route('eventner.billing.upgrade') }}" class="btn btn-warning fw-semibold flex-shrink-0">
+                            <i class="ti ti-bolt me-1"></i> Upgrade Sekarang
+                        </a>
                     </div>
                 @elseif($trialDaysLeft > 0)
                     <div class="alert alert-info border-0 rounded-3 shadow-sm d-flex align-items-center gap-3 mb-4" role="alert">
@@ -38,6 +41,9 @@
                             <strong>Masa trial tersisa {{ $trialDaysLeft }} hari.</strong>
                             <span class="small">Nikmati akses penuh ke semua fitur premium selama masa trial. Upgrade ke paket berbayar sebelum trial berakhir.</span>
                         </div>
+                        <a href="{{ route('eventner.billing.upgrade') }}" class="btn btn-info fw-semibold flex-shrink-0">
+                            <i class="ti ti-bolt me-1"></i> Upgrade
+                        </a>
                     </div>
                 @endif
             @endif
@@ -46,9 +52,14 @@
             @if($eventner->plan === 'free' && $isTrialExpired && !empty($lockedFeatures))
                 <div class="card border-warning-subtle bg-warning-subtle shadow-none mb-4">
                     <div class="card-body py-3">
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <i class="ti ti-lock text-warning-emphasis"></i>
-                            <h6 class="fw-semibold mb-0 text-warning-emphasis">Fitur Terkunci</h6>
+                        <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="ti ti-lock text-warning-emphasis"></i>
+                                <h6 class="fw-semibold mb-0 text-warning-emphasis">Fitur Terkunci</h6>
+                            </div>
+                            <a href="{{ route('eventner.billing.upgrade') }}" class="btn btn-sm btn-warning fw-semibold">
+                                <i class="ti ti-bolt me-1"></i> Buka Semua Fitur
+                            </a>
                         </div>
                         <div class="d-flex flex-wrap gap-2">
                             @foreach($lockedFeatures as $key => $label)

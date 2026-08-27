@@ -115,6 +115,15 @@
               <span class="hide-menu">Landing Page</span>
             </a>
           </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('admin.revenue') ? 'active' : '' }}"
+              href="{{ route('admin.revenue') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-chart-arcs"></i>
+              </span>
+              <span class="hide-menu">Pendapatan Platform</span>
+            </a>
+          </li>
         @endif
 
         @if(auth()->user()->role === 'Eventner')
@@ -468,6 +477,17 @@
               <span class="hide-menu">Rekening Bank</span>
             </a>
           </li>
+          @if($ev && $ev->plan !== 'paid')
+            <li class="sidebar-item">
+              <a class="sidebar-link {{ request()->routeIs('eventner.billing.*') ? 'active' : '' }}"
+                href="{{ route('eventner.billing.upgrade') }}" aria-expanded="false">
+                <span>
+                  <i class="ti ti-bolt"></i>
+                </span>
+                <span class="hide-menu">Upgrade Paket</span>
+              </a>
+            </li>
+          @endif
         @endif
       </ul>
     </nav>

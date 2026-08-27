@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 
 Route::get('dashboard', App\Livewire\Admin\Dashboard::class)->name('admin.dashboard');
+Route::get('revenue', App\Livewire\Admin\RevenueDashboard::class)->name('admin.revenue');
 Route::get('eventner/pending', App\Livewire\Admin\Eventner\Pending::class)->name('admin.eventner.pending');
 Route::get('eventner', App\Livewire\Admin\Eventner\Index::class)->name('admin.eventner.index');
 Route::get('eventner/{id}', App\Livewire\Admin\Eventner\Show::class)->name('admin.eventner.show');

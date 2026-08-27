@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 
 Route::get('/', App\Livewire\Public\LandingPage::class)->name('landing');
+Route::get('/pricing', App\Livewire\Public\PricingPage::class)->name('pricing');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', App\Livewire\Auth\Login::class)->name('login');
@@ -41,6 +42,7 @@ Route::get('/help', App\Livewire\Public\HelpSupport::class)->name('help');
 Route::middleware(['auth:web'])->group(function () {
     Route::post('logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('dashboard', App\Livewire\Dashboard\Index::class)->name('dashboard');
+    Route::get('upgrade', App\Livewire\Eventner\Settings\Billing\Upgrade::class)->name('eventner.billing.upgrade');
 });
 
 // Juknis Download

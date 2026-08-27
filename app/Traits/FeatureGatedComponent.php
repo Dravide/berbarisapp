@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 trait FeatureGatedComponent
 {
     /**
-     * Panggil dari mount() — redirect ke dashboard jika fitur terkunci.
+     * Panggil dari mount() — redirect ke /upgrade jika fitur terkunci.
      * Pastikan class yang menggunakan trait ini mendefinisikan:
      * protected string $requiredFeature = 'nama_fitur';
      */
@@ -20,8 +20,10 @@ trait FeatureGatedComponent
         }
 
         if (!$eventner->canAccessFeature($this->requiredFeature)) {
-            session()->flash('error', 'Fitur ini hanya tersedia untuk paket berbayar. Trial Anda telah berakhir.');
-            abort(403);
+            $label = config("eventner_features.{$this->requiredFeature}.label", 'Fitur ini');
+            session()->flash('error', "{$label} hanya tersedia untuk paket berbayar. Upgrade untuk mengaktifkan.");
+
+            $this->redirect(route('eventner.billing.upgrade'), navigate: true);
         }
     }
 }

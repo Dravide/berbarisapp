@@ -143,35 +143,43 @@ class AutoGoPayWebhookController extends Controller
     private function handleEventnerSettlement(string $transactionId): void
     {
         $eventner = Eventner::where('autogopay_transaction_id', $transactionId)->first();
-        if (!$eventner || $eventner->status === 'approved') {
+        // Idempotent: registration_paid_at terisi = transaksi ini sudah diproses.
+        // Jangan pakai plan==='paid' — eventner yang daftar paid sudah ber-plan paid sebelum bayar.
+        if (!$eventner || $eventner->registration_paid_at) {
             return;
         }
 
+        $wasPending = $eventner->status !== 'approved';
+
+        // Satu path settle untuk dua kasus: daftar-paid baru & upgrade akun lama
         $eventner->update([
+            'plan' => 'paid',
             'status' => 'approved',
-            'approved_at' => now(),
+            'approved_at' => $eventner->approved_at ?? now(),
             'registration_paid_at' => now(),
         ]);
-
         $eventner->user->update(['is_active' => true]);
 
-        Log::info('Eventner registration auto-approved via webhook', [
+        Log::info('Eventner plan activated via webhook', [
             'transaction_id' => $transactionId,
             'eventner_id' => $eventner->id,
+            'was_pending' => $wasPending,
         ]);
 
-        // Kirim email notifikasi
-        try {
-            app(\App\Services\MailyService::class)->sendEventnerApproved(
-                $eventner->user->email,
-                $eventner->user->name,
-                $eventner->nama_event
-            );
-        } catch (\Exception $e) {
-            Log::warning('Maily.id: sendEventnerApproved failed (webhook)', [
-                'error' => $e->getMessage(),
-                'eventner_id' => $eventner->id,
-            ]);
+        // Email hanya untuk eventner yang belum disetujui sebelumnya
+        if ($wasPending) {
+            try {
+                app(\App\Services\MailyService::class)->sendEventnerApproved(
+                    $eventner->user->email,
+                    $eventner->user->name,
+                    $eventner->nama_event
+                );
+            } catch (\Exception $e) {
+                Log::warning('Maily.id: sendEventnerApproved failed (webhook)', [
+                    'error' => $e->getMessage(),
+                    'eventner_id' => $eventner->id,
+                ]);
+            }
         }
     }
 

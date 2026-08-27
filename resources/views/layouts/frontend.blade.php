@@ -8,7 +8,9 @@
 
     {{-- Favicon --}}
     @php
-        $_ev = $eventner ?? $subdomainEventner ?? null;
+        // Halaman non-event (landing, pricing, dll) tidak punya $eventner — defaultkan null
+        $eventner = $eventner ?? $subdomainEventner ?? null;
+        $_ev = $eventner;
         $_evTitle = $_ev?->nama_event ?? get_setting('site_title', 'BARIS APP');
         $_evDesc = $_ev?->deskripsi ? strip_tags($_ev->deskripsi) : ($_ev?->nama_event ?? get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu'));
         $_evPoster = $_ev?->poster ? asset('storage/' . $_ev->poster) : null;
@@ -213,7 +215,7 @@
                     <a href="{{ event_url($eventner, 'participant') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.participant') || request()->routeIs('subdomain.participant') ? 'text-primary bg-primary/5' : '' }}">Peserta</a>
                     <a href="{{ event_url($eventner, 'results') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.results') || request()->routeIs('subdomain.results') ? 'text-primary bg-primary/5' : '' }}">Hasil</a>
                     <a href="{{ event_url($eventner, 'vote') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.vote') || request()->routeIs('subdomain.vote') ? 'text-primary bg-primary/5' : '' }}">Vote</a>
-                    @if($eventner->ticket_active && $eventner->ticket_price)
+                    @if($eventner?->ticket_active && $eventner?->ticket_price)
                         <a href="{{ event_url($eventner, 'ticket') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.ticket') || request()->routeIs('subdomain.ticket') ? 'text-primary bg-primary/5' : '' }}">Tiket</a>
                     @endif
                 @else
@@ -256,7 +258,7 @@
                 @else
                     <a href="{{ url('/') }}#features" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5">Fitur</a>
                     <a href="{{ url('/') }}#eventners" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5">Event</a>
-                    <a href="{{ route('partners') }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 {{ request()->routeIs('partners') ? 'text-primary bg-primary/5' : '' }}">Mitra</a>
+                    <a href="{{ url('/') }}#partners" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5">Mitra</a>
                     <a href="{{ url('/') }}#contact" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5">Kontak</a>
                     <a href="{{ route('login') }}" class="btn-ghost text-center mt-2 py-2.5">Login</a>
                     <a href="{{ route('login') }}" class="btn-primary text-center mt-1 py-2.5">Mulai Sekarang</a>
@@ -300,7 +302,7 @@
                             <li><a href="{{ event_url($eventner, 'participant') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Daftar Peserta</a></li>
                             <li><a href="{{ event_url($eventner, 'results') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Hasil Perlombaan</a></li>
                             <li><a href="{{ event_url($eventner, 'vote') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Voting</a></li>
-                            @if($eventner->ticket_active)
+                            @if($eventner?->ticket_active)
                                 <li><a href="{{ event_url($eventner, 'ticket') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Beli Tiket</a></li>
                             @endif
                         @else
