@@ -25,3 +25,9 @@ Homestead.yaml
 Thumbs.db
 .mcp.json
 bootstrap/cache/*
+
+# tool output & test scratch
+graphify-out/
+storage/framework/qr_page.php
+storage/framework/qr_test.html
+storage/framework/qr_test.pdf
