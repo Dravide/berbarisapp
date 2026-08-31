@@ -20,6 +20,12 @@ class EventQr extends Component
     /** @var array<string, array{label: string, url: string, dataUri: ?string}> */
     public $qrs = [];
 
+    public array $icons = [
+        'detail' => 'ti ti-home',
+        'ticket' => 'ti ti-ticket',
+        'vote' => 'ti ti-heart',
+    ];
+
     public function mount()
     {
         $this->eventner = Auth::user()->eventner;
