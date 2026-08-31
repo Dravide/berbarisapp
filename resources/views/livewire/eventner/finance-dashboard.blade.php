@@ -141,8 +141,11 @@
 
     {{-- Category Breakdown --}}
     <div class="card mb-4">
-        <div class="card-header bg-white">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h5 class="card-title fw-semibold mb-0">Pendapatan per Kategori Lomba</h5>
+            <button class="btn btn-sm btn-primary" wire:click="openDetailModal">
+                <i class="ti ti-list-details me-1"></i> Detail Pembayaran
+            </button>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -204,53 +207,82 @@
         </div>
     </div>
 
-    {{-- Detail Pembayaran Semua Registrasi --}}
-    <div class="card mb-4">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h5 class="card-title fw-semibold mb-0">Detail Pembayaran</h5>
-            <div class="form-check form-switch mb-0">
-                <input class="form-check-input" type="checkbox" role="switch" id="showOnlyUnpaidSwitch" wire:model.live="showOnlyUnpaid">
-                <label class="form-check-label text-muted" for="showOnlyUnpaidSwitch" style="font-size: 0.85rem;">Belum lunas saja</label>
-            </div>
-        </div>
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="ps-4">Sekolah</th>
-                            <th>Kategori</th>
-                            <th class="text-center">Status Pembayaran</th>
-                            <th class="text-end pe-4">Total Biaya</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($paymentDetails->when($showOnlyUnpaid, fn($q) => $q->where('payment_status', '!=', 'paid')) as $reg)
-                            <tr>
-                                <td class="ps-4 fw-semibold">{{ $reg->nama_sekolah }}</td>
-                                <td class="text-muted">{{ $reg->competitionCategory?->full_name }}</td>
-                                <td class="text-center">
-                                    @if($reg->payment_status === 'paid')
-                                        <span class="badge bg-success-subtle text-success px-3 py-2"><i class="ti ti-circle-check me-1"></i>Lunas</span>
-                                    @elseif($reg->payment_status === 'pending_verification')
-                                        <span class="badge bg-warning-subtle text-warning px-3 py-2"><i class="ti ti-hourglass me-1"></i>Menunggu Verifikasi</span>
-                                    @elseif($reg->payment_status === 'unpaid')
-                                        <span class="badge bg-danger-subtle text-danger px-3 py-2"><i class="ti ti-circle-x me-1"></i>Belum Bayar</span>
-                                    @else
-                                        <span class="badge bg-light text-muted border px-3 py-2">{{ $reg->payment_status }}</span>
-                                    @endif
-                                </td>
-                                <td class="text-end pe-4 fw-bold">Rp {{ number_format($reg->total_fee, 0, ',', '.') }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="4" class="text-center py-4 text-muted">
-                                    Belum ada data pembayaran.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+    {{-- Modal Detail Pembayaran --}}
+    <div class="modal fade" id="paymentDetailModal" tabindex="-1" aria-hidden="true" wire:ignore.self>
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-semibold">Detail Pembayaran</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {{-- Filter --}}
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-5">
+                            <select class="form-select" wire:model.live="detailCategoryId">
+                                <option value="all">Semua Kategori</option>
+                                @foreach($this->detailCategories as $cat)
+                                    <option value="{{ $cat->id }}">{{ $cat->full_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" wire:model.live="detailStatus">
+                                <option value="all">Semua Status</option>
+                                <option value="paid">Sudah Bayar</option>
+                                <option value="pending_verification">Menunggu Verifikasi</option>
+                                <option value="unpaid">Belum Bayar</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 text-md-end">
+                            <span class="badge bg-secondary-subtle text-secondary px-3 py-2">
+                                {{ $filteredPaymentDetails->count() }} data
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Sekolah</th>
+                                    <th>Kategori</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-end">Total Biaya</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($filteredPaymentDetails as $reg)
+                                    <tr>
+                                        <td class="fw-semibold">{{ $reg->nama_sekolah }}</td>
+                                        <td class="text-muted">{{ $reg->competitionCategory?->full_name }}</td>
+                                        <td class="text-center">
+                                            @if($reg->payment_status === 'paid')
+                                                <span class="badge bg-success-subtle text-success px-3 py-2"><i class="ti ti-circle-check me-1"></i>Lunas</span>
+                                            @elseif($reg->payment_status === 'pending_verification')
+                                                <span class="badge bg-warning-subtle text-warning px-3 py-2"><i class="ti ti-hourglass me-1"></i>Menunggu Verifikasi</span>
+                                            @elseif($reg->payment_status === 'unpaid')
+                                                <span class="badge bg-danger-subtle text-danger px-3 py-2"><i class="ti ti-circle-x me-1"></i>Belum Bayar</span>
+                                            @else
+                                                <span class="badge bg-light text-muted border px-3 py-2">{{ $reg->payment_status }}</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-end fw-bold">Rp {{ number_format($reg->total_fee, 0, ',', '.') }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4 text-muted">
+                                            Tidak ada data sesuai filter.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+                </div>
             </div>
         </div>
     </div>
@@ -347,6 +379,15 @@
         paymentModal = new bootstrap.Modal(paymentModalEl);
         window.Livewire.on('open-payment-modal', () => paymentModal.show());
         window.Livewire.on('close-payment-modal', () => paymentModal.hide());
+    }
+
+    // Modal detail pembayaran
+    const detailModalEl = document.getElementById('paymentDetailModal');
+    let detailModal = null;
+    if (detailModalEl) {
+        detailModal = new bootstrap.Modal(detailModalEl);
+        window.Livewire.on('open-detail-modal', () => detailModal.show());
+        window.Livewire.on('close-detail-modal', () => detailModal.hide());
     }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>

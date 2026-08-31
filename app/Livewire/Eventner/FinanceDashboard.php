@@ -31,7 +31,10 @@ class FinanceDashboard extends Component
     public $selectedPaymentRegId = null;
     public $revenueData = [];
 
-    public bool $showOnlyUnpaid = false;
+    // Filter modal detail pembayaran
+    public string $detailStatus = 'all'; // all | paid | pending_verification | unpaid
+    public string $detailCategoryId = 'all';
+    public bool $showDetailModal = false;
 
     #[Computed]
     public function selectedPayment()
@@ -41,6 +44,14 @@ class FinanceDashboard extends Component
         return Registration::with(['competitionCategory', 'paymentBankAccount'])
             ->where('eventner_id', $this->eventner->id)
             ->find($this->selectedPaymentRegId);
+    }
+
+    #[Computed]
+    public function filteredPaymentDetails()
+    {
+        return collect($this->paymentDetails)
+            ->when($this->detailStatus !== 'all', fn($c) => $c->where('payment_status', $this->detailStatus))
+            ->when($this->detailCategoryId !== 'all', fn($c) => $c->where('competition_category_id', (int) $this->detailCategoryId));
     }
 
     public function mount()
@@ -204,6 +215,29 @@ class FinanceDashboard extends Component
         session()->flash('success', 'Bukti pembayaran ' . $reg->nama_sekolah . ' ditolak. Peserta dapat upload ulang.');
         $this->closePaymentModal();
         $this->loadData();
+    }
+
+    public function openDetailModal()
+    {
+        $this->showDetailModal = true;
+        $this->dispatch('open-detail-modal');
+    }
+
+    public function closeDetailModal()
+    {
+        $this->showDetailModal = false;
+        $this->detailStatus = 'all';
+        $this->detailCategoryId = 'all';
+        $this->dispatch('close-detail-modal');
+    }
+
+    public function getDetailCategoriesProperty()
+    {
+        // Kategori yang punya registrasi berbayar (child categories saja)
+        return $this->eventner->competitionCategories()
+            ->whereNotNull('parent_id')
+            ->orderBy('name')
+            ->get();
     }
 
     public function openPaymentModal($regId)
