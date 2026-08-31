@@ -204,6 +204,57 @@
         </div>
     </div>
 
+    {{-- Detail Pembayaran Semua Registrasi --}}
+    <div class="card mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="card-title fw-semibold mb-0">Detail Pembayaran</h5>
+            <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" role="switch" id="showOnlyUnpaidSwitch" wire:model.live="showOnlyUnpaid">
+                <label class="form-check-label text-muted" for="showOnlyUnpaidSwitch" style="font-size: 0.85rem;">Belum lunas saja</label>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Sekolah</th>
+                            <th>Kategori</th>
+                            <th class="text-center">Status Pembayaran</th>
+                            <th class="text-end pe-4">Total Biaya</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($paymentDetails->when($showOnlyUnpaid, fn($q) => $q->where('payment_status', '!=', 'paid')) as $reg)
+                            <tr>
+                                <td class="ps-4 fw-semibold">{{ $reg->nama_sekolah }}</td>
+                                <td class="text-muted">{{ $reg->competitionCategory?->full_name }}</td>
+                                <td class="text-center">
+                                    @if($reg->payment_status === 'paid')
+                                        <span class="badge bg-success-subtle text-success px-3 py-2"><i class="ti ti-circle-check me-1"></i>Lunas</span>
+                                    @elseif($reg->payment_status === 'pending_verification')
+                                        <span class="badge bg-warning-subtle text-warning px-3 py-2"><i class="ti ti-hourglass me-1"></i>Menunggu Verifikasi</span>
+                                    @elseif($reg->payment_status === 'unpaid')
+                                        <span class="badge bg-danger-subtle text-danger px-3 py-2"><i class="ti ti-circle-x me-1"></i>Belum Bayar</span>
+                                    @else
+                                        <span class="badge bg-light text-muted border px-3 py-2">{{ $reg->payment_status }}</span>
+                                    @endif
+                                </td>
+                                <td class="text-end pe-4 fw-bold">Rp {{ number_format($reg->total_fee, 0, ',', '.') }}</td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">
+                                    Belum ada data pembayaran.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     {{-- Modal Review Pembayaran --}}
     <div class="modal fade" id="paymentReviewModal" tabindex="-1" aria-hidden="true" wire:ignore.self>
         <div class="modal-dialog modal-lg modal-dialog-centered">

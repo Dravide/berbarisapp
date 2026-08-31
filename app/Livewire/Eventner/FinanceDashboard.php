@@ -27,8 +27,11 @@ class FinanceDashboard extends Component
     public $selectedCategory = null;
     public $categoryBreakdown = [];
     public $pendingPayments = [];
+    public $paymentDetails = [];
     public $selectedPaymentRegId = null;
     public $revenueData = [];
+
+    public bool $showOnlyUnpaid = false;
 
     #[Computed]
     public function selectedPayment()
@@ -79,6 +82,9 @@ class FinanceDashboard extends Component
         // Pending payments
         $this->loadPendingPayments();
 
+        // All registrations payment detail
+        $this->loadPaymentDetails();
+
         // Revenue chart last 30 days
         $this->loadRevenueData();
     }
@@ -123,6 +129,16 @@ class FinanceDashboard extends Component
             ->where('eventner_id', $this->eventner->id)
             ->where('payment_status', 'pending_verification')
             ->orderBy('updated_at', 'asc')
+            ->get();
+    }
+
+    public function loadPaymentDetails()
+    {
+        $this->paymentDetails = Registration::with('competitionCategory')
+            ->where('eventner_id', $this->eventner->id)
+            ->whereIn('payment_status', ['paid', 'unpaid', 'pending_verification'])
+            ->orderByRaw("CASE payment_status WHEN 'pending_verification' THEN 0 WHEN 'unpaid' THEN 1 ELSE 2 END")
+            ->orderBy('updated_at', 'desc')
             ->get();
     }
 
