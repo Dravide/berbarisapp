@@ -168,6 +168,13 @@ class Index extends Component
     {
         if (!$this->selectedRegistration) return;
 
+        // Draft (belum difinalisasi sekolah) tidak boleh diverifikasi
+        if (!$this->selectedRegistration->is_finalized) {
+            session()->flash('error', 'Pendaftaran ' . $this->selectedRegistration->nama_sekolah . ' masih draft. Sekolah belum menekan tombol "Finalisasi" pada portal.');
+            $this->closeVerifyModal();
+            return;
+        }
+
         $updateData = ['status_berkas' => $status];
         
         // Jika ditolak, kembalikan status finalized ke false agar bisa diperbaiki

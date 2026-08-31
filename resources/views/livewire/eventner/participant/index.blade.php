@@ -565,10 +565,10 @@
                         <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold" wire:click="closeVerifyModal">
                             <i class="ti ti-x me-1"></i>Tutup
                         </button>
-                        <button type="button" class="btn btn-danger px-4 rounded-pill fw-semibold" wire:click="verifyStatus('Ditolak')" wire:confirm="Yakin ingin MENOLAK berkas pendaftaran ini?">
+                        <button type="button" class="btn btn-danger px-4 rounded-pill fw-semibold" wire:click="verifyStatus('Ditolak')" wire:confirm="Yakin ingin MENOLAK berkas pendaftaran ini?" @if(!$selectedRegistration->is_finalized) disabled title="Data masih draft" @endif>
                             <i class="ti ti-x me-1"></i> Tolak
                         </button>
-                        <button type="button" class="btn btn-success px-4 rounded-pill fw-semibold shadow-sm" wire:click="verifyStatus('Terverifikasi')" wire:confirm="Nyatakan semua data & berkas sudah LENGKAP dan BENAR?">
+                        <button type="button" class="btn btn-success px-4 rounded-pill fw-semibold shadow-sm" wire:click="verifyStatus('Terverifikasi')" wire:confirm="Nyatakan semua data & berkas sudah LENGKAP dan BENAR?" @if(!$selectedRegistration->is_finalized) disabled title="Data masih draft" @endif>
                             <i class="ti ti-check me-1"></i> Verifikasi / ACC
                         </button>
                     </div>
