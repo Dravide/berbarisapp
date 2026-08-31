@@ -16,7 +16,9 @@ use Livewire\Attributes\Title;
 class EventQr extends Component
 {
     public $eventner;
-    public $qrDataUri;
+
+    /** @var array<string, array{label: string, url: string, dataUri: ?string}> */
+    public $qrs = [];
 
     public function mount()
     {
@@ -27,9 +29,37 @@ class EventQr extends Component
 
     public function generateQr()
     {
-        $url = $this->eventner->publicUrl('detail');
+        $favicon = $this->resolveFavicon();
 
-        // Cari logo favicon dari admin settings — fallback ke logo event
+        $targets = [
+            'detail' => [
+                'label' => 'Halaman Event',
+                'url' => $this->eventner->publicUrl('detail'),
+            ],
+            'ticket' => [
+                'label' => 'Laman Tiket',
+                'url' => $this->eventner->publicUrl('ticket'),
+            ],
+            'vote' => [
+                'label' => 'Laman Vote',
+                'url' => $this->eventner->publicUrl('vote'),
+            ],
+        ];
+
+        foreach ($targets as $key => $target) {
+            $this->qrs[$key] = [
+                'label' => $target['label'],
+                'url' => $target['url'],
+                'dataUri' => $this->renderQr($target['url'], $favicon),
+            ];
+        }
+    }
+
+    /**
+     * Cari logo favicon dari admin settings — fallback ke logo event, lalu favicon default.
+     */
+    private function resolveFavicon(): ?string
+    {
         $favicon = null;
         $faviconPath = \App\Models\Setting::get('favicon');
         if ($faviconPath) {
@@ -47,6 +77,11 @@ class EventQr extends Component
             if (!file_exists($favicon)) $favicon = null;
         }
 
+        return $favicon;
+    }
+
+    private function renderQr(string $url, ?string $favicon): ?string
+    {
         $options = new QROptions;
         $options->outputInterface = QRGdImagePNG::class;
         $options->outputBase64 = false;
@@ -62,8 +97,7 @@ class EventQr extends Component
         // Composite logo di tengah QR
         $qrImg = imagecreatefromstring($qrPng);
         if ($qrImg === false) {
-            $this->qrDataUri = null;
-            return;
+            return null;
         }
 
         $qrW = imagesx($qrImg);
@@ -84,7 +118,7 @@ class EventQr extends Component
         $pngData = ob_get_clean();
         imagedestroy($qrImg);
 
-        $this->qrDataUri = 'data:image/png;base64,' . base64_encode($pngData);
+        return 'data:image/png;base64,' . base64_encode($pngData);
     }
 
     private function loadLogo($path, $maxSize)
