@@ -203,11 +203,10 @@
             </div>
         </div>
     </div>
-</div>
 
-{{-- Modal Review Pembayaran --}}
-<div class="modal fade" id="paymentReviewModal" tabindex="-1" aria-hidden="true" wire:ignore.self>
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    {{-- Modal Review Pembayaran --}}
+    <div class="modal fade" id="paymentReviewModal" tabindex="-1" aria-hidden="true" wire:ignore.self>
+        <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title fw-semibold">Review Bukti Pembayaran</h5>
@@ -284,6 +283,7 @@
                 @endif
             </div>
         </div>
+    </div>
     </div>
 </div>
 
