@@ -11,11 +11,14 @@ use Illuminate\Support\Facades\Storage;
 class MailyService
 {
     private string $apiKey;
-    private string $baseUrl = 'https://maily.id/api/v1/emails/send';
+    private string $baseUrl;
+    private string $from;
 
     public function __construct()
     {
-        $this->apiKey = 'ml_live_C-pV-esWoQ6rU3zOHbkNQ_VZTFip8RJF';
+        $this->apiKey = config('maily.api_key');
+        $this->baseUrl = config('maily.endpoint');
+        $this->from = config('maily.from');
     }
 
     public function sendBookingConfirmation(
@@ -99,7 +102,7 @@ class MailyService
                 'X-API-Key' => $this->apiKey,
                 'Content-Type' => 'application/json',
             ])->post($this->baseUrl, [
-                'from' => 'noreply@berbaris.app',
+                'from' => $this->from,
                 'to' => $toEmail,
                 'subject' => "Booking {$eventName} - {$schoolName}",
                 'html' => $html,
@@ -237,7 +240,7 @@ class MailyService
                 'X-API-Key' => $this->apiKey,
                 'Content-Type' => 'application/json',
             ])->post($this->baseUrl, [
-                'from' => 'noreply@berbaris.app',
+                'from' => $this->from,
                 'to' => $ticket->buyer_email,
                 'subject' => "Tiket {$eventName} - {$ticket->order_code}",
                 'html' => $html,
@@ -365,12 +368,18 @@ class MailyService
      */
     private function send(string $toEmail, string $subject, string $html): bool
     {
+        // Jangan kirim email sungguhan saat testing / dinonaktifkan.
+        if (! config('maily.enabled')) {
+            Log::info("Maily.id: suppressed (disabled) — {$toEmail} — {$subject}");
+            return false;
+        }
+
         try {
             $response = Http::withHeaders([
                 'X-API-Key' => $this->apiKey,
                 'Content-Type' => 'application/json',
             ])->post($this->baseUrl, [
-                'from' => 'noreply@berbaris.app',
+                'from' => $this->from,
                 'to' => $toEmail,
                 'subject' => $subject,
                 'html' => $html,
