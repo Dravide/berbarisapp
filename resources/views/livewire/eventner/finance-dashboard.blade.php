@@ -103,7 +103,7 @@
             </div>
         </div>
 
-        {{-- Pending Verifications --}}
+        {{-- Verifikasi Pembayaran (via modal) --}}
         <div class="col-lg-5">
             <div class="card h-100">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
@@ -123,17 +123,9 @@
                                 <span class="fw-bold text-primary">Rp {{ number_format($reg->total_fee, 0, ',', '.') }}</span>
                             </div>
                             <div class="d-flex gap-2 mt-2">
-                                <button class="btn btn-sm btn-success" wire:click="verifyPayment({{ $reg->id }})">
-                                    <i class="ti ti-circle-check"></i> Verifikasi
+                                <button class="btn btn-sm btn-primary" wire:click="openPaymentModal({{ $reg->id }})">
+                                    <i class="ti ti-eye"></i> Review
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger" wire:click="rejectPayment({{ $reg->id }})" onclick="return confirm('Tolak bukti pembayaran ini?')">
-                                    <i class="ti ti-x"></i> Tolak
-                                </button>
-                                @if($reg->payment_proof)
-                                    <a href="{{ asset('storage/' . $reg->payment_proof) }}" target="_blank" class="btn btn-sm btn-light">
-                                        <i class="ti ti-eye"></i> Lihat
-                                    </a>
-                                @endif
                             </div>
                         </div>
                     @empty
@@ -213,7 +205,99 @@
     </div>
 </div>
 
+{{-- Modal Review Pembayaran --}}
+<div class="modal fade" id="paymentReviewModal" tabindex="-1" aria-hidden="true" wire:ignore.self>
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-semibold">Review Bukti Pembayaran</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if($this->selectedPayment)
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <h6 class="fw-semibold text-muted fs-3 mb-3">Detail Pendaftaran</h6>
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr>
+                                    <td class="text-muted">Nama Sekolah</td>
+                                    <td class="fw-semibold">{{ $this->selectedPayment->nama_sekolah }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Kategori Lomba</td>
+                                    <td class="fw-semibold">{{ $this->selectedPayment->competitionCategory?->full_name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Pelatih</td>
+                                    <td>{{ $this->selectedPayment->nama_pelatih }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">No. HP</td>
+                                    <td>{{ $this->selectedPayment->no_hp }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Total Biaya</td>
+                                    <td class="fw-bold text-primary">Rp {{ number_format($this->selectedPayment->total_fee, 0, ',', '.') }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Rekening Tujuan</td>
+                                    <td>
+                                        @if($this->selectedPayment->paymentBankAccount)
+                                            {{ $this->selectedPayment->paymentBankAccount->bank_name }} — {{ $this->selectedPayment->paymentBankAccount->account_number }}
+                                            ({{ $this->selectedPayment->paymentBankAccount->account_name }})
+                                        @else
+                                            <span class="text-muted">Tidak tercatat</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-semibold text-muted fs-3 mb-3">Bukti Transfer</h6>
+                            @if($this->selectedPayment->payment_proof)
+                                <a href="{{ asset('storage/' . $this->selectedPayment->payment_proof) }}" target="_blank">
+                                    <img src="{{ asset('storage/' . $this->selectedPayment->payment_proof) }}" class="img-fluid rounded border w-100" alt="Bukti pembayaran">
+                                </a>
+                            @else
+                                <div class="text-center py-5 bg-light-subtle rounded border text-muted">
+                                    <i class="ti ti-file-off fs-8 d-block mb-2"></i>
+                                    Tidak ada bukti pembayaran.
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @else
+                    <div class="text-center py-5 text-muted">
+                        <span class="spinner-border"></span>
+                    </div>
+                @endif
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+                @if($this->selectedPayment)
+                    <button type="button" class="btn btn-outline-danger" wire:click="rejectPayment({{ $this->selectedPayment->id }})" wire:confirm="Tolak bukti pembayaran {{ $this->selectedPayment->nama_sekolah }}? Peserta harus upload ulang.">
+                        <i class="ti ti-x"></i> Tolak
+                    </button>
+                    <button type="button" class="btn btn-success" wire:click="verifyPayment({{ $this->selectedPayment->id }})">
+                        <i class="ti ti-circle-check"></i> Verifikasi
+                    </button>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
 @script
+<script>
+    // Modal buka/tutup dari komponen Livewire
+    const paymentModalEl = document.getElementById('paymentReviewModal');
+    let paymentModal = null;
+    if (paymentModalEl) {
+        paymentModal = new bootstrap.Modal(paymentModalEl);
+        window.Livewire.on('open-payment-modal', () => paymentModal.show());
+        window.Livewire.on('close-payment-modal', () => paymentModal.hide());
+    }
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
     const ctx = document.getElementById('financeRevenueChart');

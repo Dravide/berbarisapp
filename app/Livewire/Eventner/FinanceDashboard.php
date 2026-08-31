@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Computed;
 
 #[Layout('layouts.admin')]
 #[Title('Dashboard Keuangan - BARIS APP')]
@@ -28,6 +29,16 @@ class FinanceDashboard extends Component
     public $pendingPayments = [];
     public $selectedPaymentRegId = null;
     public $revenueData = [];
+
+    #[Computed]
+    public function selectedPayment()
+    {
+        if (!$this->selectedPaymentRegId) return null;
+
+        return Registration::with(['competitionCategory', 'paymentBankAccount'])
+            ->where('eventner_id', $this->eventner->id)
+            ->find($this->selectedPaymentRegId);
+    }
 
     public function mount()
     {
@@ -159,6 +170,7 @@ class FinanceDashboard extends Component
         $reg->save();
 
         session()->flash('success', 'Pembayaran ' . $reg->nama_sekolah . ' berhasil diverifikasi.');
+        $this->closePaymentModal();
         $this->loadData();
     }
 
@@ -174,7 +186,20 @@ class FinanceDashboard extends Component
         $reg->save();
 
         session()->flash('success', 'Bukti pembayaran ' . $reg->nama_sekolah . ' ditolak. Peserta dapat upload ulang.');
+        $this->closePaymentModal();
         $this->loadData();
+    }
+
+    public function openPaymentModal($regId)
+    {
+        $this->selectedPaymentRegId = $regId;
+        $this->dispatch('open-payment-modal');
+    }
+
+    public function closePaymentModal()
+    {
+        $this->selectedPaymentRegId = null;
+        $this->dispatch('close-payment-modal');
     }
 
     public function render()
