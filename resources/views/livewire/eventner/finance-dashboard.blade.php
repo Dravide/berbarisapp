@@ -160,6 +160,7 @@
                             <th class="text-center">Belum Bayar</th>
                             <th class="text-end pe-4">Terkumpul</th>
                             <th class="text-end pe-4">Potensi</th>
+                            <th class="text-center pe-4">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -193,10 +194,15 @@
                                 </td>
                                 <td class="text-end pe-4 fw-bold text-success">Rp {{ number_format($cat['paid_revenue'], 0, ',', '.') }}</td>
                                 <td class="text-end pe-4 text-muted">Rp {{ number_format($cat['potential_revenue'], 0, ',', '.') }}</td>
-                            </tr>
-                        @empty
+                                <td class="text-center pe-4">
+                                    <button class="btn btn-sm btn-light" wire:click="openDetailModal({{ $cat['id'] }})"
+                                            title="Detail pembayaran kategori {{ $cat['name'] }}">
+                                        <i class="ti ti-list-details"></i> Detail
+                                    </button>
+                                </td>
+                            </tr>                        @empty
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">
+                                <td colspan="9" class="text-center py-4 text-muted">
                                     Belum ada kategori lomba.
                                 </td>
                             </tr>
@@ -212,7 +218,12 @@
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title fw-semibold">Detail Pembayaran</h5>
+                    <h5 class="modal-title fw-semibold">
+                        Detail Pembayaran
+                        @if($detailCategoryId !== 'all')
+                            <span class="text-muted fs-6 fw-normal">— {{ $this->detailCategories->firstWhere('id', (int) $detailCategoryId)?->full_name }}</span>
+                        @endif
+                    </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">

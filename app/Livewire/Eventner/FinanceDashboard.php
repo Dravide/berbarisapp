@@ -122,6 +122,7 @@ class FinanceDashboard extends Component
                 : 0;
 
             $this->categoryBreakdown[] = [
+                'id' => $cat->id,
                 'name' => $cat->full_name,
                 'fee' => $cat->registration_fee,
                 'paid_count' => (int) $cat->total_paid,
@@ -217,8 +218,9 @@ class FinanceDashboard extends Component
         $this->loadData();
     }
 
-    public function openDetailModal()
+    public function openDetailModal(?int $categoryId = null)
     {
+        $this->detailCategoryId = $categoryId !== null ? (string) $categoryId : 'all';
         $this->showDetailModal = true;
         $this->dispatch('open-detail-modal');
     }
