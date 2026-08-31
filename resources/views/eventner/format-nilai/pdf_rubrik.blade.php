@@ -143,7 +143,7 @@
                     <div class="role" style="margin-bottom:8px;">Koordinator Juri</div>
                     <br><br><br>
                     <span class="line"></span><br>
-                    <small>___________________</small>
+                    <small>{{ $judgeName ?? '___________________' }}</small>
                 </td>
             </tr>
         </table>
