@@ -90,8 +90,8 @@
                 </button>
             </div>
 
-            <!-- Kategori Select -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
+            <!-- Kategori Select + Pencarian -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
                 <div class="input-group" style="max-width: 380px;">
                     <span class="input-group-text bg-primary text-white"><i class="ti ti-category"></i></span>
                     <select class="form-select" wire:model.live="activeTab">
@@ -103,7 +103,28 @@
                         @endforelse
                     </select>
                 </div>
-                <div class="d-flex gap-2">
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <div class="input-group" style="width: 260px;">
+                        <span class="input-group-text"><i class="ti ti-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Cari sekolah / NPSN / pelatih..." wire:model.live.debounce.300ms="search">
+                        @if($search !== '')
+                            <button class="btn btn-outline-secondary" type="button" wire:click="$set('search', '')" title="Hapus pencarian">
+                                <i class="ti ti-x"></i>
+                            </button>
+                        @endif
+                    </div>
+                    <div class="input-group" style="width: 210px;">
+                        <span class="input-group-text bg-warning text-white"><i class="ti ti-filter"></i></span>
+                        <select class="form-select" wire:model.live="statusFilter" title="Filter status">
+                            <option value="all">Semua Status</option>
+                            <option value="draft">Draft (Belum Final)</option>
+                            <option value="finalized">Finalized</option>
+                            <option value="booking">Booking</option>
+                            <option value="menunggu">Menunggu Verifikasi</option>
+                            <option value="terverifikasi">Terverifikasi</option>
+                            <option value="ditolak">Ditolak</option>
+                        </select>
+                    </div>
                     <a href="{{ route('eventner.participants.qr-batch', ['category_id' => $activeTab]) }}" target="_blank" class="btn btn-sm btn-outline-dark d-flex align-items-center gap-1" title="Cetak QR Semua Peserta">
                         <i class="ti ti-qrcode fs-4"></i> QR
                     </a>

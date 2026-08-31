@@ -13,6 +13,8 @@ class Index extends Component
 {
     public $activeTab = '';
     public $categories = [];
+    public $search = '';
+    public $statusFilter = 'all';
 
     public $competition_category_id = '';
     public $jumlah_pasukan = 1;
@@ -195,6 +197,16 @@ class Index extends Component
             ? Registration::with('participants')
                 ->where('eventner_id', $eventner->id)
                 ->where('competition_category_id', $this->activeTab)
+                ->when($this->search !== '', fn ($q) => $q->where(fn ($q) => $q
+                    ->where('nama_sekolah', 'like', "%{$this->search}%")
+                    ->orWhere('npsn', 'like', "%{$this->search}%")
+                    ->orWhere('nama_pelatih', 'like', "%{$this->search}%")))
+                ->when($this->statusFilter === 'draft', fn ($q) => $q->where('is_finalized', false))
+                ->when($this->statusFilter === 'finalized', fn ($q) => $q->where('is_finalized', true))
+                ->when($this->statusFilter === 'booking', fn ($q) => $q->where('status_berkas', 'booking'))
+                ->when($this->statusFilter === 'menunggu', fn ($q) => $q->whereIn('status_berkas', ['confirmed', 'Menunggu']))
+                ->when($this->statusFilter === 'terverifikasi', fn ($q) => $q->where('status_berkas', 'Terverifikasi'))
+                ->when($this->statusFilter === 'ditolak', fn ($q) => $q->where('status_berkas', 'Ditolak'))
                 ->get()
             : collect();
 
