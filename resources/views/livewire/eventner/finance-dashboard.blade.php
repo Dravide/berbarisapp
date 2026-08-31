@@ -236,7 +236,7 @@
                         </div>
                         <div class="col-md-3 text-md-end">
                             <span class="badge bg-secondary-subtle text-secondary px-3 py-2">
-                                {{ $filteredPaymentDetails->count() }} data
+                                {{ $this->filteredPaymentDetails->count() }} data
                             </span>
                         </div>
                     </div>
@@ -252,7 +252,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($filteredPaymentDetails as $reg)
+                                @forelse($this->filteredPaymentDetails as $reg)
                                     <tr>
                                         <td class="fw-semibold">{{ $reg->nama_sekolah }}</td>
                                         <td class="text-muted">{{ $reg->competitionCategory?->full_name }}</td>
