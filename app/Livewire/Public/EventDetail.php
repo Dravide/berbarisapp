@@ -76,10 +76,21 @@ class EventDetail extends Component
             return collect();
         }
 
+        $categories = $this->eventner->competitionCategories->whereNotNull('parent_id');
+
+        // Query langsung agar total_votes terisi di jalur subdomain (middleware bind tanpa eager load)
+        $registrations = \App\Models\Registration::whereIn('competition_category_id', $categories->pluck('id'))
+            ->withSum(['voteTransactions as total_votes' => function ($q) {
+                $q->where('status', 'PAID');
+            }], 'votes_earned')
+            ->where('status_berkas', '!=', 'dibatalkan')
+            ->get();
+
         $perCategory = [];
 
-        foreach ($this->eventner->competitionCategories->whereNotNull('parent_id') as $cat) {
-            $top = $cat->registrations
+        foreach ($categories as $cat) {
+            $top = $registrations
+                ->where('competition_category_id', $cat->id)
                 ->sortByDesc('total_votes')
                 ->take(5)
                 ->values();
