@@ -750,6 +750,11 @@
                                         @error('dantonFoto') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                                         @if($registration->danton_foto)
                                             <span class="text-xs font-bold text-emerald-600 mt-2 block inline-flex items-center gap-1"><i class="ti ti-circle-check-filled"></i> Foto danton berhasil diunggah</span>
+                                            <div class="mt-2">
+                                                <a href="{{ asset('storage/' . $registration->danton_foto) }}" target="_blank" title="Lihat foto">
+                                                    <img src="{{ asset('storage/' . $registration->danton_foto) }}" class="h-24 w-20 rounded-lg object-cover border border-outline-variant/30 shadow-sm" alt="Pas Foto Danton">
+                                                </a>
+                                            </div>
                                         @endif
                                     </div>
                                 </div>
@@ -804,6 +809,11 @@
                                             </div>
                                             @if(isset($participant['existing_foto']) && $participant['existing_foto'])
                                                 <span class="text-xs font-bold text-emerald-600 mt-2 block inline-flex items-center gap-1"><i class="ti ti-circle-check-filled"></i> Foto diunggah</span>
+                                                <div class="mt-2">
+                                                    <a href="{{ asset('storage/' . $participant['existing_foto']) }}" target="_blank" title="Lihat foto">
+                                                        <img src="{{ asset('storage/' . $participant['existing_foto']) }}" class="h-20 w-16 rounded object-cover border border-outline-variant/30 shadow-sm" alt="Pas Foto Anggota">
+                                                    </a>
+                                                </div>
                                             @endif
                                         </div>
                                         @if(count($participants) > 1 && !$isLocked)
