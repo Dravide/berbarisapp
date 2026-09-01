@@ -72,12 +72,16 @@ class FinanceDashboardController extends Controller
             ];
         }
 
-        // Detail pembayaran semua registrasi
+        // Detail pembayaran semua registrasi — urut kategori lomba, lalu status, lalu nama sekolah
         $paymentDetails = Registration::with('competitionCategory')
-            ->where('eventner_id', $eventnerId)
-            ->whereIn('payment_status', ['paid', 'unpaid', 'pending_verification'])
-            ->orderByRaw("CASE payment_status WHEN 'pending_verification' THEN 0 WHEN 'unpaid' THEN 1 ELSE 2 END")
-            ->orderBy('updated_at', 'desc')
+            ->where('registrations.eventner_id', $eventnerId)
+            ->whereIn('registrations.payment_status', ['paid', 'unpaid', 'pending_verification'])
+            ->join('competition_categories', 'registrations.competition_category_id', '=', 'competition_categories.id')
+            ->orderBy('competition_categories.sort_order')
+            ->orderBy('competition_categories.id')
+            ->orderByRaw("CASE registrations.payment_status WHEN 'pending_verification' THEN 0 WHEN 'unpaid' THEN 1 ELSE 2 END")
+            ->orderBy('registrations.nama_sekolah')
+            ->select('registrations.*')
             ->get();
 
         $data = [
