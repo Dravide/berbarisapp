@@ -25,6 +25,8 @@ Route::get('vote-results/pdf', [App\Http\Controllers\Eventner\VoteResultsControl
 Route::get('vote-results/{registration}', App\Livewire\Eventner\VoteResults\Show::class)->name('eventner.vote-results.show');
 Route::get('vote-transactions', App\Livewire\Eventner\VoteTransaction\Index::class)->name('eventner.vote-transactions.index');
 Route::get('vote-transactions/csv', [App\Http\Controllers\Eventner\VoteTransactionController::class, 'downloadCsv'])->name('eventner.vote-transactions.csv');
+Route::get('vote-comments', App\Livewire\Eventner\VoteComment\Index::class)->name('eventner.vote-comments.index');
+Route::get('vote-comments/csv', [App\Http\Controllers\Eventner\VoteCommentController::class, 'downloadCsv'])->name('eventner.vote-comments.csv');
 Route::get('profile', App\Livewire\Eventner\Settings\Profile::class)->name('eventner.profile.index');
 Route::get('bank-accounts', App\Livewire\Eventner\Settings\BankAccount::class)->name('eventner.bank-accounts.index');
 Route::get('score-recap', App\Livewire\Eventner\ScoreRecap\Index::class)->name('eventner.score-recap.index');
