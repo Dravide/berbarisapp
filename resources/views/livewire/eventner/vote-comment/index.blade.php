@@ -176,7 +176,7 @@
     {{-- Daftar Komentar --}}
     <div class="card w-100">
         <div class="card-header bg-light d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 fw-semibold"><i class="ti ti-message-heart me-2"></i>Pesan &amp; Dukungan Voter</h5>
+            <h5 class="mb-0 fw-semibold"><i class="ti ti-messages me-2"></i>Pesan &amp; Dukungan Voter</h5>
             <a href="{{ route('eventner.vote-comments.csv', [
                 'search' => $search,
                 'filterRegistration' => $filterRegistration,

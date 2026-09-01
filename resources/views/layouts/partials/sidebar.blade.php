@@ -316,7 +316,7 @@
             <a class="sidebar-link {{ request()->routeIs('eventner.vote-comments.*') ? 'active' : '' }}"
               href="{{ route('eventner.vote-comments.index') }}" aria-expanded="false">
               <span>
-                <i class="ti ti-message-heart"></i>
+                <i class="ti ti-messages"></i>
               </span>
               <span class="hide-menu">Komentar Voting</span>
               @if($ev && !$ev->canAccessFeature('vote_transactions')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
