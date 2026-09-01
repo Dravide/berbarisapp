@@ -12,6 +12,9 @@
                     </nav>
                 </div>
                 <div class="col-3 text-end mb-n5">
+                    <a href="{{ route('eventner.finance.pdf') }}" class="btn btn-danger btn-sm rounded-pill px-3 mb-2">
+                        <i class="ti ti-file-type-pdf me-1"></i> Unduh PDF
+                    </a>
                     <img src="{{ asset('templates/assets/images/breadcrumb/ChatBc.png') }}" alt="" class="img-fluid mb-n4" style="max-height: 80px;" />
                 </div>
             </div>
