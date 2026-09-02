@@ -183,7 +183,8 @@ class Index extends Component
         // Ambil daftar kontingen/sekolah untuk dropdown filter
         $registrations = Registration::where('eventner_id', $eventnerId)
             ->orderBy('nama_sekolah')
-            ->get(['id', 'nama_sekolah', 'npsn']);
+            ->with('competitionCategory:id,name,parent_id')
+            ->get(['id', 'nama_sekolah', 'npsn', 'competition_category_id']);
 
         // Query transaksi vote
         $query = VoteTransaction::query()
