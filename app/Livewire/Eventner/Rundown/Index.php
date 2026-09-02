@@ -173,12 +173,13 @@ class Index extends Component
         $sort = EventRundown::where('eventner_id', $this->eventner->id)->max('sort_order') ?? 0;
         $cursor = Carbon::createFromFormat('H:i', $this->importStartTime);
         $duration = (int) $this->importDefaultDuration;
+        $categoryName = !empty($category['parent']) ? $category['parent']['name'] . ' — ' . $category['name'] : $category['name'];
 
         foreach ($drawn as $reg) {
             $label = $reg->label_pasukan ? " (Pasukan {$reg->label_pasukan})" : '';
             EventRundown::create([
                 'eventner_id' => $this->eventner->id,
-                'title' => "Urutan {$reg->urutan_tampil} — {$reg->nama_sekolah}{$label}",
+                'title' => "{$categoryName} — Urutan {$reg->urutan_tampil} — {$reg->nama_sekolah}{$label}",
                 'start_time' => $cursor->format('H:i'),
                 'end_time' => $cursor->copy()->addMinutes($duration)->format('H:i'),
                 'duration_minutes' => $duration,
@@ -239,7 +240,8 @@ class Index extends Component
 
     public function render()
     {
-        $items = EventRundown::where('eventner_id', $this->eventner->id)
+        $items = EventRundown::with('sourceCategory.parent')
+            ->where('eventner_id', $this->eventner->id)
             ->orderBy('sort_order')
             ->get();
 

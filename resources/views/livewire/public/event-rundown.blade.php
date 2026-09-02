@@ -86,14 +86,14 @@
                             <div class="flex-1 min-w-0">
                                 <h4 class="text-sm font-bold text-deep-slate leading-tight mb-0.5 flex items-center gap-2 flex-wrap">
                                     {{ $item->title }}
-                                    @if($item->source_category_id)
-                                        <span class="inline-flex items-center rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 border border-amber-500/20">
-                                            <i class="ti ti-arrows-shuffle"></i> Undian
-                                        </span>
-                                    @endif
                                 </h4>
+                                @if($item->sourceCategory)
+                                    <span class="inline-flex items-center rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 border border-amber-500/20">
+                                        <i class="ti ti-arrows-shuffle"></i> {{ $item->sourceCategory->parent?->name ? $item->sourceCategory->parent->name . ' — ' . $item->sourceCategory->name : $item->sourceCategory->name }}
+                                    </span>
+                                @endif
                                 @if($item->description)
-                                    <p class="text-xs text-on-surface-variant leading-normal">{{ $item->description }}</p>
+                                    <p class="text-xs text-on-surface-variant leading-normal mt-1">{{ $item->description }}</p>
                                 @endif
                             </div>
                             {{-- Durasi --}}

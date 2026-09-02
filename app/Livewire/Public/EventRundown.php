@@ -16,9 +16,9 @@ class EventRundown extends Component
         $resolved = app()->bound('current_eventner') ? app('current_eventner') : null;
         if ($resolved) {
             $this->eventner = $resolved;
-            $this->eventner->loadMissing('eventRundowns');
+            $this->eventner->loadMissing('eventRundowns.sourceCategory.parent');
         } else {
-            $this->eventner = Eventner::with('eventRundowns')
+            $this->eventner = Eventner::with('eventRundowns.sourceCategory.parent')
                 ->approved()->where('slug', $slug)->firstOrFail();
         }
     }

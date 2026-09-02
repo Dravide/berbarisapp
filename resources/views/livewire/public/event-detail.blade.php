@@ -510,7 +510,7 @@
                 @endif
 
                 {{-- Rundown Acara --}}
-                @php $rundowns = \App\Models\EventRundown::where('eventner_id', $eventner->id)->orderBy('sort_order')->take(3)->get(); @endphp
+                @php $rundowns = \App\Models\EventRundown::with('sourceCategory.parent')->where('eventner_id', $eventner->id)->orderBy('sort_order')->take(3)->get(); @endphp
                 @if($rundowns->isNotEmpty())
                     <div class="surface-card p-6">
                         <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
@@ -530,6 +530,11 @@
                                         <span class="font-bold text-deep-slate text-sm leading-normal">{{ $item->title }}</span>
                                         @if($item->description)
                                             <p class="text-xs text-on-surface-variant leading-normal mt-0.5">{{ $item->description }}</p>
+                                        @endif
+                                        @if($item->sourceCategory)
+                                            <span class="inline-flex items-center rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 border border-amber-500/20 mt-1">
+                                                <i class="ti ti-arrows-shuffle"></i> {{ $item->sourceCategory->parent?->name ? $item->sourceCategory->parent->name . ' — ' . $item->sourceCategory->name : $item->sourceCategory->name }}
+                                            </span>
                                         @endif
                                     </div>
                                 </div>

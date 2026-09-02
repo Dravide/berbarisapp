@@ -33,4 +33,9 @@ class EventRundown extends Model
     {
         return $this->belongsTo(Eventner::class);
     }
+
+    public function sourceCategory()
+    {
+        return $this->belongsTo(\App\Models\CompetitionCategory::class, 'source_category_id');
+    }
 }

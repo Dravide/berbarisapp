@@ -16,7 +16,8 @@ class RundownController extends Controller
             abort(403, 'Anda bukan Eventner yang sah.');
         }
 
-        $rundowns = EventRundown::where('eventner_id', $eventner->id)
+        $rundowns = EventRundown::with('sourceCategory.parent')
+            ->where('eventner_id', $eventner->id)
             ->orderBy('sort_order')
             ->get();
 

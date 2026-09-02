@@ -258,8 +258,8 @@
                         </td>
                         <td>
                             <strong>{{ $item->title }}</strong>
-                            @if($item->source_category_id)
-                                <span class="source-tag undian">Undian</span>
+                            @if($item->sourceCategory)
+                                <span class="source-tag undian">{{ $item->sourceCategory->parent?->name ? $item->sourceCategory->parent->name . ' — ' . $item->sourceCategory->name : $item->sourceCategory->name }}</span>
                             @endif
                             @if($item->description)
                                 <span class="desc">{{ $item->description }}</span>

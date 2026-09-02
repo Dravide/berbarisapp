@@ -86,7 +86,7 @@
                                                 @endif
                                                 @if($item->source_category_id)
                                                     <span class="badge bg-warning-subtle text-warning-emphasis mt-1 py-0 px-2" style="font-size: 0.65rem;">
-                                                        <i class="ti ti-arrows-shuffle me-1"></i>Undian
+                                                        <i class="ti ti-arrows-shuffle me-1"></i>{{ $item->sourceCategory?->parent?->name ? $item->sourceCategory->parent->name . ' — ' . $item->sourceCategory->name : $item->sourceCategory?->name ?? 'Undian' }}
                                                     </span>
                                                 @else
                                                     <span class="badge bg-light text-muted mt-1 py-0 px-2 border" style="font-size: 0.65rem;">
