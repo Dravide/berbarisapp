@@ -44,9 +44,14 @@
                         <i class="ti ti-list-details me-2"></i> Daftar Rundown ({{ $items->count() }})
                     </h5>
                     @if($items->count() > 0)
-                        <a href="{{ event_url($eventner, 'rundown') }}" target="_blank" class="btn btn-sm btn-light">
-                            <i class="ti ti-external-link me-1"></i> Lihat di Landing
-                        </a>
+                        <div class="d-flex gap-2">
+                            <a href="{{ route('eventner.rundown.print') }}" target="_blank" class="btn btn-sm btn-light">
+                                <i class="ti ti-file-type-pdf me-1"></i> Unduh PDF
+                            </a>
+                            <a href="{{ event_url($eventner, 'rundown') }}" target="_blank" class="btn btn-sm btn-light">
+                                <i class="ti ti-external-link me-1"></i> Lihat di Landing
+                            </a>
+                        </div>
                     @endif
                 </div>
                 <div class="card-body p-0">

@@ -42,6 +42,7 @@ Route::get('activity-log', App\Livewire\Eventner\ActivityLog\Index::class)->name
 Route::get('drawing', App\Livewire\Eventner\Drawing\Index::class)->name('eventner.drawing.index');
 Route::get('drawing/print', [App\Http\Controllers\Eventner\DrawingController::class, 'print'])->name('eventner.drawing.print');
 Route::get('rundown', App\Livewire\Eventner\Rundown\Index::class)->name('eventner.rundown.index');
+Route::get('rundown/print', [App\Http\Controllers\Eventner\RundownController::class, 'print'])->name('eventner.rundown.print');
 Route::get('livestream', App\Livewire\Eventner\Livestream\Manage::class)->name('eventner.livestream.index');
 Route::get('faq', App\Livewire\Eventner\Faq\Index::class)->name('eventner.faq.index');
 Route::get('gallery', App\Livewire\Eventner\Gallery\Index::class)->name('eventner.gallery.index');
