@@ -38,7 +38,10 @@
                         NPSN: {{ $registration->npsn }}
                     </p>
                 </div>
-                <div class="ms-auto">
+                <div class="ms-auto d-flex gap-2">
+                    <a href="{{ route('eventner.vote-results.detail-pdf', $registration) }}" class="btn btn-sm btn-danger">
+                        <i class="ti ti-file-type-pdf me-1"></i> Unduh PDF
+                    </a>
                     <a href="{{ route('eventner.vote-results.index') }}" class="btn btn-sm btn-light">
                         <i class="ti ti-arrow-left me-1"></i> Kembali
                     </a>

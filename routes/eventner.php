@@ -22,6 +22,7 @@ Route::get('vote-settings', App\Livewire\Eventner\VoteSettings\Index::class)->na
 Route::get('vote-booster', App\Livewire\Eventner\VoteBooster\Index::class)->name('eventner.vote-booster.index');
 Route::get('vote-results', App\Livewire\Eventner\VoteResults\Index::class)->name('eventner.vote-results.index');
 Route::get('vote-results/pdf', [App\Http\Controllers\Eventner\VoteResultsController::class, 'downloadPdf'])->name('eventner.vote-results.pdf');
+Route::get('vote-results/{registration}/pdf', [App\Http\Controllers\Eventner\VoteResultsController::class, 'downloadDetailPdf'])->name('eventner.vote-results.detail-pdf');
 Route::get('vote-results/{registration}', App\Livewire\Eventner\VoteResults\Show::class)->name('eventner.vote-results.show');
 Route::get('vote-transactions', App\Livewire\Eventner\VoteTransaction\Index::class)->name('eventner.vote-transactions.index');
 Route::get('vote-transactions/csv', [App\Http\Controllers\Eventner\VoteTransactionController::class, 'downloadCsv'])->name('eventner.vote-transactions.csv');

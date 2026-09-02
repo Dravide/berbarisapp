@@ -59,4 +59,65 @@ class VoteResultsController extends Controller
         $filename = 'Rekap_Voting_' . str_replace(['/', '\\'], '-', $eventner->nama_event) . '.pdf';
         return $pdf->download($filename);
     }
+
+    /**
+     * PDF detail voter per kontingen — data lengkap & transparan:
+     * semua transaksi PAID (nama, email, vote, nominal, ID transaksi, waktu),
+     * ringkasan, konteks event + kategori.
+     */
+    public function downloadDetailPdf(Request $request, Registration $registration)
+    {
+        $eventner = Auth::user()->eventner;
+        if (!$eventner) {
+            abort(403, 'Anda bukan Eventner yang sah.');
+        }
+
+        abort_unless(
+            $registration->eventner_id === $eventner->id,
+            403,
+            'Kontingen ini bukan milik event Anda.'
+        );
+
+        $registration->load(['competitionCategory.parent', 'eventner']);
+
+        $pricePerVote = $eventner->vote_price ?: 1000;
+
+        // Semua transaksi PAID — transparan, tanpa paging, urut waktu bayar
+        $voters = VoteTransaction::where('registration_id', $registration->id)
+            ->where('status', 'PAID')
+            ->orderBy('paid_at')
+            ->orderBy('id')
+            ->get();
+
+        $summary = VoteTransaction::where('registration_id', $registration->id)
+            ->where('status', 'PAID')
+            ->selectRaw('COUNT(*) as trx_count, COALESCE(SUM(votes_earned), 0) as total_votes, COALESCE(SUM(amount), 0) as total_amount, COALESCE(MIN(paid_at), ?) as first_paid_at, COALESCE(MAX(paid_at), ?) as last_paid_at', [now(), now()])
+            ->first();
+
+        // Transaksi non-PAID utk transparansi lengkap (EXPIRED/FAILED — tidak hitung vote)
+        $invalid = VoteTransaction::where('registration_id', $registration->id)
+            ->whereIn('status', ['EXPIRED', 'FAILED'])
+            ->selectRaw('status, COUNT(*) as trx_count')
+            ->groupBy('status')
+            ->pluck('trx_count', 'status');
+
+        $data = [
+            'eventner' => $eventner,
+            'registration' => $registration,
+            'pricePerVote' => $pricePerVote,
+            'voters' => $voters,
+            'summary' => $summary,
+            'invalid' => $invalid,
+        ];
+
+        $pdf = Pdf::loadView('eventner.vote-results.pdf_detail', $data)
+            ->setPaper('a4', 'portrait')
+            ->setOption('margin-top', '10mm')
+            ->setOption('margin-bottom', '10mm')
+            ->setOption('margin-left', '5mm')
+            ->setOption('margin-right', '5mm');
+
+        $filename = 'Detail_Voting_' . str_replace(['/', '\\'], '-', $registration->nama_sekolah) . '_' . now()->format('Ymd_His') . '.pdf';
+        return $pdf->download($filename);
+    }
 }
