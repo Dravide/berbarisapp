@@ -143,6 +143,21 @@ class AutoGoPay
     }
 
     /**
+     * Map status gateway (settlement/expire/cancel) ke status internal
+     * yang valid di enum vote_transactions/tickets (PENDING/PAID/EXPIRED/FAILED).
+     * Status lain return null (biarkan baris tidak berubah).
+     */
+    public static function mapStatus(?string $gatewayStatus): ?string
+    {
+        return match ($gatewayStatus) {
+            'settlement' => 'PAID',
+            'expire' => 'EXPIRED',
+            'cancel' => 'FAILED',
+            default => null,
+        };
+    }
+
+    /**
      * Verifikasi webhook signature (HMAC SHA256).
      */
     public function verifySignature(string $payload, string $signature): bool

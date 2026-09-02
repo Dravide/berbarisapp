@@ -118,7 +118,7 @@ class Index extends Component
             } elseif (in_array($status, ['expire', 'cancel'])) {
                 $claimed = Ticket::where('id', $ticket->id)
                     ->where('status', 'PENDING')
-                    ->update(['status' => strtoupper($status)]);
+                    ->update(['status' => AutoGoPay::mapStatus($status)]);
 
                 if ($claimed) {
                     $synced++;
