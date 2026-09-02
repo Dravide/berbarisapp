@@ -44,7 +44,7 @@
                         <i class="ti ti-list-details me-2"></i> Daftar Rundown ({{ $items->count() }})
                     </h5>
                     @if($items->count() > 0)
-                        <a href="{{ event_url($eventner, 'detail') }}#rundown" target="_blank" class="btn btn-sm btn-light">
+                        <a href="{{ event_url($eventner, 'rundown') }}" target="_blank" class="btn btn-sm btn-light">
                             <i class="ti ti-external-link me-1"></i> Lihat di Landing
                         </a>
                     @endif

@@ -210,6 +210,7 @@ class Eventner extends Model
             $paths = [
                 'detail' => '/',
                 'participant' => '/peserta',
+                'rundown' => '/rundown',
                 'results' => '/hasil',
                 'vote' => '/vote',
                 'ticket' => '/tiket',

@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', App\Livewire\Public\EventDetail::class)->name('subdomain.detail');
 Route::get('/peserta', App\Livewire\Public\EventParticipant::class)->name('subdomain.participant');
+Route::get('/rundown', App\Livewire\Public\EventRundown::class)->name('subdomain.rundown');
 Route::get('/hasil', App\Livewire\Public\EventResult::class)->name('subdomain.results');
 Route::get('/vote', App\Livewire\Public\EventVote::class)->name('subdomain.vote');
 Route::get('/tiket', App\Livewire\Public\EventTicket::class)->name('subdomain.ticket');

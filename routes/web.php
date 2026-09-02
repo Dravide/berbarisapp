@@ -13,6 +13,7 @@ Route::middleware('guest')->group(function () {
 
 Route::get('/event/{slug}', App\Livewire\Public\EventDetail::class)->name('event.detail');
 Route::get('/event/{slug}/participant', App\Livewire\Public\EventParticipant::class)->name('event.participant');
+Route::get('/event/{slug}/rundown', App\Livewire\Public\EventRundown::class)->name('event.rundown');
 Route::get('/event/{slug}/results', App\Livewire\Public\EventResult::class)->name('event.results');
 
 // Voting Routes

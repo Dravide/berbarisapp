@@ -510,9 +510,9 @@
                 @endif
 
                 {{-- Rundown Acara --}}
-                @php $rundowns = \App\Models\EventRundown::where('eventner_id', $eventner->id)->orderBy('sort_order')->get(); @endphp
+                @php $rundowns = \App\Models\EventRundown::where('eventner_id', $eventner->id)->orderBy('sort_order')->take(3)->get(); @endphp
                 @if($rundowns->isNotEmpty())
-                    <div class="surface-card p-6" id="rundown">
+                    <div class="surface-card p-6">
                         <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
                             <i class="ti ti-list-details text-primary"></i>
                             Rundown Acara
@@ -535,6 +535,11 @@
                                 </div>
                             @endforeach
                         </div>
+                        <a href="{{ event_url($eventner, 'rundown') }}"
+                            class="mt-4 w-full py-2.5 px-4 rounded-xl bg-primary/10 hover:bg-primary/15 border border-primary/20 text-primary text-xs font-bold leading-normal inline-flex items-center justify-center gap-1.5 text-decoration-none transition">
+                            <i class="ti ti-list-details"></i> Lihat Rundown Lengkap
+                            <i class="ti ti-chevron-right"></i>
+                        </a>
                     </div>
                 @endif
 
