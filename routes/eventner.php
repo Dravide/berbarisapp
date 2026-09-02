@@ -36,6 +36,7 @@ Route::get('scoring', App\Livewire\Eventner\Scoring\Index::class)->name('eventne
 Route::get('champion-categories', App\Livewire\Eventner\ChampionCategory\Index::class)->name('eventner.champion-categories.index');
 Route::get('champion-categories/pdf', [App\Http\Controllers\Eventner\ChampionCategoryController::class, 'downloadPdf'])->name('eventner.champion-categories.pdf');
 Route::get('tickets', App\Livewire\Eventner\Ticket\Index::class)->name('eventner.tickets.index');
+Route::get('tickets/csv', [App\Http\Controllers\Eventner\TicketController::class, 'downloadCsv'])->name('eventner.tickets.csv');
 Route::get('tickets/settings', App\Livewire\Eventner\Ticket\Settings::class)->name('eventner.tickets.settings');
 Route::get('activity-log', App\Livewire\Eventner\ActivityLog\Index::class)->name('eventner.activity-log.index');
 Route::get('drawing', App\Livewire\Eventner\Drawing\Index::class)->name('eventner.drawing.index');

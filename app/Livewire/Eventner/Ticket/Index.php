@@ -6,22 +6,39 @@ use App\Models\Ticket;
 use App\Services\AutoGoPay;
 use App\Traits\FeatureGatedComponent;
 use Illuminate\Support\Facades\Auth;
-use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
+use Livewire\Component;
+use Livewire\WithPagination;
 
 #[Layout('layouts.admin')]
+#[Title('Tiket - BARIS APP')]
 class Index extends Component
 {
+    use WithPagination;
     use FeatureGatedComponent;
 
     protected string $requiredFeature = 'tickets';
 
+    protected string $paginationTheme = 'bootstrap';
+
     public $eventner;
     public $search = '';
     public $filterStatus = '';
+    public $dateFrom = '';
+    public $dateTo = '';
+
+    // Check-in state
     public $checkInCode = '';
     public $showCheckIn = false;
     public $checkInResult = null;
+
+    protected $queryString = [
+        'search' => ['except' => ''],
+        'filterStatus' => ['except' => ''],
+        'dateFrom' => ['except' => ''],
+        'dateTo' => ['except' => ''],
+    ];
 
     public function mount()
     {
@@ -35,6 +52,27 @@ class Index extends Component
 
     public function updatingSearch()
     {
+        $this->resetPage();
+    }
+
+    public function updatingFilterStatus()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateFrom()
+    {
+        $this->resetPage();
+    }
+
+    public function updatingDateTo()
+    {
+        $this->resetPage();
+    }
+
+    public function resetFilters()
+    {
+        $this->reset(['search', 'filterStatus', 'dateFrom', 'dateTo']);
         $this->resetPage();
     }
 
@@ -77,6 +115,24 @@ class Index extends Component
         }
 
         session()->flash('success', "Sinkron selesai: {$synced} tiket diperbarui" . ($errors > 0 ? ", {$errors} gagal." : "."));
+    }
+
+    public function markAsPaid($id)
+    {
+        // Scope ke eventner milik user (cegah akses lintas tenant)
+        $ticket = Ticket::where('eventner_id', $this->eventner->id)->findOrFail($id);
+
+        if ($ticket->status !== 'PENDING') {
+            session()->flash('error', 'Tiket ini tidak dapat dikonfirmasi (status: ' . $ticket->status . '). Hanya tiket PENDING yang bisa dikonfirmasi manual.');
+            return;
+        }
+
+        $ticket->update([
+            'status' => 'PAID',
+            'paid_at' => now(),
+        ]);
+
+        session()->flash('success', 'Tiket ' . $ticket->order_code . ' berhasil dikonfirmasi sebagai PAID.');
     }
 
     public function openCheckIn()
@@ -146,34 +202,63 @@ class Index extends Component
 
     public function render()
     {
-        $query = Ticket::where('eventner_id', $this->eventner->id);
+        $eventnerId = $this->eventner->id;
 
-        if ($this->search) {
-            $query->where(function ($q) {
-                $q->where('order_code', 'like', '%' . $this->search . '%')
-                    ->orWhere('buyer_name', 'like', '%' . $this->search . '%')
-                    ->orWhere('buyer_email', 'like', '%' . $this->search . '%');
+        $query = Ticket::where('eventner_id', $eventnerId);
+
+        // Filter search (kode order / nama / email pembeli)
+        if ($this->search !== '') {
+            $needle = '%' . $this->search . '%';
+            $query->where(function ($w) use ($needle) {
+                $w->where('order_code', 'like', $needle)
+                    ->orWhere('buyer_name', 'like', $needle)
+                    ->orWhere('buyer_email', 'like', $needle)
+                    ->orWhere('autogopay_transaction_id', 'like', $needle);
             });
         }
 
-        if ($this->filterStatus) {
+        // Filter status
+        if ($this->filterStatus !== '') {
             $query->where('status', $this->filterStatus);
         }
 
-        $tickets = $query->orderByDesc('created_at')->get();
+        // Filter rentang tanggal (berdasarkan dibuat)
+        if ($this->dateFrom !== '') {
+            $query->whereDate('created_at', '>=', $this->dateFrom);
+        }
+        if ($this->dateTo !== '') {
+            $query->whereDate('created_at', '<=', $this->dateTo);
+        }
 
-        // Stats
-        $stats = [
-            'total' => Ticket::where('eventner_id', $this->eventner->id)->count(),
-            'paid' => Ticket::where('eventner_id', $this->eventner->id)->where('status', 'PAID')->count(),
-            'checked_in' => Ticket::where('eventner_id', $this->eventner->id)->where('status', 'CHECKED_IN')->count(),
-            'revenue' => Ticket::where('eventner_id', $this->eventner->id)->whereIn('status', ['PAID', 'CHECKED_IN'])->sum('total_amount'),
-            'pending' => Ticket::where('eventner_id', $this->eventner->id)->where('status', 'PENDING')->count(),
-        ];
+        $tickets = $query->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->paginate(20);
+
+        // Summary keseluruhan
+        $summaryPaid = Ticket::where('eventner_id', $eventnerId)
+            ->where('status', 'PAID')
+            ->selectRaw('COUNT(*) as trx_count, COALESCE(SUM(total_amount), 0) as total_amount')
+            ->first();
+
+        $checkedIn = Ticket::where('eventner_id', $eventnerId)
+            ->where('status', 'CHECKED_IN')
+            ->selectRaw('COUNT(*) as trx_count, COALESCE(SUM(total_amount), 0) as total_amount')
+            ->first();
+
+        $totalTicketsCount = Ticket::where('eventner_id', $eventnerId)->count();
+
+        $statusCounts = Ticket::where('eventner_id', $eventnerId)
+            ->select('status', \Illuminate\Support\Facades\DB::raw('COUNT(*) as count'))
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->toArray();
 
         return view('livewire.eventner.ticket.index', [
             'tickets' => $tickets,
-            'stats' => $stats,
+            'summaryPaid' => $summaryPaid,
+            'checkedIn' => $checkedIn,
+            'totalTicketsCount' => $totalTicketsCount,
+            'statusCounts' => $statusCounts,
         ])->title('Tiket - ' . $this->eventner->nama_event);
     }
 }
