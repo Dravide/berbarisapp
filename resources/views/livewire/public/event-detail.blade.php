@@ -509,6 +509,35 @@
                     </div>
                 @endif
 
+                {{-- Rundown Acara --}}
+                @php $rundowns = \App\Models\EventRundown::where('eventner_id', $eventner->id)->orderBy('sort_order')->get(); @endphp
+                @if($rundowns->isNotEmpty())
+                    <div class="surface-card p-6" id="rundown">
+                        <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
+                            <i class="ti ti-list-details text-primary"></i>
+                            Rundown Acara
+                        </h3>
+                        <div class="flex flex-col gap-3">
+                            @foreach($rundowns as $item)
+                                <div class="flex gap-3 items-start border-b border-outline-variant/30 pb-3 last:border-0 last:pb-0">
+                                    <div class="shrink-0 rounded-lg bg-primary/10 text-primary px-3 py-1.5 font-mono text-xs font-extrabold leading-normal text-center min-w-[92px]">
+                                        {{ \Carbon\Carbon::parse($item->start_time)->format('H:i') }}
+                                        @if($item->end_time)
+                                            <span class="text-primary/50">–</span> {{ \Carbon\Carbon::parse($item->end_time)->format('H:i') }}
+                                        @endif
+                                    </div>
+                                    <div class="min-w-0">
+                                        <span class="font-bold text-deep-slate text-sm leading-normal">{{ $item->title }}</span>
+                                        @if($item->description)
+                                            <p class="text-xs text-on-surface-variant leading-normal mt-0.5">{{ $item->description }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Hubungi Penyelenggara --}}
                 @if($eventner->link_whatsapp)
                     <div class="surface-card p-6">

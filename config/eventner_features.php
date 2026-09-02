@@ -50,6 +50,10 @@ return [
         'label' => 'Drawing / Undian',
         'locked_free' => true,
     ],
+    'rundown' => [
+        'label' => 'Rundown Acara',
+        'locked_free' => true,
+    ],
     'livestream' => [
         'label' => 'Livestream Overlay',
         'locked_free' => true,

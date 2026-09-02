@@ -184,6 +184,11 @@ class Eventner extends Model
         return $this->hasMany(EventnerBankAccount::class);
     }
 
+    public function eventRundowns()
+    {
+        return $this->hasMany(EventRundown::class);
+    }
+
     public function activeBankAccounts()
     {
         return $this->hasMany(EventnerBankAccount::class)->where('is_active', true);
