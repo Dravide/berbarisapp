@@ -157,7 +157,6 @@ class Index extends Component
         $drawn = Registration::where('eventner_id', $this->eventner->id)
             ->where('competition_category_id', $this->importCategoryId)
             ->whereNotNull('urutan_tampil')
-            ->whereIn('status_berkas', ['Terverifikasi', 'confirmed'])
             ->orderBy('urutan_tampil')
             ->get();
 
