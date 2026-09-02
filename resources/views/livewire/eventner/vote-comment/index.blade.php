@@ -71,7 +71,7 @@
                     <select class="form-select" wire:model.live="filterRegistration">
                         <option value="">Semua Kontingen</option>
                         @foreach($registrations as $reg)
-                            <option value="{{ $reg->id }}">{{ $reg->nama_sekolah }}</option>
+                            <option value="{{ $reg->id }}">{{ $reg->nama_sekolah }} — {{ $reg->competitionCategory?->full_name }}</option>
                         @endforeach
                     </select>
                 </div>
