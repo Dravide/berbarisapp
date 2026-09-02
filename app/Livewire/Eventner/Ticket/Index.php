@@ -3,6 +3,7 @@
 namespace App\Livewire\Eventner\Ticket;
 
 use App\Models\Ticket;
+use App\Services\AutoGoPay;
 use App\Traits\FeatureGatedComponent;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -35,6 +36,47 @@ class Index extends Component
     public function updatingSearch()
     {
         $this->resetPage();
+    }
+
+    public function syncPending()
+    {
+        $pendingTickets = Ticket::where('eventner_id', $this->eventner->id)
+            ->where('status', 'PENDING')
+            ->whereNotNull('autogopay_transaction_id')
+            ->get();
+
+        $service = new AutoGoPay();
+        $synced = 0;
+        $errors = 0;
+
+        foreach ($pendingTickets as $ticket) {
+            try {
+                $result = $service->checkStatus($ticket->autogopay_transaction_id);
+                $status = $result['data']['transaction_status'] ?? 'pending';
+
+                if ($status === 'settlement') {
+                    $claimed = Ticket::where('id', $ticket->id)
+                        ->where('status', 'PENDING')
+                        ->update(['status' => 'PAID', 'paid_at' => now()]);
+
+                    if ($claimed) {
+                        $synced++;
+                    }
+                } elseif (in_array($status, ['expire', 'cancel'])) {
+                    $claimed = Ticket::where('id', $ticket->id)
+                        ->where('status', 'PENDING')
+                        ->update(['status' => strtoupper($status)]);
+
+                    if ($claimed) {
+                        $synced++;
+                    }
+                }
+            } catch (\Exception $e) {
+                $errors++;
+            }
+        }
+
+        session()->flash('success', "Sinkron selesai: {$synced} tiket diperbarui" . ($errors > 0 ? ", {$errors} gagal." : "."));
     }
 
     public function openCheckIn()

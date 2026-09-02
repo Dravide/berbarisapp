@@ -104,6 +104,10 @@
                     </select>
                 </div>
                 <div class="d-flex gap-2">
+                    <button wire:click="syncPending" class="btn btn-sm btn-outline-primary px-3 fw-semibold" wire:loading.attr="disabled" wire:target="syncPending">
+                        <span wire:loading.remove wire:target="syncPending"><i class="ti ti-refresh me-1"></i> Sinkron Status</span>
+                        <span wire:loading wire:target="syncPending"><span class="spinner-border spinner-border-sm me-1"></span> Sinkron...</span>
+                    </button>
                     <button wire:click="openCheckIn" class="btn btn-sm btn-success px-3 fw-semibold">
                         <i class="ti ti-scan me-1"></i> Check-in
                     </button>
