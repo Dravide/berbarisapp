@@ -70,6 +70,64 @@ class AutoGoPay
     }
 
     /**
+     * Cek status banyak transaksi sekaligus (paralel via HTTP pool).
+     * Mengembalikan map [transaction_id => transaction_status].
+     * Transaksi gagal dicek tidak dimasukkan ke map.
+     *
+     * @param  array<int, string>  $transactionIds
+     * @return array<string, string>
+     */
+    public function checkStatusMany(array $transactionIds): array
+    {
+        if (empty($transactionIds)) {
+            return [];
+        }
+
+        // Key pool = transaction_id supaya mudah dipetakan balik
+        $keyed = [];
+        foreach ($transactionIds as $id) {
+            $keyed[$id] = $id;
+        }
+
+        $responses = Http::pool(function ($pool) use ($keyed) {
+            foreach ($keyed as $id => $txnId) {
+                $pool->as((string) $txnId)
+                    ->withToken($this->apiKey)
+                    ->timeout(10)
+                    ->connectTimeout(5)
+                    ->post("{$this->baseUrl}/qris/status", [
+                        'transaction_id' => $txnId,
+                    ]);
+            }
+        });
+
+        $statuses = [];
+        foreach ($responses as $txnId => $response) {
+            if (!$response instanceof \Illuminate\Http\Client\Response) {
+                Log::error('AutoGoPay checkStatusMany: response tidak valid', ['transaction_id' => $txnId]);
+                continue;
+            }
+
+            if (!$response->successful()) {
+                Log::error('AutoGoPay checkStatusMany failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                    'transaction_id' => $txnId,
+                ]);
+                continue;
+            }
+
+            $json = $response->json();
+            $status = $json['data']['transaction_status'] ?? null;
+            if ($status !== null) {
+                $statuses[(string) $txnId] = $status;
+            }
+        }
+
+        return $statuses;
+    }
+
+    /**
      * Cancel transaksi yang masih pending.
      */
     public function cancelTransaction(string $transactionId): array

@@ -83,38 +83,59 @@ class Index extends Component
             ->whereNotNull('autogopay_transaction_id')
             ->get();
 
+        if ($pendingTickets->isEmpty()) {
+            session()->flash('success', 'Tidak ada tiket PENDING untuk disinkronkan.');
+            return;
+        }
+
+        // Batch 25 tiket per klik — jaga request tidak kepanjangan
+        $batch = $pendingTickets->take(25);
+        $remaining = $pendingTickets->count() - $batch->count();
+
+        // Cek status semua batch secara paralel (HTTP pool)
         $service = new AutoGoPay();
+        $statuses = $service->checkStatusMany($batch->pluck('autogopay_transaction_id', 'autogopay_transaction_id')->all());
+
         $synced = 0;
         $errors = 0;
 
-        foreach ($pendingTickets as $ticket) {
-            try {
-                $result = $service->checkStatus($ticket->autogopay_transaction_id);
-                $status = $result['data']['transaction_status'] ?? 'pending';
+        foreach ($batch as $ticket) {
+            $status = $statuses[$ticket->autogopay_transaction_id] ?? null;
 
-                if ($status === 'settlement') {
-                    $claimed = Ticket::where('id', $ticket->id)
-                        ->where('status', 'PENDING')
-                        ->update(['status' => 'PAID', 'paid_at' => now()]);
-
-                    if ($claimed) {
-                        $synced++;
-                    }
-                } elseif (in_array($status, ['expire', 'cancel'])) {
-                    $claimed = Ticket::where('id', $ticket->id)
-                        ->where('status', 'PENDING')
-                        ->update(['status' => strtoupper($status)]);
-
-                    if ($claimed) {
-                        $synced++;
-                    }
-                }
-            } catch (\Exception $e) {
+            if ($status === null) {
                 $errors++;
+                continue;
+            }
+
+            if ($status === 'settlement') {
+                $claimed = Ticket::where('id', $ticket->id)
+                    ->where('status', 'PENDING')
+                    ->update(['status' => 'PAID', 'paid_at' => now()]);
+
+                if ($claimed) {
+                    $synced++;
+                }
+            } elseif (in_array($status, ['expire', 'cancel'])) {
+                $claimed = Ticket::where('id', $ticket->id)
+                    ->where('status', 'PENDING')
+                    ->update(['status' => strtoupper($status)]);
+
+                if ($claimed) {
+                    $synced++;
+                }
             }
         }
 
-        session()->flash('success', "Sinkron selesai: {$synced} tiket diperbarui" . ($errors > 0 ? ", {$errors} gagal." : "."));
+        $message = "Sinkron selesai: {$synced} tiket diperbarui";
+        if ($errors > 0) {
+            $message .= ", {$errors} gagal";
+        }
+        if ($remaining > 0) {
+            $message .= ". Masih ada {$remaining} tiket PENDING — klik Sinkron lagi untuk lanjut";
+        }
+        $message .= '.';
+
+        session()->flash('success', $message);
     }
 
     public function markAsPaid($id)

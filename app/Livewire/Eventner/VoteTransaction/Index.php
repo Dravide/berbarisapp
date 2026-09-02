@@ -89,67 +89,97 @@ class Index extends Component
             ->whereNotNull('autogopay_transaction_id')
             ->get();
 
+        $total = $pending->count() + $pendingTickets->count();
+        if ($total === 0) {
+            session()->flash('success', 'Tidak ada transaksi PENDING untuk disinkronkan.');
+            return;
+        }
+
+        // Batch: 25 transaksi per klik (sisanya klik lagi) — jaga request tidak kepanjangan
+        $batch = 25;
+        $voteBatch = $pending->take($batch);
+        $voteLeft = $pending->count() - $voteBatch->count();
+        $ticketBatch = $pendingTickets->take(max(0, $batch - $voteBatch->count()));
+        $ticketLeft = $pendingTickets->count() - $ticketBatch->count();
+
+        // Cek status semua transaksi batch secara paralel (HTTP pool)
         $service = new AutoGoPay();
+        $txnIds = $voteBatch->pluck('autogopay_transaction_id', 'autogopay_transaction_id')
+            ->merge($ticketBatch->pluck('autogopay_transaction_id', 'autogopay_transaction_id'))
+            ->all();
+
+        $statuses = $service->checkStatusMany($txnIds);
+
         $synced = 0;
         $errors = 0;
 
-        // Sync vote transactions
-        foreach ($pending as $tx) {
-            try {
-                $result = $service->checkStatus($tx->autogopay_transaction_id);
-                $status = $result['data']['transaction_status'] ?? 'pending';
+        // Terapkan status vote transactions (atomic claim: cegah race dgn webhook)
+        foreach ($voteBatch as $tx) {
+            $status = $statuses[$tx->autogopay_transaction_id] ?? null;
 
-                if ($status === 'settlement') {
-                    $claimed = VoteTransaction::where('id', $tx->id)
-                        ->where('status', 'PENDING')
-                        ->update(['status' => 'PAID', 'paid_at' => now()]);
-
-                    if ($claimed) {
-                        $synced++;
-                    }
-                } elseif (in_array($status, ['expire', 'cancel'])) {
-                    $claimed = VoteTransaction::where('id', $tx->id)
-                        ->where('status', 'PENDING')
-                        ->update(['status' => strtoupper($status)]);
-
-                    if ($claimed) {
-                        $synced++;
-                    }
-                }
-            } catch (\Exception $e) {
+            if ($status === null) {
                 $errors++;
+                continue;
+            }
+
+            if ($status === 'settlement') {
+                $claimed = VoteTransaction::where('id', $tx->id)
+                    ->where('status', 'PENDING')
+                    ->update(['status' => 'PAID', 'paid_at' => now()]);
+
+                if ($claimed) {
+                    $synced++;
+                }
+            } elseif (in_array($status, ['expire', 'cancel'])) {
+                $claimed = VoteTransaction::where('id', $tx->id)
+                    ->where('status', 'PENDING')
+                    ->update(['status' => strtoupper($status)]);
+
+                if ($claimed) {
+                    $synced++;
+                }
             }
         }
 
-        // Sync ticket transactions
-        foreach ($pendingTickets as $ticket) {
-            try {
-                $result = $service->checkStatus($ticket->autogopay_transaction_id);
-                $status = $result['data']['transaction_status'] ?? 'pending';
+        // Terapkan status ticket transactions
+        foreach ($ticketBatch as $ticket) {
+            $status = $statuses[$ticket->autogopay_transaction_id] ?? null;
 
-                if ($status === 'settlement') {
-                    $claimed = Ticket::where('id', $ticket->id)
-                        ->where('status', 'PENDING')
-                        ->update(['status' => 'PAID', 'paid_at' => now()]);
-
-                    if ($claimed) {
-                        $synced++;
-                    }
-                } elseif (in_array($status, ['expire', 'cancel'])) {
-                    $claimed = Ticket::where('id', $ticket->id)
-                        ->where('status', 'PENDING')
-                        ->update(['status' => strtoupper($status)]);
-
-                    if ($claimed) {
-                        $synced++;
-                    }
-                }
-            } catch (\Exception $e) {
+            if ($status === null) {
                 $errors++;
+                continue;
+            }
+
+            if ($status === 'settlement') {
+                $claimed = Ticket::where('id', $ticket->id)
+                    ->where('status', 'PENDING')
+                    ->update(['status' => 'PAID', 'paid_at' => now()]);
+
+                if ($claimed) {
+                    $synced++;
+                }
+            } elseif (in_array($status, ['expire', 'cancel'])) {
+                $claimed = Ticket::where('id', $ticket->id)
+                    ->where('status', 'PENDING')
+                    ->update(['status' => strtoupper($status)]);
+
+                if ($claimed) {
+                    $synced++;
+                }
             }
         }
 
-        session()->flash('success', "Sinkron selesai: {$synced} transaksi diperbarui" . ($errors > 0 ? ", {$errors} gagal." : "."));
+        $remaining = $voteLeft + $ticketLeft;
+        $message = "Sinkron selesai: {$synced} transaksi diperbarui";
+        if ($errors > 0) {
+            $message .= ", {$errors} gagal";
+        }
+        if ($remaining > 0) {
+            $message .= ". Masih ada {$remaining} transaksi PENDING — klik Sinkron lagi untuk lanjut";
+        }
+        $message .= '.';
+
+        session()->flash('success', $message);
     }
 
     public function markAsPaid($id)
