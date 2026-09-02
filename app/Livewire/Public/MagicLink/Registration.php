@@ -34,6 +34,9 @@ class Registration extends Component
     public $paymentProof;
     public $participants = [];
 
+    // Draft state cache per registration (survives tab switching)
+    public array $draftCache = [];
+
     public function mount($token)
     {
         $this->portalUrl = url()->current();
@@ -56,12 +59,32 @@ class Registration extends Component
 
     public function switchRegistration($regId)
     {
+        if ($regId == $this->activeRegId) return;
+
+        // Cache current draft state before switching away
+        $this->draftCache[$this->activeRegId] = [
+            'participants' => $this->participants,
+            'dantonNama'   => $this->dantonNama,
+            'dantonNisn'   => $this->dantonNisn,
+            'namaPelatih'  => $this->namaPelatih,
+        ];
+
         $reg = $this->siblingRegistrations->firstWhere('id', $regId);
         if (!$reg) return;
 
         $this->activeRegId = $regId;
         $this->registration = $reg;
-        $this->loadFormData();
+
+        // Restore cached draft if present, otherwise load from DB
+        if (isset($this->draftCache[$regId])) {
+            $c = $this->draftCache[$regId];
+            $this->participants = $c['participants'];
+            $this->dantonNama   = $c['dantonNama'];
+            $this->dantonNisn   = $c['dantonNisn'];
+            $this->namaPelatih  = $c['namaPelatih'];
+        } else {
+            $this->loadFormData();
+        }
     }
 
     private function loadFormData()
@@ -163,6 +186,15 @@ class Registration extends Component
             ->where('status_berkas', '!=', 'dibatalkan')
             ->get();
 
+        // Re-sync form state with what was just saved
+        $this->loadFormData();
+        $this->draftCache[$this->activeRegId] = [
+            'participants' => $this->participants,
+            'dantonNama'   => $this->dantonNama,
+            'dantonNisn'   => $this->dantonNisn,
+            'namaPelatih'  => $this->namaPelatih,
+        ];
+
         session()->flash('success', 'Konfirmasi berhasil! Data pasukan telah dikirim untuk diverifikasi panitia.');
     }
 
@@ -256,6 +288,15 @@ class Registration extends Component
         $this->fotoPelatih = null;
         $this->buktiPendaftaran = null;
         $this->dantonFoto = null;
+
+        // Re-sync form state with what was just saved (staged fotos consumed, existing_foto updated)
+        $this->loadFormData();
+        $this->draftCache[$this->activeRegId] = [
+            'participants' => $this->participants,
+            'dantonNama'   => $this->dantonNama,
+            'dantonNisn'   => $this->dantonNisn,
+            'namaPelatih'  => $this->namaPelatih,
+        ];
 
         session()->flash('success', $isFinal
             ? 'Data berhasil difinalisasi dan dikirim ke panitia!'

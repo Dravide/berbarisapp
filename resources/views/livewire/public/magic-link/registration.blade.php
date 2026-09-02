@@ -340,7 +340,7 @@
                                     <p class="text-xs text-on-surface-variant font-medium mb-4 leading-normal">
                                         Setelah melakukan transfer, upload bukti pembayaran untuk diverifikasi panitia.
                                     </p>
-                                    <div wire:ignore x-data="{ pond: null }" x-init="
+                                    <div wire:ignore wire:key="pond-{{ $activeRegId }}-payment" x-data="{ pond: null }" x-init="
                                         pond = FilePond.create($refs.paymentProof, {
                                             credits: false,
                                             labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
@@ -622,7 +622,7 @@
                                 </div>
                                 <div class="md:col-span-2">
                                     <label class="text-sm font-bold text-deep-slate block mb-1.5">Foto Resmi Pelatih</label>
-                                    <div wire:ignore x-data="{ pond: null }" x-init="
+                                    <div wire:ignore wire:key="pond-{{ $activeRegId }}-pelatih" x-data="{ pond: null }" x-init="
                                         pond = FilePond.create($refs.input, {
                                             credits: false,
                                             labelIdle: 'Tarik & Letakkan berkas foto atau <span class=\'filepond--label-action\'>Pilih File</span>',
@@ -660,7 +660,7 @@
                                     {{-- Logo Sekolah --}}
                                     <div>
                                         <label class="text-sm font-bold text-deep-slate block mb-1.5">Logo Sekolah</label>
-                                        <div wire:ignore x-data="{ pond: null }" x-init="
+                                        <div wire:ignore wire:key="pond-{{ $activeRegId }}-logo" x-data="{ pond: null }" x-init="
                                             pond = FilePond.create($refs.input, {
                                                 credits: false,
                                                 labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
@@ -686,7 +686,7 @@
                                     @if($registration->eventner->surat_tugas_required)
                                         <div>
                                             <label class="text-sm font-bold text-deep-slate block mb-1.5">Surat Tugas (.pdf/.jpg)</label>
-                                            <div wire:ignore x-data="{ pond: null }" x-init="
+                                            <div wire:ignore wire:key="pond-{{ $activeRegId }}-surat" x-data="{ pond: null }" x-init="
                                                 pond = FilePond.create($refs.input, {
                                                     credits: false,
                                                     labelIdle: 'Tarik & Letakkan berkas atau <span class=\'filepond--label-action\'>Pilih File</span>',
@@ -731,7 +731,7 @@
                                     </div>
                                     <div class="md:col-span-4">
                                         <label class="text-sm font-bold text-deep-slate block mb-1.5">Pas Foto Danton</label>
-                                        <div wire:ignore x-data="{ pond: null }" x-init="
+                                        <div wire:ignore wire:key="pond-{{ $activeRegId }}-danton" x-data="{ pond: null }" x-init="
                                             pond = FilePond.create($refs.input, {
                                                 credits: false,
                                                 labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
@@ -791,7 +791,7 @@
                                         </div>
                                         <div class="flex-1 min-w-[160px]">
                                             <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase tracking-wider">Pas Foto Anggota</label>
-                                            <div wire:ignore x-data="{ pond: null }" x-init="
+                                            <div wire:ignore wire:key="pond-{{ $activeRegId }}-p-{{ $index }}" x-data="{ pond: null }" x-init="
                                                 pond = FilePond.create($refs.input, {
                                                     credits: false,
                                                     labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
