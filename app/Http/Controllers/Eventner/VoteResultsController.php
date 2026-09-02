@@ -94,6 +94,12 @@ class VoteResultsController extends Controller
             ->selectRaw('COUNT(*) as trx_count, COALESCE(SUM(votes_earned), 0) as total_votes, COALESCE(SUM(amount), 0) as total_amount, COALESCE(MIN(paid_at), ?) as first_paid_at, COALESCE(MAX(paid_at), ?) as last_paid_at', [now(), now()])
             ->first();
 
+        // MIN/MAX via selectRaw kembali string — cast ke Carbon supaya translatedFormat jalan di view
+        if ($summary) {
+            $summary->first_paid_at = $summary->first_paid_at ? \Carbon\Carbon::parse($summary->first_paid_at) : null;
+            $summary->last_paid_at = $summary->last_paid_at ? \Carbon\Carbon::parse($summary->last_paid_at) : null;
+        }
+
         // Transaksi non-PAID utk transparansi lengkap (EXPIRED/FAILED — tidak hitung vote)
         $invalid = VoteTransaction::where('registration_id', $registration->id)
             ->whereIn('status', ['EXPIRED', 'FAILED'])
