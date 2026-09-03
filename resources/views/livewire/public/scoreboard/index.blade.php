@@ -57,30 +57,30 @@
             </div>
         </div>
 
-        {{-- Rankings Table --}}
-        <div wire:poll.5s>
-
-            {{-- Category Dropdown --}}
-            @if(count($categories) > 1 || count($championCategories) > 0)
-                <div class="card mb-4">
-                    <div class="card-body p-2">
-                        <div class="mx-auto" style="max-width: 420px;">
-                            <div class="input-group">
-                                <span class="input-group-text bg-primary text-white"><i class="ti ti-list-numbers"></i></span>
-                                <select class="form-select" wire:change="switchCategory($event.target.value)">
-                                    @foreach($categories as $cat)
-                                        @php $label = $cat->parent ? $cat->parent->name . ' — ' . $cat->name : $cat->name; @endphp
-                                        <option value="{{ $cat->id }}" {{ (!$selectedChampionCategoryId && $selectedCategoryId == $cat->id) ? 'selected' : '' }}>{{ $label }}</option>
-                                    @endforeach
-                                    @foreach($championCategories as $champ)
-                                        <option value="champion:{{ $champ->id }}" {{ ($selectedChampionCategoryId == $champ->id) ? 'selected' : '' }}>🏆 {{ $champ->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+        {{-- Category Dropdown --}}
+        @if(count($categories) > 1 || count($championCategories) > 0)
+            <div class="card mb-4">
+                <div class="card-body p-2">
+                    <div class="mx-auto" style="max-width: 420px;">
+                        <div class="input-group">
+                            <span class="input-group-text bg-primary text-white"><i class="ti ti-list-numbers"></i></span>
+                            <select class="form-select" wire:model.live="selectedOption">
+                                @foreach($categories as $cat)
+                                    @php $label = $cat->parent ? $cat->parent->name . ' — ' . $cat->name : $cat->name; @endphp
+                                    <option value="cat:{{ $cat->id }}">{{ $label }}</option>
+                                @endforeach
+                                @foreach($championCategories as $champ)
+                                    <option value="champion:{{ $champ->id }}">🏆 {{ $champ->name }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
                 </div>
-            @endif
+            </div>
+        @endif
+
+        {{-- Rankings Table --}}
+        <div wire:poll.5s>
 
             {{-- Podium Top 3 --}}
             @if(collect($rankings)->isNotEmpty())

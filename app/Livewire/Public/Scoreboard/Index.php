@@ -23,6 +23,7 @@ class Index extends Component
     public $selectedChampionCategoryId = null;
     public $championCategory = null;
     public $championCategories = [];
+    public $selectedOption = null; // "cat:{id}" atau "champion:{id}" — binding dropdown
 
     public function mount($scoringCode, $competitionCategoryId = null, $championCategoryId = null)
     {
@@ -63,21 +64,33 @@ class Index extends Component
         } elseif ($this->categories->isNotEmpty()) {
             $this->selectedCategoryId = $this->categories->first()->id;
         }
+
+        $this->selectedOption = $this->selectedChampionCategoryId
+            ? 'champion:' . $this->selectedChampionCategoryId
+            : 'cat:' . $this->selectedCategoryId;
+    }
+
+    public function updatedSelectedOption($value)
+    {
+        if (str_starts_with((string) $value, 'champion:')) {
+            $this->switchChampionCategory(substr($value, strlen('champion:')));
+
+            return;
+        }
+
+        $this->switchCategory(str_starts_with((string) $value, 'cat:')
+            ? substr($value, strlen('cat:'))
+            : $value);
     }
 
     public function switchCategory($categoryId)
     {
-        // Opsi champion dari dropdown: "champion:{id}"
-        if (str_starts_with($categoryId, 'champion:')) {
-            $this->switchChampionCategory(substr($categoryId, strlen('champion:')));
-            return;
-        }
-
         $this->selectedCategoryId = $categoryId;
         $this->previousRanks = [];
         // Kembali ke mode kategori lomba: matikan mode champion
         $this->selectedChampionCategoryId = null;
         $this->championCategory = null;
+        $this->selectedOption = 'cat:' . $categoryId;
     }
 
     public function switchChampionCategory($championCategoryId)
@@ -87,6 +100,7 @@ class Index extends Component
             ->where('eventner_id', $this->eventner->id)
             ->findOrFail($championCategoryId);
         $this->previousRanks = [];
+        $this->selectedOption = 'champion:' . $championCategoryId;
     }
 
     public function getRankingsProperty()
