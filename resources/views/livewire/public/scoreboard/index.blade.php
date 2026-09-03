@@ -60,25 +60,23 @@
         {{-- Rankings Table --}}
         <div wire:poll.5s>
 
-            {{-- Category Tabs --}}
+            {{-- Category Dropdown --}}
             @if(count($categories) > 1 || count($championCategories) > 0)
                 <div class="card mb-4">
                     <div class="card-body p-2">
-                        <div class="d-flex flex-wrap gap-2 justify-content-center">
-                            @foreach($categories as $cat)
-                                <button wire:click="switchCategory({{ $cat->id }})"
-                                        wire:key="cat-tab-{{ $cat->id }}"
-                                        class="btn btn-sm px-3 {{ (!$selectedChampionCategoryId && $selectedCategoryId == $cat->id) ? 'btn-primary' : 'btn-outline-secondary' }}">
-                                    <i class="ti ti-category me-1"></i>{{ $cat->name }}
-                                </button>
-                            @endforeach
-                            @foreach($championCategories as $champ)
-                                <button wire:click="switchChampionCategory({{ $champ->id }})"
-                                        wire:key="champ-tab-{{ $champ->id }}"
-                                        class="btn btn-sm px-3 {{ ($selectedChampionCategoryId == $champ->id) ? 'btn-warning text-dark' : 'btn-outline-warning' }}">
-                                    <i class="ti ti-trophy me-1"></i>{{ $champ->name }}
-                                </button>
-                            @endforeach
+                        <div class="mx-auto" style="max-width: 420px;">
+                            <div class="input-group">
+                                <span class="input-group-text bg-primary text-white"><i class="ti ti-list-numbers"></i></span>
+                                <select class="form-select" wire:change="switchCategory($event.target.value)">
+                                    @foreach($categories as $cat)
+                                        @php $label = $cat->parent ? $cat->parent->name . ' — ' . $cat->name : $cat->name; @endphp
+                                        <option value="{{ $cat->id }}" {{ (!$selectedChampionCategoryId && $selectedCategoryId == $cat->id) ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                    @foreach($championCategories as $champ)
+                                        <option value="champion:{{ $champ->id }}" {{ ($selectedChampionCategoryId == $champ->id) ? 'selected' : '' }}>🏆 {{ $champ->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>

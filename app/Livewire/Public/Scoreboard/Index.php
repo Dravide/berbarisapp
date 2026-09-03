@@ -29,9 +29,19 @@ class Index extends Component
         $this->scoringCode = $scoringCode;
         $this->eventner = Eventner::where('scoring_code', $scoringCode)->firstOrFail();
 
+        // Kategori lomba: hanya child (yang punya parent), parent tidak ikut
         $this->categories = CompetitionCategory::where('eventner_id', $this->eventner->id)
+            ->whereNotNull('parent_id')
+            ->with('parent')
             ->orderBy('name')
             ->get();
+
+        // Fallback: event dengan kategori flat (tanpa hierarki)
+        if ($this->categories->isEmpty()) {
+            $this->categories = CompetitionCategory::where('eventner_id', $this->eventner->id)
+                ->orderBy('name')
+                ->get();
+        }
 
         $this->championCategories = ChampionCategory::where('eventner_id', $this->eventner->id)
             ->orderBy('name')
@@ -57,6 +67,12 @@ class Index extends Component
 
     public function switchCategory($categoryId)
     {
+        // Opsi champion dari dropdown: "champion:{id}"
+        if (str_starts_with($categoryId, 'champion:')) {
+            $this->switchChampionCategory(substr($categoryId, strlen('champion:')));
+            return;
+        }
+
         $this->selectedCategoryId = $categoryId;
         $this->previousRanks = [];
         // Kembali ke mode kategori lomba: matikan mode champion
