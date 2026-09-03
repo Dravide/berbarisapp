@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Eventner;
 use App\Models\Registration;
 use App\Models\AssessmentScore;
+use App\Models\ChampionCategory;
 use App\Models\CompetitionCategory;
 use Livewire\Attributes\Layout;
 
@@ -21,6 +22,7 @@ class Index extends Component
 
     public $selectedChampionCategoryId = null;
     public $championCategory = null;
+    public $championCategories = [];
 
     public function mount($scoringCode, $competitionCategoryId = null, $championCategoryId = null)
     {
@@ -31,9 +33,13 @@ class Index extends Component
             ->orderBy('name')
             ->get();
 
+        $this->championCategories = ChampionCategory::where('eventner_id', $this->eventner->id)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
         if ($championCategoryId) {
             $this->selectedChampionCategoryId = $championCategoryId;
-            $this->championCategory = \App\Models\ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles'])
+            $this->championCategory = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles'])
                 ->where('eventner_id', $this->eventner->id)
                 ->findOrFail($championCategoryId);
         }
@@ -53,15 +59,28 @@ class Index extends Component
     {
         $this->selectedCategoryId = $categoryId;
         $this->previousRanks = [];
+        // Kembali ke mode kategori lomba: matikan mode champion
+        $this->selectedChampionCategoryId = null;
+        $this->championCategory = null;
+    }
+
+    public function switchChampionCategory($championCategoryId)
+    {
+        $this->selectedChampionCategoryId = $championCategoryId;
+        $this->championCategory = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles'])
+            ->where('eventner_id', $this->eventner->id)
+            ->findOrFail($championCategoryId);
+        $this->previousRanks = [];
     }
 
     public function getRankingsProperty()
     {
-        if (!$this->selectedCategoryId) {
+        if (!$this->selectedCategoryId && !$this->selectedChampionCategoryId) {
             return collect();
         }
 
-        $participants = Registration::where('competition_category_id', $this->selectedCategoryId)
+        $participants = Registration::where('eventner_id', $this->eventner->id)
+            ->when(!$this->selectedChampionCategoryId, fn ($q) => $q->where('competition_category_id', $this->selectedCategoryId))
             ->with('participants')
             ->orderBy('nama_sekolah')
             ->get();

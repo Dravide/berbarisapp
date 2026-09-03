@@ -38,11 +38,13 @@
                         </h4>
                         <p class="text-muted fs-3 mb-0">
                             {{ $eventner->nama_event }}
-                            @php
-                                $activeCat = collect($categories)->firstWhere('id', $selectedCategoryId);
-                            @endphp
-                            @if($activeCat)
-                                &mdash; <strong class="text-dark">{{ $activeCat->name }}</strong>
+                            @if(!$selectedChampionCategoryId)
+                                @php
+                                    $activeCat = collect($categories)->firstWhere('id', $selectedCategoryId);
+                                @endphp
+                                @if($activeCat)
+                                    &mdash; <strong class="text-dark">{{ $activeCat->name }}</strong>
+                                @endif
                             @endif
                         </p>
                     </div>
@@ -57,6 +59,31 @@
 
         {{-- Rankings Table --}}
         <div wire:poll.5s>
+
+            {{-- Category Tabs --}}
+            @if(count($categories) > 1 || count($championCategories) > 0)
+                <div class="card mb-4">
+                    <div class="card-body p-2">
+                        <div class="d-flex flex-wrap gap-2 justify-content-center">
+                            @foreach($categories as $cat)
+                                <button wire:click="switchCategory({{ $cat->id }})"
+                                        wire:key="cat-tab-{{ $cat->id }}"
+                                        class="btn btn-sm px-3 {{ (!$selectedChampionCategoryId && $selectedCategoryId == $cat->id) ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                    <i class="ti ti-category me-1"></i>{{ $cat->name }}
+                                </button>
+                            @endforeach
+                            @foreach($championCategories as $champ)
+                                <button wire:click="switchChampionCategory({{ $champ->id }})"
+                                        wire:key="champ-tab-{{ $champ->id }}"
+                                        class="btn btn-sm px-3 {{ ($selectedChampionCategoryId == $champ->id) ? 'btn-warning text-dark' : 'btn-outline-warning' }}">
+                                    <i class="ti ti-trophy me-1"></i>{{ $champ->name }}
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             {{-- Podium Top 3 --}}
             @if(collect($rankings)->isNotEmpty())
                 <div class="card mb-4 bg-white border">
