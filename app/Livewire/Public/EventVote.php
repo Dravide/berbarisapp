@@ -266,18 +266,13 @@ class EventVote extends Component
     }
 
     /**
-     * Top 10 pendukung kategori terpilih — agregasi per email voter.
+     * Top 10 pendukung seluruh kategori — agregasi per email voter.
      */
     public function getTopSupportersProperty()
     {
-        if (!$this->selectedCategoryId) {
-            return collect();
-        }
-
         return VoteTransaction::where('eventner_id', $this->eventner->id)
             ->where('status', 'PAID')
             ->whereNotNull('voter_email')
-            ->whereIn('registration_id', Registration::where('competition_category_id', $this->selectedCategoryId)->pluck('id'))
             ->selectRaw('voter_email, MAX(voter_name) as voter_name, SUM(votes_earned) as total_votes, COUNT(*) as total_transactions')
             ->groupBy('voter_email')
             ->orderByDesc('total_votes')

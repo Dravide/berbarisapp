@@ -30,7 +30,7 @@ class EventVoteTopSupportersTest extends TestCase
         ], $extra));
     }
 
-    public function test_top_supporters_aggregate_per_email()
+    public function test_top_supporters_aggregate_per_email_across_all_categories()
     {
         $user = \App\Models\User::factory()->eventner()->create(['is_active' => true]);
         $eventner = Eventner::factory()->create([
@@ -39,42 +39,39 @@ class EventVoteTopSupportersTest extends TestCase
             'vote_active' => true,
         ]);
         $parent = CompetitionCategory::factory()->create(['eventner_id' => $eventner->id, 'parent_id' => null]);
-        $category = CompetitionCategory::factory()->create(['eventner_id' => $eventner->id, 'parent_id' => $parent->id]);
-        $otherCategory = CompetitionCategory::factory()->create(['eventner_id' => $eventner->id, 'parent_id' => $parent->id]);
+        $categoryA = CompetitionCategory::factory()->create(['eventner_id' => $eventner->id, 'parent_id' => $parent->id]);
+        $categoryB = CompetitionCategory::factory()->create(['eventner_id' => $eventner->id, 'parent_id' => $parent->id]);
 
-        $reg = Registration::factory()->create([
+        $regA = Registration::factory()->create([
             'eventner_id' => $eventner->id,
-            'competition_category_id' => $category->id,
+            'competition_category_id' => $categoryA->id,
         ]);
-        $regOther = Registration::factory()->create([
+        $regB = Registration::factory()->create([
             'eventner_id' => $eventner->id,
-            'competition_category_id' => $otherCategory->id,
+            'competition_category_id' => $categoryB->id,
         ]);
 
-        // Email sama transaksi 2x — harus tergabung (20 + 30 = 50)
-        $this->createVoteTransaction($eventner, $reg, 'dedi@mail.com', 'Dedi', 20);
-        $this->createVoteTransaction($eventner, $reg, 'dedi@mail.com', 'Dedi', 30);
+        // Email sama transaksi 2x lintas kategori — tergabung (20 + 30 = 50)
+        $this->createVoteTransaction($eventner, $regA, 'dedi@mail.com', 'Dedi', 20);
+        $this->createVoteTransaction($eventner, $regB, 'dedi@mail.com', 'Dedi', 30);
         // Email beda, vote lebih kecil
-        $this->createVoteTransaction($eventner, $reg, 'andi@mail.com', 'Andi', 40);
-        // Email sama tapi PENDING — tidak dihitung
-        $this->createVoteTransaction($eventner, $reg, 'pending@mail.com', 'Pending Guy', 99, [
+        $this->createVoteTransaction($eventner, $regA, 'andi@mail.com', 'Andi', 40);
+        // PENDING — tidak dihitung
+        $this->createVoteTransaction($eventner, $regA, 'pending@mail.com', 'Pending Guy', 99, [
             'status' => 'PENDING',
             'paid_at' => null,
         ]);
-        // Email sama, vote besar, tapi kategori lain — tidak muncul di kategori ini
-        $this->createVoteTransaction($eventner, $regOther, 'other@mail.com', 'Other Cat', 100);
 
+        // Tampil di laman awal /vote (view categories, tanpa kategori terpilih)
         Livewire::actingAs($user)
-            ->withQueryParams(['selectedCategoryId' => $category->id])
             ->test(\App\Livewire\Public\EventVote::class, ['slug' => $eventner->slug])
             ->assertSee('Top 10 Pendukung')
             ->assertSee('dedi@mail.com')
             ->assertSee('andi@mail.com')
-            ->assertDontSee('pending@mail.com')
-            ->assertDontSee('other@mail.com');
+            ->assertDontSee('pending@mail.com');
 
-        // Urutan: dedi (50) di atas andi (40)
-        $supporters = Livewire::withQueryParams(['selectedCategoryId' => $category->id])
+        // Urutan: dedi (50, gabung lintas kategori) di atas andi (40)
+        $supporters = Livewire::actingAs($user)
             ->test(\App\Livewire\Public\EventVote::class, ['slug' => $eventner->slug])
             ->instance()->topSupporters;
 
