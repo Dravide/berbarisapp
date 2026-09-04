@@ -191,7 +191,8 @@
                              x-transition:leave="transition ease-in duration-300"
                              x-transition:leave-start="opacity-100 translate-x-0"
                              x-transition:leave-end="opacity-0 -translate-x-4"
-                             class="col-start-1 row-start-1">
+                             class="overflow-hidden"
+                             style="grid-area: 1 / 1">
                             @if($topReg)
                                 <div class="flex items-center gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
                                     <div class="shrink-0 relative">
