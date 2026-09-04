@@ -656,59 +656,6 @@
                     animation: fadeSlide 0.3s ease-out both;
                 }
 
-                /* ===== Tier effects: komentar vote tinggi ===== */
-                #comments-widget .cw-tier {
-                    border: 2px solid transparent;
-                    border-radius: 0.625rem;
-                    padding: 0.25rem 0.375rem;
-                }
-                #comments-widget .cw-tier--populer {
-                    border-color: #f59e0b;
-                    --cw-glow: rgba(245, 158, 11, 0.45);
-                    animation: cwGlow 2.4s ease-in-out infinite;
-                }
-                #comments-widget .cw-tier--hot {
-                    border-color: #f97316;
-                    --cw-glow: rgba(249, 115, 22, 0.6);
-                    animation: cwGlow 1.8s ease-in-out infinite;
-                }
-                #comments-widget .cw-tier--elite {
-                    border-color: #c026d3;
-                    background-color: rgba(192, 38, 211, 0.05);
-                    --cw-glow: rgba(192, 38, 211, 0.5);
-                    animation: cwGlow 2s ease-in-out infinite;
-                }
-                @property --cw-angle {
-                    syntax: '<angle>';
-                    initial-value: 0deg;
-                    inherits: false;
-                }
-                #comments-widget .cw-tier--legend {
-                    background:
-                        linear-gradient(#fff, #fff) padding-box,
-                        conic-gradient(from var(--cw-angle),
-                            #f59e0b, #ef4444, #ec4899, #8b5cf6, #06b6d4, #22c55e, #eab308, #f59e0b) border-box;
-                    animation: cwSpin 3s linear infinite;
-                }
-                #comments-widget .cw-tier--mvp {
-                    background:
-                        linear-gradient(#fff, #fff) padding-box,
-                        linear-gradient(110deg, #b45309, #fbbf24, #fde68a, #fbbf24, #b45309) border-box;
-                    background-size: 100% 100%, 250% 100%;
-                    animation: cwShimmer 2.5s linear infinite, cwGlow 2s ease-in-out infinite;
-                    --cw-glow: rgba(250, 204, 21, 0.55);
-                }
-                @keyframes cwGlow {
-                    0%, 100% { box-shadow: 0 0 0 0 var(--cw-glow); }
-                    50%      { box-shadow: 0 0 10px 2px var(--cw-glow); }
-                }
-                @keyframes cwSpin {
-                    to { --cw-angle: 360deg; }
-                }
-                @keyframes cwShimmer {
-                    from { background-position: 0 0, 200% 0; }
-                    to   { background-position: 0 0, -200% 0; }
-                }
                 /* Badge tier */
                 #comments-widget .cw-badge {
                     display: inline-flex; align-items: center; gap: 2px;
@@ -720,10 +667,6 @@
                 #comments-widget .cw-badge--elite   { background: #fae8ff; color: #a21caf; }
                 #comments-widget .cw-badge--legend  { background: linear-gradient(90deg,#ede9fe,#fce7f3); color: #7c3aed; }
                 #comments-widget .cw-badge--mvp     { background: #fef9c3; color: #a16207; }
-                @media (prefers-reduced-motion: reduce) {
-                    #comments-widget .cw-tier,
-                    #comments-widget .cw-badge { animation: none !important; }
-                }
             </style>
 
             <button type="button" @click="open = !open" class="cw-btn"
@@ -776,7 +719,7 @@
                                 };
                             @endphp
                             <div class="px-5 py-4 animate-fade-slide" style="animation-delay: {{ $idx * 40 }}ms;">
-                                <div @class(['cw-comment', $tier ? 'cw-tier cw-tier--'.$tier : ''])>
+                                <div class="cw-comment">
                                 <div class="flex items-start gap-3">
                                     <span class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary shrink-0 text-xs font-bold">
                                         {{ strtoupper(substr($c->voter_name, 0, 1)) }}
