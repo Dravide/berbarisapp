@@ -346,9 +346,9 @@
             $bottomNavLeft = [
                 ['url' => event_url($eventner, 'detail'), 'label' => 'Info', 'icon' => 'ti-info-circle', 'active' => request()->routeIs('event.detail') || request()->routeIs('subdomain.detail')],
                 ['url' => event_url($eventner, 'participant'), 'label' => 'Peserta', 'icon' => 'ti-users', 'active' => request()->routeIs('event.participant') || request()->routeIs('subdomain.participant')],
-                ['url' => event_url($eventner, 'results'), 'label' => 'Hasil', 'icon' => 'ti-trophy', 'active' => request()->routeIs('event.results') || request()->routeIs('subdomain.results')],
             ];
             $bottomNavRight = [
+                ['url' => event_url($eventner, 'results'), 'label' => 'Hasil', 'icon' => 'ti-trophy', 'active' => request()->routeIs('event.results') || request()->routeIs('subdomain.results')],
                 ['url' => event_url($eventner, 'vote'), 'label' => 'Vote', 'icon' => 'ti-heart-filled', 'active' => request()->routeIs('event.vote') || request()->routeIs('subdomain.vote')],
             ];
             if ($eventner->ticket_active && $eventner->ticket_price) {
@@ -357,26 +357,25 @@
         @endphp
         <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-outline-variant/50"
              style="padding-bottom: env(safe-area-inset-bottom);" aria-label="Navigasi utama">
-            <div class="relative flex items-stretch h-16">
-                <div class="flex-1 flex justify-around items-center">
-                    @foreach($bottomNavLeft as $item)
-                        <a href="{{ $item['url'] }}" class="flex flex-col items-center justify-center gap-0.5 w-14 text-decoration-none {{ $item['active'] ? 'text-primary' : 'text-on-surface-variant' }}" aria-current="{{ $item['active'] ? 'page' : 'false' }}">
-                            <i class="ti {{ $item['icon'] }} text-xl"></i>
-                            <span class="text-[10px] font-bold leading-none">{{ $item['label'] }}</span>
-                        </a>
-                    @endforeach
+            <div class="flex h-16 items-stretch">
+                @foreach($bottomNavLeft as $item)
+                    <a href="{{ $item['url'] }}" class="flex-1 flex flex-col items-center justify-center gap-1 text-decoration-none {{ $item['active'] ? 'text-primary' : 'text-on-surface-variant' }}" aria-current="{{ $item['active'] ? 'page' : 'false' }}">
+                        <i class="ti {{ $item['icon'] }} text-xl"></i>
+                        <span class="text-[10px] font-bold leading-none">{{ $item['label'] }}</span>
+                    </a>
+                @endforeach
+                {{-- Slot tengah: tempat FAB Daftar menempel, tidak pernah menimpa item --}}
+                <div class="flex-1 relative">
+                    <a href="{{ event_url($eventner, 'register') }}" class="absolute left-1/2 -translate-x-1/2 -top-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-on-primary shadow-lg transition hover:bg-[#1a72ff]" aria-label="Daftar Sekarang">
+                        <i class="ti ti-user-plus text-2xl"></i>
+                    </a>
                 </div>
-                <div class="flex-1 flex justify-around items-center">
-                    @foreach($bottomNavRight as $item)
-                        <a href="{{ $item['url'] }}" class="flex flex-col items-center justify-center gap-0.5 w-14 text-decoration-none {{ $item['active'] ? 'text-primary' : 'text-on-surface-variant' }}" aria-current="{{ $item['active'] ? 'page' : 'false' }}">
-                            <i class="ti {{ $item['icon'] }} text-xl"></i>
-                            <span class="text-[10px] font-bold leading-none">{{ $item['label'] }}</span>
-                        </a>
-                    @endforeach
-                </div>
-                <a href="{{ event_url($eventner, 'register') }}" class="absolute left-1/2 -translate-x-1/2 -top-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-on-primary shadow-lg transition hover:bg-[#1a72ff]" aria-label="Daftar Sekarang">
-                    <i class="ti ti-user-plus text-2xl"></i>
-                </a>
+                @foreach($bottomNavRight as $item)
+                    <a href="{{ $item['url'] }}" class="flex-1 flex flex-col items-center justify-center gap-1 text-decoration-none {{ $item['active'] ? 'text-primary' : 'text-on-surface-variant' }}" aria-current="{{ $item['active'] ? 'page' : 'false' }}">
+                        <i class="ti {{ $item['icon'] }} text-xl"></i>
+                        <span class="text-[10px] font-bold leading-none">{{ $item['label'] }}</span>
+                    </a>
+                @endforeach
             </div>
         </nav>
     @endisset
