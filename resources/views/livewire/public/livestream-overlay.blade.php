@@ -44,31 +44,52 @@
     {{-- HEADER (Terra style for full mode, Dark for others) --}}
     {{-- ============================================================ --}}
     @if($mode === 'full')
-    <header class="shrink-0 flex items-center gap-6 px-8 h-[64px]" style="background: #ffffff; border-bottom: 1px solid #c2c6d9;">
-        <div class="absolute top-0 left-8 right-8 h-0.5" style="background: var(--color-primary); opacity: 0.3; border-radius: 0 0 4px 4px;"></div>
+    <header class="shrink-0 flex items-center gap-5 px-8 h-[72px] relative overflow-hidden" style="background: #ffffff; border-bottom: 1px solid #c2c6d9;">
+        <div class="absolute top-0 left-0 h-[3px]" style="width: 30%; background: var(--color-primary);"></div>
+        <div class="absolute top-0 left-[30%] h-[3px] w-16" style="background: linear-gradient(90deg, var(--color-primary), transparent);"></div>
 
         @if($eventner->logo_event)
-            <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="h-9 w-9 rounded-lg object-cover border border-primary/20 shrink-0" style="box-shadow: 0 2px 8px rgba(var(--color-primary-rgb),0.1);">
+            <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="h-11 w-11 rounded-xl object-cover shrink-0" style="border: 1px solid #c2c6d9; box-shadow: 0 2px 10px rgba(25,28,29,0.08);">
         @else
-            <span class="flex h-9 w-9 items-center justify-center rounded-lg shrink-0" style="background: var(--color-primary); opacity: 0.1; color: var(--color-primary);">
-                <i class="ti ti-calendar-event text-sm"></i>
+            <span class="flex h-11 w-11 items-center justify-center rounded-xl shrink-0" style="background: rgba(var(--color-primary-rgb),0.08); color: var(--color-primary); border: 1px solid rgba(var(--color-primary-rgb),0.15);">
+                <i class="ti ti-calendar-event text-lg"></i>
             </span>
         @endif
 
         <div class="flex-1 min-w-0">
-            <h1 class="font-display text-lg font-extrabold tracking-tight truncate" style="color: #191c1d;">
+            <div class="flex items-center gap-2 mb-0.5">
+                <span class="text-[9px] font-bold uppercase tracking-[0.18em]" style="color: var(--color-primary);">Live Streaming</span>
+                @if($eventner->diselenggarakan_oleh)
+                    <span class="text-[9px] font-medium" style="color: #737687;">— {{ \Illuminate\Support\Str::limit($eventner->diselenggarakan_oleh, 40) }}</span>
+                @endif
+            </div>
+            <h1 class="font-display text-lg font-extrabold tracking-tight truncate leading-tight" style="color: #191c1d;">
                 {{ $eventner->nama_event }}
             </h1>
+            @if($eventner->venue || $eventner->tanggal)
+                <p class="text-[10px] font-medium truncate flex items-center gap-3" style="color: #737687;">
+                    @if($eventner->venue)
+                        <span class="inline-flex items-center gap-1"><i class="ti ti-map-pin-filled text-[10px]" style="color: #ba1a1a;"></i>{{ \Illuminate\Support\Str::limit($eventner->venue, 50) }}</span>
+                    @endif
+                    @if($eventner->tanggal)
+                        <span class="inline-flex items-center gap-1"><i class="ti ti-calendar-filled text-[10px]" style="color: var(--color-primary);"></i>{{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d F Y') }}</span>
+                    @endif
+                </p>
+            @endif
         </div>
 
-        <div class="flex items-center gap-6 shrink-0">
-            <div class="flex items-center gap-3 px-4 py-1.5 rounded-full" style="background: #f3f4f5; border: 1px solid #c2c6d9;">
-                <span class="w-2.5 h-2.5 rounded-full" style="background: #ba1a1a; animation: pulse-red 2s infinite ease-in-out;"></span>
-                <span class="text-[10px] font-bold uppercase tracking-[0.12em]" style="color: #191c1d;">Live</span>
+        <div class="flex items-center gap-4 shrink-0">
+            <div class="flex items-center gap-2 px-4 py-1.5 rounded-full" style="background: rgba(186,26,26,0.06); border: 1px solid rgba(186,26,26,0.15);">
+                <span class="relative flex h-2 w-2">
+                    <span class="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping"></span>
+                    <span class="relative inline-flex h-2 w-2 rounded-full bg-red-500"></span>
+                </span>
+                <span class="text-[10px] font-bold uppercase tracking-[0.15em]" style="color: #ba1a1a;">Live</span>
             </div>
-            <div class="h-5 w-px" style="background: #c2c6d9;"></div>
-            <div class="flex items-center gap-2" style="background: rgba(var(--color-primary-rgb),0.08); padding: 2px 10px; border-radius: 6px;">
-                <span class="font-mono text-sm font-bold tracking-widest" style="color: var(--color-primary);" x-text="time"></span>
+            <div class="h-6 w-px" style="background: #c2c6d9;"></div>
+            <div class="text-right">
+                <div class="font-mono text-xl font-bold tabular-nums leading-none tracking-tight" style="color: #191c1d;" x-text="time"></div>
+                <div class="text-[9px] font-medium leading-tight mt-0.5" style="color: #737687;" x-text="date"></div>
             </div>
         </div>
     </header>
@@ -465,10 +486,9 @@
         </main>
 
     {{-- ============================================================ --}}
-    {{-- FULL MODE (default) --}}
     {{-- FULL MODE (default) — Terra Organic Style --}}
     @else
-        <main class="flex-1 flex overflow-hidden" style="background: #f8f9fa;" wire:poll.10s="refreshVoteData">
+        <main class="flex-1 flex overflow-hidden" style="background: #f1f5f9;" wire:poll.10s="refreshVoteData">
 
             {{-- LEFT: Leaderboard Sidebar --}}
             <aside class="w-[300px] shrink-0 flex flex-col mr-6" style="background: #ffffff; border: 1px solid #c2c6d9; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,98,255,0.06);">
@@ -476,39 +496,72 @@
                     <span class="flex items-center justify-center w-8 h-8 rounded-lg" style="background: rgba(var(--color-primary-rgb),0.08); color: var(--color-primary);">
                         <i class="ti ti-trophy text-sm"></i>
                     </span>
-                    <span class="font-display text-sm font-bold" style="color: #191c1d;">Leaderboard</span>
-                    <span class="text-[9px] font-bold px-2 py-0.5 rounded-full ml-auto" style="background: rgba(var(--color-primary-rgb),0.08); color: var(--color-primary);">TOP 7</span>
+                    <div class="min-w-0">
+                        <span class="font-display text-sm font-bold block leading-tight" style="color: #191c1d;">Leaderboard</span>
+                        <span class="text-[9px] font-medium" style="color: #737687;">Vote berbayar — real-time</span>
+                    </div>
+                    <span class="text-[9px] font-bold px-2 py-0.5 rounded-full ml-auto shrink-0" style="background: rgba(var(--color-primary-rgb),0.08); color: var(--color-primary);">TOP 7</span>
                 </div>
 
-                @php $top7 = array_slice($topVoteData, 0, 7); @endphp
-                <div class="flex-1 overflow-y-auto p-3 gap-1 flex flex-col leaderboard-scroll"
+                @php
+                    $top7 = array_slice($topVoteData, 0, 7);
+                    $maxVotes = max($top7[0]['total_votes'] ?? 1, 1);
+                @endphp
+                <div class="flex-1 overflow-y-auto p-3 gap-1.5 flex flex-col leaderboard-scroll"
                      x-data="{ h: -1 }"
                      x-init="setInterval(() => h = (h + 1) % {{ max(count($top7), 1) }}, 5000)">
                     @forelse($top7 as $i => $reg)
-                        @php $rank = $i + 1; $votes = $reg['total_votes'] ?? 0; @endphp
-                        <div class="flex items-center gap-3 px-3 py-3 rounded-xl transition-colors duration-500"
+                        @php
+                            $rank = $i + 1;
+                            $votes = $reg['total_votes'] ?? 0;
+                            $pct = min(round(($votes / $maxVotes) * 100), 100);
+                            $medal = $rank === 1 ? '#f5b301' : ($rank === 2 ? '#98a2b3' : ($rank === 3 ? '#cd7f32' : null));
+                        @endphp
+                        <div class="relative overflow-hidden rounded-xl transition-colors duration-500"
                              :style="h === {{ $i }}
                                 ? 'background: rgba(var(--color-primary-rgb), 0.08); border: 1px solid var(--color-primary);'
                                 : 'background: {{ $i % 2 === 0 ? 'transparent' : '#f3f4f5' }}; border: 1px solid transparent;'">
-                            <span class="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs font-bold"
-                                  style="{{ $rank === 1 ? 'background: var(--color-primary); color: #fff;' : 'background: #f3f4f5; color: #191c1d;' }}">
-                                @if($rank === 1)<i class="ti ti-crown-filled text-xs"></i>@else{{ $rank }}@endif
-                            </span>
-                            @if($reg['logo_sekolah'])
-                                <img src="{{ asset('storage/' . $reg['logo_sekolah']) }}" class="h-8 w-8 rounded-lg object-cover border border-primary/20 shrink-0">
-                            @else
-                                <span class="flex h-8 w-8 items-center justify-center rounded-lg shrink-0" style="background: #f3f4f5; color: #424656;"><i class="ti ti-school text-xs"></i></span>
-                            @endif
-                            <span class="flex-1 text-xs font-bold whitespace-nowrap truncate" style="color: #191c1d;">{{ $reg['display_name'] ?? $reg['nama_sekolah'] }}</span>
-                            <span class="shrink-0 text-xs font-bold tabular-nums" style="color: {{ $rank === 1 ? 'var(--color-primary)' : '#424656' }};">{{ number_format($votes, 0, ',', '.') }}</span>
+                            {{-- progress bar vote --}}
+                            <div class="absolute bottom-0 left-0 h-[3px] rounded-full" style="width: {{ $pct }}%; background: {{ $medal ?? 'rgba(var(--color-primary-rgb),0.3)' }}; transition: width 0.8s ease;"></div>
+                            <div class="flex items-center gap-3 px-3 py-3">
+                                <span class="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs font-bold"
+                                      style="{{ $medal ? 'background: ' . $medal . '; color: #fff;' : 'background: #f3f4f5; color: #191c1d;' }}">
+                                    @if($rank === 1)<i class="ti ti-crown-filled text-sm"></i>@else{{ $rank }}@endif
+                                </span>
+                                @if($reg['logo_sekolah'])
+                                    <img src="{{ asset('storage/' . $reg['logo_sekolah']) }}" class="h-9 w-9 rounded-lg object-cover shrink-0" style="border: 1px solid #c2c6d9;">
+                                @else
+                                    <span class="flex h-9 w-9 items-center justify-center rounded-lg shrink-0" style="background: #f3f4f5; color: #424656;"><i class="ti ti-school text-xs"></i></span>
+                                @endif
+                                <div class="flex-1 min-w-0">
+                                    <span class="block text-xs font-bold whitespace-nowrap truncate leading-tight" style="color: #191c1d;">{{ $reg['display_name'] ?? $reg['nama_sekolah'] }}</span>
+                                    @if($medal)
+                                        <span class="block text-[9px] font-bold uppercase tracking-wider mt-0.5" style="color: {{ $medal }};">
+                                            {{ $rank === 1 ? 'Juara Sementara' : 'Posisi ' . $rank }}
+                                        </span>
+                                    @endif
+                                </div>
+                                <div class="shrink-0 text-right">
+                                    <span class="block text-sm font-bold tabular-nums leading-none" style="color: {{ $medal ?? 'var(--color-primary)' }};">{{ number_format($votes, 0, ',', '.') }}</span>
+                                    <span class="block text-[9px] font-medium mt-0.5" style="color: #737687;">suara</span>
+                                </div>
+                            </div>
                         </div>
                     @empty
                         <div class="flex-1 flex items-center justify-center py-12"><p class="text-xs font-medium" style="color: #424656;">Belum ada data</p></div>
                     @endforelse
                 </div>
+
+                {{-- footer total vote --}}
+                @if(count($top7) > 0)
+                    <div class="shrink-0 flex items-center justify-between px-5 py-3" style="border-top: 1px solid #c2c6d9; background: #fafbfc;">
+                        <span class="text-[10px] font-bold uppercase tracking-wider" style="color: #737687;">Total Suara</span>
+                        <span class="text-sm font-bold tabular-nums" style="color: var(--color-primary);">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
+                    </div>
+                @endif
             </aside>
 
-            {{-- CENTER: Greenscreen --}}
+            {{-- CENTER: Greenscreen (chroma key #00FF00 untuk OBS — jangan ganti warna) --}}
             <div class="flex-1 bg-[#00FF00] relative overflow-hidden">
                 <div class="absolute top-6 left-6 w-14 h-14 border-t border-l rounded-tl-lg" style="border-color: #c2c6d9;"></div>
                 <div class="absolute top-6 right-6 w-14 h-14 border-t border-r rounded-tr-lg" style="border-color: #c2c6d9;"></div>
@@ -525,20 +578,24 @@
                     <span class="flex items-center justify-center w-8 h-8 rounded-lg" style="background: rgba(var(--color-primary-rgb),0.08); color: var(--color-primary);">
                         <i class="ti ti-message-circle text-sm"></i>
                     </span>
-                    <span class="font-display text-sm font-bold" style="color: #191c1d;">Dukungan</span>
-                    <span class="text-[9px] font-bold ml-auto" style="color: var(--color-primary);">{{ number_format($totalVoteCount, 0, ',', '.') }} suara</span>
+                    <div class="min-w-0">
+                        <span class="font-display text-sm font-bold block leading-tight" style="color: #191c1d;">Dukungan</span>
+                        <span class="text-[9px] font-medium" style="color: #737687;">Komentar & vote terbaru</span>
+                    </div>
+                    <span class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full" style="background: rgba(186,26,26,0.06); color: #ba1a1a;">{{ number_format($totalVoteCount, 0, ',', '.') }} suara</span>
                 </div>
 
                 @php $coms3 = array_slice($this->overlayComments ?? [], 0, 5); @endphp
                 <div class="flex-1 overflow-y-auto p-4 space-y-3 leaderboard-scroll">
                     @forelse($coms3 as $c)
+                        @php $initial = strtoupper(mb_substr(trim($c['voter_name'] ?? '?'), 0, 1)); @endphp
                         <div class="flex items-start gap-2.5">
-                            <span style="color: #ba1a1a; font-size: 14px; line-height: 1.3;">♥</span>
-                            <div class="flex-1 min-w-0">
-                                <span class="font-bold text-sm" style="color: var(--color-primary);">{{ $c['voter_name'] }}</span>
-                                <span class="block mt-0.5 text-xs leading-relaxed" style="color: #424656;">"{{ $c['comment'] }}"</span>
+                            <span class="shrink-0 flex items-center justify-center w-7 h-7 rounded-full text-[10px] font-bold" style="background: rgba(var(--color-primary-rgb),0.1); color: var(--color-primary);">{{ $initial }}</span>
+                            <div class="flex-1 min-w-0 rounded-xl rounded-tl-sm px-3 py-2" style="background: #f3f4f5;">
+                                <span class="block text-xs font-bold leading-tight" style="color: #191c1d;">{{ $c['voter_name'] }}</span>
+                                <span class="block mt-0.5 text-[11px] leading-relaxed" style="color: #424656;">"{{ $c['comment'] }}"</span>
                             </div>
-                            <span class="shrink-0 text-xs font-bold" style="color: #424656;">+{{ number_format($c['votes_earned'] ?? 0, 0, ',', '.') }}</span>
+                            <span class="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-md" style="background: rgba(186,26,26,0.06); color: #ba1a1a;">+{{ number_format($c['votes_earned'] ?? 0, 0, ',', '.') }}</span>
                         </div>
                     @empty
                         <div class="flex items-center justify-center py-12"><p class="text-sm" style="color: #424656;">Belum ada komentar</p></div>
@@ -548,7 +605,7 @@
         </main>
 
         {{-- BOTTOM BAR --}}
-        <div class="shrink-0 flex items-center h-[44px] px-8 gap-10" style="background: #ffffff; border-top: 1px solid #c2c6d9;">
+        <div class="shrink-0 flex items-center h-[48px] px-8 gap-8" style="background: #ffffff; border-top: 1px solid #c2c6d9;">
             @php $comsAll = $this->overlayComments ?? []; @endphp
             @if(count($comsAll) > 0)
             <div class="flex-1 min-w-0 relative h-full overflow-hidden"
@@ -562,21 +619,28 @@
                          x-transition:leave-start="opacity-100 translate-y-0"
                          x-transition:leave-end="opacity-0 -translate-y-3"
                          class="absolute inset-0 flex items-center gap-2.5 px-2">
-                        <span style="color: #ba1a1a;">♥</span>
+                        <span class="shrink-0 flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-bold" style="background: rgba(var(--color-primary-rgb),0.1); color: var(--color-primary);" x-text="(c.n||'?').charAt(0).toUpperCase()"></span>
                         <span class="text-xs font-bold truncate max-w-[140px]" style="color: var(--color-primary);" x-text="c.n"></span>
                         <span class="text-xs italic truncate flex-1" style="color: #424656;" x-text="'— “'+c.t+'”'"></span>
-                        <span class="text-xs shrink-0 font-bold" style="color: #424656;" x-text="'+'+Number(c.v).toLocaleString('id-ID')"></span>
+                        <span class="text-xs shrink-0 font-bold" style="color: #ba1a1a;" x-text="'+'+Number(c.v).toLocaleString('id-ID')"></span>
                     </div>
                 </template>
             </div>
+            @else
+            <div class="flex-1 flex items-center gap-2">
+                <span class="text-[10px] font-bold uppercase tracking-wider shrink-0" style="color: #737687;">Komentar</span>
+                <span class="text-xs italic" style="color: #737687;">Belum ada dukungan masuk</span>
+            </div>
             @endif
-            <div class="shrink-0 flex items-center gap-4">
-                <span class="text-[10px] font-bold uppercase tracking-wider" style="color: #424656;">Kegiatan</span>
+            <div class="h-5 w-px shrink-0" style="background: #c2c6d9;"></div>
+            <div class="shrink-0 flex items-center gap-3">
+                <span class="text-[10px] font-bold uppercase tracking-wider" style="color: #737687;">Kegiatan</span>
                 @foreach($categoriesData->take(4) as $cat)
-                    <span class="text-xs" style="color: #424656;">{{ $cat->full_name }}<span style="color: #737687;"> ({{ $cat->registrations_count ?? 0 }})</span></span>
+                    <span class="text-[11px] px-2 py-0.5 rounded-full font-medium" style="background: #f3f4f5; color: #424656;">{{ $cat->full_name }}<span style="color: #737687;"> ({{ $cat->registrations_count ?? 0 }})</span></span>
                 @endforeach
             </div>
-            <span class="text-[10px]" style="color: #424656;">Powered by <span class="font-bold" style="color: var(--color-primary);">BARIS APP</span></span>
+            <div class="h-5 w-px shrink-0" style="background: #c2c6d9;"></div>
+            <span class="shrink-0 text-[10px] font-medium" style="color: #424656;">Powered by <span class="font-bold" style="color: var(--color-primary);">BARIS APP</span></span>
         </div>
     @endif
 
