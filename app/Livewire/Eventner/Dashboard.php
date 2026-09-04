@@ -5,6 +5,7 @@ namespace App\Livewire\Eventner;
 use Livewire\Component;
 use App\Models\Eventner;
 use App\Models\Registration;
+use App\Models\VoteBooster;
 use App\Models\VoteTransaction;
 use App\Models\Ticket;
 use App\Models\Judge;
@@ -26,6 +27,30 @@ class Dashboard extends Component
     public $ticketRevenue = 0;
     public $voteRevenue = 0;
     public $feeRevenue = 0;
+
+    // Stat card tambahan
+    public $totalVotes = 0;
+    public $ticketsSold = 0;
+    public $ticketsCheckedIn = 0;
+    public $pendingVerificationCount = 0;
+    public $berkasMenungguCount = 0;
+
+    // Voting
+    public $voteStatus = 'nonaktif';
+    public $voteTimeRemaining = null;
+    public $votePaidCount = 0;
+    public $votePendingCount = 0;
+    public $activeBooster;
+    public $recentVoteTransactions;
+
+    // Pembayaran & berkas
+    public $paymentBreakdown = [];
+    public $berkasBreakdown = [];
+    public $pendingVerifications;
+
+    // Tiket & jadwal
+    public $ticketStatusBreakdown = [];
+    public $daysUntilEvent;
 
     // Trial & Feature gating
     public $trialDaysLeft = 0;
@@ -73,10 +98,6 @@ class Dashboard extends Component
 
         $this->totalRevenue = $this->voteRevenue + $this->ticketRevenue + (float) $feeRevenue;
 
-        $feeRevenue = Registration::where('eventner_id', $eventnerId)
-            ->where('payment_status', 'paid')
-            ->sum('total_fee');
-
         $this->totalRegistrations = Registration::where('eventner_id', $eventnerId)->count();
         $this->totalCategories = $this->eventner->competitionCategories()->whereNotNull('parent_id')->count();
         $this->totalJudges = Judge::where('eventner_id', $eventnerId)->count();
@@ -87,6 +108,81 @@ class Dashboard extends Component
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
+
+        // Stat card tambahan
+        $this->totalVotes = (int) VoteTransaction::where('eventner_id', $eventnerId)
+            ->where('status', 'PAID')
+            ->sum('votes_earned');
+
+        $this->ticketsSold = (int) Ticket::where('eventner_id', $eventnerId)
+            ->whereIn('status', ['PAID', 'CHECKED_IN'])
+            ->sum('quantity');
+
+        $this->ticketsCheckedIn = Ticket::where('eventner_id', $eventnerId)
+            ->where('status', 'CHECKED_IN')
+            ->count();
+
+        $this->pendingVerificationCount = Registration::where('eventner_id', $eventnerId)
+            ->where('payment_status', 'pending_verification')
+            ->count();
+
+        $this->berkasMenungguCount = Registration::where('eventner_id', $eventnerId)
+            ->whereIn('status_berkas', ['Menunggu', 'booking'])
+            ->count();
+
+        // Jadwal voting
+        $this->loadVoteSchedule();
+
+        // Voting stats
+        $this->votePaidCount = VoteTransaction::where('eventner_id', $eventnerId)
+            ->where('status', 'PAID')
+            ->count();
+        $this->votePendingCount = VoteTransaction::where('eventner_id', $eventnerId)
+            ->where('status', 'PENDING')
+            ->count();
+        $this->activeBooster = VoteBooster::where('eventner_id', $eventnerId)
+            ->active()
+            ->orderByDesc('vote_multiplier')
+            ->first();
+        $this->recentVoteTransactions = VoteTransaction::with('registration')
+            ->where('eventner_id', $eventnerId)
+            ->where('status', 'PAID')
+            ->orderByDesc('paid_at')
+            ->limit(5)
+            ->get();
+
+        // Breakdown pembayaran & berkas
+        $this->paymentBreakdown = Registration::where('eventner_id', $eventnerId)
+            ->selectRaw('payment_status, COUNT(*) as total')
+            ->groupBy('payment_status')
+            ->pluck('total', 'payment_status')
+            ->toArray();
+
+        $this->berkasBreakdown = Registration::where('eventner_id', $eventnerId)
+            ->selectRaw('status_berkas, COUNT(*) as total')
+            ->groupBy('status_berkas')
+            ->pluck('total', 'status_berkas')
+            ->toArray();
+
+        $this->pendingVerifications = Registration::with('competitionCategory')
+            ->where('eventner_id', $eventnerId)
+            ->where('payment_status', 'pending_verification')
+            ->orderBy('created_at')
+            ->limit(3)
+            ->get();
+
+        // Breakdown status tiket
+        $this->ticketStatusBreakdown = Ticket::where('eventner_id', $eventnerId)
+            ->selectRaw('status, COUNT(*) as total, SUM(quantity) as qty')
+            ->groupBy('status')
+            ->get()
+            ->mapWithKeys(fn ($row) => [$row->status => ['total' => (int) $row->total, 'qty' => (int) $row->qty]])
+            ->toArray();
+
+        // Countdown hari-H
+        $this->daysUntilEvent = $this->eventner->tanggal
+            ? (int) now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($this->eventner->tanggal)->startOfDay(), false)
+            : null;
 
         // Scoring progress per category
         $this->loadScoringProgress();
@@ -141,6 +237,38 @@ class Dashboard extends Component
                 'scored' => $scoredParticipants,
                 'percentage' => $percentage,
             ];
+        }
+    }
+
+    public function loadVoteSchedule()
+    {
+        $this->voteStatus = 'nonaktif';
+        $this->voteTimeRemaining = null;
+
+        if (!$this->eventner->vote_active) {
+            return;
+        }
+
+        $now = now();
+
+        if ($this->eventner->vote_start && $now->lt($this->eventner->vote_start)) {
+            $this->voteStatus = 'belum';
+            return;
+        }
+
+        if ($this->eventner->vote_end && $now->gt($this->eventner->vote_end)) {
+            $this->voteStatus = 'selesai';
+            return;
+        }
+
+        // Berjalan (atau tanpa jadwal sama sekali = selalu buka)
+        $this->voteStatus = 'berjalan';
+
+        if ($this->eventner->vote_end) {
+            $diff = $now->diff($this->eventner->vote_end);
+            $this->voteTimeRemaining = $diff->days > 0
+                ? $diff->days . ' hari ' . $diff->h . ' jam'
+                : $diff->h . ' jam ' . $diff->i . ' menit';
         }
     }
 
