@@ -217,10 +217,17 @@ class Eventner extends Model
                 'register' => '/daftar',
                 'drawing.spin' => '/drawing',
                 'drawing.results' => '/hasil-drawing',
+                'checkin.scan' => '/scan',
                 'overlay' => '/overlay',
                 'juknis' => '/juknis',
             ];
             $path = $paths[$route] ?? '/';
+
+            // Route dengan path param (scan butuh token sebagai segmen, bukan query)
+            if ($route === 'checkin.scan' && !empty($params['token'])) {
+                $path .= '/' . rawurlencode($params['token']);
+                unset($params['token']);
+            }
 
             $nonPathParams = $params;
             $query = $nonPathParams ? '?' . http_build_query($nonPathParams) : '';

@@ -115,9 +115,11 @@
                         <a href="{{ event_url($eventner, 'drawing.spin') }}" target="_blank" class="btn btn-sm btn-outline-primary text-nowrap">
                             <i class="ti ti-arrows-shuffle me-1"></i> Layar Undian
                         </a>
-                        <a href="{{ event_url($eventner, 'checkin.scan') }}" target="_blank" class="btn btn-sm btn-outline-info text-nowrap">
-                            <i class="ti ti-scan me-1"></i> Check-in Tiket
-                        </a>
+                        @if($eventner->checkin_token)
+                            <a href="{{ event_url($eventner, 'checkin.scan', ['token' => $eventner->checkin_token]) }}" target="_blank" class="btn btn-sm btn-outline-info text-nowrap">
+                                <i class="ti ti-scan me-1"></i> Check-in Tiket
+                            </a>
+                        @endif
                         <a href="{{ route('eventner.participants.qr-batch') }}" class="btn btn-sm btn-outline-secondary text-nowrap">
                             <i class="ti ti-qrcode me-1"></i> QR Peserta
                         </a>
@@ -630,9 +632,15 @@
                             <h5 class="card-title fw-semibold mb-0">
                                 <i class="ti ti-scan me-2 text-info"></i> Check-in Tiket
                             </h5>
-                            <a href="{{ event_url($eventner, 'checkin.scan') }}" target="_blank" class="btn btn-sm btn-info">
-                                <i class="ti ti-scan me-1"></i> Scan
-                            </a>
+                            @if($eventner->checkin_token)
+                                <a href="{{ event_url($eventner, 'checkin.scan', ['token' => $eventner->checkin_token]) }}" target="_blank" class="btn btn-sm btn-info">
+                                    <i class="ti ti-scan me-1"></i> Scan
+                                </a>
+                            @else
+                                <a href="{{ route('eventner.tickets.settings') }}" class="btn btn-sm btn-outline-info">
+                                    <i class="ti ti-settings me-1"></i> Aktifkan
+                                </a>
+                            @endif
                         </div>
                         <div class="card-body">
                             <div class="d-flex align-items-center justify-content-between">
@@ -761,8 +769,11 @@
     </div>
 </div>
 
+@assets
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+@endassets
+
 @script
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
     // Revenue Chart
     const revenueCtx = document.getElementById('revenueChart');
