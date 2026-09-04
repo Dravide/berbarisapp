@@ -595,7 +595,7 @@
 
     {{-- ========== STICKY BOTTOM FORM (Mobile Only) ========== --}}
     @if($view !== 'payment' && $view !== 'success' && !in_array($view, ['scheduled', 'closed']) && $eventner->vote_active)
-        <div class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-outline-variant/50 p-4 shadow-[0_-4px_24px_rgba(0,0,0,0.06)]" style="padding-bottom: calc(1rem + env(safe-area-inset-bottom));">
+        <div class="lg:hidden fixed left-0 right-0 z-40 bg-white border-t border-outline-variant/50 p-4 shadow-[0_-4px_24px_rgba(0,0,0,0.06)]" style="bottom: calc(4.25rem + env(safe-area-inset-bottom));">
             @if($selectedRegistrationId)
                 <div class="flex items-center justify-between gap-4">
                     <div class="min-w-0 flex-1">
@@ -640,7 +640,8 @@
                 @media (max-width: 1023px) {
                     #comments-widget { left: 0; right: 0; bottom: 0; }
                     #comments-widget .cw-btn {
-                        display: flex; position: fixed; bottom: 5.5rem; right: 1rem;
+                        display: flex; position: fixed; right: 1rem;
+                        bottom: calc(10.25rem + env(safe-area-inset-bottom));
                     }
                     #comments-widget .cw-panel {
                         position: fixed; bottom: 0; left: 0; right: 0; top: auto;

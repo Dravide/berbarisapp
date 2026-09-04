@@ -228,47 +228,19 @@
             {{-- CTA / Action Buttons --}}
             <div class="flex items-center gap-2">
                 @isset($eventner?->slug)
-                    <a href="{{ event_url($eventner, 'register') }}" class="btn-primary py-2 px-4 text-xs font-bold leading-none hidden sm:inline-flex">
+                    <a href="{{ event_url($eventner, 'register') }}" class="btn-primary py-2 px-4 text-xs font-bold leading-none inline-flex">
                         Daftar
                     </a>
                 @else
                     <a href="{{ route('login') }}" class="btn-ghost py-2 px-4 text-xs font-bold leading-none hidden sm:inline-flex">Login</a>
-                    <a href="{{ route('login') }}" class="btn-primary py-2 px-4 text-xs font-bold leading-none hidden sm:inline-flex">Mulai Sekarang</a>
-                @endisset
-
-                {{-- Mobile menu toggle button --}}
-                <button id="nav-toggle" class="md:hidden flex h-10 w-10 items-center justify-center rounded-md text-on-surface hover:bg-primary/5" aria-label="Toggle Menu">
-                    <i class="ti ti-menu-2 text-2xl"></i>
-                </button>
-            </div>
-        </div>
-
-        {{-- Mobile menu (hidden by default) --}}
-        <div id="mobile-menu" class="hidden border-t border-outline-variant/50 md:hidden bg-white/95 backdrop-blur-xl">
-            <div class="container-landing flex flex-col gap-1 py-3">
-                @isset($eventner?->slug)
-                    <a href="{{ event_url($eventner, 'detail') }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.detail') || request()->routeIs('subdomain.detail') ? 'text-primary bg-primary/5' : '' }}">Info Event</a>
-                    <a href="{{ event_url($eventner, 'participant') }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.participant') || request()->routeIs('subdomain.participant') ? 'text-primary bg-primary/5' : '' }}">Peserta</a>
-                    <a href="{{ event_url($eventner, 'results') }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.results') || request()->routeIs('subdomain.results') ? 'text-primary bg-primary/5' : '' }}">Hasil Perlombaan</a>
-                    <a href="{{ event_url($eventner, 'vote') }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.vote') || request()->routeIs('subdomain.vote') ? 'text-primary bg-primary/5' : '' }}">Vote</a>
-                    @if($eventner->ticket_active && $eventner->ticket_price)
-                        <a href="{{ event_url($eventner, 'ticket') }}" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.ticket') || request()->routeIs('subdomain.ticket') ? 'text-primary bg-primary/5' : '' }}">Tiket</a>
-                    @endif
-                    <a href="{{ event_url($eventner, 'register') }}" class="btn-primary text-center mt-2 py-2.5">Daftar Sekarang</a>
-                @else
-                    <a href="{{ url('/') }}#features" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5">Fitur</a>
-                    <a href="{{ url('/') }}#eventners" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5">Event</a>
-                    <a href="{{ url('/') }}#partners" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5">Mitra</a>
-                    <a href="{{ url('/') }}#contact" class="block rounded-md px-3 py-2.5 text-sm font-semibold text-on-surface-variant hover:bg-primary/5">Kontak</a>
-                    <a href="{{ route('login') }}" class="btn-ghost text-center mt-2 py-2.5">Login</a>
-                    <a href="{{ route('login') }}" class="btn-primary text-center mt-1 py-2.5">Mulai Sekarang</a>
+                    <a href="{{ route('login') }}" class="btn-primary py-2 px-4 text-xs font-bold leading-none inline-flex">Mulai Sekarang</a>
                 @endisset
             </div>
         </div>
     </header>
 
     {{-- Main Content Slot --}}
-    <main class="flex-1 w-full">
+    <main class="flex-1 w-full @isset($eventner?->slug) pb-20 md:pb-0 @endisset">
         {{ $slot }}
     </main>
 
@@ -368,13 +340,48 @@
         </div>
     </footer>
 
-    {{-- Scripts --}}
-    <script>
-        document.getElementById('nav-toggle')?.addEventListener('click', () => {
-            document.getElementById('mobile-menu')?.classList.toggle('hidden');
-        });
-    </script>
+    {{-- Mobile bottom navigation (hanya halaman event) --}}
+    @isset($eventner?->slug)
+        @php
+            $bottomNavLeft = [
+                ['url' => event_url($eventner, 'detail'), 'label' => 'Info', 'icon' => 'ti-info-circle', 'active' => request()->routeIs('event.detail') || request()->routeIs('subdomain.detail')],
+                ['url' => event_url($eventner, 'participant'), 'label' => 'Peserta', 'icon' => 'ti-users', 'active' => request()->routeIs('event.participant') || request()->routeIs('subdomain.participant')],
+                ['url' => event_url($eventner, 'results'), 'label' => 'Hasil', 'icon' => 'ti-trophy', 'active' => request()->routeIs('event.results') || request()->routeIs('subdomain.results')],
+            ];
+            $bottomNavRight = [
+                ['url' => event_url($eventner, 'vote'), 'label' => 'Vote', 'icon' => 'ti-heart-filled', 'active' => request()->routeIs('event.vote') || request()->routeIs('subdomain.vote')],
+            ];
+            if ($eventner->ticket_active && $eventner->ticket_price) {
+                $bottomNavRight[] = ['url' => event_url($eventner, 'ticket'), 'label' => 'Tiket', 'icon' => 'ti-ticket', 'active' => request()->routeIs('event.ticket') || request()->routeIs('subdomain.ticket')];
+            }
+        @endphp
+        <nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-xl border-t border-outline-variant/50"
+             style="padding-bottom: env(safe-area-inset-bottom);" aria-label="Navigasi utama">
+            <div class="relative flex items-stretch h-16">
+                <div class="flex-1 flex justify-around items-center">
+                    @foreach($bottomNavLeft as $item)
+                        <a href="{{ $item['url'] }}" class="flex flex-col items-center justify-center gap-0.5 w-14 text-decoration-none {{ $item['active'] ? 'text-primary' : 'text-on-surface-variant' }}" aria-current="{{ $item['active'] ? 'page' : 'false' }}">
+                            <i class="ti {{ $item['icon'] }} text-xl"></i>
+                            <span class="text-[10px] font-bold leading-none">{{ $item['label'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+                <div class="flex-1 flex justify-around items-center">
+                    @foreach($bottomNavRight as $item)
+                        <a href="{{ $item['url'] }}" class="flex flex-col items-center justify-center gap-0.5 w-14 text-decoration-none {{ $item['active'] ? 'text-primary' : 'text-on-surface-variant' }}" aria-current="{{ $item['active'] ? 'page' : 'false' }}">
+                            <i class="ti {{ $item['icon'] }} text-xl"></i>
+                            <span class="text-[10px] font-bold leading-none">{{ $item['label'] }}</span>
+                        </a>
+                    @endforeach
+                </div>
+                <a href="{{ event_url($eventner, 'register') }}" class="absolute left-1/2 -translate-x-1/2 -top-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-on-primary shadow-lg transition hover:bg-[#1a72ff]" aria-label="Daftar Sekarang">
+                    <i class="ti ti-user-plus text-2xl"></i>
+                </a>
+            </div>
+        </nav>
+    @endisset
 
+    {{-- Scripts --}}
     @livewireScripts
     @stack('scripts')
 </body>

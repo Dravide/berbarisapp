@@ -123,4 +123,26 @@ class PublicPagesTest extends TestCase
         $response = $this->get('/event/tidak-ada-99999');
         $response->assertStatus(404);
     }
+
+    public function test_mobile_bottom_nav_replaces_hamburger()
+    {
+        $eventner = Eventner::factory()->create([
+            'status' => 'approved',
+            'ticket_active' => true,
+            'ticket_price' => 25000,
+        ]);
+
+        $response = $this->get("/event/{$eventner->slug}");
+        $response->assertStatus(200);
+
+        // Bottom bar: label semua item + FAB daftar tampil
+        foreach (['Info', 'Peserta', 'Hasil', 'Vote', 'Tiket', 'Daftar Sekarang'] as $label) {
+            $response->assertSee($label, false);
+        }
+        $response->assertSee('aria-label="Navigasi utama"', false);
+
+        // Hamburger menu + dropdown hilang dari markup
+        $response->assertDontSee('nav-toggle');
+        $response->assertDontSee('mobile-menu');
+    }
 }
