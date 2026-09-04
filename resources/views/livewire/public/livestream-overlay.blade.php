@@ -184,6 +184,102 @@
         </main>
 
     {{-- ============================================================ --}}
+    {{-- CATEGORY MODE — rank vote + komentar per kategori --}}
+    {{-- ============================================================ --}}
+    @elseif($mode === 'category')
+        <main class="flex-1 flex flex-col px-12 py-6 overflow-hidden" wire:poll.10s="refreshVoteData"
+              style="background: #0a0d1a; background-image: radial-gradient(ellipse at 50% 0%, rgba(var(--color-primary-rgb),0.06) 0%, transparent 60%);">
+
+            {{-- Header: nama kategori + total vote kategori --}}
+            <div class="shrink-0 flex items-center gap-6 mb-5">
+                <span class="flex items-center justify-center w-12 h-12 rounded-xl shrink-0" style="background: rgba(var(--color-primary-rgb),0.15); color: #fff; border: 1px solid rgba(var(--color-primary-rgb),0.25);">
+                    <i class="ti ti-award text-2xl"></i>
+                </span>
+                <div class="flex-1 min-w-0">
+                    <span class="text-[10px] font-bold uppercase tracking-[0.2em] block mb-1" style="color: rgba(var(--color-primary-rgb),0.8);">Klasemen Vote Kategori</span>
+                    <h1 class="font-display text-2xl font-extrabold text-white leading-tight truncate">
+                        {{ $selectedCategory?->parent ? $selectedCategory->parent->name . ' — ' : '' }}{{ $selectedCategory?->name ?? 'Kategori' }}
+                    </h1>
+                </div>
+                <div class="text-right shrink-0">
+                    <span class="font-display text-3xl font-extrabold leading-none" style="color: var(--color-primary);">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
+                    <span class="text-[9px] font-bold text-white/25 uppercase tracking-[0.15em] block mt-1">Total Vote</span>
+                </div>
+            </div>
+
+            <div class="flex-1 flex gap-6 overflow-hidden min-h-0">
+                {{-- Kiri: Leaderboard top 10 kategori --}}
+                <div class="flex-1 rounded-2xl flex flex-col overflow-hidden" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
+                    <div class="shrink-0 flex items-center gap-2.5 px-6 py-3" style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+                        <i class="ti ti-trophy text-sm" style="color: #f59e0b;"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">Peringkat</span>
+                        <span class="text-[9px] font-bold px-2 py-0.5 rounded-full ml-auto" style="background: rgba(var(--color-primary-rgb),0.15); color: #fff;">TOP {{ min(count($topVoteData), 10) }}</span>
+                    </div>
+                    @php
+                        $topCat = array_slice($topVoteData, 0, 10);
+                        $maxCatV = max($topCat[0]['total_votes'] ?? 1, 1);
+                    @endphp
+                    <div class="flex-1 overflow-y-auto divide-y leaderboard-scroll" style="border-color: rgba(255,255,255,0.03);">
+                        @forelse($topCat as $i => $reg)
+                            @php
+                                $rank = $i + 1;
+                                $votes = $reg['total_votes'] ?? 0;
+                                $barPct = min(($votes / $maxCatV) * 100, 100);
+                                $medal = $rank === 1 ? '#f59e0b' : ($rank === 2 ? '#94a3b8' : ($rank === 3 ? '#38bdf8' : null));
+                            @endphp
+                            <div class="relative flex items-center gap-4 px-6 py-3 overflow-hidden">
+                                <div class="absolute inset-y-0 left-0 pointer-events-none" style="width: {{ $barPct }}%; background: linear-gradient(90deg, rgba(var(--color-primary-rgb),0.12), transparent);"></div>
+                                <span class="relative shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-lg text-sm font-bold"
+                                      style="{{ $medal ? 'background: ' . $medal . '20; color: ' . $medal . '; border: 1px solid ' . $medal . '40;' : 'background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.3); border: 1px solid rgba(255,255,255,0.05);' }}">
+                                    @if($rank === 1)<i class="ti ti-crown-filled"></i>@else{{ $rank }}@endif
+                                </span>
+                                @if($reg['logo_sekolah'])
+                                    <img src="{{ asset('storage/' . $reg['logo_sekolah']) }}" class="relative h-10 w-10 rounded-xl object-cover shrink-0" style="border: 1px solid rgba(255,255,255,0.08);">
+                                @else
+                                    <span class="relative flex h-10 w-10 items-center justify-center rounded-xl shrink-0 text-white/20" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);"><i class="ti ti-school text-lg"></i></span>
+                                @endif
+                                <span class="relative flex-1 text-sm font-bold text-white/80 truncate">{{ $reg['display_name'] ?? $reg['nama_sekolah'] }}</span>
+                                <span class="relative shrink-0 font-display font-extrabold text-base" style="color: {{ $medal ?? 'var(--color-primary)' }};">{{ number_format($votes, 0, ',', '.') }}</span>
+                            </div>
+                        @empty
+                            <div class="flex-1 flex items-center justify-center py-12">
+                                <p class="text-sm text-white/25">Belum ada vote di kategori ini</p>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                {{-- Kanan: Komentar kategori --}}
+                <div class="w-[360px] shrink-0 rounded-2xl flex flex-col overflow-hidden" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);">
+                    <div class="shrink-0 flex items-center gap-2.5 px-6 py-3" style="border-bottom: 1px solid rgba(255,255,255,0.04);">
+                        <i class="ti ti-message-circle text-sm" style="color: #ec4899;"></i>
+                        <span class="text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">Dukungan</span>
+                    </div>
+                    @php $comsCat = array_slice($overlayComments ?? [], 0, 10); @endphp
+                    <div class="flex-1 overflow-y-auto p-4 space-y-3 leaderboard-scroll">
+                        @forelse($comsCat as $c)
+                            @php $initial = strtoupper(mb_substr(trim($c['voter_name'] ?? '?'), 0, 1)); @endphp
+                            <div class="flex items-start gap-2.5">
+                                <span class="shrink-0 flex items-center justify-center w-8 h-8 rounded-full text-[11px] font-bold" style="background: rgba(var(--color-primary-rgb),0.2); color: #fff;">{{ $initial }}</span>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-baseline gap-2">
+                                        <span class="text-xs font-bold truncate" style="color: #fff;">{{ $c['voter_name'] }}</span>
+                                        <span class="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded" style="background: rgba(186,26,26,0.3); color: #ff9a9a;">+{{ number_format($c['votes_earned'] ?? 0, 0, ',', '.') }}</span>
+                                    </div>
+                                    <p class="mt-0.5 text-[11px] leading-relaxed" style="color: rgba(255,255,255,0.6);">"{{ $c['comment'] }}"</p>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="flex-1 flex items-center justify-center">
+                                <p class="text-xs text-white/25">Belum ada komentar</p>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+        </main>
+
+    {{-- ============================================================ --}}
     {{-- CUSTOM MODE --}}
     {{-- ============================================================ --}}
     @elseif($mode === 'custom')

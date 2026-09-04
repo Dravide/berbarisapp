@@ -56,6 +56,7 @@ class Manage extends Component
 
         $categories = CompetitionCategory::where('eventner_id', $this->eventner->id)
             ->whereNotNull('parent_id')
+            ->with('parent')
             ->withCount('registrations')
             ->get();
 

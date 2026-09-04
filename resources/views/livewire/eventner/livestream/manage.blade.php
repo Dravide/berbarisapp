@@ -97,6 +97,36 @@
         </div>
     </div>
 
+    {{-- ========== PER KATEGORI OVERLAYS ========== --}}
+    @if($categories->isNotEmpty())
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-body p-5">
+            <h5 class="fs-6 fw-bold text-deep-slate mb-1">Overlay Per Kategori</h5>
+            <p class="text-xs text-on-surface-variant mb-4">Rank vote + komentar, scoped ke satu kategori — cocok untuk OBS per segmen lomba.</p>
+
+            <div class="row g-3">
+                @foreach($categories as $cat)
+                    <div class="col-6 col-lg-3">
+                        <a href="{{ event_url($eventner, 'overlay') }}?mode=category&selectedCategoryId={{ $cat->id }}" target="_blank"
+                           class="d-block p-4 rounded-2xl text-decoration-none transition"
+                           style="background: #f0f4f8; border: 2px solid #d0dae4;"
+                           onmouseover="this.style.borderColor='#6366f1';this.style.background='#e8ecf4'"
+                           onmouseout="this.style.borderColor='#d0dae4';this.style.background='#f0f4f8'">
+                            <span class="d-inline-flex align-items-center justify-center" style="width: 48px; height: 48px; border-radius: 14px; background: #6366f115; color: #6366f1; font-size: 24px; margin-bottom: 8px;">
+                                <i class="ti ti-award"></i>
+                            </span>
+                            <h6 class="fw-bold text-deep-slate mb-0 text-truncate" style="font-size: 13px;">
+                                {{ $cat->parent ? $cat->parent->name . ' — ' : '' }}{{ $cat->name }}
+                            </h6>
+                            <span class="text-xs text-on-surface-variant">{{ $cat->registrations_count }} kontingen</span>
+                        </a>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- ========== CUSTOM OVERLAY SETTINGS ========== --}}
     <div class="card border-0 shadow-sm mb-5">
         <div class="card-body p-5">
