@@ -519,7 +519,7 @@
 
                         <div class="grid gap-3 sm:grid-cols-2">
                             @forelse($participants as $reg)
-                                @php $rank = $search ? ($loop->index + 1) : ($loop->index + 4); @endphp
+                                @php $rank = $loop->index + 1; @endphp
                                 @if($eventner->vote_active)
                                     <div wire:click="selectTeam({{ $reg->id }})"
                                          class="surface-card cursor-pointer p-4 transition duration-200 {{ $selectedRegistrationId == $reg->id ? 'ring-2 ring-primary bg-primary/5 border-transparent shadow-md' : 'border-outline-variant/50 hover:-translate-y-0.5 hover:shadow-sm' }}">
