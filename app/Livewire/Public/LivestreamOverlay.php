@@ -25,7 +25,7 @@ class LivestreamOverlay extends Component
         'mode' => ['except' => 'full'],
     ];
 
-    protected $allowedModes = ['full', 'greenscreen', 'vote', 'kegiatan', 'custom'];
+    protected $allowedModes = ['full', 'greenscreen', 'vote', 'comments', 'kegiatan', 'custom'];
 
     public function mount($slug = null)
     {
@@ -41,8 +41,8 @@ class LivestreamOverlay extends Component
             $this->mode = 'full';
         }
 
-        // Load competition categories (except greenscreen mode)
-        if ($this->mode !== 'greenscreen') {
+        // Load competition categories (except greenscreen + comments mode)
+        if (!in_array($this->mode, ['greenscreen', 'comments'])) {
             $this->categories = CompetitionCategory::where('eventner_id', $this->eventner->id)
                 ->whereNotNull('parent_id')
                 ->with('parent')
@@ -56,8 +56,8 @@ class LivestreamOverlay extends Component
             $this->loadVoteData();
         }
 
-        // Load comments for full + custom modes
-        if (in_array($this->mode, ['full', 'custom'])) {
+        // Load comments for full + comments + custom modes
+        if (in_array($this->mode, ['full', 'comments', 'custom'])) {
             $this->loadComments();
         }
 
@@ -72,7 +72,7 @@ class LivestreamOverlay extends Component
         if (in_array($this->mode, ['full', 'vote', 'custom'])) {
             $this->loadVoteData();
         }
-        if (in_array($this->mode, ['full', 'custom'])) {
+        if (in_array($this->mode, ['full', 'comments', 'custom'])) {
             $this->loadComments();
         }
     }

@@ -155,6 +155,35 @@
         </main>
 
     {{-- ============================================================ --}}
+    {{-- COMMENTS MODE — komentar vote saja untuk OBS browser source --}}
+    {{-- ============================================================ --}}
+    @elseif($mode === 'comments')
+        <main class="flex-1 flex flex-col justify-end items-stretch overflow-hidden" wire:poll.10s="refreshVoteData"
+              style="background: #000000;">
+            @php $comsC = array_slice($overlayComments ?? [], 0, 6); @endphp
+            <div class="flex flex-col-reverse gap-2.5 px-16 pb-10 max-w-[1100px] w-full mx-auto">
+                @forelse($comsC as $c)
+                    @php $initial = strtoupper(mb_substr(trim($c['voter_name'] ?? '?'), 0, 1)); @endphp
+                    <div class="flex items-start gap-3 rounded-xl px-5 py-3 self-start"
+                         style="background: rgba(0,0,0,0.72); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.08); max-width: 720px;">
+                        <span class="shrink-0 flex items-center justify-center w-9 h-9 rounded-full text-sm font-bold" style="background: rgba(var(--color-primary-rgb),0.25); color: #fff;">{{ $initial }}</span>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-sm font-bold truncate" style="color: #fff;">{{ $c['voter_name'] }}</span>
+                                <span class="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded" style="background: rgba(186,26,26,0.25); color: #ff9a9a;">+{{ number_format($c['votes_earned'] ?? 0, 0, ',', '.') }}</span>
+                            </div>
+                            <p class="mt-0.5 text-sm leading-relaxed" style="color: rgba(255,255,255,0.85);">"{{ $c['comment'] }}"</p>
+                        </div>
+                    </div>
+                @empty
+                    <div class="self-start rounded-xl px-5 py-3" style="background: rgba(0,0,0,0.72); border: 1px solid rgba(255,255,255,0.08);">
+                        <p class="text-sm italic" style="color: rgba(255,255,255,0.4);">Belum ada komentar dukungan</p>
+                    </div>
+                @endforelse
+            </div>
+        </main>
+
+    {{-- ============================================================ --}}
     {{-- CUSTOM MODE --}}
     {{-- ============================================================ --}}
     @elseif($mode === 'custom')

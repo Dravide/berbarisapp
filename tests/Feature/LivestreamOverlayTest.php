@@ -48,4 +48,16 @@ class LivestreamOverlayTest extends TestCase
 
         $response->assertStatus(200);
     }
+
+    public function test_overlay_comments_mode_renders()
+    {
+        $eventner = Eventner::factory()->create([
+            'status' => 'approved',
+            'slug' => 'test-overlay-comments',
+        ]);
+
+        $response = $this->get('/event/' . $eventner->slug . '/overlay?mode=comments');
+
+        $response->assertStatus(200);
+    }
 }

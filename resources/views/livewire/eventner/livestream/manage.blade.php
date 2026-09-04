@@ -53,6 +53,20 @@
                 </div>
 
                 <div class="col-6 col-lg-3">
+                    <a href="{{ event_url($eventner, 'overlay') }}?mode=comments" target="_blank"
+                       class="d-block p-4 rounded-2xl text-center text-decoration-none transition"
+                       style="background: #fdf0f4; border: 2px solid #f0d0dd;"
+                       onmouseover="this.style.borderColor='#ec4899';this.style.background='#fce4ef'"
+                       onmouseout="this.style.borderColor='#f0d0dd';this.style.background='#fdf0f4'">
+                        <span class="d-inline-flex align-items-center justify-center" style="width: 48px; height: 48px; border-radius: 14px; background: #ec489915; color: #ec4899; font-size: 24px; margin-bottom: 8px;">
+                            <i class="ti ti-message-chatbot"></i>
+                        </span>
+                        <h6 class="fw-bold text-deep-slate mb-0" style="font-size: 13px;">Komentar</h6>
+                        <span class="text-xs text-on-surface-variant">Komentar Vote Only</span>
+                    </a>
+                </div>
+
+                <div class="col-6 col-lg-3">
                     <a href="{{ event_url($eventner, 'overlay') }}?mode=kegiatan" target="_blank"
                        class="d-block p-4 rounded-2xl text-center text-decoration-none transition"
                        style="background: #f5fdf5; border: 2px solid #d0e6d0;"
