@@ -174,4 +174,97 @@ class EventnerDashboardTest extends TestCase
             ->test(\App\Livewire\Eventner\Dashboard::class)
             ->assertSet('voteStatus', 'nonaktif');
     }
+
+    public function test_dashboard_readiness_shows_progress()
+    {
+        [$user, $eventner, $category] = $this->setupEventnerUser();
+
+        // Event kosong: 1 kategori tanpa kuota, tanpa juri, tanpa rundown — readiness < 100
+        $component = Livewire::actingAs($user)
+            ->test(\App\Livewire\Eventner\Dashboard::class)
+            ->assertSet('readinessPercent', fn ($percent) => $percent < 100)
+            ->assertSee('Kesiapan Event Anda')
+            ->assertSee('Juri belum ada')
+            ->assertSee('Rundown kosong');
+
+        // Isi semua readiness → 100%
+        // Refresh user — Auth::user()->eventner relasi ter-cache dari mount pertama
+        $user = $user->fresh();
+        $eventner->update([
+            'logo_event' => 'logos/test.png',
+            'poster' => 'posters/test.png',
+            'vote_active' => true,
+            'vote_start' => now()->subDay(),
+            'vote_end' => now()->addDays(5),
+        ]);
+        $category->update(['kuota' => 10]);
+        \App\Models\Judge::create([
+            'eventner_id' => $eventner->id,
+            'name' => 'Juri Satu',
+            'phone_number' => '08123456789',
+        ]);
+        \App\Models\AssessmentCategory::create([
+            'eventner_id' => $eventner->id,
+            'name' => 'Penampilan',
+        ]);
+        \App\Models\EventRundown::create([
+            'eventner_id' => $eventner->id,
+            'title' => 'Opening',
+            'start_time' => '08:00',
+        ]);
+        // Undian: 1 registrasi dengan urutan_tampil
+        Registration::factory()->create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $category->id,
+            'urutan_tampil' => 1,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Eventner\Dashboard::class)
+            ->assertSet('readinessPercent', 100);
+    }
+
+    public function test_dashboard_alerts_generated()
+    {
+        [$user, $eventner, $category] = $this->setupEventnerUser();
+
+        Registration::factory()->create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $category->id,
+            'payment_status' => 'pending_verification',
+        ]);
+        Registration::factory()->create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $category->id,
+            'payment_status' => 'pending_verification',
+        ]);
+
+        // Kuota penuh: kuota 1 + 1 pendaftar = 100% ≥ 80%
+        $category->update(['kuota' => 1]);
+        Registration::factory()->create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $category->id,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Eventner\Dashboard::class)
+            ->assertSee('Perlu Perhatian')
+            ->assertSee('2 pembayaran menunggu verifikasi')
+            ->assertSee('% penuh');
+    }
+
+    public function test_dashboard_kpi_modules_render()
+    {
+        [$user, $eventner, $category] = $this->setupEventnerUser();
+
+        Livewire::actingAs($user)
+            ->test(\App\Livewire\Eventner\Dashboard::class)
+            ->assertSee('Aksi Cepat')
+            ->assertSee('Kategori Lomba')
+            ->assertSee('Undian')
+            ->assertSee('Skoring')
+            ->assertSee('Check-in Tiket')
+            ->assertDontSee('Pintasan Panitia')
+            ->assertDontSee('Informasi Event Anda');
+    }
 }

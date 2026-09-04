@@ -96,6 +96,99 @@
                 </div>
             </div>
 
+            {{-- Quick Actions Bar --}}
+            <div class="card shadow-none border mb-4">
+                <div class="card-body py-2 px-3">
+                    <div class="d-flex align-items-center gap-2 flex-nowrap overflow-auto pb-1">
+                        <small class="text-muted fw-semibold text-nowrap me-1 d-none d-sm-block">
+                            <i class="ti ti-bolt me-1"></i>Aksi Cepat:
+                        </small>
+                        <a href="{{ route('eventner.finance.index') }}" class="btn btn-sm btn-warning text-nowrap">
+                            <i class="ti ti-alert-circle me-1"></i> Verifikasi
+                            @if($pendingVerificationCount > 0)
+                                <span class="badge bg-danger ms-1">{{ $pendingVerificationCount }}</span>
+                            @endif
+                        </a>
+                        <a href="{{ route('eventner.finance.pdf') }}" class="btn btn-sm btn-outline-success text-nowrap">
+                            <i class="ti ti-file-export me-1"></i> PDF Keuangan
+                        </a>
+                        <a href="{{ event_url($eventner, 'drawing.spin') }}" target="_blank" class="btn btn-sm btn-outline-primary text-nowrap">
+                            <i class="ti ti-arrows-shuffle me-1"></i> Layar Undian
+                        </a>
+                        <a href="{{ event_url($eventner, 'checkin.scan') }}" target="_blank" class="btn btn-sm btn-outline-info text-nowrap">
+                            <i class="ti ti-scan me-1"></i> Check-in Tiket
+                        </a>
+                        <a href="{{ route('eventner.participants.qr-batch') }}" class="btn btn-sm btn-outline-secondary text-nowrap">
+                            <i class="ti ti-qrcode me-1"></i> QR Peserta
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Event Readiness --}}
+            <div class="card border mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title fw-semibold mb-0">
+                        <i class="ti ti-list-check me-2 text-primary"></i> Kesiapan Event Anda
+                    </h5>
+                    <span class="fw-bold fs-3 {{ $readinessPercent >= 80 ? 'text-success' : ($readinessPercent >= 50 ? 'text-warning' : 'text-danger') }}">
+                        {{ $readinessPercent }}% siap
+                    </span>
+                </div>
+                <div class="card-body">
+                    <div class="progress mb-3" style="height: 10px;">
+                        <div class="progress-bar {{ $readinessPercent >= 80 ? 'bg-success' : ($readinessPercent >= 50 ? 'bg-warning' : 'bg-danger') }}"
+                             role="progressbar" style="width: {{ $readinessPercent }}%"
+                             aria-valuenow="{{ $readinessPercent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div class="row">
+                        @foreach($readiness as $item)
+                            <div class="col-md-6 mb-2">
+                                <div class="d-flex align-items-center justify-content-between gap-2">
+                                    <div class="d-flex align-items-center gap-2 text-truncate">
+                                        @if($item['status'] === 'done')
+                                            <i class="ti ti-circle-check text-success flex-shrink-0"></i>
+                                            <span class="small text-truncate">{{ $item['label'] }}</span>
+                                        @elseif($item['status'] === 'partial')
+                                            <i class="ti ti-minus text-warning flex-shrink-0"></i>
+                                            <span class="small text-truncate">{{ $item['label'] }}</span>
+                                        @else
+                                            <i class="ti ti-circle-x text-danger flex-shrink-0"></i>
+                                            <span class="small text-muted text-truncate">{{ $item['label'] }}</span>
+                                        @endif
+                                    </div>
+                                    <a href="{{ $item['route'] }}" class="btn btn-sm {{ $item['status'] === 'done' ? 'btn-light' : 'btn-outline-primary' }} text-nowrap flex-shrink-0">
+                                        {{ $item['action'] }}
+                                    </a>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+            {{-- Alerts & Tugas --}}
+            @if(!empty($alerts))
+                <div class="card border-warning-subtle bg-warning-subtle shadow-none mb-4">
+                    <div class="card-body py-2 px-3">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="ti ti-bell text-warning-emphasis"></i>
+                            <h6 class="fw-semibold mb-0 text-warning-emphasis">Perlu Perhatian</h6>
+                        </div>
+                        @foreach($alerts as $alert)
+                            <div class="d-flex align-items-center justify-content-between gap-2 py-1">
+                                <span class="small {{ $alert['severity'] === 'danger' ? 'text-danger fw-semibold' : 'text-warning-emphasis' }}">
+                                    <i class="ti ti-alert-triangle me-1"></i>{{ $alert['message'] }}
+                                </span>
+                                <a href="{{ $alert['route'] }}" class="btn btn-sm btn-outline-{{ $alert['severity'] === 'danger' ? 'danger' : 'warning' }} text-nowrap flex-shrink-0">
+                                    {{ $alert['action'] }} <i class="ti ti-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             {{-- Dashboard Stats — 4 card konsolidasi --}}
             @php
                 $fmt = fn ($v) => $v >= 1000000
@@ -130,6 +223,9 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="card-footer bg-white border-0 pt-0 pb-2 text-end">
+                            <a href="{{ route('eventner.participants.index') }}" class="small text-decoration-none">Kelola <i class="ti ti-arrow-right"></i></a>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -145,6 +241,9 @@
                                     <small class="text-muted">Vote {{ $fmt($voteRevenue) }} &middot; Tiket {{ $fmt($ticketRevenue) }} &middot; Fee {{ $fmt($feeRevenue) }}</small>
                                 </div>
                             </div>
+                        </div>
+                        <div class="card-footer bg-white border-0 pt-0 pb-2 text-end">
+                            <a href="{{ route('eventner.finance.index') }}" class="small text-decoration-none">Kelola <i class="ti ti-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>
@@ -178,6 +277,9 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="card-footer bg-white border-0 pt-0 pb-2 text-end">
+                            <a href="{{ route('eventner.vote-results.index') }}" class="small text-decoration-none">Kelola <i class="ti ti-arrow-right"></i></a>
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -197,6 +299,85 @@
                                     @endif
                                 </div>
                             </div>
+                        </div>
+                        <div class="card-footer bg-white border-0 pt-0 pb-2 text-end">
+                            <a href="{{ route('eventner.tickets.index') }}" class="small text-decoration-none">Kelola <i class="ti ti-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- KPI Row 2 — Modul lain --}}
+            <div class="row mb-4">
+                <div class="col-md-3 col-6">
+                    <div class="card border shadow-none h-100">
+                        <div class="card-body py-2 px-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <small class="text-muted d-block">Juri</small>
+                                    <span class="fw-bold fs-4">{{ $totalJudges }}</span>
+                                    <small class="d-block {{ $formatNilaiReady ? 'text-success' : 'text-warning' }}">
+                                        {{ $formatNilaiReady ? 'Format nilai siap' : 'Format nilai kosong' }}
+                                    </small>
+                                </div>
+                                <i class="ti ti-gavel text-muted fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-0 pt-0 pb-2 text-end">
+                            <a href="{{ route('eventner.judges.index') }}" class="small text-decoration-none">Kelola <i class="ti ti-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card border shadow-none h-100">
+                        <div class="card-body py-2 px-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <small class="text-muted d-block">Kategori Lomba</small>
+                                    <span class="fw-bold fs-4">{{ $totalCategories }}</span>
+                                    <small class="d-block text-muted">
+                                        {{ $kuotaTotal > 0 ? $kuotaFilled . '/' . $kuotaTotal . ' kuota terisi' : 'Kuota belum diset' }}
+                                    </small>
+                                </div>
+                                <i class="ti ti-category text-muted fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-0 pt-0 pb-2 text-end">
+                            <a href="{{ route('eventner.competition-categories.index') }}" class="small text-decoration-none">Kelola <i class="ti ti-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card border shadow-none h-100">
+                        <div class="card-body py-2 px-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <small class="text-muted d-block">Undian</small>
+                                    <span class="fw-bold fs-4">{{ $drawnTotal }}/{{ $drawnGrandTotal }}</span>
+                                    <small class="d-block text-muted">peserta sudah diundi</small>
+                                </div>
+                                <i class="ti ti-arrows-shuffle text-muted fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-0 pt-0 pb-2 text-end">
+                            <a href="{{ route('eventner.drawing.index') }}" class="small text-decoration-none">Kelola <i class="ti ti-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="card border shadow-none h-100">
+                        <div class="card-body py-2 px-3">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <small class="text-muted d-block">Skoring</small>
+                                    <span class="fw-bold fs-4">{{ $participantTotal > 0 ? $scoredTotal . '/' . $participantTotal : '0' }}</span>
+                                    <small class="d-block text-muted">peserta dinilai juri</small>
+                                </div>
+                                <i class="ti ti-checklist text-muted fs-5"></i>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-0 pt-0 pb-2 text-end">
+                            <a href="{{ route('eventner.scoring.index') }}" class="small text-decoration-none">Kelola <i class="ti ti-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>
@@ -256,6 +437,11 @@
                                 <span class="fw-semibold">s/d {{ $eventner->ticket_end?->translatedFormat('d M Y') ?? '-' }}</span>
                             </div>
                         @endif
+                        <div class="ms-auto">
+                            <a href="{{ $eventner->publicUrl('detail') }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="ti ti-external-link"></i> Laman Publik
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -329,62 +515,6 @@
             <div class="row">
                 <!-- Left Column -->
                 <div class="col-lg-8">
-                    <!-- Event Info -->
-                    <div class="card">
-                        <div class="card-header bg-white">
-                            <h5 class="card-title fw-semibold mb-0">Informasi Event Anda</h5>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-4 text-center mb-4 mb-md-0">
-                                    @if($eventner->logo_event)
-                                        <img src="{{ Storage::url($eventner->logo_event) }}" class="img-fluid rounded border p-2" style="max-height: 150px;">
-                                    @else
-                                        <div class="bg-light rounded p-5 text-center">
-                                            <i class="ti ti-photo fs-9 text-muted"></i>
-                                            <p class="mb-0 text-muted mt-2">No Logo</p>
-                                        </div>
-                                    @endif
-                                    <div class="mt-3">
-                                        <a href="{{ $eventner->publicUrl('detail') }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                            <i class="ti ti-external-link"></i> Link Pendaftaran Publik
-                                        </a>
-                                    </div>
-                                </div>
-                                <div class="col-md-8">
-                                    <ul class="list-group list-group-flush">
-                                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                            <span class="text-muted">Tingkat Perlombaan</span>
-                                            <span class="badge bg-primary rounded-pill">{{ $eventner->tingkat_perlombaan }}</span>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                            <span class="text-muted">Tanggal Pelaksanaan</span>
-                                            <span class="fw-bold">
-                                                @if($eventner->tanggal_akhir)
-                                                    {{ \Carbon\Carbon::parse($eventner->tanggal)->format('d M') }} - {{ \Carbon\Carbon::parse($eventner->tanggal_akhir)->format('d F Y') }}
-                                                @else
-                                                    {{ \Carbon\Carbon::parse($eventner->tanggal)->format('d F Y') }}
-                                                @endif
-                                            </span>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                            <span class="text-muted">Batas Pendaftaran</span>
-                                            <span class="fw-bold text-danger">{{ $eventner->tanggal_pendaftaran }}</span>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                                            <span class="text-muted">Venue / Lokasi</span>
-                                            <span class="fw-bold text-end">{{ $eventner->venue }}, {{ $eventner->lokasi }}</span>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-bottom-0">
-                                            <span class="text-muted">Technical Meeting</span>
-                                            <span class="fw-bold">{{ $eventner->technical_meeting }}</span>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Categories Table -->
                     <div class="card">
                         <div class="card-header bg-white">
@@ -494,56 +624,34 @@
 
                 <!-- Right Column -->
                 <div class="col-lg-4">
-                    <!-- Map Section -->
+                    {{-- Check-in mini-panel --}}
                     <div class="card">
-                        <div class="card-header bg-white">
-                            <h5 class="card-title fw-semibold mb-0">Lokasi Venue</h5>
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="card-title fw-semibold mb-0">
+                                <i class="ti ti-scan me-2 text-info"></i> Check-in Tiket
+                            </h5>
+                            <a href="{{ event_url($eventner, 'checkin.scan') }}" target="_blank" class="btn btn-sm btn-info">
+                                <i class="ti ti-scan me-1"></i> Scan
+                            </a>
                         </div>
                         <div class="card-body">
-                            @if($eventner->latitude && $eventner->longitude)
-                                <div class="rounded overflow-hidden mb-3 border">
-                                    <iframe
-                                        width="100%"
-                                        height="250"
-                                        frameborder="0"
-                                        scrolling="no"
-                                        marginheight="0"
-                                        marginwidth="0"
-                                        src="https://maps.google.com/maps?q={{ $eventner->latitude }},{{ $eventner->longitude }}&hl=id&z=15&output=embed">
-                                    </iframe>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div>
+                                    <small class="text-muted d-block">Check-in hari ini</small>
+                                    <span class="fw-bold fs-3">{{ $checkinsToday }}</span>
                                 </div>
-                                <a href="https://www.google.com/maps/search/?api=1&query={{ $eventner->latitude }},{{ $eventner->longitude }}" target="_blank" class="btn btn-primary w-100">
-                                    <i class="ti ti-navigation me-2"></i> Buka Google Maps
-                                </a>
-                            @else
-                                <div class="bg-light rounded p-4 text-center border">
-                                    <i class="ti ti-map-off fs-8 text-muted"></i>
-                                    <p class="mb-0 text-muted mt-2">Koordinat lokasi belum diset.</p>
-                                    <a href="{{ route('eventner.profile.index') }}" class="btn btn-sm btn-link">Setel Lokasi</a>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">Total terjual</small>
+                                    <span class="fw-bold fs-3">{{ $ticketsSold }}</span>
                                 </div>
+                            </div>
+                            @if($ticketsSold > 0)
+                                @php $checkinPercent = round(($ticketsCheckedIn / $ticketsSold) * 100); @endphp
+                                <div class="progress mt-2" style="height: 6px;">
+                                    <div class="progress-bar bg-info" style="width: {{ $checkinPercent }}%"></div>
+                                </div>
+                                <small class="text-muted">{{ $ticketsCheckedIn }}/{{ $ticketsSold }} tiket check-in ({{ $checkinPercent }}%)</small>
                             @endif
-                        </div>
-                    </div>
-
-                    <!-- Quick Links -->
-                    <div class="card">
-                        <div class="card-header bg-white text-primary fw-bold">Pintasan Panitia</div>
-                        <div class="list-group list-group-flush">
-                            <a href="{{ route('eventner.judges.index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
-                                <i class="ti ti-gavel fs-5 me-2"></i> Kelola Juri
-                            </a>
-                            <a href="{{ route('eventner.format-nilai.builder') }}" class="list-group-item list-group-item-action d-flex align-items-center">
-                                <i class="ti ti-file-text fs-5 me-2"></i> Builder Format Nilai
-                            </a>
-                            <a href="{{ route('eventner.vote-results.index') }}" class="list-group-item list-group-item-action d-flex align-items-center">
-                                <i class="ti ti-chart-bar fs-5 me-2"></i> Hasil Voting
-                            </a>
-                            <a href="{{ event_url($eventner, 'drawing.spin') }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center bg-primary-subtle">
-                                <i class="ti ti-arrows-shuffle fs-5 me-2 text-primary"></i> <span class="fw-bold">Layar Pengundian (Spin)</span>
-                            </a>
-                            <a href="{{ event_url($eventner, 'drawing.results') }}" target="_blank" class="list-group-item list-group-item-action d-flex align-items-center bg-primary-subtle">
-                                <i class="ti ti-list-numbers fs-5 me-2 text-primary"></i> <span class="fw-bold">Lihat Hasil Undian</span>
-                            </a>
                         </div>
                     </div>
 
@@ -616,6 +724,37 @@
                         </div>
                     </div>
                 </div>
+
+                    {{-- Map Section --}}
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title fw-semibold mb-0">Lokasi Venue</h5>
+                        </div>
+                        <div class="card-body">
+                            @if($eventner->latitude && $eventner->longitude)
+                                <div class="rounded overflow-hidden mb-3 border">
+                                    <iframe
+                                        width="100%"
+                                        height="250"
+                                        frameborder="0"
+                                        scrolling="no"
+                                        marginheight="0"
+                                        marginwidth="0"
+                                        src="https://maps.google.com/maps?q={{ $eventner->latitude }},{{ $eventner->longitude }}&hl=id&z=15&output=embed">
+                                    </iframe>
+                                </div>
+                                <a href="https://www.google.com/maps/search/?api=1&query={{ $eventner->latitude }},{{ $eventner->longitude }}" target="_blank" class="btn btn-primary w-100">
+                                    <i class="ti ti-navigation me-2"></i> Buka Google Maps
+                                </a>
+                            @else
+                                <div class="bg-light rounded p-4 text-center border">
+                                    <i class="ti ti-map-off fs-8 text-muted"></i>
+                                    <p class="mb-0 text-muted mt-2">Koordinat lokasi belum diset.</p>
+                                    <a href="{{ route('eventner.profile.index') }}" class="btn btn-sm btn-link">Setel Lokasi</a>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

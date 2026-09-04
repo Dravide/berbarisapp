@@ -56,6 +56,21 @@ class Dashboard extends Component
     public $revenueData = [];
     public $topParticipants = [];
 
+    // Command center
+    public $readiness = [];
+    public $readinessPercent = 0;
+    public $alerts = [];
+    public $checkinsToday = 0;
+
+    // KPI row 2 — modul lain
+    public $formatNilaiReady = false;
+    public $kuotaFilled = 0;
+    public $kuotaTotal = 0;
+    public $drawnTotal = 0;
+    public $drawnGrandTotal = 0;
+    public $scoredTotal = 0;
+    public $participantTotal = 0;
+
     public function mount()
     {
         $this->eventner = Auth::user()->eventner;
@@ -64,12 +79,12 @@ class Dashboard extends Component
             abort(403, 'Anda belum memiliki data Event terdaftar.');
         }
 
-        $this->loadData();
-
-        // Trial & feature gate info
+        // Trial & feature gate info — sebelum loadData (alerts butuh trialDaysLeft)
         $this->trialDaysLeft = $this->eventner->trialDaysLeft();
         $this->isTrialExpired = $this->eventner->isTrialExpired();
         $this->lockedFeatures = $this->eventner->lockedFeatures();
+
+        $this->loadData();
     }
 
     public function loadData()
@@ -157,6 +172,198 @@ class Dashboard extends Component
             }
         }
         $this->loadTopParticipants();
+
+        // Command center
+        $this->loadKpiModules();
+        $this->loadReadiness();
+        $this->loadAlerts();
+
+        $this->checkinsToday = Ticket::where('eventner_id', $eventnerId)
+            ->where('status', 'CHECKED_IN')
+            ->whereDate('checked_in_at', today())
+            ->count();
+    }
+
+    /**
+     * KPI row 2 — rekap modul lain: juri, kategori+kuota, undian, skoring.
+     */
+    public function loadKpiModules()
+    {
+        $eventnerId = $this->eventner->id;
+
+        $this->formatNilaiReady = $this->eventner->assessmentCategories()->exists();
+
+        // Kuota terisi vs total kuota (kategori child saja, yang punya kuota)
+        $categories = $this->eventner->competitionCategories()
+            ->whereNotNull('parent_id')
+            ->withCount('registrations')
+            ->get();
+        $this->kuotaFilled = 0;
+        $this->kuotaTotal = 0;
+        foreach ($categories as $cat) {
+            if ($cat->kuota) {
+                $this->kuotaTotal += (int) $cat->kuota;
+                $this->kuotaFilled += min((int) $cat->registrations_count, (int) $cat->kuota);
+            }
+        }
+
+        // Undian
+        $drawing = $this->drawingData;
+        foreach ($drawing as $row) {
+            $this->drawnTotal += $row['drawn'];
+            $this->drawnGrandTotal += $row['total'];
+        }
+
+        // Skoring — agregat scoringProgress
+        $this->scoredTotal = 0;
+        $this->participantTotal = 0;
+        foreach ($this->scoringProgress as $row) {
+            $this->scoredTotal += $row['scored'];
+            $this->participantTotal += $row['total'];
+        }
+    }
+
+    /**
+     * Checklist kesiapan event — tiap item: done / partial / todo + route aksi.
+     */
+    public function loadReadiness(): array
+    {
+        $eventner = $this->eventner;
+
+        $categories = $eventner->competitionCategories()->whereNotNull('parent_id')->get();
+        $totalCategories = $categories->count();
+        $categoriesWithKuota = $categories->where('kuota', '>', 0)->count();
+
+        $rundownCount = $eventner->eventRundowns()->count();
+        $formatNilaiCount = $eventner->assessmentCategories()->count();
+        $drawnCategories = $this->drawingData->where('drawn', '>', 0)->count();
+
+        $items = [
+            [
+                'key' => 'profil',
+                'label' => 'Profil & logo event',
+                'status' => ($eventner->logo_event && $eventner->poster) ? 'done' : (($eventner->logo_event || $eventner->poster) ? 'partial' : 'todo'),
+                'route' => route('eventner.profile.index'),
+                'action' => 'Kelola Profil',
+            ],
+            [
+                'key' => 'kategori',
+                'label' => $totalCategories > 0
+                    ? "Kategori lomba + kuota ({$totalCategories})"
+                    : 'Kategori lomba belum ada',
+                'status' => $totalCategories === 0 ? 'todo' : ($categoriesWithKuota === $totalCategories ? 'done' : 'partial'),
+                'route' => route('eventner.competition-categories.index'),
+                'action' => $totalCategories > 0 ? 'Kelola Kategori' : 'Tambah Kategori',
+            ],
+            [
+                'key' => 'juri',
+                'label' => $this->totalJudges > 0 ? "Juri ({$this->totalJudges})" : 'Juri belum ada',
+                'status' => $this->totalJudges > 0 ? 'done' : 'todo',
+                'route' => route('eventner.judges.index'),
+                'action' => $this->totalJudges > 0 ? 'Kelola Juri' : 'Tambah Juri',
+            ],
+            [
+                'key' => 'format_nilai',
+                'label' => $formatNilaiCount > 0 ? 'Format nilai' : 'Format nilai belum dibuat',
+                'status' => $formatNilaiCount > 0 ? 'done' : 'todo',
+                'route' => route('eventner.format-nilai.builder'),
+                'action' => $formatNilaiCount > 0 ? 'Builder' : 'Buat Format Nilai',
+            ],
+            [
+                'key' => 'rundown',
+                'label' => $rundownCount > 0 ? "Rundown ({$rundownCount} kegiatan)" : 'Rundown kosong',
+                'status' => $rundownCount > 0 ? 'done' : 'todo',
+                'route' => route('eventner.rundown.index'),
+                'action' => $rundownCount > 0 ? 'Kelola Rundown' : 'Buat Rundown',
+            ],
+            [
+                'key' => 'voting',
+                'label' => $this->voteStatus === 'berjalan' ? 'Voting berjalan' : 'Voting belum dijadwalkan',
+                'status' => ($eventner->vote_active && $eventner->vote_start && $eventner->vote_end) ? 'done' : 'partial',
+                'route' => route('eventner.vote-settings.index'),
+                'action' => 'Pengaturan Vote',
+            ],
+            [
+                'key' => 'tiket',
+                'label' => $eventner->ticket_active ? 'Tiket aktif' : 'Tiket tidak dipakai (opsional)',
+                'status' => !$eventner->ticket_active || ($eventner->ticket_start && $eventner->ticket_end) ? 'done' : 'partial',
+                'route' => route('eventner.tickets.settings'),
+                'action' => 'Pengaturan Tiket',
+            ],
+            [
+                'key' => 'undian',
+                'label' => $drawnCategories > 0 ? "Undian ({$drawnCategories} kategori diundi)" : 'Undian belum diadakan',
+                'status' => $drawnCategories > 0 ? 'done' : 'todo',
+                'route' => route('eventner.drawing.index'),
+                'action' => $drawnCategories > 0 ? 'Kelola Undian' : 'Mulai Undian',
+            ],
+        ];
+
+        $score = 0;
+        foreach ($items as $item) {
+            $score += $item['status'] === 'done' ? 1.0 : ($item['status'] === 'partial' ? 0.5 : 0);
+        }
+        $this->readinessPercent = (int) round(($score / count($items)) * 100);
+
+        return $this->readiness = $items;
+    }
+
+    /**
+     * Alert & tugas — hal yang butuh perhatian user sekarang.
+     */
+    public function loadAlerts(): array
+    {
+        $eventnerId = $this->eventner->id;
+        $alerts = [];
+
+        if ($this->pendingVerificationCount > 0) {
+            $alerts[] = [
+                'severity' => 'warning',
+                'message' => "{$this->pendingVerificationCount} pembayaran menunggu verifikasi",
+                'route' => route('eventner.finance.index'),
+                'action' => 'Verifikasi',
+            ];
+        }
+
+        if ($this->berkasMenungguCount > 0) {
+            $alerts[] = [
+                'severity' => 'warning',
+                'message' => "{$this->berkasMenungguCount} berkas menunggu",
+                'route' => route('eventner.participants.index'),
+                'action' => 'Cek Berkas',
+            ];
+        }
+
+        // Kategori kuota terisi >= 80%
+        $categories = $this->eventner->competitionCategories()
+            ->whereNotNull('parent_id')
+            ->where('kuota', '>', 0)
+            ->withCount('registrations')
+            ->get();
+        foreach ($categories as $cat) {
+            $ratio = $cat->registrations_count / $cat->kuota;
+            if ($ratio >= 0.8) {
+                $percent = (int) round($ratio * 100);
+                $alerts[] = [
+                    'severity' => $ratio >= 1 ? 'danger' : 'warning',
+                    'message' => "Kuota \"{$cat->full_name}\" {$percent}% penuh",
+                    'route' => route('eventner.competition-categories.index'),
+                    'action' => 'Lihat',
+                ];
+            }
+        }
+
+        // Trial hampir habis
+        if ($this->trialDaysLeft > 0 && $this->trialDaysLeft <= 7 && !$this->isTrialExpired) {
+            $alerts[] = [
+                'severity' => $this->trialDaysLeft <= 3 ? 'danger' : 'warning',
+                'message' => "Trial berakhir {$this->trialDaysLeft} hari",
+                'route' => route('eventner.billing.upgrade'),
+                'action' => 'Upgrade',
+            ];
+        }
+
+        return $this->alerts = $alerts;
     }
 
     public function loadScoringProgress()
