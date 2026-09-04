@@ -364,12 +364,8 @@
                         <span class="text-[10px] font-bold leading-none">{{ $item['label'] }}</span>
                     </a>
                 @endforeach
-                {{-- Slot tengah: tempat FAB Daftar menempel, tidak pernah menimpa item --}}
-                <div class="flex-1 relative">
-                    <a href="{{ event_url($eventner, 'register') }}" class="absolute left-1/2 -translate-x-1/2 -top-5 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-on-primary shadow-lg transition hover:bg-[#1a72ff]" aria-label="Daftar Sekarang">
-                        <i class="ti ti-user-plus text-2xl"></i>
-                    </a>
-                </div>
+                {{-- Spacer tengah — tombol Daftar sudah ada di header --}}
+                <div class="flex-1"></div>
                 @foreach($bottomNavRight as $item)
                     <a href="{{ $item['url'] }}" class="flex-1 flex flex-col items-center justify-center gap-1 text-decoration-none {{ $item['active'] ? 'text-primary' : 'text-on-surface-variant' }}" aria-current="{{ $item['active'] ? 'page' : 'false' }}">
                         <i class="ti {{ $item['icon'] }} text-xl"></i>
