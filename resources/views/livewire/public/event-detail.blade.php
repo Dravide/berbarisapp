@@ -211,10 +211,10 @@
                                             <span class="font-display text-lg font-extrabold text-primary">{{ number_format($topReg['total_votes'] ?? 0, 0, ',', '.') }}</span>
                                             <span class="text-[11px] font-semibold text-on-surface-variant">suara</span>
                                         </div>
+                                        <a href="{{ event_url($eventner, 'vote', ['selectedCategoryId' => $cat->id]) }}" class="btn-primary mt-3 py-2 px-3 text-xs font-bold inline-flex items-center justify-center gap-1.5 text-decoration-none w-full sm:w-auto">
+                                            <i class="ti ti-heart-filled"></i> Vote Kategori Ini
+                                        </a>
                                     </div>
-                                    <a href="{{ event_url($eventner, 'vote', ['selectedCategoryId' => $cat->id]) }}" class="btn-primary shrink-0 py-2 px-3 text-xs font-bold inline-flex items-center gap-1.5 text-decoration-none">
-                                        <i class="ti ti-heart-filled"></i> Vote Kategori Ini
-                                    </a>
                                 </div>
                             @endif
                         </div>
