@@ -282,7 +282,6 @@ class EventVote extends Component
         $participants = collect();
         $selectedCategory = null;
         $recentComments = collect();
-        $topThree = collect();
 
         if ($this->selectedCategoryId) {
             $selectedCategory = CompetitionCategory::find($this->selectedCategoryId);
@@ -301,15 +300,6 @@ class EventVote extends Component
             }
 
             $participants = $query->get();
-
-            // Top-3 kategori tanpa filter search — untuk modal hasil
-            $topThree = Registration::where('competition_category_id', $this->selectedCategoryId)
-                ->withSum(['voteTransactions as total_votes' => function($q) {
-                    $q->where('status', 'PAID');
-                }], 'votes_earned')
-                ->orderByDesc('total_votes')
-                ->take(3)
-                ->get();
 
             // Load recent comments per participant
             $regIds = $participants->pluck('id');
@@ -343,7 +333,6 @@ class EventVote extends Component
             'selectedCategory' => $selectedCategory,
             'categories' => $this->eventner->competitionCategories()->whereNotNull('parent_id')->with('parent')->orderBy('sort_order')->get(),
             'recentComments' => $recentComments,
-            'topThree' => $topThree,
             'allComments' => $allComments ?? collect(),
             'totalEventVotes' => $totalEventVotes ?? 0,
         ])->title('Vote Peserta - ' . $this->eventner->nama_event)

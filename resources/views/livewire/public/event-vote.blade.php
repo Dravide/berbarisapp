@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-surface" x-data="{ showMobileForm: false, resultsOpen: false }">
+<div class="min-h-screen bg-surface" x-data="{ showMobileForm: false }">
 
     {{-- ========== HERO ========== --}}
     <div class="relative overflow-hidden bg-primary text-white py-12 md:py-16">
@@ -391,21 +391,111 @@
                         </div>
                     @else
                         {{-- VIEW B: Participants list --}}
+                        @php
+                            $top3 = collect();
+                            if (!$search && $participants->count() > 0) {
+                                $top3 = $participants->take(3);
+                            }
+                        @endphp
+
                         <div class="flex items-center gap-3 mb-6">
                             <button wire:click="backToCategories" class="flex h-10 w-10 items-center justify-center rounded-xl border border-outline-variant/60 bg-white hover:bg-primary/5 transition text-on-surface-variant cursor-pointer">
                                 <i class="ti ti-arrow-left text-lg"></i>
                             </button>
-                            <nav class="text-sm font-medium text-on-surface-variant flex items-center gap-1.5 flex-1 min-w-0">
+                            <nav class="text-sm font-medium text-on-surface-variant flex items-center gap-1.5">
                                 <span>Kategori</span>
                                 <span class="text-outline-variant">/</span>
-                                <strong class="text-primary font-bold truncate">{{ $selectedCategory?->full_name }}</strong>
+                                <strong class="text-primary font-bold">{{ $selectedCategory?->full_name }}</strong>
                             </nav>
-                            @if($topThree->isNotEmpty())
-                                <button type="button" @click="resultsOpen = true" class="btn-secondary h-10 py-2.5 px-4 font-bold text-xs leading-normal inline-flex items-center gap-1.5 shrink-0 cursor-pointer">
-                                    <i class="ti ti-podium text-base"></i> Hasil Sementara
-                                </button>
-                            @endif
                         </div>
+
+                        {{-- ========== VOTE LEADERBOARD PODIUM (Juara 1-3) ========== --}}
+                        @if($top3->isNotEmpty())
+                            @php
+                                $rank1 = $top3->values()->get(0);
+                                $rank2 = $top3->values()->get(1);
+                                $rank3 = $top3->values()->get(2);
+                            @endphp
+                            <div class="surface-card mb-8 border border-outline-variant/50 bg-white overflow-hidden">
+                                <span class="overline text-center justify-center pt-6 pb-4">Pimpinan Klasemen</span>
+
+                                <div class="flex items-end justify-center gap-3 sm:gap-6 max-w-lg mx-auto px-6 pb-4">
+
+                                    {{-- 2nd Place --}}
+                                    <div class="flex flex-col items-center flex-1 max-w-[140px]">
+                                        @if($rank2)
+                                            <div wire:click="selectTeam({{ $rank2->id }})" class="flex flex-col items-center cursor-pointer group w-full">
+                                                @if($rank2->logo_sekolah)
+                                                    <img src="{{ asset('storage/' . $rank2->logo_sekolah) }}" alt="" class="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover border-2 border-slate-300 shadow-md mb-2 transition group-hover:scale-105 {{ $selectedRegistrationId == $rank2->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
+                                                @else
+                                                    <div class="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-slate-100 text-slate-500 border-2 border-slate-300 shadow-md mb-2 {{ $selectedRegistrationId == $rank2->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
+                                                        <i class="ti ti-school text-2xl"></i>
+                                                    </div>
+                                                @endif
+                                                <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank2->nama_sekolah }}</h4>
+                                                <span class="font-display font-extrabold text-primary text-sm mb-1">{{ number_format($rank2->total_votes ?? 0, 0, ',', '.') }}</span>
+                                                <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vote</span>
+                                                <div class="w-full bg-slate-200 border border-slate-200/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 80px;">
+                                                    <span class="font-display text-3xl font-extrabold text-slate-400">2</span>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="w-full bg-slate-50 border border-slate-200/50 rounded-t-xl" style="height: 80px;"></div>
+                                        @endif
+                                    </div>
+
+                                    {{-- 1st Place --}}
+                                    <div class="flex flex-col items-center flex-1 max-w-[160px]">
+                                        @if($rank1)
+                                            <div wire:click="selectTeam({{ $rank1->id }})" class="flex flex-col items-center cursor-pointer group w-full">
+                                                <div class="relative mb-2">
+                                                    <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                                                        <i class="ti ti-crown-filled text-amber-400 text-2xl drop-shadow-sm"></i>
+                                                    </div>
+                                                    @if($rank1->logo_sekolah)
+                                                        <img src="{{ asset('storage/' . $rank1->logo_sekolah) }}" alt="" class="h-18 w-18 sm:h-20 sm:w-20 rounded-full object-cover border-3 border-amber-400 shadow-lg ring-4 ring-amber-400/20 transition group-hover:scale-105 {{ $selectedRegistrationId == $rank1->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
+                                                    @else
+                                                        <div class="flex h-18 w-18 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-amber-50 text-amber-500 border-3 border-amber-400 shadow-lg ring-4 ring-amber-400/20 {{ $selectedRegistrationId == $rank1->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
+                                                            <i class="ti ti-school text-3xl"></i>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                                <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank1->nama_sekolah }}</h4>
+                                                <span class="font-display font-extrabold text-primary text-base mb-1">{{ number_format($rank1->total_votes ?? 0, 0, ',', '.') }}</span>
+                                                <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vote</span>
+                                                <div class="w-full bg-amber-300 border border-amber-300/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 110px;">
+                                                    <span class="font-display text-4xl font-extrabold text-amber-500/80">1</span>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    {{-- 3rd Place --}}
+                                    <div class="flex flex-col items-center flex-1 max-w-[140px]">
+                                        @if($rank3)
+                                            <div wire:click="selectTeam({{ $rank3->id }})" class="flex flex-col items-center cursor-pointer group w-full">
+                                                @if($rank3->logo_sekolah)
+                                                    <img src="{{ asset('storage/' . $rank3->logo_sekolah) }}" alt="" class="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover border-2 border-sky-300 shadow-md mb-2 transition group-hover:scale-105 {{ $selectedRegistrationId == $rank3->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
+                                                @else
+                                                    <div class="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-sky-50 text-sky-500 border-2 border-sky-300 shadow-md mb-2 {{ $selectedRegistrationId == $rank3->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
+                                                        <i class="ti ti-school text-2xl"></i>
+                                                    </div>
+                                                @endif
+                                                <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank3->nama_sekolah }}</h4>
+                                                <span class="font-display font-extrabold text-primary text-sm mb-1">{{ number_format($rank3->total_votes ?? 0, 0, ',', '.') }}</span>
+                                                <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vote</span>
+                                                <div class="w-full bg-sky-200 border border-sky-200/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 60px;">
+                                                    <span class="font-display text-3xl font-extrabold text-sky-400/80">3</span>
+                                                </div>
+                                            </div>
+                                        @else
+                                            <div class="w-full bg-sky-50 border border-sky-200/50 rounded-t-xl" style="height: 60px;"></div>
+                                        @endif
+                                    </div>
+
+                                </div>
+                            </div>
+                        @endif
 
                         {{-- ===== DIVIDER ===== --}}
                         <div class="flex items-center gap-4 my-8">
@@ -523,134 +613,6 @@
                     </p>
                 </div>
             @endif
-        </div>
-    @endif
-
-    {{-- ========== MODAL HASIL TOP-3 ========== --}}
-    @if($selectedCategoryId && $topThree->isNotEmpty())
-        <div x-show="resultsOpen" x-cloak
-             @keydown.escape.window="resultsOpen = false"
-             class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-6"
-             role="dialog" aria-modal="true" aria-labelledby="vote-results-title">
-            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="resultsOpen = false"
-                 x-show="resultsOpen"
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0"
-                 x-transition:enter-end="opacity-100"
-                 x-transition:leave="transition ease-in duration-150"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"></div>
-
-            <div x-show="resultsOpen"
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0 translate-y-6 sm:scale-95"
-                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave="transition ease-in duration-150"
-                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                 x-transition:leave-end="opacity-0 translate-y-6 sm:scale-95"
-                 class="relative surface-card w-full sm:max-w-lg overflow-hidden rounded-t-2xl sm:rounded-2xl shadow-2xl">
-                <div class="bg-primary text-white px-5 py-4 flex items-center justify-between shrink-0">
-                    <div class="min-w-0">
-                        <h3 id="vote-results-title" class="font-display text-sm font-bold text-white inline-flex items-center gap-2 mb-0">
-                            <i class="ti ti-podium"></i> Hasil Voting Sementara
-                        </h3>
-                        <span class="text-[11px] text-white/70 block truncate">{{ $selectedCategory?->full_name }}</span>
-                    </div>
-                    <button type="button" @click="resultsOpen = false" aria-label="Tutup"
-                            class="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 text-white hover:bg-white/25 transition cursor-pointer shrink-0 border-0">
-                        <i class="ti ti-x text-lg"></i>
-                    </button>
-                </div>
-
-                <div class="p-5 overflow-y-auto max-h-[70vh]">
-                    <span class="overline text-center justify-center block mb-2">Pimpinan Klasemen</span>
-
-                    <div class="flex items-end justify-center gap-3 sm:gap-6 max-w-lg mx-auto px-2 pb-2">
-                        @php
-                            $rank1 = $topThree->values()->get(0);
-                            $rank2 = $topThree->values()->get(1);
-                            $rank3 = $topThree->values()->get(2);
-                        @endphp
-
-                        {{-- 2nd Place --}}
-                        <div class="flex flex-col items-center flex-1 max-w-[140px]">
-                            @if($rank2)
-                                <div wire:click="selectTeam({{ $rank2->id }})" @click="resultsOpen = false" class="flex flex-col items-center cursor-pointer group w-full">
-                                    @if($rank2->logo_sekolah)
-                                        <img src="{{ asset('storage/' . $rank2->logo_sekolah) }}" alt="" class="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover border-2 border-slate-300 shadow-md mb-2 transition group-hover:scale-105 {{ $selectedRegistrationId == $rank2->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
-                                    @else
-                                        <div class="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-slate-100 text-slate-500 border-2 border-slate-300 shadow-md mb-2 {{ $selectedRegistrationId == $rank2->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
-                                            <i class="ti ti-school text-2xl"></i>
-                                        </div>
-                                    @endif
-                                    <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank2->nama_sekolah }}</h4>
-                                    <span class="font-display font-extrabold text-primary text-sm mb-1">{{ number_format($rank2->total_votes ?? 0, 0, ',', '.') }}</span>
-                                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vote</span>
-                                    <div class="w-full bg-slate-200 border border-slate-200/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 80px;">
-                                        <span class="font-display text-3xl font-extrabold text-slate-400">2</span>
-                                    </div>
-                                </div>
-                            @else
-                                <div class="w-full bg-slate-50 border border-slate-200/50 rounded-t-xl" style="height: 80px;"></div>
-                            @endif
-                        </div>
-
-                        {{-- 1st Place --}}
-                        <div class="flex flex-col items-center flex-1 max-w-[160px]">
-                            @if($rank1)
-                                <div wire:click="selectTeam({{ $rank1->id }})" @click="resultsOpen = false" class="flex flex-col items-center cursor-pointer group w-full">
-                                    <div class="relative mb-2">
-                                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                                            <i class="ti ti-crown-filled text-amber-400 text-2xl drop-shadow-sm"></i>
-                                        </div>
-                                        @if($rank1->logo_sekolah)
-                                            <img src="{{ asset('storage/' . $rank1->logo_sekolah) }}" alt="" class="h-18 w-18 sm:h-20 sm:w-20 rounded-full object-cover border-3 border-amber-400 shadow-lg ring-4 ring-amber-400/20 transition group-hover:scale-105 {{ $selectedRegistrationId == $rank1->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
-                                        @else
-                                            <div class="flex h-18 w-18 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-amber-50 text-amber-500 border-3 border-amber-400 shadow-lg ring-4 ring-amber-400/20 {{ $selectedRegistrationId == $rank1->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
-                                                <i class="ti ti-school text-3xl"></i>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank1->nama_sekolah }}</h4>
-                                    <span class="font-display font-extrabold text-primary text-base mb-1">{{ number_format($rank1->total_votes ?? 0, 0, ',', '.') }}</span>
-                                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vote</span>
-                                    <div class="w-full bg-amber-300 border border-amber-300/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 110px;">
-                                        <span class="font-display text-4xl font-extrabold text-amber-500/80">1</span>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-
-                        {{-- 3rd Place --}}
-                        <div class="flex flex-col items-center flex-1 max-w-[140px]">
-                            @if($rank3)
-                                <div wire:click="selectTeam({{ $rank3->id }})" @click="resultsOpen = false" class="flex flex-col items-center cursor-pointer group w-full">
-                                    @if($rank3->logo_sekolah)
-                                        <img src="{{ asset('storage/' . $rank3->logo_sekolah) }}" alt="" class="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover border-2 border-sky-300 shadow-md mb-2 transition group-hover:scale-105 {{ $selectedRegistrationId == $rank3->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
-                                    @else
-                                        <div class="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-sky-50 text-sky-500 border-2 border-sky-300 shadow-md mb-2 {{ $selectedRegistrationId == $rank3->id ? 'ring-4 ring-primary ring-offset-2' : '' }}">
-                                            <i class="ti ti-school text-2xl"></i>
-                                        </div>
-                                    @endif
-                                    <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank3->nama_sekolah }}</h4>
-                                    <span class="font-display font-extrabold text-primary text-sm mb-1">{{ number_format($rank3->total_votes ?? 0, 0, ',', '.') }}</span>
-                                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vote</span>
-                                    <div class="w-full bg-sky-200 border border-sky-200/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 60px;">
-                                        <span class="font-display text-3xl font-extrabold text-sky-400/80">3</span>
-                                    </div>
-                                </div>
-                            @else
-                                <div class="w-full bg-sky-50 border border-sky-200/50 rounded-t-xl" style="height: 60px;"></div>
-                            @endif
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="px-5 py-3 border-t border-outline-variant/40 bg-surface-container/50 text-center shrink-0">
-                    <p class="text-[11px] text-on-surface-variant font-medium m-0">Klik kontingen untuk langsung memberikan dukungan</p>
-                </div>
-            </div>
         </div>
     @endif
 
