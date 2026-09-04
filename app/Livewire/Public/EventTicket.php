@@ -69,6 +69,17 @@ class EventTicket extends Component
         }
     }
 
+    public function incrementQuantity()
+    {
+        $max = $this->eventner->ticket_max_per_order ?? 10;
+        $this->quantity = min((int) $this->quantity + 1, $max);
+    }
+
+    public function decrementQuantity()
+    {
+        $this->quantity = max((int) $this->quantity - 1, 1);
+    }
+
     public function updatedQuantity()
     {
         $max = $this->eventner->ticket_max_per_order ?? 10;

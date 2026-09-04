@@ -94,7 +94,7 @@ class EventnerDashboardTest extends TestCase
             ->assertSet('ticketsCheckedIn', 1);
     }
 
-    public function test_dashboard_shows_payment_and_berkas_breakdown()
+    public function test_dashboard_shows_verification_counts()
     {
         [$user, $eventner, $category] = $this->setupEventnerUser();
 
@@ -122,11 +122,7 @@ class EventnerDashboardTest extends TestCase
         Livewire::actingAs($user)
             ->test(\App\Livewire\Eventner\Dashboard::class)
             ->assertSet('pendingVerificationCount', 1)
-            ->assertSet('berkasMenungguCount', 1)
-            ->assertSet('paymentBreakdown.paid', 1)
-            ->assertSet('paymentBreakdown.pending_verification', 1)
-            ->assertSet('paymentBreakdown.unpaid', 1)
-            ->assertSee('Menunggu Verifikasi (1)', false);
+            ->assertSet('berkasMenungguCount', 1);
     }
 
     public function test_dashboard_revenue_labels_fixed()
@@ -136,7 +132,9 @@ class EventnerDashboardTest extends TestCase
         Livewire::actingAs($user)
             ->test(\App\Livewire\Eventner\Dashboard::class)
             ->assertSee('Total Pendapatan')
-            ->assertDontSee('Estimasi Voting');
+            ->assertDontSee('Estimasi Voting')
+            ->assertDontSee('paymentStatusChart')
+            ->assertDontSee('Status Pembayaran Pendaftar');
     }
 
     public function test_dashboard_vote_schedule_belum()

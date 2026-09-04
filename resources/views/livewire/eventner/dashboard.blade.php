@@ -96,10 +96,15 @@
                 </div>
             </div>
 
-            <!-- Dashboard Stats -->
+            {{-- Dashboard Stats — 4 card konsolidasi --}}
+            @php
+                $fmt = fn ($v) => $v >= 1000000
+                    ? number_format($v / 1000000, 1, ',', '.') . 'jt'
+                    : ($v >= 1000 ? number_format($v / 1000, 0, ',', '.') . 'rb' : '0');
+            @endphp
             <div class="row mb-4">
                 <div class="col-md-3">
-                    <div class="card bg-primary-subtle shadow-none">
+                    <div class="card bg-primary-subtle shadow-none h-100">
                         <div class="card-body">
                             <div class="d-flex align-items-center">
                                 <div class="bg-primary text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
@@ -108,13 +113,27 @@
                                 <div class="ms-3">
                                     <h6 class="mb-0 text-muted">Pendaftar</h6>
                                     <h4 class="mb-0 fw-bold">{{ $totalRegistrations }}</h4>
+                                    <small class="{{ $pendingVerificationCount > 0 || $berkasMenungguCount > 0 ? 'text-warning fw-semibold' : 'text-muted' }}">
+                                        @if($pendingVerificationCount > 0)
+                                            {{ $pendingVerificationCount }} perlu verifikasi
+                                        @endif
+                                        @if($pendingVerificationCount > 0 && $berkasMenungguCount > 0)
+                                            &middot;
+                                        @endif
+                                        @if($berkasMenungguCount > 0)
+                                            {{ $berkasMenungguCount }} berkas menunggu
+                                        @endif
+                                        @if($pendingVerificationCount === 0 && $berkasMenungguCount === 0)
+                                            Semua jelas
+                                        @endif
+                                    </small>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card bg-success-subtle shadow-none">
+                    <div class="card bg-success-subtle shadow-none h-100">
                         <div class="card-body">
                             <div class="d-flex align-items-center">
                                 <div class="bg-success text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
@@ -123,36 +142,59 @@
                                 <div class="ms-3">
                                     <h6 class="mb-0 text-muted">Total Pendapatan</h6>
                                     <h4 class="mb-0 fw-bold">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</h4>
+                                    <small class="text-muted">Vote {{ $fmt($voteRevenue) }} &middot; Tiket {{ $fmt($ticketRevenue) }} &middot; Fee {{ $fmt($feeRevenue) }}</small>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card bg-warning-subtle shadow-none">
+                    <div class="card bg-danger-subtle shadow-none h-100">
                         <div class="card-body">
                             <div class="d-flex align-items-center">
-                                <div class="bg-warning text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                    <i class="ti ti-category fs-6"></i>
+                                <div class="bg-danger text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                    <i class="ti ti-heart-filled fs-6"></i>
                                 </div>
                                 <div class="ms-3">
-                                    <h6 class="mb-0 text-muted">Kategori Lomba</h6>
-                                    <h4 class="mb-0 fw-bold">{{ $totalCategories }}</h4>
+                                    <h6 class="mb-0 text-muted">Voting</h6>
+                                    <h4 class="mb-0 fw-bold">{{ number_format($totalVotes, 0, ',', '.') }}</h4>
+                                    <small class="text-muted d-block">
+                                        {{ $votePaidCount }} PAID &middot; {{ $votePendingCount }} pending
+                                        @if($activeBooster)
+                                            &middot; <span class="badge bg-danger">x{{ $activeBooster->vote_multiplier }}</span>
+                                        @endif
+                                    </small>
+                                    @if($voteStatus === 'berjalan')
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle mt-1">
+                                            <i class="ti ti-clock me-1"></i>Berjalan{{ $voteTimeRemaining ? ' · sisa ' . $voteTimeRemaining : '' }}
+                                        </span>
+                                    @elseif($voteStatus === 'belum')
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle mt-1">Belum Dimulai</span>
+                                    @elseif($voteStatus === 'selesai')
+                                        <span class="badge bg-light text-dark border mt-1">Selesai</span>
+                                    @else
+                                        <span class="badge bg-secondary-subtle text-secondary border mt-1">Nonaktif</span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <div class="card bg-secondary-subtle shadow-none">
+                    <div class="card bg-info-subtle shadow-none h-100">
                         <div class="card-body">
                             <div class="d-flex align-items-center">
-                                <div class="bg-secondary text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                    <i class="ti ti-user-check fs-6"></i>
+                                <div class="bg-info text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                                    <i class="ti ti-ticket fs-6"></i>
                                 </div>
                                 <div class="ms-3">
-                                    <h6 class="mb-0 text-muted">Juri Terdaftar</h6>
-                                    <h4 class="mb-0 fw-bold">{{ $totalJudges }}</h4>
+                                    <h6 class="mb-0 text-muted">Tiket Terjual</h6>
+                                    <h4 class="mb-0 fw-bold">{{ number_format($ticketsSold, 0, ',', '.') }}</h4>
+                                    @if($eventner->ticket_active)
+                                        <small class="text-muted">{{ $ticketsCheckedIn }} check-in &middot; Rp {{ $fmt($ticketRevenue) }}</small>
+                                    @else
+                                        <small class="text-muted">Tidak diaktifkan</small>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -160,74 +202,61 @@
                 </div>
             </div>
 
-            {{-- Stat Card Tambahan --}}
-            <div class="row mb-4">
-                <div class="col-md-3">
-                    <div class="card bg-primary-subtle shadow-none">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-primary text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                    <i class="ti ti-heart-filled fs-6"></i>
-                                </div>
-                                <div class="ms-3">
-                                    <h6 class="mb-0 text-muted">Total Vote Masuk</h6>
-                                    <h4 class="mb-0 fw-bold">{{ number_format($totalVotes, 0, ',', '.') }}</h4>
-                                </div>
-                            </div>
+            {{-- Event Meta Strip --}}
+            <div class="card shadow-none bg-light-subtle border mb-4">
+                <div class="card-body py-2">
+                    <div class="d-flex flex-wrap gap-4 align-items-center">
+                        <div>
+                            <small class="text-muted d-block">Kategori Lomba</small>
+                            <span class="fw-semibold">{{ $totalCategories }}</span>
                         </div>
+                        <div>
+                            <small class="text-muted d-block">Juri</small>
+                            <span class="fw-semibold">{{ $totalJudges }}</span>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Pendaftaran</small>
+                            <span class="fw-semibold">s/d {{ $eventner->tanggal_pendaftaran ?? '-' }}</span>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Hari-H</small>
+                            <span class="fw-semibold">
+                                {{ $eventner->tanggal ? \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d M Y') : '-' }}
+                                @if($daysUntilEvent !== null)
+                                    @if($daysUntilEvent > 1)
+                                        <span class="badge bg-primary-subtle text-primary">{{ $daysUntilEvent }} hari lagi</span>
+                                    @elseif($daysUntilEvent === 1)
+                                        <span class="badge bg-warning-subtle text-warning">Besok!</span>
+                                    @elseif($daysUntilEvent === 0)
+                                        <span class="badge bg-danger">Hari ini!</span>
+                                    @else
+                                        <span class="badge bg-light text-muted border">Sudah lewat</span>
+                                    @endif
+                                @endif
+                            </span>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Voting</small>
+                            <span class="fw-semibold">
+                                {{ $eventner->vote_start || $eventner->vote_end ? $eventner->vote_start?->translatedFormat('d M') . ' — ' . $eventner->vote_end?->translatedFormat('d M Y') : '-' }}
+                                @if($voteStatus === 'berjalan')
+                                    <span class="badge bg-success">Berjalan</span>
+                                @elseif($voteStatus === 'belum')
+                                    <span class="badge bg-info-subtle text-info">Belum</span>
+                                @elseif($voteStatus === 'selesai')
+                                    <span class="badge bg-secondary">Selesai</span>
+                                @else
+                                    <span class="badge bg-light text-muted border">Nonaktif</span>
+                                @endif
+                            </span>
+                        </div>
+                        @if($eventner->ticket_active)
+                            <div>
+                                <small class="text-muted d-block">Tiket</small>
+                                <span class="fw-semibold">s/d {{ $eventner->ticket_end?->translatedFormat('d M Y') ?? '-' }}</span>
+                            </div>
+                        @endif
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card bg-success-subtle shadow-none">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center">
-                                <div class="bg-success text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                    <i class="ti ti-ticket fs-6"></i>
-                                </div>
-                                <div class="ms-3">
-                                    <h6 class="mb-0 text-muted">Tiket Terjual</h6>
-                                    <h4 class="mb-0 fw-bold">{{ number_format($ticketsSold, 0, ',', '.') }}</h4>
-                                    <small class="text-muted">{{ $ticketsCheckedIn }} check-in</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <a href="{{ route('eventner.finance.index') }}" class="text-decoration-none">
-                        <div class="card bg-warning-subtle shadow-none h-100">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-warning text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                        <i class="ti ti-credit-card fs-6"></i>
-                                    </div>
-                                    <div class="ms-3">
-                                        <h6 class="mb-0 text-muted">Perlu Verifikasi</h6>
-                                        <h4 class="mb-0 fw-bold {{ $pendingVerificationCount > 0 ? 'text-warning' : '' }}">{{ $pendingVerificationCount }}</h4>
-                                        <small class="text-muted">pembayaran</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                <div class="col-md-3">
-                    <a href="{{ route('eventner.participants.index') }}" class="text-decoration-none">
-                        <div class="card bg-info-subtle shadow-none h-100">
-                            <div class="card-body">
-                                <div class="d-flex align-items-center">
-                                    <div class="bg-info text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                                        <i class="ti ti-file-check fs-6"></i>
-                                    </div>
-                                    <div class="ms-3">
-                                        <h6 class="mb-0 text-muted">Berkas Menunggu</h6>
-                                        <h4 class="mb-0 fw-bold {{ $berkasMenungguCount > 0 ? 'text-info' : '' }}">{{ $berkasMenungguCount }}</h4>
-                                        <small class="text-muted">pendaftar</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </a>
                 </div>
             </div>
 
@@ -292,290 +321,6 @@
                         </div>
                         <div class="card-body">
                             <canvas id="topParticipantsChart" height="250"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Section Voting --}}
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-                            <h5 class="card-title fw-semibold mb-0">
-                                <i class="ti ti-heart-filled text-danger me-2"></i>Voting
-                            </h5>
-                            <div class="d-flex align-items-center gap-2">
-                                @if($voteStatus === 'berjalan' && $voteTimeRemaining)
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
-                                        <i class="ti ti-clock me-1"></i>Berjalan &middot; sisa {{ $voteTimeRemaining }}
-                                    </span>
-                                @elseif($voteStatus === 'belum')
-                                    <span class="badge bg-info-subtle text-info border border-info-subtle">Belum Dimulai</span>
-                                @elseif($voteStatus === 'selesai')
-                                    <span class="badge bg-dark-subtle text-dark border">Selesai</span>
-                                @else
-                                    <span class="badge bg-secondary-subtle text-secondary border">Nonaktif</span>
-                                @endif
-                                <a href="{{ route('eventner.vote-results.index') }}" class="btn btn-sm btn-light">Hasil Voting <i class="ti ti-arrow-right ms-1"></i></a>
-                            </div>
-                        </div>
-                        <div class="card-body">
-                            <div class="row mb-3">
-                                <div class="col-md-4">
-                                    <div class="d-flex align-items-center gap-2 p-2 rounded border">
-                                        <i class="ti ti-heart-check text-success fs-4"></i>
-                                        <div>
-                                            <small class="text-muted d-block">Transaksi PAID</small>
-                                            <span class="fw-bold">{{ $votePaidCount }}</span>
-                                            <small class="text-muted">&middot; {{ number_format($totalVotes, 0, ',', '.') }} vote</small>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mt-2 mt-md-0">
-                                    <div class="d-flex align-items-center gap-2 p-2 rounded border">
-                                        <i class="ti ti-hourglass text-warning fs-4"></i>
-                                        <div>
-                                            <small class="text-muted d-block">Transaksi PENDING</small>
-                                            <span class="fw-bold {{ $votePendingCount > 0 ? 'text-warning' : '' }}">{{ $votePendingCount }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mt-2 mt-md-0">
-                                    <div class="d-flex align-items-center gap-2 p-2 rounded border">
-                                        <i class="ti ti-rocket text-danger fs-4"></i>
-                                        <div>
-                                            <small class="text-muted d-block">Vote Booster Aktif</small>
-                                            @if($activeBooster)
-                                                <span class="badge bg-danger">x{{ $activeBooster->vote_multiplier }}</span>
-                                                <small class="text-muted">s/d {{ $activeBooster->ends_at?->translatedFormat('d M H:i') }}</small>
-                                            @else
-                                                <span class="fw-bold text-muted">&mdash;</span>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th class="ps-4">Voter</th>
-                                            <th>Kontingen</th>
-                                            <th class="text-center">Jumlah Vote</th>
-                                            <th class="text-center">Status</th>
-                                            <th class="text-end pe-4">Waktu</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($recentVoteTransactions as $trx)
-                                            <tr>
-                                                <td class="ps-4">
-                                                    <h6 class="mb-0 fw-semibold">{{ $trx->voter_name }}</h6>
-                                                    <span class="text-muted fs-2">{{ $trx->voter_email }}</span>
-                                                </td>
-                                                <td>{{ $trx->registration?->nama_sekolah ?? '-' }}</td>
-                                                <td class="text-center fw-semibold text-primary">{{ number_format($trx->votes_earned, 0, ',', '.') }}</td>
-                                                <td class="text-center">
-                                                    <span class="badge bg-success-subtle text-success">PAID</span>
-                                                </td>
-                                                <td class="text-end pe-4 fs-2 text-muted">{{ $trx->paid_at?->translatedFormat('d M Y H:i') ?? '-' }}</td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="5" class="text-center p-4 text-muted">
-                                                    <i class="ti ti-heart-off fs-8 d-block mb-2"></i>Belum ada transaksi vote.
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-white border-top text-center">
-                            <a href="{{ route('eventner.finance.index') }}" class="btn btn-sm btn-light">Lihat Semua Transaksi <i class="ti ti-arrow-right ms-1"></i></a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Section Pembayaran & Berkas --}}
-            <div class="row mb-4">
-                <div class="col-lg-6">
-                    <div class="card h-100">
-                        <div class="card-header bg-white">
-                            <h5 class="card-title fw-semibold mb-0"><i class="ti ti-credit-card me-2"></i>Status Pembayaran Pendaftar</h5>
-                        </div>
-                        <div class="card-body">
-                            @php
-                                $paymentTotal = array_sum($paymentBreakdown);
-                            @endphp
-                            @if($paymentTotal > 0)
-                                <div style="height: 220px;"><canvas id="paymentStatusChart"></canvas></div>
-                            @else
-                                <div class="text-center text-muted py-5">
-                                    <i class="ti ti-credit-card-off fs-8"></i>
-                                    <p class="mb-0 mt-2">Belum ada pendaftaran.</p>
-                                </div>
-                            @endif
-
-                            @if($pendingVerificationCount > 0)
-                                <hr>
-                                <h6 class="fw-semibold mb-2">Menunggu Verifikasi ({{ $pendingVerificationCount }})</h6>
-                                <ul class="list-group list-group-flush">
-                                    @foreach($pendingVerifications as $pv)
-                                        <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <span class="fw-semibold">{{ $pv->nama_sekolah }}</span>
-                                                <small class="text-muted d-block">{{ $pv->competitionCategory?->full_name }}</small>
-                                            </div>
-                                            <span class="badge bg-warning-subtle text-warning">Rp {{ number_format($pv->total_fee, 0, ',', '.') }}</span>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                                <a href="{{ route('eventner.finance.index') }}" class="btn btn-sm btn-warning fw-semibold w-100 mt-2">
-                                    <i class="ti ti-checkbox me-1"></i>Verifikasi Sekarang
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <div class="card h-100">
-                        <div class="card-header bg-white">
-                            <h5 class="card-title fw-semibold mb-0"><i class="ti ti-file-check me-2"></i>Status Berkas Pendaftar</h5>
-                        </div>
-                        <div class="card-body">
-                            @php
-                                $berkasTotal = array_sum($berkasBreakdown);
-                            @endphp
-                            @if($berkasTotal > 0)
-                                <div style="height: 220px;"><canvas id="berkasStatusChart"></canvas></div>
-                            @else
-                                <div class="text-center text-muted py-5">
-                                    <i class="ti ti-file-off fs-8"></i>
-                                    <p class="mb-0 mt-2">Belum ada pendaftaran.</p>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Section Tiket & Jadwal --}}
-            <div class="row mb-4">
-                <div class="col-lg-8">
-                    <div class="card h-100">
-                        <div class="card-header bg-white">
-                            <h5 class="card-title fw-semibold mb-0"><i class="ti ti-ticket me-2"></i>Tiket &amp; Check-in</h5>
-                        </div>
-                        <div class="card-body">
-                            @if($eventner->ticket_active)
-                                @php
-                                    $ticketTotal = array_sum(array_column($ticketStatusBreakdown, 'total'));
-                                @endphp
-                                @if($ticketTotal > 0)
-                                    <div style="height: 200px;"><canvas id="ticketStatusChart"></canvas></div>
-                                @else
-                                    <div class="text-center text-muted py-4">
-                                        <i class="ti ti-ticket-off fs-8"></i>
-                                        <p class="mb-0 mt-2">Belum ada transaksi tiket.</p>
-                                    </div>
-                                @endif
-                                <div class="row text-center mt-3">
-                                    <div class="col-4">
-                                        <small class="text-muted d-block">Terjual</small>
-                                        <span class="fw-bold fs-5">{{ number_format($ticketsSold, 0, ',', '.') }}</span>
-                                    </div>
-                                    <div class="col-4">
-                                        <small class="text-muted d-block">Check-in</small>
-                                        <span class="fw-bold fs-5">{{ $ticketsCheckedIn }}</span>
-                                    </div>
-                                    <div class="col-4">
-                                        <small class="text-muted d-block">Pendapatan</small>
-                                        <span class="fw-bold fs-5 text-success">Rp {{ number_format($ticketRevenue, 0, ',', '.') }}</span>
-                                    </div>
-                                </div>
-                            @else
-                                <div class="text-center text-muted py-5">
-                                    <i class="ti ti-ticket-off fs-8"></i>
-                                    <p class="mb-0 mt-2">Tiket tidak diaktifkan untuk event ini.</p>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="card h-100">
-                        <div class="card-header bg-white">
-                            <h5 class="card-title fw-semibold mb-0"><i class="ti ti-calendar-event me-2"></i>Jadwal Event</h5>
-                        </div>
-                        <div class="card-body">
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="fw-semibold">Pendaftaran</span>
-                                        <small class="text-muted d-block">s/d {{ $eventner->tanggal_pendaftaran ?? '-' }}</small>
-                                    </div>
-                                    <i class="ti ti-calendar-minus text-muted"></i>
-                                </li>
-                                <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="fw-semibold">Hari-H</span>
-                                        <small class="text-muted d-block">
-                                            @if($eventner->tanggal)
-                                                {{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d M Y') }}
-                                            @else
-                                                -
-                                            @endif
-                                        </small>
-                                    </div>
-                                    @if($daysUntilEvent !== null)
-                                        @if($daysUntilEvent > 1)
-                                            <span class="badge bg-primary-subtle text-primary">{{ $daysUntilEvent }} hari lagi</span>
-                                        @elseif($daysUntilEvent === 1)
-                                            <span class="badge bg-warning-subtle text-warning">Besok!</span>
-                                        @elseif($daysUntilEvent === 0)
-                                            <span class="badge bg-danger">Hari ini!</span>
-                                        @else
-                                            <span class="badge bg-light text-muted border">Sudah lewat</span>
-                                        @endif
-                                    @endif
-                                </li>
-                                <li class="list-group-item px-0 d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="fw-semibold">Voting</span>
-                                        <small class="text-muted d-block">
-                                            @if($eventner->vote_start || $eventner->vote_end)
-                                                {{ $eventner->vote_start?->translatedFormat('d M') }} &mdash; {{ $eventner->vote_end?->translatedFormat('d M Y') }}
-                                            @else
-                                                -
-                                            @endif
-                                        </small>
-                                    </div>
-                                    @if($voteStatus === 'berjalan')
-                                        <span class="badge bg-success">Berjalan</span>
-                                    @elseif($voteStatus === 'belum')
-                                        <span class="badge bg-info-subtle text-info">Belum</span>
-                                    @elseif($voteStatus === 'selesai')
-                                        <span class="badge bg-secondary">Selesai</span>
-                                    @else
-                                        <span class="badge bg-light text-muted border">Nonaktif</span>
-                                    @endif
-                                </li>
-                                @if($eventner->ticket_active)
-                                    <li class="list-group-item px-0 d-flex justify-content-between align-items-center border-bottom-0">
-                                        <div>
-                                            <span class="fw-semibold">Tiket</span>
-                                            <small class="text-muted d-block">
-                                                {{ $eventner->ticket_start?->translatedFormat('d M') }} &mdash; {{ $eventner->ticket_end?->translatedFormat('d M Y') }}
-                                            </small>
-                                        </div>
-                                        <i class="ti ti-ticket text-muted"></i>
-                                    </li>
-                                @endif
-                            </ul>
                         </div>
                     </div>
                 </div>
@@ -959,90 +704,6 @@
                     x: { beginAtZero: true },
                     y: { ticks: { font: { size: 11 } } }
                 }
-            }
-        });
-    }
-
-    // Payment Status Doughnut
-    const paymentCtx = document.getElementById('paymentStatusChart');
-    if (paymentCtx) {
-        const paymentData = @json($paymentBreakdown);
-        const paymentLabels = {paid: 'Paid', pending_verification: 'Pending Verifikasi', unpaid: 'Unpaid', free: 'Free', expired: 'Expired'};
-        const paymentColors = {paid: 'rgba(41, 182, 115, 0.8)', pending_verification: 'rgba(252, 143, 0, 0.8)', unpaid: 'rgba(108, 117, 125, 0.8)', free: 'rgba(94, 126, 210, 0.8)', expired: 'rgba(239, 83, 80, 0.8)'};
-        const paymentEntries = Object.entries(paymentData).filter(([s, t]) => t > 0);
-        if (paymentEntries.length > 0) {
-            new Chart(paymentCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: paymentEntries.map(([s]) => paymentLabels[s] ?? s),
-                    datasets: [{
-                        data: paymentEntries.map(([, t]) => t),
-                        backgroundColor: paymentEntries.map(([s]) => paymentColors[s] ?? 'rgba(108, 117, 125, 0.8)'),
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10 } } }
-                }
-            });
-        }
-    }
-
-    // Berkas Status Doughnut
-    const berkasCtx = document.getElementById('berkasStatusChart');
-    if (berkasCtx) {
-        const berkasData = @json($berkasBreakdown);
-        const berkasLabels = {Terverifikasi: 'Terverifikasi', confirmed: 'Confirmed', Menunggu: 'Menunggu', booking: 'Booking', Ditolak: 'Ditolak', dibatalkan: 'Dibatalkan'};
-        const berkasColors = {Terverifikasi: 'rgba(41, 182, 115, 0.8)', confirmed: 'rgba(72, 187, 120, 0.8)', Menunggu: 'rgba(252, 143, 0, 0.8)', booking: 'rgba(94, 126, 210, 0.8)', Ditolak: 'rgba(239, 83, 80, 0.8)', dibatalkan: 'rgba(108, 117, 125, 0.8)'};
-        const berkasEntries = Object.entries(berkasData).filter(([s, t]) => t > 0);
-        if (berkasEntries.length > 0) {
-            new Chart(berkasCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: berkasEntries.map(([s]) => berkasLabels[s] ?? s),
-                    datasets: [{
-                        data: berkasEntries.map(([, t]) => t),
-                        backgroundColor: berkasEntries.map(([s]) => berkasColors[s] ?? 'rgba(108, 117, 125, 0.8)'),
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10 } } }
-                }
-            });
-        }
-    }
-
-    // Ticket Status Bar
-    const ticketCtx = document.getElementById('ticketStatusChart');
-    if (ticketCtx) {
-        const ticketData = @json($ticketStatusBreakdown);
-        const ticketLabels = {PAID: 'PAID', CHECKED_IN: 'Checked In', PENDING: 'Pending', EXPIRED: 'Expired'};
-        const ticketColors = {PAID: 'rgba(41, 182, 115, 0.8)', CHECKED_IN: 'rgba(94, 126, 210, 0.8)', PENDING: 'rgba(252, 143, 0, 0.8)', EXPIRED: 'rgba(239, 83, 80, 0.8)'};
-        const order = ['PAID', 'CHECKED_IN', 'PENDING', 'EXPIRED'];
-        const ticketEntries = order.map(s => [s, (ticketData[s] ? ticketData[s].qty : 0)]);
-        new Chart(ticketCtx, {
-            type: 'bar',
-            data: {
-                labels: ticketEntries.map(([s]) => ticketLabels[s] ?? s),
-                datasets: [{
-                    label: 'Jumlah Tiket',
-                    data: ticketEntries.map(([, t]) => t),
-                    backgroundColor: ticketEntries.map(([s]) => ticketColors[s] ?? 'rgba(108, 117, 125, 0.8)'),
-                    borderRadius: 4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
             }
         });
     }

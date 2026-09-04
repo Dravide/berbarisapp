@@ -41,15 +41,8 @@ class Dashboard extends Component
     public $votePaidCount = 0;
     public $votePendingCount = 0;
     public $activeBooster;
-    public $recentVoteTransactions;
 
-    // Pembayaran & berkas
-    public $paymentBreakdown = [];
-    public $berkasBreakdown = [];
-    public $pendingVerifications;
-
-    // Tiket & jadwal
-    public $ticketStatusBreakdown = [];
+    // Jadwal & countdown
     public $daysUntilEvent;
 
     // Trial & Feature gating
@@ -144,40 +137,6 @@ class Dashboard extends Component
             ->active()
             ->orderByDesc('vote_multiplier')
             ->first();
-        $this->recentVoteTransactions = VoteTransaction::with('registration')
-            ->where('eventner_id', $eventnerId)
-            ->where('status', 'PAID')
-            ->orderByDesc('paid_at')
-            ->limit(5)
-            ->get();
-
-        // Breakdown pembayaran & berkas
-        $this->paymentBreakdown = Registration::where('eventner_id', $eventnerId)
-            ->selectRaw('payment_status, COUNT(*) as total')
-            ->groupBy('payment_status')
-            ->pluck('total', 'payment_status')
-            ->toArray();
-
-        $this->berkasBreakdown = Registration::where('eventner_id', $eventnerId)
-            ->selectRaw('status_berkas, COUNT(*) as total')
-            ->groupBy('status_berkas')
-            ->pluck('total', 'status_berkas')
-            ->toArray();
-
-        $this->pendingVerifications = Registration::with('competitionCategory')
-            ->where('eventner_id', $eventnerId)
-            ->where('payment_status', 'pending_verification')
-            ->orderBy('created_at')
-            ->limit(3)
-            ->get();
-
-        // Breakdown status tiket
-        $this->ticketStatusBreakdown = Ticket::where('eventner_id', $eventnerId)
-            ->selectRaw('status, COUNT(*) as total, SUM(quantity) as qty')
-            ->groupBy('status')
-            ->get()
-            ->mapWithKeys(fn ($row) => [$row->status => ['total' => (int) $row->total, 'qty' => (int) $row->qty]])
-            ->toArray();
 
         // Countdown hari-H
         $this->daysUntilEvent = $this->eventner->tanggal

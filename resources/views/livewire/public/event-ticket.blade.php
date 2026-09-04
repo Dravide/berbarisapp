@@ -336,9 +336,9 @@
                             <div class="mb-6">
                                 <label class="text-sm font-bold text-deep-slate block mb-1.5">Jumlah Tiket <span class="text-red-500">*</span></label>
                                 <div class="flex max-w-[160px] border border-outline-variant/60 rounded-lg overflow-hidden h-11 bg-surface">
-                                    <button type="button" wire:click="$set('quantity', Math.max(1, $quantity - 1))" class="w-12 flex items-center justify-center font-bold text-lg text-primary hover:bg-primary/5 border-r border-outline-variant/60 transition cursor-pointer select-none">−</button>
+                                    <button type="button" wire:click="decrementQuantity" class="w-12 flex items-center justify-center font-bold text-lg text-primary hover:bg-primary/5 border-r border-outline-variant/60 transition cursor-pointer select-none">−</button>
                                     <input type="number" wire:model="quantity" class="flex-1 text-center font-bold text-sm text-deep-slate border-none outline-none h-full w-full bg-transparent px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" min="1" max="{{ $eventner->ticket_max_per_order ?? 10 }}">
-                                    <button type="button" wire:click="$set('quantity', Math.min({{ $eventner->ticket_max_per_order ?? 10 }}, $quantity + 1))" class="w-12 flex items-center justify-center font-bold text-lg text-primary hover:bg-primary/5 border-l border-outline-variant/60 transition cursor-pointer select-none">+</button>
+                                    <button type="button" wire:click="incrementQuantity" class="w-12 flex items-center justify-center font-bold text-lg text-primary hover:bg-primary/5 border-l border-outline-variant/60 transition cursor-pointer select-none">+</button>
                                 </div>
                                 <span class="text-xs text-on-surface-variant font-medium mt-1.5 block">Maksimal {{ $eventner->ticket_max_per_order ?? 10 }} tiket per order</span>
                                 @error('quantity') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
