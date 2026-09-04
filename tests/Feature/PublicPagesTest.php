@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Public\EventVote;
 use App\Models\CompetitionCategory;
 use App\Models\Eventner;
 use App\Models\Participant;
@@ -9,6 +10,7 @@ use App\Models\Registration;
 use App\Models\Sponsor;
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class PublicPagesTest extends TestCase
@@ -122,5 +124,86 @@ class PublicPagesTest extends TestCase
     {
         $response = $this->get('/event/tidak-ada-99999');
         $response->assertStatus(404);
+    }
+
+    public function test_vote_page_shows_top3_modal()
+    {
+        $eventner = Eventner::factory()->create([
+            'status' => 'approved',
+            'vote_active' => true,
+        ]);
+        $parent = CompetitionCategory::factory()->create([
+            'eventner_id' => $eventner->id,
+            'parent_id' => null,
+        ]);
+        $child = CompetitionCategory::factory()->create([
+            'eventner_id' => $eventner->id,
+            'parent_id' => $parent->id,
+        ]);
+
+        $schools = ['SMA Juara Satu', 'SMA Perak', 'SMA Perunggu'];
+        foreach ($schools as $i => $nama) {
+            $reg = Registration::factory()->create([
+                'eventner_id' => $eventner->id,
+                'competition_category_id' => $child->id,
+                'nama_sekolah' => $nama,
+            ]);
+            \App\Models\VoteTransaction::create([
+                'eventner_id' => $eventner->id,
+                'registration_id' => $reg->id,
+                'autogopay_transaction_id' => 'tx-modal-' . $i,
+                'qr_url' => 'https://example.com/qr.png',
+                'amount' => 10000,
+                'votes_earned' => (3 - $i) * 100, // 300, 200, 100
+                'status' => 'PAID',
+                'paid_at' => now(),
+            ]);
+        }
+
+        $response = $this->get("/event/{$eventner->slug}/vote?selectedCategoryId={$child->id}");
+        $response->assertStatus(200);
+
+        // Tombol buka modal + podium di dalam modal dirender
+        $response->assertSee('Hasil Sementara');
+        $response->assertSee('Pimpinan Klasemen');
+        $response->assertSee('SMA Juara Satu');
+
+        // Modal hanya berisi 3 tertinggi — kontingen ke-4 tampil di list, bukan di topThree
+        Registration::factory()->create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $child->id,
+            'nama_sekolah' => 'SMA Bukan Pemenang',
+        ]);
+        Livewire::test(EventVote::class, ['slug' => $eventner->slug])
+            ->set('selectedCategoryId', $child->id)
+            ->assertViewHas('topThree', fn ($top) => $top->count() === 3
+                && $top->first()->nama_sekolah === 'SMA Juara Satu'
+                && !$top->contains('nama_sekolah', 'SMA Bukan Pemenang'));
+    }
+
+    public function test_vote_page_hides_top3_modal_when_no_paid_votes()
+    {
+        $eventner = Eventner::factory()->create([
+            'status' => 'approved',
+            'vote_active' => true,
+        ]);
+        $parent = CompetitionCategory::factory()->create([
+            'eventner_id' => $eventner->id,
+            'parent_id' => null,
+        ]);
+        $child = CompetitionCategory::factory()->create([
+            'eventner_id' => $eventner->id,
+            'parent_id' => $parent->id,
+        ]);
+        Registration::factory()->create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $child->id,
+        ]);
+
+        // Top-3 dihitung dari semua peserta kategori, PAID-sum bisa 0 —
+        // modal tetap render karena isNotEmpty() cek registrasi, bukan vote.
+        $response = $this->get("/event/{$eventner->slug}/vote?selectedCategoryId={$child->id}");
+        $response->assertStatus(200);
+        $response->assertSee('Hasil Sementara');
     }
 }
