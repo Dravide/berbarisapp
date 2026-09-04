@@ -487,7 +487,9 @@
                             <span class="badge bg-success-subtle text-success">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</span>
                         </div>
                         <div class="card-body">
-                            <canvas id="revenueChart" height="250"></canvas>
+                            <div style="position: relative; height: 250px;">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -508,7 +510,9 @@
                             </div>
                         </div>
                         <div class="card-body">
-                            <canvas id="topParticipantsChart" height="250"></canvas>
+                            <div style="position: relative; height: 250px;">
+                                <canvas id="topParticipantsChart"></canvas>
+                            </div>
                         </div>
                     </div>
                 </div>
