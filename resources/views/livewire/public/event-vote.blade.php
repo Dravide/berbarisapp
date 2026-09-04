@@ -497,6 +497,42 @@
                             </div>
                         @endif
 
+                        {{-- ===== TOP 10 PENDUKUNG ===== --}}
+                        @php $topSupporters = $this->topSupporters; @endphp
+                        @if($topSupporters->isNotEmpty())
+                            <div class="surface-card mb-8 border border-outline-variant/50 bg-white overflow-hidden">
+                                <div class="px-5 py-4 border-b border-outline-variant/30 flex items-center justify-between gap-3">
+                                    <h3 class="font-display text-sm font-bold text-deep-slate inline-flex items-center gap-2 m-0">
+                                        <i class="ti ti-medal-2 text-primary text-lg"></i>
+                                        Top 10 Pendukung
+                                    </h3>
+                                    <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Berdasarkan email</span>
+                                </div>
+                                <div class="p-4">
+                                    <div class="grid gap-2.5 sm:grid-cols-2">
+                                        @foreach($topSupporters as $i => $supporter)
+                                            <div class="flex items-center gap-3 p-2.5 rounded-xl {{ $i === 0 ? 'bg-amber-500/10 border border-amber-500/30' : ($i === 1 ? 'bg-slate-400/10 border border-slate-400/30' : ($i === 2 ? 'bg-orange-500/10 border border-orange-500/30' : 'bg-surface-container-low border border-outline-variant/30')) }}">
+                                                <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-display text-xs font-extrabold
+                                                    {{ $i === 0 ? 'bg-amber-500 text-white' : ($i === 1 ? 'bg-slate-400 text-white' : ($i === 2 ? 'bg-orange-600 text-white' : 'bg-outline-variant/40 text-on-surface-variant')) }}">
+                                                    {{ $i + 1 }}
+                                                </span>
+                                                <div class="flex-1 min-w-0">
+                                                    <h4 class="text-xs font-bold text-deep-slate truncate leading-tight mb-0.5">{{ $supporter->voter_name ?: $supporter->voter_email }}</h4>
+                                                    <span class="text-[10px] text-on-surface-variant block truncate">{{ $supporter->voter_email }}</span>
+                                                </div>
+                                                <span class="chip py-1 px-2.5 !text-[11px] shrink-0 inline-flex items-center gap-1 bg-primary/10 !text-primary font-bold">
+                                                    <i class="ti ti-heart-filled text-[10px]"></i> {{ number_format($supporter->total_votes, 0, ',', '.') }}
+                                                </span>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    @if($topSupporters->count() === 10)
+                                        <p class="text-[10px] text-on-surface-variant text-center mt-3 mb-0">Total vote digabung berdasarkan email pendukung (PAID).</p>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
                         {{-- ===== DIVIDER ===== --}}
                         <div class="flex items-center gap-4 my-8">
                             <div class="flex-1 h-px bg-outline-variant/40"></div>
