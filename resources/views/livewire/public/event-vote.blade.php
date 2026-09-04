@@ -417,7 +417,7 @@
                                 $rank3 = $top3->values()->get(2);
                             @endphp
                             <div class="surface-card mb-8 border border-outline-variant/50 bg-white overflow-hidden">
-                                <span class="overline text-center justify-center pt-6 pb-4">Pimpinan Klasemen</span>
+                                <span class="overline w-full justify-center pt-6 pb-4">Pimpinan Klasemen</span>
 
                                 <div class="flex items-end justify-center gap-3 sm:gap-6 max-w-lg mx-auto px-6 pb-4">
 
