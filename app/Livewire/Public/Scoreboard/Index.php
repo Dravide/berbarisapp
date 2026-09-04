@@ -199,9 +199,11 @@ class Index extends Component
         // Cache ranks for next poll comparison
         $this->previousRanks = collect($rankings)->pluck('rank', 'id')->toArray();
 
-        // Check active scoring in last 15 seconds
+        // Check active scoring in last 15 seconds — scope ke kategori/champion aktif
+        // supaya badge "Menilai" tidak bocor dari kategori lain
         $latestScore = AssessmentScore::with('registration')
             ->where('eventner_id', $this->eventner->id)
+            ->whereIn('registration_id', $participants->pluck('id'))
             ->orderBy('updated_at', 'desc')
             ->first();
 
