@@ -181,7 +181,7 @@
                     <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider" x-text="'{{ $leaderboardData->count() }} kategori'"></span>
                 </div>
 
-                <div class="relative" style="min-height: 120px;">
+                <div class="grid">
                     @foreach($leaderboardData as $idx => $item)
                         @php $cat = $item['category']; $topReg = $item['top']->first(); @endphp
                         <div x-show="li === {{ $idx }}"
@@ -191,7 +191,7 @@
                              x-transition:leave="transition ease-in duration-300"
                              x-transition:leave-start="opacity-100 translate-x-0"
                              x-transition:leave-end="opacity-0 -translate-x-4"
-                             class="absolute inset-0">
+                             class="col-start-1 row-start-1">
                             @if($topReg)
                                 <div class="flex items-center gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
                                     <div class="shrink-0 relative">
