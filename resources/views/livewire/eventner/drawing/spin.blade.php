@@ -81,7 +81,7 @@
                                     </div>
                                 @endif
 
-                                <h4 class="fw-bold mb-1">{{ $currentSchool->nama_sekolah }}</h4>
+                                <h4 class="fw-bold mb-1">{{ $currentSchool->display_name }}</h4>
                                 <p class="text-muted fs-3 mb-4">NPSN: {{ $currentSchool->npsn }}</p>
 
                                 <div wire:key="spinner-{{ $currentSchool->id }}" x-data="window.spinnerWidget()" class="w-100" style="max-width: 320px;">
@@ -163,7 +163,7 @@
                                         {{ $school->urutan_tampil }}
                                     </span>
                                     <div class="min-w-0">
-                                        <h6 class="fw-bold mb-0 text-truncate">{{ $school->nama_sekolah }}</h6>
+                                        <h6 class="fw-bold mb-0 text-truncate">{{ $school->display_name }}</h6>
                                         <small class="text-muted">NPSN: {{ $school->npsn }}</small>
                                     </div>
                                 </div>

@@ -81,7 +81,7 @@ class Index extends Component
             ->first();
 
         if ($existingNumber) {
-            $this->addError('manualUrutan', "Nomor urut {$this->manualUrutan} sudah digunakan oleh {$existingNumber->nama_sekolah}.");
+            $this->addError('manualUrutan', "Nomor urut {$this->manualUrutan} sudah digunakan oleh {$existingNumber->display_name}.");
             return;
         }
 
@@ -89,7 +89,7 @@ class Index extends Component
             'urutan_tampil' => $this->manualUrutan,
         ]);
 
-        session()->flash('success', "{$registration->nama_sekolah} mendapat urutan tampil #{$this->manualUrutan}.");
+        session()->flash('success', "{$registration->display_name} mendapat urutan tampil #{$this->manualUrutan}.");
         $this->manualRegistrationId = null;
         $this->manualUrutan = null;
         $this->dispatch('reinit-select2');
@@ -102,7 +102,7 @@ class Index extends Component
             ->findOrFail($id);
 
         $registration->update(['urutan_tampil' => null]);
-        session()->flash('success', "Urutan tampil {$registration->nama_sekolah} telah dihapus.");
+        session()->flash('success', "Urutan tampil {$registration->display_name} telah dihapus.");
     }
 
     public function resetDrawing()

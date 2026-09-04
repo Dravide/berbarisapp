@@ -156,7 +156,7 @@
                                     <tr>
                                         <td>{{ $idx + 1 }}</td>
                                         <td>
-                                            <h6 class="fw-semibold mb-1">{{ $reg->nama_sekolah }}</h6>
+                                            <h6 class="fw-semibold mb-1">{{ $reg->display_name }}</h6>
                                             <span class="fw-normal text-muted">NPSN: {{ $reg->npsn }}</span>
                                         </td>
                                         <td>
@@ -326,7 +326,7 @@
                             <i class="ti ti-checklist me-2"></i>Verifikasi Pendaftaran
                         </h4>
                         <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <span class="fw-bold fs-4">{{ $selectedRegistration->nama_sekolah }}</span>
+                            <span class="fw-bold fs-4">{{ $selectedRegistration->display_name }}</span>
                             <span class="badge bg-white bg-opacity-25 text-white rounded-pill px-3 py-1">{{ $selectedRegistration->competitionCategory->full_name }}</span>
                             @if($selectedRegistration->is_finalized)
                                 <span class="badge bg-white bg-opacity-25 text-white rounded-pill px-3 py-1"><i class="ti ti-lock me-1"></i>Finalized</span>

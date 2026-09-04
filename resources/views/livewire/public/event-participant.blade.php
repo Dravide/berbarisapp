@@ -90,7 +90,7 @@
                                     @endif
                                     <div class="flex-1 min-w-0">
                                         <h4 class="text-sm font-bold text-deep-slate leading-tight mb-1 inline-flex items-center gap-2 flex-wrap">
-                                            {{ $reg->nama_sekolah }}
+                                            {{ $reg->display_name }}
                                             @if($reg->urutan_tampil)
                                                 <span class="inline-flex items-center rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 border border-amber-500/20">
                                                     #{{ str_pad($reg->urutan_tampil, 2, '0', STR_PAD_LEFT) }}

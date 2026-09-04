@@ -144,7 +144,7 @@
                     @forelse($rankingData as $idx => $reg)
                         <tr>
                             <td class="rank-col">{{ $idx + 1 }}</td>
-                            <td class="name-col">{{ $reg->nama_sekolah }}</td>
+                            <td class="name-col">{{ $reg->display_name }}</td>
                             <td>{{ $reg->danton_nama ?: '-' }}</td>
                             <td class="val-col num-val">{{ number_format($reg->total_votes ?: 0, 0, ',', '.') }}</td>
                             <td class="val-col money-val">Rp {{ number_format(($reg->total_votes ?: 0) * $pricePerVote, 0, ',', '.') }}</td>

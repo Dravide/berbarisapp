@@ -132,7 +132,7 @@ class VoteController extends Controller
 
         $event = Eventner::approved()->where('slug', $request->event_slug)->firstOrFail();
 
-        $comments = VoteTransaction::with('registration:id,nama_sekolah')
+        $comments = VoteTransaction::with('registration:id,nama_sekolah,label_pasukan')
             ->where('eventner_id', $event->id)
             ->where('status', 'PAID')
             ->whereNotNull('comment')

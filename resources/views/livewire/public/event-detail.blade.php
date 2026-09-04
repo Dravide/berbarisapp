@@ -207,7 +207,7 @@
                                     </div>
                                     <div class="flex-1 min-w-0">
                                         <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block mb-0.5">{{ $cat->full_name ?? $cat->name }}</span>
-                                        <h4 class="text-base font-extrabold text-deep-slate truncate">{{ $topReg['nama_sekolah'] }}</h4>
+                                        <h4 class="text-base font-extrabold text-deep-slate truncate">{{ $topReg['display_name'] }}</h4>
                                         <div class="flex items-center gap-3 mt-1">
                                             <span class="font-display text-lg font-extrabold text-primary">{{ number_format($topReg['total_votes'] ?? 0, 0, ',', '.') }}</span>
                                             <span class="text-[11px] font-semibold text-on-surface-variant">suara</span>

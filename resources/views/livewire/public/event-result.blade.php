@@ -115,7 +115,7 @@
                                             <i class="ti ti-school text-2xl"></i>
                                         </div>
                                     @endif
-                                    <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2">{{ $rank2['participant']->nama_sekolah }}</h4>
+                                    <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2">{{ $rank2['participant']->display_name }}</h4>
                                     @if($rank2['title'])
                                         <span class="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 mb-1.5">
                                             <i class="ti ti-award"></i> {{ $rank2['title'] }}
@@ -145,7 +145,7 @@
                                             </div>
                                         @endif
                                     </div>
-                                    <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2">{{ $rank1['participant']->nama_sekolah }}</h4>
+                                    <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2">{{ $rank1['participant']->display_name }}</h4>
                                     @if($rank1['title'])
                                         <span class="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 mb-1.5">
                                             <i class="ti ti-award"></i> {{ $rank1['title'] }}
@@ -168,7 +168,7 @@
                                             <i class="ti ti-school text-2xl"></i>
                                         </div>
                                     @endif
-                                    <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2">{{ $rank3['participant']->nama_sekolah }}</h4>
+                                    <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2">{{ $rank3['participant']->display_name }}</h4>
                                     @if($rank3['title'])
                                         <span class="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 mb-1.5">
                                             <i class="ti ti-award"></i> {{ $rank3['title'] }}
@@ -209,7 +209,7 @@
 
                                     <div class="flex-1 min-w-0">
                                         <h4 class="text-sm font-bold text-deep-slate leading-tight mb-1 inline-flex items-center gap-2 flex-wrap">
-                                            {{ $ps['participant']->nama_sekolah }}
+                                            {{ $ps['participant']->display_name }}
                                             @if($ps['title'])
                                                 <span class="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-bold text-emerald-600 border border-emerald-500/20">
                                                     <i class="ti ti-award"></i> {{ $ps['title'] }}

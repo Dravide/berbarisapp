@@ -52,6 +52,7 @@ class ScoreboardController extends Controller
             $rankings[] = [
                 'id' => $reg->id,
                 'nama_sekolah' => $reg->nama_sekolah,
+                'display_name' => $reg->display_name,
                 'logo_sekolah' => $reg->logo_sekolah ? asset('storage/' . $reg->logo_sekolah) : null,
                 'total_skor' => (float) $totalScore,
                 'total_votes' => (int) ($reg->total_votes ?? 0),

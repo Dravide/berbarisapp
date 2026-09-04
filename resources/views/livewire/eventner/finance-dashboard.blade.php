@@ -120,7 +120,7 @@
                         <div class="border-bottom p-3">
                             <div class="d-flex justify-content-between align-items-start mb-1">
                                 <div>
-                                    <h6 class="fw-semibold mb-0">{{ $reg->nama_sekolah }}</h6>
+                                    <h6 class="fw-semibold mb-0">{{ $reg->display_name }}</h6>
                                     <small class="text-muted">{{ $reg->competitionCategory->full_name }}</small>
                                 </div>
                                 <span class="fw-bold text-primary">Rp {{ number_format($reg->total_fee, 0, ',', '.') }}</span>
@@ -268,7 +268,7 @@
                             <tbody>
                                 @forelse($this->filteredPaymentDetails as $reg)
                                     <tr>
-                                        <td class="fw-semibold">{{ $reg->nama_sekolah }}</td>
+                                        <td class="fw-semibold">{{ $reg->display_name }}</td>
                                         <td class="text-muted">{{ $reg->competitionCategory?->full_name }}</td>
                                         <td class="text-center">
                                             @if($reg->payment_status === 'paid')
@@ -317,7 +317,7 @@
                             <table class="table table-sm table-borderless mb-0">
                                 <tr>
                                     <td class="text-muted">Nama Sekolah</td>
-                                    <td class="fw-semibold">{{ $this->selectedPayment->nama_sekolah }}</td>
+                                    <td class="fw-semibold">{{ $this->selectedPayment->display_name }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-muted">Kategori Lomba</td>
@@ -371,7 +371,7 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
                 @if($this->selectedPayment)
-                    <button type="button" class="btn btn-outline-danger" wire:click="rejectPayment({{ $this->selectedPayment->id }})" wire:confirm="Tolak bukti pembayaran {{ $this->selectedPayment->nama_sekolah }}? Peserta harus upload ulang.">
+                    <button type="button" class="btn btn-outline-danger" wire:click="rejectPayment({{ $this->selectedPayment->id }})" wire:confirm="Tolak bukti pembayaran {{ $this->selectedPayment->display_name }}? Peserta harus upload ulang.">
                         <i class="ti ti-x"></i> Tolak
                     </button>
                     <button type="button" class="btn btn-success" wire:click="verifyPayment({{ $this->selectedPayment->id }})">

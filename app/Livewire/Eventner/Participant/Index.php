@@ -172,7 +172,7 @@ class Index extends Component
 
         // Draft (belum difinalisasi sekolah) tidak boleh diverifikasi
         if (!$this->selectedRegistration->is_finalized) {
-            session()->flash('error', 'Pendaftaran ' . $this->selectedRegistration->nama_sekolah . ' masih draft. Sekolah belum menekan tombol "Finalisasi" pada portal.');
+            session()->flash('error', 'Pendaftaran ' . $this->selectedRegistration->display_name . ' masih draft. Sekolah belum menekan tombol "Finalisasi" pada portal.');
             $this->closeVerifyModal();
             return;
         }
@@ -186,7 +186,7 @@ class Index extends Component
 
         $this->selectedRegistration->update($updateData);
 
-        session()->flash('success', 'Status pendaftaran ' . $this->selectedRegistration->nama_sekolah . ' berhasil diubah menjadi ' . $status . '.');
+        session()->flash('success', 'Status pendaftaran ' . $this->selectedRegistration->display_name . ' berhasil diubah menjadi ' . $status . '.');
         $this->closeVerifyModal();
     }
 

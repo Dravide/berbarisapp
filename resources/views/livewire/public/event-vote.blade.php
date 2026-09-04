@@ -230,7 +230,7 @@
                                                     {{ $i + 1 }}
                                                 </div>
                                                 <div class="flex-1 min-w-0">
-                                                    <div class="font-semibold text-sm truncate">{{ $p->nama_sekolah }}</div>
+                                                    <div class="font-semibold text-sm truncate">{{ $p->display_name }}</div>
                                                     <div class="text-xs text-muted">{{ $p->nama_pelatih }}</div>
                                                 </div>
                                                 <div class="text-right">
@@ -251,7 +251,7 @@
                                                     <div class="flex items-center justify-between py-1.5 px-2 text-sm">
                                                         <div class="flex items-center gap-2 min-w-0">
                                                             <span class="text-muted text-xs w-5">{{ $loop->index + 4 }}.</span>
-                                                            <span class="truncate">{{ $p->nama_sekolah }}</span>
+                                                            <span class="truncate">{{ $p->display_name }}</span>
                                                         </div>
                                                         <span class="font-semibold text-xs">{{ number_format($p->total_votes ?? 0) }}</span>
                                                     </div>
@@ -466,7 +466,7 @@
                                                         <i class="ti ti-school text-2xl"></i>
                                                     </div>
                                                 @endif
-                                                <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank2->nama_sekolah }}</h4>
+                                                <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank2->display_name }}</h4>
                                                 <span class="font-display font-extrabold text-primary text-sm mb-1">{{ number_format($rank2->total_votes ?? 0, 0, ',', '.') }}</span>
                                                 <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vote</span>
                                                 <div class="w-full bg-slate-200 border border-slate-200/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 80px;">
@@ -494,7 +494,7 @@
                                                         </div>
                                                     @endif
                                                 </div>
-                                                <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank1->nama_sekolah }}</h4>
+                                                <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank1->display_name }}</h4>
                                                 <span class="font-display font-extrabold text-primary text-base mb-1">{{ number_format($rank1->total_votes ?? 0, 0, ',', '.') }}</span>
                                                 <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vote</span>
                                                 <div class="w-full bg-amber-300 border border-amber-300/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 110px;">
@@ -515,7 +515,7 @@
                                                         <i class="ti ti-school text-2xl"></i>
                                                     </div>
                                                 @endif
-                                                <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank3->nama_sekolah }}</h4>
+                                                <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 transition group-hover:text-primary">{{ $rank3->display_name }}</h4>
                                                 <span class="font-display font-extrabold text-primary text-sm mb-1">{{ number_format($rank3->total_votes ?? 0, 0, ',', '.') }}</span>
                                                 <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Vote</span>
                                                 <div class="w-full bg-sky-200 border border-sky-200/80 rounded-t-xl mt-3 flex items-center justify-center transition group-hover:shadow-md" style="height: 60px;">
@@ -586,7 +586,7 @@
                                             @endif
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <h4 class="text-sm font-bold text-deep-slate leading-tight mb-0.5 truncate">{{ $reg->nama_sekolah }}</h4>
+                                            <h4 class="text-sm font-bold text-deep-slate leading-tight mb-0.5 truncate">{{ $reg->display_name }}</h4>
                                             <span class="text-xs text-on-surface-variant block truncate">Pelatih: {{ $reg->nama_pelatih ?? '—' }}</span>
                                         </div>
                                         <span class="chip py-1 px-3 !text-[11px] shrink-0 inline-flex items-center gap-1 bg-amber-500/10 !text-amber-700 font-bold" title="Total Vote Terkumpul">
@@ -634,7 +634,7 @@
                 <div class="flex items-center justify-between gap-4">
                     <div class="min-w-0 flex-1">
                         <span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider block">Dukungan Untuk</span>
-                        <h4 class="text-sm font-bold text-deep-slate truncate">{{ App\Models\Registration::find($selectedRegistrationId)?->nama_sekolah }}</h4>
+                        <h4 class="text-sm font-bold text-deep-slate truncate">{{ App\Models\Registration::find($selectedRegistrationId)?->display_name }}</h4>
                     </div>
                     <a href="#mobile-vote-form" class="btn-primary py-2.5 px-5 font-bold text-xs leading-normal shrink-0 text-decoration-none">
                         Isi Formulir Vote
@@ -777,7 +777,7 @@
                                         </p>
                                         @if($c->registration)
                                             <span class="text-[10px] text-primary font-medium mt-1 block">
-                                                <i class="ti ti-school text-[9px]"></i> {{ $c->registration->nama_sekolah }}
+                                                <i class="ti ti-school text-[9px]"></i> {{ $c->registration->display_name }}
                                             </span>
                                         @endif
                                     </div>

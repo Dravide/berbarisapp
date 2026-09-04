@@ -105,7 +105,7 @@
                                             </div>
                                         @endif
                                         <div class="overflow-hidden">
-                                            <h6 class="fw-semibold mb-0 text-truncate">{{ $reg->nama_sekolah }}</h6>
+                                            <h6 class="fw-semibold mb-0 text-truncate">{{ $reg->display_name }}</h6>
                                             <p class="text-muted mb-0 fs-2 text-truncate">Pelatih: {{ $reg->nama_pelatih }}</p>
                                         </div>
                                     </div>
@@ -144,7 +144,7 @@
                                     </div>
                                 @endif
                                 <div>
-                                    <h5 class="text-white fw-semibold mb-0">{{ $selectedRegistration->nama_sekolah }}</h5>
+                                    <h5 class="text-white fw-semibold mb-0">{{ $selectedRegistration->display_name }}</h5>
                                     <p class="text-white text-opacity-75 mb-0 fs-2">Pelatih: {{ $selectedRegistration->nama_pelatih }} &bull; {{ $selectedRegistration->competitionCategory->name ?? '-' }}</p>
                                 </div>
                             </div>

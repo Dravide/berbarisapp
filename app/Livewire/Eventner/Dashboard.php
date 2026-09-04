@@ -534,7 +534,7 @@ class Dashboard extends Component
                 $total += (int) $score->score * $weight;
             }
             $data[] = [
-                'name' => $participant->nama_sekolah,
+                'name' => $participant->display_name,
                 'total' => $total,
             ];
         }

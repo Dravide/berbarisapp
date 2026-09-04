@@ -49,7 +49,19 @@ class Registration extends Model
         ];
     }
 
+    /**
+     * Nama tampil: sekolah + label pasukan (A/B/C) jika ada.
+     */
+    public function getDisplayNameAttribute(): string
+    {
+        return $this->label_pasukan
+            ? $this->nama_sekolah . ' — Pasukan ' . $this->label_pasukan
+            : $this->nama_sekolah;
+    }
+
     protected $hidden = ['password'];
+
+    protected $appends = ['display_name'];
 
     protected static function boot()
     {

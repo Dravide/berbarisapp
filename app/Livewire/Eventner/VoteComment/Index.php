@@ -104,7 +104,7 @@ class Index extends Component
         $registrations = Registration::where('eventner_id', $eventnerId)
             ->orderBy('nama_sekolah')
             ->with('competitionCategory:id,name,parent_id')
-            ->get(['id', 'nama_sekolah', 'npsn', 'competition_category_id']);
+            ->get(['id', 'nama_sekolah', 'label_pasukan', 'npsn', 'competition_category_id']);
 
         // Query komentar: transaksi PAID dengan isi komentar
         $query = VoteTransaction::query()
@@ -112,7 +112,7 @@ class Index extends Component
             ->where('status', 'PAID')
             ->whereNotNull('comment')
             ->where('comment', '!=', '')
-            ->with(['registration:id,nama_sekolah,npsn,competition_category_id', 'registration.competitionCategory:id,name']);
+            ->with(['registration:id,nama_sekolah,label_pasukan,npsn,competition_category_id', 'registration.competitionCategory:id,name']);
 
         // Filter search (nama pemilih / isi komentar)
         if ($this->search !== '') {

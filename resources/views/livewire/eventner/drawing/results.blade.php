@@ -82,7 +82,7 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                <span class="fw-semibold">{{ $reg->nama_sekolah }}</span>
+                                                <span class="fw-semibold">{{ $reg->display_name }}</span>
                                             </td>
                                             <td>
                                                 <span class="text-muted">{{ $reg->npsn }}</span>

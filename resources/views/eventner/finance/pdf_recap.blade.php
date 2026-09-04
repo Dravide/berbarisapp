@@ -180,7 +180,7 @@
             @forelse($paymentDetails as $i => $reg)
                 <tr>
                     <td class="center">{{ $i + 1 }}</td>
-                    <td class="name-col">{{ $reg->nama_sekolah }}</td>
+                    <td class="name-col">{{ $reg->display_name }}</td>
                     <td>{{ $reg->competitionCategory?->full_name }}</td>
                     <td class="center">
                         @if($reg->payment_status === 'paid')

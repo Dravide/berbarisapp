@@ -45,7 +45,7 @@ class Index extends Component
                 $reg = Registration::where('eventner_id', $eventner->id)
                     ->findOrFail($this->registrationId);
                 $sent = $fcm->sendToModel($reg, $this->title, $this->body, $data);
-                $message = "Notifikasi terkirim ke {$reg->nama_sekolah} ({$sent} device).";
+                $message = "Notifikasi terkirim ke {$reg->display_name} ({$sent} device).";
             } else {
                 $sent = $fcm->sendToEvent($eventner, $this->title, $this->body, $data);
                 $message = "Notifikasi broadcast terkirim ke {$sent} device peserta.";

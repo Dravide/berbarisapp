@@ -32,6 +32,16 @@ class RegistrationFactory extends Factory
     }
 
     /**
+     * Registration with a squad label (A/B/C) — distinguishes multiple teams from one school.
+     */
+    public function pasukan(string $label = 'A'): static
+    {
+        return $this->state(fn (array $attrs) => [
+            'label_pasukan' => $label,
+        ]);
+    }
+
+    /**
      * Registration with participants.
      */
     public function withParticipants(int $count = 1): static

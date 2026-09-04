@@ -32,7 +32,7 @@ class VoteCommentController extends Controller
             ->where('status', 'PAID')
             ->whereNotNull('comment')
             ->where('comment', '!=', '')
-            ->with(['registration:id,nama_sekolah,npsn,competition_category_id', 'registration.competitionCategory:id,name']);
+            ->with(['registration:id,nama_sekolah,label_pasukan,npsn,competition_category_id', 'registration.competitionCategory:id,name']);
 
         // Filter search
         if ($search !== '') {
@@ -103,7 +103,7 @@ class VoteCommentController extends Controller
                     $comment->voter_name ?: 'Guest / Anonim',
                     $comment->voter_email ?: '-',
                     $comment->comment,
-                    $comment->registration->nama_sekolah ?? '-',
+                    $comment->registration->display_name ?? '-',
                     $comment->registration->competitionCategory->name ?? '-',
                     $comment->registration->npsn ?? '-',
                     $comment->votes_earned,

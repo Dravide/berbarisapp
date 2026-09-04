@@ -119,7 +119,7 @@
                                                         </div>
                                                     @endif
                                                     <div>
-                                                        <h6 class="fw-semibold mb-1">{{ $reg->nama_sekolah }}</h6>
+                                                        <h6 class="fw-semibold mb-1">{{ $reg->display_name }}</h6>
                                                         <span class="text-muted fs-2">Danton: {{ $reg->danton_nama ?: '-' }}</span>
                                                     </div>
                                                 </div>

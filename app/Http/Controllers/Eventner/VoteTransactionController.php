@@ -28,7 +28,7 @@ class VoteTransactionController extends Controller
         // Query transaksi
         $query = VoteTransaction::query()
             ->where('eventner_id', $eventnerId)
-            ->with(['registration:id,nama_sekolah,npsn,competition_category_id', 'registration.competitionCategory:id,name']);
+            ->with(['registration:id,nama_sekolah,label_pasukan,npsn,competition_category_id', 'registration.competitionCategory:id,name']);
 
         // Filter search
         if ($search !== '') {
@@ -100,7 +100,7 @@ class VoteTransactionController extends Controller
                     $trx->autogopay_transaction_id ?: '-',
                     $trx->voter_name ?: 'Guest / Anonim',
                     $trx->voter_email ?: '-',
-                    $trx->registration->nama_sekolah ?? '-',
+                    $trx->registration->display_name ?? '-',
                     $trx->registration->competitionCategory->name ?? '-',
                     $trx->registration->npsn ?? '-',
                     $trx->votes_earned,

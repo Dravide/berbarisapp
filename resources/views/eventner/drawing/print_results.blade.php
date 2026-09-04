@@ -227,7 +227,7 @@
                         <td class="center">
                             <span class="number-badge">{{ $reg->urutan_tampil }}</span>
                         </td>
-                        <td><strong>{{ $reg->nama_sekolah }}</strong></td>
+                        <td><strong>{{ $reg->display_name }}</strong></td>
                         <td class="center">{{ $reg->npsn }}</td>
                     </tr>
                 @empty

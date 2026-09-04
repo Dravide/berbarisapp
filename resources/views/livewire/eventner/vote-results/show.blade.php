@@ -9,7 +9,7 @@
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a class="text-muted text-decoration-none" href="{{ route('dashboard') }}">Home</a></li>
                             <li class="breadcrumb-item"><a class="text-muted text-decoration-none" href="{{ route('eventner.vote-results.index') }}">Voting</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">{{ $registration->nama_sekolah }}</li>
+                            <li class="breadcrumb-item active" aria-current="page">{{ $registration->display_name }}</li>
                         </ol>
                     </nav>
                 </div>
@@ -32,7 +32,7 @@
                     </div>
                 @endif
                 <div>
-                    <h4 class="fw-semibold mb-1">{{ $registration->nama_sekolah }}</h4>
+                    <h4 class="fw-semibold mb-1">{{ $registration->display_name }}</h4>
                     <p class="text-muted mb-0">
                         <span class="badge bg-primary-subtle text-primary me-2">{{ $registration->competitionCategory->name ?? '-' }}</span>
                         NPSN: {{ $registration->npsn }}

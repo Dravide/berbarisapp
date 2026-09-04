@@ -431,7 +431,7 @@
                                                     </div>
                                                 @endif
                                                 <div>
-                                                    <div class="fw-semibold">{{ $ps['participant']->nama_sekolah }}</div>
+                                                    <div class="fw-semibold">{{ $ps['participant']->display_name }}</div>
                                                     <div class="text-muted small">Pelatih: {{ $ps['participant']->nama_pelatih }}</div>
                                                 </div>
                                             </div>

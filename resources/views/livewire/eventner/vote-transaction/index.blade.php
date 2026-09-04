@@ -109,7 +109,7 @@
                     <select class="form-select" wire:model.live="filterRegistration">
                         <option value="">Semua Kontingen</option>
                         @foreach($registrations as $reg)
-                            <option value="{{ $reg->id }}">{{ $reg->nama_sekolah }} — {{ $reg->competitionCategory?->full_name }}</option>
+                            <option value="{{ $reg->id }}">{{ $reg->display_name }} — {{ $reg->competitionCategory?->full_name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -185,7 +185,7 @@
                                 <td>
                                     @if($v->registration)
                                         <div>
-                                            <h6 class="fw-semibold mb-0">{{ $v->registration->nama_sekolah }}</h6>
+                                            <h6 class="fw-semibold mb-0">{{ $v->registration->display_name }}</h6>
                                             <span class="badge bg-primary-subtle text-primary py-0 px-2 mt-1" style="font-size: 0.7rem;">
                                                 {{ $v->registration->competitionCategory->name ?? '-' }}
                                             </span>

@@ -128,7 +128,7 @@
                 <td class="lbl">No. Urut</td>
                 <td class="val">{{ $registration->urutan_tampil ? '#' . $registration->urutan_tampil : '-' }}</td>
                 <td class="lbl">Nama Kontingen</td>
-                <td class="val">{{ $registration->nama_sekolah }}</td>
+                <td class="val">{{ $registration->display_name }}</td>
             </tr>
             <tr>
                 <td class="lbl">Pelatih</td>
@@ -158,7 +158,7 @@
                         <tr>
                             <td class="no">{{ $i + 1 }}</td>
                             <td class="undian">{{ $reg->urutan_tampil ?: '-' }}</td>
-                            <td>{{ $reg->nama_sekolah }}</td>
+                            <td>{{ $reg->display_name }}</td>
                             <td>{{ $reg->nama_pelatih }}</td>
                             <td>{{ $reg->competitionCategory->full_name ?? '-' }}</td>
                         </tr>

@@ -214,12 +214,12 @@ class Index extends Component
         $registrations = Registration::where('eventner_id', $eventnerId)
             ->orderBy('nama_sekolah')
             ->with('competitionCategory:id,name,parent_id')
-            ->get(['id', 'nama_sekolah', 'npsn', 'competition_category_id']);
+            ->get(['id', 'nama_sekolah', 'label_pasukan', 'npsn', 'competition_category_id']);
 
         // Query transaksi vote
         $query = VoteTransaction::query()
             ->where('eventner_id', $eventnerId)
-            ->with(['registration:id,nama_sekolah,npsn,competition_category_id', 'registration.competitionCategory:id,name']);
+            ->with(['registration:id,nama_sekolah,label_pasukan,npsn,competition_category_id', 'registration.competitionCategory:id,name']);
 
         // Filter search (nama pemilih, email pemilih, id transaksi)
         if ($this->search !== '') {

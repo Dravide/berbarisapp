@@ -179,7 +179,7 @@
                                                 <span class="flex h-14 w-14 items-center justify-center rounded-full border-2 border-white/10 text-white/30 mb-2" style="background: rgba(255,255,255,0.04);"><i class="ti ti-school text-2xl"></i></span>
                                             @endif
                                         @endif
-                                        <h3 class="text-xs font-bold text-white/80 text-center leading-tight line-clamp-2 mb-1">{{ $r['nama_sekolah'] }}</h3>
+                                        <h3 class="text-xs font-bold text-white/80 text-center leading-tight line-clamp-2 mb-1">{{ $r['display_name'] ?? $r['nama_sekolah'] }}</h3>
                                         <span class="font-display font-extrabold text-sm" style="color: {{ ['#f59e0b','#94a3b8','#38bdf8'][$i] }};">{{ number_format($votes, 0, ',', '.') }}</span>
                                         <span class="text-[9px] font-medium text-white/20">suara</span>
                                     </div>
@@ -195,7 +195,7 @@
                                 <div class="relative flex items-center gap-3 px-5 py-2.5 overflow-hidden">
                                     <div class="absolute inset-0 opacity-30 pointer-events-none"><div class="h-full" style="width:{{ $barPct }}%; background:linear-gradient(90deg, rgba(var(--color-primary-rgb),0.12), transparent); transition: width 1s ease-out;"></div></div>
                                     <span class="relative text-xs font-bold text-white/25 w-6 text-center tabular-nums">{{ $i + 4 }}</span>
-                                    <h4 class="relative text-xs font-bold text-white/65 flex-1 truncate">{{ $r['nama_sekolah'] }}</h4>
+                                    <h4 class="relative text-xs font-bold text-white/65 flex-1 truncate">{{ $r['display_name'] ?? $r['nama_sekolah'] }}</h4>
                                     <span class="relative text-xs font-bold" style="color: var(--color-primary);">{{ number_format($r['total_votes'] ?? 0, 0, ',', '.') }}</span>
                                 </div>
                             @endforeach
@@ -317,7 +317,7 @@
                                         @else
                                             <span class="flex h-16 w-16 items-center justify-center rounded-full border-2 border-white/10 text-white/25 mb-2" style="background: rgba(255,255,255,0.03);"><i class="ti ti-school text-2xl"></i></span>
                                         @endif
-                                        <h3 class="text-xs font-bold text-white/80 text-center leading-tight line-clamp-2 mb-1.5 max-w-[160px]">{{ $r2['nama_sekolah'] }}</h3>
+                                        <h3 class="text-xs font-bold text-white/80 text-center leading-tight line-clamp-2 mb-1.5 max-w-[160px]">{{ $r2['display_name'] ?? $r2['nama_sekolah'] }}</h3>
                                         <span class="font-display font-extrabold text-lg text-white/50 mb-2">{{ number_format($r2['total_votes'] ?? 0, 0, ',', '.') }}</span>
                                         <div class="w-full rounded-t-xl flex items-center justify-center" style="height: 90px; background: linear-gradient(180deg, rgba(148,163,184,0.15) 0%, rgba(148,163,184,0.03) 100%); border: 1px solid rgba(148,163,184,0.08);">
                                             <span class="font-display text-4xl font-extrabold text-white/12">2</span>
@@ -339,7 +339,7 @@
                                                 <span class="flex h-24 w-24 items-center justify-center rounded-full border-2 border-amber-400/40 text-white/25" style="background: rgba(255,255,255,0.03); box-shadow: 0 0 40px rgba(245,158,11,0.2);"><i class="ti ti-school text-3xl"></i></span>
                                             @endif
                                         </div>
-                                        <h3 class="text-sm font-bold text-white text-center leading-tight line-clamp-2 mb-1.5 max-w-[200px]">{{ $r1['nama_sekolah'] }}</h3>
+                                        <h3 class="text-sm font-bold text-white text-center leading-tight line-clamp-2 mb-1.5 max-w-[200px]">{{ $r1['display_name'] ?? $r1['nama_sekolah'] }}</h3>
                                         <span class="font-display font-extrabold text-xl text-amber-400 mb-2">{{ number_format($r1['total_votes'] ?? 0, 0, ',', '.') }}</span>
                                         <div class="w-full rounded-t-xl flex items-center justify-center" style="height: 130px; background: linear-gradient(180deg, rgba(245,158,11,0.2) 0%, rgba(245,158,11,0.04) 100%); border: 1px solid rgba(245,158,11,0.12);">
                                             <span class="font-display text-5xl font-extrabold text-amber-400/25">1</span>
@@ -358,7 +358,7 @@
                                         @else
                                             <span class="flex h-16 w-16 items-center justify-center rounded-full border-2 border-white/10 text-white/25 mb-2" style="background: rgba(255,255,255,0.03);"><i class="ti ti-school text-2xl"></i></span>
                                         @endif
-                                        <h3 class="text-xs font-bold text-white/80 text-center leading-tight line-clamp-2 mb-1.5 max-w-[160px]">{{ $r3['nama_sekolah'] }}</h3>
+                                        <h3 class="text-xs font-bold text-white/80 text-center leading-tight line-clamp-2 mb-1.5 max-w-[160px]">{{ $r3['display_name'] ?? $r3['nama_sekolah'] }}</h3>
                                         <span class="font-display font-extrabold text-lg text-white/50 mb-2">{{ number_format($r3['total_votes'] ?? 0, 0, ',', '.') }}</span>
                                         <div class="w-full rounded-t-xl flex items-center justify-center" style="height: 70px; background: linear-gradient(180deg, rgba(56,189,248,0.15) 0%, rgba(56,189,248,0.03) 100%); border: 1px solid rgba(56,189,248,0.08);">
                                             <span class="font-display text-4xl font-extrabold text-white/12">3</span>
@@ -388,7 +388,7 @@
                                         <span class="relative flex h-11 w-11 items-center justify-center rounded-xl text-white/20 shrink-0" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);"><i class="ti ti-school text-lg"></i></span>
                                     @endif
                                     <div class="relative flex-1 min-w-0">
-                                        <h4 class="text-sm font-bold text-white/75 leading-tight truncate">{{ $reg['nama_sekolah'] }}</h4>
+                                        <h4 class="text-sm font-bold text-white/75 leading-tight truncate">{{ $reg['display_name'] ?? $reg['nama_sekolah'] }}</h4>
                                     </div>
                                     <div class="relative shrink-0 text-right">
                                         <span class="font-display font-extrabold text-lg" style="color: var(--color-primary);">{{ number_format($reg['total_votes'] ?? 0, 0, ',', '.') }}</span>
@@ -499,7 +499,7 @@
                             @else
                                 <span class="flex h-8 w-8 items-center justify-center rounded-lg shrink-0" style="background: #f3f4f5; color: #424656;"><i class="ti ti-school text-xs"></i></span>
                             @endif
-                            <span class="flex-1 text-xs font-bold whitespace-nowrap truncate" style="color: #191c1d;">{{ $reg['nama_sekolah'] }}</span>
+                            <span class="flex-1 text-xs font-bold whitespace-nowrap truncate" style="color: #191c1d;">{{ $reg['display_name'] ?? $reg['nama_sekolah'] }}</span>
                             <span class="shrink-0 text-xs font-bold tabular-nums" style="color: {{ $rank === 1 ? 'var(--color-primary)' : '#424656' }};">{{ number_format($votes, 0, ',', '.') }}</span>
                         </div>
                     @empty

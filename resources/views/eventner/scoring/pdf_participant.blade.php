@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Nilai {{ $registration->nama_sekolah }}</title>
+    <title>Nilai {{ $registration->display_name }}</title>
     <style>
         @font-face {
             font-family: 'PJ';
@@ -114,7 +114,7 @@
     <table class="info">
         <tr>
             <td class="lbl">Nama Kontingen</td>
-            <td class="val">{{ $registration->nama_sekolah }}</td>
+            <td class="val">{{ $registration->display_name }}</td>
             <td class="lbl">NPSN</td>
             <td>{{ $registration->npsn }}</td>
         </tr>

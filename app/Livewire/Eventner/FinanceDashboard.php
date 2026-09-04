@@ -197,7 +197,7 @@ class FinanceDashboard extends Component
         $reg->payment_verified_by = Auth::id();
         $reg->save();
 
-        session()->flash('success', 'Pembayaran ' . $reg->nama_sekolah . ' berhasil diverifikasi.');
+        session()->flash('success', 'Pembayaran ' . $reg->display_name . ' berhasil diverifikasi.');
         $this->closePaymentModal();
         $this->loadData();
     }
@@ -213,7 +213,7 @@ class FinanceDashboard extends Component
         $reg->payment_verified_by = null;
         $reg->save();
 
-        session()->flash('success', 'Bukti pembayaran ' . $reg->nama_sekolah . ' ditolak. Peserta dapat upload ulang.');
+        session()->flash('success', 'Bukti pembayaran ' . $reg->display_name . ' ditolak. Peserta dapat upload ulang.');
         $this->closePaymentModal();
         $this->loadData();
     }

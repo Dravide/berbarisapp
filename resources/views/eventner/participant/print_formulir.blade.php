@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Formulir - {{ $registration->nama_sekolah }}</title>
+    <title>Cetak Formulir - {{ $registration->display_name }}</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -322,7 +322,7 @@
         <table class="table-detail">
             <tr>
                 <td class="lbl" style="width:18%;">Nama Sekolah</td>
-                <td style="width:32%;">{{ $registration->nama_sekolah }}</td>
+                <td style="width:32%;">{{ $registration->display_name }}</td>
                 <td class="lbl" style="width:18%;">NPSN</td>
                 <td style="width:32%;">{{ $registration->npsn }}</td>
             </tr>

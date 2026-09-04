@@ -55,7 +55,7 @@
                 <div class="surface-card p-4 border border-outline-variant/40 bg-white text-xs font-semibold">
                     <div class="flex justify-between items-center mb-2 pb-2 border-b border-outline-variant/30">
                         <span class="text-on-surface-variant">Sekolah</span>
-                        <span class="text-deep-slate font-bold text-right truncate max-w-[150px]">{{ $registration->nama_sekolah }}</span>
+                        <span class="text-deep-slate font-bold text-right truncate max-w-[150px]">{{ $registration->display_name }}</span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-on-surface-variant">NPSN</span>
@@ -262,7 +262,7 @@
                 <div class="p-4 px-5">
                     <div class="flex flex-wrap items-center gap-2">
                         <span class="inline-flex items-center gap-1 rounded-md bg-surface-container px-2.5 py-1 text-xs font-semibold text-deep-slate border border-outline-variant/30">
-                            <i class="ti ti-school text-on-surface-variant"></i> {{ $registration->nama_sekolah }}
+                            <i class="ti ti-school text-on-surface-variant"></i> {{ $registration->display_name }}
                         </span>
                         @if($registration->nama_pelatih)
                             <span class="inline-flex items-center gap-1 rounded-md bg-surface-container px-2.5 py-1 text-xs font-semibold text-deep-slate border border-outline-variant/30">
@@ -412,7 +412,7 @@
                                 </tr>
                                 <tr>
                                     <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">Nama Sekolah</th>
-                                    <td class="px-5 py-3.5 text-deep-slate font-bold">{{ $registration->nama_sekolah }}</td>
+                                    <td class="px-5 py-3.5 text-deep-slate font-bold">{{ $registration->display_name }}</td>
                                 </tr>
                                 <tr>
                                     <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">Data Pelatih</th>

@@ -38,7 +38,7 @@
                         <select class="form-select" wire:model="registrationId" @if($target !== 'registration') disabled @endif>
                             <option value="">— Pilih sekolah/pasukan —</option>
                             @foreach($registrations as $r)
-                                <option value="{{ $r->id }}">{{ $r->nama_sekolah }}{{ $r->label_pasukan ? ' — ' . $r->label_pasukan : '' }}</option>
+                                <option value="{{ $r->id }}">{{ $r->display_name }}</option>
                             @endforeach
                         </select>
                         @error('registrationId')<span class="text-danger small">{{ $message }}</span>@enderror

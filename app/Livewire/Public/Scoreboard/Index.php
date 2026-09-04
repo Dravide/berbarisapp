@@ -152,7 +152,7 @@ class Index extends Component
 
             $rankings[] = [
                 'id' => $participant->id,
-                'nama_sekolah' => $participant->nama_sekolah,
+                'nama_sekolah' => $participant->display_name,
                 'npsn' => $participant->npsn,
                 'total' => $total,
                 'participants' => $participant->participants,
@@ -206,7 +206,7 @@ class Index extends Component
             ->first();
 
         if ($latestScore && $latestScore->updated_at->gt(now()->subSeconds(15))) {
-            $this->activeInputSchool = $latestScore->registration->nama_sekolah;
+            $this->activeInputSchool = $latestScore->registration->display_name;
         } else {
             $this->activeInputSchool = null;
         }

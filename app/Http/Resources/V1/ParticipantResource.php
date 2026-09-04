@@ -12,6 +12,7 @@ class ParticipantResource extends JsonResource
         return [
             'id' => $this->id,
             'nama_sekolah' => $this->nama_sekolah,
+            'display_name' => $this->display_name,
             'logo_sekolah' => $this->logo_sekolah ? asset('storage/' . $this->logo_sekolah) : null,
             'total_votes' => (int) ($this->total_votes ?? 0),
             'status_berkas' => $this->status_berkas,

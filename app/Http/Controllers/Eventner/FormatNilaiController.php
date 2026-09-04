@@ -289,7 +289,7 @@ class FormatNilaiController extends Controller
             ->setPaper('a4', 'portrait');
 
         $label = match ($mode) {
-            'peserta' => 'Peserta_'.str_replace(['/', '\\', ' '], '_', $data['registration']->nama_sekolah),
+            'peserta' => 'Peserta_'.str_replace(['/', '\\', ' ', '—'], '_', $data['registration']->display_name),
             'daftar' => 'Daftar_Peserta',
             default => 'Format_Kosong',
         };

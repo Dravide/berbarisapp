@@ -35,6 +35,7 @@ class ChampionController extends Controller
                         'rank' => $w->rank,
                         'title' => $w->title,
                         'nama_sekolah' => $w->registration?->nama_sekolah,
+                        'display_name' => $w->registration?->display_name,
                         'logo_sekolah' => $w->registration?->logo_sekolah
                             ? asset('storage/' . $w->registration->logo_sekolah)
                             : null,

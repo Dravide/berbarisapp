@@ -70,7 +70,7 @@
                             <option value="">— Pilih Peserta —</option>
                             @foreach($this->registrations as $reg)
                                 <option value="{{ $reg->id }}">
-                                    {{ $reg->urutan_tampil ? '#'.$reg->urutan_tampil.' — ' : '' }}{{ $reg->nama_sekolah }} ({{ $reg->competitionCategory->full_name ?? '-' }})
+                                    {{ $reg->urutan_tampil ? '#'.$reg->urutan_tampil.' — ' : '' }}{{ $reg->display_name }} ({{ $reg->competitionCategory->full_name ?? '-' }})
                                 </option>
                             @endforeach
                         </select>
@@ -84,7 +84,7 @@
                 @if($mode === 'peserta')
                     <a href="{{ $this->pdfUrl() }}" target="_blank"
                        class="btn btn-danger {{ $selectedRegistrationId ? '' : 'disabled' }}">
-                        <i class="ti ti-file-type-pdf me-1"></i> Unduh Lembar {{ $this->registrations->firstWhere('id', $selectedRegistrationId)?->nama_sekolah ?? 'Peserta' }}
+                        <i class="ti ti-file-type-pdf me-1"></i> Unduh Lembar {{ $this->registrations->firstWhere('id', $selectedRegistrationId)?->display_name ?? 'Peserta' }}
                     </a>
                 @else
                     <a href="{{ $this->pdfUrl() }}" target="_blank" class="btn btn-danger">

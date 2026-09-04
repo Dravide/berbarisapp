@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Formulir Pendaftaran - {{ $registration->nama_sekolah }}</title>
+    <title>Formulir Pendaftaran - {{ $registration->display_name }}</title>
     <style>
         @page {
             size: A4 portrait;
@@ -215,7 +215,7 @@
     <table class="table-detail">
         <tr>
             <td class="lbl">Nama Sekolah</td>
-            <td>{{ $registration->nama_sekolah }}</td>
+            <td>{{ $registration->display_name }}</td>
             <td class="lbl">NPSN</td>
             <td>{{ $registration->npsn }}</td>
         </tr>

@@ -51,7 +51,7 @@ class ParticipantController extends Controller
         ini_set('memory_limit', '512M');
 
         $eventner = $registration->eventner;
-        $filename = 'Formulir_' . $registration->nama_sekolah . '.pdf';
+        $filename = 'Formulir_' . $registration->display_name . '.pdf';
 
         return Pdf::loadView('eventner.participant.pdf_formulir', [
             'eventner' => $eventner,
@@ -70,7 +70,7 @@ class ParticipantController extends Controller
         }
 
         $qrToken = $registration->qr_token;
-        $schoolName = $registration->nama_sekolah;
+        $schoolName = $registration->display_name;
         $category = $registration->competitionCategory?->full_name ?? '-';
 
         $options = new QROptions([
@@ -102,7 +102,7 @@ class ParticipantController extends Controller
             ]);
             $items[] = [
                 'qrCode' => (new QRCode($options))->render($reg->qr_token),
-                'schoolName' => $reg->nama_sekolah,
+                'schoolName' => $reg->display_name,
                 'category' => $reg->competitionCategory?->full_name ?? '-',
                 'qrToken' => $reg->qr_token,
             ];

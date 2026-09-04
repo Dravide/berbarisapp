@@ -38,7 +38,7 @@ class VoteResultsController extends Controller
                     $query->where('status', 'PAID');
                 }], 'votes_earned')
                 ->orderByDesc('total_votes')
-                ->get(['id', 'nama_sekolah', 'logo_sekolah', 'danton_nama']);
+                ->get(['id', 'nama_sekolah', 'label_pasukan', 'logo_sekolah', 'danton_nama']);
         }
 
         $data = [
@@ -123,7 +123,7 @@ class VoteResultsController extends Controller
             ->setOption('margin-left', '5mm')
             ->setOption('margin-right', '5mm');
 
-        $filename = 'Detail_Voting_' . str_replace(['/', '\\'], '-', $registration->nama_sekolah) . '_' . now()->format('Ymd_His') . '.pdf';
+        $filename = 'Detail_Voting_' . str_replace(['/', '\\'], '-', $registration->display_name) . '_' . now()->format('Ymd_His') . '.pdf';
         return $pdf->download($filename);
     }
 }

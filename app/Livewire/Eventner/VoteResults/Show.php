@@ -73,6 +73,6 @@ class Show extends Component
         return view('livewire.eventner.vote-results.show', [
             'voters' => $voters,
             'summary' => $summary,
-        ])->title('Detail Voter - ' . $this->registration->nama_sekolah);
+        ])->title('Detail Voter - ' . $this->registration->display_name);
     }
 }

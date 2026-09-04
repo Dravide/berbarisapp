@@ -132,7 +132,7 @@
                     @endphp
                     <tr class="{{ $rankClass }}">
                         <td style="font-weight: bold;">{{ $index + 1 }}</td>
-                        <td class="p-name">{{ $data['participant']->nama_sekolah }}</td>
+                        <td class="p-name">{{ $data['participant']->display_name }}</td>
                         <td class="p-coach">{{ $data['participant']->nama_pelatih }}</td>
                         @foreach($assessmentCategories as $cat)
                             @foreach($cat->subCategories as $sub)

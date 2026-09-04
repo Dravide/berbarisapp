@@ -176,7 +176,7 @@ class ScoringController extends Controller
             foreach ($scoringData as $index => $data) {
                 $row = [
                     $index + 1,
-                    $data['participant']->nama_sekolah,
+                    $data['participant']->display_name,
                     $data['participant']->nama_pelatih,
                 ];
                 foreach ($assessmentCategories as $cat) {
@@ -340,7 +340,7 @@ class ScoringController extends Controller
             ->setOption('margin-left', '5mm')
             ->setOption('margin-right', '5mm');
 
-        $name = str_replace(['/', '\\'], '-', $registration->nama_sekolah);
+        $name = str_replace(['/', '\\'], '-', $registration->display_name);
         $filename = 'Nilai_' . $name . '.pdf';
         return $pdf->download($filename);
     }

@@ -596,7 +596,7 @@
                                         @forelse($recentRegistrations as $registration)
                                             <tr>
                                                 <td class="ps-4">
-                                                    <h6 class="mb-0 fw-semibold">{{ $registration->nama_sekolah }}</h6>
+                                                    <h6 class="mb-0 fw-semibold">{{ $registration->display_name }}</h6>
                                                     <span class="text-muted fs-2">{{ $registration->npsn }}</span>
                                                 </td>
                                                 <td>{{ $registration->competitionCategory->full_name }}</td>

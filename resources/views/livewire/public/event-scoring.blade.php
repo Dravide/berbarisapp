@@ -155,7 +155,7 @@
                                                     @endif
                                                 </div>
                                                 <div class="flex-grow-1 overflow-hidden">
-                                                    <h6 class="fw-bolder mb-0 fs-4 text-truncate">{{ $reg->nama_sekolah }}</h6>
+                                                    <h6 class="fw-bolder mb-0 fs-4 text-truncate">{{ $reg->display_name }}</h6>
                                                     <p class="text-secondary mb-0 fs-2 text-truncate">Pelatih: {{ $reg->nama_pelatih }}</p>
                                                 </div>
                                             </div>
@@ -202,7 +202,7 @@
                                             @endif
                                             <div>
                                                 <span class="badge bg-secondary text-white mb-1 px-2 py-1 rounded-pill fw-bold">Langkah 3: Penilaian</span>
-                                                <h4 class="text-white fw-bolder mb-0">{{ $selectedRegistration->nama_sekolah }}</h4>
+                                                <h4 class="text-white fw-bolder mb-0">{{ $selectedRegistration->display_name }}</h4>
                                                 <p class="text-white opacity-75 mb-0">{{ $selectedRegistration->nama_pelatih }} &bull; {{ $selectedRegistration->competitionCategory->full_name ?? '-' }}</p>
                                             </div>
                                         </div>

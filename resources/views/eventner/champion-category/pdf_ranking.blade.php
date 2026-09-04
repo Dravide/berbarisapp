@@ -150,7 +150,7 @@
                                         @if($rankingData[1]['participant']->urutan_tampil)
                                             <span style="opacity:0.85; font-size:0.85em;">Undian #{{ $rankingData[1]['participant']->urutan_tampil }}</span><br>
                                         @endif
-                                        {{ $rankingData[1]['participant']->nama_sekolah }}
+                                        {{ $rankingData[1]['participant']->display_name }}
                                     </div>
                                     <div class="podium-score">{{ $rankingData[1]['total'] }}</div>
                                 </div>
@@ -163,7 +163,7 @@
                                         @if($rankingData[0]['participant']->urutan_tampil)
                                             <span style="opacity:0.85; font-size:0.85em;">Undian #{{ $rankingData[0]['participant']->urutan_tampil }}</span><br>
                                         @endif
-                                        {{ $rankingData[0]['participant']->nama_sekolah }}
+                                        {{ $rankingData[0]['participant']->display_name }}
                                     </div>
                                     <div class="podium-score">{{ $rankingData[0]['total'] }}</div>
                                 </div>
@@ -176,7 +176,7 @@
                                         @if($rankingData[2]['participant']->urutan_tampil)
                                             <span style="opacity:0.85; font-size:0.85em;">Undian #{{ $rankingData[2]['participant']->urutan_tampil }}</span><br>
                                         @endif
-                                        {{ $rankingData[2]['participant']->nama_sekolah }}
+                                        {{ $rankingData[2]['participant']->display_name }}
                                     </div>
                                     <div class="podium-score">{{ $rankingData[2]['total'] }}</div>
                                 </div>
@@ -218,7 +218,7 @@
                                 @endif
                             </td>
                             <td style="text-align:center;">{{ $ps['participant']->urutan_tampil ?: '-' }}</td>
-                            <td class="name-col">{{ $ps['participant']->nama_sekolah }}</td>
+                            <td class="name-col">{{ $ps['participant']->display_name }}</td>
                             <td>{{ $ps['participant']->nama_pelatih }}</td>
                             <td class="score-col">{{ $ps['total'] }}</td>
                         </tr>

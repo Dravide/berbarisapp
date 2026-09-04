@@ -13,6 +13,7 @@ class RegistrationResource extends JsonResource
             'id' => $this->id,
             'eventner_id' => $this->eventner_id,
             'nama_sekolah' => $this->nama_sekolah,
+            'display_name' => $this->display_name,
             'npsn' => $this->npsn,
             'label_pasukan' => $this->label_pasukan,
             'nama_pelatih' => $this->nama_pelatih,

@@ -147,6 +147,7 @@ class EventContentController extends Controller
                 ->map(fn ($reg, $i) => [
                     'urutan' => $reg->urutan_tampil,
                     'nama_sekolah' => $reg->nama_sekolah,
+                    'display_name' => $reg->display_name,
                     'label_pasukan' => $reg->label_pasukan,
                 ]);
 

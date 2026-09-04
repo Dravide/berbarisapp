@@ -97,7 +97,7 @@
                                                     </div>
                                                 @endif
                                                 <div>
-                                                    <span class="fw-semibold">{{ $ps['participant']->nama_sekolah }}</span>
+                                                    <span class="fw-semibold">{{ $ps['participant']->display_name }}</span>
                                                     <br><small class="text-muted">NPSN: {{ $ps['participant']->npsn }}</small>
                                                 </div>
                                             </div>

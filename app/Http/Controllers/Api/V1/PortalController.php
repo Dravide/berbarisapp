@@ -234,7 +234,7 @@ class PortalController extends Controller
                 ->sum('score');
 
             if ($totalScore > 0) {
-                $nama = Registration::find($rid)?->nama_sekolah ?? 'Unknown';
+                $nama = Registration::find($rid)?->display_name ?? 'Unknown';
                 $rankings[] = [
                     'id' => $rid,
                     'nama_sekolah' => $nama,
@@ -278,6 +278,7 @@ class PortalController extends Controller
         return response()->json([
             'data' => [
                 'nama_sekolah' => $reg->nama_sekolah,
+                'display_name' => $reg->display_name,
                 'label_pasukan' => $reg->label_pasukan,
                 'kategori' => $reg->competitionCategory?->full_name,
                 'event' => $reg->eventner->nama_event,

@@ -93,7 +93,7 @@
                                                         <i class="ti ti-school fs-5"></i>
                                                     </div>
                                                 @endif
-                                                <h6 class="fw-semibold mb-0">{{ $data['participant']->nama_sekolah }}</h6>
+                                                <h6 class="fw-semibold mb-0">{{ $data['participant']->display_name }}</h6>
                                             </div>
                                         </td>
                                         <td><span class="text-muted">{{ $data['participant']->nama_pelatih }}</span></td>

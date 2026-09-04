@@ -122,7 +122,7 @@
                                                 <span class="badge bg-primary px-3 py-2 fs-3">{{ $reg->urutan_tampil }}</span>
                                             </td>
                                             <td>
-                                                <h6 class="fw-semibold mb-0">{{ $reg->nama_sekolah }}</h6>
+                                                <h6 class="fw-semibold mb-0">{{ $reg->display_name }}</h6>
                                             </td>
                                             <td>
                                                 <span class="text-muted">{{ $reg->npsn }}</span>
@@ -163,7 +163,7 @@
                             <select wire:model="manualRegistrationId" class="form-select form-select-sm">
                                 <option value="">-- Cari Peserta --</option>
                                 @foreach($undrawnParticipants as $p)
-                                    <option value="{{ $p->id }}">{{ $p->nama_sekolah }} ({{ $p->npsn }})</option>
+                                    <option value="{{ $p->id }}">{{ $p->display_name }} ({{ $p->npsn }})</option>
                                 @endforeach
                             </select>
                             @error('manualRegistrationId')
