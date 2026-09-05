@@ -27,6 +27,38 @@
         </div>
     @endif
 
+    {{-- Mode Simulasi (Sandbox) --}}
+    <div class="card border border-warning border-2 bg-warning-subtle shadow-none mb-4">
+        <div class="card-body px-4 py-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style="width:42px;height:42px;">
+                    <i class="ti ti-flask fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-0">Mode Simulasi (Sandbox)</h6>
+                    <p class="text-muted small mb-0">
+                        @if($simulateMode)
+                            AKTIF — latihan input nilai <strong>tanpa menyimpan apa pun</strong> ke database. Simpan, finalisasi, dan reset tidak berpengaruh.
+                        @else
+                            Nonaktif — penilaian berjalan normal dan tersimpan ke database.
+                        @endif
+                    </p>
+                </div>
+            </div>
+            <button wire:click="toggleSimulateMode" class="btn {{ $simulateMode ? 'btn-warning fw-bold' : 'btn-outline-warning fw-semibold' }} px-4">
+                <i class="ti ti-{{ $simulateMode ? 'toggle-right-filled' : 'toggle-left' }} me-1"></i>
+                {{ $simulateMode ? 'Sedang Simulasi — Matikan' : 'Aktifkan Simulasi' }}
+            </button>
+        </div>
+    </div>
+
+    @if($simulateMode)
+        <div class="alert alert-warning d-flex align-items-center gap-2 py-2 px-3 mb-4">
+            <i class="ti ti-alert-triangle fs-5"></i>
+            <span class="small fw-semibold">Simulasi aktif: nilai yang Anda klik hanya untuk latihan dan tidak akan direkam di mana pun.</span>
+        </div>
+    @endif
+
     @if($view == 'categories')
         {{-- ========== STEP 1: SELECT CATEGORY ========== --}}
         <div class="card w-100">
@@ -130,12 +162,17 @@
             <div class="col-lg-8">
                 {{-- Participant Info Card --}}
                 <div class="card w-100 overflow-hidden mb-4">
-                    <div class="card-body p-4 bg-primary text-white">
+                    <div class="card-body p-4 {{ $simulateMode ? 'bg-warning' : 'bg-primary' }} text-white">
                         <div class="d-flex align-items-center justify-content-between">
                             <div class="d-flex align-items-center gap-3">
                                 <button wire:click="backToParticipants" class="btn btn-sm btn-light me-1">
                                     <i class="ti ti-arrow-left"></i>
                                 </button>
+                                @if($simulateMode)
+                                    <span class="badge bg-dark text-warning fw-bold d-none d-md-inline-flex align-items-center gap-1 me-1">
+                                        <i class="ti ti-flask"></i> SIMULASI
+                                    </span>
+                                @endif
                                 @if($selectedRegistration->logo_sekolah)
                                     <img src="{{ asset('storage/' . $selectedRegistration->logo_sekolah) }}" class="rounded-circle border border-white border-2" width="48" height="48" style="object-fit:cover;" alt="">
                                 @else
@@ -422,16 +459,22 @@
                                         </div>
                                     @endif
 
-                                    <button wire:click="saveDeductions"
-                                            class="btn btn-danger w-100 py-2 fw-semibold mt-3"
-                                            wire:loading.attr="disabled">
-                                        <span wire:loading.remove wire:target="saveDeductions">
-                                            <i class="ti ti-device-floppy me-1"></i> Simpan Pengurangan
-                                        </span>
-                                        <span wire:loading wire:target="saveDeductions">
-                                            <span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...
-                                        </span>
-                                    </button>
+                                    @if($simulateMode)
+                                        <button type="button" disabled class="btn btn-secondary w-100 py-2 fw-semibold mt-3 opacity-75">
+                                            <i class="ti ti-device-floppy me-1"></i> Simulasi — Tidak Tersimpan
+                                        </button>
+                                    @else
+                                        <button wire:click="saveDeductions"
+                                                class="btn btn-danger w-100 py-2 fw-semibold mt-3"
+                                                wire:loading.attr="disabled">
+                                            <span wire:loading.remove wire:target="saveDeductions">
+                                                <i class="ti ti-device-floppy me-1"></i> Simpan Pengurangan
+                                            </span>
+                                            <span wire:loading wire:target="saveDeductions">
+                                                <span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...
+                                            </span>
+                                        </button>
+                                    @endif
                                 </div>
 
                                 {{-- Final Score --}}
@@ -476,7 +519,19 @@
                             </div>
                         </div>
 
-                        @if($totalCriteria > 0 && !$isFinalized)
+                        @if($simulateMode)
+                            <div class="alert alert-warning py-2 px-3 small fw-semibold mb-2">
+                                <i class="ti ti-flask me-1"></i> Mode simulasi: tombol simpan dinonaktifkan.
+                            </div>
+                            <button type="button" disabled class="btn btn-secondary w-100 py-2 fw-semibold mb-2 opacity-75">
+                                <i class="ti ti-device-floppy me-2"></i> Simulasi — Tidak Tersimpan
+                            </button>
+
+                            <button wire:click="resetScores"
+                                    class="btn btn-outline-warning w-100 py-2 fw-semibold mb-3">
+                                <i class="ti ti-refresh me-1"></i> Kosongkan Nilai Simulasi
+                            </button>
+                        @elseif($totalCriteria > 0 && !$isFinalized)
                             <button wire:click="saveScores"
                                     class="btn btn-primary w-100 py-8 fw-semibold mb-2"
                                     wire:loading.attr="disabled">

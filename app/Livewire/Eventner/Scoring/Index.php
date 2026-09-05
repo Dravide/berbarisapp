@@ -26,6 +26,9 @@ class Index extends Component
     public $saveStatus = ''; // '', 'saved', 'error'
     public $isFinalized = false;
 
+    // Sandbox: latihan input nilai tanpa menyimpan apa pun ke database
+    public $simulateMode = false;
+
     // Judge support
     public $selectedJudgeId;
     public $judges = [];
@@ -57,6 +60,18 @@ class Index extends Component
     {
         $this->selectedCategoryId = $id;
         $this->view = 'participants';
+    }
+
+    public function toggleSimulateMode()
+    {
+        $this->simulateMode = !$this->simulateMode;
+
+        // Bersihkan state penilaian agar tidak terbawa antar mode
+        $this->scores = [];
+        $this->deductions = [];
+        $this->saveStatus = '';
+        $this->deductionSaveStatus = '';
+        $this->isFinalized = false;
     }
 
     public function backToCategories()
@@ -138,7 +153,7 @@ class Index extends Component
         $this->scores = [];
         $this->isFinalized = false;
 
-        if (!$this->selectedJudgeId) {
+        if ($this->simulateMode || !$this->selectedJudgeId) {
             return;
         }
 
@@ -157,6 +172,8 @@ class Index extends Component
 
     public function saveScores()
     {
+        if ($this->simulateMode) return;
+
         if (!$this->selectedJudgeId || $this->isFinalized) {
             $this->saveStatus = 'error';
             return;
@@ -189,7 +206,7 @@ class Index extends Component
 
     public function finalizeScores()
     {
-        if (!$this->selectedJudgeId || $this->isFinalized) {
+        if ($this->simulateMode || !$this->selectedJudgeId || $this->isFinalized) {
             return;
         }
 
@@ -294,6 +311,13 @@ class Index extends Component
 
     public function resetScores()
     {
+        if ($this->simulateMode) {
+            // Sandbox: cukup kosongkan state lokal, tidak perlu sentuh DB
+            $this->scores = [];
+            $this->saveStatus = '';
+            return;
+        }
+
         if (!$this->selectedJudgeId || !$this->selectedRegistrationId) {
             return;
         }
@@ -327,6 +351,11 @@ class Index extends Component
             ->orderBy('sort_order')
             ->get();
 
+        // Sandbox: mulai kosong, jangan muat pengurangan tersimpan
+        if ($this->simulateMode) {
+            return;
+        }
+
         // Load existing deductions for this registration
         $existingDeductions = ScoreDeduction::where('registration_id', $this->selectedRegistrationId)
             ->where('eventner_id', $this->eventner->id)
@@ -339,6 +368,11 @@ class Index extends Component
 
     public function saveDeductions()
     {
+        if ($this->simulateMode) {
+            // Sandbox: tombolnya sudah didisable di view; jangan set status "saved" palsu
+            return;
+        }
+
         if (!$this->selectedRegistrationId) {
             return;
         }
@@ -418,21 +452,34 @@ class Index extends Component
         // Calculate per-judge totals for the current registration
         $judgeTotals = collect();
         if ($this->view === 'scoring' && $this->selectedRegistration && count($this->judges) > 0) {
-            $allJudgeScores = AssessmentScore::where('registration_id', $this->selectedRegistrationId)
-                ->where('eventner_id', $this->eventner->id)
-                ->whereIn('judge_id', collect($this->judges)->pluck('id'))
-                ->get()
-                ->groupBy('judge_id');
+            if ($this->simulateMode) {
+                // Sandbox: hanya juri aktif yang punya nilai (state lokal, bukan DB)
+                foreach ($this->judges as $judge) {
+                    $isMine = $judge->id == $this->selectedJudgeId;
+                    $filled = collect($this->scores)->filter(fn($v) => $v !== '' && $v !== null)->count();
+                    $judgeTotals->push([
+                        'judge' => $judge,
+                        'total' => $isMine ? collect($this->scores)->sum(fn($v) => ($v === '' || $v === null) ? 0 : (float) $v) : 0,
+                        'filled' => $isMine ? $filled : 0,
+                    ]);
+                }
+            } else {
+                $allJudgeScores = AssessmentScore::where('registration_id', $this->selectedRegistrationId)
+                    ->where('eventner_id', $this->eventner->id)
+                    ->whereIn('judge_id', collect($this->judges)->pluck('id'))
+                    ->get()
+                    ->groupBy('judge_id');
 
-            foreach ($this->judges as $judge) {
-                $judgeScores = $allJudgeScores->get($judge->id, collect());
-                $total = $judgeScores->sum(fn($s) => (int) $s->score);
-                $filled = $judgeScores->count();
-                $judgeTotals->push([
-                    'judge' => $judge,
-                    'total' => $total,
-                    'filled' => $filled,
-                ]);
+                foreach ($this->judges as $judge) {
+                    $judgeScores = $allJudgeScores->get($judge->id, collect());
+                    $total = $judgeScores->sum(fn($s) => (int) $s->score);
+                    $filled = $judgeScores->count();
+                    $judgeTotals->push([
+                        'judge' => $judge,
+                        'total' => $total,
+                        'filled' => $filled,
+                    ]);
+                }
             }
         }
 
