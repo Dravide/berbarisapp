@@ -17,7 +17,6 @@ return new class extends Migration
         });
 
         Schema::table('eventners', function (Blueprint $table) {
-            $table->enum('signature_mode', ['image', 'qr'])->default('qr');
             $table->foreignId('active_signature_id')->nullable()
                 ->constrained('eventner_signatures')->nullOnDelete();
         });
@@ -27,7 +26,6 @@ return new class extends Migration
     {
         Schema::table('eventners', function (Blueprint $table) {
             $table->dropConstrainedForeignId('active_signature_id');
-            $table->dropColumn('signature_mode');
         });
 
         Schema::dropIfExists('eventner_signatures');

@@ -48,6 +48,7 @@ class ParticipantController extends Controller
 
     /**
      * Unduh kwitansi/invoice PDF dari sisi eventner (halaman participants).
+     * Kwitansi digabung per sekolah (NPSN): semua pasukan yang sudah paid.
      */
     public function downloadInvoice(Registration $registration)
     {
@@ -70,10 +71,11 @@ class ParticipantController extends Controller
 
     /**
      * Unduh kwitansi/invoice PDF via magic link peserta.
+     * Kwitansi digabung per sekolah (NPSN): semua pasukan yang sudah paid.
      */
     public function downloadInvoiceByToken(string $token)
     {
-        $registration = Registration::with(['participants', 'competitionCategory', 'eventner', 'paymentBankAccount'])
+        $registration = Registration::with(['eventner'])
             ->where('magic_token', $token)
             ->firstOrFail();
 
@@ -88,11 +90,20 @@ class ParticipantController extends Controller
     {
         $eventner = $registration->eventner;
 
-        $filename = 'Invoice_' . str_replace(['/', '\\', ' ', '—'], '_', $registration->display_name) . '.pdf';
+        // Gabung semua pasukan sekolah ini (NPSN sama) yang sudah diverifikasi.
+        $registrations = Registration::with(['competitionCategory', 'paymentBankAccount'])
+            ->where('eventner_id', $eventner->id)
+            ->where('npsn', $registration->npsn)
+            ->where('payment_status', 'paid')
+            ->where('status_berkas', '!=', 'dibatalkan')
+            ->orderBy('id')
+            ->get();
+
+        $filename = 'Invoice_' . str_replace(['/', '\\', ' ', '—'], '_', $registration->nama_sekolah) . '.pdf';
 
         return Pdf::loadView('eventner.participant.pdf_invoice', [
             'eventner' => $eventner,
-            'registration' => $registration->load(['participants', 'competitionCategory', 'paymentBankAccount']),
+            'registrations' => $registrations,
         ])
             ->setPaper('a4', 'portrait')
             ->download($filename);

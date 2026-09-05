@@ -63,7 +63,6 @@ class Eventner extends Model
         'kwitansi_required',
         'checkin_token',
         'checkin_pin',
-        'signature_mode',
         'active_signature_id',
     ];
 

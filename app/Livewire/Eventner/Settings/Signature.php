@@ -20,7 +20,6 @@ class Signature extends Component
     public $name = '';
     public $image; // upload baru (PNG)
 
-    public $signatureMode = 'qr'; // 'qr' | 'image'
     public $activeSignatureId;
 
     protected $eventnerId;
@@ -35,7 +34,6 @@ class Signature extends Component
     public function mount()
     {
         $eventner = Eventner::findOrFail($this->eventnerId);
-        $this->signatureMode = $eventner->signature_mode ?? 'qr';
         $this->activeSignatureId = $eventner->active_signature_id;
     }
 
@@ -76,24 +74,11 @@ class Signature extends Component
 
         $eventner = Eventner::findOrFail($this->eventnerId);
         $eventner->active_signature_id = $sig->id;
-        $eventner->signature_mode = 'image';
         $eventner->save();
 
         $this->activeSignatureId = $sig->id;
-        $this->signatureMode = 'image';
 
-        session()->flash('success', "TTD/Stempel '{$sig->name}' dipakai pada dokumen (invoice, kwitansi).");
-    }
-
-    public function useQrMode()
-    {
-        $eventner = Eventner::findOrFail($this->eventnerId);
-        $eventner->signature_mode = 'qr';
-        $eventner->save();
-
-        $this->signatureMode = 'qr';
-
-        session()->flash('success', 'Mode QR otomatis dipakai pada dokumen.');
+        session()->flash('success', "Stempel '{$sig->name}' dipakai pada kolom Penerima Pembayaran di kwitansi/invoice.");
     }
 
     public function delete($id)
@@ -105,15 +90,13 @@ class Signature extends Component
             Storage::disk('public')->delete($sig->image);
         }
 
-        // Bila yang aktif dihapus, mode balik ke QR
+        // Bila yang aktif dihapus, kosongkan pilihan
         $eventner = Eventner::findOrFail($this->eventnerId);
         if ($eventner->active_signature_id == $sig->id) {
             $eventner->active_signature_id = null;
-            $eventner->signature_mode = 'qr';
             $eventner->save();
 
             $this->activeSignatureId = null;
-            $this->signatureMode = 'qr';
         }
 
         $sig->delete();

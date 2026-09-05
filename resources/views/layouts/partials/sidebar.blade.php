@@ -505,7 +505,7 @@
             <a class="sidebar-link {{ request()->routeIs('eventner.signatures.*') ? 'active' : '' }}"
               href="{{ route('eventner.signatures.index') }}" aria-expanded="false">
               <span>
-                <i class="ti ti-stamp"></i>
+                <i class="ti ti-signature"></i>
               </span>
               <span class="hide-menu">TTD &amp; Stempel</span>
             </a>

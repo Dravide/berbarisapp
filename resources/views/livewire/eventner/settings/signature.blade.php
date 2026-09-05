@@ -26,33 +26,14 @@
         </div>
     @endif
 
+    <div class="alert alert-light border border-info-subtle fs-2 mb-4">
+        <i class="ti ti-info-circle me-1 text-info"></i>
+        Stempel terpilih dipakai pada kolom <strong>Penerima Pembayaran</strong> di kwitansi/invoice PDF.
+        Kolom <strong>Ketua Pelaksana</strong> otomatis memakai QR event.
+    </div>
+
     <div class="row">
         <div class="col-md-5">
-            {{-- Mode --}}
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title fw-semibold mb-3">Mode Tanda Tangan Dokumen</h5>
-                    <p class="text-muted fs-2 mb-3">Atur tampilan TTD panitia pada kwitansi/invoice dan dokumen PDF lain.</p>
-                    <div class="d-flex flex-column gap-2">
-                        <button type="button"
-                            class="btn text-start {{ $signatureMode === 'image' ? 'btn-primary' : 'btn-light' }} rounded-3 px-3 py-2"
-                            wire:click="useQrMode">
-                            <i class="ti ti-qrcode me-2 fs-5 align-middle"></i>
-                            <span class="fw-semibold">QR Otomatis</span>
-                            <span class="d-block fs-2 text-opacity-75 {{ $signatureMode === 'image' ? 'text-white' : 'text-muted' }}">
-                                Tampilkan QR link event pada semua dokumen
-                            </span>
-                        </button>
-                        @if($signatureMode === 'image')
-                            <div class="alert alert-info mb-0 fs-2 py-2">
-                                <i class="ti ti-stamp me-1"></i>
-                                Mode gambar aktif: TTD/Stempel terpilih dipakai pada dokumen.
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
             {{-- Upload --}}
             <div class="card">
                 <div class="card-body">
@@ -90,14 +71,14 @@
                 <div class="card-body">
                     @if($this->signatures->isEmpty())
                         <div class="text-center py-5">
-                            <i class="ti ti-stamp-off fs-10 text-muted"></i>
+                            <i class="ti ti-signature-off fs-10 text-muted"></i>
                             <p class="text-muted mt-3 mb-0">Belum ada TTD/Stempel terunggah. Unggah PNG di samping untuk mulai.</p>
                         </div>
                     @else
                         <div class="row g-3">
                             @foreach($this->signatures as $sig)
                                 <div class="col-md-6">
-                                    <div class="card h-100 {{ $sig->id === $activeSignatureId && $signatureMode === 'image' ? 'border-primary border-2' : '' }}">
+                                    <div class="card h-100 {{ $sig->id === $activeSignatureId ? 'border-primary border-2' : '' }}">
                                         <div class="card-body text-center"
                                             style="background-color: #fff; background-image: linear-gradient(45deg, #e9ecef 25%, transparent 25%, transparent 75%, #e9ecef 75%, #e9ecef), linear-gradient(45deg, #e9ecef 25%, transparent 25%, transparent 75%, #e9ecef 75%, #e9ecef); background-size: 16px 16px; background-position: 0 0, 8px 8px;">
                                             <img src="{{ asset('storage/' . $sig->image) }}" alt="{{ $sig->name }}" style="max-height: 110px; max-width: 100%;">
@@ -105,12 +86,12 @@
                                         <div class="card-footer bg-white d-flex justify-content-between align-items-center">
                                             <span class="fw-semibold fs-3 text-truncate">{{ $sig->name }}</span>
                                             <div class="d-flex gap-1">
-                                                @if($sig->id === $activeSignatureId && $signatureMode === 'image')
+                                                @if($sig->id === $activeSignatureId)
                                                     <span class="btn btn-sm btn-success rounded-pill px-3 disabled">
                                                         <i class="ti ti-checks me-1"></i> Aktif
                                                     </span>
                                                 @else
-                                                    <button type="button" class="btn btn-sm btn-outline-primary" wire:click="selectSignature({{ $sig->id }})" title="Pakai TTD ini">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary" wire:click="selectSignature({{ $sig->id }})" title="Pakai stempel ini">
                                                         <i class="ti ti-check me-1"></i> Pakai
                                                     </button>
                                                 @endif

@@ -14,10 +14,10 @@ class InvoiceDownloadTest extends TestCase
 
     private function makePaidRegistration(): Registration
     {
-        $eventner = Eventner::factory()->create();
-        $user = User::find($eventner->user_id);
+        $user = User::factory()->eventner()->create();
+        $eventner = Eventner::factory()->for($user, 'user')->create();
 
-        $reg = Registration::factory()->for($eventner)->create([
+        $reg = Registration::factory()->for($eventner, 'eventner')->create([
             'payment_status' => 'paid',
             'total_fee' => 500000,
             'payment_verified_at' => now(),
@@ -45,6 +45,55 @@ class InvoiceDownloadTest extends TestCase
 
         $response->assertOk();
         $response->assertHeader('Content-Type', 'application/pdf');
+    }
+
+    public function test_invoice_merges_multiple_paid_pasukan_of_same_school(): void
+    {
+        $reg = $this->makePaidRegistration();
+
+        // Pasukan B & C dari sekolah yang sama (NPSN sama), sudah paid.
+        Registration::factory()->for($reg->eventner, 'eventner')->pasukan('B')->create([
+            'npsn' => $reg->npsn,
+            'nama_sekolah' => $reg->nama_sekolah,
+            'payment_status' => 'paid',
+            'total_fee' => 300000,
+            'payment_verified_at' => now(),
+        ]);
+        Registration::factory()->for($reg->eventner, 'eventner')->pasukan('C')->create([
+            'npsn' => $reg->npsn,
+            'nama_sekolah' => $reg->nama_sekolah,
+            'payment_status' => 'paid',
+            'total_fee' => 200000,
+            'payment_verified_at' => now(),
+        ]);
+
+        $response = $this->actingAs($reg->user)
+            ->get(route('eventner.participants.invoice', $reg->id));
+
+        $response->assertOk();
+        $response->assertHeader('Content-Type', 'application/pdf');
+
+        // Nama file kwitansi memakai nama sekolah (gabungan), bukan per pasukan.
+        $disposition = $response->headers->get('Content-Disposition');
+        $this->assertStringContainsString('Invoice_' . str_replace(' ', '_', $reg->nama_sekolah), $disposition);
+    }
+
+    public function test_invoice_excludes_unpaid_siblings_of_same_school(): void
+    {
+        $reg = $this->makePaidRegistration();
+
+        // Saudara sekolah yang sama, belum paid — tidak boleh ikut kwitansi.
+        Registration::factory()->for($reg->eventner, 'eventner')->pasukan('B')->create([
+            'npsn' => $reg->npsn,
+            'nama_sekolah' => $reg->nama_sekolah,
+            'payment_status' => 'unpaid',
+            'total_fee' => 300000,
+        ]);
+
+        $response = $this->actingAs($reg->user)
+            ->get(route('eventner.participants.invoice', $reg->id));
+
+        $response->assertOk();
     }
 
     public function test_invoice_forbidden_when_unpaid(): void
