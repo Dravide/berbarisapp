@@ -27,29 +27,16 @@
         </div>
     @endif
 
-    {{-- Mode Simulasi (Sandbox) --}}
-    <div class="card border border-warning border-2 bg-warning-subtle shadow-none mb-4">
-        <div class="card-body px-4 py-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
-            <div class="d-flex align-items-center gap-3">
-                <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center" style="width:42px;height:42px;">
-                    <i class="ti ti-flask fs-5"></i>
-                </div>
-                <div>
-                    <h6 class="fw-bold mb-0">Mode Simulasi (Sandbox)</h6>
-                    <p class="text-muted small mb-0">
-                        @if($simulateMode)
-                            AKTIF — latihan input nilai <strong>tanpa menyimpan apa pun</strong> ke database. Simpan, finalisasi, dan reset tidak berpengaruh.
-                        @else
-                            Nonaktif — penilaian berjalan normal dan tersimpan ke database.
-                        @endif
-                    </p>
-                </div>
-            </div>
-            <button wire:click="toggleSimulateMode" class="btn {{ $simulateMode ? 'btn-warning fw-bold' : 'btn-outline-warning fw-semibold' }} px-4">
-                <i class="ti ti-{{ $simulateMode ? 'toggle-right-filled' : 'toggle-left' }} me-1"></i>
-                {{ $simulateMode ? 'Sedang Simulasi — Matikan' : 'Aktifkan Simulasi' }}
-            </button>
-        </div>
+    {{-- Mode Simulasi (Sandbox) — tombol kecil, pengaturan di modal --}}
+    <div class="d-flex justify-content-end mb-3">
+        <button type="button"
+                class="btn btn-sm {{ $simulateMode ? 'btn-warning fw-bold' : 'btn-outline-warning fw-semibold' }}"
+                data-bs-toggle="modal" data-bs-target="#simulateModal">
+            <i class="ti ti-flask me-1"></i> Mode Simulasi
+            @if($simulateMode)
+                <span class="badge bg-dark text-warning ms-1">AKTIF</span>
+            @endif
+        </button>
     </div>
 
     @if($simulateMode)
@@ -588,4 +575,47 @@
             </div>
         </div>
     @endif
+
+    {{-- Modal Mode Simulasi (Sandbox) --}}
+    <div class="modal fade" id="simulateModal" tabindex="-1" aria-labelledby="simulateModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header {{ $simulateMode ? 'bg-warning' : 'bg-light' }}">
+                    <h5 class="modal-title fw-bold" id="simulateModalLabel">
+                        <i class="ti ti-flask me-2 {{ $simulateMode ? 'text-white' : 'text-warning' }}"></i>
+                        <span {{ $simulateMode ? 'class="text-white"' : '' }}>Mode Simulasi (Sandbox)</span>
+                    </h5>
+                    <button type="button" class="btn-close {{ $simulateMode ? 'btn-close-white' : '' }}" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @if($simulateMode)
+                        <div class="alert alert-warning mb-3 d-flex align-items-start gap-2">
+                            <i class="ti ti-alert-triangle fs-5 mt-1"></i>
+                            <div class="small">
+                                <strong>Sedang aktif.</strong> Semua nilai yang diklik saat ini hanya latihan — tidak tersimpan ke database.
+                            </div>
+                        </div>
+                    @endif
+                    <p class="text-muted small">
+                        Mode Simulasi memungkinkan Anda mencoba alur input nilai lengkap — pilih kategori, peserta, juri, klik nilai, lihat subtotal &amp; pengurangan — <strong>tanpa menyimpan apa pun</strong> ke database.
+                    </p>
+                    <ul class="text-muted small mb-0 ps-3">
+                        <li>Simpan, finalisasi, dan reset dinonaktifkan</li>
+                        <li>Rekap juri dihitung dari layar saja</li>
+                        <li>Cocok untuk melatih operator/juri sebelum hari-H</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button"
+                            wire:click="toggleSimulateMode"
+                            data-bs-dismiss="modal"
+                            class="btn {{ $simulateMode ? 'btn-outline-warning fw-semibold' : 'btn-warning fw-bold' }}">
+                        <i class="ti ti-{{ $simulateMode ? 'toggle-right-filled' : 'toggle-left' }} me-1"></i>
+                        {{ $simulateMode ? 'Matikan Simulasi' : 'Aktifkan Simulasi' }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
