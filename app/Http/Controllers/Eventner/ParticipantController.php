@@ -46,6 +46,58 @@ class ParticipantController extends Controller
         return $this->renderFormulir($registration);
     }
 
+    /**
+     * Unduh kwitansi/invoice PDF dari sisi eventner (halaman participants).
+     */
+    public function downloadInvoice(Registration $registration)
+    {
+        $eventner = Auth::user()->eventner;
+        if (!$eventner) {
+            abort(403, 'Anda bukan Eventner yang sah.');
+        }
+
+        if ($registration->eventner_id !== $eventner->id) {
+            abort(403, 'Anda tidak memiliki hak akses untuk data ini.');
+        }
+
+        // Invoice hanya sah setelah pembayaran diverifikasi
+        if ($registration->payment_status !== 'paid') {
+            abort(403, 'Invoice hanya dapat diunduh setelah pembayaran diverifikasi.');
+        }
+
+        return $this->renderInvoice($registration);
+    }
+
+    /**
+     * Unduh kwitansi/invoice PDF via magic link peserta.
+     */
+    public function downloadInvoiceByToken(string $token)
+    {
+        $registration = Registration::with(['participants', 'competitionCategory', 'eventner', 'paymentBankAccount'])
+            ->where('magic_token', $token)
+            ->firstOrFail();
+
+        if ($registration->payment_status !== 'paid') {
+            abort(403, 'Invoice hanya dapat diunduh setelah pembayaran diverifikasi panitia.');
+        }
+
+        return $this->renderInvoice($registration);
+    }
+
+    private function renderInvoice(Registration $registration)
+    {
+        $eventner = $registration->eventner;
+
+        $filename = 'Invoice_' . str_replace(['/', '\\', ' ', '—'], '_', $registration->display_name) . '.pdf';
+
+        return Pdf::loadView('eventner.participant.pdf_invoice', [
+            'eventner' => $eventner,
+            'registration' => $registration->load(['participants', 'competitionCategory', 'paymentBankAccount']),
+        ])
+            ->setPaper('a4', 'portrait')
+            ->download($filename);
+    }
+
     private function renderFormulir(Registration $registration)
     {
         ini_set('memory_limit', '512M');

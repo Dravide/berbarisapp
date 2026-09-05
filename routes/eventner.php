@@ -16,6 +16,7 @@ Route::get('judges/{judge}/format-pdf/{competitionCategoryId?}', [App\Http\Contr
 Route::get('competition-categories', App\Livewire\Eventner\CompetitionCategory\Index::class)->name('eventner.competition-categories.index');
 Route::get('participants', App\Livewire\Eventner\Participant\Index::class)->name('eventner.participants.index');
 Route::get('participants/{registration}/pdf', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadPdf'])->name('eventner.participants.pdf');
+Route::get('participants/{registration}/invoice', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadInvoice'])->name('eventner.participants.invoice');
 Route::get('participants/{registration}/qr', [App\Http\Controllers\Eventner\ParticipantController::class, 'qrCode'])->name('eventner.participants.qr');
 Route::get('participants/qr-batch', [App\Http\Controllers\Eventner\ParticipantController::class, 'qrCodeBatch'])->name('eventner.participants.qr-batch');
 Route::get('vote-settings', App\Livewire\Eventner\VoteSettings\Index::class)->name('eventner.vote-settings.index');
@@ -30,6 +31,7 @@ Route::get('vote-comments', App\Livewire\Eventner\VoteComment\Index::class)->nam
 Route::get('vote-comments/csv', [App\Http\Controllers\Eventner\VoteCommentController::class, 'downloadCsv'])->name('eventner.vote-comments.csv');
 Route::get('profile', App\Livewire\Eventner\Settings\Profile::class)->name('eventner.profile.index');
 Route::get('bank-accounts', App\Livewire\Eventner\Settings\BankAccount::class)->name('eventner.bank-accounts.index');
+Route::get('signatures', App\Livewire\Eventner\Settings\Signature::class)->name('eventner.signatures.index');
 Route::get('score-recap', App\Livewire\Eventner\ScoreRecap\Index::class)->name('eventner.score-recap.index');
 Route::get('scoring/csv', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadCsv'])->name('eventner.scoring.csv');
 Route::get('scoring/pdf-participant', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadParticipantPdf'])->name('eventner.scoring.pdf-participant');

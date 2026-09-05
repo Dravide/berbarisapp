@@ -63,6 +63,8 @@ class Eventner extends Model
         'kwitansi_required',
         'checkin_token',
         'checkin_pin',
+        'signature_mode',
+        'active_signature_id',
     ];
 
     protected $casts = [
@@ -117,6 +119,16 @@ class Eventner extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function signatures()
+    {
+        return $this->hasMany(EventnerSignature::class);
+    }
+
+    public function activeSignature()
+    {
+        return $this->belongsTo(EventnerSignature::class);
     }
 
     public function scopeApproved($query)

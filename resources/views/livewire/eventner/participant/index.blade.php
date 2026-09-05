@@ -203,6 +203,12 @@
                                                     </a>
                                                 @endif
 
+                                                @if($reg->payment_status === 'paid')
+                                                    <a href="{{ route('eventner.participants.invoice', $reg->id) }}" target="_blank" class="btn btn-sm btn-outline-success text-success" title="Unduh Invoice PDF">
+                                                        <i class="ti ti-receipt fs-4"></i> Invoice
+                                                    </a>
+                                                @endif
+
                                                 <a href="{{ route('eventner.participants.qr', $reg->id) }}" target="_blank" class="btn btn-sm btn-outline-dark d-flex align-items-center gap-1" title="Cetak QR">
                                                     <i class="ti ti-qrcode fs-4"></i>
                                                 </a>

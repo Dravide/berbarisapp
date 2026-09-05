@@ -501,6 +501,15 @@
               <span class="hide-menu">Rekening Bank</span>
             </a>
           </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.signatures.*') ? 'active' : '' }}"
+              href="{{ route('eventner.signatures.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-stamp"></i>
+              </span>
+              <span class="hide-menu">TTD &amp; Stempel</span>
+            </a>
+          </li>
           @if($ev && $ev->plan !== 'paid')
             <li class="sidebar-item">
               <a class="sidebar-link {{ request()->routeIs('eventner.billing.*') ? 'active' : '' }}"

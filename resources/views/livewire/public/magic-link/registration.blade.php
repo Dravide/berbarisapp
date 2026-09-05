@@ -299,7 +299,13 @@
                         @if($registration->payment_status === 'paid')
                             <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm font-semibold flex items-center gap-2">
                                 <i class="ti ti-circle-check-filled"></i>
-                                Pembayaran sudah diverifikasi panitia pada {{ $registration->payment_verified_at ? \Carbon\Carbon::parse($registration->payment_verified_at)->translatedFormat('d M Y H:i') : '—' }}.
+                                <div>
+                                    Pembayaran sudah diverifikasi panitia pada {{ $registration->payment_verified_at ? \Carbon\Carbon::parse($registration->payment_verified_at)->translatedFormat('d M Y H:i') : '—' }}.
+                                    <a href="{{ route('magic.link.invoice', $registration->magic_token) }}" target="_blank"
+                                        class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-colors">
+                                        <i class="ti ti-file-invoice"></i> Unduh Invoice (PDF)
+                                    </a>
+                                </div>
                             </div>
                         @elseif($registration->payment_status === 'pending_verification')
                             <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 text-sm font-semibold flex items-start gap-2">
