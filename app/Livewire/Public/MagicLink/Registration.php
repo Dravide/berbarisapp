@@ -210,8 +210,8 @@ class Registration extends Component
             return;
         }
 
-        if (($reg->eventner->registration_status ?? 'open') == 'closed') {
-            session()->flash('error', 'Pendaftaran telah ditutup. Perubahan data tidak lagi diperbolehkan.');
+        if (($reg->eventner->registration_status ?? 'open') == 'closed' && $reg->eventner->hasEventDayStarted()) {
+            session()->flash('error', 'Hari-H pelaksanaan telah tiba. Perubahan data tidak lagi diperbolehkan.');
             return;
         }
 

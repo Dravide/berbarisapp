@@ -194,6 +194,16 @@ class Eventner extends Model
         return $this->hasMany(EventnerBankAccount::class)->where('is_active', true);
     }
 
+    /**
+     * Hari-H pelaksanaan event sudah dimulai/belum.
+     * Hari-H = tanggal (hari pertama pelaksanaan, event multi-hari pun sama).
+     */
+    public function hasEventDayStarted(): bool
+    {
+        $start = $this->tanggal ? \Carbon\Carbon::parse($this->tanggal) : null;
+        return $start !== null && now()->startOfDay()->gte($start->startOfDay());
+    }
+
     public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by');
