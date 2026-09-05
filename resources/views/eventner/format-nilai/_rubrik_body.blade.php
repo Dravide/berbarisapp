@@ -68,7 +68,7 @@
                                     @endphp
                                     @for($span = 0; $span < $labelSpan[$label]; $span++)
                                         @php $sval = $cellScores->get($span); @endphp
-                                        <td class="sv">{{ $sval ?? '&nbsp;' }}</td>
+                                        <td class="sv">@if($sval !== null){{ $sval }}@else&nbsp;@endif</td>
                                     @endfor
                                 @endforeach
                             @else
