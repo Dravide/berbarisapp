@@ -25,10 +25,19 @@ class ChampionCategoryController extends Controller
 
         $championCategoryId = $request->query('champion_category_id');
 
-        $championCategories = ChampionCategory::with('assessmentSubCategories.criterias')
+        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'assessmentSubCategories.category'])
             ->where('eventner_id', $eventner->id)
             ->when($championCategoryId, fn($q) => $q->where('id', $championCategoryId))
             ->get();
+
+        // Kategori juara yang rubriknya milik tingkat lain tidak relevan —
+        // nilainya tidak akan pernah terisi untuk peserta tingkat terpilih.
+        // Sama seperti filter laman admin (ChampionCategory/Index::render).
+        if ($competitionCategoryId) {
+            $championCategories = $championCategories
+                ->filter(fn($c) => $c->isVisibleFor($competitionCategoryId))
+                ->values();
+        }
 
         if ($championCategoryId && $championCategories->isEmpty()) {
             abort(404, 'Kategori juara tidak ditemukan.');
@@ -99,11 +108,13 @@ class ChampionCategoryController extends Controller
                 }
 
                 $deductions = $allDeductions->get($participant->id, collect());
-                $totalDeduction = $deductions->sum('amount');
+                // abs() per-baris: opsi pengurangan bisa tersimpan -5 maupun 5.
+                $totalDeduction = $deductions->sum(fn($d) => abs((float) $d->amount));
 
                 $participantScores[] = [
                     'participant' => $participant,
-                    'total' => $total,
+                    'total' => $total - $totalDeduction, // nilai bersih: dipakai sort + tampil
+                    'gross_total' => $total,
                     'first_sub_total' => $firstSubTotal,
                     'other_total' => $otherTotal,
                     'deduction' => $totalDeduction,

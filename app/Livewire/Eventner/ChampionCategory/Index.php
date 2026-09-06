@@ -333,7 +333,7 @@ class Index extends Component
 
     public function render()
     {
-        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias'])
+        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'assessmentSubCategories.category', 'rankTitles', 'tiebreakSubCategories.criterias'])
             ->where('eventner_id', $this->eventner->id)
             ->get();
 
@@ -344,23 +344,9 @@ class Index extends Component
         // Kategori juara hanya relevan di tingkat lomba yang rubriknya dipakai.
         // Sembunyikan kategori juara yang seluruh rubriknya milik tingkat lain —
         // nilainya tidak akan pernah terisi untuk peserta tingkat terpilih.
-        $visibleChampionCategories = $championCategories->filter(function ($champion) {
-            $subs = $champion->assessmentSubCategories;
-            if ($subs->isEmpty()) {
-                return true; // belum diatur rubriknya — biarkan tampil
-            }
-
-            return $subs->contains(function ($sub) {
-                $cat = $sub->category;
-                if (!$cat) {
-                    return true;
-                }
-
-                // Rubrik global (competition_category_id null) berlaku di semua tingkat.
-                return $cat->competition_category_id === null
-                    || (string) $cat->competition_category_id === (string) $this->selectedCompetitionCategoryId;
-            });
-        });
+        $visibleChampionCategories = $championCategories
+            ->filter(fn($champion) => $champion->isVisibleFor($this->selectedCompetitionCategoryId))
+            ->values();
 
         // Filter rubrik mengikuti tingkat lomba yang dipilih di filter halaman.
         // Rubrik global (competition_category_id null) ikut tampil. Bila tingkat

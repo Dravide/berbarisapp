@@ -40,4 +40,27 @@ class ChampionCategory extends Model
     {
         return $this->belongsToMany(AssessmentSubCategory::class, 'champion_tiebreak', 'champion_category_id', 'assessment_sub_category_id');
     }
+
+    /**
+     * Kategori juara relevan di tingkat lomba ini? True bila:
+     * belum punya rubrik, punya rubrik global (competition_category_id null),
+     * atau punya rubrik milik tingkat tsb.
+     */
+    public function isVisibleFor($competitionCategoryId): bool
+    {
+        $subs = $this->assessmentSubCategories;
+        if ($subs->isEmpty()) {
+            return true;
+        }
+
+        return $subs->contains(function ($sub) use ($competitionCategoryId) {
+            $cat = $sub->category;
+            if (!$cat) {
+                return true;
+            }
+
+            return $cat->competition_category_id === null
+                || (string) $cat->competition_category_id === (string) $competitionCategoryId;
+        });
+    }
 }
