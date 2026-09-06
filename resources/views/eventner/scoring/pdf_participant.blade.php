@@ -146,7 +146,6 @@
                 <thead>
                     <tr>
                         <th style="text-align:left;">Kriteria</th>
-                        <th style="text-align:center;width:50px;">Label</th>
                         @foreach($judges as $judge)
                             <th class="j-name">{{ $judge->name }}</th>
                         @endforeach
@@ -157,25 +156,8 @@
                     @foreach($cat->subCategories as $sub)
                         @if($sub->criterias->count() > 0)
                             @foreach($sub->criterias as $crit)
-                                @php
-                                    // Build label lookup map for this criteria
-                                    $labelMap = [];
-                                    foreach($crit->score_options ?? [] as $o) {
-                                        if (is_array($o) && !empty($o['label'])) {
-                                            $labelMap[$o['score']] = $o['label'];
-                                        }
-                                    }
-                                    // Get first judge's score to determine label
-                                    $firstScore = null;
-                                    foreach($judges as $judge) {
-                                        $firstScore = $judgeScores[$judge->id][$crit->id] ?? null;
-                                        if ($firstScore !== null) break;
-                                    }
-                                    $label = $firstScore !== null ? ($labelMap[$firstScore] ?? '') : '';
-                                @endphp
                                 <tr>
                                     <td class="crit-name">{{ $crit->name }}</td>
-                                    <td class="j-score" style="text-align:center;font-size:8px;{{ $label ? 'color:#2c3e50;font-weight:bold;' : 'color:#999;' }}">{{ $label ?: '-' }}</td>
                                     @foreach($judges as $judge)
                                         @php
                                             $jVal = $judgeScores[$judge->id][$crit->id] ?? null;
