@@ -7,6 +7,7 @@ use App\Models\AssessmentCategory;
 use App\Models\AssessmentScore;
 use App\Models\CompetitionCategory;
 use App\Models\DeductionCategory;
+use App\Models\Judge;
 use App\Models\Registration;
 use App\Models\ScoreDeduction;
 use Illuminate\Http\Request;
@@ -216,8 +217,16 @@ class ScoringController extends Controller
             ->where('eventner_id', $eventner->id)
             ->findOrFail($registrationId);
 
+        // Kategori penilaian hanya yang terikat kategori lomba pendaftaran ini
+        // (atau yang umum/tidak terikat) — sama seperti halaman Input Nilai.
+        $compCategoryId = $registration->competition_category_id;
+
         $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
             ->where('eventner_id', $eventner->id)
+            ->where(function ($q) use ($compCategoryId) {
+                $q->where('competition_category_id', $compCategoryId)
+                  ->orWhereNull('competition_category_id');
+            })
             ->get();
 
         $allScores = AssessmentScore::where('eventner_id', $eventner->id)
@@ -245,8 +254,17 @@ class ScoringController extends Controller
             $grandTotal += $catTotal;
         }
 
-        // Get judges
-        $judges = $eventner->judges()->get();
+        // Juri hanya yang ditugaskan (Tugaskan Kategori) ke format penilaian
+        // kategori lomba pendaftaran ini — sama seperti halaman Input Nilai.
+        $judges = Judge::where('eventner_id', $eventner->id)
+            ->whereHas('assessmentCategories', function ($q) use ($compCategoryId) {
+                $q->where('assessment_categories.eventner_id', $eventner->id)
+                    ->where(function ($sq) use ($compCategoryId) {
+                        $sq->where('assessment_categories.competition_category_id', $compCategoryId)
+                           ->orWhereNull('assessment_categories.competition_category_id');
+                    });
+            })
+            ->get();
         $judgeIds = $judges->pluck('id');
 
         // Build per-judge scores: [judge_id => [criteria_id => score]]
