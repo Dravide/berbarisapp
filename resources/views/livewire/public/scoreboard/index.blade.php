@@ -57,8 +57,10 @@
             </div>
         </div>
 
-        {{-- Category Dropdown --}}
-        @if(count($categories) > 1 || count($championCategories) > 0)
+        {{-- Category Dropdown: hanya di mode kategori lomba. Saat menampilkan
+             kategori juara (URL /champion/{id}?category_id=..), pilihan sudah
+             ditentukan URL — dropdown tak perlu. --}}
+        @if(!$selectedChampionCategoryId && (count($categories) > 1 || count($championCategories) > 0))
             <div class="card mb-4">
                 <div class="card-body p-2">
                     <div class="mx-auto" style="max-width: 420px;">
