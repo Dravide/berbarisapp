@@ -5,6 +5,7 @@ namespace App\Livewire\Eventner\Participant;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use App\Models\AssessmentScore;
 use App\Models\Registration;
 
 #[Layout('layouts.admin')]
@@ -31,6 +32,10 @@ class Index extends Component
     // Verification modal
     public $showVerifyModal = false;
     public $selectedRegistration = null;
+
+    // Swap pasukan modal
+    public $showSwapModal = false;
+    public $swapSource = null; // Registration sumber (yang datanya salah)
 
     public function mount()
     {
@@ -166,6 +171,97 @@ class Index extends Component
         $this->selectedRegistration = null;
     }
 
+    /**
+     * Kandidat tukar: pasukan lain dari sekolah yang sama (sama NPSN),
+     * satu event, satu kategori lomba. Data pasukan (anggota + danton)
+     * hanya bisa bertukar antar pasukan satu sekolah.
+     */
+    public function getSwapCandidatesProperty()
+    {
+        if (!$this->swapSource) {
+            return collect();
+        }
+
+        return Registration::with('participants')
+            ->where('eventner_id', $this->swapSource->eventner_id)
+            ->where('npsn', $this->swapSource->npsn)
+            ->where('competition_category_id', $this->swapSource->competition_category_id)
+            ->where('id', '!=', $this->swapSource->id)
+            ->orderBy('label_pasukan')
+            ->get();
+    }
+
+    public function openSwapModal($id)
+    {
+        $eventner = auth()->user()->eventner;
+        $this->swapSource = Registration::where('eventner_id', $eventner->id)
+            ->with('participants')
+            ->findOrFail($id);
+        $this->showSwapModal = true;
+    }
+
+    public function closeSwapModal()
+    {
+        $this->showSwapModal = false;
+        $this->swapSource = null;
+    }
+
+    /**
+     * Tukar data pasukan (anggota + danton) antara 2 registration.
+     * Identitas registrasi (magic link, pembayaran, status) tidak disentuh.
+     */
+    public function swapPasukan($targetId)
+    {
+        $eventner = auth()->user()->eventner;
+        $source = $this->swapSource;
+
+        if (!$source) return;
+
+        $target = Registration::where('eventner_id', $eventner->id)
+            ->where('npsn', $source->npsn)
+            ->where('competition_category_id', $source->competition_category_id)
+            ->findOrFail($targetId);
+
+        // Guard: nilai juri menempel ke registration — tukar setelah dinilai
+        // bikin nilai tercampur antar pasukan. Blokir total.
+        $hasScores = AssessmentScore::whereIn('registration_id', [$source->id, $target->id])
+            ->exists();
+        if ($hasScores) {
+            session()->flash('error', 'Tukar tidak bisa dilakukan: salah satu pasukan sudah memiliki nilai juri. Hapus nilai dulu di halaman Input Nilai (Reset Nilai).');
+            $this->closeSwapModal();
+            return;
+        }
+
+        \DB::transaction(function () use ($source, $target) {
+            // Tukar anggota pasukan: satu UPDATE dengan CASE — tanpa nilai
+            // registration_id pernah kosong/illegit (FK tetap valid).
+            \DB::table('participants')
+                ->whereIn('registration_id', [$source->id, $target->id])
+                ->update([
+                    'registration_id' => \DB::raw(
+                        'CASE registration_id WHEN ' . (int) $source->id . ' THEN ' . (int) $target->id
+                        . ' ELSE ' . (int) $source->id . ' END'
+                    ),
+                ]);
+
+            // Tukar data danton (bagian dari data pasukan yang tertukar)
+            [$source->danton_nama, $target->danton_nama] = [$target->danton_nama, $source->danton_nama];
+            [$source->danton_nisn, $target->danton_nisn] = [$target->danton_nisn, $source->danton_nisn];
+            [$source->danton_foto, $target->danton_foto] = [$target->danton_foto, $source->danton_foto];
+            $source->save();
+            $target->save();
+
+            // Jejak audit — model Registration tidak me-log kolom danton.
+            activity()
+                ->performedOn($source)
+                ->withProperties(['target_registration_id' => $target->id])
+                ->log('Tukar data pasukan: ' . $source->display_name . ' <-> ' . $target->display_name);
+        });
+
+        session()->flash('success', "Data pasukan {$source->display_name} dan {$target->display_name} berhasil ditukar.");
+        $this->closeSwapModal();
+    }
+
     public function verifyStatus($status)
     {
         if (!$this->selectedRegistration) return;
@@ -224,9 +320,25 @@ class Index extends Component
             'rejected' => $allRegs->where('status_berkas', 'Ditolak')->count(),
         ];
 
+        // Registrasi yang punya pasukan-pasukan lain dari sekolah yang sama
+        // (kandidat tukar data pasukan) — dipetakan per id supaya tombol
+        // "Tukar" tidak memicu query per baris.
+        $swapCandidateIds = [];
+        if ($eventner) {
+            $grouped = $allRegs->groupBy(fn($r) => $r->npsn . '|' . $r->competition_category_id);
+            foreach ($grouped as $regs) {
+                if ($regs->count() > 1) {
+                    foreach ($regs as $r) {
+                        $swapCandidateIds[$r->id] = true;
+                    }
+                }
+            }
+        }
+
         return view('livewire.eventner.participant.index', [
             'registrations' => $registrations,
             'summary' => $summary,
+            'swapCandidateIds' => $swapCandidateIds,
         ]);
     }
 }

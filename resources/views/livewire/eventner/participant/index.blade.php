@@ -80,6 +80,12 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
+    @if(session()->has('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="ti ti-alert-circle me-2"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
 
     <div class="card">
         <div class="card-body p-4">
@@ -207,6 +213,12 @@
                                                     <a href="{{ route('eventner.participants.invoice', $reg->id) }}" target="_blank" class="btn btn-sm btn-outline-success text-success" title="Unduh Invoice PDF">
                                                         <i class="ti ti-receipt fs-4"></i> Invoice
                                                     </a>
+                                                @endif
+
+                                                @if(($swapCandidateIds[$reg->id] ?? false))
+                                                    <button wire:click="openSwapModal({{ $reg->id }})" class="btn btn-sm btn-outline-info text-info" title="Tukar Data Pasukan (A/B)">
+                                                        <i class="ti ti-arrows-exchange fs-4"></i>
+                                                    </button>
                                                 @endif
 
                                                 <a href="{{ route('eventner.participants.qr', $reg->id) }}" target="_blank" class="btn btn-sm btn-outline-dark d-flex align-items-center gap-1" title="Cetak QR">
@@ -599,6 +611,58 @@
                             <i class="ti ti-check me-1"></i> Verifikasi / ACC
                         </button>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Modal Tukar Data Pasukan --}}
+    @if($showSwapModal && $swapSource)
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,.6); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg border-0 rounded-4">
+                <div class="modal-header bg-info text-white rounded-top-4 p-4 border-bottom-0">
+                    <div>
+                        <h4 class="modal-title fw-bold mb-1 text-white">
+                            <i class="ti ti-arrows-exchange me-2"></i>Tukar Data Pasukan
+                        </h4>
+                        <span class="fw-bold fs-4">{{ $swapSource->display_name }}</span>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closeSwapModal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-3">
+                        Pilih pasukan tujuan. Seluruh <strong>anggota pasukan &amp; data danton</strong> akan dipertukarkan
+                        antara kedua registrasi. Magic Link, status, dan pembayaran tidak berubah.
+                    </p>
+
+                    @php $candidates = $this->swapCandidates; @endphp
+                    @if($candidates->isNotEmpty())
+                        <div class="list-group">
+                            @foreach($candidates as $cand)
+                                <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                        wire:click="swapPasukan({{ $cand->id }})"
+                                        wire:confirm="Tukar SEMUA anggota & danton {{ $swapSource->display_name }} dengan {{ $cand->display_name }}?">
+                                    <div>
+                                        <span class="fw-semibold">{{ $cand->display_name }}</span>
+                                        <div class="text-muted small">{{ $cand->participants->count() }} anggota</div>
+                                    </div>
+                                    <i class="ti ti-arrow-right fs-5 text-info"></i>
+                                </button>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="alert alert-warning mb-0">
+                            <i class="ti ti-alert-triangle me-1"></i>
+                            Tidak ada pasukan lain dari sekolah &amp; kategori lomba yang sama.
+                        </div>
+                    @endif
+                </div>
+                <div class="modal-footer bg-light border-top rounded-bottom-4 p-3">
+                    <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold" wire:click="closeSwapModal">
+                        <i class="ti ti-x me-1"></i>Batal
+                    </button>
                 </div>
             </div>
         </div>
