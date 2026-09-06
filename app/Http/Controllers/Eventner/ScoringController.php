@@ -25,9 +25,16 @@ class ScoringController extends Controller
 
         $categoryId = $request->query('category_id');
 
-        // Get assessment categories for this event
+        // Get assessment categories for this event — jika rekap per kategori lomba,
+        // hanya format yang terikat kategori itu + yang umum (NULL).
         $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
             ->where('eventner_id', $eventner->id)
+            ->when($categoryId, function ($q) use ($categoryId) {
+                $q->where(function ($sq) use ($categoryId) {
+                    $sq->where('competition_category_id', $categoryId)
+                       ->orWhereNull('competition_category_id');
+                });
+            })
             ->get();
 
         // Get participants - filtered by competition category if specified

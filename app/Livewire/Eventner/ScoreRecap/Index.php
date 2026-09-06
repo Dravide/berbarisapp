@@ -52,8 +52,16 @@ class Index extends Component
         $selectedCategory = null;
         $scoringData = collect();
 
+        // Format nilai hanya yang terikat kategori lomba terpilih + yang umum —
+        // sama seperti halaman Input Nilai.
         $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
             ->where('eventner_id', $this->eventner->id)
+            ->when($this->selectedCategoryId, function ($q) {
+                $q->where(function ($sq) {
+                    $sq->where('competition_category_id', $this->selectedCategoryId)
+                       ->orWhereNull('competition_category_id');
+                });
+            })
             ->get();
 
         if ($this->selectedCategoryId) {
