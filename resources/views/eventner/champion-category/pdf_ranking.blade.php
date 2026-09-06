@@ -103,7 +103,9 @@
     <div class="judul">Rekap Hasil Juara</div>
     <div class="subjudul">
         @if($competitionCategory)
-            Kategori Lomba: {{ $competitionCategory->name }} &bull;
+            Kategori Lomba: {{ $competitionCategory->full_name }} &bull;
+        @else
+            Semua Kategori Lomba &bull;
         @endif
         Dicetak: {{ now()->translatedFormat('d F Y H:i') }} WIB
     </div>
