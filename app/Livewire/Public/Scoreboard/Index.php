@@ -110,7 +110,7 @@ class Index extends Component
         }
 
         $participants = Registration::where('eventner_id', $this->eventner->id)
-            ->when(!$this->selectedChampionCategoryId, fn ($q) => $q->where('competition_category_id', $this->selectedCategoryId))
+            ->when($this->selectedCategoryId, fn ($q) => $q->where('competition_category_id', $this->selectedCategoryId))
             ->with('participants')
             ->orderBy('nama_sekolah')
             ->get();
