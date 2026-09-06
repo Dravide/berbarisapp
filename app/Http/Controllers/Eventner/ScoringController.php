@@ -257,7 +257,7 @@ class ScoringController extends Controller
         // Juri hanya yang ditugaskan (Tugaskan Kategori) ke format penilaian
         // kategori lomba pendaftaran ini — sama seperti halaman Input Nilai.
         $judges = Judge::where('eventner_id', $eventner->id)
-            ->whereHas('assessmentCategories', function ($q) use ($compCategoryId) {
+            ->whereHas('assessmentCategories', function ($q) use ($eventner, $compCategoryId) {
                 $q->where('assessment_categories.eventner_id', $eventner->id)
                     ->where(function ($sq) use ($compCategoryId) {
                         $sq->where('assessment_categories.competition_category_id', $compCategoryId)
