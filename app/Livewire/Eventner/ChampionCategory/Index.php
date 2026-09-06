@@ -341,6 +341,27 @@ class Index extends Component
             ->where('eventner_id', $this->eventner->id)
             ->get();
 
+        // Kategori juara hanya relevan di tingkat lomba yang rubriknya dipakai.
+        // Sembunyikan kategori juara yang seluruh rubriknya milik tingkat lain —
+        // nilainya tidak akan pernah terisi untuk peserta tingkat terpilih.
+        $visibleChampionCategories = $championCategories->filter(function ($champion) {
+            $subs = $champion->assessmentSubCategories;
+            if ($subs->isEmpty()) {
+                return true; // belum diatur rubriknya — biarkan tampil
+            }
+
+            return $subs->contains(function ($sub) {
+                $cat = $sub->category;
+                if (!$cat) {
+                    return true;
+                }
+
+                // Rubrik global (competition_category_id null) berlaku di semua tingkat.
+                return $cat->competition_category_id === null
+                    || (string) $cat->competition_category_id === (string) $this->selectedCompetitionCategoryId;
+            });
+        });
+
         // Filter rubrik mengikuti tingkat lomba yang dipilih di filter halaman.
         // Rubrik global (competition_category_id null) ikut tampil. Bila tingkat
         // terpilih belum punya rubrik, tampilkan semua (fallback agar tidak kosong).
@@ -406,7 +427,7 @@ class Index extends Component
                 )->pluck('id')
             )->pluck('weight', 'id')->toArray();
 
-            foreach ($championCategories as $champion) {
+            foreach ($visibleChampionCategories as $champion) {
                 $criteriaMap = [];
                 foreach ($champion->assessmentSubCategories as $sub) {
                     foreach ($sub->criterias as $crit) {
@@ -501,7 +522,7 @@ class Index extends Component
         }
 
         return view('livewire.eventner.champion-category.index', [
-            'championCategories' => $championCategories,
+            'championCategories' => $visibleChampionCategories,
             'assessmentCategories' => $assessmentCategories,
             'rubrikByLevel' => $rubrikByLevel,
             'competitionCategories' => $competitionCategories,
