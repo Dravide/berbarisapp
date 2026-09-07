@@ -197,50 +197,67 @@
                                             </div>
                                         </td>
                                         <td class="text-center">
-                                            <div class="d-flex justify-content-center gap-1">
-                                                {{-- Tombol Verifikasi --}}
+                                            <div class="d-flex justify-content-center align-items-center gap-1">
+                                                {{-- Aksi Utama: Verifikasi --}}
                                                 <button wire:click="openVerifyModal({{ $reg->id }})" class="btn btn-sm btn-info text-white" title="Verifikasi Data & Berkas">
                                                     <i class="ti ti-checklist fs-4"></i> Verifikasi
                                                 </button>
 
-                                                @if($reg->status_berkas === 'Terverifikasi')
-                                                    <a href="{{ route('eventner.participants.pdf', $reg->id) }}" target="_blank" class="btn btn-sm btn-success text-white" title="Lihat Formulir PDF">
-                                                        <i class="ti ti-download fs-4"></i> Formulir
-                                                    </a>
-                                                @endif
-
-                                                @if($reg->payment_status === 'paid')
-                                                    <a href="{{ route('eventner.participants.invoice', $reg->id) }}" target="_blank" class="btn btn-sm btn-outline-success text-success" title="Unduh Invoice PDF">
-                                                        <i class="ti ti-receipt fs-4"></i> Invoice
-                                                    </a>
-                                                @endif
-
-                                                @if(($swapCandidateIds[$reg->id] ?? false))
-                                                    <button wire:click="openSwapModal({{ $reg->id }})" class="btn btn-sm btn-outline-info text-info" title="Tukar Data Pasukan (A/B)">
-                                                        <i class="ti ti-arrows-exchange fs-4"></i>
+                                                {{-- Aksi Lain: Dropdown --}}
+                                                <div class="dropdown">
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1" data-bs-toggle="dropdown" aria-expanded="false">
+                                                        <i class="ti ti-dots fs-4"></i>
                                                     </button>
-                                                @endif
-
-                                                <a href="{{ route('eventner.participants.qr', $reg->id) }}" target="_blank" class="btn btn-sm btn-outline-dark d-flex align-items-center gap-1" title="Cetak QR">
-                                                    <i class="ti ti-qrcode fs-4"></i>
-                                                </a>
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1"
-                                                    onclick="navigator.clipboard.writeText('{{ url('/reg/' . $reg->magic_token) }}'); alert('Magic Link berhasil disalin!\n\n{{ url('/reg/' . $reg->magic_token) }}');"
-                                                    title="Salin Magic Link"
-                                                >
-                                                    <i class="ti ti-link fs-4"></i>
-                                                </button>
-                                                <a href="{{ url('/reg/' . $reg->magic_token) }}" target="_blank" class="btn btn-sm btn-light-primary text-primary" title="Preview Portal">
-                                                    <i class="ti ti-external-link fs-4"></i>
-                                                </a>
-                                                <button wire:click="edit({{ $reg->id }})" class="btn btn-sm btn-warning" title="Edit Identitas">
-                                                    <i class="ti ti-edit fs-4"></i>
-                                                </button>
-                                                <button wire:click="delete({{ $reg->id }})" wire:confirm="Yakin ingin menghapus pendaftar ini?" class="btn btn-sm btn-danger" title="Hapus">
-                                                    <i class="ti ti-trash fs-4"></i>
-                                                </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        @if($reg->status_berkas === 'Terverifikasi')
+                                                            <li>
+                                                                <a href="{{ route('eventner.participants.pdf', $reg->id) }}" target="_blank" class="dropdown-item">
+                                                                    <i class="ti ti-download me-2"></i>Formulir PDF
+                                                                </a>
+                                                            </li>
+                                                        @endif
+                                                        @if($reg->payment_status === 'paid')
+                                                            <li>
+                                                                <a href="{{ route('eventner.participants.invoice', $reg->id) }}" target="_blank" class="dropdown-item">
+                                                                    <i class="ti ti-receipt me-2"></i>Invoice
+                                                                </a>
+                                                            </li>
+                                                        @endif
+                                                        @if(($swapCandidateIds[$reg->id] ?? false))
+                                                            <li>
+                                                                <button type="button" class="dropdown-item" wire:click="openSwapModal({{ $reg->id }})">
+                                                                    <i class="ti ti-arrows-exchange me-2"></i>Tukar Data Pasukan
+                                                                </button>
+                                                            </li>
+                                                        @endif
+                                                        <li>
+                                                            <a href="{{ route('eventner.participants.qr', $reg->id) }}" target="_blank" class="dropdown-item">
+                                                                <i class="ti ti-qrcode me-2"></i>Cetak QR
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <button type="button" class="dropdown-item" onclick="navigator.clipboard.writeText('{{ url('/reg/' . $reg->magic_token) }}'); alert('Magic Link berhasil disalin!\n\n{{ url('/reg/' . $reg->magic_token) }}');">
+                                                                <i class="ti ti-link me-2"></i>Salin Magic Link
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <a href="{{ url('/reg/' . $reg->magic_token) }}" target="_blank" class="dropdown-item">
+                                                                <i class="ti ti-external-link me-2"></i>Preview Portal
+                                                            </a>
+                                                        </li>
+                                                        <li><hr class="dropdown-divider"></li>
+                                                        <li>
+                                                            <button type="button" class="dropdown-item" wire:click="edit({{ $reg->id }})">
+                                                                <i class="ti ti-edit me-2"></i>Edit Identitas
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <button type="button" class="dropdown-item text-danger" wire:click="delete({{ $reg->id }})" wire:confirm="Yakin ingin menghapus pendaftar ini?">
+                                                                <i class="ti ti-trash me-2"></i>Hapus
+                                                            </button>
+                                                        </li>
+                                                    </ul>
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>
