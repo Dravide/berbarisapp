@@ -29,6 +29,7 @@ class Index extends Component
     public string $filterRegistration = '';
     public string $dateFrom = '';
     public string $dateTo = '';
+    public bool $showRevenue = false;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -72,6 +73,11 @@ class Index extends Component
     {
         $this->reset(['search', 'filterStatus', 'filterRegistration', 'dateFrom', 'dateTo']);
         $this->resetPage();
+    }
+
+    public function toggleRevenue()
+    {
+        $this->showRevenue = !$this->showRevenue;
     }
 
     public function syncPending()

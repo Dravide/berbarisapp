@@ -61,7 +61,16 @@
             <div class="card mb-0 bg-info-subtle border-0">
                 <div class="card-body p-3 text-center">
                     <p class="text-muted small mb-1 fw-semibold">Total Pendapatan (PAID)</p>
-                    <h3 class="fw-semibold text-info mb-0">Rp {{ number_format($summaryPaid->total_amount ?? 0, 0, ',', '.') }}</h3>
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <h3 class="fw-semibold text-info mb-0 revenue-value {{ $showRevenue ? '' : 'd-none' }}">Rp {{ number_format($summaryPaid->total_amount ?? 0, 0, ',', '.') }}</h3>
+                        <h3 class="fw-semibold text-info mb-0 revenue-placeholder {{ $showRevenue ? 'd-none' : '' }}">•••••</h3>
+                        <button type="button"
+                                class="btn btn-link text-info p-0 ms-1"
+                                wire:click="toggleRevenue"
+                                title="{{ $showRevenue ? 'Sembunyikan' : 'Lihat' }} nominal pendapatan">
+                            <i class="ti fs-4 {{ $showRevenue ? 'ti-eye-off' : 'ti-eye' }}"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
