@@ -108,20 +108,22 @@
                             {{-- 2nd Place --}}
                             <div class="flex flex-col items-center flex-1 max-w-[140px]">
                                 @if($rank2)
-                                    @if($rank2['participant']->logo_sekolah)
-                                        <img src="{{ asset('storage/' . $rank2['participant']->logo_sekolah) }}" alt="" class="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover border-2 border-slate-300 shadow-md mb-2">
-                                    @else
-                                        <div class="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-slate-100 text-slate-500 border-2 border-slate-300 shadow-md mb-2">
-                                            <i class="ti ti-school text-2xl"></i>
-                                        </div>
-                                    @endif
-                                    <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2">{{ $rank2['participant']->display_name }}</h4>
-                                    @if($rank2['title'])
-                                        <span class="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 mb-1.5">
-                                            <i class="ti ti-award"></i> {{ $rank2['title'] }}
-                                        </span>
-                                    @endif
-                                    <span class="font-display font-extrabold text-primary text-sm">{{ number_format($rank2['total'], 0) }}</span>
+                                    <a href="{{ event_url($eventner, 'results.detail', ['registration' => $rank2['participant']->id]) }}" class="flex flex-col items-center group">
+                                        @if($rank2['participant']->logo_sekolah)
+                                            <img src="{{ asset('storage/' . $rank2['participant']->logo_sekolah) }}" alt="" class="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover border-2 border-slate-300 shadow-md mb-2 group-hover:border-slate-400 transition">
+                                        @else
+                                            <div class="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-slate-100 text-slate-500 border-2 border-slate-300 shadow-md mb-2 group-hover:border-slate-400 transition">
+                                                <i class="ti ti-school text-2xl"></i>
+                                            </div>
+                                        @endif
+                                        <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 group-hover:text-primary transition">{{ $rank2['participant']->display_name }}</h4>
+                                        @if($rank2['title'])
+                                            <span class="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 mb-1.5">
+                                                <i class="ti ti-award"></i> {{ $rank2['title'] }}
+                                            </span>
+                                        @endif
+                                        <span class="font-display font-extrabold text-primary text-sm">{{ number_format($rank2['total'], 0) }}</span>
+                                    </a>
                                     <div class="w-full bg-slate-200 border border-slate-200/80 rounded-t-xl mt-3 flex items-center justify-center" style="height: 80px;">
                                         <span class="font-display text-3xl font-extrabold text-slate-400">2</span>
                                     </div>
@@ -133,25 +135,27 @@
                             {{-- 1st Place --}}
                             <div class="flex flex-col items-center flex-1 max-w-[160px]">
                                 @if($rank1)
-                                    <div class="relative mb-2">
-                                        <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
-                                            <i class="ti ti-crown-filled text-amber-400 text-2xl drop-shadow-sm"></i>
-                                        </div>
-                                        @if($rank1['participant']->logo_sekolah)
-                                            <img src="{{ asset('storage/' . $rank1['participant']->logo_sekolah) }}" alt="" class="h-18 w-18 sm:h-20 sm:w-20 rounded-full object-cover border-3 border-amber-400 shadow-lg ring-4 ring-amber-400/20">
-                                        @else
-                                            <div class="flex h-18 w-18 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-amber-50 text-amber-500 border-3 border-amber-400 shadow-lg ring-4 ring-amber-400/20">
-                                                <i class="ti ti-school text-3xl"></i>
+                                    <a href="{{ event_url($eventner, 'results.detail', ['registration' => $rank1['participant']->id]) }}" class="flex flex-col items-center group">
+                                        <div class="relative mb-2">
+                                            <div class="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                                                <i class="ti ti-crown-filled text-amber-400 text-2xl drop-shadow-sm"></i>
                                             </div>
+                                            @if($rank1['participant']->logo_sekolah)
+                                                <img src="{{ asset('storage/' . $rank1['participant']->logo_sekolah) }}" alt="" class="h-18 w-18 sm:h-20 sm:w-20 rounded-full object-cover border-3 border-amber-400 shadow-lg ring-4 ring-amber-400/20">
+                                            @else
+                                                <div class="flex h-18 w-18 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-amber-50 text-amber-500 border-3 border-amber-400 shadow-lg ring-4 ring-amber-400/20">
+                                                    <i class="ti ti-school text-3xl"></i>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 group-hover:text-primary transition">{{ $rank1['participant']->display_name }}</h4>
+                                        @if($rank1['title'])
+                                            <span class="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 mb-1.5">
+                                                <i class="ti ti-award"></i> {{ $rank1['title'] }}
+                                            </span>
                                         @endif
-                                    </div>
-                                    <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2">{{ $rank1['participant']->display_name }}</h4>
-                                    @if($rank1['title'])
-                                        <span class="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 mb-1.5">
-                                            <i class="ti ti-award"></i> {{ $rank1['title'] }}
-                                        </span>
-                                    @endif
-                                    <span class="font-display font-extrabold text-primary text-base">{{ number_format($rank1['total'], 0) }}</span>
+                                        <span class="font-display font-extrabold text-primary text-base">{{ number_format($rank1['total'], 0) }}</span>
+                                    </a>
                                     <div class="w-full bg-amber-300 border border-amber-300/80 rounded-t-xl mt-3 flex items-center justify-center" style="height: 110px;">
                                         <span class="font-display text-4xl font-extrabold text-amber-500/80">1</span>
                                     </div>
@@ -161,20 +165,22 @@
                             {{-- 3rd Place --}}
                             <div class="flex flex-col items-center flex-1 max-w-[140px]">
                                 @if($rank3)
-                                    @if($rank3['participant']->logo_sekolah)
-                                        <img src="{{ asset('storage/' . $rank3['participant']->logo_sekolah) }}" alt="" class="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover border-2 border-sky-300 shadow-md mb-2">
-                                    @else
-                                        <div class="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-sky-50 text-sky-500 border-2 border-sky-300 shadow-md mb-2">
-                                            <i class="ti ti-school text-2xl"></i>
-                                        </div>
-                                    @endif
-                                    <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2">{{ $rank3['participant']->display_name }}</h4>
-                                    @if($rank3['title'])
-                                        <span class="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 mb-1.5">
-                                            <i class="ti ti-award"></i> {{ $rank3['title'] }}
-                                        </span>
-                                    @endif
-                                    <span class="font-display font-extrabold text-primary text-sm">{{ number_format($rank3['total'], 0) }}</span>
+                                    <a href="{{ event_url($eventner, 'results.detail', ['registration' => $rank3['participant']->id]) }}" class="flex flex-col items-center group">
+                                        @if($rank3['participant']->logo_sekolah)
+                                            <img src="{{ asset('storage/' . $rank3['participant']->logo_sekolah) }}" alt="" class="h-14 w-14 sm:h-16 sm:w-16 rounded-full object-cover border-2 border-sky-300 shadow-md mb-2 group-hover:border-sky-400 transition">
+                                        @else
+                                            <div class="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-sky-50 text-sky-500 border-2 border-sky-300 shadow-md mb-2 group-hover:border-sky-400 transition">
+                                                <i class="ti ti-school text-2xl"></i>
+                                            </div>
+                                        @endif
+                                        <h4 class="text-xs sm:text-sm font-bold text-deep-slate text-center leading-tight mb-1 line-clamp-2 group-hover:text-primary transition">{{ $rank3['participant']->display_name }}</h4>
+                                        @if($rank3['title'])
+                                            <span class="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-600 mb-1.5">
+                                                <i class="ti ti-award"></i> {{ $rank3['title'] }}
+                                            </span>
+                                        @endif
+                                        <span class="font-display font-extrabold text-primary text-sm">{{ number_format($rank3['total'], 0) }}</span>
+                                    </a>
                                     <div class="w-full bg-sky-200 border border-sky-200/80 rounded-t-xl mt-3 flex items-center justify-center" style="height: 60px;">
                                         <span class="font-display text-3xl font-extrabold text-sky-400/80">3</span>
                                     </div>
@@ -192,7 +198,7 @@
                     <div class="border-t border-outline-variant/30">
                         <div class="divide-y divide-outline-variant/30">
                             @foreach($rest as $ps)
-                                <div class="flex items-center gap-4 px-6 py-4 hover:bg-surface-container-lowest transition duration-150">
+                                <a href="{{ event_url($eventner, 'results.detail', ['registration' => $ps['participant']->id]) }}" class="flex items-center gap-4 px-6 py-4 hover:bg-surface-container-lowest transition duration-150">
                                     {{-- Rank Badge --}}
                                     <div class="shrink-0 w-10 text-center">
                                         <span class="inline-flex items-center justify-center h-9 w-9 rounded-full bg-surface-container border border-outline-variant/30 font-bold text-sm text-on-surface-variant">{{ $ps['rank'] }}</span>
@@ -224,7 +230,8 @@
                                         <span class="font-display font-extrabold text-primary text-lg">{{ number_format($ps['total'], 0) }}</span>
                                         <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">Skor</span>
                                     </div>
-                                </div>
+                                    <i class="ti ti-chevron-right text-on-surface-variant/60 shrink-0"></i>
+                                </a>
                             @endforeach
                         </div>
                     </div>

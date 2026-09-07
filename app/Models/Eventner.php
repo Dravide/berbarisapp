@@ -233,6 +233,7 @@ class Eventner extends Model
                 'participant' => '/peserta',
                 'rundown' => '/rundown',
                 'results' => '/hasil',
+                'results.detail' => '/hasil',
                 'vote' => '/vote',
                 'ticket' => '/tiket',
                 'register' => '/daftar',
@@ -248,6 +249,12 @@ class Eventner extends Model
             if ($route === 'checkin.scan' && !empty($params['token'])) {
                 $path .= '/' . rawurlencode($params['token']);
                 unset($params['token']);
+            }
+
+            // Detail hasil per sekolah: /hasil/{registration}
+            if ($route === 'results.detail' && !empty($params['registration'])) {
+                $path .= '/' . rawurlencode($params['registration']);
+                unset($params['registration']);
             }
 
             $nonPathParams = $params;

@@ -17,6 +17,7 @@ Route::get('/', App\Livewire\Public\EventDetail::class)->name('subdomain.detail'
 Route::get('/peserta', App\Livewire\Public\EventParticipant::class)->name('subdomain.participant');
 Route::get('/rundown', App\Livewire\Public\EventRundown::class)->name('subdomain.rundown');
 Route::get('/hasil', App\Livewire\Public\EventResult::class)->name('subdomain.results');
+Route::get('/hasil/{registration}', App\Livewire\Public\EventResultDetail::class)->name('subdomain.results.detail');
 Route::get('/vote', App\Livewire\Public\EventVote::class)->name('subdomain.vote');
 Route::get('/tiket', App\Livewire\Public\EventTicket::class)->name('subdomain.ticket');
 Route::get('/daftar', App\Livewire\Public\Registration\Create::class)->name('subdomain.register');

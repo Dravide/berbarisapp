@@ -15,6 +15,7 @@ Route::get('/event/{slug}', App\Livewire\Public\EventDetail::class)->name('event
 Route::get('/event/{slug}/participant', App\Livewire\Public\EventParticipant::class)->name('event.participant');
 Route::get('/event/{slug}/rundown', App\Livewire\Public\EventRundown::class)->name('event.rundown');
 Route::get('/event/{slug}/results', App\Livewire\Public\EventResult::class)->name('event.results');
+Route::get('/event/{slug}/results/{registration}', App\Livewire\Public\EventResultDetail::class)->name('event.results.detail');
 
 // Voting Routes
 Route::get('/event/{slug}/vote', App\Livewire\Public\EventVote::class)->name('event.vote');
