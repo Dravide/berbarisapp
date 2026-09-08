@@ -58,33 +58,55 @@
                             $xp = ($field['x'] / $template['width']) * 100;
                             $yp = ($field['y'] / $template['height']) * 100;
                             $mw = $field['max_width'] ? ($field['max_width'] / $template['width'] * 100) : null;
+                            $qrPct = $template['height'] > 0 ? ($field['font_size'] / $template['height'] * 100) : 0;
                         @endphp
-                        <div class="cert-text-field"
-                             data-field-id="{{ $field['id'] }}"
-                             data-x-pct="{{ round($xp, 3) }}"
-                             data-y-pct="{{ round($yp, 3) }}"
-                             data-font-size="{{ $field['font_size'] }}"
-                             data-font-color="{{ $field['font_color'] }}"
-                             data-text-align="{{ $field['text_align'] }}"
-                             data-font-weight="{{ $field['font_weight'] }}"
-                             data-max-width-pct="{{ $mw ? round($mw, 3) : '' }}"
-                             data-selected="{{ $selectedFieldId == $field['id'] ? '1' : '0' }}"
-                             style="position: absolute;
-                                    left: {{ round($xp, 3) }}%;
-                                    top: {{ round($yp, 3) }}%;
-                                    transform: translate(-50%, -50%);
-                                    font-size: {{ $field['font_size'] }}pt;
-                                    color: {{ $field['font_color'] }};
-                                    text-align: {{ $field['text_align'] }};
-                                    font-weight: {{ $field['font_weight'] }};
-                                    @if($mw) max-width: {{ round($mw, 3) }}%; @endif
-                                    cursor: move; user-select: none; -webkit-user-select: none;
-                                    white-space: nowrap; padding: 2px 6px; border-radius: 3px;
-                                    border: 1px dashed {{ $selectedFieldId == $field['id'] ? '#0d6efd' : 'transparent' }};
-                                    background: {{ $selectedFieldId == $field['id'] ? 'rgba(13,110,253,0.15)' : 'transparent' }};"
-                             title="{{ $field['label'] }} (klik untuk edit, drag untuk pindah)">
-                            {{ $field['label'] }}
-                        </div>
+                        @if($field['field_key'] === 'qr_event')
+                            <div class="cert-text-field"
+                                 data-field-id="{{ $field['id'] }}"
+                                 data-selected="{{ $selectedFieldId == $field['id'] ? '1' : '0' }}"
+                                 style="position: absolute;
+                                        left: {{ round($xp, 3) }}%;
+                                        top: {{ round($yp, 3) }}%;
+                                        transform: translate(-50%, -50%);
+                                        width: {{ round($qrPct, 3) }}%;
+                                        aspect-ratio: 1 / 1;
+                                        cursor: move; user-select: none; -webkit-user-select: none;
+                                        border-radius: 3px;
+                                        border: 1px dashed {{ $selectedFieldId == $field['id'] ? '#0d6efd' : '#6c757d' }};
+                                        background: {{ $selectedFieldId == $field['id'] ? 'rgba(13,110,253,0.15)' : 'rgba(108,117,125,0.1)' }};
+                                        display: flex; align-items: center; justify-content: center;
+                                        font-size: 8pt; color: #6c757d; text-align: center; font-weight: normal;"
+                                 title="{{ $field['label'] }} (klik untuk edit, drag untuk pindah)">
+                                QR Event
+                            </div>
+                        @else
+                            <div class="cert-text-field"
+                                 data-field-id="{{ $field['id'] }}"
+                                 data-x-pct="{{ round($xp, 3) }}"
+                                 data-y-pct="{{ round($yp, 3) }}"
+                                 data-font-size="{{ $field['font_size'] }}"
+                                 data-font-color="{{ $field['font_color'] }}"
+                                 data-text-align="{{ $field['text_align'] }}"
+                                 data-font-weight="{{ $field['font_weight'] }}"
+                                 data-max-width-pct="{{ $mw ? round($mw, 3) : '' }}"
+                                 data-selected="{{ $selectedFieldId == $field['id'] ? '1' : '0' }}"
+                                 style="position: absolute;
+                                        left: {{ round($xp, 3) }}%;
+                                        top: {{ round($yp, 3) }}%;
+                                        transform: translate(-50%, -50%);
+                                        font-size: {{ $field['font_size'] }}pt;
+                                        color: {{ $field['font_color'] }};
+                                        text-align: {{ $field['text_align'] }};
+                                        font-weight: {{ $field['font_weight'] }};
+                                        @if($mw) max-width: {{ round($mw, 3) }}%; @endif
+                                        cursor: move; user-select: none; -webkit-user-select: none;
+                                        white-space: nowrap; padding: 2px 6px; border-radius: 3px;
+                                        border: 1px dashed {{ $selectedFieldId == $field['id'] ? '#0d6efd' : 'transparent' }};
+                                        background: {{ $selectedFieldId == $field['id'] ? 'rgba(13,110,253,0.15)' : 'transparent' }};"
+                                 title="{{ $field['label'] }} (klik untuk edit, drag untuk pindah)">
+                                {{ $field['label'] }}
+                            </div>
+                        @endif
                     @endforeach
                 </div>
             @else
@@ -129,8 +151,10 @@
                     @if($selectedFieldId)
                         <div class="row g-3">
                             <div class="col-md-4"><label class="form-label small fw-bold">Field</label><input type="text" class="form-control form-control-sm" value="{{ $editingField['label'] }}" readonly></div>
-                            <div class="col-md-4"><label class="form-label small fw-bold">Font Size (pt)</label><input type="number" class="form-control form-control-sm" wire:model.live="editingField.font_size" min="6" max="120"></div>
+                            <div class="col-md-4"><label class="form-label small fw-bold">{{ $editingField['field_key'] === 'qr_event' ? 'Ukuran QR (mm)' : 'Font Size (pt)' }}</label><input type="number" class="form-control form-control-sm" wire:model.live="editingField.font_size" min="6" max="120"></div>
+                            @if($editingField['field_key'] !== 'qr_event')
                             <div class="col-md-4"><label class="form-label small fw-bold">Warna</label><input type="color" class="form-control form-control-sm" wire:model.live="editingField.font_color" style="height:34px;"></div>
+                            @endif
                             <div class="col-md-4">
                                 <label class="form-label small fw-bold">Text Align</label>
                                 <div class="btn-group w-100">

@@ -12,6 +12,9 @@ use App\Models\Participant;
 use App\Models\Registration;
 use App\Models\ScoreDeduction;
 use Barryvdh\DomPDF\Facade\Pdf;
+use chillerlan\QRCode\Output\QRGdImagePNG;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -219,12 +222,24 @@ class CertificateController extends Controller
             abort(404, 'Belum ada data peserta pada juara untuk kategori ini.');
         }
 
+        // QR code menuju link event (dipakai field qr_event di template).
+        $eventQrDataUri = null;
+        if ($template->textFields->contains('field_key', 'qr_event')) {
+            $options = new QROptions;
+            $options->outputInterface = QRGdImagePNG::class;
+            $options->outputBase64 = false;
+            $options->eccLevel = 'H';
+            $png = (new QRCode($options))->render($eventner->publicUrl('detail'));
+            $eventQrDataUri = 'data:image/png;base64,' . base64_encode($png);
+        }
+
         $data = [
             'eventner' => $eventner,
             'template' => $template,
             'championCategory' => $championCategory,
             'competitionCategory' => $competitionCategory,
             'pages' => $pages,
+            'eventQrDataUri' => $eventQrDataUri,
         ];
 
         // Background template di-decode GD per halaman pemenang — butuh memori besar.

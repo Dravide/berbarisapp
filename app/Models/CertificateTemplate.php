@@ -57,6 +57,7 @@ class CertificateTemplate extends Model
             'nama_pelatih'         => 'Nama Pelatih',
             'total_skor'           => 'Total Skor',
             'diselenggarakan_oleh' => 'Diselenggarakan Oleh',
+            'qr_event'             => 'QR Code (menuju link event — font size = ukuran mm)',
         ];
     }
 }

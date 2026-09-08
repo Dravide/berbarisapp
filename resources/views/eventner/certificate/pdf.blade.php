@@ -46,6 +46,10 @@
             left: {{ $l }}%;
             top: {{ $t }}%;
             transform: translate(-50%, -50%);
+            @if($field->field_key === 'qr_event')
+            width: {{ $field->font_size }}mm;
+            height: {{ $field->font_size }}mm;
+            @else
             font-size: {{ $field->font_size }}pt;
             color: {{ $field->font_color }};
             text-align: {{ $field->text_align }};
@@ -56,6 +60,7 @@
             max-width: {{ $mw }}%;
             white-space: normal;
             word-wrap: break-word;
+            @endif
             @endif
         }
         @endforeach
@@ -77,15 +82,19 @@
     <div class="cert-page" style="@if(!$loop->last) page-break-after: always; @endif">
         <img src="{{ public_path('storage/' . $template->file_path) }}" class="cert-bg" alt="">
         @foreach($template->textFields as $field)
-            <div class="cert-field-{{ $field->id }}">
-                {{ $page['registration']->resolveCertificateField($field->field_key, [
-                    'winner' => $page,
-                    'participant' => $page['participant'],
-                    'eventner' => $eventner,
-                    'championCategory' => $championCategory,
-                    'competitionCategory' => $competitionCategory,
-                ]) }}
-            </div>
+            @if($field->field_key === 'qr_event' && $eventQrDataUri)
+                <img src="{{ $eventQrDataUri }}" class="cert-field-{{ $field->id }}" alt="QR Event">
+            @else
+                <div class="cert-field-{{ $field->id }}">
+                    {{ $page['registration']->resolveCertificateField($field->field_key, [
+                        'winner' => $page,
+                        'participant' => $page['participant'],
+                        'eventner' => $eventner,
+                        'championCategory' => $championCategory,
+                        'competitionCategory' => $competitionCategory,
+                    ]) }}
+                </div>
+            @endif
         @endforeach
 
         @if($template->show_besign)
