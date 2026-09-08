@@ -4,13 +4,7 @@ namespace App\Livewire\Eventner\Certificate;
 
 use App\Models\CertificateTemplate;
 use App\Models\CertificateTextField;
-use App\Models\ChampionCategory;
-use App\Models\CompetitionCategory;
-use App\Services\ChampionCalculator;
 use App\Traits\FeatureGatedComponent;
-use chillerlan\QRCode\Output\QRGdImagePNG;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
@@ -32,12 +26,6 @@ class Editor extends Component
     // Field management
     public $selectedFieldId = null;
     public $newFieldKey = '';
-
-    // Download & preview
-    public $previewChampionCategoryId = null;
-    public $previewCompetitionCategoryId = null;
-    public $previewMode = 'participant';
-    public $showPreview = false;
 
     // Field properties panel
     public $editingField = [
@@ -222,101 +210,30 @@ class Editor extends Component
         return collect($this->textFields)->pluck('field_key')->toArray();
     }
 
-    // ── Download & Preview ──────────────────────────────────────────────
-
-    public function getChampionCategoriesProperty()
-    {
-        if (!$this->eventner) return collect();
-        return ChampionCategory::where('eventner_id', $this->eventner->id)
-            ->orderBy('name')
-            ->get();
-    }
-
-    public function getCompetitionCategoriesProperty()
-    {
-        if (!$this->eventner) return collect();
-        return $this->eventner->competitionCategories()
-            ->whereNotNull('parent_id')
-            ->with('parent:id,name')
-            ->orderBy('name')
-            ->get();
-    }
-
-    public function togglePreview()
-    {
-        $this->showPreview = !$this->showPreview;
-    }
-
     /**
-     * Data preview sertifikat halaman pertama dengan juara asli.
-     * Pakai ChampionCalculator (logika sama dengan download PDF).
+     * Contoh nilai tiap field untuk preview di canvas —
+     * data event asli bila ada, sisanya contoh generik.
      */
-    public function getPreviewDataProperty()
+    public function getSampleValuesProperty(): array
     {
-        if (!$this->showPreview
-            || !$this->previewChampionCategoryId
-            || !$this->previewCompetitionCategoryId) {
-            return null;
-        }
-
-        $championCategory = ChampionCategory::where('eventner_id', $this->eventner->id)
-            ->with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias'])
-            ->find($this->previewChampionCategoryId);
-        $competitionCategory = CompetitionCategory::with('parent')->find($this->previewCompetitionCategoryId);
-
-        if (!$championCategory || !$competitionCategory) {
-            return null;
-        }
-
-        [$eventner, $category, $winners] = app(ChampionCalculator::class)->winners($championCategory);
-
-        if (empty($winners)) {
-            return ['error' => 'Belum ada data juara untuk kategori ini.'];
-        }
-
-        // Ambil juara pertama yang cocok kategori lombanya (kalau ada),
-        // kalau tidak ada juaranya di kategori lomba tsb pakai juara pertama.
-        $winner = collect($winners)->first(fn($w) => $w['registration']->competition_category_id == $competitionCategory->id)
-            ?? $winners[0];
-
-        // Gelar: sama seperti CertificateController (tambah nomor posisi dalam grup)
-        $title = $winner['title'];
-        foreach ($category->rankTitles as $rt) {
-            if ($rt->coversRank($winner['rank'])) {
-                $title = $rt->rank_start !== $rt->rank_end
-                    ? $rt->title . ' ' . ($winner['rank'] - $rt->rank_start + 1)
-                    : $rt->title;
-                break;
-            }
-        }
-
-        $pages = [];
-        $sampleParticipant = $this->previewMode === 'school' ? null : ($winner['registration']->participants->first() ?? null);
-        $pages[] = [
-            'registration' => $winner['registration'],
-            'participant' => $sampleParticipant,
-            'rank' => $winner['rank'],
-            'title' => $title,
-            'total' => $winner['total'],
-        ];
-
-        // QR menuju link event
-        $eventQrDataUri = null;
-        if (collect($this->textFields)->contains('field_key', 'qr_event')) {
-            $options = new QROptions;
-            $options->outputInterface = QRGdImagePNG::class;
-            $options->outputBase64 = false;
-            $options->eccLevel = 'H';
-            $png = (new QRCode($options))->render($this->eventner->publicUrl('detail'));
-            $eventQrDataUri = 'data:image/png;base64,' . base64_encode($png);
-        }
+        $ev = $this->eventner;
 
         return [
-            'pages' => $pages,
-            'championCategory' => $category,
-            'competitionCategory' => $competitionCategory,
-            'eventQrDataUri' => $eventQrDataUri,
-            'winnerCount' => count($winners),
+            'nama_sekolah'         => 'SD Negeri 1 Contoh',
+            'nama_peserta'         => 'Andi Pratama',
+            'gelar_juara'          => 'Juara 1',
+            'gelar_juara_lengkap'  => 'Juara 1 LOBB - U13 - SD / MI',
+            'peringkat'            => '1',
+            'kategori_juara'       => 'JUARA LOBB',
+            'kategori_lomba'       => 'LOBB - U13 - SD / MI',
+            'nama_event'           => $ev?->nama_event ?: 'Nama Event Contoh',
+            'tanggal'              => $ev?->tanggal
+                ? \Carbon\Carbon::parse($ev->tanggal)->translatedFormat('d F Y')
+                : '15 Agustus 2026',
+            'venue'                => $ev?->venue ?: 'Lapangan Contoh',
+            'nama_pelatih'         => 'Budi Santoso, S.Pd.',
+            'total_skor'           => '2.850',
+            'diselenggarakan_oleh' => $ev?->diselenggarakan_oleh ?: 'Diselenggarakan Oleh Contoh',
         ];
     }
 
@@ -325,9 +242,7 @@ class Editor extends Component
         return view('livewire.eventner.certificate.editor', [
             'availableFieldKeys' => $this->availableFieldKeys,
             'usedFieldKeys' => $this->usedFieldKeys,
-            'championCategories' => $this->championCategories,
-            'competitionCategories' => $this->competitionCategories,
-            'previewData' => $this->previewData,
+            'sampleValues' => $this->sampleValues,
         ])->title('Edit Layout: ' . ($this->template['name'] ?? '') . ' - ' . $this->eventner->nama_event);
     }
 }

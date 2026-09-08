@@ -36,112 +36,6 @@
         </div>
     </div>
 
-    {{-- Download & Preview --}}
-    <div class="card mb-3">
-        <div class="card-body py-2">
-            <div class="row g-2 align-items-end">
-                <div class="col-md-3 col-6">
-                    <label class="form-label small fw-bold mb-1">Kategori Juara</label>
-                    <select class="form-select form-select-sm" wire:model.live="previewChampionCategoryId">
-                        <option value="">-- Pilih --</option>
-                        @foreach($championCategories as $cc)
-                            <option value="{{ $cc->id }}">{{ $cc->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3 col-6">
-                    <label class="form-label small fw-bold mb-1">Kategori Lomba</label>
-                    <select class="form-select form-select-sm" wire:model.live="previewCompetitionCategoryId">
-                        <option value="">-- Pilih --</option>
-                        @foreach($competitionCategories as $cat)
-                            <option value="{{ $cat->id }}">{{ $cat->parent ? $cat->parent->name . ' — ' : '' }}{{ $cat->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3 col-6">
-                    <label class="form-label small fw-bold mb-1">Mode Sertifikat</label>
-                    <select class="form-select form-select-sm" wire:model.live="previewMode">
-                        <option value="participant">Per Siswa</option>
-                        <option value="school">Per Sekolah</option>
-                    </select>
-                </div>
-                <div class="col-md-3 col-6 d-flex gap-2">
-                    <button class="btn btn-sm btn-outline-info flex-fill" wire:click="togglePreview"
-                            @if(!$previewChampionCategoryId || !$previewCompetitionCategoryId) disabled @endif>
-                        <i class="ti ti-eye me-1"></i> {{ $showPreview ? 'Sembunyikan' : 'Preview' }}
-                    </button>
-                    <a href="{{ route('eventner.certificate.pdf', [
-                        'template_id' => $templateId,
-                        'champion_category_id' => $previewChampionCategoryId,
-                        'competition_category_id' => $previewCompetitionCategoryId,
-                        'mode' => $previewMode,
-                    ]) }}"
-                       target="_blank"
-                       class="btn btn-sm btn-primary flex-fill {{ (!$previewChampionCategoryId || !$previewCompetitionCategoryId) ? 'disabled' : '' }}">
-                        <i class="ti ti-download me-1"></i> PDF
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {{-- Preview Sertifikat --}}
-    @if($showPreview && $previewData)
-        <div class="card mb-3">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h6 class="card-title mb-0 fw-semibold"><i class="ti ti-eye me-1"></i> Preview Sertifikat (data juara asli)</h6>
-                <span class="badge bg-info-subtle text-info">{{ $previewData['winnerCount'] }} juara</span>
-            </div>
-            <div class="card-body d-flex justify-content-center bg-light p-3">
-                @if(isset($previewData['error']))
-                    <div class="alert alert-warning mb-0">{{ $previewData['error'] }}</div>
-                @else
-                    @php
-                        $page = $previewData['pages'][0];
-                        $pxPerMm = 4; // preview scale
-                    @endphp
-                    <div style="position: relative; width: {{ $template['width'] * $pxPerMm }}px; height: {{ $template['height'] * $pxPerMm }}px; overflow: hidden; border: 1px solid #dee2e6; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: url('{{ $template['image_url'] }}') no-repeat; background-size: 100% 100%;">
-                        @foreach($textFields as $field)
-                            @php
-                                $xp = ($field['x'] / $template['width']) * 100;
-                                $yp = ($field['y'] / $template['height']) * 100;
-                                $mw = $field['max_width'] ? ($field['max_width'] / $template['width'] * 100) : null;
-                                $qrPct = $template['height'] > 0 ? ($field['font_size'] / $template['height'] * 100) : 0;
-                            @endphp
-                            @if($field['field_key'] === 'qr_event')
-                                @if($previewData['eventQrDataUri'])
-                                    <img src="{{ $previewData['eventQrDataUri'] }}"
-                                         style="position: absolute; left: {{ round($xp, 3) }}%; top: {{ round($yp, 3) }}%;
-                                                transform: translate(-50%, -50%);
-                                                width: {{ round($qrPct, 3) }}%; aspect-ratio: 1/1;">
-                                @endif
-                            @else
-                                @php
-                                    $resolved = $page['registration']->resolveCertificateField($field['field_key'], [
-                                        'winner' => $page,
-                                        'participant' => $page['participant'],
-                                        'eventner' => $eventner,
-                                        'championCategory' => $previewData['championCategory'],
-                                        'competitionCategory' => $previewData['competitionCategory'],
-                                    ]);
-                                @endphp
-                                <div style="position: absolute; left: {{ round($xp, 3) }}%; top: {{ round($yp, 3) }}%;
-                                            transform: translate(-50%, -50%);
-                                            font-size: {{ round($field['font_size'] / 72 * 25.4 * $pxPerMm, 2) }}px;
-                                            color: {{ $field['font_color'] }};
-                                            text-align: {{ $field['text_align'] }};
-                                            font-weight: {{ $field['font_weight'] }};
-                                            @if($mw) max-width: {{ round($mw, 3) }}%; white-space: normal; @else white-space: nowrap; @endif">
-                                    {{ $resolved }}
-                                </div>
-                            @endif
-                        @endforeach
-                    </div>
-                @endif
-            </div>
-        </div>
-    @endif
-
     {{-- Canvas --}}
     <div class="card mb-3">
         <div class="card-body d-flex justify-content-center bg-light p-3" style="min-height: 620px;">
@@ -210,7 +104,7 @@
                                         border: 1px dashed {{ $selectedFieldId == $field['id'] ? '#0d6efd' : 'transparent' }};
                                         background: {{ $selectedFieldId == $field['id'] ? 'rgba(13,110,253,0.15)' : 'transparent' }};"
                                  title="{{ $field['label'] }} (klik untuk edit, drag untuk pindah)">
-                                {{ $field['label'] }}
+                                {{ $sampleValues[$field['field_key']] ?? $field['label'] }}
                             </div>
                         @endif
                     @endforeach
