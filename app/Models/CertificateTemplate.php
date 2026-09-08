@@ -45,14 +45,16 @@ class CertificateTemplate extends Model
     {
         return [
             'nama_sekolah'         => 'Nama Sekolah',
-            'gelar_juara'          => 'Gelar Juara',
+            'nama_peserta'         => 'Nama Peserta',
+            'gelar_juara'          => 'Gelar Juara (otomatis sesuai peringkat)',
+            'peringkat'            => 'Peringkat (angka)',
             'kategori_juara'       => 'Kategori Juara',
             'kategori_lomba'       => 'Kategori Lomba',
             'nama_event'           => 'Nama Event',
             'tanggal'              => 'Tanggal',
             'venue'                => 'Venue / Lokasi',
             'nama_pelatih'         => 'Nama Pelatih',
-            'nama_peserta'         => 'Nama Peserta',
+            'total_skor'           => 'Total Skor',
             'diselenggarakan_oleh' => 'Diselenggarakan Oleh',
         ];
     }

@@ -142,7 +142,12 @@ class CertificateController extends Controller
             $title = null;
             foreach ($championCategory->rankTitles as $rt) {
                 if ($rt->coversRank($rank)) {
-                    $title = $rt->title;
+                    // Sama seperti halaman /hasil: tambah nomor posisi dalam grup
+                    // jika rank title meng-cover lebih dari 1 peringkat.
+                    $positionInGroup = $rank - $rt->rank_start + 1;
+                    $title = $rt->rank_start !== $rt->rank_end
+                        ? $rt->title . ' ' . $positionInGroup
+                        : $rt->title;
                     break;
                 }
             }

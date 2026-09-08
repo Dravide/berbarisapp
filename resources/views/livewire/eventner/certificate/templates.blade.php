@@ -180,7 +180,7 @@
                     <select class="form-select form-select-sm" wire:model.live="downloadCompetitionCategoryId">
                         <option value="">-- Pilih Kategori Lomba --</option>
                         @foreach($competitionCategories as $cat)
-                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                            <option value="{{ $cat->id }}">{{ $cat->parent ? $cat->parent->name . ' — ' : '' }}{{ $cat->name }}</option>
                         @endforeach
                     </select>
                 </div>

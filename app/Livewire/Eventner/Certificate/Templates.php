@@ -192,6 +192,7 @@ class Templates extends Component
 
         return $this->eventner->competitionCategories()
             ->whereNotNull('parent_id')
+            ->with('parent:id,name')
             ->orderBy('name')
             ->get();
     }

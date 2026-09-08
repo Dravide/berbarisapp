@@ -183,6 +183,8 @@ class Registration extends Model
             'venue'         => $eventner?->venue ?? '',
             'nama_pelatih'  => $this->nama_pelatih ?? '',
             'nama_peserta'  => $participant?->nama ?? $this->participants->pluck('nama')->join(', '),
+            'peringkat'     => (string) ($winner['rank'] ?? ''),
+            'total_skor'    => isset($winner['total']) ? number_format((float) $winner['total'], 0, ',', '.') : '',
             'diselenggarakan_oleh' => $eventner?->diselenggarakan_oleh ?? '',
             default         => '',
         };
