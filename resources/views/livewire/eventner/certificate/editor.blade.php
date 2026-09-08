@@ -85,63 +85,6 @@
         </div>
     </div>
 
-    {{-- Preview Sertifikat --}}
-    @if($showPreview && $previewData)
-        <div class="card mb-3">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <h6 class="card-title mb-0 fw-semibold"><i class="ti ti-eye me-1"></i> Preview Sertifikat (data juara asli)</h6>
-                <span class="badge bg-info-subtle text-info">{{ $previewData['winnerCount'] }} juara</span>
-            </div>
-            <div class="card-body d-flex justify-content-center bg-light p-3">
-                @if(isset($previewData['error']))
-                    <div class="alert alert-warning mb-0">{{ $previewData['error'] }}</div>
-                @else
-                    @php
-                        $page = $previewData['pages'][0];
-                        $pxPerMm = 4; // preview scale
-                    @endphp
-                    <div style="position: relative; width: {{ $template['width'] * $pxPerMm }}px; height: {{ $template['height'] * $pxPerMm }}px; overflow: hidden; border: 1px solid #dee2e6; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); background: url('{{ $template['image_url'] }}') no-repeat; background-size: 100% 100%;">
-                        @foreach($textFields as $field)
-                            @php
-                                $xp = ($field['x'] / $template['width']) * 100;
-                                $yp = ($field['y'] / $template['height']) * 100;
-                                $mw = $field['max_width'] ? ($field['max_width'] / $template['width'] * 100) : null;
-                                $qrPct = $template['height'] > 0 ? ($field['font_size'] / $template['height'] * 100) : 0;
-                            @endphp
-                            @if($field['field_key'] === 'qr_event')
-                                @if($previewData['eventQrDataUri'])
-                                    <img src="{{ $previewData['eventQrDataUri'] }}"
-                                         style="position: absolute; left: {{ round($xp, 3) }}%; top: {{ round($yp, 3) }}%;
-                                                transform: translate(-50%, -50%);
-                                                width: {{ round($qrPct, 3) }}%; aspect-ratio: 1/1;">
-                                @endif
-                            @else
-                                @php
-                                    $resolved = $page['registration']->resolveCertificateField($field['field_key'], [
-                                        'winner' => $page,
-                                        'participant' => $page['participant'],
-                                        'eventner' => $eventner,
-                                        'championCategory' => $previewData['championCategory'],
-                                        'competitionCategory' => $previewData['competitionCategory'],
-                                    ]);
-                                @endphp
-                                <div style="position: absolute; left: {{ round($xp, 3) }}%; top: {{ round($yp, 3) }}%;
-                                            transform: translate(-50%, -50%);
-                                            font-size: {{ round($field['font_size'] / 72 * 25.4 * $pxPerMm, 2) }}px;
-                                            color: {{ $field['font_color'] }};
-                                            text-align: {{ $field['text_align'] }};
-                                            font-weight: {{ $field['font_weight'] }};
-                                            @if($mw) max-width: {{ round($mw, 3) }}%; white-space: normal; @else white-space: nowrap; @endif">
-                                    {{ $resolved }}
-                                </div>
-                            @endif
-                        @endforeach
-                    </div>
-                @endif
-            </div>
-        </div>
-    @endif
-
     {{-- Canvas --}}
     <div class="card mb-3">
         <div class="card-body d-flex justify-content-center bg-light p-3" style="min-height: 620px;">
@@ -165,27 +108,60 @@
                             $yp = ($field['y'] / $template['height']) * 100;
                             $mw = $field['max_width'] ? ($field['max_width'] / $template['width'] * 100) : null;
                             $qrPct = $template['height'] > 0 ? ($field['font_size'] / $template['height'] * 100) : 0;
+                            // Saat preview aktif: isi field = data juara asli (mail-merge)
+                            $isLivePreview = $showPreview && $previewData && !isset($previewData['error']);
                         @endphp
                         @if($field['field_key'] === 'qr_event')
-                            <div class="cert-text-field"
-                                 data-field-id="{{ $field['id'] }}"
-                                 data-selected="{{ $selectedFieldId == $field['id'] ? '1' : '0' }}"
-                                 style="position: absolute;
-                                        left: {{ round($xp, 3) }}%;
-                                        top: {{ round($yp, 3) }}%;
-                                        transform: translate(-50%, -50%);
-                                        width: {{ round($qrPct, 3) }}%;
-                                        aspect-ratio: 1 / 1;
-                                        cursor: move; user-select: none; -webkit-user-select: none;
-                                        border-radius: 3px;
-                                        border: 1px dashed {{ $selectedFieldId == $field['id'] ? '#0d6efd' : '#6c757d' }};
-                                        background: {{ $selectedFieldId == $field['id'] ? 'rgba(13,110,253,0.15)' : 'rgba(108,117,125,0.1)' }};
-                                        display: flex; align-items: center; justify-content: center;
-                                        font-size: 8pt; color: #6c757d; text-align: center; font-weight: normal;"
-                                 title="{{ $field['label'] }} (klik untuk edit, drag untuk pindah)">
-                                QR Event
-                            </div>
+                            @if($isLivePreview && $previewData['eventQrDataUri'])
+                                <div class="cert-text-field"
+                                     data-field-id="{{ $field['id'] }}"
+                                     data-selected="{{ $selectedFieldId == $field['id'] ? '1' : '0' }}"
+                                     style="position: absolute;
+                                            left: {{ round($xp, 3) }}%;
+                                            top: {{ round($yp, 3) }}%;
+                                            transform: translate(-50%, -50%);
+                                            width: {{ round($qrPct, 3) }}%;
+                                            aspect-ratio: 1 / 1;
+                                            cursor: move; user-select: none; -webkit-user-select: none;
+                                            border-radius: 3px;
+                                            border: 1px dashed {{ $selectedFieldId == $field['id'] ? '#0d6efd' : '#0d99fd' }};"
+                                     title="{{ $field['label'] }} (klik untuk edit, drag untuk pindah)">
+                                    <img src="{{ $previewData['eventQrDataUri'] }}" style="width: 100%; height: 100%; object-fit: contain;">
+                                </div>
+                            @else
+                                <div class="cert-text-field"
+                                     data-field-id="{{ $field['id'] }}"
+                                     data-selected="{{ $selectedFieldId == $field['id'] ? '1' : '0' }}"
+                                     style="position: absolute;
+                                            left: {{ round($xp, 3) }}%;
+                                            top: {{ round($yp, 3) }}%;
+                                            transform: translate(-50%, -50%);
+                                            width: {{ round($qrPct, 3) }}%;
+                                            aspect-ratio: 1 / 1;
+                                            cursor: move; user-select: none; -webkit-user-select: none;
+                                            border-radius: 3px;
+                                            border: 1px dashed {{ $selectedFieldId == $field['id'] ? '#0d6efd' : '#6c757d' }};
+                                            background: {{ $selectedFieldId == $field['id'] ? 'rgba(13,110,253,0.15)' : 'rgba(108,117,125,0.1)' }};
+                                            display: flex; align-items: center; justify-content: center;
+                                            font-size: 8pt; color: #6c757d; text-align: center; font-weight: normal;"
+                                     title="{{ $field['label'] }} (klik untuk edit, drag untuk pindah)">
+                                    QR Event
+                                </div>
+                            @endif
                         @else
+                            @php
+                                $display = $sampleValues[$field['field_key']] ?? $field['label'];
+                                if ($isLivePreview) {
+                                    $page = $previewData['pages'][0];
+                                    $display = $page['registration']->resolveCertificateField($field['field_key'], [
+                                        'winner' => $page,
+                                        'participant' => $page['participant'],
+                                        'eventner' => $eventner,
+                                        'championCategory' => $previewData['championCategory'],
+                                        'competitionCategory' => $previewData['competitionCategory'],
+                                    ]);
+                                }
+                            @endphp
                             <div class="cert-text-field"
                                  data-field-id="{{ $field['id'] }}"
                                  data-x-pct="{{ round($xp, 3) }}"
@@ -210,7 +186,7 @@
                                         border: 1px dashed {{ $selectedFieldId == $field['id'] ? '#0d6efd' : 'transparent' }};
                                         background: {{ $selectedFieldId == $field['id'] ? 'rgba(13,110,253,0.15)' : 'transparent' }};"
                                  title="{{ $field['label'] }} (klik untuk edit, drag untuk pindah)">
-                                {{ $sampleValues[$field['field_key']] ?? $field['label'] }}
+                                {{ $display }}
                             </div>
                         @endif
                     @endforeach
