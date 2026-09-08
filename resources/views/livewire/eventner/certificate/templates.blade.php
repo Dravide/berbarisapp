@@ -125,7 +125,7 @@
                                         wire:click="openPdfModal({{ $tpl['id'] }})"
                                         title="Download PDF sertifikat dengan template ini"
                                         @if($tpl['fields_count'] == 0) disabled @endif>
-                                        <i class="ti ti-file-type-pdf"></i>
+                                        <i class="ti ti-file-download"></i>
                                     </button>
                                     <button class="btn btn-sm btn-light" wire:click="editTemplate({{ $tpl['id'] }})"
                                         title="Ubah nama/ukuran">
@@ -161,7 +161,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-danger text-white">
                     <h5 class="modal-title text-white fw-semibold">
-                        <i class="ti ti-file-type-pdf me-1"></i> Download Sertifikat PDF
+                        <i class="ti ti-file-download me-1"></i> Download Sertifikat PDF
                     </h5>
                     <button type="button" class="btn-close btn-close-white" wire:click="cancelPdfModal"></button>
                 </div>
@@ -209,7 +209,7 @@
                     ]) }}"
                        target="_blank"
                        class="btn btn-danger {{ (!$pdfChampionCategoryId || !$pdfCompetitionCategoryId) ? 'disabled' : '' }}">
-                        <i class="ti ti-file-type-pdf me-1"></i> Download PDF
+                        <i class="ti ti-file-download me-1"></i> Download PDF
                     </a>
                 </div>
             </div>
