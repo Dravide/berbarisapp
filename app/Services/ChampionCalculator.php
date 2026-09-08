@@ -22,7 +22,7 @@ class ChampionCalculator
     /**
      * @return array{0: Eventner, 1: ChampionCategory, 2: array} [eventner, category, winners]
      */
-    public function winners(ChampionCategory $championCategory): array
+    public function winners(ChampionCategory $championCategory, ?int $competitionCategoryId = null, bool $perSchool = false): array
     {
         $eventner = $championCategory->eventner;
 
@@ -50,8 +50,9 @@ class ChampionCalculator
             )->pluck('id')
         )->pluck('weight', 'id')->toArray();
 
-        // Semua registration event ini
+        // Semua registration event ini (opsional: scope tingkat lomba)
         $participants = Registration::where('eventner_id', $eventner->id)
+            ->when($competitionCategoryId, fn($q) => $q->where('competition_category_id', $competitionCategoryId))
             ->with('participants')
             ->orderBy('nama_sekolah')
             ->get();
@@ -109,6 +110,21 @@ class ChampionCalculator
             if ($a['deduction'] !== $b['deduction']) return $a['deduction'] <=> $b['deduction'];
             return $a['urutan_tampil'] <=> $b['urutan_tampil'];
         });
+
+        // Juara persekolah: 1 sekolah hanya diwakili pasukan terbaiknya
+        // (satu pasukan skor tertinggi), lalu sekolah diranking ulang.
+        if ($perSchool) {
+            $bySchool = [];
+            foreach ($participantScores as $ps) {
+                $reg = $ps['participant'];
+                $key = $reg->npsn ?: mb_strtolower(trim((string) $reg->nama_sekolah));
+                if (!isset($bySchool[$key])) {
+                    $bySchool[$key] = $ps;
+                }
+                // participantScores sudah terurut — yang pertama ditemukan = terbaik
+            }
+            $participantScores = array_values($bySchool);
+        }
 
         $participantScores = array_slice($participantScores, 0, $championCategory->quantity);
 

@@ -317,25 +317,34 @@ class Editor extends Component
     /**
      * Data preview sertifikat halaman pertama dengan juara asli.
      * Pakai ChampionCalculator (logika sama dengan download PDF).
+     * Mode per_school: kategori lomba opsional (kosong = semua tingkat).
      */
     public function getPreviewDataProperty()
     {
+        $isPerSchool = $this->previewMode === 'per_school';
+
         if (!$this->showPreview
             || !$this->previewChampionCategoryId
-            || !$this->previewCompetitionCategoryId) {
+            || (!$this->previewCompetitionCategoryId && !$isPerSchool)) {
             return null;
         }
 
         $championCategory = ChampionCategory::where('eventner_id', $this->eventner->id)
             ->with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias'])
             ->find($this->previewChampionCategoryId);
-        $competitionCategory = CompetitionCategory::with('parent')->find($this->previewCompetitionCategoryId);
+        $competitionCategory = $this->previewCompetitionCategoryId
+            ? CompetitionCategory::with('parent')->find($this->previewCompetitionCategoryId)
+            : null;
 
-        if (!$championCategory || !$competitionCategory) {
+        if (!$championCategory) {
             return null;
         }
 
-        [$eventner, $category, $winners] = app(ChampionCalculator::class)->winners($championCategory);
+        [$eventner, $category, $winners] = app(ChampionCalculator::class)->winners(
+            $championCategory,
+            $this->previewCompetitionCategoryId ? (int) $this->previewCompetitionCategoryId : null,
+            $isPerSchool
+        );
 
         if (empty($winners)) {
             return ['error' => 'Belum ada data juara untuk kategori ini.'];
@@ -343,7 +352,9 @@ class Editor extends Component
 
         // Ambil juara pertama yang cocok kategori lombanya (kalau ada),
         // kalau tidak ada juaranya di kategori lomba tsb pakai juara pertama.
-        $winner = collect($winners)->first(fn($w) => $w['registration']->competition_category_id == $competitionCategory->id)
+        $winner = ($competitionCategory
+            ? collect($winners)->first(fn($w) => $w['registration']->competition_category_id == $competitionCategory->id)
+            : null)
             ?? $winners[0];
 
         // Gelar: sama seperti CertificateController (tambah nomor posisi dalam
@@ -362,7 +373,9 @@ class Editor extends Component
         }
 
         $pages = [];
-        $sampleParticipant = $this->previewMode === 'school' ? null : ($winner['registration']->participants->first() ?? null);
+        $sampleParticipant = in_array($this->previewMode, ['school', 'per_school'])
+            ? null
+            : ($winner['registration']->participants->first() ?? null);
         $pages[] = [
             'registration' => $winner['registration'],
             'participant' => $sampleParticipant,

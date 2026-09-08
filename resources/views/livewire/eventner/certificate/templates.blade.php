@@ -187,13 +187,14 @@
                                 <option value="{{ $cat->id }}">{{ $cat->parent ? $cat->parent->name . ' — ' : '' }}{{ $cat->name }}</option>
                             @endforeach
                         </select>
-                        <small class="form-text text-muted">Hanya tingkat yang relevan dengan kategori juara terpilih.</small>
+                        <small class="form-text text-muted">Hanya tingkat yang relevan dengan kategori juara terpilih. Boleh kosong hanya pada mode Juara Persekolah (= semua tingkat digabung).</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Mode Sertifikat</label>
                         <select class="form-select" wire:model.live="pdfMode">
                             <option value="participant">Per Siswa (1 sertifikat 1 nama)</option>
-                            <option value="school">Per Sekolah (semua nama 1 sertifikat)</option>
+                            <option value="school">Per Pasukan (semua nama pasukan 1 sertifikat)</option>
+                            <option value="per_school">Juara Persekolah (1 sertifikat per sekolah)</option>
                         </select>
                     </div>
                 </div>
@@ -201,6 +202,7 @@
                     <button class="btn btn-secondary" wire:click="cancelPdfModal">
                         <i class="ti ti-x me-1"></i> Batal
                     </button>
+                    @php $pdfReady = $pdfChampionCategoryId && ($pdfCompetitionCategoryId || $pdfMode === 'per_school'); @endphp
                     <a href="{{ route('eventner.certificate.pdf', [
                         'template_id' => $pdfTemplateId,
                         'champion_category_id' => $pdfChampionCategoryId,
@@ -208,7 +210,7 @@
                         'mode' => $pdfMode,
                     ]) }}"
                        target="_blank"
-                       class="btn btn-danger {{ (!$pdfChampionCategoryId || !$pdfCompetitionCategoryId) ? 'disabled' : '' }}">
+                       class="btn btn-danger {{ !$pdfReady ? 'disabled' : '' }}">
                         <i class="ti ti-file-download me-1"></i> Download PDF
                     </a>
                 </div>

@@ -31,7 +31,13 @@ class CertificateController extends Controller
         $championCategoryId = $request->query('champion_category_id');
         $competitionCategoryId = $request->query('competition_category_id');
 
-        if (!$templateId || !$championCategoryId || !$competitionCategoryId) {
+        // Mode sertifikat: participant = 1 siswa 1 sertifikat, school = semua
+        // nama pasukan dalam 1 sertifikat, per_school = 1 sertifikat per
+        // sekolah (kategori lomba opsional — kosong = semua tingkat).
+        $mode = $request->query('mode') === 'school' ? 'school'
+            : ($request->query('mode') === 'per_school' ? 'per_school' : 'participant');
+
+        if (!$templateId || !$championCategoryId || (!$competitionCategoryId && $mode !== 'per_school')) {
             abort(422, 'Template, kategori juara, dan kategori lomba wajib dipilih.');
         }
 
@@ -45,7 +51,9 @@ class CertificateController extends Controller
             ->with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias'])
             ->findOrFail($championCategoryId);
 
-        $competitionCategory = CompetitionCategory::findOrFail($competitionCategoryId);
+        $competitionCategory = $competitionCategoryId
+            ? CompetitionCategory::findOrFail($competitionCategoryId)
+            : null;
 
         // Build criteria weight maps
         $criteriaMap = [];
@@ -72,8 +80,9 @@ class CertificateController extends Controller
         )->pluck('weight', 'id')->toArray();
 
         // Get participants for this competition category
+        // (mode per_school tanpa kategori lomba = semua tingkat)
         $participants = Registration::where('eventner_id', $eventner->id)
-            ->where('competition_category_id', $competitionCategoryId)
+            ->when($competitionCategoryId, fn($q) => $q->where('competition_category_id', $competitionCategoryId))
             ->with('participants')
             ->orderBy('nama_sekolah')
             ->get();
@@ -136,6 +145,20 @@ class CertificateController extends Controller
             return $a['urutan_tampil'] <=> $b['urutan_tampil'];
         });
 
+        // Juara persekolah: 1 sekolah diwakili pasukan terbaiknya saja.
+        if ($mode === 'per_school') {
+            $bySchool = [];
+            foreach ($participantScores as $ps) {
+                $reg = $ps['participant'];
+                $key = $reg->npsn ?: mb_strtolower(trim((string) $reg->nama_sekolah));
+                if (!isset($bySchool[$key])) {
+                    $bySchool[$key] = $ps;
+                }
+                // participantScores sudah terurut — yang pertama ditemukan = terbaik
+            }
+            $participantScores = array_values($bySchool);
+        }
+
         // Take top N and assign ranks/titles
         $participantScores = array_slice($participantScores, 0, $championCategory->quantity);
 
@@ -170,12 +193,21 @@ class CertificateController extends Controller
             abort(404, 'Belum ada data juara untuk kategori ini.');
         }
 
-        // Mode sertifikat: participant = 1 siswa 1 sertifikat, school = semua nama dalam 1 sertifikat
-        $mode = $request->query('mode') === 'school' ? 'school' : 'participant';
-
         $pages = [];
         foreach ($winners as $winner) {
             $reg = $winner['participant'];
+
+            // Juara persekolah: 1 sertifikat per sekolah (tanpa nama individu).
+            if ($mode === 'per_school') {
+                $pages[] = [
+                    'registration' => $reg,
+                    'participant' => null,
+                    'rank' => $winner['rank'],
+                    'title' => $winner['title'],
+                    'total' => $winner['total'],
+                ];
+                continue;
+            }
 
             if ($mode === 'school') {
                 $pages[] = [
@@ -258,7 +290,10 @@ class CertificateController extends Controller
             ->setOption('margin-right', '0mm');
 
         $filename = 'Sertifikat_' . str_replace(['/', '\\'], '-', $championCategory->name)
-            . '_' . str_replace(['/', '\\'], '-', $competitionCategory->name) . '.pdf';
+            . '_' . ($competitionCategory
+                ? str_replace(['/', '\\'], '-', $competitionCategory->name)
+                : ($mode === 'per_school' ? 'Persekolah' : 'Semua'))
+            . '.pdf';
 
         return $pdf->download($filename);
     }

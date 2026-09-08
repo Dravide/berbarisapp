@@ -62,12 +62,14 @@
                     <label class="form-label small fw-bold mb-1">Mode Sertifikat</label>
                     <select class="form-select form-select-sm" wire:model.live="previewMode">
                         <option value="participant">Per Siswa</option>
-                        <option value="school">Per Sekolah</option>
+                        <option value="school">Per Pasukan</option>
+                        <option value="per_school">Juara Persekolah</option>
                     </select>
                 </div>
                 <div class="col-md-3 col-6 d-flex gap-2">
+                    @php $previewReady = $previewChampionCategoryId && ($previewCompetitionCategoryId || $previewMode === 'per_school'); @endphp
                     <button class="btn btn-sm btn-outline-info flex-fill" wire:click="togglePreview"
-                            @if(!$previewChampionCategoryId || !$previewCompetitionCategoryId) disabled @endif>
+                            @if(!$previewReady) disabled @endif>
                         <i class="ti ti-eye me-1"></i> {{ $showPreview ? 'Sembunyikan' : 'Preview' }}
                     </button>
                     <a href="{{ route('eventner.certificate.pdf', [
@@ -77,7 +79,7 @@
                         'mode' => $previewMode,
                     ]) }}"
                        target="_blank"
-                       class="btn btn-sm btn-primary flex-fill {{ (!$previewChampionCategoryId || !$previewCompetitionCategoryId) ? 'disabled' : '' }}">
+                       class="btn btn-sm btn-primary flex-fill {{ !$previewReady ? 'disabled' : '' }}">
                         <i class="ti ti-download me-1"></i> PDF
                     </a>
                 </div>
