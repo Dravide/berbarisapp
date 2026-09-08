@@ -35,11 +35,11 @@ class Templates extends Component
     public $showTemplateForm = false;
     public $presetKey = '';
 
-    // Download
-    public $downloadTemplateId = null;
-    public $downloadChampionCategoryId = null;
-    public $downloadCompetitionCategoryId = null;
-    public $downloadMode = 'participant';
+    // PDF modal per template (dibuka dari tombol aksi)
+    public $pdfTemplateId = null;
+    public $pdfChampionCategoryId = null;
+    public $pdfCompetitionCategoryId = null;
+    public $pdfMode = 'participant';
 
     // Paper presets
     public $paperPresets = [
@@ -175,7 +175,30 @@ class Templates extends Component
         session()->flash('success', 'Template berhasil dihapus.');
     }
 
-    // ── Download helpers ───────────────────────────────────────────────
+    // ── PDF helpers ────────────────────────────────────────────────────
+
+    public function openPdfModal($templateId)
+    {
+        $this->pdfTemplateId = $templateId;
+        $this->pdfChampionCategoryId = null;
+        $this->pdfCompetitionCategoryId = null;
+        $this->pdfMode = 'participant';
+    }
+
+    public function cancelPdfModal()
+    {
+        $this->pdfTemplateId = null;
+    }
+
+    public function updatedPdfChampionCategoryId($value)
+    {
+        // Ganti kategori juara → reset kategori lomba; auto-terpilih bila 1.
+        $this->pdfCompetitionCategoryId = null;
+        $filtered = $this->filteredCompetitionCategories;
+        if ($filtered->count() === 1) {
+            $this->pdfCompetitionCategoryId = $filtered->first()->id;
+        }
+    }
 
     public function getChampionCategoriesProperty()
     {
@@ -186,7 +209,7 @@ class Templates extends Component
             ->get();
     }
 
-    public function getCompetitionCategoriesForDownloadProperty()
+    public function getCompetitionCategoriesProperty()
     {
         if (!$this->eventner) return collect();
 
@@ -197,11 +220,38 @@ class Templates extends Component
             ->get();
     }
 
+    /**
+     * Kategori lomba yang relevan dengan kategori juara terpilih di modal
+     * PDF — lewat rubrik (sama seperti editor sertifikat).
+     */
+    public function getFilteredCompetitionCategoriesProperty()
+    {
+        $all = $this->competitionCategories;
+        if (!$this->pdfChampionCategoryId) return $all;
+
+        $championCategory = $this->championCategories->firstWhere('id', $this->pdfChampionCategoryId);
+        if (!$championCategory) return $all;
+
+        $championCategory->loadMissing('assessmentSubCategories.category');
+
+        $subs = $championCategory->assessmentSubCategories;
+        if ($subs->isEmpty()) return $all;
+
+        $catIds = $subs->map(fn($sub) => $sub->category?->competition_category_id)
+            ->filter(fn($id) => !is_null($id))
+            ->unique()
+            ->values();
+
+        if ($catIds->isEmpty()) return $all;
+
+        return $all->whereIn('id', $catIds->all())->values();
+    }
+
     public function render()
     {
         return view('livewire.eventner.certificate.templates', [
             'championCategories' => $this->championCategories,
-            'competitionCategories' => $this->competitionCategoriesForDownload,
+            'competitionCategories' => $this->filteredCompetitionCategories,
         ])->title('Sertifikat - ' . $this->eventner->nama_event);
     }
 }

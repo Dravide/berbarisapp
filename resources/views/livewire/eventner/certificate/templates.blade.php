@@ -121,6 +121,12 @@
                                        class="btn btn-sm btn-outline-primary">
                                         <i class="ti ti-edit me-1"></i> Atur Field
                                     </a>
+                                    <button class="btn btn-sm btn-outline-danger"
+                                        wire:click="openPdfModal({{ $tpl['id'] }})"
+                                        title="Download PDF sertifikat dengan template ini"
+                                        @if($tpl['fields_count'] == 0) disabled @endif>
+                                        <i class="ti ti-file-type-pdf"></i>
+                                    </button>
                                     <button class="btn btn-sm btn-light" wire:click="editTemplate({{ $tpl['id'] }})"
                                         title="Ubah nama/ukuran">
                                         <i class="ti ti-pencil"></i>
@@ -148,65 +154,66 @@
         </div>
     </div>
 
-    {{-- Download Section --}}
-    <div class="card">
-        <div class="card-header bg-white">
-            <h5 class="card-title mb-0 fw-semibold">
-                <i class="ti ti-download me-2"></i> Download Sertifikat
-            </h5>
-        </div>
-        <div class="card-body">
-            <div class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold">Template</label>
-                    <select class="form-select form-select-sm" wire:model.live="downloadTemplateId">
-                        <option value="">-- Pilih Template --</option>
-                        @foreach($templates as $tpl)
-                            <option value="{{ $tpl['id'] }}">{{ $tpl['name'] }}</option>
-                        @endforeach
-                    </select>
+    {{-- Modal Download PDF per Template --}}
+    @if($pdfTemplateId)
+    <div class="modal fade show d-block" tabindex="-1" style="display:block; background-color: rgba(0,0,0,.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title text-white fw-semibold">
+                        <i class="ti ti-file-type-pdf me-1"></i> Download Sertifikat PDF
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" wire:click="cancelPdfModal"></button>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold">Kategori Juara</label>
-                    <select class="form-select form-select-sm" wire:model.live="downloadChampionCategoryId">
-                        <option value="">-- Pilih Kategori Juara --</option>
-                        @foreach($championCategories as $cc)
-                            <option value="{{ $cc->id }}">{{ $cc->name }}</option>
-                        @endforeach
-                    </select>
+                <div class="modal-body">
+                    @php $pdfTpl = collect($templates)->firstWhere('id', $pdfTemplateId); @endphp
+                    <div class="alert alert-danger border-0 bg-danger-subtle text-danger mb-3">
+                        <i class="ti ti-certificate me-1"></i> Template: <strong>{{ $pdfTpl['name'] ?? '' }}</strong>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Kategori Juara</label>
+                        <select class="form-select" wire:model.live="pdfChampionCategoryId">
+                            <option value="">— Pilih Kategori Juara —</option>
+                            @foreach($championCategories as $cc)
+                                <option value="{{ $cc->id }}">{{ $cc->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Kategori Lomba</label>
+                        <select class="form-select" wire:model.live="pdfCompetitionCategoryId">
+                            <option value="">— Pilih Kategori Lomba —</option>
+                            @foreach($competitionCategories as $cat)
+                                <option value="{{ $cat->id }}">{{ $cat->parent ? $cat->parent->name . ' — ' : '' }}{{ $cat->name }}</option>
+                            @endforeach
+                        </select>
+                        <small class="form-text text-muted">Hanya tingkat yang relevan dengan kategori juara terpilih.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Mode Sertifikat</label>
+                        <select class="form-select" wire:model.live="pdfMode">
+                            <option value="participant">Per Siswa (1 sertifikat 1 nama)</option>
+                            <option value="school">Per Sekolah (semua nama 1 sertifikat)</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold">Kategori Lomba</label>
-                    <select class="form-select form-select-sm" wire:model.live="downloadCompetitionCategoryId">
-                        <option value="">-- Pilih Kategori Lomba --</option>
-                        @foreach($competitionCategories as $cat)
-                            <option value="{{ $cat->id }}">{{ $cat->parent ? $cat->parent->name . ' — ' : '' }}{{ $cat->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold">Mode Sertifikat</label>
-                    <select class="form-select form-select-sm" wire:model.live="downloadMode">
-                        <option value="participant">Per Siswa (1 sertifikat 1 nama)</option>
-                        <option value="school">Per Sekolah (semua nama 1 sertifikat)</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" wire:click="cancelPdfModal">
+                        <i class="ti ti-x me-1"></i> Batal
+                    </button>
                     <a href="{{ route('eventner.certificate.pdf', [
-                        'template_id' => $downloadTemplateId,
-                        'champion_category_id' => $downloadChampionCategoryId,
-                        'competition_category_id' => $downloadCompetitionCategoryId,
-                        'mode' => $downloadMode,
+                        'template_id' => $pdfTemplateId,
+                        'champion_category_id' => $pdfChampionCategoryId,
+                        'competition_category_id' => $pdfCompetitionCategoryId,
+                        'mode' => $pdfMode,
                     ]) }}"
                        target="_blank"
-                       class="btn btn-primary {{ !$downloadTemplateId || !$downloadChampionCategoryId || !$downloadCompetitionCategoryId ? 'disabled' : '' }}">
-                        <i class="ti ti-download me-1"></i> Download PDF
+                       class="btn btn-danger {{ (!$pdfChampionCategoryId || !$pdfCompetitionCategoryId) ? 'disabled' : '' }}">
+                        <i class="ti ti-file-type-pdf me-1"></i> Download PDF
                     </a>
                 </div>
             </div>
-            @if(!$downloadTemplateId || !$downloadChampionCategoryId || !$downloadCompetitionCategoryId)
-                <small class="text-muted d-block mt-2">Pilih template, kategori juara, dan kategori lomba untuk mendownload.</small>
-            @endif
         </div>
     </div>
+    @endif
 </div>
