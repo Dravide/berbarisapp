@@ -39,6 +39,7 @@ class Templates extends Component
     public $downloadTemplateId = null;
     public $downloadChampionCategoryId = null;
     public $downloadCompetitionCategoryId = null;
+    public $downloadMode = 'participant';
 
     // Paper presets
     public $paperPresets = [

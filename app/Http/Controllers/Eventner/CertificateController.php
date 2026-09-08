@@ -8,6 +8,7 @@ use App\Models\AssessmentScore;
 use App\Models\CertificateTemplate;
 use App\Models\ChampionCategory;
 use App\Models\CompetitionCategory;
+use App\Models\Participant;
 use App\Models\Registration;
 use App\Models\ScoreDeduction;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -157,13 +158,73 @@ class CertificateController extends Controller
             abort(404, 'Belum ada data juara untuk kategori ini.');
         }
 
+        // Mode sertifikat: participant = 1 siswa 1 sertifikat, school = semua nama dalam 1 sertifikat
+        $mode = $request->query('mode') === 'school' ? 'school' : 'participant';
+
+        $pages = [];
+        foreach ($winners as $winner) {
+            $reg = $winner['participant'];
+
+            if ($mode === 'school') {
+                $pages[] = [
+                    'registration' => $reg,
+                    'participant' => null,
+                    'rank' => $winner['rank'],
+                    'title' => $winner['title'],
+                    'total' => $winner['total'],
+                ];
+                continue;
+            }
+
+            // Per peserta: sertifikat untuk tiap anggota pasukan
+            foreach ($reg->participants as $p) {
+                $pages[] = [
+                    'registration' => $reg,
+                    'participant' => $p,
+                    'rank' => $winner['rank'],
+                    'title' => $winner['title'],
+                    'total' => $winner['total'],
+                ];
+            }
+
+            // Danton juga anggota pasukan
+            if ($reg->danton_nama) {
+                $pages[] = [
+                    'registration' => $reg,
+                    'participant' => new Participant(['nama' => $reg->danton_nama]),
+                    'rank' => $winner['rank'],
+                    'title' => $winner['title'],
+                    'total' => $winner['total'],
+                ];
+            }
+
+            // Fallback: sekolah tanpa data anggota → 1 sertifikat per sekolah
+            if ($reg->participants->isEmpty() && !$reg->danton_nama) {
+                $pages[] = [
+                    'registration' => $reg,
+                    'participant' => null,
+                    'rank' => $winner['rank'],
+                    'title' => $winner['title'],
+                    'total' => $winner['total'],
+                ];
+            }
+        }
+
+        if (empty($pages)) {
+            abort(404, 'Belum ada data peserta pada juara untuk kategori ini.');
+        }
+
         $data = [
             'eventner' => $eventner,
             'template' => $template,
             'championCategory' => $championCategory,
             'competitionCategory' => $competitionCategory,
-            'winners' => $winners,
+            'pages' => $pages,
         ];
+
+        // Background template di-decode GD per halaman pemenang — butuh memori besar.
+        ini_set('memory_limit', '1024M');
+        gc_collect_cycles();
 
         $pdf = Pdf::loadView('eventner.certificate.pdf', $data)
             ->setPaper('a4', 'portrait')

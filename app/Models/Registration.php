@@ -169,6 +169,7 @@ class Registration extends Model
         $winner = $context['winner'] ?? null;
         $championCategory = $context['championCategory'] ?? null;
         $competitionCategory = $context['competitionCategory'] ?? null;
+        $participant = $context['participant'] ?? null;
 
         return match ($fieldKey) {
             'nama_sekolah'  => $this->nama_sekolah,
@@ -181,7 +182,7 @@ class Registration extends Model
                 : '',
             'venue'         => $eventner?->venue ?? '',
             'nama_pelatih'  => $this->nama_pelatih ?? '',
-            'nama_peserta'  => $this->participants->pluck('nama')->join(', '),
+            'nama_peserta'  => $participant?->nama ?? $this->participants->pluck('nama')->join(', '),
             'diselenggarakan_oleh' => $eventner?->diselenggarakan_oleh ?? '',
             default         => '',
         };

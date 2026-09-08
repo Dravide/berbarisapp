@@ -73,13 +73,14 @@
     </style>
 </head>
 <body>
-@foreach($winners as $winner)
+@foreach($pages as $page)
     <div class="cert-page" style="@if(!$loop->last) page-break-after: always; @endif">
         <img src="{{ public_path('storage/' . $template->file_path) }}" class="cert-bg" alt="">
         @foreach($template->textFields as $field)
             <div class="cert-field-{{ $field->id }}">
-                {{ $winner['participant']->resolveCertificateField($field->field_key, [
-                    'winner' => $winner,
+                {{ $page['registration']->resolveCertificateField($field->field_key, [
+                    'winner' => $page,
+                    'participant' => $page['participant'],
                     'eventner' => $eventner,
                     'championCategory' => $championCategory,
                     'competitionCategory' => $competitionCategory,

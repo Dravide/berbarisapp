@@ -185,10 +185,18 @@
                     </select>
                 </div>
                 <div class="col-md-3">
+                    <label class="form-label small fw-bold">Mode Sertifikat</label>
+                    <select class="form-select form-select-sm" wire:model.live="downloadMode">
+                        <option value="participant">Per Siswa (1 sertifikat 1 nama)</option>
+                        <option value="school">Per Sekolah (semua nama 1 sertifikat)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
                     <a href="{{ route('eventner.certificate.pdf', [
                         'template_id' => $downloadTemplateId,
                         'champion_category_id' => $downloadChampionCategoryId,
                         'competition_category_id' => $downloadCompetitionCategoryId,
+                        'mode' => $downloadMode,
                     ]) }}"
                        target="_blank"
                        class="btn btn-primary {{ !$downloadTemplateId || !$downloadChampionCategoryId || !$downloadCompetitionCategoryId ? 'disabled' : '' }}">
