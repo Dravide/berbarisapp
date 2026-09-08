@@ -171,11 +171,18 @@ class Registration extends Model
         $competitionCategory = $context['competitionCategory'] ?? null;
         $participant = $context['participant'] ?? null;
 
+        // Kategori lomba format "child - parent" (contoh: "u13 - SD / MI")
+        $cat = $competitionCategory ?? $this->competitionCategory;
+        $catFull = $cat
+            ? (($cat->parent_id && $cat->parent) ? $cat->name . ' - ' . $cat->parent->name : $cat->name)
+            : '';
+
         return match ($fieldKey) {
             'nama_sekolah'  => $this->nama_sekolah,
             'gelar_juara'   => $winner['title'] ?? ($winner['rank'] ?? ''),
+            'gelar_juara_lengkap' => trim(($winner['title'] ?? ($winner['rank'] ?? '')) . ' ' . ($championCategory?->name ?? '') . ($catFull ? ' - ' . $catFull : '')),
             'kategori_juara' => $championCategory?->name ?? '',
-            'kategori_lomba' => $competitionCategory?->name ?? $this->competitionCategory?->name ?? '',
+            'kategori_lomba' => $catFull,
             'nama_event'    => $eventner?->nama_event ?? '',
             'tanggal'       => $eventner?->tanggal
                 ? \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d F Y')
