@@ -178,10 +178,17 @@ class Registration extends Model
             ? (($cat->parent_id && $cat->parent) ? $cat->parent->name . ' - ' . $cat->name : $cat->name)
             : '';
 
+        // Gelar juara: pakai title dari rank title; fallback "Juara {rank}"
+        // bila rank title tidak meng-cover peringkat tsb.
+        $gelar = $winner['title'] ?? '';
+        if ($gelar === '' || $gelar === null) {
+            $gelar = isset($winner['rank']) ? 'Juara ' . $winner['rank'] : '';
+        }
+
         return match ($fieldKey) {
             'nama_sekolah'  => $this->nama_sekolah,
-            'gelar_juara'   => $winner['title'] ?? ($winner['rank'] ?? ''),
-            'gelar_juara_lengkap' => trim(($winner['title'] ?? ($winner['rank'] ?? '')) . ($catFull ? ' ' . $catFull : '')),
+            'gelar_juara'   => $gelar,
+            'gelar_juara_lengkap' => trim($gelar . ($catFull ? ' ' . $catFull : '')),
             'kategori_juara' => $championCategory?->name ?? '',
             'kategori_lomba' => $catFull,
             'nama_event'    => $eventner?->nama_event ?? '',

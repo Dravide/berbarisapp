@@ -154,6 +154,10 @@ class CertificateController extends Controller
                     break;
                 }
             }
+            // Fallback bila rank title tidak meng-cover peringkat ini
+            if (!$title) {
+                $title = 'Juara ' . $rank;
+            }
             $winners[] = [
                 'participant' => $ps['participant'],
                 'rank' => $rank,

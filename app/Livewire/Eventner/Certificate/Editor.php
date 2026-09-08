@@ -269,6 +269,46 @@ class Editor extends Component
             ->get();
     }
 
+    /**
+     * Kategori lomba yang relevan dengan kategori juara terpilih —
+     * lewat rubrik: rubrik global (tanpa tingkat) atau rubrik milik
+     * tingkat tsb. Kalau kategori juara tak punya rubrik → semua.
+     */
+    public function getFilteredCompetitionCategoriesProperty()
+    {
+        $all = $this->competitionCategories;
+        if (!$this->previewChampionCategoryId) return $all;
+
+        $championCategory = $this->championCategories->firstWhere('id', $this->previewChampionCategoryId);
+        if (!$championCategory) return $all;
+
+        $championCategory->loadMissing('assessmentSubCategories.category');
+
+        $subs = $championCategory->assessmentSubCategories;
+        if ($subs->isEmpty()) return $all;
+
+        // Kumpulkan competition_category_id dari rubrik; null = global
+        $catIds = $subs->map(fn($sub) => $sub->category?->competition_category_id)
+            ->filter(fn($id) => !is_null($id))
+            ->unique()
+            ->values();
+
+        if ($catIds->isEmpty()) return $all;
+
+        return $all->whereIn('id', $catIds->all())->values();
+    }
+
+    public function updatedPreviewChampionCategoryId($value)
+    {
+        // Ganti kategori juara → reset kategori lomba; kalau cuma
+        // 1 tingkat relevan, langsung terpilih.
+        $this->previewCompetitionCategoryId = null;
+        $filtered = $this->filteredCompetitionCategories;
+        if ($filtered->count() === 1) {
+            $this->previewCompetitionCategoryId = $filtered->first()->id;
+        }
+    }
+
     public function togglePreview()
     {
         $this->showPreview = !$this->showPreview;
@@ -306,8 +346,9 @@ class Editor extends Component
         $winner = collect($winners)->first(fn($w) => $w['registration']->competition_category_id == $competitionCategory->id)
             ?? $winners[0];
 
-        // Gelar: sama seperti CertificateController (tambah nomor posisi dalam grup)
-        $title = $winner['title'];
+        // Gelar: sama seperti CertificateController (tambah nomor posisi dalam
+        // grup; fallback "Juara {rank}" bila rank title tidak meng-cover)
+        $title = null;
         foreach ($category->rankTitles as $rt) {
             if ($rt->coversRank($winner['rank'])) {
                 $title = $rt->rank_start !== $rt->rank_end
@@ -315,6 +356,9 @@ class Editor extends Component
                     : $rt->title;
                 break;
             }
+        }
+        if (!$title) {
+            $title = 'Juara ' . $winner['rank'];
         }
 
         $pages = [];
@@ -353,7 +397,7 @@ class Editor extends Component
             'availableFieldKeys' => $this->availableFieldKeys,
             'usedFieldKeys' => $this->usedFieldKeys,
             'championCategories' => $this->championCategories,
-            'competitionCategories' => $this->competitionCategories,
+            'competitionCategories' => $this->filteredCompetitionCategories,
             'previewData' => $this->previewData,
             'sampleValues' => $this->sampleValues,
         ])->title('Edit Layout: ' . ($this->template['name'] ?? '') . ' - ' . $this->eventner->nama_event);
