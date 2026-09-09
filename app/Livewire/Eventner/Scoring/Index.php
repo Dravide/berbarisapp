@@ -276,6 +276,15 @@ class Index extends Component
         $registration = Registration::find($this->selectedRegistrationId);
         if (!$registration) return;
 
+        $this->sendFinalNotificationIfComplete($registration);
+    }
+
+    /**
+     * Kirim notifikasi FCM nilai_final bila semua juri yang ditugaskan
+     * pada tingkat lomba registrasi ini sudah punya skor terfinalisasi.
+     */
+    private function sendFinalNotificationIfComplete(Registration $registration): void
+    {
         $category = $registration->competitionCategory;
         $judgeIds = $category
             ? Judge::where('eventner_id', $this->eventner->id)
@@ -307,6 +316,50 @@ class Index extends Component
                 'error' => $e->getMessage(),
             ]);
         }
+    }
+
+    /**
+     * Finalisasi massal: kunci semua nilai yang sudah tersimpan untuk
+     * seluruh peserta pada kategori lomba terpilih. Registrasi tanpa
+     * nilai apa pun dilewati (tidak ada yang bisa dikunci).
+     */
+    public function finalizeAllForCategory()
+    {
+        if ($this->simulateMode) return;
+
+        if (!$this->selectedCategoryId) {
+            session()->flash('scoring_error', 'Pilih kategori lomba terlebih dahulu.');
+            return;
+        }
+
+        $registrationIds = Registration::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $this->selectedCategoryId)
+            ->pluck('id');
+
+        if ($registrationIds->isEmpty()) {
+            session()->flash('scoring_error', 'Tidak ada peserta pada kategori ini.');
+            return;
+        }
+
+        $updated = 0;
+        foreach ($registrationIds as $regId) {
+            $affected = AssessmentScore::where('registration_id', $regId)
+                ->where('eventner_id', $this->eventner->id)
+                ->where('is_finalized', false)
+                ->update(['is_finalized' => true]);
+            $updated += $affected;
+
+            if ($affected > 0) {
+                $this->sendFinalNotificationIfComplete(Registration::find($regId));
+            }
+        }
+
+        session()->flash(
+            'success',
+            $updated > 0
+                ? "Finalisasi massal berhasil: {$updated} baris nilai dikunci untuk seluruh peserta kategori ini."
+                : 'Semua nilai pada kategori ini sudah terfinalisasi sebelumnya.'
+        );
     }
 
     public function resetScores()
