@@ -210,45 +210,6 @@
                     </div>
 
                     <div class="col-lg-4">
-                        {{-- Biaya Pendaftaran --}}
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title fw-semibold mb-4">Biaya Pendaftaran Eventner</h5>
-                                <div class="mb-3">
-                                    <label for="eventner_registration_fee" class="form-label">Biaya Paket Berbayar (Rp)</label>
-                                    <input type="number" class="form-control @error('eventner_registration_fee') is-invalid @enderror"
-                                        id="eventner_registration_fee" wire:model="eventner_registration_fee" min="0" step="1000">
-                                    @error('eventner_registration_fee') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    <div class="form-text">Biaya pendaftaran untuk paket berbayar. Biaya 0 = gratis.</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Harga & Paket SaaS --}}
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title fw-semibold mb-4">Harga & Paket SaaS</h5>
-                                <div class="mb-3">
-                                    <label for="plan_price" class="form-label">Harga Paket "Event Penuh" (Rp)</label>
-                                    <input type="number" class="form-control @error('plan_price') is-invalid @enderror"
-                                        id="plan_price" wire:model="plan_price" min="0" step="1000">
-                                    @error('plan_price') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    <div class="form-text">Bayar sekali per event via QRIS. Harga tampil di /pricing dan landing.</div>
-                                </div>
-                                <div class="mb-2">
-                                    <label class="form-label fw-semibold">Fitur Paket Berbayar</label>
-                                    <p class="text-muted fs-2 mb-2">Centang fitur yang dipamerkan sebagai bagian paket berbayar.</p>
-                                    @foreach($premium_features as $key => $included)
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" wire:model="premium_features.{{ $key }}" id="pf_{{ $key }}">
-                                            <label class="form-check-label fs-3" for="pf_{{ $key }}">{{ config("eventner_features.{$key}.label") }}</label>
-                                        </div>
-                                    @endforeach
-                                    <div class="form-text">Fitur terkunci otomatis setelah trial 3 hari berakhir. Tambah fitur baru di config/eventner_features.php.</div>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="card">
                             <div class="card-body">
                                 <h5 class="card-title fw-semibold mb-4">Aksi</h5>

@@ -38,10 +38,6 @@ class Index extends Component
     // Biaya pendaftaran eventner
     public $eventner_registration_fee = 50000;
 
-    // Harga & paket SaaS
-    public $plan_price = 150000;
-    public $premium_features = []; // [key => bool]
-
     public function mount()
     {
         $this->site_title = Setting::get('site_title', 'BARIS APP');
@@ -60,17 +56,6 @@ class Index extends Component
 
         // Biaya
         $this->eventner_registration_fee = (int) Setting::get('eventner_registration_fee', 50000);
-
-        // Harga & paket SaaS
-        $this->plan_price = (int) Setting::get('eventner_plan_price', 150000);
-        $saved = json_decode(Setting::get('saas_pricing', '{}'), true) ?? [];
-        foreach (config('eventner_features', []) as $key => $config) {
-            if (!($config['locked_free'] ?? true)) {
-                continue; // fitur selalu terbuka tak perlu ditampilkan
-            }
-            $this->premium_features[$key] = !isset($saved['premium_features'])
-                || in_array($key, $saved['premium_features'], true);
-        }
     }
 
     public function save()
@@ -92,14 +77,6 @@ class Index extends Component
         Setting::set('site_font_sans', $this->site_font_sans);
         Setting::set('site_font_display', $this->site_font_display);
         Setting::set('eventner_registration_fee', $this->eventner_registration_fee);
-
-        // Harga & paket SaaS
-        $this->validate(['plan_price' => 'required|integer|min:0']);
-        Setting::set('eventner_plan_price', (int) $this->plan_price);
-        Setting::set('saas_pricing', json_encode([
-            'plan_price' => (int) $this->plan_price,
-            'premium_features' => array_keys(array_filter($this->premium_features)),
-        ]));
 
         if ($this->new_logo_dark) {
             if ($this->logo_dark_path) Storage::disk('public')->delete($this->logo_dark_path);

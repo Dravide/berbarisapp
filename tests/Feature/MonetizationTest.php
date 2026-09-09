@@ -224,4 +224,28 @@ class MonetizationTest extends TestCase
             ->assertSee('Event Penuh')
             ->assertSee('Daftar Gratis');
     }
+
+    public function test_admin_pricing_settings_page_saves()
+    {
+        $admin = User::factory()->admin()->create();
+
+        Livewire::actingAs($admin)->test(\App\Livewire\Admin\PricingSettings::class)
+            ->set('plan_price', 250000)
+            ->set('registration_fee', 75000)
+            ->set('premium_features.tickets', false)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertEquals(250000, Setting::get('eventner_plan_price'));
+        $this->assertEquals(75000, Setting::get('eventner_registration_fee'));
+        $features = json_decode(Setting::get('saas_pricing'), true)['premium_features'];
+        $this->assertNotContains('tickets', $features);
+        $this->assertContains('certificate', $features);
+    }
+
+    public function test_admin_pricing_settings_route_requires_admin()
+    {
+        $user = User::factory()->eventner()->create();
+        $this->actingAs($user)->get(route('admin.pricing-settings'))->assertForbidden();
+    }
 }

@@ -116,6 +116,15 @@
             </a>
           </li>
           <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('admin.pricing-settings') ? 'active' : '' }}"
+              href="{{ route('admin.pricing-settings') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-cash"></i>
+              </span>
+              <span class="hide-menu">Harga & Paket</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('admin.revenue') ? 'active' : '' }}"
               href="{{ route('admin.revenue') }}" aria-expanded="false">
               <span>

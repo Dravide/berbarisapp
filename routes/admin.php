@@ -13,3 +13,4 @@ Route::get('schools/{npsn}', App\Livewire\Admin\School\Show::class)->name('admin
 Route::get('schools/{npsn}/edit', App\Livewire\Admin\School\Edit::class)->name('admin.schools.edit');
 Route::get('settings', App\Livewire\Admin\Setting\Index::class)->name('admin.settings.index');
 Route::get('settings/landing-page', App\Livewire\Admin\Setting\LandingPage::class)->name('admin.settings.landing-page');
+Route::get('pricing-settings', App\Livewire\Admin\PricingSettings::class)->name('admin.pricing-settings');
