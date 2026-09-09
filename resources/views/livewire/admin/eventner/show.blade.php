@@ -89,6 +89,42 @@
                 </div>
             </div>
 
+            <!-- Status Modul per Fitur -->
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="card-title fw-semibold mb-0">Status Modul Event</h5>
+                    <span class="text-muted fs-2"><i class="ti ti-lock me-1"></i>= terkunci sesuai paket</span>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        @foreach($this->featureStatuses as $key => $mod)
+                            <div class="col-md-4 col-xl-3">
+                                <div class="border rounded-3 p-3 h-100 {{ $mod['locked'] ? 'bg-light' : '' }}">
+                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <i class="ti {{ $mod['icon'] }} {{ $mod['locked'] ? 'text-muted' : 'text-primary' }} fs-5"></i>
+                                            <span class="fw-semibold {{ $mod['locked'] ? 'text-muted' : '' }}">{{ $mod['label'] }}</span>
+                                        </div>
+                                        @if($mod['locked'])
+                                            <i class="ti ti-lock text-muted" title="Terkunci — tidak termasuk paket"></i>
+                                        @else
+                                            <i class="ti ti-circle-check text-success" title="Terbuka"></i>
+                                        @endif
+                                    </div>
+                                    <div class="mb-1">
+                                        <span class="fw-bold fs-5">{{ $mod['count'] }}</span>
+                                        <span class="text-muted fs-2">{{ $mod['count_label'] }}</span>
+                                    </div>
+                                    @if($mod['meta'])
+                                        <div class="fs-2 text-muted">{{ $mod['meta'] }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
             <div class="row">
                 <!-- Left Column -->
                 <div class="col-lg-8">

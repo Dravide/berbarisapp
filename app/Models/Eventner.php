@@ -206,6 +206,31 @@ class Eventner extends Model
         return $this->hasMany(EventRundown::class);
     }
 
+    public function faqs()
+    {
+        return $this->hasMany(EventFaq::class);
+    }
+
+    public function galleries()
+    {
+        return $this->hasMany(EventGallery::class);
+    }
+
+    public function voteBoosters()
+    {
+        return $this->hasMany(VoteBooster::class);
+    }
+
+    public function championCategories()
+    {
+        return $this->hasMany(ChampionCategory::class);
+    }
+
+    public function overlaySetting()
+    {
+        return $this->hasOne(OverlaySetting::class);
+    }
+
     public function activeBankAccounts()
     {
         return $this->hasMany(EventnerBankAccount::class)->where('is_active', true);
