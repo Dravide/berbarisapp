@@ -269,6 +269,77 @@
 
                 <!-- Right Column -->
                 <div class="col-lg-4">
+                    <!-- Paket SaaS -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="card-title fw-semibold mb-0">Paket SaaS</h5>
+                            @php
+                                $hasPaid = $eventner->plan === 'paid' || $eventner->registration_paid_at;
+                                $trialLeft = $eventner->trialDaysLeft();
+                            @endphp
+                            @if($eventner->plan === 'paid' && $hasPaid)
+                                <span class="badge bg-success fs-2">Aktif</span>
+                            @elseif($eventner->plan === 'paid')
+                                <span class="badge bg-warning text-dark fs-2">Belum Bayar</span>
+                            @elseif($eventner->isOnTrial())
+                                <span class="badge bg-warning text-dark fs-2">Trial {{ $trialLeft }} Hari</span>
+                            @else
+                                <span class="badge bg-danger fs-2">Trial Berakhir</span>
+                            @endif
+                        </div>
+                        <div class="card-body">
+                            @if($eventner->saasPlan)
+                                <h6 class="fw-bold mb-1">{{ $eventner->saasPlan->name }}</h6>
+                                <p class="text-muted fs-2 mb-3">
+                                    @if($eventner->saasPlan->is_free)
+                                        Paket gratis
+                                    @else
+                                        Rp {{ number_format($eventner->saasPlan->price, 0, ',', '.') }}
+                                        @if($eventner->saasPlan->registration_fee > 0)
+                                            + daftar Rp {{ number_format($eventner->saasPlan->registration_fee, 0, ',', '.') }}
+                                        @endif
+                                        — sekali bayar per event
+                                    @endif
+                                </p>
+                                @if(!$eventner->saasPlan->is_free)
+                                    <label class="text-muted fs-2 d-block mb-2">Fitur Paket:</label>
+                                    <div class="d-flex flex-wrap gap-1 mb-3">
+                                        @foreach($eventner->saasPlan->features as $feature)
+                                            <span class="badge bg-primary-subtle text-primary fs-2">{{ config("eventner_features.{$feature->feature_key}.label", $feature->feature_key) }}</span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            @else
+                                <h6 class="fw-bold mb-1">Legacy</h6>
+                                <p class="text-muted fs-2 mb-0">
+                                    {{ $eventner->plan === 'paid' ? 'Paket berbayar lama — semua fitur terbuka.' : 'Paket gratis — fitur dasar.' }}
+                                </p>
+                            @endif
+                            <ul class="list-unstyled mb-0 small">
+                                <li class="d-flex justify-content-between">
+                                    <span class="text-muted">Sumber Pendaftaran</span>
+                                    <span class="fw-semibold">{{ ucfirst($eventner->registration_source ?? '-') }}</span>
+                                </li>
+                                <li class="d-flex justify-content-between">
+                                    <span class="text-muted">Status Bayar</span>
+                                    <span class="fw-semibold">{{ $eventner->registration_paid_at ? $eventner->registration_paid_at->format('d M Y H:i') : 'Belum' }}</span>
+                                </li>
+                                @if($eventner->autogopay_transaction_id)
+                                    <li class="d-flex justify-content-between">
+                                        <span class="text-muted">Transaksi</span>
+                                        <span class="fw-semibold">{{ $eventner->autogopay_transaction_id }}</span>
+                                    </li>
+                                @endif
+                                @if($eventner->trial_ends_at)
+                                    <li class="d-flex justify-content-between">
+                                        <span class="text-muted">Trial Berakhir</span>
+                                        <span class="fw-semibold">{{ $eventner->trial_ends_at->format('d M Y') }}</span>
+                                    </li>
+                                @endif
+                            </ul>
+                        </div>
+                    </div>
+
                     <!-- Panitia Info -->
                     <div class="card">
                         <div class="card-header bg-white">

@@ -30,7 +30,7 @@ class Show extends Component
 
     public function loadData()
     {
-        $this->eventner = Eventner::with(['user', 'competitionCategories'])
+        $this->eventner = Eventner::with(['user', 'competitionCategories', 'saasPlan.features'])
             ->findOrFail($this->eventnerId);
 
         // Stats
