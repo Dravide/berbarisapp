@@ -244,7 +244,7 @@
                 <p>Panitia Pelaksana,</p>
                 <div class="signature-space"></div>
                 <p class="signature-name">Koordinator Drawing</p>
-                <p style="font-size: 11px; margin-top: 4px; color: #666;">BARIS APP Drawing System</p>
+                <p style="font-size: 11px; margin-top: 4px; color: #666;">{{ app_name() }} Drawing System</p>
             </div>
         </div>
     </div>

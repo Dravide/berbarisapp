@@ -11,7 +11,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.admin')]
-#[Title('Data Sekolah - BARIS APP')]
 class Index extends Component
 {
     public $schools;
@@ -88,6 +87,6 @@ class Index extends Component
 
     public function render()
     {
-        return view('livewire.admin.school.index');
+        return view('livewire.admin.school.index')->title('Data Sekolah - ' . app_name());
     }
 }

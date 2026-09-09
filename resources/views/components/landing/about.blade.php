@@ -3,7 +3,7 @@
     $image = $data['image'] ?? '';
     $video = $data['video'] ?? '';
     $heading = $data['heading'] ?? 'Platform Event & Kompetisi Terpadu';
-    $description = $data['description'] ?? 'BARIS APP menyediakan solusi lengkap untuk menyelenggarakan event dan kompetisi. Dari pendaftaran peserta hingga pengumuman pemenang, semuanya terintegrasi dalam satu platform.';
+    $description = $data['description'] ?? (app_name() . ' menyediakan solusi lengkap untuk menyelenggarakan event dan kompetisi. Dari pendaftaran peserta hingga pengumuman pemenang, semuanya terintegrasi dalam satu platform.');
     $points = $data['points'] ?? [
         ['title' => 'Pendaftaran Digital', 'text' => 'Peserta mendaftar secara online dengan verifikasi otomatis dan tracking status real-time.'],
         ['title' => 'Penilaian Terintegrasi', 'text' => 'Juri memberikan nilai secara digital dengan format penilaian yang bisa dikustomisasi.'],
@@ -21,7 +21,7 @@
                             <source src="{{ $video }}" type="video/mp4">
                         </video>
                     @elseif($image)
-                        <img src="{{ Storage::url($image) }}" alt="Tentang BARIS APP" class="h-full w-full object-cover">
+                        <img src="{{ Storage::url($image) }}" alt="Tentang {{ app_name() }}" class="h-full w-full object-cover">
                     @else
                         <div class="flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-primary/10 via-surface-container-lowest to-tertiary/10">
                             <i class="ti ti-device-desktop-analytics text-7xl text-primary/40"></i>

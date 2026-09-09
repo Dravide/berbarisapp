@@ -14,7 +14,6 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Computed;
 
 #[Layout('layouts.admin')]
-#[Title('Dashboard Keuangan - BARIS APP')]
 class FinanceDashboard extends Component
 {
     public $eventner;
@@ -256,6 +255,6 @@ class FinanceDashboard extends Component
 
     public function render()
     {
-        return view('livewire.eventner.finance-dashboard');
+        return view('livewire.eventner.finance-dashboard')->title('Dashboard Keuangan - ' . app_name());
     }
 }

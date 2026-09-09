@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? get_setting('site_title', 'BARIS APP') }} - Platform Manajemen Event & Kompetisi</title>
+    <title>{{ $title ?? get_setting('site_title', 'Berbaris App') }} - Platform Manajemen Event & Kompetisi</title>
     <meta name="description" content="{{ get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu. Solusi lengkap untuk penyelenggara event, lomba, dan kompetisi di Indonesia.') }}">
     <meta name="keywords" content="{{ get_setting('meta_keywords', 'event, kompetisi, lomba, baris, pendaftaran, manajemen event, platform kompetisi, penyelenggara event') }}">
     <link rel="canonical" href="{{ url()->current() }}">
@@ -14,8 +14,8 @@
 
     {{-- Open Graph --}}
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="{{ get_setting('site_title', 'BARIS APP') }}">
-    <meta property="og:title" content="{{ $title ?? get_setting('site_title', 'BARIS APP') }}">
+    <meta property="og:site_name" content="{{ get_setting('site_title', 'Berbaris App') }}">
+    <meta property="og:title" content="{{ $title ?? get_setting('site_title', 'Berbaris App') }}">
     <meta property="og:description" content="{{ get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu di Indonesia.') }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:locale" content="id_ID">
@@ -25,7 +25,7 @@
 
     {{-- Twitter Card --}}
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ $title ?? get_setting('site_title', 'BARIS APP') }}">
+    <meta name="twitter:title" content="{{ $title ?? get_setting('site_title', 'Berbaris App') }}">
     <meta name="twitter:description" content="{{ Str::limit(get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu'), 200) }}">
 
     @isset($favicon)
@@ -100,10 +100,10 @@
                 {{-- Logo --}}
                 <a href="{{ url('/') }}" class="flex items-center gap-2">
                     @if(($logoPath ?? null) && is_string($logoPath))
-                        <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" class="h-9 w-auto md:h-10" style="max-height: 40px; object-fit: contain;">
+                        <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'Berbaris App') }}" class="h-9 w-auto md:h-10" style="max-height: 40px; object-fit: contain;">
                     @else
                         <span class="font-display text-lg font-extrabold tracking-tight text-deep-slate">
-                            {{ get_setting('site_title', 'BARIS APP') }}
+                            {{ get_setting('site_title', 'Berbaris App') }}
                         </span>
                     @endif
                 </a>
@@ -179,15 +179,15 @@
                 <div class="lg:col-span-1">
                     <a href="{{ url('/') }}" class="mb-4 flex items-center gap-2">
                         @if(($logoPath ?? null) && is_string($logoPath))
-                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" class="h-9 w-auto" style="max-height: 40px; object-fit: contain;">
+                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'Berbaris App') }}" class="h-9 w-auto" style="max-height: 40px; object-fit: contain;">
                         @else
                             <span class="font-display text-lg font-extrabold tracking-tight text-white">
-                                {{ get_setting('site_title', 'BARIS APP') }}
+                                {{ get_setting('site_title', 'Berbaris App') }}
                             </span>
                         @endif
                     </a>
                     <p class="text-sm leading-relaxed">
-                        {{ get_setting('site_title', 'BARIS APP') }} — Platform manajemen event dan kompetisi terpadu untuk penyelenggara dan peserta.
+                        {{ get_setting('site_title', 'Berbaris App') }} — Platform manajemen event dan kompetisi terpadu untuk penyelenggara dan peserta.
                     </p>
                 </div>
 
@@ -236,8 +236,8 @@
             </div>
 
             <div class="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs sm:flex-row">
-                <p>&copy; {{ date('Y') }} {{ get_setting('site_title', 'BARIS APP') }}. All Rights Reserved.</p>
-                <p>Powered by <span class="font-semibold text-secondary">{{ get_setting('site_title', 'BARIS APP') }}</span></p>
+                <p>&copy; {{ date('Y') }} {{ get_setting('site_title', 'Berbaris App') }}. All Rights Reserved.</p>
+                <p>Powered by <span class="font-semibold text-secondary">{{ get_setting('site_title', 'Berbaris App') }}</span></p>
             </div>
         </div>
     </footer>

@@ -199,6 +199,6 @@ class Show extends Component
     public function render()
     {
         return view('livewire.admin.eventner.show')
-            ->title('Detail Event: ' . $this->eventner->nama_event . ' - BARIS APP');
+            ->title('Detail Event: ' . $this->eventner->nama_event . ' - ' . app_name());
     }
 }

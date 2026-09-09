@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>{{ $title ?? get_setting('site_title', 'BARIS APP') }} - Platform Manajemen Event & Kompetisi</title>
+    <title>{{ $title ?? get_setting('site_title', 'Berbaris App') }} - Platform Manajemen Event & Kompetisi</title>
     <meta name="description" content="{{ get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu. Solusi lengkap untuk penyelenggara event, lomba, dan kompetisi di Indonesia.') }}">
     <meta name="keywords" content="{{ get_setting('meta_keywords', 'event, kompetisi, lomba, baris, pendaftaran, manajemen event, platform kompetisi, penyelenggara event') }}">
     <link rel="canonical" href="{{ url()->current() }}">
@@ -16,8 +16,8 @@
 
     {{-- Open Graph --}}
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="{{ get_setting('site_title', 'BARIS APP') }}">
-    <meta property="og:title" content="{{ $title ?? get_setting('site_title', 'BARIS APP') }}">
+    <meta property="og:site_name" content="{{ get_setting('site_title', 'Berbaris App') }}">
+    <meta property="og:title" content="{{ $title ?? get_setting('site_title', 'Berbaris App') }}">
     <meta property="og:description" content="{{ get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu.') }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:locale" content="id_ID">
@@ -27,7 +27,7 @@
 
     {{-- Twitter Card --}}
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="{{ $title ?? get_setting('site_title', 'BARIS APP') }}">
+    <meta name="twitter:title" content="{{ $title ?? get_setting('site_title', 'Berbaris App') }}">
 
     @isset($favicon)
         <link rel="shortcut icon" href="{{ $favicon }}" type="image/x-icon">
@@ -66,11 +66,11 @@
                 <div class="brand-logo">
                     <a href="{{ url('/') }}" style="display: inline-block;">
                         @if(($logoPath ?? null) && is_string($logoPath))
-                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" class="light-version-logo" style="display: block; width: 128px;">
-                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" class="dark-version-logo" style="display: none; width: 128px;">
+                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'Berbaris App') }}" class="light-version-logo" style="display: block; width: 128px;">
+                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'Berbaris App') }}" class="dark-version-logo" style="display: none; width: 128px;">
                         @else
-                            <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="BARIS APP" class="light-version-logo">
-                            <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="BARIS APP" class="dark-version-logo" style="display: none;">
+                            <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="{{ app_name() }}" class="light-version-logo">
+                            <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="{{ app_name() }}" class="dark-version-logo" style="display: none;">
                         @endif
                     </a>
                 </div>
@@ -137,14 +137,14 @@
                         <div class="zubuz-footer-textarea">
                             <a href="{{ url('/') }}">
                                 @if(($logoPath ?? null) && is_string($logoPath))
-                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" class="light-version-logo" style="display: block; width: 128px;">
-                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" class="dark-version-logo" style="display: none; width: 128px;">
+                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'Berbaris App') }}" class="light-version-logo" style="display: block; width: 128px;">
+                            <img src="{{ $logoPath }}" alt="{{ get_setting('site_title', 'Berbaris App') }}" class="dark-version-logo" style="display: none; width: 128px;">
                         @else
-                            <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="BARIS APP" class="light-version-logo">
-                            <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="BARIS APP" class="dark-version-logo" style="display: none;">
+                            <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="{{ app_name() }}" class="light-version-logo">
+                            <img src="{{ asset('templates/zubaz/assets/images/logo/logo-dark.png') }}" alt="{{ app_name() }}" class="dark-version-logo" style="display: none;">
                         @endif
                             </a>
-                            <p>{{ get_setting('site_title', 'BARIS APP') }} — Platform manajemen event dan kompetisi terpadu untuk penyelenggara dan peserta.</p>
+                            <p>{{ get_setting('site_title', 'Berbaris App') }} — Platform manajemen event dan kompetisi terpadu untuk penyelenggara dan peserta.</p>
                         </div>
                     </div>
                     <div class="col-xl-3 col-md-4">
@@ -205,7 +205,7 @@
                     </ul>
                 </div>
                 <div class="zubuz-copywright">
-                    <p>&copy; {{ date('Y') }} {{ get_setting('site_title', 'BARIS APP') }}. All Rights Reserved.</p>
+                    <p>&copy; {{ date('Y') }} {{ get_setting('site_title', 'Berbaris App') }}. All Rights Reserved.</p>
                 </div>
             </div>
         </div>

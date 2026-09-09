@@ -11,7 +11,6 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 #[Layout('layouts.admin')]
-#[Title('Detail Voter - BARIS APP')]
 class Show extends Component
 {
     use WithPagination;
@@ -73,6 +72,6 @@ class Show extends Component
         return view('livewire.eventner.vote-results.show', [
             'voters' => $voters,
             'summary' => $summary,
-        ])->title('Detail Voter - ' . $this->registration->display_name);
+        ])->title('Detail Voter - ' . $this->registration->display_name . ' - ' . app_name());
     }
 }

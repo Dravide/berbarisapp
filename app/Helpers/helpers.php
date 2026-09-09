@@ -15,3 +15,13 @@ if (!function_exists('get_setting')) {
         return Setting::get($key, $default);
     }
 }
+
+if (!function_exists('app_name')) {
+    /**
+     * Nama aplikasi dari Pengaturan Situs (site_title).
+     */
+    function app_name($default = 'Berbaris App')
+    {
+        return Setting::get('site_title', $default);
+    }
+}

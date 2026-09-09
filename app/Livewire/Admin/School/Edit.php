@@ -10,7 +10,6 @@ use Livewire\Attributes\Title;
 use Illuminate\Support\Facades\Storage;
 
 #[Layout('layouts.admin')]
-#[Title('Edit Sekolah - BARIS APP')]
 class Edit extends Component
 {
     use WithFileUploads;
@@ -96,6 +95,6 @@ class Edit extends Component
 
     public function render()
     {
-        return view('livewire.admin.school.edit');
+        return view('livewire.admin.school.edit')->title('Edit Sekolah - ' . app_name());
     }
 }

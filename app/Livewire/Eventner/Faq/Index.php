@@ -55,6 +55,6 @@ class Index extends Component
     {
         return view('livewire.eventner.faq.index', [
             'faqs' => EventFaq::where('eventner_id', Auth::user()->eventner->id)->orderBy('sort_order')->get(),
-        ])->title('FAQ - BARIS APP');
+        ])->title('FAQ - ' . app_name());
     }
 }

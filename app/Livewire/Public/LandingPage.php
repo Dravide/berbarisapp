@@ -113,6 +113,6 @@ class LandingPage extends Component
                 'favicon' => $this->favicon,
                 'sectionsActive' => $this->sectionsActive,
             ])
-            ->title(get_setting('site_title', 'BARIS APP'));
+            ->title(app_name());
     }
 }

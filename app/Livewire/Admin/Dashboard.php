@@ -10,7 +10,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.admin')]
-#[Title('Admin Dashboard - BARIS APP')]
 class Dashboard extends Component
 {
     public $totalEventners = 0;
@@ -26,6 +25,6 @@ class Dashboard extends Component
 
     public function render()
     {
-        return view('livewire.admin.dashboard');
+        return view('livewire.admin.dashboard')->title('Admin Dashboard - ' . app_name());
     }
 }

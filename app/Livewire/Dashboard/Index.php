@@ -8,7 +8,6 @@ use Livewire\Attributes\Title;
 use App\Services\AutoGoPay;
 
 #[Layout('layouts.auth')]
-#[Title('Dashboard - BARIS APP')]
 class Index extends Component
 {
     public $eventner = null;
@@ -128,7 +127,8 @@ class Index extends Component
                 ->with('eventner', $this->eventner)
                 ->with('paymentQrUrl', $this->paymentQrUrl)
                 ->with('paymentAmount', $this->paymentAmount)
-                ->with('paymentTransactionId', $this->paymentTransactionId);
+                ->with('paymentTransactionId', $this->paymentTransactionId)
+                ->title('Dashboard - ' . app_name());
         }
 
         // Active — redirect ke dashboard masing-masing role

@@ -158,7 +158,7 @@
                             <input type="checkbox" wire:model="show_footer" class="form-check-input" style="width: 20px; height: 20px;">
                             <div>
                                 <span class="fw-semibold text-deep-slate" style="font-size: 14px;">Footer</span>
-                                <p class="text-xs text-on-surface-variant mb-0">Powered by BARIS APP</p>
+                                <p class="text-xs text-on-surface-variant mb-0">Powered by {{ app_name() }}</p>
                             </div>
                         </label>
 

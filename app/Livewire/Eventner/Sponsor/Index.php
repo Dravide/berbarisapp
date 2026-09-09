@@ -142,6 +142,6 @@ class Index extends Component
     public function render()
     {
         return view('livewire.eventner.sponsor.index')
-            ->title('Sponsor & Media Partner - BARIS APP');
+            ->title('Sponsor & Media Partner - ' . app_name());
     }
 }

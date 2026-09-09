@@ -9,7 +9,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.admin')]
-#[Title('Detail Sekolah - BARIS APP')]
 class Show extends Component
 {
     public $npsn;
@@ -50,6 +49,6 @@ class Show extends Component
 
     public function render()
     {
-        return view('livewire.admin.school.show');
+        return view('livewire.admin.school.show')->title('Detail Sekolah - ' . app_name());
     }
 }

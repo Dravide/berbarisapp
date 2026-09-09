@@ -765,7 +765,7 @@
                 @endforeach
             </div>
             <div class="h-5 w-px shrink-0" style="background: #c2c6d9;"></div>
-            <span class="shrink-0 text-[10px] font-medium" style="color: #424656;">Powered by <span class="font-bold" style="color: var(--color-primary);">BARIS APP</span></span>
+            <span class="shrink-0 text-[10px] font-medium" style="color: #424656;">Powered by <span class="font-bold" style="color: var(--color-primary);">{{ app_name() }}</span></span>
         </div>
     @endif
 
@@ -773,7 +773,7 @@
     @if($mode !== 'full')
     <footer class="shrink-0 flex items-center justify-center h-[30px] relative" style="background: #060912; border-top: 1px solid rgba(255,255,255,0.03);">
         <div class="absolute top-0 inset-x-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(var(--color-primary-rgb),0.15), transparent);"></div>
-        <span class="text-[9px] font-medium tracking-[0.1em]" style="color: rgba(255,255,255,0.15);">Powered by <strong class="font-bold" style="color: rgba(255,255,255,0.3);">BARIS APP</strong></span>
+        <span class="text-[9px] font-medium tracking-[0.1em]" style="color: rgba(255,255,255,0.15);">Powered by <strong class="font-bold" style="color: rgba(255,255,255,0.3);">{{ app_name() }}</strong></span>
     </footer>
     @endif
 </div>

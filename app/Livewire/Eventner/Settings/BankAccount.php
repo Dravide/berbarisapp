@@ -9,7 +9,6 @@ use Livewire\Attributes\Title;
 use Illuminate\Support\Facades\Auth;
 
 #[Layout('layouts.admin')]
-#[Title('Rekening Bank - BARIS APP')]
 class BankAccount extends Component
 {
     public $bank_name = '';
@@ -100,6 +99,6 @@ class BankAccount extends Component
 
     public function render()
     {
-        return view('livewire.eventner.settings.bank-account');
+        return view('livewire.eventner.settings.bank-account')->title('Rekening Bank - ' . app_name());
     }
 }

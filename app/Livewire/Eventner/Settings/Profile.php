@@ -12,7 +12,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.admin')]
-#[Title('Profil Event - BARIS APP')]
 class Profile extends Component
 {
     use WithFileUploads;
@@ -297,6 +296,6 @@ class Profile extends Component
 
     public function render()
     {
-        return view('livewire.eventner.settings.profile');
+        return view('livewire.eventner.settings.profile')->title('Profil Event - ' . app_name());
     }
 }

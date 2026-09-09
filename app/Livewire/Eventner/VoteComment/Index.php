@@ -11,7 +11,6 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 #[Layout('layouts.admin')]
-#[Title('Komentar Voting - BARIS APP')]
 class Index extends Component
 {
     use WithPagination;
@@ -159,6 +158,6 @@ class Index extends Component
             'comments' => $comments,
             'registrations' => $registrations,
             'summary' => $summary,
-        ])->title('Komentar Voting - ' . $eventner->nama_event);
+        ])->title('Komentar Voting - ' . $eventner->nama_event->title('Komentar Voting - ' . app_name()));
     }
 }

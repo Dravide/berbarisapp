@@ -10,7 +10,6 @@ use Livewire\Attributes\Title;
 use Illuminate\Support\Facades\Storage;
 
 #[Layout('layouts.admin')]
-#[Title('Pengaturan Situs - BARIS APP')]
 class Index extends Component
 {
     use WithFileUploads;
@@ -40,7 +39,7 @@ class Index extends Component
 
     public function mount()
     {
-        $this->site_title = Setting::get('site_title', 'BARIS APP');
+        $this->site_title = Setting::get('site_title', 'Berbaris App');
         $this->meta_description = Setting::get('meta_description', 'Platform manajemen event dan kompetisi terpadu. Solusi lengkap untuk penyelenggara event, lomba, dan kompetisi di Indonesia.');
         $this->meta_keywords = Setting::get('meta_keywords', 'event, kompetisi, lomba, pendaftaran, manajemen event, platform kompetisi, penyelenggara event, penilaian juri, voting online');
 
@@ -132,6 +131,6 @@ class Index extends Component
 
     public function render()
     {
-        return view('livewire.admin.setting.index');
+        return view('livewire.admin.setting.index')->title('Pengaturan Situs - ' . app_name());
     }
 }

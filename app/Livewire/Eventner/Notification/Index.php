@@ -75,6 +75,6 @@ class Index extends Component
                 ->whereHas('deviceTokens')
                 ->orderBy('nama_sekolah')
                 ->get(['id', 'nama_sekolah', 'label_pasukan']),
-        ])->title('Kirim Notifikasi - BARIS APP');
+        ])->title('Kirim Notifikasi - ' . app_name());
     }
 }

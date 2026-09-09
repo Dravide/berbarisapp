@@ -10,7 +10,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.admin')]
-#[Title('Persetujuan Eventner - BARIS APP')]
 class Pending extends Component
 {
     public $pendingEventners;
@@ -121,6 +120,6 @@ class Pending extends Component
 
     public function render()
     {
-        return view('livewire.admin.eventner.pending');
+        return view('livewire.admin.eventner.pending')->title('Persetujuan Eventner - ' . app_name());
     }
 }

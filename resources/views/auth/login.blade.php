@@ -1,6 +1,6 @@
 @extends('layouts.auth')
 
-@section('title', 'Login - BARIS APP')
+@section('title', 'Login - ' . app_name())
 
 @section('content')
 <div class="position-relative overflow-hidden radial-gradient min-vh-100 w-100">

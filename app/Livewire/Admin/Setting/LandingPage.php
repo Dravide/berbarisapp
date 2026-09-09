@@ -10,7 +10,6 @@ use Livewire\Component;
 use Livewire\WithFileUploads;
 
 #[Layout('layouts.admin')]
-#[Title('Pengaturan Landing Page - BARIS APP')]
 class LandingPage extends Component
 {
     use WithFileUploads;
@@ -501,6 +500,6 @@ class LandingPage extends Component
 
     public function render()
     {
-        return view('livewire.admin.setting.landing-page');
+        return view('livewire.admin.setting.landing-page')->title('Pengaturan Landing Page - ' . app_name());
     }
 }

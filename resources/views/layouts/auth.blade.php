@@ -15,18 +15,18 @@
 
     {{-- Open Graph --}}
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="{{ get_setting('site_title', 'BARIS APP') }}">
-    <meta property="og:title" content="{{ $title ?? 'Login - ' . get_setting('site_title', 'BARIS APP') }}">
+    <meta property="og:site_name" content="{{ get_setting('site_title', 'Berbaris App') }}">
+    <meta property="og:title" content="{{ $title ?? 'Login - ' . get_setting('site_title', 'Berbaris App') }}">
     <meta property="og:description" content="{{ get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu') }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:locale" content="id_ID">
 
     {{-- Twitter Card --}}
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="{{ $title ?? 'Login - ' . get_setting('site_title', 'BARIS APP') }}">
+    <meta name="twitter:title" content="{{ $title ?? 'Login - ' . get_setting('site_title', 'Berbaris App') }}">
 
     <link rel="stylesheet" href="{{ asset('templates/assets/css/styles.css') }}" />
-    <title>{{ $title ?? get_setting('site_title', 'BARIS APP') . ' - Masuk' }}</title>
+    <title>{{ $title ?? get_setting('site_title', 'Berbaris App') . ' - Masuk' }}</title>
     @livewireStyles
 </head>
 

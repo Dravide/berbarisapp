@@ -142,6 +142,6 @@ class Index extends Component
     public function render()
     {
         return view('livewire.eventner.tenant.index')
-            ->title('Daftar Tenant - BARIS APP');
+            ->title('Daftar Tenant - ' . app_name());
     }
 }

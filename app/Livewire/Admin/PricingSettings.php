@@ -9,7 +9,6 @@ use App\Models\SaasPlan;
 use App\Models\Setting;
 
 #[Layout('layouts.admin')]
-#[Title('Harga & Paket SaaS - BARIS APP')]
 class PricingSettings extends Component
 {
     public bool $showModal = false;
@@ -166,6 +165,6 @@ class PricingSettings extends Component
                 ->filter(fn ($c) => $c['locked_free'] ?? true)
                 ->keys()
                 ->all(),
-        ]);
+        ])->title('Harga & Paket SaaS - ' . app_name());
     }
 }

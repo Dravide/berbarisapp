@@ -6,9 +6,9 @@
         // Halaman non-event tidak punya $eventner — defaultkan null
         $eventner = $eventner ?? $subdomainEventner ?? null;
     @endphp
-    <meta name="description" content="{{ $eventner?->nama_event ? 'Live streaming ' . $eventner->nama_event : 'BARIS APP - Platform manajemen event' }}">
+    <meta name="description" content="{{ $eventner?->nama_event ? 'Live streaming ' . $eventner->nama_event : app_name() . ' - Platform manajemen event' }}">
     <meta name="robots" content="noindex, nofollow">
-    <title>{{ $title ? $title . ' - ' . get_setting('site_title', 'BARIS APP') : ($eventner?->nama_event ?? get_setting('site_title', 'BARIS APP')) . ' - Live' }}</title>
+    <title>{{ $title ? $title . ' - ' . get_setting('site_title', 'Berbaris App') : ($eventner?->nama_event ?? get_setting('site_title', 'Berbaris App')) . ' - Live' }}</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
 

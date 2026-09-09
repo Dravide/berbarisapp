@@ -9,7 +9,6 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.landing')]
-#[Title('Bantuan & Support - BARIS APP')]
 class HelpSupport extends Component
 {
     public $logoPath = null;
@@ -62,6 +61,6 @@ class HelpSupport extends Component
                 'logoPath' => $this->logoPath,
                 'favicon' => $this->favicon,
             ])
-            ->title('Bantuan & Support - '.get_setting('site_title', 'BARIS APP'));
+            ->title('Bantuan & Support - '.app_name());
     }
 }

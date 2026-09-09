@@ -14,7 +14,6 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 #[Layout('layouts.auth')]
-#[Title('Daftar Eventner - BARIS APP')]
 class EventnerRegister extends Component
 {
     public $name = '';
@@ -188,6 +187,6 @@ class EventnerRegister extends Component
     {
         return view('livewire.public.eventner-register', [
             'plans' => SaasPlan::with('features')->where('is_active', true)->where('is_contact', false)->orderBy('sort_order')->get(),
-        ]);
+        ])->title('Daftar Eventner - ' . app_name());
     }
 }

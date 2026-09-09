@@ -12,7 +12,6 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 #[Layout('layouts.admin')]
-#[Title('Tiket - BARIS APP')]
 class Index extends Component
 {
     use WithPagination;
@@ -280,6 +279,6 @@ class Index extends Component
             'checkedIn' => $checkedIn,
             'totalTicketsCount' => $totalTicketsCount,
             'statusCounts' => $statusCounts,
-        ])->title('Tiket - ' . $this->eventner->nama_event);
+        ])->title('Tiket - ' . $this->eventner->nama_event->title('Tiket - ' . app_name()));
     }
 }

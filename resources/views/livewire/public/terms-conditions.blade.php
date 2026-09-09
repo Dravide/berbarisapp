@@ -4,7 +4,7 @@
         <div class="text-center mb-12">
             <span class="overline justify-center">Legal</span>
             <h1 class="mt-4 text-3xl font-bold leading-tight md:text-4xl font-display text-deep-slate">Syarat & Ketentuan</h1>
-            <p class="mt-4 max-w-2xl mx-auto text-on-surface-variant">Ketentuan penggunaan layanan platform BARIS APP yang berlaku bagi seluruh pengguna.</p>
+            <p class="mt-4 max-w-2xl mx-auto text-on-surface-variant">Ketentuan penggunaan layanan platform {{ app_name() }} yang berlaku bagi seluruh pengguna.</p>
         </div>
 
         {{-- Content --}}
@@ -15,7 +15,7 @@
                 <div class="space-y-8">
                     <div>
                         <h2 class="text-xl font-bold text-deep-slate mb-3">1. Penerimaan Ketentuan</h2>
-                        <p class="text-on-surface-variant leading-relaxed">Dengan mengakses dan menggunakan platform BARIS APP, Anda menyetujui untuk terikat dan mematuhi Syarat & Ketentuan ini. Jika Anda tidak menyetujui ketentuan ini, harap tidak menggunakan platform kami. Ketentuan ini berlaku untuk semua pengguna termasuk penyelenggara event (Eventner), peserta, dan pengunjung.</p>
+                        <p class="text-on-surface-variant leading-relaxed">Dengan mengakses dan menggunakan platform {{ app_name() }}, Anda menyetujui untuk terikat dan mematuhi Syarat & Ketentuan ini. Jika Anda tidak menyetujui ketentuan ini, harap tidak menggunakan platform kami. Ketentuan ini berlaku untuk semua pengguna termasuk penyelenggara event (Eventner), peserta, dan pengunjung.</p>
                     </div>
 
                     <div>
@@ -25,13 +25,13 @@
                             <li>Setiap sekolah/institusi bertanggung jawab atas kerahasiaan password akun mereka</li>
                             <li>Pendaftaran bersifat "Booking" dan memerlukan konfirmasi dari penyelenggara event</li>
                             <li>Dilarang membuat akun duplikat atau menggunakan identitas palsu</li>
-                            <li>BARIS APP berhak menangguhkan akun yang melanggar ketentuan</li>
+                            <li>{{ app_name() }} berhak menangguhkan akun yang melanggar ketentuan</li>
                         </ul>
                     </div>
 
                     <div>
                         <h2 class="text-xl font-bold text-deep-slate mb-3">3. Layanan Platform</h2>
-                        <p class="text-on-surface-variant leading-relaxed mb-3">BARIS APP menyediakan layanan manajemen event dan kompetisi yang meliputi:</p>
+                        <p class="text-on-surface-variant leading-relaxed mb-3">{{ app_name() }} menyediakan layanan manajemen event dan kompetisi yang meliputi:</p>
                         <ul class="space-y-2 text-on-surface-variant list-disc pl-5">
                             <li>Sistem pendaftaran dan manajemen peserta</li>
                             <li>Voting digital dengan pembayaran terintegrasi</li>
@@ -49,7 +49,7 @@
                             <li>Pembayaran voting dan tiket bersifat non-refundable kecuali event dibatalkan</li>
                             <li>Harga dan biaya yang tertera sudah termasuk biaya layanan platform</li>
                             <li>Bukti pembayaran dikirim melalui email yang terdaftar</li>
-                            <li>BARIS APP tidak bertanggung jawab atas kegagalan transaksi akibat kesalahan bank atau payment gateway</li>
+                            <li>{{ app_name() }} tidak bertanggung jawab atas kegagalan transaksi akibat kesalahan bank atau payment gateway</li>
                         </ul>
                     </div>
 
@@ -72,7 +72,7 @@
 
                     <div>
                         <h2 class="text-xl font-bold text-deep-slate mb-3">6. Batasan Tanggung Jawab</h2>
-                        <p class="text-on-surface-variant leading-relaxed">BARIS APP disediakan "sebagaimana adanya" tanpa jaminan apapun. Kami tidak bertanggung jawab atas kerugian tidak langsung, insidental, atau konsekuensial yang timbul dari penggunaan platform. Keputusan juri dan penyelenggara event bersifat final dan bukan tanggung jawab platform.</p>
+                        <p class="text-on-surface-variant leading-relaxed">{{ app_name() }} disediakan "sebagaimana adanya" tanpa jaminan apapun. Kami tidak bertanggung jawab atas kerugian tidak langsung, insidental, atau konsekuensial yang timbul dari penggunaan platform. Keputusan juri dan penyelenggara event bersifat final dan bukan tanggung jawab platform.</p>
                     </div>
 
                     <div>
@@ -82,7 +82,7 @@
 
                     <div>
                         <h2 class="text-xl font-bold text-deep-slate mb-3">8. Hak Kekayaan Intelektual</h2>
-                        <p class="text-on-surface-variant leading-relaxed">Seluruh konten, desain, kode, dan fitur platform BARIS APP merupakan hak kekayaan intelektual yang dilindungi. Dilarang menyalin, memodifikasi, mendistribusikan, atau membuat karya turunan tanpa izin tertulis dari pemilik platform.</p>
+                        <p class="text-on-surface-variant leading-relaxed">Seluruh konten, desain, kode, dan fitur platform {{ app_name() }} merupakan hak kekayaan intelektual yang dilindungi. Dilarang menyalin, memodifikasi, mendistribusikan, atau membuat karya turunan tanpa izin tertulis dari pemilik platform.</p>
                     </div>
 
                     <div>

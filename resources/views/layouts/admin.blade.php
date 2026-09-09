@@ -17,20 +17,20 @@
 
   {{-- Open Graph --}}
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="{{ get_setting('site_title', 'BARIS APP') }}">
-  <meta property="og:title" content="{{ $title ?? get_setting('site_title', 'BARIS APP') . ' - Dashboard' }}">
-  <meta property="og:description" content="{{ get_setting('meta_description', 'Dashboard panel BARIS APP') }}">
+  <meta property="og:site_name" content="{{ get_setting('site_title', 'Berbaris App') }}">
+  <meta property="og:title" content="{{ $title ?? get_setting('site_title', 'Berbaris App') . ' - Dashboard' }}">
+  <meta property="og:description" content="{{ get_setting('meta_description', 'Dashboard panel ' . app_name()) }}">
   <meta property="og:url" content="{{ url()->current() }}">
   <meta property="og:locale" content="id_ID">
 
   {{-- Twitter Card --}}
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="{{ $title ?? get_setting('site_title', 'BARIS APP') . ' - Dashboard' }}">
+  <meta name="twitter:title" content="{{ $title ?? get_setting('site_title', 'Berbaris App') . ' - Dashboard' }}">
 
   <!-- Core Css -->
   <link rel="stylesheet" href="{{ asset('templates/assets/css/styles.css') }}" />
 
-  <title>@yield('title', ($title ?? get_setting('site_title', 'BARIS APP')) . ' - Dashboard')</title>
+  <title>@yield('title', ($title ?? get_setting('site_title', 'Berbaris App')) . ' - Dashboard')</title>
   <!-- Owl Carousel  -->
   <link rel="stylesheet" href="{{ asset('templates/assets/libs/owl.carousel/dist/assets/owl.carousel.min.css') }}" />
 

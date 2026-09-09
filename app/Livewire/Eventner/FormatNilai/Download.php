@@ -13,7 +13,6 @@ use App\Models\Registration;
 use Illuminate\Support\Facades\Auth;
 
 #[Layout('layouts.admin')]
-#[Title('Unduh Format Penilaian - BARIS APP')]
 class Download extends Component
 {
     public $eventnerId;
@@ -113,6 +112,6 @@ class Download extends Component
 
     public function render()
     {
-        return view('livewire.eventner.format-nilai.download');
+        return view('livewire.eventner.format-nilai.download')->title('Unduh Format Penilaian - ' . app_name());
     }
 }

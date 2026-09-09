@@ -9,7 +9,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.admin')]
-#[Title('Manajemen User - BARIS APP')]
 class Index extends Component
 {
     public $users;
@@ -62,7 +61,7 @@ class Index extends Component
 
     public function render()
     {
-        return view('livewire.admin.user.index');
+        return view('livewire.admin.user.index')->title('Manajemen User - ' . app_name());
     }
 
     public function resetForm()

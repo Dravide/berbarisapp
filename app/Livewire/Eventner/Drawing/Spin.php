@@ -11,7 +11,6 @@ use App\Models\Registration;
 use App\Models\Eventner;
 
 #[Layout('layouts.scoreboard')]
-#[Title('Pengundian Urutan Tampil - BARIS APP')]
 class Spin extends Component
 {
     public $slug;
@@ -165,6 +164,6 @@ class Spin extends Component
             'drawnSchools' => $drawnSchools,
             'totalSchools' => $totalSchools,
             'eventner' => $eventner,
-        ])->layoutData(['eventner' => $eventner]);
+        ])->layoutData(['eventner' => $eventner])->title('Pengundian Urutan Tampil - ' . app_name());
     }
 }

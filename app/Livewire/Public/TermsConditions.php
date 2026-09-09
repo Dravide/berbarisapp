@@ -9,7 +9,6 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.landing')]
-#[Title('Syarat & Ketentuan - BARIS APP')]
 class TermsConditions extends Component
 {
     public $logoPath = null;
@@ -36,6 +35,6 @@ class TermsConditions extends Component
                 'logoPath' => $this->logoPath,
                 'favicon' => $this->favicon,
             ])
-            ->title('Syarat & Ketentuan - '.get_setting('site_title', 'BARIS APP'));
+            ->title('Syarat & Ketentuan - '.app_name());
     }
 }

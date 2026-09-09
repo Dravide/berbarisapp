@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
 #[Layout('layouts.admin')]
-#[Title('TTD & Stempel - BARIS APP')]
 class Signature extends Component
 {
     use WithFileUploads;
@@ -105,6 +104,6 @@ class Signature extends Component
 
     public function render()
     {
-        return view('livewire.eventner.settings.signature');
+        return view('livewire.eventner.settings.signature')->title('TTD & Stempel - ' . app_name());
     }
 }

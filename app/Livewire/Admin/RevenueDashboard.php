@@ -11,7 +11,6 @@ use App\Models\VoteTransaction;
 use Illuminate\Support\Facades\DB;
 
 #[Layout('layouts.admin')]
-#[Title('Pendapatan Platform - BARIS APP')]
 class RevenueDashboard extends Component
 {
     public $saasRevenue = 0;      // fee registrasi eventner paid
@@ -165,6 +164,6 @@ class RevenueDashboard extends Component
 
     public function render()
     {
-        return view('livewire.admin.revenue-dashboard');
+        return view('livewire.admin.revenue-dashboard')->title('Pendapatan Platform - ' . app_name());
     }
 }

@@ -9,7 +9,6 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.landing')]
-#[Title('Kebijakan Privasi - BARIS APP')]
 class PrivacyPolicy extends Component
 {
     public $logoPath = null;
@@ -35,6 +34,6 @@ class PrivacyPolicy extends Component
                 'logoPath' => $this->logoPath,
                 'favicon' => $this->favicon,
             ])
-            ->title('Kebijakan Privasi - '.get_setting('site_title', 'BARIS APP'));
+            ->title('Kebijakan Privasi - '.app_name());
     }
 }

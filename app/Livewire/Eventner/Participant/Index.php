@@ -9,7 +9,6 @@ use App\Models\AssessmentScore;
 use App\Models\Registration;
 
 #[Layout('layouts.admin')]
-#[Title('Daftar Peserta - BARIS APP')]
 class Index extends Component
 {
     public $activeTab = '';
@@ -339,6 +338,6 @@ class Index extends Component
             'registrations' => $registrations,
             'summary' => $summary,
             'swapCandidateIds' => $swapCandidateIds,
-        ]);
+        ])->title('Daftar Peserta - ' . app_name());
     }
 }

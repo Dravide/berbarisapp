@@ -12,7 +12,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.admin')]
-#[Title('QR Link Event - BARIS APP')]
 class EventQr extends Component
 {
     public $eventner;
@@ -160,6 +159,6 @@ class EventQr extends Component
     public function render()
     {
         return view('livewire.eventner.event-qr')
-            ->title('QR Link Event - BARIS APP');
+            ->title('QR Link Event - ' . app_name());
     }
 }

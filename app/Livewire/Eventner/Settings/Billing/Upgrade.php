@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 #[Layout('layouts.admin')]
-#[Title('Paket & Tagihan - BARIS APP')]
 class Upgrade extends Component
 {
     public Eventner $eventner;
@@ -152,6 +151,6 @@ class Upgrade extends Component
     {
         return view('livewire.eventner.settings.billing.upgrade', [
             'plans' => SaasPlan::with('features')->where('is_active', true)->where('is_contact', false)->orderBy('sort_order')->get(),
-        ]);
+        ])->title('Paket & Tagihan - ' . app_name());
     }
 }

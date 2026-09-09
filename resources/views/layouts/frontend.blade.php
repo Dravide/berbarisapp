@@ -11,7 +11,7 @@
         // Halaman non-event (landing, pricing, dll) tidak punya $eventner — defaultkan null
         $eventner = $eventner ?? $subdomainEventner ?? null;
         $_ev = $eventner;
-        $_evTitle = $_ev?->nama_event ?? get_setting('site_title', 'BARIS APP');
+        $_evTitle = $_ev?->nama_event ?? get_setting('site_title', 'Berbaris App');
         $_evDesc = $_ev?->deskripsi ? strip_tags($_ev->deskripsi) : ($_ev?->nama_event ?? get_setting('meta_description', 'Platform manajemen event dan kompetisi terpadu'));
         $_evPoster = $_ev?->poster ? asset('storage/' . $_ev->poster) : null;
         $_evLogo = $_ev?->logo_event ? asset('storage/' . $_ev->logo_event) : null;
@@ -35,7 +35,7 @@
 
     {{-- Open Graph / Facebook --}}
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="{{ get_setting('site_title', 'BARIS APP') }}">
+    <meta property="og:site_name" content="{{ get_setting('site_title', 'Berbaris App') }}">
     <meta property="og:title" content="{{ $_evTitle }}">
     <meta property="og:description" content="{{ Str::limit($_evDesc, 200) }}">
     <meta property="og:url" content="{{ $_currentUrl }}">
@@ -92,7 +92,7 @@
             }
             $_ld['organizer'] = [
                 '@type' => 'Organization',
-                'name' => $_ev->diselenggarakan_oleh ?: 'BARIS APP',
+                'name' => $_ev->diselenggarakan_oleh ?: get_setting('site_title', 'Berbaris App'),
             ];
             $_ld['eventStatus'] = 'https://schema.org/EventScheduled';
             $_ld['eventAttendanceMode'] = 'https://schema.org/OfflineEventAttendanceMode';
@@ -183,7 +183,7 @@
         }
     </style>
 
-    <title>{{ $title ?? ($eventner?->nama_event ?? 'BARIS APP') }}</title>
+    <title>{{ $title ?? ($eventner?->nama_event ?? get_setting('site_title', 'Berbaris App')) }}</title>
 
     @livewireStyles
     @stack('styles')
@@ -206,10 +206,10 @@
                     </span>
                 @else
                     @if($platformLogo && is_string($platformLogo))
-                        <img src="{{ $platformLogo }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" class="h-9 w-auto md:h-10" style="max-height: 40px; object-fit: contain;">
+                        <img src="{{ $platformLogo }}" alt="{{ get_setting('site_title', 'Berbaris App') }}" class="h-9 w-auto md:h-10" style="max-height: 40px; object-fit: contain;">
                     @else
                         <span class="font-display text-lg font-extrabold tracking-tight text-deep-slate">
-                            {{ get_setting('site_title', 'BARIS APP') }}
+                            {{ get_setting('site_title', 'Berbaris App') }}
                         </span>
                     @endif
                 @endisset
@@ -266,7 +266,7 @@
                                 <i class="ti ti-calendar-event text-xl"></i>
                             </div>
                         @endisset
-                        <span class="font-display text-base font-bold tracking-tight text-white">{{ $eventner?->nama_event ?? get_setting('site_title', 'BARIS APP') }}</span>
+                        <span class="font-display text-base font-bold tracking-tight text-white">{{ $eventner?->nama_event ?? get_setting('site_title', 'Berbaris App') }}</span>
                     </a>
                     <p class="text-sm text-white/60 leading-relaxed">
                         {{ ($eventner?->deskripsi ?? null) ? Str::limit(strip_tags($eventner->deskripsi), 120) : 'Platform manajemen event dan kompetisi terpadu.' }}
@@ -343,8 +343,8 @@
 
             {{-- Bottom copyright --}}
             <div class="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row">
-                <p class="m-0">&copy; {{ date('Y') }} {{ $eventner?->diselenggarakan_oleh ?? get_setting('site_title', 'BARIS APP') }}. Hak cipta dilindungi.</p>
-                <p class="m-0">Powered by <a href="{{ url('/') }}" class="text-secondary hover:text-secondary hover:underline text-decoration-none transition font-semibold">BARIS APP</a></p>
+                <p class="m-0">&copy; {{ date('Y') }} {{ $eventner?->diselenggarakan_oleh ?? get_setting('site_title', 'Berbaris App') }}. Hak cipta dilindungi.</p>
+                <p class="m-0">Powered by <a href="{{ url('/') }}" class="text-secondary hover:text-secondary hover:underline text-decoration-none transition font-semibold">{{ app_name() }}</a></p>
             </div>
         </div>
     </footer>

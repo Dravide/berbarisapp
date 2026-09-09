@@ -48,6 +48,6 @@ class Index extends Component
     {
         return view('livewire.eventner.gallery.index', [
             'images' => EventGallery::where('eventner_id', Auth::user()->eventner->id)->orderBy('sort_order')->latest()->get(),
-        ])->title('Galeri - BARIS APP');
+        ])->title('Galeri - ' . app_name());
     }
 }

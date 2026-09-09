@@ -55,7 +55,7 @@
                 <div class="col-md-6">
                     <label class="form-label">Teks BeSign</label>
                     <input type="text" class="form-control" wire:model="templateForm.besign_text"
-                           placeholder="Contoh: Diterbitkan oleh BARIS APP">
+                           placeholder="Contoh: Diterbitkan oleh {{ app_name() }}">
                     <small class="text-muted">Ditampilkan sebagai watermark kecil. Kosongkan untuk default "Diterbitkan oleh {nama_event}"</small>
                 </div>
             </div>

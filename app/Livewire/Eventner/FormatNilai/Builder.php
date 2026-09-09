@@ -20,7 +20,6 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Layout('layouts.admin')]
-#[Title('Format Penilaian - BARIS APP')]
 class Builder extends Component
 {
     use FeatureGatedComponent;
@@ -1077,6 +1076,6 @@ class Builder extends Component
 
     public function render()
     {
-        return view('livewire.eventner.format-nilai.builder');
+        return view('livewire.eventner.format-nilai.builder')->title('Format Penilaian - ' . app_name());
     }
 }

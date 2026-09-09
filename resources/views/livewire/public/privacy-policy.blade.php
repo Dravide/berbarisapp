@@ -4,7 +4,7 @@
         <div class="text-center mb-12">
             <span class="overline justify-center">Legal</span>
             <h1 class="mt-4 text-3xl font-bold leading-tight md:text-4xl font-display text-deep-slate">Kebijakan Privasi</h1>
-            <p class="mt-4 max-w-2xl mx-auto text-on-surface-variant">Komitmen kami untuk melindungi data dan privasi Anda saat menggunakan platform BARIS APP.</p>
+            <p class="mt-4 max-w-2xl mx-auto text-on-surface-variant">Komitmen kami untuk melindungi data dan privasi Anda saat menggunakan platform {{ app_name() }}.</p>
         </div>
 
         {{-- Content --}}
@@ -15,7 +15,7 @@
                 <div class="space-y-8">
                     <div>
                         <h2 class="text-xl font-bold text-deep-slate mb-3">1. Pendahuluan</h2>
-                        <p class="text-on-surface-variant leading-relaxed">BARIS APP ("kami", "kita", atau "platform") berkomitmen untuk melindungi privasi pengguna kami. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, menyimpan, dan melindungi informasi pribadi Anda saat Anda menggunakan platform manajemen event dan kompetisi kami.</p>
+                        <p class="text-on-surface-variant leading-relaxed">{{ app_name() }} ("kami", "kita", atau "platform") berkomitmen untuk melindungi privasi pengguna kami. Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, menyimpan, dan melindungi informasi pribadi Anda saat Anda menggunakan platform manajemen event dan kompetisi kami.</p>
                     </div>
 
                     <div>

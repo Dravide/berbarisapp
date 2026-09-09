@@ -108,7 +108,7 @@ class EventDetail extends Component
     {
         return view('livewire.public.event-detail', [
             'eventner' => $this->eventner,
-        ])->title($this->eventner->nama_event . ' - ' . ($this->eventner->diselenggarakan_oleh ?: 'BARIS APP'))
+        ])->title($this->eventner->nama_event . ' - ' . ($this->eventner->diselenggarakan_oleh ?: app_name()))
             ->layoutData(['eventner' => $this->eventner]);
     }
 }

@@ -11,7 +11,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.admin')]
-#[Title('Hasil Voting - BARIS APP')]
 class Index extends Component
 {
     use FeatureGatedComponent;
@@ -70,6 +69,6 @@ class Index extends Component
         return view('livewire.eventner.vote-results.index', [
             'results' => $results,
             'summary' => $summary,
-        ]);
+        ])->title('Hasil Voting - ' . app_name());
     }
 }

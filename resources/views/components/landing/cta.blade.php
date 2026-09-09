@@ -1,7 +1,7 @@
 @php
     $data = json_decode($section?->content ?? 'null', true) ?? $defaults ?? [];
     $heading = $data['heading'] ?? 'Siap Mengelola Event Lebih Efisien?';
-    $description = $data['description'] ?? 'Mulai gunakan BARIS APP sekarang dan rasakan kemudahan mengelola event dan kompetisi secara digital. Daftar gratis dan langsung gunakan.';
+    $description = $data['description'] ?? ('Mulai gunakan ' . app_name() . ' sekarang dan rasakan kemudahan mengelola event dan kompetisi secara digital. Daftar gratis dan langsung gunakan.');
     $buttonText = $data['button_text'] ?? 'Daftar Sekarang';
     $buttonUrl = $data['button_url'] ?? route('login');
     $image = $data['image'] ?? '';

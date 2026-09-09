@@ -10,7 +10,6 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
 #[Layout('layouts.admin')]
-#[Title('Kelola Eventner - BARIS APP')]
 class Index extends Component
 {
     public $eventners;
@@ -54,7 +53,7 @@ class Index extends Component
 
     public function render()
     {
-        return view('livewire.admin.eventner.index');
+        return view('livewire.admin.eventner.index')->title('Kelola Eventner - ' . app_name());
     }
 
     public function resetForm()

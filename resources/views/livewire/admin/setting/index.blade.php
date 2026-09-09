@@ -55,7 +55,7 @@
                         <div class="card">
                             <div class="card-body">
                                 <h5 class="card-title fw-semibold mb-4">Tema & Tampilan Landing Page</h5>
-                                <p class="text-muted fs-3 mb-3">Sesuaikan warna dan font untuk halaman utama BARIS APP.</p>
+                                <p class="text-muted fs-3 mb-3">Sesuaikan warna dan font untuk halaman utama {{ app_name() }}.</p>
 
                                 {{-- Warna --}}
                                 <div class="row mb-3">

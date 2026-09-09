@@ -11,7 +11,6 @@ use App\Models\Registration;
 use App\Models\Eventner;
 
 #[Layout('layouts.scoreboard')]
-#[Title('Hasil Pengundian - BARIS APP')]
 class Results extends Component
 {
     public $slug;
@@ -73,6 +72,6 @@ class Results extends Component
             'results' => $results,
             'totalSchools' => $totalSchools,
             'eventner' => $eventner,
-        ])->layoutData(['eventner' => $eventner]);
+        ])->layoutData(['eventner' => $eventner])->title('Hasil Pengundian - ' . app_name());
     }
 }
