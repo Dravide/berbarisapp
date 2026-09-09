@@ -42,7 +42,7 @@ class Index extends Component
 
     public function loadEventners()
     {
-        $this->eventners = Eventner::with('user')
+        $this->eventners = Eventner::with(['user', 'saasPlan'])
             ->where('status', 'approved')
             ->where(function ($q) {
                 $q->where('nama_event', 'like', '%' . $this->search . '%')
@@ -128,12 +128,13 @@ class Index extends Component
                 'role' => 'Eventner',
             ]);
 
-            // Create Eventner
+            // Create Eventner — admin buat langsung full akses (tanpa saas_plan = legacy full)
             Eventner::create([
                 'user_id' => $user->id,
                 'status' => 'approved',
                 'plan' => 'paid',
                 'trial_ends_at' => null,
+                'registration_paid_at' => now(),
                 'registration_source' => 'admin',
                 'nama_event' => $this->nama_event,
                 'diselenggarakan_oleh' => $this->diselenggarakan_oleh,

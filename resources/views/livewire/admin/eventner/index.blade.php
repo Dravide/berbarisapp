@@ -42,6 +42,7 @@
                             <th scope="col">Lokasi / Venue</th>
                             <th scope="col">Tanggal</th>
                             <th scope="col">Akun Pengguna</th>
+                            <th scope="col">Paket SaaS</th>
                             <th scope="col" class="text-end">Aksi</th>
                         </tr>
                     </thead>
@@ -82,6 +83,26 @@
                                         class="badge bg-primary-subtle text-primary">{{ $eventner->user->username }}</span>
                                     <span class="d-block fs-2">{{ $eventner->user->email }}</span>
                                 </td>
+                                <td>
+                                    @php
+                                        $hasPaid = $eventner->plan === 'paid' || $eventner->registration_paid_at;
+                                    @endphp
+                                    @if($eventner->saasPlan)
+                                        <span class="badge {{ $hasPaid ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning' }}">
+                                            {{ $eventner->saasPlan->name }}
+                                        </span>
+                                        @if(!$hasPaid)
+                                            <span class="d-block fs-2 text-muted">Belum bayar</span>
+                                        @endif
+                                    @elseif($eventner->plan === 'paid')
+                                        <span class="badge bg-success-subtle text-success">Event Penuh</span>
+                                    @else
+                                        @php $expired = $eventner->isTrialExpired(); @endphp
+                                        <span class="badge {{ $expired ? 'bg-danger-subtle text-danger' : 'bg-warning-subtle text-warning' }}">
+                                            {{ $expired ? 'Trial Berakhir' : 'Gratis (Trial ' . $eventner->trialDaysLeft() . ' hari)' }}
+                                        </span>
+                                    @endif
+                                </td>
                                 <td class="text-end">
                                     <a href="{{ route('admin.eventner.show', $eventner->id) }}"
                                         class="btn btn-sm btn-primary me-1">
@@ -100,7 +121,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center">Belum ada data eventner.</td>
+                                <td colspan="7" class="text-center">Belum ada data eventner.</td>
                             </tr>
                         @endforelse
                     </tbody>
