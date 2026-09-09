@@ -6,6 +6,7 @@ use App\Models\CertificateTemplate;
 use App\Models\CertificateTextField;
 use App\Models\ChampionCategory;
 use App\Models\CompetitionCategory;
+use App\Models\Registration;
 use App\Services\ChampionCalculator;
 use App\Traits\FeatureGatedComponent;
 use chillerlan\QRCode\Output\QRGdImagePNG;
@@ -36,6 +37,7 @@ class Editor extends Component
     // Download & preview
     public $previewChampionCategoryId = null;
     public $previewCompetitionCategoryId = null;
+    public $previewSchool = null;
     public $previewMode = 'participant';
     public $showPreview = false;
 
@@ -303,10 +305,36 @@ class Editor extends Component
         // Ganti kategori juara → reset kategori lomba; kalau cuma
         // 1 tingkat relevan, langsung terpilih.
         $this->previewCompetitionCategoryId = null;
+        $this->previewSchool = null;
         $filtered = $this->filteredCompetitionCategories;
         if ($filtered->count() === 1) {
             $this->previewCompetitionCategoryId = $filtered->first()->id;
         }
+    }
+
+    public function updatedPreviewCompetitionCategoryId($value)
+    {
+        // Ganti kategori lomba → daftar sekolah berubah, reset pilihan.
+        $this->previewSchool = null;
+    }
+
+    /**
+     * Sekolah terdaftar pada kategori lomba terpilih — opsi filter sekolah.
+     */
+    public function getSchoolOptionsProperty()
+    {
+        if (!$this->eventner || !$this->previewCompetitionCategoryId) return collect();
+
+        return Registration::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $this->previewCompetitionCategoryId)
+            ->orderBy('nama_sekolah')
+            ->get()
+            ->map(fn($reg) => [
+                'key' => (string) ($reg->npsn ?: mb_strtolower(trim((string) $reg->nama_sekolah))),
+                'label' => $reg->nama_sekolah,
+            ])
+            ->unique('key')
+            ->values();
     }
 
     public function togglePreview()
@@ -317,45 +345,48 @@ class Editor extends Component
     /**
      * Data preview sertifikat halaman pertama dengan juara asli.
      * Pakai ChampionCalculator (logika sama dengan download PDF).
-     * Mode per_school: kategori lomba opsional (kosong = semua tingkat).
      */
     public function getPreviewDataProperty()
     {
-        $isPerSchool = $this->previewMode === 'per_school';
-
         if (!$this->showPreview
             || !$this->previewChampionCategoryId
-            || (!$this->previewCompetitionCategoryId && !$isPerSchool)) {
+            || !$this->previewCompetitionCategoryId) {
             return null;
         }
 
         $championCategory = ChampionCategory::where('eventner_id', $this->eventner->id)
             ->with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias'])
             ->find($this->previewChampionCategoryId);
-        $competitionCategory = $this->previewCompetitionCategoryId
-            ? CompetitionCategory::with('parent')->find($this->previewCompetitionCategoryId)
-            : null;
+        $competitionCategory = CompetitionCategory::with('parent')->find($this->previewCompetitionCategoryId);
 
         if (!$championCategory) {
             return null;
         }
 
-        [$eventner, $category, $winners] = app(ChampionCalculator::class)->winners(
-            $championCategory,
-            $this->previewCompetitionCategoryId ? (int) $this->previewCompetitionCategoryId : null,
-            $isPerSchool
-        );
+        [$eventner, $category, $winners] = app(ChampionCalculator::class)->winners($championCategory);
+
+        // Batasi ke kategori lomba terpilih — peringkat tetap dari
+        // kompetisi penuh, hanya pemenang tingkat ini yang masuk.
+        $winners = array_values(array_filter($winners, fn($w) =>
+            $w['registration']->competition_category_id == $competitionCategory->id));
 
         if (empty($winners)) {
             return ['error' => 'Belum ada data juara untuk kategori ini.'];
         }
 
-        // Ambil juara pertama yang cocok kategori lombanya (kalau ada),
-        // kalau tidak ada juaranya di kategori lomba tsb pakai juara pertama.
-        $winner = ($competitionCategory
-            ? collect($winners)->first(fn($w) => $w['registration']->competition_category_id == $competitionCategory->id)
-            : null)
-            ?? $winners[0];
+        // Filter sekolah: pemenang pertama milik sekolah terpilih.
+        if ($this->previewSchool !== null && $this->previewSchool !== '') {
+            $winner = collect($winners)->first(function ($w) {
+                $reg = $w['registration'];
+                $key = $reg->npsn ?: mb_strtolower(trim((string) $reg->nama_sekolah));
+                return $key === (string) $this->previewSchool;
+            });
+            if (!$winner) {
+                return ['error' => 'Belum ada juara dari sekolah terpilih.'];
+            }
+        } else {
+            $winner = $winners[0];
+        }
 
         // Gelar: sama seperti CertificateController (tambah nomor posisi dalam
         // grup; fallback "Juara {rank}" bila rank title tidak meng-cover)
@@ -373,7 +404,7 @@ class Editor extends Component
         }
 
         $pages = [];
-        $sampleParticipant = in_array($this->previewMode, ['school', 'per_school'])
+        $sampleParticipant = $this->previewMode === 'school'
             ? null
             : ($winner['registration']->participants->first() ?? null);
         $pages[] = [
@@ -411,6 +442,7 @@ class Editor extends Component
             'usedFieldKeys' => $this->usedFieldKeys,
             'championCategories' => $this->championCategories,
             'competitionCategories' => $this->filteredCompetitionCategories,
+            'schoolOptions' => $this->schoolOptions,
             'previewData' => $this->previewData,
             'sampleValues' => $this->sampleValues,
         ])->title('Edit Layout: ' . ($this->template['name'] ?? '') . ' - ' . $this->eventner->nama_event);

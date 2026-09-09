@@ -58,16 +58,25 @@
                         @endforeach
                     </select>
                 </div>
-                <div class="col-md-3 col-6">
+                <div class="col-md-2 col-6">
                     <label class="form-label small fw-bold mb-1">Mode Sertifikat</label>
                     <select class="form-select form-select-sm" wire:model.live="previewMode">
                         <option value="participant">Per Siswa</option>
                         <option value="school">Per Pasukan</option>
-                        <option value="per_school">Juara Persekolah</option>
+                    </select>
+                </div>
+                <div class="col-md-2 col-6">
+                    <label class="form-label small fw-bold mb-1">Sekolah</label>
+                    <select class="form-select form-select-sm" wire:model.live="previewSchool"
+                            @if(!$previewCompetitionCategoryId) disabled @endif>
+                        <option value="">— Semua Sekolah —</option>
+                        @foreach($schoolOptions as $opt)
+                            <option value="{{ $opt['key'] }}">{{ $opt['label'] }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div class="col-md-3 col-6 d-flex gap-2">
-                    @php $previewReady = $previewChampionCategoryId && ($previewCompetitionCategoryId || $previewMode === 'per_school'); @endphp
+                    @php $previewReady = $previewChampionCategoryId && $previewCompetitionCategoryId; @endphp
                     <button class="btn btn-sm btn-outline-info flex-fill" wire:click="togglePreview"
                             @if(!$previewReady) disabled @endif>
                         <i class="ti ti-eye me-1"></i> {{ $showPreview ? 'Sembunyikan' : 'Preview' }}
@@ -76,6 +85,7 @@
                         'template_id' => $templateId,
                         'champion_category_id' => $previewChampionCategoryId,
                         'competition_category_id' => $previewCompetitionCategoryId,
+                        'school' => $previewSchool,
                         'mode' => $previewMode,
                     ]) }}"
                        target="_blank"

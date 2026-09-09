@@ -187,14 +187,24 @@
                                 <option value="{{ $cat->id }}">{{ $cat->parent ? $cat->parent->name . ' — ' : '' }}{{ $cat->name }}</option>
                             @endforeach
                         </select>
-                        <small class="form-text text-muted">Hanya tingkat yang relevan dengan kategori juara terpilih. Boleh kosong hanya pada mode Juara Persekolah (= semua tingkat digabung).</small>
+                        <small class="form-text text-muted">Hanya tingkat yang relevan dengan kategori juara terpilih.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Sekolah</label>
+                        <select class="form-select" wire:model.live="pdfSchool"
+                                @if(!$pdfCompetitionCategoryId) disabled @endif>
+                            <option value="">— Semua Sekolah —</option>
+                            @foreach($schoolOptions as $opt)
+                                <option value="{{ $opt['key'] }}">{{ $opt['label'] }}</option>
+                            @endforeach
+                        </select>
+                        <small class="form-text text-muted">Pilih sekolah untuk mengunduh sertifikat juara sekolah tsb saja. Peringkat tetap dari kompetisi penuh.</small>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Mode Sertifikat</label>
                         <select class="form-select" wire:model.live="pdfMode">
                             <option value="participant">Per Siswa (1 sertifikat 1 nama)</option>
                             <option value="school">Per Pasukan (semua nama pasukan 1 sertifikat)</option>
-                            <option value="per_school">Juara Persekolah (1 sertifikat per sekolah)</option>
                         </select>
                     </div>
                 </div>
@@ -202,11 +212,12 @@
                     <button class="btn btn-secondary" wire:click="cancelPdfModal">
                         <i class="ti ti-x me-1"></i> Batal
                     </button>
-                    @php $pdfReady = $pdfChampionCategoryId && ($pdfCompetitionCategoryId || $pdfMode === 'per_school'); @endphp
+                    @php $pdfReady = $pdfChampionCategoryId && $pdfCompetitionCategoryId; @endphp
                     <a href="{{ route('eventner.certificate.pdf', [
                         'template_id' => $pdfTemplateId,
                         'champion_category_id' => $pdfChampionCategoryId,
                         'competition_category_id' => $pdfCompetitionCategoryId,
+                        'school' => $pdfSchool,
                         'mode' => $pdfMode,
                     ]) }}"
                        target="_blank"

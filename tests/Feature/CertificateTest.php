@@ -9,7 +9,6 @@ use App\Models\AssessmentSubCategory;
 use App\Models\CertificateTemplate;
 use App\Models\CertificateTextField;
 use App\Models\ChampionCategory;
-use App\Services\ChampionCalculator;
 use App\Models\ChampionRankTitle;
 use App\Models\CompetitionCategory;
 use App\Models\Eventner;
@@ -148,79 +147,42 @@ class CertificateTest extends TestCase
         $response->assertHeader('Content-Type', 'application/pdf');
     }
 
-    public function test_certificate_per_school_without_competition_category_returns_pdf()
+    public function test_certificate_school_filter_returns_pdf()
     {
-        [$user, $eventner, $template, $championCat] = $this->setupCertificateAssets();
+        [$user, $eventner, $template, $championCat, $compCat] = $this->setupCertificateAssets();
 
         $this->actingAs($user);
+
+        // Sekolah Test 2 = peringkat 2 (skor 81) — filter by nama sekolah
+        // (registrasi helper pakai npsn unik, jadi key-nya npsn).
+        $reg = Registration::where('eventner_id', $eventner->id)
+            ->where('nama_sekolah', 'Sekolah Test 2')
+            ->first();
 
         $response = $this->get(route('eventner.certificate.pdf', [
             'template_id' => $template->id,
             'champion_category_id' => $championCat->id,
-            'competition_category_id' => null,
-            'mode' => 'per_school',
+            'competition_category_id' => $compCat->id,
+            'school' => $reg->npsn,
         ]));
 
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'application/pdf');
     }
 
-    public function test_certificate_per_school_still_requires_champion_category()
+    public function test_certificate_school_filter_unknown_school_404()
     {
-        [$user, $eventner, $template, $championCat] = $this->setupCertificateAssets();
+        [$user, $eventner, $template, $championCat, $compCat] = $this->setupCertificateAssets();
 
         $this->actingAs($user);
 
         $response = $this->get(route('eventner.certificate.pdf', [
             'template_id' => $template->id,
-            'champion_category_id' => null,
-            'mode' => 'per_school',
+            'champion_category_id' => $championCat->id,
+            'competition_category_id' => $compCat->id,
+            'school' => '99999999',
         ]));
 
-        $response->assertStatus(422);
-    }
-
-    public function test_champion_calculator_per_school_groups_by_school()
-    {
-        [$user, $eventner, , $championCat, $compCat, $criteria] = $this->setupCertificateAssets();
-
-        // Sekolah A punya 2 pasukan (label A & B) — skor lewat helper.
-        $sekolahA = Registration::factory()->create([
-            'eventner_id' => $eventner->id,
-            'competition_category_id' => $compCat->id,
-            'nama_sekolah' => 'Sekolah A',
-            'npsn' => '11111111',
-            'label_pasukan' => 'A',
-        ]);
-        $sekolahAPasukanB = Registration::factory()->create([
-            'eventner_id' => $eventner->id,
-            'competition_category_id' => $compCat->id,
-            'nama_sekolah' => 'Sekolah A',
-            'npsn' => '11111111',
-            'label_pasukan' => 'B',
-        ]);
-
-        $judge = Judge::create(['eventner_id' => $eventner->id, 'name' => 'Juri Grup']);
-        foreach ([$sekolahA, $sekolahAPasukanB] as $i => $reg) {
-            AssessmentScore::create([
-                'eventner_id' => $eventner->id,
-                'judge_id' => $judge->id,
-                'registration_id' => $reg->id,
-                'assessment_criteria_id' => $criteria->id,
-                'score' => $i === 0 ? 70 : 95, // pasukan B lebih tinggi
-            ]);
-        }
-
-        [, , $winners] = app(ChampionCalculator::class)->winners($championCat, null, true);
-
-        // 1 pemenang per sekolah, dibatasi quantity (3): Sekolah A (95)
-        // menyingkirkan Sekolah Test 0 (skor terendah).
-        $schools = collect($winners)->map(fn ($w) => $w['registration']->nama_sekolah)->all();
-        $this->assertSame(['Sekolah A', 'Sekolah Test 2', 'Sekolah Test 1'], $schools);
-
-        // Sekolah A diwakili pasukan B (skor terbaik), bukan pasukan A.
-        $sekolahAWinner = collect($winners)->first(fn ($w) => $w['registration']->nama_sekolah === 'Sekolah A');
-        $this->assertSame('B', $sekolahAWinner['registration']->label_pasukan);
-        $this->assertSame(95.0, $sekolahAWinner['total']);
+        $response->assertStatus(404);
     }
 }

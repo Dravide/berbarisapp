@@ -4,6 +4,7 @@ namespace App\Livewire\Eventner\Certificate;
 
 use App\Models\CertificateTemplate;
 use App\Models\ChampionCategory;
+use App\Models\Registration;
 use App\Traits\FeatureGatedComponent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -39,6 +40,7 @@ class Templates extends Component
     public $pdfTemplateId = null;
     public $pdfChampionCategoryId = null;
     public $pdfCompetitionCategoryId = null;
+    public $pdfSchool = null;
     public $pdfMode = 'participant';
 
     // Paper presets
@@ -182,6 +184,7 @@ class Templates extends Component
         $this->pdfTemplateId = $templateId;
         $this->pdfChampionCategoryId = null;
         $this->pdfCompetitionCategoryId = null;
+        $this->pdfSchool = null;
         $this->pdfMode = 'participant';
     }
 
@@ -194,10 +197,37 @@ class Templates extends Component
     {
         // Ganti kategori juara → reset kategori lomba; auto-terpilih bila 1.
         $this->pdfCompetitionCategoryId = null;
+        $this->pdfSchool = null;
         $filtered = $this->filteredCompetitionCategories;
         if ($filtered->count() === 1) {
             $this->pdfCompetitionCategoryId = $filtered->first()->id;
         }
+    }
+
+    public function updatedPdfCompetitionCategoryId($value)
+    {
+        // Ganti kategori lomba → daftar sekolah berubah, reset pilihan.
+        $this->pdfSchool = null;
+    }
+
+    /**
+     * Sekolah terdaftar pada kategori lomba terpilih — opsi filter sekolah
+     * di modal download PDF.
+     */
+    public function getSchoolOptionsProperty()
+    {
+        if (!$this->eventner || !$this->pdfCompetitionCategoryId) return collect();
+
+        return Registration::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $this->pdfCompetitionCategoryId)
+            ->orderBy('nama_sekolah')
+            ->get()
+            ->map(fn($reg) => [
+                'key' => (string) ($reg->npsn ?: mb_strtolower(trim((string) $reg->nama_sekolah))),
+                'label' => $reg->nama_sekolah,
+            ])
+            ->unique('key')
+            ->values();
     }
 
     public function getChampionCategoriesProperty()
@@ -252,6 +282,7 @@ class Templates extends Component
         return view('livewire.eventner.certificate.templates', [
             'championCategories' => $this->championCategories,
             'competitionCategories' => $this->filteredCompetitionCategories,
+            'schoolOptions' => $this->schoolOptions,
         ])->title('Sertifikat - ' . $this->eventner->nama_event);
     }
 }
