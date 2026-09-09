@@ -195,17 +195,24 @@
     <header class="glass-nav sticky top-0 z-50">
         <div class="container-landing flex h-16 items-center justify-between">
             {{-- Brand logo & name --}}
+            @php
+                $platformLogo = get_setting('logo_dark') ? Storage::url(get_setting('logo_dark')) : null;
+            @endphp
             <a href="{{ url('/') }}" class="flex items-center gap-2 text-decoration-none">
                 @isset($eventner?->logo_event)
                     <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt="{{ $eventner->nama_event }}" class="h-9 w-9 rounded-lg object-cover">
+                    <span class="font-display text-base font-bold text-deep-slate tracking-tight">
+                        {{ $eventner?->nama_event }}
+                    </span>
                 @else
-                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <i class="ti ti-calendar-event text-xl"></i>
-                    </div>
+                    @if($platformLogo && is_string($platformLogo))
+                        <img src="{{ $platformLogo }}" alt="{{ get_setting('site_title', 'BARIS APP') }}" class="h-9 w-auto md:h-10" style="max-height: 40px; object-fit: contain;">
+                    @else
+                        <span class="font-display text-lg font-extrabold tracking-tight text-deep-slate">
+                            {{ get_setting('site_title', 'BARIS APP') }}
+                        </span>
+                    @endif
                 @endisset
-                <span class="font-display text-base font-bold text-deep-slate tracking-tight">
-                    {{ $eventner?->nama_event ?? get_setting('site_title', 'BARIS APP') }}
-                </span>
             </a>
 
             {{-- Desktop navigation --}}
@@ -220,7 +227,7 @@
                     @endif
                 @else
                     <a href="{{ url('/') }}#features" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Fitur</a>
-                    <a href="{{ url('/') }}#pricing" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Harga</a>
+                    <a href="{{ route('pricing') }}" class="rounded-md px-3 py-2 text-sm font-semibold transition {{ request()->routeIs('pricing') ? 'text-primary' : 'text-on-surface-variant hover:text-primary' }}">Harga</a>
                     <a href="{{ url('/') }}#eventners" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Event</a>
                     <a href="{{ url('/') }}#contact" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Kontak</a>
                 @endisset
@@ -234,7 +241,7 @@
                     </a>
                 @else
                     <a href="{{ route('login') }}" class="btn-ghost py-2 px-4 text-xs font-bold leading-none hidden sm:inline-flex">Login</a>
-                    <a href="{{ route('login') }}" class="btn-primary py-2 px-4 text-xs font-bold leading-none inline-flex">Mulai Sekarang</a>
+                    <a href="{{ route('register.eventner') }}" class="btn-primary py-2 px-4 text-xs font-bold leading-none inline-flex">Daftar Eventner</a>
                 @endisset
             </div>
         </div>
