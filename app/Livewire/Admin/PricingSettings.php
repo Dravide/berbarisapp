@@ -22,6 +22,8 @@ class PricingSettings extends Component
     public string $description = '';
     public bool $is_active = true;
     public bool $is_free = false;
+    public bool $is_contact = false;
+    public string $contact_url = '';
     public bool $highlight = false;
     public $sort_order = 0;
 
@@ -50,6 +52,7 @@ class PricingSettings extends Component
             'price' => 'required|integer|min:0',
             'registration_fee' => 'required|integer|min:0',
             'description' => 'nullable|string|max:255',
+            'contact_url' => 'nullable|url|max:255',
             'sort_order' => 'required|integer|min:0',
         ];
     }
@@ -72,6 +75,8 @@ class PricingSettings extends Component
         $this->description = (string) $plan->description;
         $this->is_active = $plan->is_active;
         $this->is_free = $plan->is_free;
+        $this->is_contact = $plan->is_contact;
+        $this->contact_url = (string) $plan->contact_url;
         $this->highlight = $plan->highlight;
         $this->sort_order = $plan->sort_order;
 
@@ -98,6 +103,8 @@ class PricingSettings extends Component
             'description' => $this->description ?: null,
             'is_active' => $this->is_active,
             'is_free' => $this->is_free,
+            'is_contact' => $this->is_contact,
+            'contact_url' => $this->is_contact ? ($this->contact_url ?: null) : null,
             'highlight' => $this->is_free ? false : $this->highlight,
             'sort_order' => (int) $this->sort_order,
         ];
@@ -108,6 +115,9 @@ class PricingSettings extends Component
         $features = $this->is_free
             ? []
             : array_keys(array_filter($this->plan_features));
+        if ($this->is_contact) {
+            // Paket contact: fitur disimpan untuk display, guard tetap per fitur saat diaktifkan admin
+        }
         $plan->features()->delete();
         $plan->features()->createMany(
             collect($features)->map(fn ($key) => ['feature_key' => $key])->all()
@@ -143,7 +153,7 @@ class PricingSettings extends Component
 
     private function resetForm(): void
     {
-        $this->reset('planId', 'name', 'price', 'registration_fee', 'description', 'is_active', 'is_free', 'highlight', 'sort_order');
+        $this->reset('planId', 'name', 'price', 'registration_fee', 'description', 'is_active', 'is_free', 'is_contact', 'contact_url', 'highlight', 'sort_order');
         $this->is_active = true;
         $this->loadFeatureDefaults();
     }

@@ -33,6 +33,8 @@ class Pricing
                 'registration_fee' => $p->registration_fee,
                 'description' => $p->description,
                 'is_free' => $p->is_free,
+                'is_contact' => $p->is_contact,
+                'contact_url' => $p->contact_url,
                 'highlight' => $p->highlight,
                 'features' => $p->featureKeys(),
             ]);
@@ -46,16 +48,26 @@ class Pricing
 
     public static function planPrice(): int
     {
-        $plan = SaasPlan::query()->where('is_active', true)->where('is_free', false)->orderBy('sort_order')->first();
+        $plan = self::paidPlan();
 
         return $plan?->price ?? (int) Setting::get('eventner_plan_price', 150000);
     }
 
     public static function registrationFee(): int
     {
-        $plan = SaasPlan::query()->where('is_active', true)->where('is_free', false)->orderBy('sort_order')->first();
+        $plan = self::paidPlan();
 
         return $plan?->registration_fee ?? (int) Setting::get('eventner_registration_fee', 50000);
+    }
+
+    private static function paidPlan(): ?SaasPlan
+    {
+        return SaasPlan::query()
+            ->where('is_active', true)
+            ->where('is_free', false)
+            ->where('is_contact', false)
+            ->orderBy('sort_order')
+            ->first();
     }
 
     /**
@@ -68,7 +80,7 @@ class Pricing
             ->filter(fn ($c) => $c['locked_free'] ?? true)
             ->map(fn ($c, $key) => ['key' => $key, 'label' => $c['label']]);
 
-        $plan = SaasPlan::query()->with('features')->where('is_active', true)->where('is_free', false)->orderBy('sort_order')->first();
+        $plan = self::paidPlan()->loadMissing('features');
 
         if ($plan) {
             $included = $plan->featureKeys();

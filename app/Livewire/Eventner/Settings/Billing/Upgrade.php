@@ -61,8 +61,8 @@ class Upgrade extends Component
         }
 
         $plan = $planId
-            ? SaasPlan::where('is_active', true)->where('is_free', false)->findOrFail($planId)
-            : SaasPlan::where('is_active', true)->where('is_free', false)->orderBy('sort_order')->first();
+            ? SaasPlan::where('is_active', true)->where('is_free', false)->where('is_contact', false)->findOrFail($planId)
+            : SaasPlan::where('is_active', true)->where('is_free', false)->where('is_contact', false)->orderBy('sort_order')->first();
 
         $price = $plan?->price ?? (int) Setting::get('eventner_plan_price', 150000);
 
@@ -151,7 +151,7 @@ class Upgrade extends Component
     public function render()
     {
         return view('livewire.eventner.settings.billing.upgrade', [
-            'plans' => SaasPlan::with('features')->where('is_active', true)->orderBy('sort_order')->get(),
+            'plans' => SaasPlan::with('features')->where('is_active', true)->where('is_contact', false)->orderBy('sort_order')->get(),
         ]);
     }
 }

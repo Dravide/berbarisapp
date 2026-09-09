@@ -67,12 +67,25 @@
                                             <span class="fw-semibold">{{ $plan->name }}</span>
                                             @if($plan->highlight) <span class="badge bg-warning text-dark ms-1">Rekomendasi</span> @endif
                                             @if($plan->is_free) <span class="badge bg-secondary ms-1">Gratis</span> @endif
+                                            @if($plan->is_contact) <span class="badge bg-info ms-1">Hubungi Admin</span> @endif
                                             @if($plan->description)
                                                 <div class="text-muted fs-3">{{ $plan->description }}</div>
                                             @endif
                                         </td>
-                                        <td>Rp {{ number_format($plan->price, 0, ',', '.') }}</td>
-                                        <td>Rp {{ number_format($plan->registration_fee, 0, ',', '.') }}</td>
+                                        <td>
+                                            @if($plan->is_contact)
+                                                <span class="text-muted">Kustom</span>
+                                            @else
+                                                Rp {{ number_format($plan->price, 0, ',', '.') }}
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($plan->is_contact)
+                                                <span class="text-muted">-</span>
+                                            @else
+                                                Rp {{ number_format($plan->registration_fee, 0, ',', '.') }}
+                                            @endif
+                                        </td>
                                         <td>
                                             @if($plan->is_free)
                                                 <span class="text-muted fs-3">Dasar saja</span>
@@ -130,12 +143,13 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Harga (Rp)</label>
-                                    <input type="number" class="form-control @error('price') is-invalid @enderror" wire:model="price" min="0" step="1000" @disabled($is_free)>
+                                    <input type="number" class="form-control @error('price') is-invalid @enderror" wire:model="price" min="0" step="1000" @disabled($is_free || $is_contact)>
                                     @error('price') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    @if($is_contact) <div class="form-text">Harga disepakati langsung dengan admin.</div> @endif
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Biaya Pendaftaran (Rp)</label>
-                                    <input type="number" class="form-control @error('registration_fee') is-invalid @enderror" wire:model="registration_fee" min="0" step="1000" @disabled($is_free)>
+                                    <input type="number" class="form-control @error('registration_fee') is-invalid @enderror" wire:model="registration_fee" min="0" step="1000" @disabled($is_free || $is_contact)>
                                     @error('registration_fee') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     <div class="form-text">Dibayar saat mendaftar dengan paket ini. 0 = gratis.</div>
                                 </div>
@@ -149,7 +163,11 @@
                                         <label class="form-check-label" for="is_free">Paket gratis (harga Rp 0, tanpa fitur premium)</label>
                                     </div>
                                     <div class="form-check form-check-inline">
-                                        <input class="form-check-input" type="checkbox" id="highlight" wire:model="highlight" @disabled($is_free)>
+                                        <input class="form-check-input" type="checkbox" id="is_contact" wire:model.live="is_contact">
+                                        <label class="form-check-label" for="is_contact">Paket khusus (tombol Hubungi Admin, tanpa pembayaran online)</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" id="highlight" wire:model="highlight" @disabled($is_free || $is_contact)>
                                         <label class="form-check-label" for="highlight">Tandai sebagai Rekomendasi</label>
                                     </div>
                                     <div class="form-check form-check-inline">
@@ -157,6 +175,14 @@
                                         <label class="form-check-label" for="is_active">Aktif (tampil di halaman harga)</label>
                                     </div>
                                 </div>
+                                @if($is_contact)
+                                    <div class="col-12 mb-3">
+                                        <label class="form-label">URL Kontak <span class="text-danger">*</span></label>
+                                        <input type="url" class="form-control @error('contact_url') is-invalid @enderror" wire:model="contact_url" placeholder="https://wa.me/62812xxxxx atau link form">
+                                        @error('contact_url') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                        <div class="form-text">Dibuka saat pengunjung klik tombol "Hubungi Admin" pada paket ini.</div>
+                                    </div>
+                                @endif
                             </div>
 
                             @unless($is_free)

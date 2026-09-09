@@ -28,6 +28,9 @@
                     <div class="mt-5">
                         @if($plan['is_free'])
                             <span class="font-display text-4xl font-extrabold text-deep-slate">Rp 0</span>
+                        @elseif($plan['is_contact'])
+                            <span class="font-display text-4xl font-extrabold text-primary">Kustom</span>
+                            <p class="mt-1 text-xs text-on-surface-variant">Harga disepakati bersama admin</p>
                         @else
                             <span class="font-display text-4xl font-extrabold text-primary">Rp {{ number_format($plan['price'], 0, ',', '.') }}</span>
                             @if($plan['registration_fee'] > 0)
@@ -48,30 +51,33 @@
                                 @php $label = config("eventner_features.{$featureKey}.label", $featureKey); @endphp
                                 <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> {{ $label }}</li>
                             @endforeach
-                            <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> Aktivasi otomatis setelah bayar</li>
+                            <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> {{ $plan['is_contact'] ? 'Aktivasi oleh admin setelah konfirmasi' : 'Aktivasi otomatis setelah bayar' }}</li>
                         @endif
                     </ul>
                     <div class="mt-8">
-                        @auth
-                            @if($eventner)
-                                @if($isOwned && $hasPaid)
-                                    <span class="btn-primary pointer-events-none w-full justify-center opacity-60"><i class="ti ti-circle-check"></i> Paket Anda</span>
-                                @elseif($isOwned)
-                                    <a href="{{ route('eventner.billing.upgrade') }}" class="btn-primary w-full justify-center"><i class="ti ti-bolt"></i> Aktifkan Sekarang</a>
-                                @elseif($hasPaid)
-                                    <a href="{{ route('dashboard') }}" class="btn-ghost w-full justify-center">Ke Dashboard</a>
-                                @else
-                                    <a href="{{ route('eventner.billing.upgrade') }}" class="{{ $plan['highlight'] ? 'btn-primary' : 'btn-ghost' }} w-full justify-center">Pilih Paket Ini</a>
-                                @endif
-                            @else
-                                <a href="{{ route('dashboard') }}" class="{{ $plan['highlight'] ? 'btn-primary' : 'btn-ghost' }} w-full justify-center">Ke Dashboard</a>
-                            @endif
-                        @else
+                        @if($plan['is_contact'])
+                            <a href="{{ $plan['contact_url'] ?: '#contact' }}" target="_blank" rel="noopener"
+                                class="{{ $plan['highlight'] ? 'btn-primary' : 'btn-ghost' }} w-full justify-center">
+                                <i class="ti ti-message-circle"></i> Hubungi Admin
+                            </a>
+                        @elseif(!auth()->check())
                             <a href="{{ route('register.eventner') }}{{ $plan['is_free'] ? '?plan=free' : '?plan=' . $plan['slug'] }}"
                                 class="{{ $plan['highlight'] ? 'btn-primary' : 'btn-ghost' }} w-full justify-center">
                                 {{ $plan['is_free'] ? 'Daftar Gratis' : 'Mulai Sekarang' }}
                             </a>
-                        @endauth
+                        @elseif($eventner)
+                            @if($isOwned && $hasPaid)
+                                <span class="btn-primary pointer-events-none w-full justify-center opacity-60"><i class="ti ti-circle-check"></i> Paket Anda</span>
+                            @elseif($isOwned)
+                                <a href="{{ route('eventner.billing.upgrade') }}" class="btn-primary w-full justify-center"><i class="ti ti-bolt"></i> Aktifkan Sekarang</a>
+                            @elseif($hasPaid)
+                                <a href="{{ route('dashboard') }}" class="btn-ghost w-full justify-center">Ke Dashboard</a>
+                            @else
+                                <a href="{{ route('eventner.billing.upgrade') }}" class="{{ $plan['highlight'] ? 'btn-primary' : 'btn-ghost' }} w-full justify-center">Pilih Paket Ini</a>
+                            @endif
+                        @else
+                            <a href="{{ route('dashboard') }}" class="{{ $plan['highlight'] ? 'btn-primary' : 'btn-ghost' }} w-full justify-center">Ke Dashboard</a>
+                        @endif
                     </div>
                 </div>
             @endforeach

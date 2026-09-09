@@ -14,6 +14,8 @@ class SaasPlan extends Model
         'description',
         'is_active',
         'is_free',
+        'is_contact',
+        'contact_url',
         'highlight',
         'sort_order',
     ];
@@ -21,6 +23,7 @@ class SaasPlan extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'is_free' => 'boolean',
+        'is_contact' => 'boolean',
         'highlight' => 'boolean',
         'price' => 'integer',
         'registration_fee' => 'integer',

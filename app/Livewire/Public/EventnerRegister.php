@@ -46,7 +46,7 @@ class EventnerRegister extends Component
     {
         $slugs = array_merge(
             ['free'],
-            SaasPlan::where('is_active', true)->where('is_free', false)->pluck('slug')->all()
+            SaasPlan::where('is_active', true)->where('is_free', false)->where('is_contact', false)->pluck('slug')->all()
         );
 
         return [
@@ -67,7 +67,7 @@ class EventnerRegister extends Component
             return null;
         }
 
-        return SaasPlan::where('is_active', true)->where('is_free', false)->where('slug', $this->plan)->first();
+        return SaasPlan::where('is_active', true)->where('is_free', false)->where('is_contact', false)->where('slug', $this->plan)->first();
     }
 
     public function updated($propertyName)
@@ -187,7 +187,7 @@ class EventnerRegister extends Component
     public function render()
     {
         return view('livewire.public.eventner-register', [
-            'plans' => SaasPlan::with('features')->where('is_active', true)->orderBy('sort_order')->get(),
+            'plans' => SaasPlan::with('features')->where('is_active', true)->where('is_contact', false)->orderBy('sort_order')->get(),
         ]);
     }
 }

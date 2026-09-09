@@ -296,4 +296,77 @@ class MonetizationTest extends TestCase
         $user = User::factory()->eventner()->create();
         $this->actingAs($user)->get(route('admin.pricing-settings'))->assertForbidden();
     }
+
+    // ────────────────────────────────────────────────
+    // Paket khusus (hubungi admin)
+    // ────────────────────────────────────────────────
+
+    private function createContactPlan(): \App\Models\SaasPlan
+    {
+        $plan = \App\Models\SaasPlan::create([
+            'name' => 'Paket Khusus',
+            'slug' => 'paket-khusus',
+            'price' => 0,
+            'registration_fee' => 0,
+            'description' => 'Sesuai kebutuhan event besar',
+            'is_active' => true,
+            'is_free' => false,
+            'is_contact' => true,
+            'contact_url' => 'https://wa.me/6281234567890',
+            'sort_order' => 3,
+        ]);
+        $plan->features()->create(['feature_key' => 'tickets']);
+
+        return $plan;
+    }
+
+    public function test_contact_plan_renders_hubungi_admin_button()
+    {
+        $this->createContactPlan();
+
+        $response = $this->get(route('pricing'));
+        $response->assertOk()
+            ->assertSee('Paket Khusus')
+            ->assertSee('Kustom')
+            ->assertSee('Hubungi Admin')
+            ->assertSee('https://wa.me/6281234567890');
+    }
+
+    public function test_contact_plan_excluded_from_register_and_upgrade()
+    {
+        $plan = $this->createContactPlan();
+
+        // Halaman register tidak menampilkan paket contact
+        $register = $this->get(route('register.eventner'));
+        $register->assertOk()->assertDontSee('Paket Khusus');
+
+        // Slug paket contact ditolak saat validasi register
+        Livewire::test(\App\Livewire\Public\EventnerRegister::class)
+            ->set('plan', 'paket-khusus')
+            ->set('name', 'Panitia')
+            ->set('username', 'panitia_contact')
+            ->set('email', 'contact@example.com')
+            ->set('password', 'password123')
+            ->set('password_confirmation', 'password123')
+            ->set('nama_event', 'Event Contact')
+            ->set('lokasi', 'Bandung')
+            ->set('agreeTerms', true)
+            ->call('save')
+            ->assertHasErrors(['plan']);
+    }
+
+    public function test_contact_plan_not_used_as_default_paid_price()
+    {
+        $this->createContactPlan();
+
+        // Harga berbayar default tetap dari paket QRIS (Event Penuh)
+        $this->assertEquals(150000, \App\Support\Pricing::planPrice());
+
+        // Upgrade hanya menawarkan paket QRIS
+        $user = User::factory()->eventner()->create();
+        Eventner::factory()->create(['user_id' => $user->id, 'plan' => 'free']);
+
+        Livewire::actingAs($user)->test(\App\Livewire\Eventner\Settings\Billing\Upgrade::class)
+            ->assertDontSee('Paket Khusus');
+    }
 }
