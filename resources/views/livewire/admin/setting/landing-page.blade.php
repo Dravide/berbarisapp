@@ -48,6 +48,7 @@
                                             'hero' => 'Hero',
                                             'features' => 'Fitur',
                                             'about' => 'Tentang',
+                                            'pricing' => 'Harga',
                                             'cta' => 'CTA',
                                             'testimonials' => 'Testimoni',
                                             'statistics' => 'Statistik',
@@ -157,6 +158,22 @@
                                                 </div>
                                             </div>
                                             @endforeach
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    {{-- ==================== PRICING TAB ==================== --}}
+                                    @if($activeTab === 'pricing')
+                                    <div wire:key="tab-pricing">
+                                        <h5 class="fw-semibold mb-3"><i class="ti ti-cash me-2"></i>Harga Section</h5>
+                                        <p class="text-muted fs-3 mb-3">Harga & daftar fitur paket diatur di <a href="{{ route('admin.settings.index') }}">Pengaturan Situs</a>. Di sini cukup judul section.</p>
+                                        <div class="mb-3">
+                                            <label class="form-label">Judul Section</label>
+                                            <input type="text" class="form-control" wire:model="pricing_title">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Subjudul</label>
+                                            <textarea class="form-control" rows="2" wire:model="pricing_subtitle"></textarea>
                                         </div>
                                     </div>
                                     @endif

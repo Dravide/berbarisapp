@@ -43,6 +43,11 @@ class LandingPage extends Component
 
     public $features_items = [];
 
+    // Pricing fields
+    public $pricing_title;
+
+    public $pricing_subtitle;
+
     // About fields
     public $about_heading;
 
@@ -128,8 +133,8 @@ class LandingPage extends Component
     public function mount()
     {
         // Load section order & active
-        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', '["hero","features","about","eventners","ticket","vote","cta"]'), true);
-        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', '{"hero":true,"features":true,"about":true,"eventners":true,"ticket":true,"vote":true,"cta":true}'), true);
+        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', '["hero","features","about","pricing","eventners","ticket","vote","cta"]'), true);
+        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', '{"hero":true,"features":true,"about":true,"pricing":true,"eventners":true,"ticket":true,"vote":true,"cta":true}'), true);
 
         // Load Hero
         $hero = json_decode(Setting::get('landing_hero', '{}'), true) ?? [];
@@ -144,6 +149,11 @@ class LandingPage extends Component
         $features = json_decode(Setting::get('landing_features', '{}'), true) ?? [];
         $this->features_title = $features['title'] ?? 'Fitur Lengkap untuk Event Sukses';
         $this->features_items = $features['items'] ?? $this->defaultFeatures();
+
+        // Load Pricing
+        $pricing = json_decode(Setting::get('landing_pricing', '{}'), true) ?? [];
+        $this->pricing_title = $pricing['title'] ?? 'Harga & Paket';
+        $this->pricing_subtitle = $pricing['subtitle'] ?? 'Kelola perlombaan sekolah dengan gratis. Aktifkan fitur premium sekali bayar per event — tanpa langganan bulanan.';
 
         // Load About
         $about = json_decode(Setting::get('landing_about', '{}'), true) ?? [];
@@ -363,6 +373,12 @@ class LandingPage extends Component
         Setting::set('landing_features', json_encode([
             'title' => $this->features_title,
             'items' => $this->features_items,
+        ]));
+
+        // Save Pricing
+        Setting::set('landing_pricing', json_encode([
+            'title' => $this->pricing_title,
+            'subtitle' => $this->pricing_subtitle,
         ]));
 
         // Save About

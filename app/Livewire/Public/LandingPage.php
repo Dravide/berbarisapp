@@ -30,8 +30,8 @@ class LandingPage extends Component
             : null;
 
         // Load sections order & active state
-        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', '["hero","features","about","eventners","ticket","vote","cta","partners"]'), true);
-        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', '{"hero":true,"features":true,"about":true,"eventners":true,"ticket":true,"vote":true,"cta":true,"partners":true}'), true);
+        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', '["hero","features","about","pricing","eventners","ticket","vote","cta","partners"]'), true);
+        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', '{"hero":true,"features":true,"about":true,"pricing":true,"eventners":true,"ticket":true,"vote":true,"cta":true,"partners":true}'), true);
 
         // Load each section's content
         foreach ($this->sectionsOrder as $type) {
@@ -54,6 +54,18 @@ class LandingPage extends Component
                 'type' => 'partners',
                 'content' => Setting::get('landing_partners'),
             ];
+        }
+
+        // Kompatibilitas data lama: order existing tanpa 'pricing' → sisipkan setelah 'about' (bila aktif)
+        $pricingActive = $this->sectionsActive['pricing'] ?? true;
+        if ($pricingActive && !in_array('pricing', array_column($this->sections, 'type'))) {
+            $pricingSection = ['type' => 'pricing', 'content' => Setting::get('landing_pricing')];
+            $aboutIndex = array_search('about', array_column($this->sections, 'type'));
+            if ($aboutIndex !== false) {
+                array_splice($this->sections, $aboutIndex + 1, 0, [$pricingSection]);
+            } else {
+                $this->sections[] = $pricingSection;
+            }
         }
     }
 

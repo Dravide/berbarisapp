@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\Eventner\Settings\Billing\Upgrade;
 use App\Models\Eventner;
+use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
@@ -193,5 +194,34 @@ class MonetizationTest extends TestCase
     public function test_pricing_page_renders_publicly()
     {
         $this->get(route('pricing'))->assertOk();
+    }
+
+    // ────────────────────────────────────────────────
+    // Harga & paket: setting admin + landing
+    // ────────────────────────────────────────────────
+
+    public function test_pricing_reflects_saas_pricing_setting()
+    {
+        // Admin simpan harga + daftar fitur (tanpa 'certificate')
+        Setting::set('eventner_plan_price', 200000);
+        Setting::set('saas_pricing', json_encode([
+            'plan_price' => 200000,
+            'premium_features' => ['tickets', 'drawing'],
+        ]));
+
+        $response = $this->get(route('pricing'));
+        $response->assertOk();
+        $response->assertSee('200.000');
+        $response->assertSee('Tiket Event');
+        $response->assertSee('Drawing / Undian');
+        $response->assertDontSee('Sertifikat'); // tidak dicentang admin
+    }
+
+    public function test_landing_pricing_section_renders()
+    {
+        $this->get(route('landing'))
+            ->assertOk()
+            ->assertSee('Event Penuh')
+            ->assertSee('Daftar Gratis');
     }
 }

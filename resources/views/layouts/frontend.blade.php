@@ -220,6 +220,7 @@
                     @endif
                 @else
                     <a href="{{ url('/') }}#features" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Fitur</a>
+                    <a href="{{ url('/') }}#pricing" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Harga</a>
                     <a href="{{ url('/') }}#eventners" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Event</a>
                     <a href="{{ url('/') }}#contact" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant hover:text-primary">Kontak</a>
                 @endisset
@@ -279,6 +280,7 @@
                             @endif
                         @else
                             <li><a href="{{ url('/') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Beranda</a></li>
+                            <li><a href="{{ route('pricing') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Harga & Paket</a></li>
                         @endisset
                     </ul>
                 </div>
