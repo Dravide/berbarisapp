@@ -351,7 +351,23 @@ class Registration extends Component
 
     public function getScoreCategoriesProperty()
     {
-        return \App\Models\AssessmentCategory::where('eventner_id', $this->registration->eventner_id)->get();
+        // Hanya kategori penilaian yang relevan dengan tingkat lomba
+        // registrasi ini (spesifik tingkat + global) — sama seperti
+        // logika input nilai. Kategori tingkat lain tidak ikut tampil
+        // sebagai baris nol.
+        $compCatId = $this->registration->competition_category_id;
+
+        return \App\Models\AssessmentCategory::where('eventner_id', $this->registration->eventner_id)
+            ->where(function ($q) use ($compCatId) {
+                $q->where('competition_category_id', $compCatId)
+                    ->orWhereNull('competition_category_id');
+            })
+            ->get();
+    }
+
+    public function getScoreDeductionsProperty()
+    {
+        return \App\Models\ScoreDeduction::where('registration_id', $this->activeRegId)->get();
     }
 
     public function getScoreJudgesProperty()
