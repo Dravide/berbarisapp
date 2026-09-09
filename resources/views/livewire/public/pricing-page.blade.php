@@ -1,90 +1,84 @@
-<div class="container py-5">
-    <div class="text-center mb-5">
-        <h1 class="display-6 fw-bold mb-3">Harga &amp; Paket</h1>
-        <p class="text-muted mx-auto" style="max-width: 640px;">
-            Kelola perlombaan sekolah dengan gratis. Aktifkan fitur premium sekali bayar per event — tanpa langganan bulanan.
-        </p>
-    </div>
+<div class="min-h-screen bg-surface">
+    <div class="container-landing py-12 md:py-16">
+        {{-- Heading --}}
+        <div class="mx-auto max-w-2xl text-center">
+            <span class="overline justify-center">Harga</span>
+            <h1 class="mt-4 font-display text-3xl font-bold md:text-4xl">Harga &amp; Paket</h1>
+            <p class="mt-4 text-on-surface-variant">
+                Kelola perlombaan sekolah dengan gratis. Aktifkan fitur premium sekali bayar per event — tanpa langganan bulanan.
+            </p>
+        </div>
 
-    <div class="row g-4 justify-content-center align-items-stretch">
-        {{-- ================= Paket Gratis ================= --}}
-        <div class="col-md-5 col-lg-4">
-            <div class="card h-100 border-0 shadow-sm rounded-4">
-                <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-semibold mb-1">Gratis</h5>
-                    <p class="text-muted small mb-4">Untuk mulai mengelola lomba</p>
-                    <div class="mb-4">
-                        <span class="fs-2 fw-bold">Rp 0</span>
-                    </div>
-                    <ul class="list-unstyled d-flex flex-column gap-2 mb-4 small">
-                        <li><i class="ti ti-check text-success me-2"></i>Dashboard event & profil</li>
-                        <li><i class="ti ti-check text-success me-2"></i>Kategori lomba & pendaftaran peserta</li>
-                        <li><i class="ti ti-check text-success me-2"></i>Manajemen juri & input nilai</li>
-                        <li><i class="ti ti-check text-success me-2"></i>Rekap nilai & scoreboard publik</li>
-                        <li><i class="ti ti-check text-success me-2"></i>QR check-in & sertifikat dasar</li>
-                    </ul>
-                    <div class="mt-auto">
-                        @auth
-                            @if(auth()->user()->role === 'Eventner' && auth()->user()->eventner?->plan !== 'paid')
-                                <a href="{{ route('eventner.billing.upgrade') }}" class="btn btn-outline-primary w-100 py-8 rounded-2">Kelola Paket</a>
-                            @else
-                                <a href="{{ route('dashboard') }}" class="btn btn-outline-primary w-100 py-8 rounded-2">Ke Dashboard</a>
-                            @endif
+        {{-- Kartu Paket --}}
+        <div class="mt-12 grid grid-cols-1 items-stretch justify-center gap-6 md:grid-cols-2">
+            {{-- ================= Paket Gratis ================= --}}
+            <div class="surface-card flex flex-col p-8">
+                <h3 class="text-lg font-bold text-deep-slate">Gratis</h3>
+                <p class="mt-1 text-sm text-on-surface-variant">Untuk mulai mengelola lomba</p>
+                <div class="mt-5">
+                    <span class="font-display text-4xl font-extrabold text-deep-slate">Rp 0</span>
+                </div>
+                <ul class="mt-6 flex flex-1 flex-col gap-3 text-sm">
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> Dashboard event & profil</li>
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> Kategori lomba & pendaftaran peserta</li>
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> Manajemen juri & input nilai</li>
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> Rekap nilai & scoreboard publik</li>
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> QR check-in peserta</li>
+                </ul>
+                <div class="mt-8">
+                    @auth
+                        @if(auth()->user()->role === 'Eventner' && auth()->user()->eventner?->plan !== 'paid')
+                            <a href="{{ route('eventner.billing.upgrade') }}" class="btn-ghost w-full justify-center">Kelola Paket</a>
                         @else
-                            <a href="{{ route('register.eventner') }}?plan=free" class="btn btn-outline-primary w-100 py-8 rounded-2">Daftar Gratis</a>
-                        @endauth
-                    </div>
+                            <a href="{{ route('dashboard') }}" class="btn-ghost w-full justify-center">Ke Dashboard</a>
+                        @endif
+                    @else
+                        <a href="{{ route('register.eventner') }}?plan=free" class="btn-ghost w-full justify-center">Daftar Gratis</a>
+                    @endauth
+                </div>
+            </div>
+
+            {{-- ================= Paket Event Penuh ================= --}}
+            <div class="surface-card relative flex flex-col overflow-hidden border-2 border-secondary p-8">
+                <span class="absolute top-4 right-4 rounded-full bg-secondary px-3 py-1 text-xs font-bold text-deep-slate">Rekomendasi</span>
+                <h3 class="text-lg font-bold text-deep-slate">Event Penuh</h3>
+                <p class="mt-1 text-sm text-on-surface-variant">Bayar sekali, aktif selama event</p>
+                <div class="mt-5">
+                    <span class="font-display text-4xl font-extrabold text-primary">Rp {{ number_format($planPrice, 0, ',', '.') }}</span>
+                    @if($regFee > 0)
+                        <p class="mt-1 text-xs text-on-surface-variant">+ biaya pendaftaran Rp {{ number_format($regFee, 0, ',', '.') }}</p>
+                    @endif
+                </div>
+                <ul class="mt-6 flex flex-1 flex-col gap-3 text-sm">
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> Semua fitur paket gratis</li>
+                    @foreach($premiumFeatures as $feature)
+                        <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> {{ $feature['label'] }}</li>
+                    @endforeach
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> Aktivasi otomatis setelah bayar</li>
+                </ul>
+                <div class="mt-8">
+                    @auth
+                        @if(auth()->user()->role === 'Eventner' && auth()->user()->eventner?->plan !== 'paid')
+                            <a href="{{ route('eventner.billing.upgrade') }}" class="btn-primary w-full justify-center"><i class="ti ti-bolt"></i> Upgrade Sekarang</a>
+                        @elseif(auth()->user()->role === 'Eventner')
+                            <span class="btn-primary pointer-events-none w-full justify-center opacity-60"><i class="ti ti-circle-check"></i> Sudah Aktif</span>
+                        @else
+                            <a href="{{ route('dashboard') }}" class="btn-primary w-full justify-center">Ke Dashboard</a>
+                        @endif
+                    @else
+                        <a href="{{ route('register.eventner') }}" class="btn-primary w-full justify-center">Mulai Sekarang</a>
+                    @endauth
                 </div>
             </div>
         </div>
 
-        {{-- ================= Paket Berbayar ================= --}}
-        <div class="col-md-5 col-lg-4">
-            <div class="card h-100 border-0 shadow-lg rounded-4 position-relative overflow-hidden border-top border-4 border-success">
-                <span class="badge bg-success position-absolute top-0 end-0 m-3">Rekomendasi</span>
-                <div class="card-body p-4 d-flex flex-column">
-                    <h5 class="fw-semibold mb-1">Paket Event Penuh</h5>
-                    <p class="text-muted small mb-4">Bayar sekali, aktif selama event</p>
-                    <div class="mb-1">
-                        <span class="fs-2 fw-bold text-primary">Rp {{ number_format($planPrice, 0, ',', '.') }}</span>
-                    </div>
-                    <p class="text-muted small mb-4">
-                        + Biaya pendaftaran event Rp {{ number_format($regFee, 0, ',', '.') }}
-                    </p>
-                    <ul class="list-unstyled d-flex flex-column gap-2 mb-4 small">
-                        <li><i class="ti ti-check text-success me-2"></i>Semua fitur paket gratis</li>
-                        @foreach($premiumFeatures as $feature)
-                            <li><i class="ti ti-check text-success me-2"></i>{{ $feature['label'] }}</li>
-                        @endforeach
-                        <li><i class="ti ti-check text-success me-2"></i>Aktivasi otomatis setelah bayar</li>
-                    </ul>
-                    <div class="mt-auto">
-                        @auth
-                            @if(auth()->user()->role === 'Eventner' && auth()->user()->eventner?->plan !== 'paid')
-                                <a href="{{ route('eventner.billing.upgrade') }}" class="btn btn-primary w-100 py-8 rounded-2"><i class="ti ti-bolt me-1"></i> Upgrade Sekarang</a>
-                            @elseif(auth()->user()->role === 'Eventner')
-                                <span class="btn btn-success disabled w-100"><i class="ti ti-circle-check me-1"></i> Sudah Aktif</span>
-                            @else
-                                <a href="{{ route('dashboard') }}" class="btn btn-primary w-100 py-8 rounded-2">Ke Dashboard</a>
-                            @endif
-                        @else
-                            <a href="{{ route('register.eventner') }}" class="btn btn-primary w-100 py-8 rounded-2">Mulai Sekarang</a>
-                        @endauth
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="row justify-content-center mt-5">
-        <div class="col-lg-8">
-            <div class="alert alert-info border-0 bg-info-subtle text-info-emphasis rounded-4">
-                <div class="d-flex gap-3">
-                    <i class="ti ti-info-circle fs-4 flex-shrink-0"></i>
-                    <div>
-                        <strong>Cara kerja pembayaran:</strong>
-                        Pilih upgrade → scan QRIS → aktivasi otomatis dalam hitungan detik setelah pembayaran terkonfirmasi. Tidak ada verifikasi manual, tidak ada biaya tersembunyi. Satu kali bayar berlaku untuk satu event sampai selesai.
-                    </div>
+        {{-- Info pembayaran --}}
+        <div class="mx-auto mt-10 max-w-2xl">
+            <div class="surface-card flex items-start gap-3 p-5 border border-primary/20">
+                <i class="ti ti-info-circle shrink-0 text-xl text-primary"></i>
+                <div class="text-sm text-on-surface-variant">
+                    <span class="font-bold text-deep-slate">Cara kerja pembayaran:</span>
+                    Pilih upgrade → scan QRIS → aktivasi otomatis dalam hitungan detik setelah pembayaran terkonfirmasi. Tidak ada verifikasi manual, tidak ada biaya tersembunyi. Satu kali bayar berlaku untuk satu event sampai selesai.
                 </div>
             </div>
         </div>
