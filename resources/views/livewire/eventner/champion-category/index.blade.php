@@ -20,13 +20,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success border-0 bg-success-subtle text-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     {{-- Competition Category Filter --}}
     <div class="card w-100 mb-4">
         <div class="card-body p-3">
@@ -316,7 +309,7 @@
                     <button wire:click="edit({{ $champion->id }})" class="btn btn-sm btn-light" title="Edit">
                         <i class="ti ti-edit"></i>
                     </button>
-                    <button wire:click="delete({{ $champion->id }})" class="btn btn-sm btn-outline-light" title="Hapus" onclick="return confirm('Hapus kategori juara ini?')">
+                    <button wire:click="delete({{ $champion->id }})" wire:confirm="Hapus kategori juara ini?" class="btn btn-sm btn-outline-light" title="Hapus">
                         <i class="ti ti-trash"></i>
                     </button>
                 </div>
@@ -331,7 +324,7 @@
                                 <i class="ti ti-medal me-1"></i>{{ $rt->title }}
                                 <small class="text-muted ms-1">(Rank {{ $rt->rank_start }}-{{ $rt->rank_end }})</small>
                                 <button wire:click="editRankTitle({{ $rt->id }})" class="btn btn p-0 ms-1 text-primary"><i class="ti ti-edit fs-3"></i></button>
-                                <button wire:click="deleteRankTitle({{ $rt->id }})" class="btn btn p-0 ms-1 text-danger" onclick="return confirm('Hapus gelar ini?')"><i class="ti ti-x fs-3"></i></button>
+                                <button wire:click="deleteRankTitle({{ $rt->id }})" wire:confirm="Hapus gelar ini?" class="btn btn p-0 ms-1 text-danger"><i class="ti ti-x fs-3"></i></button>
                             </span>
                         @endforeach
                     </div>

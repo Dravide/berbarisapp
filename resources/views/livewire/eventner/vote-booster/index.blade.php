@@ -18,13 +18,6 @@
         </div>
     </div>
 
-    @if (session()->has('success'))
-        <div class="alert alert-success border-0 bg-success-subtle text-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     {{-- Active Booster Alert --}}
     @if($activeNow)
     <div class="alert alert-warning border-0 bg-warning-subtle text-warning-emphasis d-flex align-items-center gap-2 mb-4">
@@ -125,7 +118,7 @@
                                                 {{ $b->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
                                             </button>
                                             <button class="btn btn-sm btn-outline-danger" wire:click="delete({{ $b->id }})"
-                                                onclick="return confirm('Hapus booster ini?') || event.stopImmediatePropagation()">
+                                                wire:confirm="Hapus booster ini?">
                                                 <i class="ti ti-trash"></i>
                                             </button>
                                         </td>

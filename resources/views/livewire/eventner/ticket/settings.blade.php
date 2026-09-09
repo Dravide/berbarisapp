@@ -21,13 +21,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success border-0 bg-success-subtle text-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <div class="card w-100">
@@ -114,11 +107,11 @@
                             </div>
                             <div class="d-flex gap-2">
                                 <button type="button" wire:click="regenerateCheckinToken" class="btn btn-warning px-3 fw-semibold" wire:loading.attr="disabled"
-                                        onclick="return confirm('Rotate token? URL lama tidak berlaku lagi.')">
+                                        wire:confirm="Rotate token? URL lama tidak berlaku lagi.">
                                     <i class="ti ti-refresh me-1"></i> Rotate Token
                                 </button>
                                 <button type="button" wire:click="revokeCheckinAccess" class="btn btn-outline-danger px-3 fw-semibold" wire:loading.attr="disabled"
-                                        onclick="return confirm('Cabut akses check-in? Link lama akan hangus.')">
+                                        wire:confirm="Cabut akses check-in? Link lama akan hangus.">
                                     <i class="ti ti-trash me-1"></i> Cabut Akses
                                 </button>
                             </div>

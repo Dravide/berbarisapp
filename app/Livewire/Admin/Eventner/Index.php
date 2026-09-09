@@ -117,7 +117,7 @@ class Index extends Component
                 'tingkat_perlombaan' => $this->tingkat_perlombaan,
             ]);
 
-            session()->flash('message', 'Data Eventner berhasil diperbarui.');
+            session()->flash('success', 'Data Eventner berhasil diperbarui.');
         } else {
             // Create User first
             $user = User::create([
@@ -146,7 +146,7 @@ class Index extends Component
                 'tingkat_perlombaan' => $this->tingkat_perlombaan,
             ]);
 
-            session()->flash('message', 'Data Eventner dan Akun User (Password default: password) berhasil dibuat.');
+            session()->flash('success', 'Data Eventner dan Akun User (Password default: password) berhasil dibuat.');
         }
 
         $this->dispatch('close-modal');
@@ -186,7 +186,7 @@ class Index extends Component
         // Deleting the user will cascade delete the eventner because of foreign key constraint
         User::findOrFail($userId)->delete();
 
-        session()->flash('message', 'Data Eventner dan Akun User berhasil dihapus.');
+        session()->flash('success', 'Data Eventner dan Akun User berhasil dihapus.');
         $this->loadEventners();
     }
 }

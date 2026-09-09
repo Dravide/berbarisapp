@@ -19,20 +19,6 @@
         </div>
     </div>
 
-    {{-- Flash Message --}}
-    @if(session()->has('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="ti ti-check me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-    @if(session()->has('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="ti ti-alert-circle me-2"></i> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
     {{-- Summary Cards --}}
     <div class="row g-3 mb-4">
         {{-- Total Tiket --}}
@@ -132,7 +118,7 @@
                 ]) }}" class="btn btn-sm btn-primary">
                     <i class="ti ti-file-export me-1"></i> Export CSV
                 </a>
-                <button class="btn btn-sm btn-warning" wire:click="syncPending" wire:loading.attr="disabled" wire:target="syncPending" onclick="return confirm('Sinkron semua tiket PENDING dengan AutoGoPay?') || event.stopImmediatePropagation()">
+                <button class="btn btn-sm btn-warning" wire:click="syncPending" wire:loading.attr="disabled" wire:target="syncPending" wire:confirm="Sinkron semua tiket PENDING dengan AutoGoPay?">
                     <i class="ti ti-refresh me-1" wire:loading.remove wire:target="syncPending"></i>
                     <span wire:loading.remove wire:target="syncPending">Sinkron Status PENDING</span>
                     <span wire:loading wire:target="syncPending"><span class="spinner-border spinner-border-sm me-1"></span> Mengecek...</span>

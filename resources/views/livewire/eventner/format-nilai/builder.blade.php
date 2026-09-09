@@ -20,9 +20,6 @@
         </div>
     </div>
 
-    @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
-    @if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
-
     {{-- Pilih tingkat lomba --}}
     <div class="row mb-4">
         <div class="col-md-5">
@@ -128,7 +125,7 @@
                                             title="Salin ke Tingkat Lain">
                                             <i class="ti ti-arrow-right-circle"></i> Salin Ke
                                         </button>
-                                        <button class="btn btn-sm btn-outline-danger border-0" wire:click="deleteCategory({{ $category->id }})" title="Hapus Kategori" onclick="return confirm('Yakin hapus Kategori ini beserta SELURUH Sub-kategorinya?') || event.stopImmediatePropagation()">
+                                        <button class="btn btn-sm btn-outline-danger border-0" wire:click="deleteCategory({{ $category->id }})" title="Hapus Kategori" wire:confirm="Yakin hapus Kategori ini beserta SELURUH Sub-kategorinya?">
                                             <i class="ti ti-trash"></i>
                                         </button>
                                     @endif
@@ -164,7 +161,7 @@
                                                             <button class="btn btn-sm btn-outline-primary border-0 p-1" wire:click="startEditSubCategory({{ $subCat->id }})" title="Edit">
                                                                 <i class="ti ti-pencil fs-5"></i>
                                                             </button>
-                                                            <button class="btn btn-sm btn-outline-danger border-0 p-1" wire:click="deleteSubCategory({{ $subCat->id }})" title="Hapus" onclick="return confirm('Hapus Sub-Kategori ini?') || event.stopImmediatePropagation()">
+                                                            <button class="btn btn-sm btn-outline-danger border-0 p-1" wire:click="deleteSubCategory({{ $subCat->id }})" title="Hapus" wire:confirm="Hapus Sub-Kategori ini?">
                                                                 <i class="ti ti-x fs-5"></i>
                                                             </button>
                                                         </div>
@@ -258,7 +255,7 @@
                                                                     <button class="btn btn-sm btn-outline-primary border-0 p-1" wire:click="startEditDeductionCategory({{ $deductionCat->id }})" title="Edit">
                                                                         <i class="ti ti-pencil fs-5"></i>
                                                                     </button>
-                                                                    <button class="btn btn-sm btn-outline-danger border-0 p-1" wire:click="deleteDeductionCategory({{ $deductionCat->id }})" title="Hapus" onclick="return confirm('Hapus kategori pengurangan ini beserta seluruh kriterianya?') || event.stopImmediatePropagation()">
+                                                                    <button class="btn btn-sm btn-outline-danger border-0 p-1" wire:click="deleteDeductionCategory({{ $deductionCat->id }})" title="Hapus" wire:confirm="Hapus kategori pengurangan ini beserta seluruh kriterianya?">
                                                                         <i class="ti ti-trash fs-5"></i>
                                                                     </button>
                                                                 </div>
@@ -669,7 +666,6 @@
                     </select>
                     <small class="form-text text-muted">Struktur rubrik (sub-kategori & kriteria) disalin sebagai kategori baru di tingkat tujuan.</small>
                 </div>
-                @if(session('error'))<div class="alert alert-danger py-2">{{ session('error') }}</div>@endif
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" wire:click="closeCopyToModal">

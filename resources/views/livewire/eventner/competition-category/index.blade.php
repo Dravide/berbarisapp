@@ -18,20 +18,6 @@
         </div>
     </div>
 
-    @if (session()->has('success'))
-        <div class="alert alert-success border-0 bg-success-subtle text-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    @if (session()->has('error'))
-        <div class="alert alert-danger border-0 bg-danger-subtle text-danger alert-dismissible fade show">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     <div class="row">
         <!-- Panel Daftar (Tree) -->
         <div class="col-lg-8">
@@ -63,7 +49,7 @@
                                             <i class="ti ti-edit fs-4"></i>
                                         </button>
                                         <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $parent->id }})" title="Hapus Jenis Lomba"
-                                            onclick="return confirm('Hapus jenis lomba ini? Pastikan semua tingkat di dalamnya sudah dihapus.') || event.stopImmediatePropagation()">
+                                            wire:confirm="Hapus jenis lomba ini? Pastikan semua tingkat di dalamnya sudah dihapus.">
                                             <i class="ti ti-trash fs-4"></i>
                                         </button>
                                     </div>
@@ -110,7 +96,7 @@
                                                                 <i class="ti ti-edit fs-4"></i>
                                                             </button>
                                                             <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $child->id }})" title="Hapus Tingkat"
-                                                                onclick="return confirm('Hapus tingkat lomba ini?') || event.stopImmediatePropagation()">
+                                                                wire:confirm="Hapus tingkat lomba ini?">
                                                                 <i class="ti ti-trash fs-4"></i>
                                                             </button>
                                                         </div>
@@ -143,7 +129,7 @@
                                                 <i class="ti ti-edit fs-4"></i>
                                             </button>
                                             <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $orphan->id }})" title="Hapus"
-                                                onclick="return confirm('Hapus kategori lomba ini?') || event.stopImmediatePropagation()">
+                                                wire:confirm="Hapus kategori lomba ini?">
                                                 <i class="ti ti-trash fs-4"></i>
                                             </button>
                                         </div>

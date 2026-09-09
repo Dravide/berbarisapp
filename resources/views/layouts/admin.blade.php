@@ -114,5 +114,96 @@
   @yield('scripts')
   @stack('scripts')
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    // Alert SweetAlert untuk semua halaman admin.
+    // - beToast(msg, icon): notifikasi singkat pojok kanan atas
+    // - beConfirm({title, text, ...}): dialog konfirmasi, return Promise<boolean>
+    // - Override window.confirm: wire:confirm Livewire otomatis pakai
+    //   SweetAlert (sinkron via handler __livewire_confirm).
+    window.beToast = function(message, icon) {
+      if (!window.Swal) { alert(message); return; }
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: icon || 'success',
+        title: message,
+        showConfirmButton: false,
+        timer: 3500,
+        timerProgressBar: true,
+      });
+    };
+
+    window.beConfirm = function(options) {
+      if (!window.Swal) { return Promise.resolve(window.confirm(options.title || 'Lanjutkan?')); }
+      return Swal.fire({
+        title: options.title || 'Yakin?',
+        html: options.html || options.text || '',
+        icon: options.icon || 'question',
+        showCancelButton: true,
+        confirmButtonText: options.confirmText || 'Ya',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: options.confirmColor || '#198754',
+        cancelButtonColor: '#6c757d',
+        reverseButtons: true,
+      }).then(function(result) { return result.isConfirmed; });
+    };
+
+    // wire:confirm memanggil global confirm() secara sinkron; override
+    // menunggu SweetAlert dulu, lalu panggil handler asli saat dikonfirmasi.
+    window.nativeConfirm = window.confirm;
+    window.confirm = function(message) {
+      // Fallback saat Swal tak ter-load (CDN gagal): konfirmasi native.
+      if (!window.Swal) { return window.nativeConfirm(message); }
+
+      const el = document.activeElement;
+      const handler = el && el.__livewire_confirm;
+
+      Swal.fire({
+        title: message,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya',
+        cancelButtonText: 'Batal',
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        reverseButtons: true,
+      }).then(function(result) {
+        if (result.isConfirmed && handler) {
+          // Lepas __livewire_confirm dulu supaya klik ulang tidak
+          // memicu konfirmasi dua kali, lalu pulihkan.
+          const saved = el.__livewire_confirm;
+          delete el.__livewire_confirm;
+          el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+          setTimeout(function() { if (!el.__livewire_confirm) el.__livewire_confirm = saved; }, 500);
+        }
+      });
+
+      // Kembalikan false agar eksekusi native Livewire berhenti —
+      // hanya handler SweetAlert yang melanjutkan saat dikonfirmasi.
+      return false;
+    };
+
+    document.addEventListener('livewire:init', function () {
+      Livewire.on('toast', function (event) {
+        const d = (event && event.detail) || {};
+        const message = typeof d === 'string' ? d : (d.message || 'Berhasil.');
+        const type = (typeof d === 'object' && d.type) || 'success';
+        window.beToast(message, type);
+      });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      @if(session('success'))
+        beToast({!! json_encode(session('success')) !!}, 'success');
+      @endif
+      @if(session('error'))
+        beToast({!! json_encode(session('error')) !!}, 'error');
+      @endif
+      @if(session('scoring_error'))
+        beToast({!! json_encode(session('scoring_error')) !!}, 'error');
+      @endif
+    });
+  </script>
 </body>
 </html>

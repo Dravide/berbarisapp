@@ -18,13 +18,6 @@
         </div>
     </div>
 
-    @if (session()->has('success'))
-        <div class="alert alert-success border-0 bg-success-subtle text-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     <div class="row">
         <!-- Panel List Tenant -->
         <div class="col-lg-8">
@@ -90,7 +83,7 @@
                                                 <button class="btn btn-sm btn-outline-primary p-1 me-1" wire:click="edit({{ $tenant->id }})" title="Edit Tenant">
                                                     <i class="ti ti-edit fs-4"></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $tenant->id }})" title="Hapus Tenant" onclick="return confirm('Hapus tenant ini?') || event.stopImmediatePropagation()">
+                                                <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $tenant->id }})" title="Hapus Tenant" wire:confirm="Hapus tenant ini?">
                                                     <i class="ti ti-trash fs-4"></i>
                                                 </button>
                                             </td>

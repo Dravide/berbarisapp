@@ -21,20 +21,6 @@
         </div>
     </div>
 
-    {{-- Flash Messages --}}
-    @if(session('success'))
-        <div class="alert alert-success border-0 bg-success-subtle text-success alert-dismissible fade show">
-            <i class="ti ti-check me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger border-0 bg-danger-subtle text-danger alert-dismissible fade show">
-            <i class="ti ti-alert-circle me-2"></i> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     <div class="row">
         {{-- Daftar Rundown --}}
         <div class="col-lg-8">
@@ -119,7 +105,7 @@
                                                     <button class="btn btn-sm btn-outline-warning p-1" wire:click="edit({{ $item->id }})" title="Edit">
                                                         <i class="ti ti-pencil"></i>
                                                     </button>
-                                                    <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $item->id }})" onclick="return confirm('Hapus item rundown ini?')" title="Hapus">
+                                                    <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $item->id }})" wire:confirm="Hapus item rundown ini?" title="Hapus">
                                                         <i class="ti ti-trash"></i>
                                                     </button>
                                                 </div>

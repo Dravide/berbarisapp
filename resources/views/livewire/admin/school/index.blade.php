@@ -22,13 +22,6 @@
         </div>
     </div>
 
-    @if (session()->has('message'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('message') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     <div class="card">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-4">

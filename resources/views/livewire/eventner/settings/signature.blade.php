@@ -19,13 +19,6 @@
         </div>
     </div>
 
-    @if (session()->has('success'))
-        <div class="alert alert-success border-0 bg-success-subtle text-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     <div class="alert alert-light border border-info-subtle fs-2 mb-4">
         <i class="ti ti-info-circle me-1 text-info"></i>
         Stempel terpilih dipakai pada kolom <strong>Penerima Pembayaran</strong> di kwitansi/invoice PDF.

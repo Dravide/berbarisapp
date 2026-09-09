@@ -10,20 +10,6 @@
             </span>
         </div>
 
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
-                <i class="ti ti-check-circle me-1"></i> {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
-                <i class="ti ti-alert-circle me-1"></i> {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
         @if($pendingEventners->isEmpty())
             <div class="text-center py-5">
                 <i class="ti ti-circle-check text-success" style="font-size: 3rem;"></i>

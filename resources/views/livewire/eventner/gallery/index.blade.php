@@ -7,9 +7,6 @@
             </div>
         </div>
     </div>
-    @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
-    @if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
-
     <div class="row">
         <div class="col-lg-4">
             <div class="card"><div class="card-body">
@@ -34,7 +31,7 @@
                     @foreach($images as $img)
                     <div class="position-relative rounded border overflow-hidden">
                         <img src="{{ asset('storage/' . $img->image) }}" class="w-100" style="height: 120px; object-fit: cover;" alt="{{ $img->caption ?? '' }}">
-                        <button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" wire:click="delete({{ $img->id }})" onclick="return confirm('Hapus foto?')||event.stopImmediatePropagation()"><i class="ti ti-trash"></i></button>
+                        <button class="btn btn-danger btn-sm position-absolute top-0 end-0 m-1" wire:click="delete({{ $img->id }})" wire:confirm="Hapus foto ini?"><i class="ti ti-trash"></i></button>
                         @if($img->caption)<div class="p-2"><small class="text-muted">{{ $img->caption }}</small></div>@endif
                     </div>
                     @endforeach

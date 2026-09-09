@@ -14,14 +14,6 @@
                 </div>
             </div>
 
-            {{-- Flash --}}
-            @if(session()->has('success'))
-                <div class="alert alert-success border-0 bg-success-subtle text-success alert-dismissible fade show">
-                    <i class="ti ti-circle-check me-2"></i> {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-
             {{-- Info Bar --}}
             <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                 <span class="badge bg-danger-subtle text-danger border border-danger rounded-pill px-3 py-2 fs-3">

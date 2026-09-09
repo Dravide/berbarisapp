@@ -20,12 +20,8 @@
         </div>
     </div>
 
-    @if (session()->has('scoring_error'))
-        <div class="alert alert-danger border-0 bg-danger-subtle text-danger alert-dismissible fade show">
-            {{ session('scoring_error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+    {{-- Flash error dari action (finalize massal dll) dirender sebagai
+         toast SweetAlert via listener di bawah --}}
 
     {{-- Mode Simulasi (Sandbox) — tombol kecil, pengaturan di modal --}}
     <div class="d-flex justify-content-end mb-3">
@@ -90,9 +86,19 @@
                     </button>
                     <h5 class="mb-0 text-white fw-semibold">{{ $selectedCategory->full_name }} — Pilih Peserta</h5>
                 </div>
-                <a href="{{ route('eventner.scoring.csv', ['category_id' => $selectedCategoryId]) }}" class="btn btn-sm btn-light" target="_blank">
-                    <i class="ti ti-file-type-csv text-success me-1"></i> Download CSV
-                </a>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('eventner.scoring.csv', ['category_id' => $selectedCategoryId]) }}" class="btn btn-sm btn-light" target="_blank">
+                        <i class="ti ti-file-type-csv text-success me-1"></i> Download CSV
+                    </a>
+                    <button type="button"
+                            class="btn btn-sm btn-success"
+                            wire:click="finalizeAllForCategory"
+                            wire:loading.attr="disabled"
+                            wire:confirm="Finalisasi semua nilai pada kategori ini? Semua nilai tersimpan seluruh peserta kategori {{ $selectedCategory->full_name }} akan dikunci permanen."
+                            @if($simulateMode) disabled title="Tidak tersedia di mode simulasi" @endif>
+                        <i class="ti ti-lock me-1"></i> Finalisasi Semua
+                    </button>
+                </div>
             </div>
             <div class="card-body p-4">
                 {{-- Search --}}
@@ -532,9 +538,9 @@
 
                             @if($filledCount == $totalCriteria)
                                 <button wire:click="finalizeScores"
+                                        wire:confirm="Yakin ingin memfinalisasi nilai? Setelah difinalisasi, nilai tidak dapat diubah kembali."
                                         class="btn btn-success w-100 py-2 fw-semibold mb-2"
-                                        wire:loading.attr="disabled"
-                                        onclick="return confirm('Yakin ingin memfinalisasi nilai? Setelah difinalisasi, nilai tidak dapat diubah kembali.')">
+                                        wire:loading.attr="disabled">
                                     <span wire:loading.remove wire:target="finalizeScores">
                                         <i class="ti ti-lock me-2"></i> Finalisasi & Kunci Nilai
                                     </span>
@@ -545,9 +551,9 @@
                             @endif
 
                             <button wire:click="resetScores"
+                                    wire:confirm="Yakin ingin mereset semua nilai juri ini? Data yang sudah disimpan akan dihapus."
                                     class="btn btn-outline-danger w-100 py-2 fw-semibold mb-3"
-                                    wire:loading.attr="disabled"
-                                    onclick="return confirm('Yakin ingin mereset semua nilai juri ini? Data yang sudah disimpan akan dihapus.')">
+                                    wire:loading.attr="disabled">
                                 <span wire:loading.remove wire:target="resetScores">
                                     <i class="ti ti-refresh me-1"></i> Reset Nilai Juri Ini
                                 </span>

@@ -328,7 +328,7 @@ class Index extends Component
         if ($this->simulateMode) return;
 
         if (!$this->selectedCategoryId) {
-            session()->flash('scoring_error', 'Pilih kategori lomba terlebih dahulu.');
+            $this->dispatch('toast', type: 'error', message: 'Pilih kategori lomba terlebih dahulu.');
             return;
         }
 
@@ -337,7 +337,7 @@ class Index extends Component
             ->pluck('id');
 
         if ($registrationIds->isEmpty()) {
-            session()->flash('scoring_error', 'Tidak ada peserta pada kategori ini.');
+            $this->dispatch('toast', type: 'error', message: 'Tidak ada peserta pada kategori ini.');
             return;
         }
 
@@ -354,12 +354,9 @@ class Index extends Component
             }
         }
 
-        session()->flash(
-            'success',
-            $updated > 0
-                ? "Finalisasi massal berhasil: {$updated} baris nilai dikunci untuk seluruh peserta kategori ini."
-                : 'Semua nilai pada kategori ini sudah terfinalisasi sebelumnya.'
-        );
+        $this->dispatch('toast', type: 'success', message: $updated > 0
+            ? "Finalisasi massal berhasil: {$updated} baris nilai dikunci untuk seluruh peserta kategori ini."
+            : 'Semua nilai pada kategori ini sudah terfinalisasi sebelumnya.');
     }
 
     public function resetScores()

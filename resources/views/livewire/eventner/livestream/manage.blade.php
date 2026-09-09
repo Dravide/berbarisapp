@@ -8,13 +8,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div class="alert alert-success d-flex align-items-center gap-2 py-3 px-4 mb-4" role="alert">
-            <i class="ti ti-check-circle"></i>
-            {{ session('success') }}
-        </div>
-    @endif
-
     {{-- ========== PRESET MODES ========== --}}
     <div class="card border-0 shadow-sm mb-5">
         <div class="card-body p-5">

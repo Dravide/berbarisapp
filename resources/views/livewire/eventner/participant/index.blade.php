@@ -74,19 +74,6 @@
         </div>
     </div>
 
-    @if(session()->has('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="ti ti-check me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-    @if(session()->has('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="ti ti-alert-circle me-2"></i> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
     <div class="card">
         <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">

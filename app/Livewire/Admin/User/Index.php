@@ -108,7 +108,7 @@ class Index extends Component
             }
 
             $user->update($data);
-            session()->flash('message', 'Data user berhasil diperbarui.');
+            session()->flash('success', 'Data user berhasil diperbarui.');
         } else {
             User::create([
                 'name' => strip_tags($this->name),
@@ -118,7 +118,7 @@ class Index extends Component
                 'role' => $this->role,
                 'is_active' => $this->is_active,
             ]);
-            session()->flash('message', 'User baru berhasil dibuat.');
+            session()->flash('success', 'User baru berhasil dibuat.');
         }
 
         $this->dispatch('close-modal');
@@ -151,7 +151,7 @@ class Index extends Component
         }
 
         User::findOrFail($id)->delete();
-        session()->flash('message', 'User berhasil dihapus.');
+        session()->flash('success', 'User berhasil dihapus.');
         $this->loadUsers();
     }
 
@@ -166,7 +166,7 @@ class Index extends Component
 
         $user->update(['is_active' => !$user->is_active]);
         $status = $user->is_active ? 'diaktifkan' : 'dinonaktifkan';
-        session()->flash('message', "User {$user->name} berhasil {$status}.");
+        session()->flash('success', "User {$user->name} berhasil {$status}.");
         $this->loadUsers();
     }
 
@@ -179,7 +179,7 @@ class Index extends Component
 
         $user = User::findOrFail($id);
         $user->update(['password' => Hash::make('password')]);
-        session()->flash('message', "Password user {$user->name} berhasil direset ke default.");
+        session()->flash('success', "Password user {$user->name} berhasil direset ke default.");
         $this->loadUsers();
     }
 }

@@ -18,19 +18,6 @@
         </div>
     </div>
 
-    @if (session()->has('success'))
-        <div class="alert alert-success border-0 bg-success-subtle text-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    @if (session()->has('error'))
-        <div class="alert alert-danger border-0 bg-danger-subtle text-danger alert-dismissible fade show">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     {{-- ============================ --}}
     {{-- QRIS PEMBAYARAN --}}
     {{-- ============================ --}}

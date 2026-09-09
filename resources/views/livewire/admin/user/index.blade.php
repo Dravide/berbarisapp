@@ -22,20 +22,6 @@
         </div>
     </div>
 
-    @if (session()->has('message'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            {{ session('message') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    @if (session()->has('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     <div class="card">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -114,7 +100,7 @@
                                             </button>
                                             <button type="button" class="btn btn-sm btn-outline-info"
                                                 wire:click="resetPassword({{ $user->id }})"
-                                                onclick="return confirm('Reset password user ini ke default (password)?') || event.stopImmediatePropagation()"
+                                                wire:confirm="Reset password user ini ke default (password)?"
                                                 title="Reset Password">
                                                 <i class="ti ti-key"></i>
                                             </button>
@@ -125,7 +111,7 @@
                                         @if($user->id !== auth()->id())
                                             <button type="button" class="btn btn-sm btn-danger"
                                                 wire:click="delete({{ $user->id }})"
-                                                onclick="return confirm('Hapus user ini? Semua data terkait juga akan dihapus.') || event.stopImmediatePropagation()"
+                                                wire:confirm="Hapus user ini? Semua data terkait juga akan dihapus."
                                                 title="Hapus">
                                                 <i class="ti ti-trash"></i>
                                             </button>

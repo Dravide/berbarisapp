@@ -45,21 +45,6 @@
         </div>
     </div>
 
-    {{-- Flash Messages --}}
-    @if(session('success'))
-        <div class="alert alert-success border-0 bg-success-subtle text-success alert-dismissible fade show">
-            <i class="ti ti-check me-2"></i> {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
-    @if(session('error'))
-        <div class="alert alert-danger border-0 bg-danger-subtle text-danger alert-dismissible fade show">
-            <i class="ti ti-alert-circle me-2"></i> {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     {{-- Kategori Select --}}
     <div class="mb-4" style="max-width: 380px;">
         <div class="input-group">
@@ -90,7 +75,7 @@
                         <a href="{{ event_url($eventner, 'drawing.spin') }}" target="_blank" class="btn btn-sm btn-light">
                             <i class="ti ti-arrows-shuffle me-1"></i> Layar Spin
                         </a>
-                        <button class="btn btn-sm btn-outline-danger" wire:click="resetDrawing" onclick="return confirm('Yakin reset semua hasil undian kategori ini?')">
+                        <button class="btn btn-sm btn-outline-danger" wire:click="resetDrawing" wire:confirm="Yakin reset semua hasil undian kategori ini?">
                             <i class="ti ti-refresh me-1"></i> Reset
                         </button>
                     </div>

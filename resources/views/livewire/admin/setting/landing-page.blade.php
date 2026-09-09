@@ -28,13 +28,6 @@
                 </div>
             </div>
 
-            @if(session()->has('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
-
             {{-- Preview Link --}}
             <div class="alert alert-light border d-flex align-items-center mb-4">
                 <i class="ti ti-external-link fs-6 me-2 text-primary"></i>

@@ -19,13 +19,6 @@
         </div>
     </div>
 
-    @if (session()->has('success'))
-        <div class="alert alert-success border-0 bg-success-subtle text-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     <div class="row">
         <div class="col-md-5">
             <div class="card">
@@ -102,7 +95,7 @@
                                                 <i class="ti ti-edit"></i>
                                             </button>
                                             <button class="btn btn-sm btn-light text-danger" wire:click="delete({{ $acc->id }})"
-                                                onclick="return confirm('Hapus rekening ini?')">
+                                                wire:confirm="Hapus rekening ini?">
                                                 <i class="ti ti-trash"></i>
                                             </button>
                                         </td>

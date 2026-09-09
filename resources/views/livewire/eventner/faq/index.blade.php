@@ -7,8 +7,6 @@
             </div>
         </div>
     </div>
-    @if(session('success'))<div class="alert alert-success">{{ session('success') }}</div>@endif
-
     <div class="row">
         <div class="col-lg-5">
             <div class="card"><div class="card-body">
@@ -27,7 +25,7 @@
             <div class="card"><div class="card-body p-4">
                 @if($faqs->isEmpty())<div class="text-center py-5 text-muted">Belum ada FAQ.</div>
                 @else
-                @foreach($faqs as $f)<div class="border rounded p-3 mb-2"><h6 class="fw-bold">{{ $f->question }}</h6><p class="text-muted mb-2 small">{{ $f->answer }}</p><div class="d-flex gap-1"><button class="btn btn-sm btn-outline-primary" wire:click="edit({{ $f->id }})"><i class="ti ti-pencil"></i></button><button class="btn btn-sm btn-outline-danger" wire:click="delete({{ $f->id }})" onclick="return confirm('Hapus?')||event.stopImmediatePropagation()"><i class="ti ti-trash"></i></button></div></div>@endforeach
+                @foreach($faqs as $f)<div class="border rounded p-3 mb-2"><h6 class="fw-bold">{{ $f->question }}</h6><p class="text-muted mb-2 small">{{ $f->answer }}</p><div class="d-flex gap-1"><button class="btn btn-sm btn-outline-primary" wire:click="edit({{ $f->id }})"><i class="ti ti-pencil"></i></button><button class="btn btn-sm btn-outline-danger" wire:click="delete({{ $f->id }})" wire:confirm="Hapus FAQ ini?"><i class="ti ti-trash"></i></button></div></div>@endforeach
                 @endif
             </div></div>
         </div>

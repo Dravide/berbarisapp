@@ -20,8 +20,6 @@
         </div>
     </div>
 
-    @if(session('error'))<div class="alert alert-danger">{{ session('error') }}</div>@endif
-
     <div class="card w-100">
         <div class="card-header bg-primary text-white">
             <h5 class="mb-0 text-white fw-semibold">Atur Lembar Format Penilaian</h5>

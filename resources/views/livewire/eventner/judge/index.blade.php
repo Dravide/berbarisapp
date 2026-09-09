@@ -18,13 +18,6 @@
         </div>
     </div>
 
-    @if (session()->has('success'))
-        <div class="alert alert-success border-0 bg-success-subtle text-success alert-dismissible fade show">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     <div class="row">
         <!-- Panel List Juri -->
         <div class="col-lg-12">
@@ -91,7 +84,7 @@
                                                 <button class="btn btn-sm btn-outline-primary p-1 me-1" wire:click="edit({{ $judge->id }})" title="Edit Juri">
                                                     <i class="ti ti-edit fs-4"></i>
                                                 </button>
-                                                <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $judge->id }})" title="Hapus Juri" onclick="return confirm('Hapus Juri ini?') || event.stopImmediatePropagation()">
+                                                <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $judge->id }})" title="Hapus Juri" wire:confirm="Hapus Juri ini?">
                                                     <i class="ti ti-trash fs-4"></i>
                                                 </button>
                                             </td>
