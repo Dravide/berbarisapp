@@ -7,7 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use App\Models\User;
 use App\Models\Eventner;
-use App\Models\Setting;
+use App\Models\SaasPlan;
 use App\Services\AutoGoPay;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -34,8 +34,21 @@ class EventnerRegister extends Component
     public $eventnerId = null;
     public $paymentTransactionId = null;
 
+    public function mount()
+    {
+        // Pre-select dari query param (?plan=slug)
+        if (request()->query('plan')) {
+            $this->plan = request()->query('plan');
+        }
+    }
+
     public function rules(): array
     {
+        $slugs = array_merge(
+            ['free'],
+            SaasPlan::where('is_active', true)->where('is_free', false)->pluck('slug')->all()
+        );
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users,username', 'regex:/^[a-z0-9_]+$/'],
@@ -43,9 +56,18 @@ class EventnerRegister extends Component
             'password' => ['required', 'min:8', 'confirmed'],
             'nama_event' => ['required', 'string', 'max:255'],
             'lokasi' => ['required', 'string', 'max:255'],
-            'plan' => ['required', Rule::in(['free', 'paid'])],
+            'plan' => ['required', Rule::in($slugs)],
             'agreeTerms' => ['accepted'],
         ];
+    }
+
+    private function selectedPlan(): ?SaasPlan
+    {
+        if ($this->plan === 'free') {
+            return null;
+        }
+
+        return SaasPlan::where('is_active', true)->where('is_free', false)->where('slug', $this->plan)->first();
     }
 
     public function updated($propertyName)
@@ -57,7 +79,8 @@ class EventnerRegister extends Component
     {
         $this->validate();
 
-        $fee = (int) Setting::get('eventner_registration_fee', 50000);
+        $paidPlan = $this->selectedPlan();
+        $fee = $paidPlan?->registration_fee ?? 0;
 
         $user = User::create([
             'name' => $this->name,
@@ -65,14 +88,15 @@ class EventnerRegister extends Component
             'email' => $this->email,
             'password' => Hash::make($this->password),
             'role' => 'Eventner',
-            'is_active' => $this->plan === 'free', // free langsung aktif, paid nanti setelah bayar
+            'is_active' => $paidPlan === null, // free langsung aktif, paid nanti setelah bayar
         ]);
 
         $eventner = Eventner::create([
             'user_id' => $user->id,
-            'status' => $this->plan === 'free' ? 'pending' : 'pending',
-            'plan' => $this->plan,
-            'trial_ends_at' => $this->plan === 'free' ? now()->addDays(3) : null,
+            'status' => 'pending',
+            'plan' => $paidPlan ? 'paid' : 'free',
+            'saas_plan_id' => $paidPlan?->id,
+            'trial_ends_at' => $paidPlan === null ? now()->addDays(3) : null,
             'registration_source' => 'self',
             'nama_event' => $this->nama_event,
             'diselenggarakan_oleh' => $this->name,
@@ -80,7 +104,7 @@ class EventnerRegister extends Component
             'tanggal' => now()->addMonth()->toDateString(),
         ]);
 
-        if ($this->plan === 'paid' && $fee > 0) {
+        if ($paidPlan && $fee > 0) {
             // Generate QRIS
             try {
                 $autoGoPay = app(AutoGoPay::class);
@@ -110,7 +134,7 @@ class EventnerRegister extends Component
             }
         }
 
-        if ($this->plan === 'free') {
+        if ($paidPlan === null) {
             session()->flash('success', 'Pendaftaran berhasil! Silakan login dan lengkapi data event Anda.');
             return $this->redirect(route('login'));
         }
@@ -162,6 +186,8 @@ class EventnerRegister extends Component
 
     public function render()
     {
-        return view('livewire.public.eventner-register');
+        return view('livewire.public.eventner-register', [
+            'plans' => SaasPlan::with('features')->where('is_active', true)->orderBy('sort_order')->get(),
+        ]);
     }
 }

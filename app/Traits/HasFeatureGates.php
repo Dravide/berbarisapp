@@ -40,10 +40,18 @@ trait HasFeatureGates
 
     /**
      * Cek apakah fitur tertentu bisa diakses.
+     *
+     * Multi-paket: eventner paid dengan saas_plan_id → fitur dari paket DB.
+     * Legacy (plan 'paid' tanpa paket) & trial → semua terbuka.
      */
     public function canAccessFeature(string $feature): bool
     {
-        // Paid plan — semua fitur terbuka
+        // Multi-paket via DB
+        if ($this->plan === 'paid' && $this->saas_plan_id) {
+            return $this->saasPlan->features->pluck('feature_key')->contains($feature);
+        }
+
+        // Paid plan legacy — semua fitur terbuka
         if ($this->plan === 'paid') {
             return true;
         }
@@ -75,6 +83,20 @@ trait HasFeatureGates
      */
     public function lockedFeatures(): array
     {
+        // Multi-paket via DB
+        if ($this->plan === 'paid' && $this->saas_plan_id) {
+            $planKeys = $this->saasPlan->features->pluck('feature_key')->all();
+
+            $locked = [];
+            foreach (Config::get('eventner_features', []) as $key => $config) {
+                if (!in_array($key, $planKeys, true)) {
+                    $locked[$key] = $config['label'];
+                }
+            }
+
+            return $locked;
+        }
+
         if ($this->plan === 'paid') {
             return [];
         }

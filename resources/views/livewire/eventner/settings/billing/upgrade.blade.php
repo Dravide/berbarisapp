@@ -26,7 +26,7 @@
             <div class="card-body p-4 text-center">
                 <h5 class="fw-semibold mb-2">Scan QRIS untuk Bayar</h5>
                 <p class="text-muted mb-4">
-                    Paket berbayar — aktivasi otomatis setelah pembayaran terkonfirmasi.
+                    {{ $selectedPlan?->name ?? 'Paket berbayar' }} — aktivasi otomatis setelah pembayaran terkonfirmasi.
                 </p>
 
                 @if ($paymentQrUrl)
@@ -58,13 +58,12 @@
         </div>
     @else
         {{-- ============================ --}}
-        {{-- STATUS PLAN & PERBANDINGAN --}}
+        {{-- STATUS PLAN & PILIH PAKET --}}
         {{-- ============================ --}}
         @php
-            $features = config('eventner_features', []);
-            $price = (int) \App\Models\Setting::get('eventner_plan_price', 150000);
             $isTrialExpired = $eventner->isTrialExpired();
             $trialDaysLeft = $eventner->trialDaysLeft();
+            $paidPlans = $plans->filter(fn ($p) => !$p->is_free)->values();
         @endphp
 
         <div class="row g-4 mb-4">
@@ -86,7 +85,7 @@
                             @if (!$isTrialExpired && $trialDaysLeft > 0)
                                 <li><i class="ti ti-clock text-warning me-2"></i>Sementara bisa akses fitur premium (masih trial)</li>
                             @else
-                                @foreach(array_slice($features, 0, 6) as $key => $config)
+                                @foreach(array_slice(config('eventner_features', []), 0, 6) as $key => $config)
                                     <li class="text-muted"><i class="ti ti-lock text-muted me-2"></i>{{ $config['label'] }}</li>
                                 @endforeach
                             @endif
@@ -95,35 +94,42 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="card h-100 border-success shadow-sm position-relative overflow-hidden">
-                    <span class="badge bg-success position-absolute top-0 end-0 m-3">Rekomendasi</span>
-                    <div class="card-body p-4">
-                        <div class="mb-3">
-                            <h5 class="fw-semibold mb-1">Paket Berbayar</h5>
-                            <p class="text-muted small mb-0">Bayar sekali per event</p>
+
+            @foreach($paidPlans as $plan)
+                <div class="col-md-6">
+                    <div class="card h-100 {{ $plan->highlight ? 'border-success shadow-sm' : '' }} position-relative overflow-hidden">
+                        @if($plan->highlight)
+                            <span class="badge bg-success position-absolute top-0 end-0 m-3">Rekomendasi</span>
+                        @endif
+                        <div class="card-body p-4">
+                            <div class="mb-3">
+                                <h5 class="fw-semibold mb-1">{{ $plan->name }}</h5>
+                                <p class="text-muted small mb-0">{{ $plan->description ?? 'Bayar sekali per event' }}</p>
+                            </div>
+                            <h3 class="fw-bold mb-1">Rp {{ number_format($plan->price, 0, ',', '.') }}</h3>
+                            @if($plan->registration_fee > 0)
+                                <p class="text-muted small mb-1">+ biaya pendaftaran Rp {{ number_format($plan->registration_fee, 0, ',', '.') }}</p>
+                            @endif
+                            <p class="text-muted small mb-3">Sekali bayar, aktif selama event ini</p>
+                            <ul class="list-unstyled d-flex flex-column gap-2 mb-4 small">
+                                <li><i class="ti ti-check text-success me-2"></i>Semua fitur paket gratis</li>
+                                @foreach($plan->features as $feature)
+                                    <li><i class="ti ti-check text-success me-2"></i>{{ config("eventner_features.{$feature->feature_key}.label", $feature->feature_key) }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn btn-primary w-100 py-8 rounded-2" wire:click="generatePayment({{ $plan->id }})" wire:loading.attr="disabled">
+                                <span wire:loading.remove wire:target="generatePayment"><i class="ti ti-bolt me-1"></i> Upgrade Sekarang</span>
+                                <span wire:loading wire:target="generatePayment"><span class="spinner-border spinner-border-sm me-1"></span> Membuat QRIS...</span>
+                            </button>
                         </div>
-                        <h3 class="fw-bold mb-1">Rp {{ number_format($price, 0, ',', '.') }}</h3>
-                        <p class="text-muted small mb-3">Sekali bayar, aktif selama event ini</p>
-                        <ul class="list-unstyled d-flex flex-column gap-2 mb-4 small">
-                            <li><i class="ti ti-check text-success me-2"></i>Semua fitur paket gratis</li>
-                            @foreach($features as $key => $config)
-                                <li><i class="ti ti-check text-success me-2"></i>{{ $config['label'] }}</li>
-                            @endforeach
-                            <li><i class="ti ti-check text-success me-2"></i>Update & dukungan prioritas</li>
-                        </ul>
-                        <button type="button" class="btn btn-primary w-100 py-8 rounded-2" wire:click="generatePayment" wire:loading.attr="disabled">
-                            <span wire:loading.remove wire:target="generatePayment"><i class="ti ti-bolt me-1"></i> Upgrade Sekarang</span>
-                            <span wire:loading wire:target="generatePayment"><span class="spinner-border spinner-border-sm me-1"></span> Membuat QRIS...</span>
-                        </button>
                     </div>
                 </div>
-            </div>
+            @endforeach
         </div>
 
         <div class="alert alert-info border-0 bg-info-subtle text-info-emphasis">
             <i class="ti ti-info-circle me-2"></i>
-            Pembayaran via QRIS. Setelah settle, semua fitur premium pada event ini langsung aktif tanpa menunggu verifikasi manual.
+            Pembayaran via QRIS. Setelah settle, fitur premium paket terpilih langsung aktif tanpa menunggu verifikasi manual.
         </div>
     @endif
 </div>

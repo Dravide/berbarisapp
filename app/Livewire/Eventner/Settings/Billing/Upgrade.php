@@ -2,10 +2,11 @@
 
 namespace App\Livewire\Eventner\Settings\Billing;
 
-use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Component;
 use App\Models\Eventner;
+use App\Models\SaasPlan;
 use App\Models\Setting;
 use App\Services\AutoGoPay;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +21,7 @@ class Upgrade extends Component
     public ?string $paymentQrUrl = null;
     public int $paymentAmount = 0;
     public ?string $paymentTransactionId = null;
+    public ?SaasPlan $selectedPlan = null;
 
     public function mount()
     {
@@ -40,7 +42,10 @@ class Upgrade extends Component
                 if (($status['success'] ?? false) && ($status['data']['transaction_status'] ?? '') !== 'expire') {
                     $this->paymentTransactionId = $this->eventner->autogopay_transaction_id;
                     $this->paymentQrUrl = $this->eventner->qr_url;
-                    $this->paymentAmount = (int) Setting::get('eventner_plan_price', 150000);
+                    $this->paymentAmount = $this->eventner->saasPlan?->price
+                        ?? (int) Setting::get('eventner_plan_price', 150000);
+                    $this->selectedPlan = $this->eventner->saasPlan
+                        ?? SaasPlan::where('is_active', true)->where('is_free', false)->orderBy('sort_order')->first();
                     $this->showPayment = true;
                 }
             } catch (\Throwable $e) {
@@ -49,13 +54,17 @@ class Upgrade extends Component
         }
     }
 
-    public function generatePayment()
+    public function generatePayment(?int $planId = null)
     {
         if ($this->eventner->plan === 'paid') {
             return;
         }
 
-        $price = (int) Setting::get('eventner_plan_price', 150000);
+        $plan = $planId
+            ? SaasPlan::where('is_active', true)->where('is_free', false)->findOrFail($planId)
+            : SaasPlan::where('is_active', true)->where('is_free', false)->orderBy('sort_order')->first();
+
+        $price = $plan?->price ?? (int) Setting::get('eventner_plan_price', 150000);
 
         try {
             $result = app(AutoGoPay::class)->generateQris($price);
@@ -63,11 +72,13 @@ class Upgrade extends Component
             if ($result['success'] ?? false) {
                 $data = $result['data'];
                 $this->eventner->update([
+                    'saas_plan_id' => $plan?->id,
                     'autogopay_transaction_id' => $data['transaction_id'],
                     'qr_url' => $data['qr_url'] ?? null,
                     'qr_string' => $data['qr_string'] ?? null,
                 ]);
 
+                $this->selectedPlan = $plan;
                 $this->paymentTransactionId = $data['transaction_id'];
                 $this->paymentQrUrl = $data['qr_url'] ?? null;
                 $this->paymentAmount = (int) ($data['amount'] ?? $price);
@@ -88,7 +99,8 @@ class Upgrade extends Component
         }
 
         try {
-            $status = app(AutoGoPay::class)->checkStatus($this->paymentTransactionId);
+            $autoGoPay = app(AutoGoPay::class);
+            $status = $autoGoPay->checkStatus($this->paymentTransactionId);
 
             if ($status['success'] ?? false) {
                 $txStatus = $status['data']['transaction_status'] ?? '';
@@ -121,7 +133,7 @@ class Upgrade extends Component
                         }
                     }
 
-                    session()->flash('success', 'Pembayaran berhasil! Semua fitur premium sudah aktif.');
+                    session()->flash('success', 'Pembayaran berhasil! Fitur premium paket terpilih sudah aktif.');
                     return redirect()->route('dashboard');
                 }
 
@@ -138,6 +150,8 @@ class Upgrade extends Component
 
     public function render()
     {
-        return view('livewire.eventner.settings.billing.upgrade');
+        return view('livewire.eventner.settings.billing.upgrade', [
+            'plans' => SaasPlan::with('features')->where('is_active', true)->orderBy('sort_order')->get(),
+        ]);
     }
 }

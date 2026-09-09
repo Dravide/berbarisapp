@@ -14,9 +14,7 @@ class PricingPage extends Component
     public function render()
     {
         return view('livewire.public.pricing-page', [
-            'planPrice' => Pricing::planPrice(),
-            'regFee' => Pricing::registrationFee(),
-            'premiumFeatures' => Pricing::premiumFeatures(),
+            'plans' => Pricing::plans(),
         ]);
     }
 }

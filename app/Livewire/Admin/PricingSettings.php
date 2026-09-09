@@ -5,55 +5,157 @@ namespace App\Livewire\Admin;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use App\Models\SaasPlan;
 use App\Models\Setting;
 
 #[Layout('layouts.admin')]
 #[Title('Harga & Paket SaaS - BARIS APP')]
 class PricingSettings extends Component
 {
-    // Biaya pendaftaran eventner (saat daftar paket paid)
-    public $registration_fee = 50000;
+    public bool $showModal = false;
+    public ?int $planId = null;
 
-    // Harga paket Event Penuh (bayar sekali via QRIS di /upgrade)
-    public $plan_price = 150000;
+    // Form paket
+    public string $name = '';
+    public $price = 0;
+    public $registration_fee = 0;
+    public string $description = '';
+    public bool $is_active = true;
+    public bool $is_free = false;
+    public bool $highlight = false;
+    public $sort_order = 0;
 
-    // [key => bool] fitur premium yang dipamerkan di halaman harga
-    public $premium_features = [];
+    // [key => bool] fitur premium yang masuk paket (hanya relevan untuk paket berbayar)
+    public array $plan_features = [];
 
     public function mount()
     {
-        $this->registration_fee = (int) Setting::get('eventner_registration_fee', 50000);
-        $this->plan_price = (int) Setting::get('eventner_plan_price', 150000);
+        $this->loadFeatureDefaults();
+    }
 
-        $saved = json_decode(Setting::get('saas_pricing', '{}'), true) ?? [];
+    private function loadFeatureDefaults(): void
+    {
         foreach (config('eventner_features', []) as $key => $config) {
             if (!($config['locked_free'] ?? true)) {
                 continue; // fitur selalu terbuka tak perlu ditampilkan
             }
-            $this->premium_features[$key] = !isset($saved['premium_features'])
-                || in_array($key, $saved['premium_features'], true);
+            $this->plan_features[$key] = true;
         }
     }
 
-    public function save()
+    private function rules(): array
     {
-        $this->validate([
+        return [
+            'name' => 'required|string|max:100',
+            'price' => 'required|integer|min:0',
             'registration_fee' => 'required|integer|min:0',
-            'plan_price' => 'required|integer|min:0',
-        ]);
+            'description' => 'nullable|string|max:255',
+            'sort_order' => 'required|integer|min:0',
+        ];
+    }
 
-        Setting::set('eventner_registration_fee', (int) $this->registration_fee);
-        Setting::set('eventner_plan_price', (int) $this->plan_price);
-        Setting::set('saas_pricing', json_encode([
-            'plan_price' => (int) $this->plan_price,
-            'premium_features' => array_keys(array_filter($this->premium_features)),
-        ]));
+    public function createPlan()
+    {
+        $this->resetForm();
+        $this->sort_order = SaasPlan::count() + 1;
+        $this->showModal = true;
+    }
 
-        session()->flash('success', 'Pengaturan harga & paket berhasil diperbarui.');
+    public function editPlan(int $id)
+    {
+        $plan = SaasPlan::with('features')->findOrFail($id);
+
+        $this->planId = $plan->id;
+        $this->name = $plan->name;
+        $this->price = $plan->price;
+        $this->registration_fee = $plan->registration_fee;
+        $this->description = (string) $plan->description;
+        $this->is_active = $plan->is_active;
+        $this->is_free = $plan->is_free;
+        $this->highlight = $plan->highlight;
+        $this->sort_order = $plan->sort_order;
+
+        // Muat centang fitur: default false, lalu isi dari DB
+        foreach (array_keys($this->plan_features) as $key) {
+            $this->plan_features[$key] = false;
+        }
+        foreach ($plan->featureKeys() as $key) {
+            $this->plan_features[$key] = true;
+        }
+
+        $this->showModal = true;
+    }
+
+    public function savePlan()
+    {
+        $this->validate($this->rules());
+
+        $data = [
+            'name' => $this->name,
+            'slug' => \Illuminate\Support\Str::slug($this->name) . '-' . strtolower(\Illuminate\Support\Str::random(5)),
+            'price' => $this->is_free ? 0 : (int) $this->price,
+            'registration_fee' => $this->is_free ? 0 : (int) $this->registration_fee,
+            'description' => $this->description ?: null,
+            'is_active' => $this->is_active,
+            'is_free' => $this->is_free,
+            'highlight' => $this->is_free ? false : $this->highlight,
+            'sort_order' => (int) $this->sort_order,
+        ];
+
+        $plan = SaasPlan::updateOrCreate(['id' => $this->planId], $data);
+
+        // Sinkron fitur (paket gratis tidak menyimpan fitur premium)
+        $features = $this->is_free
+            ? []
+            : array_keys(array_filter($this->plan_features));
+        $plan->features()->delete();
+        $plan->features()->createMany(
+            collect($features)->map(fn ($key) => ['feature_key' => $key])->all()
+        );
+
+        $this->showModal = false;
+        $this->resetForm();
+        session()->flash('success', 'Paket berhasil disimpan.');
+    }
+
+    public function toggleActive(int $id)
+    {
+        $plan = SaasPlan::findOrFail($id);
+        $plan->update(['is_active' => !$plan->is_active]);
+    }
+
+    public function deletePlan(int $id)
+    {
+        $plan = SaasPlan::withCount('eventners')->findOrFail($id);
+
+        if ($plan->is_free) {
+            session()->flash('error', 'Paket gratis tidak bisa dihapus.');
+            return;
+        }
+        if ($plan->eventners_count > 0) {
+            session()->flash('error', "Paket masih dipakai {$plan->eventners_count} event. Nonaktifkan saja.");
+            return;
+        }
+
+        $plan->delete();
+        session()->flash('success', 'Paket dihapus.');
+    }
+
+    private function resetForm(): void
+    {
+        $this->reset('planId', 'name', 'price', 'registration_fee', 'description', 'is_active', 'is_free', 'highlight', 'sort_order');
+        $this->is_active = true;
+        $this->loadFeatureDefaults();
     }
 
     public function render()
     {
-        return view('livewire.admin.pricing-settings');
+        return view('livewire.admin.pricing-settings', [
+            'plans' => SaasPlan::with('features')->withCount('eventners')->orderBy('sort_order')->get(),
+            'premiumFeatureKeys' => collect(config('eventner_features', []))
+                ->filter(fn ($c) => $c['locked_free'] ?? true)
+                ->keys()
+                ->all(),
+        ]);
     }
 }

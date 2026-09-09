@@ -42,6 +42,7 @@ class MonetizationTest extends TestCase
     {
         $eventner = Eventner::factory()->create([
             'plan' => 'free',
+            'saas_plan_id' => \App\Models\SaasPlan::where('is_free', false)->value('id'),
             'status' => 'approved',
             'approved_at' => now()->subDays(5),
             'trial_ends_at' => now()->subDays(2),
@@ -200,21 +201,23 @@ class MonetizationTest extends TestCase
     // Harga & paket: setting admin + landing
     // ────────────────────────────────────────────────
 
-    public function test_pricing_reflects_saas_pricing_setting()
+    public function test_pricing_reflects_saas_plans()
     {
-        // Admin simpan harga + daftar fitur (tanpa 'certificate')
-        Setting::set('eventner_plan_price', 200000);
-        Setting::set('saas_pricing', json_encode([
-            'plan_price' => 200000,
-            'premium_features' => ['tickets', 'drawing'],
-        ]));
+        // Admin punya paket berbayar dengan fitur tertentu (tanpa 'certificate')
+        $plan = \App\Models\SaasPlan::where('is_free', false)->firstOrFail();
+        $plan->update(['price' => 200000]);
+        $plan->features()->delete();
+        $plan->features()->createMany([
+            ['feature_key' => 'tickets'],
+            ['feature_key' => 'drawing'],
+        ]);
 
         $response = $this->get(route('pricing'));
         $response->assertOk();
         $response->assertSee('200.000');
         $response->assertSee('Tiket Event');
         $response->assertSee('Drawing / Undian');
-        $response->assertDontSee('Sertifikat'); // tidak dicentang admin
+        $response->assertDontSee('Sertifikat'); // tidak termasuk paket
     }
 
     public function test_landing_pricing_section_renders()
@@ -225,22 +228,67 @@ class MonetizationTest extends TestCase
             ->assertSee('Daftar Gratis');
     }
 
-    public function test_admin_pricing_settings_page_saves()
+    public function test_admin_pricing_settings_page_saves_plan()
     {
         $admin = User::factory()->admin()->create();
 
         Livewire::actingAs($admin)->test(\App\Livewire\Admin\PricingSettings::class)
-            ->set('plan_price', 250000)
+            ->call('createPlan')
+            ->set('name', 'Paket Standar')
+            ->set('price', 250000)
             ->set('registration_fee', 75000)
-            ->set('premium_features.tickets', false)
-            ->call('save')
+            ->set('sort_order', 3)
+            ->set('plan_features.tickets', true)
+            ->set('plan_features.certificate', false)
+            ->call('savePlan')
             ->assertHasNoErrors();
 
-        $this->assertEquals(250000, Setting::get('eventner_plan_price'));
-        $this->assertEquals(75000, Setting::get('eventner_registration_fee'));
-        $features = json_decode(Setting::get('saas_pricing'), true)['premium_features'];
-        $this->assertNotContains('tickets', $features);
-        $this->assertContains('certificate', $features);
+        $plan = \App\Models\SaasPlan::where('name', 'Paket Standar')->first();
+        $this->assertNotNull($plan);
+        $this->assertEquals(250000, $plan->price);
+        $this->assertEquals(75000, $plan->registration_fee);
+        $this->assertTrue($plan->features->pluck('feature_key')->contains('tickets'));
+        $this->assertFalse($plan->features->pluck('feature_key')->contains('certificate'));
+    }
+
+    public function test_admin_pricing_settings_toggles_and_deletes_plan()
+    {
+        $admin = User::factory()->admin()->create();
+        $plan = \App\Models\SaasPlan::where('is_free', false)->firstOrFail();
+
+        Livewire::actingAs($admin)->test(\App\Livewire\Admin\PricingSettings::class)
+            ->call('toggleActive', $plan->id)
+            ->assertHasNoErrors();
+
+        $this->assertFalse((bool) $plan->fresh()->is_active);
+
+        // Paket masih dipakai event → tidak bisa dihapus
+        $eventner = Eventner::factory()->paid()->create();
+        $eventner->update(['saas_plan_id' => $plan->id]);
+
+        Livewire::actingAs($admin)->test(\App\Livewire\Admin\PricingSettings::class)
+            ->call('deletePlan', $plan->id)
+            ->assertHasNoErrors();
+
+        $this->assertNotNull(\App\Models\SaasPlan::find($plan->id)); // masih ada
+    }
+
+    public function test_feature_gate_respects_plan_features()
+    {
+        // Paket berbayar tanpa fitur certificate
+        $plan = \App\Models\SaasPlan::where('is_free', false)->firstOrFail();
+        $plan->features()->delete();
+        $plan->features()->create(['feature_key' => 'tickets']);
+
+        $user = User::factory()->eventner()->create();
+        $eventner = Eventner::factory()->paid()->create([
+            'user_id' => $user->id,
+            'saas_plan_id' => $plan->id,
+        ]);
+
+        $this->assertTrue($eventner->canAccessFeature('tickets'));
+        $this->assertFalse($eventner->canAccessFeature('certificate')); // tidak di paket
+        $this->assertArrayHasKey('certificate', $eventner->lockedFeatures());
     }
 
     public function test_admin_pricing_settings_route_requires_admin()

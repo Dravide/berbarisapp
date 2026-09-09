@@ -69,26 +69,19 @@
                                 {{-- Plan Selection --}}
                                 <div class="mb-4">
                                     <label class="form-label fw-semibold">Pilih Paket</label>
-                                    <div class="d-flex gap-2">
-                                        @php $fee = (int) \App\Models\Setting::get('eventner_registration_fee', 50000); @endphp
-
-                                        <label wire:click="$set('plan', 'free')" role="button"
-                                            class="flex-fill border rounded-2 p-3 text-center {{ $plan === 'free' ? 'border-primary bg-primary-subtle' : 'border-secondary' }}"
-                                            style="cursor: pointer;">
-                                            <i class="ti ti-gift fs-4 {{ $plan === 'free' ? 'text-primary' : 'text-muted' }}"></i>
-                                            <div class="fw-bold mt-1 mb-0 small {{ $plan === 'free' ? 'text-primary' : '' }}">Gratis</div>
-                                            <div class="small fw-semibold {{ $plan === 'free' ? 'text-primary' : 'text-muted' }}">Rp 0</div>
-                                            <div class="text-muted mt-1" style="font-size: 0.65rem;">Trial 3 hari, fitur terbatas</div>
-                                        </label>
-
-                                        <label wire:click="$set('plan', 'paid')" role="button"
-                                            class="flex-fill border rounded-2 p-3 text-center {{ $plan === 'paid' ? 'border-primary bg-primary-subtle' : 'border-secondary' }}"
-                                            style="cursor: pointer;">
-                                            <i class="ti ti-crown fs-4 {{ $plan === 'paid' ? 'text-primary' : 'text-muted' }}"></i>
-                                            <div class="fw-bold mt-1 mb-0 small {{ $plan === 'paid' ? 'text-primary' : '' }}">Berbayar</div>
-                                            <div class="small fw-semibold {{ $plan === 'paid' ? 'text-primary' : 'text-muted' }}">Rp {{ number_format($fee, 0, ',', '.') }}</div>
-                                            <div class="text-muted mt-1" style="font-size: 0.65rem;">Bayar sekali, akses semua fitur</div>
-                                        </label>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @foreach($plans as $planOption)
+                                            <label wire:click="$set('plan', '{{ $planOption->slug }}')" role="button"
+                                                class="flex-fill border rounded-2 p-3 text-center {{ $plan === $planOption->slug ? 'border-primary bg-primary-subtle' : 'border-secondary' }}"
+                                                style="cursor: pointer;">
+                                                <i class="ti {{ $planOption->is_free ? 'ti-gift' : 'ti-crown' }} fs-4 {{ $plan === $planOption->slug ? 'text-primary' : 'text-muted' }}"></i>
+                                                <div class="fw-bold mt-1 mb-0 small {{ $plan === $planOption->slug ? 'text-primary' : '' }}">{{ $planOption->name }}</div>
+                                                <div class="small fw-semibold {{ $plan === $planOption->slug ? 'text-primary' : 'text-muted' }}">Rp {{ number_format($planOption->registration_fee, 0, ',', '.') }}</div>
+                                                <div class="text-muted mt-1" style="font-size: 0.65rem;">
+                                                    {{ $planOption->is_free ? 'Trial 3 hari, fitur terbatas' : ($planOption->description ?? 'Bayar sekali, akses fitur paket') }}
+                                                </div>
+                                            </label>
+                                        @endforeach
                                     </div>
                                     @error('plan') <div class="text-danger small mt-1"><i class="ti ti-alert-circle"></i> {{ $message }}</div> @enderror
                                 </div>
