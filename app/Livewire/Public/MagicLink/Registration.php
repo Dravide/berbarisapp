@@ -405,11 +405,12 @@ class Registration extends Component
     }
 
     /**
-     * Pasukan (registrasi) sekolah ini yang berhak sertifikat, keyed by id:
-     * [registration_id => ['registration' => Registration, 'rank' => int,
-     * 'title' => string]]. Satu sekolah bisa punya 2 pasukan di mata lomba
-     * berbeda — hanya pasukan yang menang yang masuk sini, supaya kartu
-     * sertifikat muncul hanya di tab yang juara.
+     * Pasukan (registrasi) sekolah ini beserta hak sertifikatnya, keyed by id:
+     * [registration_id => ['registration' => Registration, 'rank' => ?int,
+     * 'title' => string, 'is_champion' => bool]].
+     *
+     * Semua tab dapat entri — pasukan juara bergelar juara, sisanya PESERTA
+     * (sertifikat PESERTA juga terbit untuk non-juara, bukan 404).
      */
     public function getCertificateRegistrationsProperty()
     {
@@ -421,37 +422,67 @@ class Registration extends Component
             return collect();
         }
 
-        $schoolKey = $this->registration->npsn ?: mb_strtolower(trim((string) $this->registration->nama_sekolah));
+        $peserta = fn ($reg) => [
+            'registration' => $reg,
+            'rank' => null,
+            'title' => 'PESERTA',
+            'is_champion' => false,
+        ];
 
         $championCategories = \App\Models\ChampionCategory::where('eventner_id', $eventner->id)
             ->with(['assessmentSubCategories.category', 'rankTitles'])
             ->get();
 
+        // Tab aktif selalu dapat entri walau npsn kosong (siblingRegistrations
+        // difilter by npsn sehingga bisa tidak memuat dirinya sendiri).
+        $result = [$this->registration->id => $peserta($this->registration)];
+
+        if ($championCategories->isEmpty()) {
+            foreach ($this->siblingRegistrations as $reg) {
+                $result[$reg->id] = $peserta($reg);
+            }
+
+            return collect($result);
+        }
+
         $calculator = app(\App\Services\ChampionCalculator::class);
 
-        $won = [];
-        foreach ($championCategories as $championCategory) {
-            // Peringkat per mata lomba — konsisten dengan halaman /hasil dan
-            // unduhan sertifikat eventner. Pool gabungan lintas mata lomba
-            // membuat pasukan sekolah yang sama saling menyalip antar papan
-            // skor dan gelar juara jadi tertukar.
-            [, , $winners] = $calculator->winners($championCategory, $this->registration->competition_category_id);
-            foreach ($winners as $winner) {
-                $reg = $winner['registration'];
-                $key = $reg->npsn ?: mb_strtolower(trim((string) $reg->nama_sekolah));
-                if ($key !== (string) $schoolKey || !$reg->competition_category_id) {
+        // Peringkat dihitung sekali per mata lomba, dipakai ulang untuk semua
+        // pasukan sekolah ini. Scope per mata lomba — pool gabungan lintas
+        // mata lomba membuat gelar juara tertukar antar pasukan.
+        $winnersByCategory = [];
+
+        foreach ($this->siblingRegistrations as $reg) {
+            $catId = $reg->competition_category_id;
+            $won = null;
+
+            foreach ($catId ? $championCategories : [] as $championCategory) {
+                if (!$championCategory->isVisibleFor($catId)) {
                     continue;
                 }
 
-                $won[$reg->id] = [
-                    'registration' => $reg,
-                    'rank' => $winner['rank'],
-                    'title' => $championCategory->name . ' — ' . $this->gelarJuara($championCategory, $winner['rank']),
-                ];
+                $winnersByCategory[$catId][$championCategory->id] ??=
+                    $calculator->winners($championCategory, $catId)[2];
+
+                foreach ($winnersByCategory[$catId][$championCategory->id] as $winner) {
+                    if ($winner['registration']->id !== $reg->id) {
+                        continue;
+                    }
+
+                    $won = [
+                        'registration' => $reg,
+                        'rank' => $winner['rank'],
+                        'title' => $championCategory->name . ' — ' . $this->gelarJuara($championCategory, $winner['rank']),
+                        'is_champion' => true,
+                    ];
+                    break 2;
+                }
             }
+
+            $result[$reg->id] = $won ?? $peserta($reg);
         }
 
-        return collect($won);
+        return collect($result);
     }
 
     /**

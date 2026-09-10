@@ -290,20 +290,27 @@
                 </div>
             @endif
 
-            {{-- Sertifikat Juara — hanya di tab pasukan yang menang --}}
-            @if($this->certificate_registrations->has($activeRegId))
-                <div class="surface-card overflow-hidden border-t-4 border-t-amber-400">
+            {{-- Sertifikat tab aktif: juara bergelar juara, pasukan lain PESERTA --}}
+            @if($cert = ($this->certificate_registrations[$activeRegId] ?? null))
+                @php
+                    $isChampion = $cert['is_champion'];
+                @endphp
+                <div class="surface-card overflow-hidden border-t-4 {{ $isChampion ? 'border-t-amber-400' : 'border-t-slate-300' }}">
                     <div class="p-5 flex flex-col gap-4">
                         <div class="flex items-center gap-4">
-                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 shrink-0">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl shrink-0 {{ $isChampion ? 'bg-amber-500/10 text-amber-600' : 'bg-surface-container text-on-surface-variant' }}">
                                 <i class="ti ti-certificate text-xl"></i>
                             </div>
                             <div>
-                                <h3 class="font-display text-sm font-bold text-deep-slate mb-0.5">Sertifikat Juara</h3>
-                                <p class="text-xs text-on-surface-variant font-medium leading-normal m-0">Selamat! Pasukan ini masuk jajaran juara. Unduh sertifikat dalam format PDF.</p>
+                                <h3 class="font-display text-sm font-bold text-deep-slate mb-0.5">{{ $isChampion ? 'Sertifikat Juara' : 'Sertifikat Peserta' }}</h3>
+                                <p class="text-xs text-on-surface-variant font-medium leading-normal m-0">
+                                    {{ $isChampion
+                                        ? 'Selamat! Pasukan ini masuk jajaran juara. Unduh sertifikat dalam format PDF.'
+                                        : 'Unduh sertifikat keikutsertaan pasukan ini dalam format PDF.' }}
+                                </p>
                                 <div class="mt-2 flex flex-wrap items-center gap-1.5">
-                                    <span class="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-700">
-                                        <i class="ti ti-trophy"></i> {{ $this->certificate_registrations[$activeRegId]['title'] }}
+                                    <span class="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-bold {{ $isChampion ? 'bg-amber-500/10 text-amber-700' : 'bg-surface-container text-on-surface-variant' }}">
+                                        <i class="ti {{ $isChampion ? 'ti-trophy' : 'ti-user-check' }}"></i> {{ $cert['title'] }}
                                     </span>
                                     <span class="inline-flex items-center gap-1 rounded-md bg-surface-container px-2.5 py-1 text-xs font-semibold text-deep-slate border border-outline-variant/30">
                                         <i class="ti ti-medal"></i> {{ $registration->competitionCategory->full_name }}
@@ -312,9 +319,9 @@
                             </div>
                         </div>
                         <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
-                            <a href="{{ route('magic.link.certificate.category', [$registration->magic_token, $this->certificate_registrations[$activeRegId]['registration']->competition_category_id]) }}"
+                            <a href="{{ route('magic.link.certificate.category', [$registration->magic_token, $cert['registration']->competition_category_id]) }}"
                                 target="_blank"
-                                class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-amber-500 text-white font-bold text-sm hover:brightness-105 transition-colors text-decoration-none">
+                                class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl text-white font-bold text-sm hover:brightness-105 transition-colors text-decoration-none {{ $isChampion ? 'bg-amber-500' : 'bg-primary' }}">
                                 <i class="ti ti-file-download"></i> Unduh Sertifikat
                             </a>
                         </div>

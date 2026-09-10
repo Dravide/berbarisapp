@@ -368,10 +368,10 @@ class CertificateTest extends TestCase
     }
 
     /**
-     * Kartu "Sertifikat Juara" hanya dirender di tab pasukan yang menang —
-     * tab pasukan yang kalah tidak menampilkannya.
+     * Kartu sertifikat tampil di SEMUA tab sekolah ini: tab juara bergelar
+     * juara, tab pasukan kalah bergelar PESERTA (sertifikat keikutsertaan).
      */
-    public function test_magic_link_certificate_card_only_on_winning_tab()
+    public function test_magic_link_certificate_card_on_every_tab()
     {
         [$user, $eventner, $template, $championCat, $compCat] = $this->setupCertificateAssets();
 
@@ -391,13 +391,15 @@ class CertificateTest extends TestCase
             'npsn' => $winner->npsn,
         ]);
 
-        // Tab pasukan kalah → kartu tidak tampil.
-        // Tab pasukan juara → kartu + keterangan juara keberapanya
+        // Tab pasukan kalah → kartu PESERTA dengan tombol unduh.
+        // Tab pasukan juara → Sertifikat Juara + keterangan juara keberapanya
         // (Sekolah Test 2 skor 82 = peringkat 1, rank title 'Juara 1').
         \Livewire\Livewire::test(\App\Livewire\Public\MagicLink\Registration::class, [
             'token' => $loser->magic_token,
         ])
-            ->assertDontSee('Sertifikat Juara')
+            ->assertSee('Sertifikat Peserta')
+            ->assertSee('PESERTA')
+            ->assertSee('Unduh Sertifikat')
             ->call('switchRegistration', $winner->id)
             ->assertSee('Sertifikat Juara')
             ->assertSee('Juara Umum — Juara 1');
@@ -409,6 +411,27 @@ class CertificateTest extends TestCase
         \Livewire\Livewire::test(\App\Livewire\Public\MagicLink\Registration::class, [
             'token' => $winner->magic_token,
         ])->assertSee('Juara Umum — Juara Harapan 1');
+    }
+
+    /**
+     * Tanpa template sertifikat aktif, kartu sertifikat tidak dirender sama
+     * sekali (fitur belum disiapkan eventner).
+     */
+    public function test_magic_link_certificate_card_hidden_without_active_template()
+    {
+        [$user, $eventner, $template, $championCat, $compCat] = $this->setupCertificateAssets();
+
+        $template->update(['is_active' => false]);
+
+        $reg = Registration::where('eventner_id', $eventner->id)
+            ->where('nama_sekolah', 'Sekolah Test 2')
+            ->first();
+
+        \Livewire\Livewire::test(\App\Livewire\Public\MagicLink\Registration::class, [
+            'token' => $reg->magic_token,
+        ])
+            ->assertDontSee('Sertifikat Juara')
+            ->assertDontSee('Sertifikat Peserta');
     }
 
     /**
