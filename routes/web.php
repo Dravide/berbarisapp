@@ -30,6 +30,9 @@ Route::get('/reg/{token}', App\Livewire\Public\MagicLink\Registration::class)->n
 Route::get('/reg/{token}/pdf', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadFormulir'])->name('magic.link.formulir');
 Route::get('/reg/{token}/invoice', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadInvoiceByToken'])->name('magic.link.invoice');
 Route::get('/reg/{token}/certificate', [App\Http\Controllers\Eventner\CertificateController::class, 'downloadCertificateByToken'])->name('magic.link.certificate');
+// Sertifikat per mata lomba: sertifikat HANYA untuk satu registrasi ini
+// (tanpa perlu token registrasi pasukan juara tsb).
+Route::get('/reg/{token}/{competitionCategory}/certificate', [App\Http\Controllers\Eventner\CertificateController::class, 'downloadCertificateByToken'])->name('magic.link.certificate.category');
 Route::get('/scoreboard/{scoringCode}', App\Livewire\Public\Scoreboard\Index::class)->name('public.scoreboard');
 Route::get('/scoreboard/{scoringCode}/category/{competitionCategoryId}', App\Livewire\Public\Scoreboard\Index::class)->name('public.scoreboard.category');
 Route::get('/scoreboard/{scoringCode}/champion/{championCategoryId}', App\Livewire\Public\Scoreboard\Index::class)->name('public.scoreboard.champion');

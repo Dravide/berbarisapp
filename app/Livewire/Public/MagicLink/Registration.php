@@ -380,42 +380,52 @@ class Registration extends Component
     }
 
     /**
-     * Sertifikat siap diunduh? Template aktif ada DAN sekolah ini
-     * masuk jajaran juara di salah satu kategori juara yang relevan.
+     * Pasukan (registrasi) sekolah ini yang berhak sertifikat, per registrasi:
+     * [registration_id => ['registration' => Registration, 'label' => string]].
+     * Satu sekolah bisa punya 2 pasukan di mata lomba berbeda — hanya pasukan
+     * yang menang yang muncul di sini.
      */
-    public function getCertificateAvailableProperty(): bool
+    public function getCertificateRegistrationsProperty()
     {
         $eventner = $this->registration->eventner;
 
-        $template = \App\Models\CertificateTemplate::where('eventner_id', $eventner->id)
+        if (!\App\Models\CertificateTemplate::where('eventner_id', $eventner->id)
             ->where('is_active', true)
-            ->exists();
-        if (!$template) {
-            return false;
+            ->exists()) {
+            return collect();
         }
 
         $schoolKey = $this->registration->npsn ?: mb_strtolower(trim((string) $this->registration->nama_sekolah));
 
         $championCategories = \App\Models\ChampionCategory::where('eventner_id', $eventner->id)
             ->with(['assessmentSubCategories.category'])
-            ->get()
-            ->filter(fn ($cc) => $cc->isVisibleFor($this->registration->competition_category_id))
-            ->values();
+            ->get();
 
         $calculator = app(\App\Services\ChampionCalculator::class);
 
+        $won = [];
         foreach ($championCategories as $championCategory) {
             [, , $winners] = $calculator->winners($championCategory);
             foreach ($winners as $winner) {
                 $reg = $winner['registration'];
                 $key = $reg->npsn ?: mb_strtolower(trim((string) $reg->nama_sekolah));
                 if ($key === (string) $schoolKey) {
-                    return true;
+                    $won[$reg->id] = $reg;
                 }
             }
         }
 
-        return false;
+        return collect($won)
+            ->filter(fn ($reg) => $reg->competitionCategory)
+            ->mapWithKeys(fn ($reg) => [
+                $reg->id => [
+                    'registration' => $reg,
+                    'label' => $reg->competitionCategory->name
+                        . ($reg->nama_sekolah !== $this->registration->nama_sekolah
+                            ? ' — ' . $reg->nama_sekolah
+                            : ''),
+                ],
+            ]);
     }
 
     public function render()

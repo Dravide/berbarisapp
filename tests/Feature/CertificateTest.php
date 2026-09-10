@@ -234,4 +234,65 @@ class CertificateTest extends TestCase
 
         $response->assertStatus(404);
     }
+
+    // ── Unduh per mata lomba (/reg/{token}/{competitionCategory}/certificate) ──
+
+    /**
+     * Sekolah 2 pasukan: pasukan kalah tetap bisa unduh sertifikat pasukan
+     * yang menang (pasukan lain) via kategori lomba pemenang.
+     */
+    public function test_magic_link_certificate_by_category_for_sibling_winner()
+    {
+        [$user, $eventner, $template, $championCat, $compCat] = $this->setupCertificateAssets();
+
+        $winner = Registration::where('eventner_id', $eventner->id)
+            ->where('nama_sekolah', 'Sekolah Test 2')
+            ->first();
+
+        $otherCat = CompetitionCategory::factory()->create([
+            'eventner_id' => $eventner->id,
+            'parent_id' => $compCat->parent_id,
+        ]);
+
+        // Pasukan kedua sekolah yang sama, mata lomba lain, tanpa skor → kalah.
+        $loser = Registration::factory()->create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $otherCat->id,
+            'nama_sekolah' => 'Sekolah Test 2 (Regu B)',
+            'npsn' => $winner->npsn,
+        ]);
+
+        // Token pasukan kalah + kategori lomba pasukan menang → PDF.
+        $response = $this->get(route('magic.link.certificate.category', [
+            $loser->magic_token,
+            $winner->competition_category_id,
+        ]));
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'application/pdf');
+
+        // Kategori lomba pasukan kalah → jajaran juara event ini tetap sama
+        // (ChampionCalculator lintas mata lomba), jadi sertifikat pasukan
+        // sekolah yang menang tetap terbit — bukan 404.
+        $this->get(route('magic.link.certificate.category', [
+            $loser->magic_token,
+            $otherCat->id,
+        ]))->assertStatus(200);
+    }
+
+    public function test_magic_link_certificate_by_category_404_for_other_event()
+    {
+        [$user, $eventner, $template, $championCat, $compCat] = $this->setupCertificateAssets();
+
+        $reg = Registration::where('eventner_id', $eventner->id)->first();
+
+        $otherEvent = Eventner::factory()->create([
+            'user_id' => User::factory()->create(['role' => 'Eventner'])->id,
+            'status' => 'approved',
+            'plan' => 'paid',
+        ]);
+        $foreignCat = CompetitionCategory::factory()->create(['eventner_id' => $otherEvent->id]);
+
+        $this->get(route('magic.link.certificate.category', [$reg->magic_token, $foreignCat->id]))
+            ->assertStatus(404);
+    }
 }

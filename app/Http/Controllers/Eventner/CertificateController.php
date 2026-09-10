@@ -289,11 +289,39 @@ class CertificateController extends Controller
      * Template aktif event + semua kategori juara di mana sekolah ini
      * masuk jajaran juara (satu PDF, satu halaman per peserta).
      */
-    public function downloadCertificateByToken(string $token)
+    public function downloadCertificateByToken(string $token, ?CompetitionCategory $competitionCategory = null)
     {
-        $registration = Registration::with(['eventner', 'participants'])
+        $tokenReg = Registration::with(['eventner', 'participants'])
             ->where('magic_token', $token)
             ->firstOrFail();
+
+        // URL per mata lomba (/reg/{token}/{competitionCategory}/certificate):
+        // sertifikat untuk pasukan lain dari sekolah yang sama, sehingga
+        // pasukan yang kalah pun tetap bisa mengunduh sertifikat pasukan
+        // sekolahnya yang menang.
+        if ($competitionCategory) {
+            if ($competitionCategory->eventner_id !== $tokenReg->eventner_id) {
+                abort(404);
+            }
+
+            $registration = $tokenReg->npsn
+                ? Registration::where('eventner_id', $tokenReg->eventner_id)
+                    ->where('npsn', $tokenReg->npsn)
+                    ->where('competition_category_id', $competitionCategory->id)
+                    ->first()
+                : null;
+
+            $registration ??= Registration::where('eventner_id', $tokenReg->eventner_id)
+                ->where('competition_category_id', $competitionCategory->id)
+                ->whereRaw('LOWER(TRIM(nama_sekolah)) = ?', [mb_strtolower(trim((string) $tokenReg->nama_sekolah))])
+                ->first();
+
+            abort_unless($registration, 404);
+            $registration->loadMissing(['eventner', 'participants']);
+        } else {
+            $registration = $tokenReg;
+        }
+
         $eventner = $registration->eventner;
 
         // Sertifikat = fitur premium. Event free (di luar trial) tidak boleh
