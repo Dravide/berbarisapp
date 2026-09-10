@@ -142,6 +142,7 @@ class MailyService
         $eventner = $ticket->eventner;
         $eventName = $eventner->nama_event ?? 'Event';
         $url = $eventner->publicUrl('ticket', ['confirmOrder' => $ticket->order_code]);
+        $pdfUrl = $eventner->publicUrl('ticket.pdf', ['orderCode' => $ticket->order_code]);
 
         // QR via URL publik — webmail (Gmail dkk) menstrip gambar data:URI,
         // jadi jangan embed base64 langsung.
@@ -225,6 +226,9 @@ class MailyService
                         Lihat Tiket
                     </a>
                     <p style='color:#9ca3af;font-size:12px;margin:10px 0 0;'>Akses ulang tiket Anda kapan saja melalui tombol di atas.</p>
+                    <p style='color:#6b7280;font-size:13px;margin:14px 0 0;'>
+                        Butuh berkas tiketnya? <a href='{$pdfUrl}' style='color:#0062FF;font-weight:600;'>Unduh Tiket (PDF)</a>
+                    </p>
                 </div>
 
                 <div style='border-top:1px solid #f0f0f0;padding-top:16px;text-align:center;'>

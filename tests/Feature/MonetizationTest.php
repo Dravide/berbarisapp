@@ -646,6 +646,50 @@ class MonetizationTest extends TestCase
     }
 
     /**
+     * Email tiket ikut menautkan PDF-nya.
+     *
+     * Catatan: Maily.id tidak menerima attachment — parameter body-nya hanya
+     * from/to/reply_to/subject/html/text. Jadi "kirim PDF ke email" di sini
+     * berarti tautan unduh, bukan lampiran berkas.
+     */
+    public function test_email_tiket_menautkan_pdf(): void
+    {
+        Storage::fake('public');
+        config(['maily.enabled' => true, 'maily.api_key' => 'ml_test_key']);
+
+        Http::fake(['maily.id/*' => Http::response(['id' => 'abc', 'status' => 'queued'], 202)]);
+
+        $eventner = Eventner::factory()->create(['status' => 'approved', 'slug' => 'event-mail']);
+        $ticket = Ticket::create([
+            'eventner_id' => $eventner->id,
+            'buyer_name' => 'Fajar',
+            'buyer_email' => 'fajar@example.com',
+            'quantity' => 1,
+            'price_per_ticket' => 50000,
+            'total_amount' => 50000,
+            'autogopay_transaction_id' => 'AGP-MAIL-001',
+            'status' => 'PENDING',
+        ]);
+        $ticket->claimPaid();
+
+        app(\App\Services\MailyService::class)->sendTicketConfirmation($ticket->fresh());
+
+        $sentHtml = null;
+        Http::assertSent(function ($request) use (&$sentHtml) {
+            $sentHtml = $request['html'] ?? '';
+
+            return true;
+        });
+
+        $this->assertNotNull($sentHtml, 'email tiket harus terkirim');
+        $this->assertStringContainsString(
+            '/tiket/' . $ticket->order_code . '/pdf',
+            $sentHtml,
+            'email harus memuat tautan unduh PDF'
+        );
+    }
+
+    /**
      * Bikin eventner yang sudah "tua" seperti kondisi produksi. created_at bukan
      * kolom fillable, jadi backdate wajib lewat forceFill — kalau tidak, nilainya
      * diabaikan diam-diam dan tes lolos palsu.
