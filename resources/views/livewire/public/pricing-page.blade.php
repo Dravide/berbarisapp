@@ -1,16 +1,21 @@
-<div class="min-h-screen bg-surface">
-    <div class="container-landing py-12 md:py-16">
-        {{-- Heading --}}
-        <div class="mx-auto max-w-2xl text-center">
-            <span class="overline justify-center">Harga</span>
-            <h1 class="mt-4 font-display text-3xl font-bold md:text-4xl">Harga &amp; Paket</h1>
-            <p class="mt-4 text-on-surface-variant">
-                Kelola perlombaan sekolah dengan gratis. Aktifkan fitur premium sekali bayar per event — tanpa langganan bulanan.
-            </p>
+<div>
+    {{-- Header --}}
+    <div class="section-pad bg-surface">
+        <div class="container-landing">
+            <div class="text-center">
+                <span class="overline justify-center">Harga</span>
+                <h1 class="mt-4 text-3xl font-bold leading-tight md:text-4xl font-display text-deep-slate">Harga &amp; Paket</h1>
+                <p class="mt-4 max-w-2xl mx-auto text-on-surface-variant">
+                    Kelola perlombaan sekolah dengan gratis. Aktifkan fitur premium sekali bayar per event — tanpa langganan bulanan.
+                </p>
+            </div>
         </div>
+    </div>
 
-        {{-- Kartu Paket --}}
-        <div class="mt-12 grid grid-cols-1 items-stretch justify-center gap-6 md:grid-cols-2 lg:grid-cols-{{ count($plans) > 3 ? 3 : count($plans) }}">
+    {{-- Kartu Paket --}}
+    <div class="section-pad bg-surface-container-lowest">
+        <div class="container-landing">
+        <div class="grid grid-cols-1 items-stretch justify-center gap-6 md:grid-cols-2 lg:grid-cols-{{ count($plans) > 3 ? 3 : count($plans) }}">
             @foreach($plans as $plan)
                 @php
                     $eventner = auth()->user()?->role === 'Eventner' ? auth()->user()->eventner : null;
@@ -92,6 +97,7 @@
                     Pilih paket → scan QRIS → aktivasi otomatis dalam hitungan detik setelah pembayaran terkonfirmasi. Tidak ada verifikasi manual, tidak ada biaya tersembunyi. Satu kali bayar berlaku untuk satu event sampai selesai.
                 </div>
             </div>
+        </div>
         </div>
     </div>
 </div>
