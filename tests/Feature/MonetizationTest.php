@@ -413,6 +413,239 @@ class MonetizationTest extends TestCase
     }
 
     /**
+     * Halaman tiket eventner punya sync + konfirmasi manual sendiri, dan
+     * keduanya dulu hanya menulis status — tiket jadi PAID tanpa QR, sehingga
+     * "QR tidak muncul" di halaman pembeli. Ini jalur yang paling sering dipakai
+     * eventner, jadi ikut ditutup.
+     */
+    public function test_sync_dan_konfirmasi_manual_di_halaman_tiket_membuat_qr(): void
+    {
+        Storage::fake('public');
+
+        $user = User::factory()->eventner()->create();
+        $eventner = Eventner::factory()->paid()->create(['user_id' => $user->id, 'status' => 'approved']);
+
+        $settled = Ticket::create([
+            'eventner_id' => $eventner->id,
+            'buyer_name' => 'Sari',
+            'buyer_email' => 'sari@example.com',
+            'quantity' => 1,
+            'price_per_ticket' => 50000,
+            'total_amount' => 50000,
+            'autogopay_transaction_id' => 'AGP-PAGE-001',
+            'status' => 'PENDING',
+        ]);
+        $manual = Ticket::create([
+            'eventner_id' => $eventner->id,
+            'buyer_name' => 'Tono',
+            'buyer_email' => 'tono@example.com',
+            'quantity' => 2,
+            'price_per_ticket' => 50000,
+            'total_amount' => 100000,
+            'autogopay_transaction_id' => 'AGP-PAGE-002',
+            'status' => 'PENDING',
+        ]);
+
+        Http::fake([
+            '*/qris/status' => Http::response([
+                'success' => true,
+                'data' => ['transaction_id' => 'AGP-PAGE-001', 'transaction_status' => 'settlement'],
+            ], 200),
+        ]);
+
+        $component = Livewire::actingAs($user)->test(\App\Livewire\Eventner\Ticket\Index::class)
+            ->call('syncPending');
+
+        $this->assertSame('PAID', $settled->fresh()->status);
+        $this->assertNotNull($settled->fresh()->qr_code_path, 'sync di halaman tiket wajib membuat QR');
+        Storage::disk('public')->assertExists($settled->fresh()->qr_code_path);
+
+        $component->call('markAsPaid', $manual->id);
+
+        $this->assertSame('PAID', $manual->fresh()->status);
+        $this->assertNotNull($manual->fresh()->qr_code_path, 'konfirmasi manual wajib membuat QR');
+        Storage::disk('public')->assertExists($manual->fresh()->qr_code_path);
+    }
+
+    /**
+     * Command payment:sync-pending jalan tiap menit dan juga menandai tiket PAID.
+     */
+    public function test_command_sync_pending_membuat_qr_masuk_tiket(): void
+    {
+        Storage::fake('public');
+
+        Http::fake([
+            '*/qris/status' => Http::response([
+                'success' => true,
+                'data' => ['transaction_id' => 'AGP-CMD-001', 'transaction_status' => 'settlement'],
+            ], 200),
+        ]);
+
+        $eventner = Eventner::factory()->create(['status' => 'approved']);
+        $ticket = Ticket::create([
+            'eventner_id' => $eventner->id,
+            'buyer_name' => 'Rina',
+            'buyer_email' => 'rina@example.com',
+            'quantity' => 1,
+            'price_per_ticket' => 50000,
+            'total_amount' => 50000,
+            'autogopay_transaction_id' => 'AGP-CMD-001',
+            'status' => 'PENDING',
+        ]);
+
+        $this->artisan('payment:sync-pending')->assertSuccessful();
+
+        $ticket->refresh();
+        $this->assertSame('PAID', $ticket->status);
+        $this->assertNotNull($ticket->qr_code_path, 'command sync wajib membuat QR masuk');
+        Storage::disk('public')->assertExists($ticket->qr_code_path);
+    }
+
+    /**
+     * claimPaid() harus menolak klaim kedua supaya webhook & polling yang
+     * berbarengan tidak mengirim email konfirmasi dua kali ke pembeli.
+     */
+    public function test_claim_paid_hanya_berhasil_sekali(): void
+    {
+        Storage::fake('public');
+
+        $eventner = Eventner::factory()->create(['status' => 'approved']);
+        $ticket = Ticket::create([
+            'eventner_id' => $eventner->id,
+            'buyer_name' => 'Dewi',
+            'buyer_email' => 'dewi@example.com',
+            'quantity' => 1,
+            'price_per_ticket' => 50000,
+            'total_amount' => 50000,
+            'autogopay_transaction_id' => 'AGP-ONCE-001',
+            'status' => 'PENDING',
+        ]);
+
+        $this->assertTrue($ticket->claimPaid(), 'klaim pertama harus menang');
+        $this->assertFalse($ticket->claimPaid(), 'klaim kedua harus ditolak');
+    }
+
+    /**
+     * Tiket bisa diunduh sebagai PDF berisi QR-nya (cadangan kalau QR di halaman
+     * tidak sempat dimuat di ponsel pembeli).
+     */
+    public function test_tiket_pdf_bisa_diunduh_dan_memuat_qr(): void
+    {
+        Storage::fake('public');
+
+        $eventner = Eventner::factory()->create(['status' => 'approved', 'slug' => 'event-pdf']);
+        $ticket = Ticket::create([
+            'eventner_id' => $eventner->id,
+            'buyer_name' => 'Bayu',
+            'buyer_email' => 'bayu@example.com',
+            'quantity' => 1,
+            'price_per_ticket' => 50000,
+            'total_amount' => 50000,
+            'autogopay_transaction_id' => 'AGP-PDF-001',
+            'status' => 'PENDING',
+        ]);
+        $ticket->claimPaid();
+
+        $response = $this->get(route('event.ticket.pdf', [
+            'slug' => 'event-pdf',
+            'orderCode' => $ticket->order_code,
+        ]));
+
+        $response->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+
+        $this->assertStringContainsString(
+            'tiket-' . $ticket->order_code,
+            $response->headers->get('content-disposition') ?? ''
+        );
+    }
+
+    /**
+     * Tiket lama yang terlanjur PAID tanpa file QR tetap bisa diunduh —
+     * QR diterbitkan saat PDF diminta (murni lokal dari order_code).
+     */
+    public function test_tiket_pdf_menerbitkan_qr_yang_belum_ada(): void
+    {
+        Storage::fake('public');
+
+        $eventner = Eventner::factory()->create(['status' => 'approved', 'slug' => 'event-pdf-2']);
+        $ticket = Ticket::create([
+            'eventner_id' => $eventner->id,
+            'buyer_name' => 'Citra',
+            'buyer_email' => 'citra@example.com',
+            'quantity' => 1,
+            'price_per_ticket' => 50000,
+            'total_amount' => 50000,
+            'autogopay_transaction_id' => 'AGP-PDF-002',
+            'status' => 'PAID',
+            'qr_code_path' => null,
+        ]);
+
+        $this->get(route('event.ticket.pdf', [
+            'slug' => 'event-pdf-2',
+            'orderCode' => $ticket->order_code,
+        ]))->assertOk();
+
+        $this->assertNotNull($ticket->fresh()->qr_code_path);
+        Storage::disk('public')->assertExists($ticket->fresh()->qr_code_path);
+    }
+
+    /**
+     * Tiket belum bayar / order code ngawur tidak boleh bisa diunduh publik —
+     * PDF memuat data pembeli, jadi jangan sampai bocor lintas event.
+     */
+    public function test_tiket_pdf_menolak_yang_belum_bayar_dan_event_lain(): void
+    {
+        Storage::fake('public');
+
+        $eventner = Eventner::factory()->create(['status' => 'approved', 'slug' => 'event-a']);
+        $lain = Eventner::factory()->create(['status' => 'approved', 'slug' => 'event-b']);
+
+        $belumBayar = Ticket::create([
+            'eventner_id' => $eventner->id,
+            'buyer_name' => 'Dedi',
+            'buyer_email' => 'dedi@example.com',
+            'quantity' => 1,
+            'price_per_ticket' => 50000,
+            'total_amount' => 50000,
+            'autogopay_transaction_id' => 'AGP-PDF-003',
+            'status' => 'PENDING',
+        ]);
+        $punyaEventLain = Ticket::create([
+            'eventner_id' => $lain->id,
+            'buyer_name' => 'Eka',
+            'buyer_email' => 'eka@example.com',
+            'quantity' => 1,
+            'price_per_ticket' => 50000,
+            'total_amount' => 50000,
+            'autogopay_transaction_id' => 'AGP-PDF-004',
+            'status' => 'PENDING',
+        ]);
+        $punyaEventLain->claimPaid();
+
+        $this->get(route('event.ticket.pdf', ['slug' => 'event-a', 'orderCode' => $belumBayar->order_code]))
+            ->assertNotFound();
+
+        // order_code valid tapi milik event lain — tidak boleh bocor
+        $this->get(route('event.ticket.pdf', ['slug' => 'event-a', 'orderCode' => $punyaEventLain->order_code]))
+            ->assertNotFound();
+    }
+
+    /**
+     * Route PDF harus benar saat event pakai subdomain — kalau tidak, tombolnya
+     * menunjuk ke path yang salah dan hanya gagal di produksi.
+     */
+    public function test_url_tiket_pdf_benar_untuk_event_subdomain(): void
+    {
+        $eventner = Eventner::factory()->create(['subdomain' => 'smk1', 'slug' => 'smk1']);
+
+        $url = $eventner->publicUrl('ticket.pdf', ['orderCode' => 'TKT-ABC123']);
+
+        $this->assertStringEndsWith('/tiket/TKT-ABC123/pdf', $url);
+        $this->assertStringContainsString('smk1.', $url);
+    }
+
+    /**
      * Bikin eventner yang sudah "tua" seperti kondisi produksi. created_at bukan
      * kolom fillable, jadi backdate wajib lewat forceFill — kalau tidak, nilainya
      * diabaikan diam-diam dan tes lolos palsu.

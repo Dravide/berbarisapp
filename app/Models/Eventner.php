@@ -267,6 +267,7 @@ class Eventner extends Model
                 'results.detail' => '/hasil',
                 'vote' => '/vote',
                 'ticket' => '/tiket',
+                'ticket.pdf' => '/tiket',
                 'register' => '/daftar',
                 'drawing.spin' => '/drawing',
                 'drawing.results' => '/hasil-drawing',
@@ -286,6 +287,12 @@ class Eventner extends Model
             if ($route === 'results.detail' && !empty($params['registration'])) {
                 $path .= '/' . rawurlencode($params['registration']);
                 unset($params['registration']);
+            }
+
+            // Unduh tiket PDF: /tiket/{orderCode}/pdf
+            if ($route === 'ticket.pdf' && !empty($params['orderCode'])) {
+                $path .= '/' . rawurlencode($params['orderCode']) . '/pdf';
+                unset($params['orderCode']);
             }
 
             $nonPathParams = $params;

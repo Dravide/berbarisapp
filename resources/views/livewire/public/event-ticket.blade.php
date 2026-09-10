@@ -191,7 +191,7 @@
                                     <i class="ti ti-info-circle text-primary"></i> Cara Penggunaan Tiket:
                                 </span>
                                 <ol class="list-decimal pl-4 text-xs text-on-surface-variant space-y-1.5 leading-relaxed">
-                                    <li>Simpan atau <strong>screenshot QR Code</strong> di atas.</li>
+                                    <li>Simpan atau <strong>screenshot QR Code</strong> di atas, atau <strong>unduh tiket PDF</strong> lewat tombol di bawah.</li>
                                     <li>Tunjukkan QR Code ini kepada panitia saat kedatangan di gerbang masuk event.</li>
                                     <li>Panitia akan men-scan tiket Anda untuk memverifikasi dan memberikan gelang masuk.</li>
                                 </ol>
@@ -231,6 +231,9 @@
 
                             {{-- Action buttons --}}
                             <div class="flex flex-col gap-2">
+                                <a href="{{ event_url($eventner, 'ticket.pdf', ['orderCode' => $paidTicket->order_code]) }}" class="btn-primary py-3 px-4 font-bold text-sm w-full text-center text-decoration-none">
+                                    <i class="ti ti-download"></i> Unduh Tiket PDF
+                                </a>
                                 <a href="{{ event_url($eventner, 'detail') }}" class="btn-secondary py-3 px-4 font-bold text-sm w-full text-center text-decoration-none">
                                     <i class="ti ti-home"></i> Kembali Ke Detail Event
                                 </a>
