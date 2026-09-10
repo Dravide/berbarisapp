@@ -260,7 +260,7 @@
             @endif
 
             {{-- Sertifikat Juara (hanya sekolah yang masuk jajaran juara) --}}
-            @if($registration->status_berkas === 'Terverifikasi' && $this->certificate_available)
+            @if($this->certificate_available)
                 <div class="surface-card overflow-hidden border-t-4 border-t-amber-400">
                     <div class="p-5 flex flex-col sm:flex-row sm:items-center gap-4">
                         <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 shrink-0">
