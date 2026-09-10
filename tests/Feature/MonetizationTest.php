@@ -384,6 +384,7 @@ class MonetizationTest extends TestCase
     {
         Storage::fake('public');
 
+
         Http::fake([
             '*/qris/status' => Http::response([
                 'success' => true,
@@ -409,5 +410,108 @@ class MonetizationTest extends TestCase
         $this->assertSame('PAID', $ticket->status);
         $this->assertNotNull($ticket->qr_code_path, 'tiket PAID wajib punya QR masuk');
         Storage::disk('public')->assertExists($ticket->qr_code_path);
+    }
+
+    /**
+     * Bikin eventner yang sudah "tua" seperti kondisi produksi. created_at bukan
+     * kolom fillable, jadi backdate wajib lewat forceFill — kalau tidak, nilainya
+     * diabaikan diam-diam dan tes lolos palsu.
+     */
+    private function agedEventner(array $attributes): Eventner
+    {
+        $eventner = Eventner::factory()->create($attributes);
+        $eventner->forceFill(['created_at' => now()->subHours(25)])->save();
+
+        return $eventner;
+    }
+
+    /**
+     * Pendaftaran yang QRIS-nya kadaluarsa harus dibersihkan supaya email &
+     * username-nya bisa dipakai daftar ulang. Sebelumnya user + eventner
+     * nyangkut: tidak bisa login (is_active false) dan tidak bisa daftar ulang
+     * (email/username masih unique).
+     */
+    public function test_pendaftaran_kadaluarsa_dibersihkan(): void
+    {
+        $user = User::factory()->create(['role' => 'Eventner', 'is_active' => false]);
+        $eventner = $this->agedEventner([
+            'user_id' => $user->id,
+            'plan' => 'paid',
+            'status' => 'pending',
+            'registration_paid_at' => null,
+            'autogopay_transaction_id' => 'AGP-ABANDON-001',
+        ]);
+
+        Http::fake([
+            '*/qris/status' => Http::response([
+                'success' => true,
+                'data' => ['transaction_id' => 'AGP-ABANDON-001', 'transaction_status' => 'expire'],
+            ], 200),
+        ]);
+
+        (new \App\Jobs\SyncPendingPayments)->handle();
+
+        $this->assertNull(Eventner::find($eventner->id), 'eventner kadaluarsa harus terhapus');
+        $this->assertNull(User::find($user->id), 'user ikut terhapus supaya email bebas dipakai lagi');
+    }
+
+    /**
+     * Yang TIDAK boleh dihapus: sudah dibayar, akun aktif, atau transaksinya
+     * masih bisa dibayar.
+     */
+    public function test_cleanup_tidak_menghapus_yang_sudah_bayar_atau_masih_pending(): void
+    {
+        $bayar = $this->agedEventner([
+            'plan' => 'paid',
+            'status' => 'pending',
+            'registration_paid_at' => now(),
+            'autogopay_transaction_id' => 'AGP-AMAN-001',
+        ]);
+        $aktif = $this->agedEventner([
+            'plan' => 'paid',
+            'status' => 'pending',
+            'registration_paid_at' => null,
+            'autogopay_transaction_id' => 'AGP-AKTIF-001',
+        ]);
+        $aktif->user->update(['is_active' => true]);
+        $masihPending = $this->agedEventner([
+            'plan' => 'paid',
+            'status' => 'pending',
+            'registration_paid_at' => null,
+            'autogopay_transaction_id' => 'AGP-PENDING-001',
+        ]);
+
+        Http::fake([
+            '*/qris/status' => Http::response([
+                'success' => true,
+                'data' => ['transaction_id' => 'X', 'transaction_status' => 'pending'],
+            ], 200),
+        ]);
+
+        (new \App\Jobs\SyncPendingPayments)->handle();
+
+        $this->assertNotNull(Eventner::find($bayar->id), 'sudah dibayar tidak boleh dihapus');
+        $this->assertNotNull(Eventner::find($aktif->id), 'akun aktif tidak boleh dihapus');
+        $this->assertNotNull(Eventner::find($masihPending->id), 'transaksi masih pending tidak boleh dihapus');
+    }
+
+    /**
+     * Endpoint status error → jangan hapus apa pun. Lebih baik nyangkut
+     * sehari lagi daripada menghapus pendaftaran yang sebenarnya sudah dibayar.
+     */
+    public function test_cleanup_tidak_menghapus_saat_cek_status_gagal(): void
+    {
+        $eventner = $this->agedEventner([
+            'plan' => 'paid',
+            'status' => 'pending',
+            'registration_paid_at' => null,
+            'autogopay_transaction_id' => 'AGP-ERROR-001',
+        ]);
+
+        Http::fake(['*/qris/status' => Http::response('server error', 500)]);
+
+        (new \App\Jobs\SyncPendingPayments)->handle();
+
+        $this->assertNotNull(Eventner::find($eventner->id), 'cek status gagal → jangan hapus');
     }
 }

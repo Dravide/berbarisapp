@@ -2,7 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Models\Eventner;
 use App\Models\Ticket;
+use App\Models\User;
 use App\Models\VoteTransaction;
 use App\Services\AutoGoPay;
 use Illuminate\Bus\Queueable;
@@ -29,8 +31,16 @@ class SyncPendingPayments implements ShouldQueue, ShouldBeUnique
     /** Batch maksimal per siklus (pool paralel, sekali jalan ~10 detik). */
     public int $batchSize = 100;
 
+    /** Umur pendaftaran belum dibayar sebelum dibersihkan (jam). */
+    public int $abandonedAfterHours = 24;
+
     public function handle(): void
     {
+        // Selalu dijalankan, termasuk saat tidak ada transaksi vote/tiket pending —
+        // pendaftaran nyangkut tidak berhubungan dengan transaksi pending, dan
+        // handle() punya early return kalau daftar transaksinya kosong.
+        $this->cleanupAbandonedRegistrations();
+
         $since = now()->subHours($this->maxAgeHours);
 
         $pendingVotes = VoteTransaction::where('status', 'PENDING')
@@ -117,6 +127,81 @@ class SyncPendingPayments implements ShouldQueue, ShouldBeUnique
 
         if ($synced > 0) {
             Log::info("Auto-sync selesai: {$synced}/{$total} transaksi diperbarui.");
+        }
+    }
+
+    /**
+     * Hapus pendaftaran eventner yang QRIS-nya kadaluarsa dan tidak pernah dibayar.
+     *
+     * Tanpa ini, user + eventner pending nyangkut: email/username masih dipakai
+     * (unique di tabel users) sehingga "silakan daftar ulang" selalu gagal, dan
+     * akunnya tidak bisa login karena is_active masih false.
+     *
+     * Hanya menyentuh baris yang JELAS belum dibayar:
+     *  - registration_paid_at NULL — guard utama, sumber kebenaran pembayaran
+     *  - status 'pending'          — belum pernah disetujui
+     *  - is_active false           — jaring pengaman: jangan hapus akun yang aktif
+     *  - plan 'paid'               — eventner gratis tidak lewat jalur QRIS
+     *  - transaksi sudah kedaluwarsa
+     * eventner.user_id cascade, jadi user-nya ikut terhapus dan emailnya bebas lagi.
+     */
+    private function cleanupAbandonedRegistrations(): void
+    {
+        $cutoff = now()->subHours($this->abandonedAfterHours);
+
+        $candidates = Eventner::where('status', 'pending')
+            ->where('plan', 'paid')
+            ->whereNull('registration_paid_at')
+            ->whereNotNull('autogopay_transaction_id')
+            ->where('created_at', '<', $cutoff)
+            ->with('user:id,is_active')
+            ->get();
+
+        $cleaned = 0;
+
+        foreach ($candidates as $eventner) {
+            if ($eventner->user?->is_active) {
+                continue;
+            }
+
+            // Pastikan transaksinya memang sudah tidak bisa dibayar lagi.
+            // Gagal cek / endpoint error → JANGAN hapus, coba lagi siklus berikutnya.
+            try {
+                $status = (new AutoGoPay)->checkStatus($eventner->autogopay_transaction_id);
+            } catch (\Throwable $e) {
+                Log::warning('Cleanup pendaftaran: cek status gagal, dilewati', [
+                    'eventner_id' => $eventner->id,
+                    'error' => $e->getMessage(),
+                ]);
+                continue;
+            }
+
+            $txStatus = $status['data']['transaction_status'] ?? '';
+
+            // Kalau ternyata sudah settlement, biarkan jalur normal yang memproses.
+            if ($txStatus === 'settlement') {
+                continue;
+            }
+
+            // pending → masih bisa dibayar, tunggu siklus berikutnya
+            if (!in_array($txStatus, ['expire', 'cancel'], true)) {
+                continue;
+            }
+
+            $userId = $eventner->user_id;
+            $eventner->delete();
+            User::where('id', $userId)->where('is_active', false)->delete();
+            $cleaned++;
+
+            Log::info('Pendaftaran eventner kadaluarsa dibersihkan', [
+                'eventner_id' => $eventner->id,
+                'transaction_id' => $eventner->autogopay_transaction_id,
+                'status' => $txStatus,
+            ]);
+        }
+
+        if ($cleaned > 0) {
+            Log::info("Cleanup pendaftaran: {$cleaned} pendaftaran belum dibayar dihapus.");
         }
     }
 
