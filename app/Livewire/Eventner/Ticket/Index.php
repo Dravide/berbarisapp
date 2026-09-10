@@ -279,6 +279,6 @@ class Index extends Component
             'checkedIn' => $checkedIn,
             'totalTicketsCount' => $totalTicketsCount,
             'statusCounts' => $statusCounts,
-        ])->title('Tiket - ' . $this->eventner->nama_event->title('Tiket - ' . app_name()));
+        ])->title('Tiket - ' . app_name());
     }
 }

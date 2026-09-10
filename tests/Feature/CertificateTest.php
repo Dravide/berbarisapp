@@ -421,4 +421,60 @@ class CertificateTest extends TestCase
             array_map(fn ($w) => $w['registration']->nama_sekolah, $winners)
         );
     }
+
+    // ── Komentar pendukung di Rekap Jumlah Vote (portal) ────────────────
+
+    /**
+     * Komentar voter tampil di kartu Rekap Jumlah Vote, terbaru dulu, dan
+     * hanya transaksi PAID yang berkomentar.
+     */
+    public function test_vote_recap_shows_voter_comments()
+    {
+        [$user, $eventner, $template, $championCat, $compCat] = $this->setupCertificateAssets();
+
+        $eventner->update(['vote_active' => true]);
+
+        $reg = Registration::where('eventner_id', $eventner->id)
+            ->where('nama_sekolah', 'Sekolah Test 2')->first();
+
+        // Kartu rekap nilai & vote hanya dirender untuk berkas Terverifikasi.
+        $reg->update(['status_berkas' => 'Terverifikasi']);
+
+        $seq = new \stdClass;
+        $seq->n = 0;
+        $make = function (array $attrs) use ($eventner, $reg, $seq) {
+            $n = ++$seq->n;
+
+            return \App\Models\VoteTransaction::create(array_merge([
+                'eventner_id' => $eventner->id,
+                'registration_id' => $reg->id,
+                'autogopay_transaction_id' => 'TRX-' . $n,
+                'qr_url' => 'https://example.test/qr/' . $n,
+                'amount' => 10000,
+                'voter_email' => 'voter' . $n . '@example.test',
+                'votes_earned' => 10,
+                'status' => 'PAID',
+                'paid_at' => now(),
+            ], $attrs));
+        };
+
+        $make(['voter_name' => 'Budi', 'comment' => 'Semangat Rukibra!', 'paid_at' => now()->subMinutes(5)]);
+        $make(['voter_name' => 'Sari', 'comment' => 'Keren sekali!', 'paid_at' => now()]);
+        // Tidak berkomentar → tidak tampil.
+        $make(['voter_name' => 'Tanpa Komentar', 'comment' => null]);
+        // Belum bayar → tidak tampil walau ada komentar.
+        $make(['voter_name' => 'Pending', 'comment' => 'Belum bayar', 'status' => 'PENDING']);
+
+        \Livewire\Livewire::test(\App\Livewire\Public\MagicLink\Registration::class, [
+            'token' => $reg->magic_token,
+        ])
+            ->assertSee('Rekap Jumlah Vote')
+            ->assertSee('Komentar Pendukung')
+            ->assertSee('Semangat Rukibra!')
+            ->assertSee('Keren sekali!')
+            ->assertSee('Budi')
+            ->assertSee('Sari')
+            ->assertDontSee('Tanpa Komentar')
+            ->assertDontSee('Belum bayar');
+    }
 }

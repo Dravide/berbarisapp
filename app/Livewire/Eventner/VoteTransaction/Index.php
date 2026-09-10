@@ -282,6 +282,6 @@ class Index extends Component
             'summaryPaid' => $summaryPaid,
             'totalTransactionsCount' => $totalTransactionsCount,
             'statusCounts' => $statusCounts,
-        ])->title('Transaksi Voting - ' . $eventner->nama_event->title('Transaksi Voting - ' . app_name()));
+        ])->title('Transaksi Voting - ' . app_name());
     }
 }

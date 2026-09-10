@@ -158,6 +158,6 @@ class Index extends Component
             'comments' => $comments,
             'registrations' => $registrations,
             'summary' => $summary,
-        ])->title('Komentar Voting - ' . $eventner->nama_event->title('Komentar Voting - ' . app_name()));
+        ])->title('Komentar Voting - ' . app_name());
     }
 }

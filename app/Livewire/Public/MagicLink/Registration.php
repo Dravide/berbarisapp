@@ -334,6 +334,31 @@ class Registration extends Component
             ->sum('votes_earned');
     }
 
+    /**
+     * Komentar pendukung (voter) untuk pasukan di tab aktif — hanya
+     * transaksi PAID yang mengisi komentar.
+     */
+    public function getVoteCommentsProperty()
+    {
+        return \App\Models\VoteTransaction::where('registration_id', $this->activeRegId)
+            ->where('status', 'PAID')
+            ->whereNotNull('comment')
+            ->where('comment', '!=', '')
+            ->orderByDesc('paid_at')
+            ->orderByDesc('id')
+            ->limit(5)
+            ->get(['id', 'voter_name', 'comment', 'votes_earned', 'paid_at']);
+    }
+
+    public function getVoteCommentCountProperty(): int
+    {
+        return \App\Models\VoteTransaction::where('registration_id', $this->activeRegId)
+            ->where('status', 'PAID')
+            ->whereNotNull('comment')
+            ->where('comment', '!=', '')
+            ->count();
+    }
+
     public function getIsScoringFinalizedProperty()
     {
         return \App\Models\AssessmentScore::where('registration_id', $this->activeRegId)

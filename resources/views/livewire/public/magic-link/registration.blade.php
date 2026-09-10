@@ -249,6 +249,37 @@
                                 <h2 class="text-4xl font-extrabold text-amber-500 m-0">{{ number_format($this->vote_total, 0, ',', '.') }}</h2>
                                 <span class="text-[10px] text-amber-600 font-bold uppercase tracking-wider block mt-1">Total Vote</span>
                             </div>
+                            {{-- Komentar pendukung --}}
+                            @if($this->vote_comment_count > 0)
+                                <div class="mt-5 pt-5 border-t border-outline-variant/40">
+                                    <h4 class="font-display text-xs font-bold text-deep-slate mb-3 inline-flex items-center gap-1.5">
+                                        <i class="ti ti-message-circle text-amber-500"></i>
+                                        Komentar Pendukung
+                                        <span class="inline-block py-0.5 px-1.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-700">{{ number_format($this->vote_comment_count, 0, ',', '.') }}</span>
+                                    </h4>
+                                    <div class="flex flex-col gap-2.5">
+                                        @foreach($this->vote_comments as $vc)
+                                            <div class="rounded-xl bg-surface-container-lowest border border-outline-variant/30 p-3">
+                                                <div class="flex items-center justify-between gap-2 mb-1">
+                                                    <span class="text-xs font-bold text-deep-slate truncate">{{ $vc->voter_name ?: 'Anonim' }}</span>
+                                                    @if($vc->votes_earned > 0)
+                                                        <span class="text-[10px] font-bold text-amber-600 shrink-0 inline-flex items-center gap-0.5">
+                                                            <i class="ti ti-heart-filled"></i> {{ number_format($vc->votes_earned, 0, ',', '.') }}
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                                <p class="text-xs text-on-surface-variant leading-normal m-0 break-words">{{ $vc->comment }}</p>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    @if($this->vote_comment_count > $this->vote_comments->count())
+                                        <p class="mt-3 mb-0 text-[10px] text-on-surface-variant text-center">
+                                            Menampilkan {{ $this->vote_comments->count() }} dari {{ number_format($this->vote_comment_count, 0, ',', '.') }} komentar.
+                                        </p>
+                                    @endif
+                                </div>
+                            @endif
+
                             <div class="mt-6 text-center shrink-0">
                                 <a href="{{ event_url($registration->eventner, 'vote') }}" class="text-xs font-bold text-primary hover:underline inline-flex items-center gap-1 text-decoration-none">
                                     Lihat Klasemen Vote <i class="ti ti-arrow-right text-[10px]"></i>
