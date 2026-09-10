@@ -363,12 +363,7 @@ class Editor extends Component
             return null;
         }
 
-        [$eventner, $category, $winners] = app(ChampionCalculator::class)->winners($championCategory);
-
-        // Batasi ke kategori lomba terpilih — peringkat tetap dari
-        // kompetisi penuh, hanya pemenang tingkat ini yang masuk.
-        $winners = array_values(array_filter($winners, fn($w) =>
-            $w['registration']->competition_category_id == $competitionCategory->id));
+        [$eventner, $category, $winners] = app(ChampionCalculator::class)->winners($championCategory, $this->previewCompetitionCategoryId);
 
         if (empty($winners)) {
             return ['error' => 'Belum ada data juara untuk kategori ini.'];

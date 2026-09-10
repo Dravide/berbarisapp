@@ -356,7 +356,9 @@ class CertificateController extends Controller
         $pages = [];
         $championsHit = collect();
         foreach ($championCategories as $championCategory) {
-            [, , $winners] = $calculator->winners($championCategory);
+            // Peringkat per mata lomba (konsisten dengan downloadPdf dan
+            // halaman /hasil) — bukan pool gabungan lintas mata lomba.
+            [, , $winners] = $calculator->winners($championCategory, $registration->competition_category_id);
 
             $mine = array_values(array_filter($winners, function ($winner) use ($schoolKey) {
                 $reg = $winner['registration'];

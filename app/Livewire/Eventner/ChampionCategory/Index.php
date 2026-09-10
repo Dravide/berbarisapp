@@ -158,7 +158,18 @@ class Index extends Component
 
     private function notifyChampions(ChampionCategory $champion): void
     {
-        [$eventner, $category, $winners] = app(ChampionCalculator::class)->winners($champion);
+        // Notifikasi gelar juara per mata lomba — pool gabungan lintas mata
+        // lomba membuat pasukan sekolah yang sama saling menyalip dan gelar
+        // yang dikirim bisa tertukar antar pasukan.
+        $winnersByCategory = \App\Models\Registration::where('eventner_id', $champion->eventner_id)
+            ->whereNotNull('competition_category_id')
+            ->distinct()
+            ->pluck('competition_category_id')
+            ->flatMap(fn ($catId) => app(ChampionCalculator::class)->winners($champion, $catId)[2]);
+
+        $winners = $winnersByCategory->all();
+        $eventner = $champion->eventner;
+        $category = $champion;
 
         $fcm = app(FcmService::class);
 

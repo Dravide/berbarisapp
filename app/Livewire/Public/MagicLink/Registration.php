@@ -406,7 +406,11 @@ class Registration extends Component
 
         $won = [];
         foreach ($championCategories as $championCategory) {
-            [, , $winners] = $calculator->winners($championCategory);
+            // Peringkat per mata lomba — konsisten dengan halaman /hasil dan
+            // unduhan sertifikat eventner. Pool gabungan lintas mata lomba
+            // membuat pasukan sekolah yang sama saling menyalip antar papan
+            // skor dan gelar juara jadi tertukar.
+            [, , $winners] = $calculator->winners($championCategory, $this->registration->competition_category_id);
             foreach ($winners as $winner) {
                 $reg = $winner['registration'];
                 $key = $reg->npsn ?: mb_strtolower(trim((string) $reg->nama_sekolah));

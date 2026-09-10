@@ -157,6 +157,13 @@ class Index extends Component
                 return $a['urutan_tampil'] <=> $b['urutan_tampil'];
             });
 
+            // Peserta tanpa nilai (skor 0) bukan juara — buang SEBELUM nomor
+            // peringkat dihitung, kalau tidak mereka menggeser peringkat juara.
+            $participantScores = array_values(array_filter(
+                $participantScores,
+                fn($ps) => $ps['total'] > 0
+            ));
+
             foreach ($participantScores as $index => &$ps) {
                 $rank = $index + 1;
                 $ps['rank'] = $rank;
@@ -164,21 +171,22 @@ class Index extends Component
 
                 foreach ($champion->rankTitles as $rt) {
                     if ($rt->coversRank($rank)) {
-                        $ps['title'] = $rt->title;
+                        // Nomor posisi dalam grup bila rank title meng-cover
+                        // lebih dari satu peringkat — sama seperti /hasil.
+                        $ps['title'] = $rt->rank_start !== $rt->rank_end
+                            ? $rt->title . ' ' . ($rank - $rt->rank_start + 1)
+                            : $rt->title;
                         break;
                     }
                 }
             }
             unset($ps);
 
-            // Only include participants with scores > 0
-            $filtered = array_filter($participantScores, fn($ps) => $ps['total'] > 0);
-
-            if (count($filtered) > 0) {
+            if (count($participantScores) > 0) {
                 $this->allRankings[] = [
                     'champion' => $champion,
                     'rankTitles' => $champion->rankTitles,
-                    'participants' => array_values($filtered),
+                    'participants' => array_values($participantScores),
                 ];
             }
         }

@@ -151,6 +151,13 @@ class EventResult extends Component
                 return $a['urutan_tampil'] <=> $b['urutan_tampil'];
             });
 
+            // Peserta tanpa nilai (skor 0) bukan juara — buang SEBELUM nomor
+            // peringkat dihitung, kalau tidak mereka menggeser peringkat juara.
+            $participantScores = array_values(array_filter(
+                $participantScores,
+                fn($ps) => $ps['total'] > 0
+            ));
+
             foreach ($participantScores as $index => &$ps) {
                 $rank = $index + 1;
                 $ps['rank'] = $rank;
@@ -166,14 +173,11 @@ class EventResult extends Component
             }
             unset($ps);
 
-            // Only include participants with scores > 0
-            $filtered = array_filter($participantScores, fn($ps) => $ps['total'] > 0);
-
-            if (count($filtered) > 0) {
+            if (count($participantScores) > 0) {
                 $this->allRankings[] = [
                     'champion' => $champion,
                     'rankTitles' => $champion->rankTitles,
-                    'participants' => array_values($filtered),
+                    'participants' => array_values($participantScores),
                 ];
             }
         }

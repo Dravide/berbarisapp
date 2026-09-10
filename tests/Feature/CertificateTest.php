@@ -270,13 +270,11 @@ class CertificateTest extends TestCase
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'application/pdf');
 
-        // Kategori lomba pasukan kalah → jajaran juara event ini tetap sama
-        // (ChampionCalculator lintas mata lomba), jadi sertifikat pasukan
-        // sekolah yang menang tetap terbit — bukan 404.
+        // Kategori lomba pasukan kalah → tidak ada juara di mata lomba itu.
         $this->get(route('magic.link.certificate.category', [
             $loser->magic_token,
             $otherCat->id,
-        ]))->assertStatus(200);
+        ]))->assertStatus(404);
     }
 
     public function test_magic_link_certificate_by_category_404_for_other_event()
@@ -338,5 +336,89 @@ class CertificateTest extends TestCase
         \Livewire\Livewire::test(\App\Livewire\Public\MagicLink\Registration::class, [
             'token' => $winner->magic_token,
         ])->assertSee('Juara Umum — Juara Harapan 1');
+    }
+
+    /**
+     * Peringkat juara dihitung per mata lomba. Dengan pool gabungan lintas
+     * mata lomba, pasukan sekolah yang sama saling menyalip: gelar juara
+     * pasukan di mata lomba A tertukar dengan pasukan di mata lomba B.
+     */
+    public function test_champion_ranking_is_scoped_per_competition_category()
+    {
+        [$user, $eventner, $template, $championCat, $compCat, $criteria] = $this->setupCertificateAssets();
+
+        // Mata lomba kedua: satu pasukan skor jauh lebih tinggi.
+        $catB = CompetitionCategory::factory()->create([
+            'eventner_id' => $eventner->id,
+            'parent_id' => $compCat->parent_id,
+        ]);
+
+        $topInB = Registration::factory()->create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $catB->id,
+            'nama_sekolah' => 'Sekolah Test 0',
+            'npsn' => Registration::where('eventner_id', $eventner->id)
+                ->where('nama_sekolah', 'Sekolah Test 0')->first()->npsn,
+        ]);
+
+        $judge = Judge::create(['eventner_id' => $eventner->id, 'name' => 'Juri B']);
+        AssessmentScore::create([
+            'eventner_id' => $eventner->id,
+            'judge_id' => $judge->id,
+            'registration_id' => $topInB->id,
+            'assessment_criteria_id' => $criteria->id,
+            'score' => 99,
+        ]);
+
+        $calc = app(\App\Services\ChampionCalculator::class);
+
+        // Papan gabungan: Sekolah Test 0 (99) menyalip semua di mata lomba A.
+        $combined = $calc->winners($championCat->fresh())[2];
+        $this->assertSame('Sekolah Test 0', $combined[0]['registration']->nama_sekolah);
+
+        // Per mata lomba: Sekolah Test 2 (82) tetap juara 1 di mata lomba A.
+        $scoped = $calc->winners($championCat->fresh(), $compCat->id)[2];
+        $this->assertSame('Sekolah Test 2', $scoped[0]['registration']->nama_sekolah);
+        $this->assertSame(1, $scoped[0]['rank']);
+
+        // Kartu portal pakai peringkat per mata lomba → gelar juara benar.
+        $reg = Registration::where('eventner_id', $eventner->id)
+            ->where('nama_sekolah', 'Sekolah Test 2')->first();
+
+        \Livewire\Livewire::test(\App\Livewire\Public\MagicLink\Registration::class, [
+            'token' => $reg->magic_token,
+        ])->assertSee('Juara Umum — Juara 1');
+    }
+
+    /**
+     * Peserta tanpa nilai tidak boleh menggeser peringkat juara. Peringkat
+     * dihitung SETELAH peserta berskor 0 dibuang (sebelumnya rank diambil
+     * dari index array mentah, sehingga juara bergeser satu nomor).
+     */
+    public function test_zero_score_participants_do_not_shift_champion_ranks()
+    {
+        [$user, $eventner, $template, $championCat, $compCat] = $this->setupCertificateAssets();
+
+        // Pasukan tanpa skor sama sekali, namanya urut paling awal sehingga
+        // berada di indeks 0 pool peserta (orderBy nama_sekolah).
+        Registration::factory()->create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $compCat->id,
+            'nama_sekolah' => 'AAA Tanpa Nilai',
+        ]);
+
+        [, , $winners] = app(\App\Services\ChampionCalculator::class)
+            ->winners($championCat->fresh(), $compCat->id);
+
+        // Juara 1 tetap Sekolah Test 2 (skor 82), bukan bergeser ke peringkat 2.
+        $this->assertSame('Sekolah Test 2', $winners[0]['registration']->nama_sekolah);
+        $this->assertSame(1, $winners[0]['rank']);
+        $this->assertSame('Juara 1', $winners[0]['title']);
+
+        // Pasukan tanpa nilai tidak masuk jajaran juara sama sekali.
+        $this->assertNotContains(
+            'AAA Tanpa Nilai',
+            array_map(fn ($w) => $w['registration']->nama_sekolah, $winners)
+        );
     }
 }

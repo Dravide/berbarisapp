@@ -20,9 +20,14 @@ use Illuminate\Support\Collection;
 class ChampionCalculator
 {
     /**
+     * Peringkat juara. Pool peserta default = SEMUA registrasi event —
+     * lintas mata lomba. Kirim $competitionCategoryId untuk scope per mata
+     * lomba (konsisten dengan halaman /hasil, /champions, dan unduhan
+     * sertifikat eventner, yang selalu menghitung per kategori lomba).
+     *
      * @return array{0: Eventner, 1: ChampionCategory, 2: array} [eventner, category, winners]
      */
-    public function winners(ChampionCategory $championCategory): array
+    public function winners(ChampionCategory $championCategory, $competitionCategoryId = null): array
     {
         $eventner = $championCategory->eventner;
 
@@ -50,8 +55,9 @@ class ChampionCalculator
             )->pluck('id')
         )->pluck('weight', 'id')->toArray();
 
-        // Semua registration event ini
+        // Semua registration event ini, scope per mata lomba bila diminta
         $participants = Registration::where('eventner_id', $eventner->id)
+            ->when($competitionCategoryId, fn ($q) => $q->where('competition_category_id', $competitionCategoryId))
             ->with('participants')
             ->orderBy('nama_sekolah')
             ->get();
@@ -110,6 +116,13 @@ class ChampionCalculator
             return $a['urutan_tampil'] <=> $b['urutan_tampil'];
         });
 
+        // Peserta tanpa nilai (skor 0) bukan juara — buang SEBELUM peringkat
+        // dihitung, kalau tidak mereka menggeser nomor peringkat juara.
+        $participantScores = array_values(array_filter(
+            $participantScores,
+            fn ($ps) => $ps['total'] > 0
+        ));
+
         $participantScores = array_slice($participantScores, 0, $championCategory->quantity);
 
         $winners = [];
@@ -118,14 +131,18 @@ class ChampionCalculator
             $title = null;
             foreach ($championCategory->rankTitles as $rt) {
                 if ($rt->coversRank($rank)) {
-                    $title = $rt->title;
+                    // Nomor posisi dalam grup bila rank title meng-cover
+                    // lebih dari satu peringkat.
+                    $title = $rt->rank_start !== $rt->rank_end
+                        ? $rt->title . ' ' . ($rank - $rt->rank_start + 1)
+                        : $rt->title;
                     break;
                 }
             }
             $winners[] = [
                 'registration' => $ps['participant'],
                 'rank' => $rank,
-                'title' => $title,
+                'title' => $title ?: 'Juara ' . $rank,
                 'total' => $ps['total'],
             ];
         }
