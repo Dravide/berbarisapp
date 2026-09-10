@@ -37,6 +37,9 @@ class Index extends Component
     // Biaya pendaftaran eventner
     public $eventner_registration_fee = 50000;
 
+    // Gateway pembayaran QRIS: gopay | instaqris
+    public $payment_gateway = 'gopay';
+
     public function mount()
     {
         $this->site_title = Setting::get('site_title', 'Berbaris App');
@@ -55,6 +58,9 @@ class Index extends Component
 
         // Biaya
         $this->eventner_registration_fee = (int) Setting::get('eventner_registration_fee', 50000);
+
+        // Gateway pembayaran
+        $this->payment_gateway = \App\Services\AutoGoPay::activeGateway();
     }
 
     public function save()
@@ -66,6 +72,8 @@ class Index extends Component
             'new_logo_dark' => 'nullable|mimes:svg,png,jpg,jpeg|max:2048',
             'new_logo_light' => 'nullable|mimes:svg,png,jpg,jpeg|max:2048',
             'new_favicon' => 'nullable|mimes:svg,png,jpg,jpeg,ico|max:1024',
+            'eventner_registration_fee' => 'required|integer|min:0',
+            'payment_gateway' => 'required|in:gopay,instaqris',
         ]);
 
         Setting::set('site_title', $this->site_title);
@@ -76,6 +84,7 @@ class Index extends Component
         Setting::set('site_font_sans', $this->site_font_sans);
         Setting::set('site_font_display', $this->site_font_display);
         Setting::set('eventner_registration_fee', $this->eventner_registration_fee);
+        Setting::set('payment_gateway', $this->payment_gateway);
 
         if ($this->new_logo_dark) {
             if ($this->logo_dark_path) Storage::disk('public')->delete($this->logo_dark_path);

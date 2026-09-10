@@ -2,8 +2,12 @@
 
 namespace App\Models;
 
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+use chillerlan\QRCode\Output\QRGdImagePNG;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Ticket extends Model
@@ -62,5 +66,22 @@ class Ticket extends Model
     public function scopePending($query)
     {
         return $query->where('status', 'PENDING');
+    }
+
+    /**
+     * Generate QR tiket masuk (PNG di disk public) dan kembalikan path-nya.
+     * Dipanggil saat status berubah PAID — dari webhook maupun dari polling.
+     */
+    public function generateEntryQr(): string
+    {
+        $options = new QROptions;
+        $options->outputInterface = QRGdImagePNG::class;
+        $options->outputBase64 = false;
+        $options->scale = 6;
+
+        $path = 'tickets/' . $this->order_code . '.png';
+        Storage::disk('public')->put($path, (new QRCode($options))->render($this->order_code));
+
+        return $path;
     }
 }

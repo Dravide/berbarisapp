@@ -7,12 +7,8 @@ use App\Models\Ticket;
 use App\Models\VoteTransaction;
 use App\Models\Eventner;
 use App\Services\AutoGoPay;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
-use chillerlan\QRCode\Output\QRGdImagePNG;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class AutoGoPayWebhookController extends Controller
 {
@@ -107,14 +103,7 @@ class AutoGoPayWebhookController extends Controller
             }
 
             // Generate QR tiket masuk (binary PNG) — hanya untuk pemenang claim
-            $options = new QROptions;
-            $options->outputInterface = QRGdImagePNG::class;
-            $options->outputBase64 = false;
-            $options->scale = 6;
-
-            $qrPath = 'tickets/' . $ticket->order_code . '.png';
-            $qrImage = (new QRCode($options))->render($ticket->order_code);
-            Storage::disk('public')->put($qrPath, $qrImage);
+            $qrPath = $ticket->generateEntryQr();
 
             $claimed = Ticket::where('id', $ticket->id)
                 ->where('status', 'PENDING')

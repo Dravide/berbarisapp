@@ -89,13 +89,14 @@ class SyncPendingPayments implements ShouldQueue, ShouldBeUnique
             $mapped = $status !== null ? AutoGoPay::mapStatus($status) : null;
 
             if ($mapped === 'PAID') {
+                // QR tiket masuk digenerate di sini juga: gateway InstaQRIS tidak
+                // punya webhook, jadi polling ini satu-satunya jalur konfirmasinya.
                 $claimed = Ticket::where('id', $ticket->id)
                     ->where('status', 'PENDING')
                     ->update([
                         'status' => 'PAID',
                         'paid_at' => now(),
-                        // QR code diisi jalur webhook settlement (punya amount utk
-                        // verifikasi) — polling tidak lengkapi qr_code_path.
+                        'qr_code_path' => $ticket->qr_code_path ?: $ticket->generateEntryQr(),
                     ]);
 
                 if ($claimed) {
