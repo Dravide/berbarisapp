@@ -259,6 +259,25 @@
                 </div>
             @endif
 
+            {{-- Sertifikat Juara (hanya sekolah yang masuk jajaran juara) --}}
+            @if($registration->status_berkas === 'Terverifikasi' && $this->certificate_available)
+                <div class="surface-card overflow-hidden border-t-4 border-t-amber-400">
+                    <div class="p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 shrink-0">
+                            <i class="ti ti-certificate text-xl"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-display text-sm font-bold text-deep-slate mb-0.5">Sertifikat Juara</h3>
+                            <p class="text-xs text-on-surface-variant font-medium leading-normal m-0">Selamat! Sekolah Anda masuk jajaran juara. Unduh sertifikat dalam format PDF.</p>
+                        </div>
+                        <a href="{{ route('magic.link.certificate', $registration->magic_token) }}" target="_blank"
+                            class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-amber-500 text-white font-bold text-sm hover:brightness-105 transition-colors shrink-0 text-decoration-none">
+                            <i class="ti ti-file-download"></i> Unduh Sertifikat
+                        </a>
+                    </div>
+                </div>
+            @endif
+
             {{-- Team Tabs (if multiple registrations exist) --}}
             @if($siblingRegistrations->count() > 1)
                 <div class="flex gap-2 overflow-x-auto pb-2">

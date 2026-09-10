@@ -379,6 +379,45 @@ class Registration extends Component
             : collect();
     }
 
+    /**
+     * Sertifikat siap diunduh? Template aktif ada DAN sekolah ini
+     * masuk jajaran juara di salah satu kategori juara yang relevan.
+     */
+    public function getCertificateAvailableProperty(): bool
+    {
+        $eventner = $this->registration->eventner;
+
+        $template = \App\Models\CertificateTemplate::where('eventner_id', $eventner->id)
+            ->where('is_active', true)
+            ->exists();
+        if (!$template) {
+            return false;
+        }
+
+        $schoolKey = $this->registration->npsn ?: mb_strtolower(trim((string) $this->registration->nama_sekolah));
+
+        $championCategories = \App\Models\ChampionCategory::where('eventner_id', $eventner->id)
+            ->with(['assessmentSubCategories.category'])
+            ->get()
+            ->filter(fn ($cc) => $cc->isVisibleFor($this->registration->competition_category_id))
+            ->values();
+
+        $calculator = app(\App\Services\ChampionCalculator::class);
+
+        foreach ($championCategories as $championCategory) {
+            [, , $winners] = $calculator->winners($championCategory);
+            foreach ($winners as $winner) {
+                $reg = $winner['registration'];
+                $key = $reg->npsn ?: mb_strtolower(trim((string) $reg->nama_sekolah));
+                if ($key === (string) $schoolKey) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     public function render()
     {
         return view('livewire.public.magic-link.registration', [

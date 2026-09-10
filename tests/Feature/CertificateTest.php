@@ -185,4 +185,53 @@ class CertificateTest extends TestCase
 
         $response->assertStatus(404);
     }
+
+    // ── Unduh via magic link peserta (/reg/{token}/certificate) ────────
+
+    public function test_magic_link_certificate_returns_pdf_for_winner_school()
+    {
+        [$user, $eventner, $template, $championCat, $compCat] = $this->setupCertificateAssets();
+
+        // Sekolah Test 2 = peringkat 2 (skor 81) — milik pasukan pemenang
+        $reg = Registration::where('eventner_id', $eventner->id)
+            ->where('nama_sekolah', 'Sekolah Test 2')
+            ->first();
+
+        $response = $this->get(route('magic.link.certificate', $reg->magic_token));
+
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'application/pdf');
+    }
+
+    public function test_magic_link_certificate_404_for_non_winner_school()
+    {
+        [$user, $eventner, $template, $championCat, $compCat] = $this->setupCertificateAssets();
+
+        // Sekolah di luar jajaran juara (quantity 3, hanya 3 pasukan → semua
+        // juara). Buat pasukan baru dengan skor 0 agar tidak masuk juara.
+        $reg = Registration::factory()->create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $compCat->id,
+            'nama_sekolah' => 'Sekolah Bukan Juara',
+        ]);
+
+        $response = $this->get(route('magic.link.certificate', $reg->magic_token));
+
+        $response->assertStatus(404);
+    }
+
+    public function test_magic_link_certificate_forbidden_when_no_active_template()
+    {
+        [$user, $eventner, $template, $championCat, $compCat] = $this->setupCertificateAssets();
+
+        $template->update(['is_active' => false]);
+
+        $reg = Registration::where('eventner_id', $eventner->id)
+            ->where('nama_sekolah', 'Sekolah Test 2')
+            ->first();
+
+        $response = $this->get(route('magic.link.certificate', $reg->magic_token));
+
+        $response->assertStatus(404);
+    }
 }

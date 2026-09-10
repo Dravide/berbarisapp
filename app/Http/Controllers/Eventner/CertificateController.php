@@ -283,4 +283,153 @@ class CertificateController extends Controller
 
         return $pdf->download($filename);
     }
+
+    /**
+     * Unduh sertifikat juara via magic link peserta (/reg/{token}).
+     * Template aktif event + semua kategori juara di mana sekolah ini
+     * masuk jajaran juara (satu PDF, satu halaman per peserta).
+     */
+    public function downloadCertificateByToken(string $token)
+    {
+        $registration = Registration::with(['eventner', 'participants'])
+            ->where('magic_token', $token)
+            ->firstOrFail();
+        $eventner = $registration->eventner;
+
+        // Sertifikat = fitur premium. Event free (di luar trial) tidak boleh
+        // mengeksploitasi unduhan token-based ini.
+        if (!$eventner->canAccessFeature('certificate')) {
+            abort(403, 'Fitur sertifikat belum aktif untuk event ini.');
+        }
+
+        $template = CertificateTemplate::where('eventner_id', $eventner->id)
+            ->where('is_active', true)
+            ->with('textFields')
+            ->orderBy('id')
+            ->first();
+
+        if (!$template) {
+            abort(404, 'Template sertifikat belum tersedia.');
+        }
+
+        $schoolKey = $registration->npsn ?: mb_strtolower(trim((string) $registration->nama_sekolah));
+        $competitionCategory = CompetitionCategory::find($registration->competition_category_id);
+
+        // Kategori juara relevan dengan tingkat lomba registration ini,
+        // lalu ambil peringkat sekolah ini dari kompetisi penuh.
+        $championCategories = ChampionCategory::where('eventner_id', $eventner->id)
+            ->with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias'])
+            ->get()
+            ->filter(fn ($cc) => $cc->isVisibleFor($registration->competition_category_id))
+            ->values();
+
+        $calculator = app(\App\Services\ChampionCalculator::class);
+
+        $pages = [];
+        $championsHit = collect();
+        foreach ($championCategories as $championCategory) {
+            [, , $winners] = $calculator->winners($championCategory);
+
+            $mine = array_values(array_filter($winners, function ($winner) use ($schoolKey) {
+                $reg = $winner['registration'];
+                $key = $reg->npsn ?: mb_strtolower(trim((string) $reg->nama_sekolah));
+
+                return $key === (string) $schoolKey;
+            }));
+
+            foreach ($mine as $winner) {
+                $reg = $winner['registration'];
+
+                // Gelar: sama seperti downloadPdf — nomor posisi dalam grup
+                // rank title bila meng-cover lebih dari 1 peringkat.
+                $title = null;
+                foreach ($championCategory->rankTitles as $rt) {
+                    if ($rt->coversRank($winner['rank'])) {
+                        $positionInGroup = $winner['rank'] - $rt->rank_start + 1;
+                        $title = $rt->rank_start !== $rt->rank_end
+                            ? $rt->title . ' ' . $positionInGroup
+                            : $rt->title;
+                        break;
+                    }
+                }
+                $title = $title ?: 'Juara ' . $winner['rank'];
+
+                // Per peserta: sertifikat untuk tiap anggota pasukan
+                foreach ($reg->participants as $p) {
+                    $pages[] = [
+                        'registration' => $reg,
+                        'participant' => $p,
+                        'rank' => $winner['rank'],
+                        'title' => $title,
+                        'total' => $winner['total'],
+                    ];
+                }
+
+                // Danton juga anggota pasukan
+                if ($reg->danton_nama) {
+                    $pages[] = [
+                        'registration' => $reg,
+                        'participant' => new Participant(['nama' => $reg->danton_nama]),
+                        'rank' => $winner['rank'],
+                        'title' => $title,
+                        'total' => $winner['total'],
+                    ];
+                }
+
+                // Fallback: sekolah tanpa data anggota → 1 sertifikat per sekolah
+                if ($reg->participants->isEmpty() && !$reg->danton_nama) {
+                    $pages[] = [
+                        'registration' => $reg,
+                        'participant' => null,
+                        'rank' => $winner['rank'],
+                        'title' => $title,
+                        'total' => $winner['total'],
+                    ];
+                }
+
+                $championsHit->push($championCategory);
+            }
+        }
+
+        if (empty($pages)) {
+            abort(404, 'Sertifikat belum tersedia — sekolah ini belum masuk jajaran juara.');
+        }
+
+        // QR code menuju link event (dipakai field qr_event di template).
+        $eventQrDataUri = null;
+        if ($template->textFields->contains('field_key', 'qr_event')) {
+            $options = new QROptions;
+            $options->outputInterface = QRGdImagePNG::class;
+            $options->outputBase64 = false;
+            $options->eccLevel = 'H';
+            $png = (new QRCode($options))->render($eventner->publicUrl('detail'));
+            $eventQrDataUri = 'data:image/png;base64,' . base64_encode($png);
+        }
+
+        $data = [
+            'eventner' => $eventner,
+            'template' => $template,
+            'championCategory' => $championsHit->first(),
+            'competitionCategory' => $competitionCategory,
+            'pages' => $pages,
+            'eventQrDataUri' => $eventQrDataUri,
+        ];
+
+        // Background template di-decode GD per halaman pemenang — butuh memori besar.
+        ini_set('memory_limit', '1024M');
+        gc_collect_cycles();
+
+        $pdf = Pdf::loadView('eventner.certificate.pdf', $data)
+            ->setPaper('a4', 'portrait')
+            ->setOption('margin-top', '0mm')
+            ->setOption('margin-bottom', '0mm')
+            ->setOption('margin-left', '0mm')
+            ->setOption('margin-right', '0mm');
+
+        $filename = 'Sertifikat_'
+            . str_replace(['/', '\\'], '-', $registration->nama_sekolah)
+            . '.pdf';
+
+        return $pdf->download($filename);
+    }
 }
