@@ -2,7 +2,9 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Sertifikat {{ $championCategory->name }} - {{ $eventner->nama_event }}</title>
+    {{-- Kategori juara bisa kosong untuk sertifikat PESERTA di event yang
+         belum punya kategori juara sama sekali. --}}
+    <title>Sertifikat {{ $championCategory?->name ?? 'Peserta' }} - {{ $eventner->nama_event }}</title>
     <style>
         @font-face {
             font-family: 'PJ';

@@ -203,7 +203,11 @@ class CertificateTest extends TestCase
         $response->assertHeader('Content-Type', 'application/pdf');
     }
 
-    public function test_magic_link_certificate_404_for_non_winner_school()
+    /**
+     * Sekolah di luar jajaran juara tetap dapat sertifikat — gelarnya PESERTA,
+     * bukan 404.
+     */
+    public function test_magic_link_certificate_for_non_winner_school_is_peserta()
     {
         [$user, $eventner, $template, $championCat, $compCat] = $this->setupCertificateAssets();
 
@@ -217,7 +221,75 @@ class CertificateTest extends TestCase
 
         $response = $this->get(route('magic.link.certificate', $reg->magic_token));
 
-        $response->assertStatus(404);
+        $response->assertStatus(200);
+        $response->assertHeader('Content-Type', 'application/pdf');
+    }
+
+    /**
+     * Peringkat & skor tidak dikosongkan sembarangan: sertifikat PESERTA tidak
+     * menampilkan angka peringkat/skor sama sekali.
+     */
+    public function test_peserta_certificate_has_no_rank_or_score()
+    {
+        [$user, $eventner, $template, $championCat, $compCat] = $this->setupCertificateAssets();
+
+        $reg = Registration::factory()->create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $compCat->id,
+            'nama_sekolah' => 'Sekolah Bukan Juara',
+        ]);
+
+        $pages = app(\App\Services\ChampionCalculator::class)->participantPages($reg);
+
+        $this->assertCount(1, $pages);
+        $this->assertSame('PESERTA', $pages[0]['title']);
+        $this->assertNull($pages[0]['rank']);
+        $this->assertNull($pages[0]['total']);
+
+        $this->assertSame('PESERTA', $reg->resolveCertificateField('gelar_juara', [
+            'winner' => $pages[0],
+            'championCategory' => $championCat,
+        ]));
+        $this->assertSame('', $reg->resolveCertificateField('peringkat', ['winner' => $pages[0]]));
+    }
+
+    /**
+     * Halaman editor sertifikat: sekolah non-juara di-preview sebagai PESERTA
+     * (bukan pesan error "Belum ada juara dari sekolah terpilih").
+     */
+    public function test_editor_preview_falls_back_to_peserta_for_non_winner_school()
+    {
+        [$user, $eventner, $template, $championCat, $compCat] = $this->setupCertificateAssets();
+
+        $reg = Registration::factory()->create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $compCat->id,
+            'nama_sekolah' => 'Sekolah Bukan Juara',
+        ]);
+
+        // Field gelar juara di canvas — mail-merge harus menghasilkan "PESERTA".
+        CertificateTextField::create([
+            'certificate_template_id' => $template->id,
+            'field_key' => 'gelar_juara',
+            'label' => 'Gelar Juara',
+            'x' => 148.5,
+            'y' => 60,
+            'font_size' => 24,
+            'font_color' => '#000000',
+            'text_align' => 'center',
+            'font_weight' => 'bold',
+        ]);
+
+        $this->actingAs($user);
+
+        \Livewire\Livewire::test(\App\Livewire\Eventner\Certificate\Editor::class, ['template' => $template->id])
+            ->set('showPreview', true)
+            ->set('previewChampionCategoryId', $championCat->id)
+            ->set('previewCompetitionCategoryId', $compCat->id)
+            ->set('previewSchool', $reg->npsn ?: mb_strtolower(trim($reg->nama_sekolah)))
+            ->assertSet('showPreview', true)
+            ->assertSee('Sekolah Bukan Juara')
+            ->assertSee('PESERTA');
     }
 
     public function test_magic_link_certificate_forbidden_when_no_active_template()
@@ -270,11 +342,12 @@ class CertificateTest extends TestCase
         $response->assertStatus(200);
         $response->assertHeader('Content-Type', 'application/pdf');
 
-        // Kategori lomba pasukan kalah → tidak ada juara di mata lomba itu.
+        // Kategori lomba pasukan kalah → tidak ada juara di mata lomba itu,
+        // jadi sertifikatnya terbit sebagai PESERTA (bukan 404).
         $this->get(route('magic.link.certificate.category', [
             $loser->magic_token,
             $otherCat->id,
-        ]))->assertStatus(404);
+        ]))->assertStatus(200)->assertHeader('Content-Type', 'application/pdf');
     }
 
     public function test_magic_link_certificate_by_category_404_for_other_event()

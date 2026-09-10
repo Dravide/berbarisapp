@@ -363,7 +363,8 @@ class Editor extends Component
             return null;
         }
 
-        [$eventner, $category, $winners] = app(ChampionCalculator::class)->winners($championCategory, $this->previewCompetitionCategoryId);
+        $calculator = app(ChampionCalculator::class);
+        [$eventner, $category, $winners] = $calculator->winners($championCategory, $this->previewCompetitionCategoryId);
 
         if (empty($winners)) {
             return ['error' => 'Belum ada data juara untuk kategori ini.'];
@@ -376,8 +377,11 @@ class Editor extends Component
                 $key = $reg->npsn ?: mb_strtolower(trim((string) $reg->nama_sekolah));
                 return $key === (string) $this->previewSchool;
             });
+
+            // Sekolah terpilih tidak masuk jajaran juara → preview sebagai
+            // PESERTA, sama seperti hasil unduhan PDF-nya.
             if (!$winner) {
-                return ['error' => 'Belum ada juara dari sekolah terpilih.'];
+                return $this->pesertaPreviewData($championCategory, $competitionCategory, $calculator);
             }
         } else {
             $winner = $winners[0];
@@ -428,6 +432,74 @@ class Editor extends Component
             'eventQrDataUri' => $eventQrDataUri,
             'winnerCount' => count($winners),
         ];
+    }
+
+    /**
+     * Preview sertifikat PESERTA: sekolah terpilih tidak masuk jajaran juara,
+     * jadi gelar = "PESERTA" tanpa peringkat/skor. Halaman mengikuti mode
+     * preview (per siswa atau per pasukan).
+     */
+    private function pesertaPreviewData(
+        ChampionCategory $championCategory,
+        ?CompetitionCategory $competitionCategory,
+        ChampionCalculator $calculator
+    ): array {
+        $registration = $this->previewRegistration;
+
+        if (!$registration) {
+            return ['error' => 'Sekolah terpilih tidak terdaftar pada kategori lomba ini.'];
+        }
+
+        $pages = $calculator->participantPages($registration);
+
+        if ($this->previewMode === 'school') {
+            $pages = [[
+                'registration' => $registration,
+                'participant' => null,
+                'rank' => null,
+                'title' => 'PESERTA',
+                'total' => null,
+            ]];
+        }
+
+        $eventQrDataUri = null;
+        if (collect($this->textFields)->contains('field_key', 'qr_event')) {
+            $options = new QROptions;
+            $options->outputInterface = QRGdImagePNG::class;
+            $options->outputBase64 = false;
+            $options->eccLevel = 'H';
+            $png = (new QRCode($options))->render($this->eventner->publicUrl('detail'));
+            $eventQrDataUri = 'data:image/png;base64,' . base64_encode($png);
+        }
+
+        return [
+            'pages' => $pages,
+            'championCategory' => $championCategory,
+            'competitionCategory' => $competitionCategory,
+            'eventQrDataUri' => $eventQrDataUri,
+            'winnerCount' => 0,
+            'isPeserta' => true,
+        ];
+    }
+
+    /**
+     * Registrasi milik sekolah terpilih pada kategori lomba terpilih.
+     */
+    public function getPreviewRegistrationProperty(): ?Registration
+    {
+        if (!$this->previewSchool || !$this->previewCompetitionCategoryId) {
+            return null;
+        }
+
+        return Registration::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $this->previewCompetitionCategoryId)
+            ->orderBy('nama_sekolah')
+            ->get()
+            ->first(function ($reg) {
+                $key = $reg->npsn ?: mb_strtolower(trim((string) $reg->nama_sekolah));
+
+                return $key === (string) $this->previewSchool;
+            });
     }
 
     public function render()

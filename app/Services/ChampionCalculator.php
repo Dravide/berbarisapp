@@ -149,4 +149,51 @@ class ChampionCalculator
 
         return [$eventner, $championCategory, $winners];
     }
+
+    /**
+     * Satu halaman sertifikat per anggota pasukan (danton + fallback sekolah
+     * tanpa data anggota), untuk registrasi yang BUKAN juara — sertifikat
+     * diterbitkan sebagai PESERTA.
+     *
+     * @return array<int, array{registration: Registration, participant: ?\App\Models\Participant, rank: ?int, title: string, total: ?float}>
+     */
+    public function participantPages(Registration $registration): array
+    {
+        $registration->loadMissing('participants');
+
+        $pages = [];
+        foreach ($registration->participants as $p) {
+            $pages[] = [
+                'registration' => $registration,
+                'participant' => $p,
+                'rank' => null,
+                'title' => 'PESERTA',
+                'total' => null,
+            ];
+        }
+
+        // Danton juga anggota pasukan
+        if ($registration->danton_nama) {
+            $pages[] = [
+                'registration' => $registration,
+                'participant' => new \App\Models\Participant(['nama' => $registration->danton_nama]),
+                'rank' => null,
+                'title' => 'PESERTA',
+                'total' => null,
+            ];
+        }
+
+        // Fallback: sekolah tanpa data anggota → 1 sertifikat per sekolah
+        if (empty($pages)) {
+            $pages[] = [
+                'registration' => $registration,
+                'participant' => null,
+                'rank' => null,
+                'title' => 'PESERTA',
+                'total' => null,
+            ];
+        }
+
+        return $pages;
+    }
 }

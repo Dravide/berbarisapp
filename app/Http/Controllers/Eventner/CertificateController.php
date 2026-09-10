@@ -177,6 +177,7 @@ class CertificateController extends Controller
 
         // Filter sekolah: peringkat tetap dari kompetisi penuh — hanya
         // pemenang milik sekolah tsb yang diterbitkan.
+        $pesertaFallback = false;
         if ($schoolKey !== null && $schoolKey !== '') {
             $winners = array_values(array_filter($winners, function ($winner) use ($schoolKey) {
                 $reg = $winner['participant'];
@@ -185,57 +186,82 @@ class CertificateController extends Controller
                 return $key === (string) $schoolKey;
             }));
 
-            if (empty($winners)) {
-                abort(404, 'Belum ada data juara untuk sekolah ini.');
-            }
+            // Sekolah terpilih tidak masuk jajaran juara → sertifikat tetap
+            // terbit sebagai PESERTA (bukan 404).
+            $pesertaFallback = empty($winners);
         }
 
         $pages = [];
-        foreach ($winners as $winner) {
-            $reg = $winner['participant'];
 
-            if ($mode === 'school') {
-                $pages[] = [
-                    'registration' => $reg,
-                    'participant' => null,
-                    'rank' => $winner['rank'],
-                    'title' => $winner['title'],
-                    'total' => $winner['total'],
-                ];
-                continue;
+        if ($pesertaFallback) {
+            // Sekolah terpilih tidak masuk jajaran juara → sertifikat tetap
+            // terbit sebagai PESERTA (bukan 404). Gelar jadi "PESERTA",
+            // peringkat & skor dikosongkan supaya field terkait tidak
+            // menampilkan angka keliru.
+            $pesertaRegistration = $participants->first(function ($p) use ($schoolKey) {
+                $key = $p->npsn ?: mb_strtolower(trim((string) $p->nama_sekolah));
+
+                return $key === (string) $schoolKey;
+            });
+
+            if ($pesertaRegistration) {
+                $pages = $mode === 'school'
+                    ? [[
+                        'registration' => $pesertaRegistration,
+                        'participant' => null,
+                        'rank' => null,
+                        'title' => 'PESERTA',
+                        'total' => null,
+                    ]]
+                    : app(\App\Services\ChampionCalculator::class)->participantPages($pesertaRegistration);
             }
+        } else {
+            foreach ($winners as $winner) {
+                $reg = $winner['participant'];
 
-            // Per peserta: sertifikat untuk tiap anggota pasukan
-            foreach ($reg->participants as $p) {
-                $pages[] = [
-                    'registration' => $reg,
-                    'participant' => $p,
-                    'rank' => $winner['rank'],
-                    'title' => $winner['title'],
-                    'total' => $winner['total'],
-                ];
-            }
+                if ($mode === 'school') {
+                    $pages[] = [
+                        'registration' => $reg,
+                        'participant' => null,
+                        'rank' => $winner['rank'],
+                        'title' => $winner['title'],
+                        'total' => $winner['total'],
+                    ];
+                    continue;
+                }
 
-            // Danton juga anggota pasukan
-            if ($reg->danton_nama) {
-                $pages[] = [
-                    'registration' => $reg,
-                    'participant' => new Participant(['nama' => $reg->danton_nama]),
-                    'rank' => $winner['rank'],
-                    'title' => $winner['title'],
-                    'total' => $winner['total'],
-                ];
-            }
+                // Per peserta: sertifikat untuk tiap anggota pasukan
+                foreach ($reg->participants as $p) {
+                    $pages[] = [
+                        'registration' => $reg,
+                        'participant' => $p,
+                        'rank' => $winner['rank'],
+                        'title' => $winner['title'],
+                        'total' => $winner['total'],
+                    ];
+                }
 
-            // Fallback: sekolah tanpa data anggota → 1 sertifikat per sekolah
-            if ($reg->participants->isEmpty() && !$reg->danton_nama) {
-                $pages[] = [
-                    'registration' => $reg,
-                    'participant' => null,
-                    'rank' => $winner['rank'],
-                    'title' => $winner['title'],
-                    'total' => $winner['total'],
-                ];
+                // Danton juga anggota pasukan
+                if ($reg->danton_nama) {
+                    $pages[] = [
+                        'registration' => $reg,
+                        'participant' => new Participant(['nama' => $reg->danton_nama]),
+                        'rank' => $winner['rank'],
+                        'title' => $winner['title'],
+                        'total' => $winner['total'],
+                    ];
+                }
+
+                // Fallback: sekolah tanpa data anggota → 1 sertifikat per sekolah
+                if ($reg->participants->isEmpty() && !$reg->danton_nama) {
+                    $pages[] = [
+                        'registration' => $reg,
+                        'participant' => null,
+                        'rank' => $winner['rank'],
+                        'title' => $winner['title'],
+                        'total' => $winner['total'],
+                    ];
+                }
             }
         }
 
@@ -277,7 +303,7 @@ class CertificateController extends Controller
         $filename = 'Sertifikat_' . str_replace(['/', '\\'], '-', $championCategory->name)
             . '_' . str_replace(['/', '\\'], '-', $competitionCategory->name)
             . ($schoolKey !== null && $schoolKey !== ''
-                ? '_' . str_replace(['/', '\\'], '-', $winners[0]['participant']->nama_sekolah)
+                ? '_' . str_replace(['/', '\\'], '-', $pages[0]['registration']->nama_sekolah)
                 : '')
             . '.pdf';
 
@@ -421,8 +447,11 @@ class CertificateController extends Controller
             }
         }
 
+        // Sekolah tidak masuk jajaran juara → sertifikat tetap terbit,
+        // sebagai PESERTA (bukan 404). Gelar jadi "PESERTA", peringkat & skor
+        // dikosongkan supaya field terkait tidak menampilkan angka keliru.
         if (empty($pages)) {
-            abort(404, 'Sertifikat belum tersedia — sekolah ini belum masuk jajaran juara.');
+            $pages = $calculator->participantPages($registration);
         }
 
         // QR code menuju link event (dipakai field qr_event di template).
@@ -439,7 +468,10 @@ class CertificateController extends Controller
         $data = [
             'eventner' => $eventner,
             'template' => $template,
-            'championCategory' => $championsHit->first(),
+            // Halaman PESERTA tidak menyentuh kategori juara mana pun — pakai
+            // kategori pertama yang relevan supaya judul PDF & field
+            // kategori_juara tidak jatuh ke null.
+            'championCategory' => $championsHit->first() ?? $championCategories->first(),
             'competitionCategory' => $competitionCategory,
             'pages' => $pages,
             'eventQrDataUri' => $eventQrDataUri,
