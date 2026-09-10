@@ -273,11 +273,10 @@
                             </div>
                         </div>
                         <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
-                            @php($cert = $this->certificate_registrations[$activeRegId])
-                            <a href="{{ route('magic.link.certificate.category', [$registration->magic_token, $cert['registration']->competition_category_id]) }}"
+                            <a href="{{ route('magic.link.certificate.category', [$registration->magic_token, $this->certificate_registrations[$activeRegId]->competition_category_id]) }}"
                                 target="_blank"
                                 class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-amber-500 text-white font-bold text-sm hover:brightness-105 transition-colors text-decoration-none">
-                                <i class="ti ti-file-download"></i> Unduh Sertifikat — {{ $cert['label'] }}
+                                <i class="ti ti-file-download"></i> Unduh Sertifikat — {{ $registration->competitionCategory->full_name }}
                             </a>
                         </div>
                     </div>
