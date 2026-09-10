@@ -270,13 +270,21 @@
                             <div>
                                 <h3 class="font-display text-sm font-bold text-deep-slate mb-0.5">Sertifikat Juara</h3>
                                 <p class="text-xs text-on-surface-variant font-medium leading-normal m-0">Selamat! Pasukan ini masuk jajaran juara. Unduh sertifikat dalam format PDF.</p>
+                                <div class="mt-2 flex flex-wrap items-center gap-1.5">
+                                    <span class="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2.5 py-1 text-xs font-bold text-amber-700">
+                                        <i class="ti ti-trophy"></i> {{ $this->certificate_registrations[$activeRegId]['title'] }}
+                                    </span>
+                                    <span class="inline-flex items-center gap-1 rounded-md bg-surface-container px-2.5 py-1 text-xs font-semibold text-deep-slate border border-outline-variant/30">
+                                        <i class="ti ti-medal"></i> {{ $registration->competitionCategory->full_name }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
-                            <a href="{{ route('magic.link.certificate.category', [$registration->magic_token, $this->certificate_registrations[$activeRegId]->competition_category_id]) }}"
+                            <a href="{{ route('magic.link.certificate.category', [$registration->magic_token, $this->certificate_registrations[$activeRegId]['registration']->competition_category_id]) }}"
                                 target="_blank"
                                 class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-amber-500 text-white font-bold text-sm hover:brightness-105 transition-colors text-decoration-none">
-                                <i class="ti ti-file-download"></i> Unduh Sertifikat — {{ $registration->competitionCategory->full_name }}
+                                <i class="ti ti-file-download"></i> Unduh Sertifikat
                             </a>
                         </div>
                     </div>

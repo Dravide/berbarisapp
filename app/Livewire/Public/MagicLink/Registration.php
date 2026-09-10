@@ -381,9 +381,10 @@ class Registration extends Component
 
     /**
      * Pasukan (registrasi) sekolah ini yang berhak sertifikat, keyed by id:
-     * [registration_id => Registration]. Satu sekolah bisa punya 2 pasukan di
-     * mata lomba berbeda — hanya pasukan yang menang yang masuk sini, supaya
-     * kartu sertifikat muncul hanya di tab yang juara.
+     * [registration_id => ['registration' => Registration, 'rank' => int,
+     * 'title' => string]]. Satu sekolah bisa punya 2 pasukan di mata lomba
+     * berbeda — hanya pasukan yang menang yang masuk sini, supaya kartu
+     * sertifikat muncul hanya di tab yang juara.
      */
     public function getCertificateRegistrationsProperty()
     {
@@ -398,7 +399,7 @@ class Registration extends Component
         $schoolKey = $this->registration->npsn ?: mb_strtolower(trim((string) $this->registration->nama_sekolah));
 
         $championCategories = \App\Models\ChampionCategory::where('eventner_id', $eventner->id)
-            ->with(['assessmentSubCategories.category'])
+            ->with(['assessmentSubCategories.category', 'rankTitles'])
             ->get();
 
         $calculator = app(\App\Services\ChampionCalculator::class);
@@ -409,13 +410,36 @@ class Registration extends Component
             foreach ($winners as $winner) {
                 $reg = $winner['registration'];
                 $key = $reg->npsn ?: mb_strtolower(trim((string) $reg->nama_sekolah));
-                if ($key === (string) $schoolKey && $reg->competition_category_id) {
-                    $won[$reg->id] = $reg;
+                if ($key !== (string) $schoolKey || !$reg->competition_category_id) {
+                    continue;
                 }
+
+                $won[$reg->id] = [
+                    'registration' => $reg,
+                    'rank' => $winner['rank'],
+                    'title' => $championCategory->name . ' — ' . $this->gelarJuara($championCategory, $winner['rank']),
+                ];
             }
         }
 
         return collect($won);
+    }
+
+    /**
+     * Gelar juara dengan nomor posisi dalam grup rank title, mengikuti
+     * perhitungan yang sama dengan halaman hasil & unduhan sertifikat.
+     */
+    private function gelarJuara(\App\Models\ChampionCategory $championCategory, int $rank): string
+    {
+        foreach ($championCategory->rankTitles as $rt) {
+            if ($rt->coversRank($rank)) {
+                return $rt->rank_start !== $rt->rank_end
+                    ? $rt->title . ' ' . ($rank - $rt->rank_start + 1)
+                    : $rt->title;
+            }
+        }
+
+        return 'Juara ' . $rank;
     }
 
     public function render()

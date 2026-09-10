@@ -321,11 +321,22 @@ class CertificateTest extends TestCase
         ]);
 
         // Tab pasukan kalah → kartu tidak tampil.
+        // Tab pasukan juara → kartu + keterangan juara keberapanya
+        // (Sekolah Test 2 skor 82 = peringkat 1, rank title 'Juara 1').
         \Livewire\Livewire::test(\App\Livewire\Public\MagicLink\Registration::class, [
             'token' => $loser->magic_token,
         ])
             ->assertDontSee('Sertifikat Juara')
             ->call('switchRegistration', $winner->id)
-            ->assertSee('Sertifikat Juara');
+            ->assertSee('Sertifikat Juara')
+            ->assertSee('Juara Umum — Juara 1');
+
+        // Rank title yang meng-cover 1–3 → gelar diberi nomor posisi dalam grup.
+        ChampionRankTitle::where('champion_category_id', $championCat->id)
+            ->update(['title' => 'Juara Harapan', 'rank_start' => 1, 'rank_end' => 3]);
+
+        \Livewire\Livewire::test(\App\Livewire\Public\MagicLink\Registration::class, [
+            'token' => $winner->magic_token,
+        ])->assertSee('Juara Umum — Juara Harapan 1');
     }
 }
