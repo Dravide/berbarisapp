@@ -7,7 +7,9 @@ use App\Models\Eventner;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\Ticket;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -19,8 +21,11 @@ class MonetizationTest extends TestCase
     {
         return [
             'event' => 'transaction.received',
+            // `transaction_id` — bentuk asli dari AutoGoPay (lihat dokumentasi).
+            // Sebelumnya di sini tertulis `id`, field yang tidak pernah dikirim
+            // gateway, sehingga webhook selalu 400 di produksi sementara tes hijau.
             'transaction' => [
-                'id' => $transactionId,
+                'transaction_id' => $transactionId,
                 'status' => $status,
             ],
         ];
@@ -368,5 +373,41 @@ class MonetizationTest extends TestCase
 
         Livewire::actingAs($user)->test(\App\Livewire\Eventner\Settings\Billing\Upgrade::class)
             ->assertDontSee('Paket Khusus');
+    }
+
+    /**
+     * Jalur polling dulu tidak mengisi qr_code_path (komentar lama: hanya webhook
+     * yang mengisi karena punya amount untuk verifikasi). Akibatnya tiket yang
+     * terkonfirmasi lewat polling jadi PAID tanpa QR masuk sama sekali.
+     */
+    public function test_polling_sync_membuat_qr_masuk_tiket(): void
+    {
+        Storage::fake('public');
+
+        Http::fake([
+            '*/qris/status' => Http::response([
+                'success' => true,
+                'data' => ['transaction_id' => 'AGP-QR-001', 'transaction_status' => 'settlement'],
+            ], 200),
+        ]);
+
+        $eventner = Eventner::factory()->create(['status' => 'approved']);
+        $ticket = Ticket::create([
+            'eventner_id' => $eventner->id,
+            'buyer_name' => 'Budi',
+            'buyer_email' => 'budi@example.com',
+            'quantity' => 1,
+            'price_per_ticket' => 50000,
+            'total_amount' => 50000,
+            'autogopay_transaction_id' => 'AGP-QR-001',
+            'status' => 'PENDING',
+        ]);
+
+        (new \App\Jobs\SyncPendingPayments)->handle();
+
+        $ticket->refresh();
+        $this->assertSame('PAID', $ticket->status);
+        $this->assertNotNull($ticket->qr_code_path, 'tiket PAID wajib punya QR masuk');
+        Storage::disk('public')->assertExists($ticket->qr_code_path);
     }
 }

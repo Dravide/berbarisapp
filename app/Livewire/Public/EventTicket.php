@@ -5,9 +5,6 @@ namespace App\Livewire\Public;
 use App\Models\Eventner;
 use App\Models\Ticket;
 use App\Services\AutoGoPay;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
-use chillerlan\QRCode\Output\QRGdImagePNG;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
@@ -237,16 +234,7 @@ class EventTicket extends Component
      */
     public function generateTicketQr(Ticket $ticket): string
     {
-        $options = new QROptions;
-        $options->outputInterface = QRGdImagePNG::class;
-        $options->outputBase64 = false;
-        $options->scale = 6;
-
-        $qrPath = 'tickets/' . $ticket->order_code . '.png';
-        $qrImage = (new QRCode($options))->render($ticket->order_code);
-        Storage::disk('public')->put($qrPath, $qrImage);
-
-        return $qrPath;
+        return $ticket->generateEntryQr();
     }
 
     public function resetPayment()

@@ -158,7 +158,11 @@ class Index extends Component
             if ($status === 'settlement') {
                 $claimed = Ticket::where('id', $ticket->id)
                     ->where('status', 'PENDING')
-                    ->update(['status' => 'PAID', 'paid_at' => now()]);
+                    ->update([
+                        'status' => 'PAID',
+                        'paid_at' => now(),
+                        'qr_code_path' => $ticket->qr_code_path ?: $ticket->generateEntryQr(),
+                    ]);
 
                 if ($claimed) {
                     $synced++;
