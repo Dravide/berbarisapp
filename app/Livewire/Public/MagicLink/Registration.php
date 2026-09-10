@@ -380,10 +380,10 @@ class Registration extends Component
     }
 
     /**
-     * Pasukan (registrasi) sekolah ini yang berhak sertifikat, per registrasi:
-     * [registration_id => ['registration' => Registration, 'label' => string]].
-     * Satu sekolah bisa punya 2 pasukan di mata lomba berbeda — hanya pasukan
-     * yang menang yang muncul di sini.
+     * Pasukan (registrasi) sekolah ini yang berhak sertifikat, keyed by id:
+     * [registration_id => Registration]. Satu sekolah bisa punya 2 pasukan di
+     * mata lomba berbeda — hanya pasukan yang menang yang masuk sini, supaya
+     * kartu sertifikat muncul hanya di tab yang juara.
      */
     public function getCertificateRegistrationsProperty()
     {
@@ -409,23 +409,13 @@ class Registration extends Component
             foreach ($winners as $winner) {
                 $reg = $winner['registration'];
                 $key = $reg->npsn ?: mb_strtolower(trim((string) $reg->nama_sekolah));
-                if ($key === (string) $schoolKey) {
+                if ($key === (string) $schoolKey && $reg->competition_category_id) {
                     $won[$reg->id] = $reg;
                 }
             }
         }
 
-        return collect($won)
-            ->filter(fn ($reg) => $reg->competitionCategory)
-            ->mapWithKeys(fn ($reg) => [
-                $reg->id => [
-                    'registration' => $reg,
-                    'label' => $reg->competitionCategory->name
-                        . ($reg->nama_sekolah !== $this->registration->nama_sekolah
-                            ? ' — ' . $reg->nama_sekolah
-                            : ''),
-                ],
-            ]);
+        return collect($won);
     }
 
     public function render()

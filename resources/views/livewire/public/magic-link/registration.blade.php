@@ -259,8 +259,8 @@
                 </div>
             @endif
 
-            {{-- Sertifikat Juara (satu tombol per pasukan yang menang) --}}
-            @if($this->certificate_registrations->isNotEmpty())
+            {{-- Sertifikat Juara — hanya di tab pasukan yang menang --}}
+            @if($this->certificate_registrations->has($activeRegId))
                 <div class="surface-card overflow-hidden border-t-4 border-t-amber-400">
                     <div class="p-5 flex flex-col gap-4">
                         <div class="flex items-center gap-4">
@@ -269,17 +269,16 @@
                             </div>
                             <div>
                                 <h3 class="font-display text-sm font-bold text-deep-slate mb-0.5">Sertifikat Juara</h3>
-                                <p class="text-xs text-on-surface-variant font-medium leading-normal m-0">Selamat! Pasukan berikut masuk jajaran juara. Unduh sertifikat dalam format PDF.</p>
+                                <p class="text-xs text-on-surface-variant font-medium leading-normal m-0">Selamat! Pasukan ini masuk jajaran juara. Unduh sertifikat dalam format PDF.</p>
                             </div>
                         </div>
                         <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
-                            @foreach($this->certificate_registrations as $item)
-                                <a href="{{ route('magic.link.certificate.category', [$registration->magic_token, $item['registration']->competition_category_id]) }}"
-                                    target="_blank"
-                                    class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-amber-500 text-white font-bold text-sm hover:brightness-105 transition-colors text-decoration-none">
-                                    <i class="ti ti-file-download"></i> {{ $item['label'] }}
-                                </a>
-                            @endforeach
+                            @php($cert = $this->certificate_registrations[$activeRegId])
+                            <a href="{{ route('magic.link.certificate.category', [$registration->magic_token, $cert['registration']->competition_category_id]) }}"
+                                target="_blank"
+                                class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-amber-500 text-white font-bold text-sm hover:brightness-105 transition-colors text-decoration-none">
+                                <i class="ti ti-file-download"></i> Unduh Sertifikat — {{ $cert['label'] }}
+                            </a>
                         </div>
                     </div>
                 </div>

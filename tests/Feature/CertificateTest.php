@@ -295,4 +295,37 @@ class CertificateTest extends TestCase
         $this->get(route('magic.link.certificate.category', [$reg->magic_token, $foreignCat->id]))
             ->assertStatus(404);
     }
+
+    /**
+     * Kartu "Sertifikat Juara" hanya dirender di tab pasukan yang menang —
+     * tab pasukan yang kalah tidak menampilkannya.
+     */
+    public function test_magic_link_certificate_card_only_on_winning_tab()
+    {
+        [$user, $eventner, $template, $championCat, $compCat] = $this->setupCertificateAssets();
+
+        $winner = Registration::where('eventner_id', $eventner->id)
+            ->where('nama_sekolah', 'Sekolah Test 2')
+            ->first();
+
+        $otherCat = CompetitionCategory::factory()->create([
+            'eventner_id' => $eventner->id,
+            'parent_id' => $compCat->parent_id,
+        ]);
+
+        $loser = Registration::factory()->create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $otherCat->id,
+            'nama_sekolah' => 'Sekolah Test 2 (Regu B)',
+            'npsn' => $winner->npsn,
+        ]);
+
+        // Tab pasukan kalah → kartu tidak tampil.
+        \Livewire\Livewire::test(\App\Livewire\Public\MagicLink\Registration::class, [
+            'token' => $loser->magic_token,
+        ])
+            ->assertDontSee('Sertifikat Juara')
+            ->call('switchRegistration', $winner->id)
+            ->assertSee('Sertifikat Juara');
+    }
 }
