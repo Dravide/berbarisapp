@@ -207,50 +207,6 @@
                                 </div>
                             </div>
                         </div>
-
-                        <div class="card">
-                            <div class="card-body">
-                                <h5 class="card-title fw-semibold mb-4">Pembayaran</h5>
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold" for="payment_gateway">Gateway QRIS Aktif</label>
-                                    <select class="form-select @error('payment_gateway') is-invalid @enderror" id="payment_gateway" wire:model.live="payment_gateway">
-                                        <option value="gopay">GoPay QRIS</option>
-                                        <option value="instaqris">InstaQRIS (Bank Mega)</option>
-                                    </select>
-                                    @error('payment_gateway') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    <div class="form-text">
-                                        Berlaku untuk semua pembayaran: biaya pendaftaran event, upgrade akun, tiket, dan vote.
-                                    </div>
-                                </div>
-
-                                @if($payment_gateway === 'instaqris')
-                                    <div class="alert alert-warning mb-0">
-                                        <div class="d-flex">
-                                            <i class="ti ti-alert-triangle fs-7 me-2"></i>
-                                            <div>
-                                                <h6 class="alert-heading">Perhatian InstaQRIS</h6>
-                                                <ul class="mb-0 ps-3 fs-2">
-                                                    <li>Maksimal <strong>Rp 10.000.000</strong> per transaksi.</li>
-                                                    <li>QR berlaku <strong>15 menit</strong>.</li>
-                                                    <li>Tidak ada notifikasi otomatis. Status pembayaran dicek berkala lewat mutasi harian, jadi pembayaran bisa terkonfirmasi beberapa menit lebih lambat.</li>
-                                                    <li>Akun InstaQRIS harus sudah dihubungkan di dashboard AutoGoPay.</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @else
-                                    <div class="alert alert-info mb-0">
-                                        <div class="d-flex">
-                                            <i class="ti ti-info-circle fs-7 me-2"></i>
-                                            <div>
-                                                <h6 class="alert-heading">GoPay QRIS</h6>
-                                                <p class="mb-0 fs-2">Pembayaran terkonfirmasi otomatis lewat webhook, biasanya dalam hitungan detik.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
                     </div>
 
                     <div class="col-lg-4">
