@@ -105,18 +105,10 @@ class AutoGoPayWebhookController extends Controller
                 return;
             }
 
-            // Generate QR tiket masuk (binary PNG) — hanya untuk pemenang claim
-            $qrPath = $ticket->generateEntryQr();
-
-            $claimed = Ticket::where('id', $ticket->id)
-                ->where('status', 'PENDING')
-                ->update([
-                    'status' => 'PAID',
-                    'paid_at' => now(),
-                    'qr_code_path' => $qrPath,
-                ]);
-
-            if ($claimed) {
+            // Klaim atomik sekaligus membuat QR tiket masuk. Cuma satu yang
+            // berhasil (webhook vs polling) — yang pertama PENDING → PAID jadi
+            // pemenang, sisanya dapat 0 affected & tidak kirim email dobel.
+            if ($ticket->claimPaid()) {
                 Log::info('Ticket payment confirmed via webhook', ['transaction_id' => $transactionId, 'ticket_id' => $ticket->id]);
 
                 // Kirim email notifikasi ke buyer

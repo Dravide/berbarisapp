@@ -107,11 +107,7 @@ class Index extends Component
             }
 
             if ($status === 'settlement') {
-                $claimed = Ticket::where('id', $ticket->id)
-                    ->where('status', 'PENDING')
-                    ->update(['status' => 'PAID', 'paid_at' => now()]);
-
-                if ($claimed) {
+                if ($ticket->claimPaid()) {
                     $synced++;
                 }
             } elseif (in_array($status, ['expire', 'cancel'])) {
@@ -147,10 +143,12 @@ class Index extends Component
             return;
         }
 
-        $ticket->update([
-            'status' => 'PAID',
-            'paid_at' => now(),
-        ]);
+        // claimPaid() sekaligus membuat QR masuk — dulu di sini hanya status yang
+        // di-update, jadi tiket yang dikonfirmasi manual tampil tanpa QR.
+        if (!$ticket->claimPaid()) {
+            session()->flash('error', 'Tiket ini baru saja diproses. Muat ulang halaman.');
+            return;
+        }
 
         session()->flash('success', 'Tiket ' . $ticket->order_code . ' berhasil dikonfirmasi sebagai PAID.');
     }

@@ -69,6 +69,28 @@ class Ticket extends Model
     }
 
     /**
+     * Klaim atomik PENDING → PAID, sekaligus memastikan QR masuk ikut terbuat.
+     *
+     * WAJIB dipakai semua jalur konfirmasi pembayaran tiket (webhook, job polling,
+     * command, tombol konfirmasi manual). `Ticket::where(...)->update([...])` di
+     * luar method ini tidak memicu model event, jadi tiket bisa jadi PAID tanpa
+     * qr_code_path dan QR-nya tidak muncul di halaman pembeli.
+     *
+     * Return false kalau barisnya bukan PENDING lagi — artinya jalur lain
+     * (webhook vs polling) sudah lebih dulu mengklaim, jadi jangan kirim email.
+     */
+    public function claimPaid(): bool
+    {
+        return (bool) static::where('id', $this->id)
+            ->where('status', 'PENDING')
+            ->update([
+                'status' => 'PAID',
+                'paid_at' => now(),
+                'qr_code_path' => $this->qr_code_path ?: $this->generateEntryQr(),
+            ]);
+    }
+
+    /**
      * Generate QR tiket masuk (PNG di disk public) dan kembalikan path-nya.
      * Idempoten: menulis ke path yang sama untuk order_code yang sama.
      */

@@ -99,18 +99,10 @@ class SyncPendingPayments implements ShouldQueue, ShouldBeUnique
             $mapped = $status !== null ? AutoGoPay::mapStatus($status) : null;
 
             if ($mapped === 'PAID') {
-                // QR tiket masuk ikut dibuat di sini. Sebelumnya hanya jalur webhook
-                // yang mengisinya, sehingga tiket yang terkonfirmasi lewat polling
-                // (webhook telat/gagal) jadi PAID tanpa QR masuk sama sekali.
-                $claimed = Ticket::where('id', $ticket->id)
-                    ->where('status', 'PENDING')
-                    ->update([
-                        'status' => 'PAID',
-                        'paid_at' => now(),
-                        'qr_code_path' => $ticket->qr_code_path ?: $ticket->generateEntryQr(),
-                    ]);
-
-                if ($claimed) {
+                // claimPaid() sekaligus membuat QR tiket masuk — sebelumnya QR
+                // hanya dibuat di jalur webhook, sehingga tiket yang terkonfirmasi
+                // lewat polling (webhook telat/gagal) jadi PAID tanpa QR.
+                if ($ticket->claimPaid()) {
                     $synced++;
                     Log::info("Auto-sync: ticket {$ticket->autogopay_transaction_id} → PAID");
                 }

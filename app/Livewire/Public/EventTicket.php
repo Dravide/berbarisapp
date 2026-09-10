@@ -188,19 +188,9 @@ class EventTicket extends Component
 
             if ($status === 'settlement') {
                 if ($ticket) {
-                    // Generate QR tiket masuk — idempoten (overwrite path yang sama)
-                    $qrPath = $this->generateTicketQr($ticket);
-
-                    // Atomic claim — hanya pemenang (PENDING → PAID) yang lanjut kirim email.
-                    $claimed = Ticket::where('id', $ticket->id)
-                        ->where('status', 'PENDING')
-                        ->update([
-                            'status' => 'PAID',
-                            'paid_at' => now(),
-                            'qr_code_path' => $qrPath,
-                        ]);
-
-                    if ($claimed) {
+                    // Klaim atomik sekaligus membuat QR tiket masuk — hanya
+                    // pemenang (PENDING → PAID) yang lanjut kirim email.
+                    if ($ticket->claimPaid()) {
                         try {
                             app(\App\Services\MailyService::class)->sendTicketConfirmation($ticket->fresh());
                         } catch (\Exception $e) {

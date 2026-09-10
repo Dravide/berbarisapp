@@ -64,11 +64,7 @@ class SyncPendingTransactions extends Command
                 $status = $result['data']['transaction_status'] ?? null;
 
                 if ($status === 'settlement') {
-                    $claimed = Ticket::where('id', $ticket->id)
-                        ->where('status', 'PENDING')
-                        ->update(['status' => 'PAID', 'paid_at' => now()]);
-
-                    if ($claimed) {
+                    if ($ticket->claimPaid()) {
                         $synced++;
                         Log::info("Sync: Ticket {$ticket->autogopay_transaction_id} → PAID");
                     }
