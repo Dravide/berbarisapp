@@ -125,6 +125,42 @@ class EventnerDashboardTest extends TestCase
             ->assertSet('berkasMenungguCount', 1);
     }
 
+    public function test_hasil_pengundian_hanya_tingkat_lomba_bukan_jenisnya()
+    {
+        [$user, $eventner, $parent] = $this->setupEventnerUser();
+
+        // setupEventnerUser membuat parent (jenis) + satu child (tingkat).
+        // Tambah satu tingkat lagi agar beda parent vs child jelas.
+        $childB = CompetitionCategory::factory()->create([
+            'eventner_id' => $eventner->id,
+            'parent_id' => $parent->id,
+            'name' => 'Tingkat B',
+        ]);
+
+        Registration::factory()->create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $childB->id,
+            'urutan_tampil' => 1,
+        ]);
+
+        $component = Livewire::actingAs($user)->test(\App\Livewire\Eventner\Dashboard::class);
+
+        $rows = $component->get('drawingData');
+
+        // Parent tidak boleh muncul sebagai baris tersendiri.
+        $this->assertCount(2, $rows, 'Hanya dua tingkat lomba yang jadi baris.');
+        $this->assertSame(['Tingkat B', $parent->name], $rows->pluck('name')->sort()->values()->all());
+
+        // Nama baris = nama child saja, bukan "Parent — Child".
+        foreach ($rows as $row) {
+            $this->assertStringNotContainsString('—', $row['name']);
+        }
+
+        $tingkatB = $rows->firstWhere('name', 'Tingkat B');
+        $this->assertSame(1, $tingkatB['total']);
+        $this->assertSame(1, $tingkatB['drawn']);
+    }
+
     public function test_dashboard_revenue_labels_fixed()
     {
         [$user, $eventner, $category] = $this->setupEventnerUser();

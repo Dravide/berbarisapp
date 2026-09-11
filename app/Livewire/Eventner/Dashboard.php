@@ -491,17 +491,20 @@ class Dashboard extends Component
 
     public function getDrawingDataProperty()
     {
-        $eventnerId = $this->eventner->id;
-        $categories = $this->eventner->competitionCategories()->withCount([
-            'registrations',
-            'registrations as drawn_count' => function ($q) {
-                $q->whereNotNull('urutan_tampil');
-            },
-        ])->get();
+        // Hanya tingkat lomba (child) — peserta menempel di child, bukan di
+        // jenis lomba (parent). Menampilkan parent membuat baris ganda kosong.
+        $categories = $this->eventner->competitionCategories()
+            ->whereNotNull('parent_id')
+            ->withCount([
+                'registrations',
+                'registrations as drawn_count' => function ($q) {
+                    $q->whereNotNull('urutan_tampil');
+                },
+            ])->get();
 
         return $categories->map(function ($cat) {
             return [
-                'name' => $cat->full_name,
+                'name' => $cat->name,
                 'drawn' => $cat->drawn_count,
                 'total' => $cat->registrations_count,
             ];
