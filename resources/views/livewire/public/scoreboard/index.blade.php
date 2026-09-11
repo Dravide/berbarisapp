@@ -93,6 +93,9 @@
                             @if(isset($rankings[1]))
                                 @php $p2 = $rankings[1]; @endphp
                                 <div class="text-center d-flex flex-column align-items-center p-2 rounded {{ ($p2['direction'] ?? '') === 'up' ? 'rank-up-anim' : (($p2['direction'] ?? '') === 'down' ? 'rank-down-anim' : '') }}" style="width: 30%; transition: all 0.3s;" wire:key="podium-2-{{ $p2['id'] }}">
+                                    @if($p2['logo_sekolah'])
+                                        <img src="{{ asset('storage/' . $p2['logo_sekolah']) }}" class="rounded-circle border mb-1" width="40" height="40" style="object-fit:cover;" alt="Logo {{ $p2['nama_sekolah'] }}">
+                                    @endif
                                     <div class="fw-bold text-truncate w-100" style="font-size: 0.85rem;" title="{{ $p2['nama_sekolah'] }}">{{ $p2['nama_sekolah'] }}</div>
                                     @if($p2['title'])
                                         <div class="badge bg-success-subtle text-success border border-success rounded-pill px-2 py-0 mt-1" style="font-size: 0.7rem;">{{ $p2['title'] }}</div>
@@ -108,8 +111,11 @@
                             @if(isset($rankings[0]))
                                 @php $p1 = $rankings[0]; @endphp
                                 <div class="text-center d-flex flex-column align-items-center p-2 rounded {{ ($p1['direction'] ?? '') === 'up' ? 'rank-up-anim' : (($p1['direction'] ?? '') === 'down' ? 'rank-down-anim' : '') }}" style="width: 35%; transition: all 0.3s;" wire:key="podium-1-{{ $p1['id'] }}">
+                                    <i class="ti ti-crown text-warning fs-5"></i>
+                                    @if($p1['logo_sekolah'])
+                                        <img src="{{ asset('storage/' . $p1['logo_sekolah']) }}" class="rounded-circle border border-warning mb-1" width="52" height="52" style="object-fit:cover;" alt="Logo {{ $p1['nama_sekolah'] }}">
+                                    @endif
                                     <div class="fw-bold text-truncate w-100" style="font-size: 0.95rem; color: #b8860b;" title="{{ $p1['nama_sekolah'] }}">
-                                        <i class="ti ti-crown text-warning fs-5"></i><br>
                                         {{ $p1['nama_sekolah'] }}
                                     </div>
                                     @if($p1['title'])
@@ -126,6 +132,9 @@
                             @if(isset($rankings[2]))
                                 @php $p3 = $rankings[2]; @endphp
                                 <div class="text-center d-flex flex-column align-items-center p-2 rounded {{ ($p3['direction'] ?? '') === 'up' ? 'rank-up-anim' : (($p3['direction'] ?? '') === 'down' ? 'rank-down-anim' : '') }}" style="width: 30%; transition: all 0.3s;" wire:key="podium-3-{{ $p3['id'] }}">
+                                    @if($p3['logo_sekolah'])
+                                        <img src="{{ asset('storage/' . $p3['logo_sekolah']) }}" class="rounded-circle border mb-1" width="40" height="40" style="object-fit:cover;" alt="Logo {{ $p3['nama_sekolah'] }}">
+                                    @endif
                                     <div class="fw-bold text-truncate w-100" style="font-size: 0.85rem;" title="{{ $p3['nama_sekolah'] }}">{{ $p3['nama_sekolah'] }}</div>
                                     @if($p3['title'])
                                         <div class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2 py-0 mt-1" style="font-size: 0.7rem;">{{ $p3['title'] }}</div>
@@ -189,6 +198,9 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex align-items-center flex-wrap gap-2">
+                                                    @if($item['logo_sekolah'])
+                                                        <img src="{{ asset('storage/' . $item['logo_sekolah']) }}" class="rounded-circle border" width="28" height="28" style="object-fit:cover;" alt="Logo {{ $item['nama_sekolah'] }}">
+                                                    @endif
                                                     <span class="fw-semibold">{{ $item['nama_sekolah'] }}</span>
                                                     @if($item['title'])
                                                         <span class="badge bg-success-subtle text-success border border-success rounded-pill px-2 py-0" style="font-size: 0.7rem;">{{ $item['title'] }}</span>

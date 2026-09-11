@@ -154,6 +154,7 @@ class Index extends Component
                 'id' => $participant->id,
                 'nama_sekolah' => $participant->display_name,
                 'npsn' => $participant->npsn,
+                'logo_sekolah' => $participant->logo_sekolah,
                 'total' => $total,
                 'participants' => $participant->participants,
             ];
@@ -220,6 +221,11 @@ class Index extends Component
     {
         return view('livewire.public.scoreboard.index', [
             'rankings' => $this->getRankingsProperty(),
+        ])->layoutData([
+            'eventner' => $this->eventner,
+            'categories' => $this->categories,
+            'selectedCategoryId' => $this->selectedCategoryId,
+            'championCategory' => $this->championCategory,
         ]);
     }
 }

@@ -198,6 +198,10 @@ class Index extends Component
     {
         return view('livewire.public.champions.index', [
             'eventner' => $this->eventner,
+        ])->layoutData([
+            'eventner' => $this->eventner,
+            'categories' => $this->categories,
+            'selectedCategoryId' => $this->selectedCategoryId,
         ])->title('Pengumuman Juara - ' . $this->eventner->nama_event);
     }
 }
