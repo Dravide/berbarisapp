@@ -46,6 +46,18 @@
             </li>
 
             <!-- ------------------------------- -->
+            <!-- start halaman bantuan (Eventner) -->
+            <!-- ------------------------------- -->
+            @php($eventnerHelp = auth()->user()?->role === 'Eventner' ? \App\Support\EventnerHelp::current() : null)
+            @if($eventnerHelp)
+              <li class="nav-item nav-icon-hover-bg rounded-circle">
+                <a class="nav-link" href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#eventnerHelpModal" title="Bantuan halaman ini" aria-label="Bantuan halaman ini">
+                  <i class="ti ti-help"></i>
+                </a>
+              </li>
+            @endif
+
+            <!-- ------------------------------- -->
             <!-- start notification Dropdown -->
             <!-- ------------------------------- -->
             <li class="nav-item nav-icon-hover-bg rounded-circle dropdown">

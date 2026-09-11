@@ -84,6 +84,9 @@
   <!-- Search Modal -->
   <livewire:search-links />
 
+  <!-- Modal Bantuan Eventner -->
+  @include('layouts.partials.help-modal')
+
   <div class="dark-transparent sidebartoggler"></div>
 
   <!-- Import Js Files -->
