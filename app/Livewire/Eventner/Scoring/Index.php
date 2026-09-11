@@ -9,6 +9,7 @@ use App\Models\DeductionCategory;
 use App\Models\Judge;
 use App\Models\Registration;
 use App\Models\ScoreDeduction;
+use App\Services\ScoreFinalizationService;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
@@ -210,112 +211,43 @@ class Index extends Component
             return;
         }
 
-        // Validate that all criteria are filled
-        $compCategoryId = $this->selectedRegistration->competition_category_id ?? null;
+        // Simpan dulu nilai di layar supaya ikut tervalidasi & terkunci.
+        $this->saveScores();
 
-        $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
-            ->where('eventner_id', $this->eventner->id)
-            ->where(function ($q) use ($compCategoryId) {
-                $q->where('competition_category_id', $compCategoryId)
-                  ->orWhereNull('competition_category_id');
-            })
-            ->whereHas('judges', function ($q) {
-                $q->where('judges.id', $this->selectedJudgeId);
-            })
-            ->get();
+        $result = app(ScoreFinalizationService::class)->finalize(
+            $this->eventner->id,
+            $this->selectedRegistrationId,
+            $this->selectedJudgeId,
+            array_filter($this->scores, fn ($v) => $v !== '' && $v !== null),
+        );
 
-        if ($assessmentCategories->isEmpty()) {
-            $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
-                ->where('eventner_id', $this->eventner->id)
-                ->where(function ($q) use ($compCategoryId) {
-                    $q->where('competition_category_id', $compCategoryId)
-                      ->orWhereNull('competition_category_id');
-                })
-                ->get();
-        }
-
-        $missing = false;
-        foreach ($assessmentCategories as $cat) {
-            foreach ($cat->subCategories as $sub) {
-                foreach ($sub->criterias as $crit) {
-                    $value = $this->scores[$crit->id] ?? null;
-                    if ($value === '' || $value === null) {
-                        $missing = true;
-                        break 3;
-                    }
-                }
-            }
-        }
-
-        if ($missing) {
+        if ($result['missing']) {
             $this->saveStatus = 'error';
             session()->flash('scoring_error', 'Semua kriteria nilai harus diisi sebelum melakukan finalisasi.');
             return;
         }
 
-        // Save scores first to ensure latest data is finalized
-        $this->saveScores();
-
-        // Mark all scores for this judge and registration as finalized
-        AssessmentScore::where('registration_id', $this->selectedRegistrationId)
-            ->where('eventner_id', $this->eventner->id)
-            ->where('judge_id', $this->selectedJudgeId)
-            ->update(['is_finalized' => true]);
-
         $this->isFinalized = true;
         $this->saveStatus = 'finalized';
 
         // Jika semua judge untuk registration ini sudah final → nilai selesai semua, kirim notif.
-        $this->notifyIfAllJudgesFinalized();
+        if ($this->selectedRegistration) {
+            app(ScoreFinalizationService::class)
+                ->notifyIfComplete($this->eventner->id, $this->selectedRegistration);
+        }
 
         session()->flash('success', 'Penilaian berhasil difinalisasi dan dikunci.');
     }
 
     private function notifyIfAllJudgesFinalized(): void
     {
-        $registration = Registration::find($this->selectedRegistrationId);
+        $registration = Registration::where('eventner_id', $this->eventner->id)
+            ->find($this->selectedRegistrationId);
+
         if (!$registration) return;
 
-        $this->sendFinalNotificationIfComplete($registration);
-    }
-
-    /**
-     * Kirim notifikasi FCM nilai_final bila semua juri yang ditugaskan
-     * pada tingkat lomba registrasi ini sudah punya skor terfinalisasi.
-     */
-    private function sendFinalNotificationIfComplete(Registration $registration): void
-    {
-        $category = $registration->competitionCategory;
-        $judgeIds = $category
-            ? Judge::where('eventner_id', $this->eventner->id)
-                ->whereHas('assessmentCategories', function ($q) use ($category) {
-                    $q->where('assessment_categories.eventner_id', $this->eventner->id)
-                        ->where(function ($sq) use ($category) {
-                            $sq->where('assessment_categories.competition_category_id', $category->id)
-                               ->orWhereNull('assessment_categories.competition_category_id');
-                        });
-                })
-                ->pluck('judges.id')
-            : collect();
-        if ($judgeIds->isEmpty()) return;
-
-        $finalizedJudgeIds = AssessmentScore::where('registration_id', $registration->id)
-            ->where('eventner_id', $this->eventner->id)
-            ->where('is_finalized', true)
-            ->distinct()
-            ->pluck('judge_id');
-
-        $allFinalized = $judgeIds->diff($finalizedJudgeIds)->isEmpty();
-        if (!$allFinalized) return;
-
-        try {
-            app(\App\Notifications\NilaiFinal::class)->construct($registration)->send();
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('FCM nilai_final notification failed', [
-                'registration_id' => $registration->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
+        app(ScoreFinalizationService::class)
+            ->notifyIfComplete($this->eventner->id, $registration);
     }
 
     /**
@@ -350,7 +282,11 @@ class Index extends Component
             $updated += $affected;
 
             if ($affected > 0) {
-                $this->sendFinalNotificationIfComplete(Registration::find($regId));
+                $registration = Registration::where('eventner_id', $this->eventner->id)->find($regId);
+                if ($registration) {
+                    app(ScoreFinalizationService::class)
+                        ->notifyIfComplete($this->eventner->id, $registration);
+                }
             }
         }
 

@@ -27,6 +27,15 @@ Route::get('/event/{slug}/register', App\Livewire\Public\Registration\Create::cl
 Route::get('/event/{slug}/drawing', App\Livewire\Eventner\Drawing\Spin::class)->name('event.drawing.spin');
 Route::get('/event/{slug}/drawing-results', App\Livewire\Eventner\Drawing\Results::class)->name('event.drawing.results');
 
+// Penilaian juri via tablet. Token = secret, tanpa login (pola sama /scan/{token}).
+// Halaman sebenarnya hidup di host entry (routes/entry.php, nama route
+// 'judge.scoring'); dua alamat di bawah ini hanya jalur masuk lama supaya
+// link/QR yang sudah dicetak tetap bekerja — di-redirect 301 ke host entry.
+Route::middleware(App\Http\Middleware\RedirectJudgeEntryHost::class)->group(function () {
+    Route::get('/juri/{token}', App\Livewire\Public\JudgeScoring\Index::class)->name('judge.scoring.legacy');
+    Route::get('/event/{slug}/juri/{token}', App\Livewire\Public\JudgeScoring\Index::class)->name('judge.scoring.legacy.slug');
+});
+
 Route::get('/reg/{token}', App\Livewire\Public\MagicLink\Registration::class)->name('magic.link');
 Route::get('/reg/{token}/pdf', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadFormulir'])->name('magic.link.formulir');
 Route::get('/reg/{token}/invoice', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadInvoiceByToken'])->name('magic.link.invoice');

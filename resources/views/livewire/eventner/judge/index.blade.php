@@ -78,6 +78,9 @@
                                                 </div>
                                             </td>
                                             <td class="text-end">
+                                                <button class="btn btn-sm btn-outline-secondary p-1 me-1" wire:click="openTabletModal({{ $judge->id }})" title="Akses Tablet Juri">
+                                                    <i class="ti ti-device-tablet fs-4"></i>
+                                                </button>
                                                 <button class="btn btn-sm btn-outline-secondary p-1 me-1" wire:click="selectJudgeForPdf({{ $judge->id }})" title="Unduh Format Penilaian Juri">
                                                     <i class="ti ti-file-type-pdf fs-4"></i>
                                                 </button>
@@ -99,6 +102,65 @@
         </div>
 
     </div>
+
+    <!-- Modal Akses Tablet Juri (QR + link) -->
+    @if($selectedTabletJudgeId)
+    @php $tablet = $this->tabletQr; @endphp
+    <div class="modal fade show d-block" tabindex="-1" style="display:block; background-color: rgba(0,0,0,.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title text-white fw-semibold">
+                        <i class="ti ti-device-tablet me-1"></i> Akses Tablet Juri
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closeTabletModal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="alert alert-primary border-0 bg-primary-subtle text-primary mb-3 text-start">
+                        <i class="ti ti-user me-1"></i> Juri: <strong>{{ $tablet['judge']->name ?? '-' }}</strong>
+                    </div>
+
+                    @if($tablet['image'])
+                        <img src="{{ $tablet['image'] }}" alt="QR akses tablet juri"
+                             class="img-fluid border rounded-3 mb-3" style="max-width: 240px;">
+                    @else
+                        <div class="alert alert-warning border-0 mb-3">
+                            QR gagal dibuat. Pakai link di bawah.
+                        </div>
+                    @endif
+
+                    <p class="text-muted fs-3 text-start mb-1">Link tablet (buka di tablet juri):</p>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" readonly value="{{ $tablet['url'] }}"
+                               onclick="this.select()">
+                        <a href="{{ $tablet['url'] }}" target="_blank" class="btn btn-outline-primary">
+                            <i class="ti ti-external-link"></i> Buka
+                        </a>
+                    </div>
+
+                    <div class="alert alert-light border text-start mb-0">
+                        <p class="fs-3 mb-1">
+                            <i class="ti ti-info-circle me-1"></i>
+                            Buka link ini di tablet juri, lalu simpan sebagai bookmark. Satu tablet untuk satu juri.
+                        </p>
+                        <p class="fs-3 mb-0 text-danger">
+                            <i class="ti ti-alert-triangle me-1"></i>
+                            Jangan bagikan link ini — siapa pun yang punya link bisa mengisi nilai.
+                        </p>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-outline-danger"
+                            wire:click="regenerateAccessToken({{ $selectedTabletJudgeId }})"
+                            wire:confirm="Ganti token? Link dan QR lama tidak akan berlaku lagi.">
+                        <i class="ti ti-refresh me-1"></i> Ganti Token
+                    </button>
+                    <button type="button" class="btn btn-secondary" wire:click="closeTabletModal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Modal Pilih Tingkat untuk Unduh Format PDF Juri -->
     @if($selectedJudgeId)

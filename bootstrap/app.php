@@ -23,6 +23,14 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware(['web', 'subdomain'])
                 ->domain('{subdomain}.' . parse_url(config('app.url'), PHP_URL_HOST))
                 ->group(base_path('routes/subdomain.php'));
+
+            // Host tetap platform untuk input nilai juri (mis. entry.berbaris.app).
+            // Tidak memakai middleware 'subdomain' — host ini bukan tenant, jadi
+            // tidak ada Eventner yang perlu di-resolve. Pencocokan domain hanya
+            // memakai host, jadi skema (kalau ada di ENTRY_HOST) dibuang dulu.
+            Route::middleware('web')
+                ->domain(judge_entry_host())
+                ->group(base_path('routes/entry.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {

@@ -56,6 +56,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Host Masuk Juri (tablet)
+    |--------------------------------------------------------------------------
+    |
+    | Subdomain tetap milik platform untuk input nilai juri, mis.
+    | "entry.berbaris.app". Semua juri dari event mana pun memakai host ini
+    | (token di path yang menentukan juri + event). Karena subdomain eventner
+    | unik per event, "entry" tidak boleh dipakai sebagai subdomain event.
+    | Host lain yang menembak /juri/{token} di-redirect 301 ke sini.
+    |
+    */
+
+    'entry_host' => env('ENTRY_HOST') ?: 'entry.' . parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

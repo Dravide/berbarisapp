@@ -11,7 +11,19 @@ class Judge extends Model
 {
     use HasFactory, LogsActivity;
 
-    protected $fillable = ['eventner_id', 'name', 'phone_number', 'photo'];
+    protected $fillable = ['eventner_id', 'name', 'phone_number', 'photo', 'access_token'];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            // Token akses tablet juri — secret, dipakai di /juri/{token}.
+            if (!$model->access_token) {
+                $model->access_token = \Illuminate\Support\Str::random(16);
+            }
+        });
+    }
 
     public function eventner()
     {

@@ -121,6 +121,15 @@ class Profile extends Component
         $this->theme_font_display = $theme['font_display'] ?? 'Plus Jakarta Sans';
     }
 
+    /** Subdomain yang dipakai host entry platform — tidak boleh dipakai event. */
+    private function reservedSubdomain(): string
+    {
+        $host = judge_entry_host() ?: 'entry';
+        $root = parse_url(config('app.url'), PHP_URL_HOST) ?: '';
+
+        return str_replace('.' . $root, '', $host);
+    }
+
     public function save()
     {
         // Convert empty string to null so DB saves null, not ''
@@ -145,7 +154,9 @@ class Profile extends Component
             'link_livestreaming' => 'nullable|url|max:255',
             'surat_tugas_required' => 'required|boolean',
             'kwitansi_required' => 'required|boolean',
-            'subdomain' => 'nullable|string|max:63|regex:/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/|unique:eventners,subdomain,' . $this->eventnerId,
+            // Subdomain pertama host entry (mis. "entry" dari entry.berbaris.app)
+            // dicadangkan — kalau dipakai event, host input juri jadi rebutan.
+            'subdomain' => 'nullable|string|max:63|regex:/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/|not_in:' . $this->reservedSubdomain() . '|unique:eventners,subdomain,' . $this->eventnerId,
             'scoring_code' => 'nullable|string|max:50|regex:/^[A-Za-z0-9-]+$/',
             'drawing_code' => 'nullable|string|max:50|regex:/^[A-Za-z0-9-]+$/',
 

@@ -25,6 +25,12 @@
         <link rel="shortcut icon" type="image/png" href="{{ asset('templates/zubaz/assets/images/favicon.ico') }}">
     @endisset
 
+    {{-- Halaman ber-token (penilaian juri) memuat kredensial di URL —
+         jangan pernah diindeks mesin pencari. Diisi via layoutData('robots'). --}}
+    @isset($robots)
+        <meta name="robots" content="{{ $robots }}">
+    @endisset
+
     {{-- Meta SEO --}}
     <meta name="description" content="{{ Str::limit($_evDesc, 160) }}">
     <meta name="keywords" content="{{ $_ev?->nama_event }}, {{ $_ev?->diselenggarakan_oleh }}, lomba, kompetisi, event, {{ $_ev?->lokasi }}, {{ $_ev?->tingkat_perlombaan }}">

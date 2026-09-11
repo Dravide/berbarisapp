@@ -28,6 +28,9 @@ class Index extends Component
     public $selectedJudgeId = null;
     public $selectedJudgePdfLevel = '';
 
+    /** Juri yang modal akses tablet-nya sedang terbuka. */
+    public $selectedTabletJudgeId = null;
+
     protected $eventnerId;
 
     public function boot()
@@ -187,6 +190,70 @@ class Index extends Component
 
         // Buka modal setelah re-render selesai (dispatch diproses pasca-morph)
         $this->dispatch('open-judge-modal');
+    }
+
+    /**
+     * QR + link tablet juri. QR dirender sebagai data-URI (tanpa file di storage),
+     * sama seperti cetak QR peserta.
+     */
+    #[Computed]
+    public function tabletQr()
+    {
+        if (!$this->selectedTabletJudgeId) {
+            return null;
+        }
+
+        $judge = $this->judges->firstWhere('id', $this->selectedTabletJudgeId);
+        if (!$judge) {
+            return null;
+        }
+
+        // Selalu host entry milik platform (config app.entry_host) — bukan host
+        // request — supaya QR tetap sah walau dibuat dari subdomain event.
+        $url = judge_entry_url($judge->access_token);
+
+        try {
+            $options = new \chillerlan\QRCode\QROptions([
+                'outputType' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
+                'scale' => 8,
+                'imageTransparent' => false,
+            ]);
+
+            return [
+                'url' => $url,
+                'image' => (new \chillerlan\QRCode\QRCode($options))->render($url),
+                'judge' => $judge,
+            ];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Judge tablet QR render failed', [
+                'judge_id' => $judge->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['url' => $url, 'image' => null, 'judge' => $judge];
+        }
+    }
+
+    public function openTabletModal($id)
+    {
+        $this->selectedTabletJudgeId = $id;
+    }
+
+    public function closeTabletModal()
+    {
+        $this->selectedTabletJudgeId = null;
+    }
+
+    /**
+     * Ganti token = cabut akses tablet lama (link/QR lama jadi 404).
+     */
+    public function regenerateAccessToken($id)
+    {
+        $judge = Judge::where('eventner_id', $this->eventnerId)->findOrFail($id);
+        $judge->update(['access_token' => \Illuminate\Support\Str::random(16)]);
+
+        $this->selectedTabletJudgeId = $judge->id;
+        session()->flash('success', 'Token akses tablet juri diperbarui. Link lama tidak berlaku lagi.');
     }
 
     public function delete($id)
