@@ -128,7 +128,7 @@ class Index extends Component
                 ->with('paymentQrUrl', $this->paymentQrUrl)
                 ->with('paymentAmount', $this->paymentAmount)
                 ->with('paymentTransactionId', $this->paymentTransactionId)
-                ->title('Dashboard - ' . app_name());
+                ->title('Aktivasi Akun - ' . app_name());
         }
 
         // Active — redirect ke dashboard masing-masing role

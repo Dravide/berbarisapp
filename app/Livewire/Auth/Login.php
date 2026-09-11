@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 #[Layout('layouts.auth')]
-#[Title('Masuk')]
 class Login extends Component
 {
     public $login = '';
@@ -85,6 +84,7 @@ class Login extends Component
 
     public function render()
     {
-        return view('livewire.auth.login');
+        return view('livewire.auth.login')
+            ->title('Masuk - ' . app_name());
     }
 }
