@@ -37,7 +37,7 @@
                 <div class="d-flex gap-2">
                     <a href="{{ route('eventner.champion-categories.pdf', ['competition_category_id' => $selectedCompetitionCategoryId]) }}"
                        class="btn btn-sm btn-danger px-3 fw-semibold" target="_blank"
-                       title="Rekap seluruh kategori juara pada tingkat lomba yang dipilih">
+                       title="Rekap seluruh kategori juara event, dikelompokkan per tingkat lomba">
                         <i class="ti ti-file-type-pdf me-1"></i> Unduh Semua PDF
                     </a>
                     <button wire:click="create" class="btn btn-sm btn-primary px-3 fw-semibold">

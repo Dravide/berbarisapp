@@ -165,11 +165,11 @@ class EventnerHelp
                     'Tentukan Tie Break, yaitu rubrik penentu bila skor akhirnya sama.',
                     'Aktifkan Tampilkan di Laman Hasil bila juara ingin tampil di halaman publik.',
                     'Atur Nama Gelar serta Rank Awal dan Akhir untuk tiap peringkat.',
-                    'Klik Unduh Semua PDF untuk merekap seluruh kategori juara pada tingkat lomba yang sedang dipilih.',
+                    'Klik Unduh Semua PDF untuk merekap seluruh kategori juara, dikelompokkan per tingkat lomba.',
                     'Klik PDF pada satu baris kategori juara bila hanya ingin mengunduh kategori itu saja.',
                 ],
                 'tips' => [
-                    'Tingkat lomba penentu rekap adalah yang terpilih di dropdown di atas halaman.',
+                    'PDF memuat seluruh tingkat, bukan hanya yang terpilih di dropdown di atas halaman.',
                 ],
             ],
 

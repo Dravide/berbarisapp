@@ -33,6 +33,11 @@
         .judul { background: #1a1a2e; color: #fff; text-align: center; padding: 8px; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
         .subjudul { text-align: center; font-size: 9px; color: #888; margin-bottom: 14px; }
 
+        /* LEVEL HEADING */
+        .level-head { background: #1a1a2e; color: #fff; padding: 7px 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; border-radius: 4px; margin-bottom: 10px; page-break-after: avoid; }
+        .level-block { margin-bottom: 20px; }
+        .kosong { font-size: 8px; color: #999; font-style: italic; padding: 8px 12px; border: 1px dashed #ddd; border-radius: 4px; }
+
         /* CHAMPION SECTION */
         .champ-section { margin-bottom: 16px; }
         .champ-header { background: #2c3e50; color: #fff; padding: 8px 12px; border-radius: 4px 4px 0 0; }
@@ -110,7 +115,21 @@
         Dicetak: {{ now()->translatedFormat('d F Y H:i') }} WIB
     </div>
 
-    @foreach($championCategories as $champion)
+    @foreach($sections as $section)
+        @php $sectionHasScore = collect($section['champions'])->contains(fn($c) => !empty($rankings[$c->id] ?? [])); @endphp
+        <div class="level-block">
+        {{-- Judul tingkat: hanya bila PDF memuat lebih dari satu kelompok --}}
+        @if($sections->count() > 1)
+            <div class="level-head">
+                {{ $section['level'] ? $section['level']->full_name : 'Semua Tingkat (Rubrik Global)' }}
+            </div>
+        @endif
+
+        @if(!$sectionHasScore)
+            <div class="kosong">Belum ada nilai peserta pada {{ $section['level'] ? $section['level']->full_name : 'rubrik global' }}.</div>
+        @endif
+
+    @foreach($section['champions'] as $champion)
         @php
             $rankingData = $rankings[$champion->id] ?? [];
         @endphp
@@ -227,6 +246,8 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+    @endforeach
         </div>
     @endforeach
 
