@@ -31,3 +31,6 @@ graphify-out/
 storage/framework/qr_page.php
 storage/framework/qr_test.html
 storage/framework/qr_test.pdf
+
+# cache font dompdf (di-generate saat render PDF)
+storage/fonts/*
