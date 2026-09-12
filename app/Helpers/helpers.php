@@ -60,3 +60,35 @@ if (!function_exists('judge_entry_url')) {
         return $scheme . '://' . judge_entry_host() . '/juri/' . rawurlencode($token);
     }
 }
+
+if (!function_exists('qr_data_uri')) {
+    /**
+     * QR sebagai data-URI PNG — siap dipakai di <img src> view dompdf.
+     *
+     * Wajib PNG: QRCode default menghasilkan SVG, dan dompdf membuang SVG
+     * diam-diam (PDF tetap jadi, tapi gambarnya tidak ada). Di
+     * chillerlan/php-qrcode v6 propertinya bernama outputInterface — kunci
+     * 'outputType' pada array QROptions diabaikan tanpa peringatan.
+     *
+     * @param  string  $data  Isi QR (URL/token).
+     * @param  int     $scale Ukuran modul; 8 untuk PDF, 10+ untuk cetak layar.
+     */
+    function qr_data_uri(string $data, int $scale = 8): ?string
+    {
+        try {
+            $options = new \chillerlan\QRCode\QROptions([
+                'scale' => $scale,
+                'imageTransparent' => false,
+            ]);
+            $options->outputInterface = \chillerlan\QRCode\Output\QRGdImagePNG::class;
+
+            return (new \chillerlan\QRCode\QRCode($options))->render($data);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('QR render failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+}

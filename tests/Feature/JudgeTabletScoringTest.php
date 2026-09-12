@@ -421,4 +421,18 @@ class JudgeTabletScoringTest extends TestCase
             ->call('openTabletModal', $this->judge->id)
             ->assertSee('http://entry.berbaris.test/juri/' . $this->judge->access_token);
     }
+
+    /**
+     * QR di modal panitia harus PNG. Di chillerlan/php-qrcode v6 propertinya
+     * bernama outputInterface; kunci 'outputType' pada array QROptions
+     * diabaikan diam-diam sehingga QR keluar SVG.
+     */
+    public function test_qr_modal_panitia_dirender_sebagai_png()
+    {
+        Livewire::actingAs($this->eventner->user)
+            ->test(\App\Livewire\Eventner\Judge\Index::class)
+            ->call('openTabletModal', $this->judge->id)
+            ->assertSee('data:image/png;base64,', false)
+            ->assertDontSee('data:image/svg+xml', false);
+    }
 }

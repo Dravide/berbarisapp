@@ -215,11 +215,13 @@ class ParticipantController extends Controller
         $schoolName = $registration->display_name;
         $category = $registration->competitionCategory?->full_name ?? '-';
 
+        // v6: outputInterface, bukan kunci 'outputType' di array — kunci itu
+        // diabaikan diam-diam dan QR keluar sebagai SVG (dompdf tak bisa).
         $options = new QROptions([
-            'outputType' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
             'scale' => 10,
             'imageTransparent' => false,
         ]);
+        $options->outputInterface = \chillerlan\QRCode\Output\QRGdImagePNG::class;
         $qrCode = (new QRCode($options))->render($qrToken);
 
         return view('eventner.participant.print_qr', compact('qrToken', 'schoolName', 'category', 'registration', 'qrCode'));
@@ -238,10 +240,10 @@ class ParticipantController extends Controller
         $items = [];
         foreach ($registrations as $reg) {
             $options = new QROptions([
-                'outputType' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
                 'scale' => 8,
                 'imageTransparent' => false,
             ]);
+            $options->outputInterface = \chillerlan\QRCode\Output\QRGdImagePNG::class;
             $items[] = [
                 'qrCode' => (new QRCode($options))->render($reg->qr_token),
                 'schoolName' => $reg->display_name,

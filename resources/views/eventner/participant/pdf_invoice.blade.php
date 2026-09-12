@@ -181,7 +181,8 @@
                     <div class="role" style="margin-bottom:8px;">Ketua Pelaksana</div>
                     @php
                         $qrData = event_url($eventner, 'detail');
-                        $qrImage = (new \chillerlan\QRCode\QRCode)->render($qrData);
+                        // PNG wajib — dompdf membuang SVG diam-diam (lihat helper qr_data_uri).
+                        $qrImage = qr_data_uri($qrData);
                     @endphp
                     <img src="{{ $qrImage }}" style="width:76px; height:76px;">
                     <p style="font-size:7px; color:#888; margin:2px 0 0;">Scan untuk info &amp; verifikasi event</p>

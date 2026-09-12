@@ -266,11 +266,13 @@ class Index extends Component
         $url = judge_entry_url($judge->access_token);
 
         try {
+            // v6: outputInterface, bukan kunci 'outputType' di array — kunci
+            // itu diabaikan diam-diam dan QR keluar sebagai SVG.
             $options = new \chillerlan\QRCode\QROptions([
-                'outputType' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
                 'scale' => 8,
                 'imageTransparent' => false,
             ]);
+            $options->outputInterface = \chillerlan\QRCode\Output\QRGdImagePNG::class;
 
             return [
                 'url' => $url,

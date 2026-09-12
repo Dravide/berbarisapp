@@ -24,9 +24,18 @@
             <div class="card w-100 position-relative overflow-hidden">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 text-white fw-semibold">Daftar Juri</h5>
-                    <button type="button" class="btn btn-light btn-sm fw-semibold" wire:click="openCreate">
-                        <i class="ti ti-plus me-1"></i> Tambah Juri
-                    </button>
+                    <div class="d-flex align-items-center gap-2">
+                        @if($this->judges->isNotEmpty())
+                            <a href="{{ route('eventner.judges.kartu-akses') }}" target="_blank"
+                               class="btn btn-outline-light btn-sm fw-semibold"
+                               title="Cetak kartu akses semua juri — 2 lembar per juri">
+                                <i class="ti ti-id-badge-2 me-1"></i> Kartu Akses Semua Juri
+                            </a>
+                        @endif
+                        <button type="button" class="btn btn-light btn-sm fw-semibold" wire:click="openCreate">
+                            <i class="ti ti-plus me-1"></i> Tambah Juri
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body p-4">
                     @if($this->judges->isEmpty())
@@ -83,6 +92,11 @@
                                                 <button class="btn btn-sm btn-outline-secondary p-1 me-1" wire:click="openTabletModal({{ $judge->id }})" title="Akses Tablet Juri">
                                                     <i class="ti ti-device-tablet fs-4"></i>
                                                 </button>
+                                                <a href="{{ route('eventner.judges.kartu-akses', $judge->id) }}" target="_blank"
+                                                   class="btn btn-sm btn-outline-secondary p-1 me-1"
+                                                   title="Unduh Kartu Akses Juri (identitas + QR)">
+                                                    <i class="ti ti-id-badge-2 fs-4"></i>
+                                                </a>
                                                 <button class="btn btn-sm btn-outline-secondary p-1 me-1" wire:click="selectJudgeForPdf({{ $judge->id }})" title="Unduh Format Penilaian Juri">
                                                     <i class="ti ti-file-type-pdf fs-4"></i>
                                                 </button>

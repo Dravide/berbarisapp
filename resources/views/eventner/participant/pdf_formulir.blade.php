@@ -313,8 +313,8 @@
     </p>
 
     @php
-        use chillerlan\QRCode\QRCode;
-        $qrImage = (new QRCode)->render(route('magic.link', $registration->magic_token));
+        // PNG wajib — dompdf membuang SVG diam-diam (lihat helper qr_data_uri).
+        $qrImage = qr_data_uri(route('magic.link', $registration->magic_token));
     @endphp
     <table class="signature-table">
         <tr>

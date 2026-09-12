@@ -186,9 +186,9 @@
 
     {{-- Tanda Tangan --}}
     @php
-        use chillerlan\QRCode\QRCode;
         $qrData = event_url($eventner, 'detail');
-        $qrImage = (new QRCode)->render($qrData);
+        // PNG wajib — dompdf membuang SVG diam-diam (lihat helper qr_data_uri).
+        $qrImage = qr_data_uri($qrData);
     @endphp
 
     <div class="ttd">
