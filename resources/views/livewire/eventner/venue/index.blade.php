@@ -39,6 +39,8 @@
                                         <th class="ps-0 border-0 fw-semibold text-dark">Nama Tempat</th>
                                         <th class="border-0 fw-semibold text-dark">Alamat</th>
                                         <th class="border-0 fw-semibold text-dark text-center">Dipakai</th>
+                                        <th class="border-0 fw-semibold text-dark">Tiket</th>
+                                        <th class="border-0 fw-semibold text-dark">Gerbang</th>
                                         <th class="border-0 fw-semibold text-dark text-center">Status</th>
                                         <th class="border-0 fw-semibold text-dark text-end">Aksi</th>
                                     </tr>
@@ -70,6 +72,54 @@
                                                     <span class="badge bg-light-primary text-primary">{{ $venue->competition_categories_count }} tingkat lomba</span>
                                                 @else
                                                     <span class="badge bg-light text-muted">Belum dipakai</span>
+                                                @endif
+                                            </td>
+                                            @php $stat = $this->ticketStats[$venue->id]; @endphp
+                                            <td>
+                                                @if($venue->ticket_price === null && $venue->ticket_kuota === null)
+                                                    <span class="fs-2 text-muted">Ikut harga event</span>
+                                                @else
+                                                    <div class="fs-2 text-dark">
+                                                        @if($venue->ticket_price !== null)
+                                                            Rp {{ number_format($venue->ticket_price, 0, ',', '.') }}
+                                                        @else
+                                                            <span class="text-muted">Harga event</span>
+                                                        @endif
+                                                    </div>
+                                                @endif
+                                                <div class="fs-2">
+                                                    <span class="text-dark">{{ $stat['sold'] }} terjual</span>
+                                                    @if($stat['remaining'] === null)
+                                                        <span class="text-muted">&middot; tanpa kuota</span>
+                                                    @else
+                                                        <span class="{{ $stat['remaining'] > 0 ? 'text-success' : 'text-danger' }}">&middot; sisa {{ $stat['remaining'] }}</span>
+                                                    @endif
+                                                </div>
+                                                @if($stat['pending'] > 0)
+                                                    <div class="fs-2 text-warning">{{ $stat['pending'] }} tiket menunggu bayar</div>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($venue->checkin_token)
+                                                    <code class="fs-2">{{ \Illuminate\Support\Str::limit($venue->checkin_token, 14) }}</code>
+                                                    <div class="mt-1">
+                                                        <button class="btn btn-sm btn-outline-warning py-0 px-2 fs-2"
+                                                            wire:click="regenerateCheckinToken({{ $venue->id }})"
+                                                            wire:confirm="Rotasi token gerbang {{ $venue->name }}? Tautan lama tidak berlaku lagi.">
+                                                            Rotasi
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-danger py-0 px-2 fs-2"
+                                                            wire:click="revokeCheckinToken({{ $venue->id }})"
+                                                            wire:confirm="Cabut token gerbang {{ $venue->name }}?">
+                                                            Cabut
+                                                        </button>
+                                                    </div>
+                                                @else
+                                                    <button class="btn btn-sm btn-outline-primary py-0 px-2 fs-2"
+                                                        wire:click="generateCheckinToken({{ $venue->id }})">
+                                                        Buat token
+                                                    </button>
+                                                    <div class="fs-2 text-muted mt-1">Pakai token event</div>
                                                 @endif
                                             </td>
                                             <td class="text-center">
@@ -136,6 +186,26 @@
                                 <label class="form-label">Longitude <span class="text-muted">(Opsional)</span></label>
                                 <input type="text" class="form-control" wire:model="longitude" placeholder="107.6098">
                                 @error('longitude') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                            </div>
+                        </div>
+
+                        <hr class="my-3">
+                        <p class="fs-2 text-muted mb-2">
+                            Tiket untuk tempat ini &mdash; kosongkan bila tempat ini tidak dijual terpisah.
+                            Kalau ada lebih dari satu tempat berjualan, pembeli memilih tempat saat membeli.
+                        </p>
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Harga Tiket <span class="text-muted">(Rp)</span></label>
+                                <input type="number" class="form-control" wire:model="ticket_price" placeholder="35000" min="0" step="1000">
+                                <small class="form-text text-muted">Kosong = ikut harga event.</small>
+                                @error('ticket_price') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label">Kuota Tiket</label>
+                                <input type="number" class="form-control" wire:model="ticket_kuota" placeholder="100" min="0">
+                                <small class="form-text text-muted">Kosong = tanpa batas.</small>
+                                @error('ticket_kuota') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                             </div>
                         </div>
 

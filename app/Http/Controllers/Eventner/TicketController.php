@@ -21,6 +21,7 @@ class TicketController extends Controller
         // Ambil filter query parameter yang sama dengan Livewire component
         $search = $request->query('search', '');
         $filterStatus = $request->query('filterStatus', '');
+        $filterVenue = $request->query('filterVenue', '');
         $dateFrom = $request->query('dateFrom', '');
         $dateTo = $request->query('dateTo', '');
 
@@ -43,6 +44,13 @@ class TicketController extends Controller
             $query->where('status', $filterStatus);
         }
 
+        // Filter tempat — sama dengan filter di halaman daftar tiket
+        if ($filterVenue === 'none') {
+            $query->whereNull('venue_id');
+        } elseif ($filterVenue !== '') {
+            $query->where('venue_id', (int) $filterVenue);
+        }
+
         // Filter tanggal
         if ($dateFrom !== '') {
             $query->whereDate('created_at', '>=', $dateFrom);
@@ -51,7 +59,7 @@ class TicketController extends Controller
             $query->whereDate('created_at', '<=', $dateTo);
         }
 
-        $tickets = $query->orderByDesc('created_at')
+        $tickets = $query->with('venue')->orderByDesc('created_at')
             ->orderByDesc('id')
             ->get();
 
@@ -75,6 +83,7 @@ class TicketController extends Controller
             fputcsv($file, [
                 'No',
                 'Kode Order',
+                'Tempat Pelaksanaan',
                 'Nama Pembeli',
                 'Email Pembeli',
                 'Jumlah Tiket',
@@ -90,6 +99,7 @@ class TicketController extends Controller
                 fputcsv($file, [
                     $index + 1,
                     $ticket->order_code,
+                    $ticket->venue?->name ?? 'Semua gerbang',
                     $ticket->buyer_name,
                     $ticket->buyer_email ?: '-',
                     $ticket->quantity,

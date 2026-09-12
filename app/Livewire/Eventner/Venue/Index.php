@@ -5,6 +5,7 @@ namespace App\Livewire\Eventner\Venue;
 use App\Models\CompetitionCategory;
 use App\Models\EventnerVenue;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -19,6 +20,10 @@ class Index extends Component
     public $longitude = '';
     public $google_maps_url = '';
     public $is_active = true;
+
+    // Tiket: kapasitas & harga khusus tempat ini (kosong = tanpa batas / ikut harga event).
+    public $ticket_kuota = '';
+    public $ticket_price = '';
 
     public $isEditMode = false;
     public $editingId = null;
@@ -44,6 +49,21 @@ class Index extends Component
             ->get();
     }
 
+    /** Sisa kuota tiket + jumlah PENDING per tempat (info meja panitia). */
+    #[Computed]
+    public function ticketStats()
+    {
+        return $this->venues->mapWithKeys(function ($venue) {
+            $pending = (int) $venue->tickets()->where('status', 'PENDING')->sum('quantity');
+
+            return [$venue->id => [
+                'sold' => $venue->ticketsSoldCount(),
+                'pending' => $pending,
+                'remaining' => $venue->remainingTicketSlots(),
+            ]];
+        });
+    }
+
     public function save()
     {
         $this->validate([
@@ -52,6 +72,8 @@ class Index extends Component
             'latitude' => 'nullable|string|max:50',
             'longitude' => 'nullable|string|max:50',
             'google_maps_url' => 'nullable|url|max:500',
+            'ticket_kuota' => 'nullable|integer|min:0|max:1000000',
+            'ticket_price' => 'nullable|integer|min:0|max:1000000000',
         ]);
 
         $data = [
@@ -61,6 +83,8 @@ class Index extends Component
             'longitude' => $this->longitude ?: null,
             'google_maps_url' => $this->google_maps_url ?: null,
             'is_active' => (bool) $this->is_active,
+            'ticket_kuota' => $this->ticket_kuota === '' ? null : (int) $this->ticket_kuota,
+            'ticket_price' => $this->ticket_price === '' ? null : (int) $this->ticket_price,
         ];
 
         if ($this->isEditMode && $this->editingId) {
@@ -92,6 +116,42 @@ class Index extends Component
         $this->longitude = $venue->longitude ?? '';
         $this->google_maps_url = $venue->google_maps_url ?? '';
         $this->is_active = $venue->is_active;
+        $this->ticket_kuota = $venue->ticket_kuota === null ? '' : (string) $venue->ticket_kuota;
+        $this->ticket_price = $venue->ticket_price === null ? '' : (string) $venue->ticket_price;
+    }
+
+    /**
+     * Buat token gerbang untuk tempat ini.
+     *
+     * Terpisah dari token event (`eventners.checkin_token`) dan disimpan di
+     * kolomnya sendiri, supaya merotasi token event tidak ikut mematikan
+     * gerbang yang sudah dibagikan ke petugas.
+     */
+    public function generateCheckinToken($id)
+    {
+        $venue = EventnerVenue::where('eventner_id', $this->eventnerId)->findOrFail($id);
+
+        if ($venue->checkin_token) {
+            session()->flash('error', 'Tempat ini sudah punya token gerbang. Pakai tombol Rotasi bila ingin menggantinya.');
+            return;
+        }
+
+        $venue->update(['checkin_token' => Str::random(40)]);
+        session()->flash('success', 'Token gerbang ' . $venue->name . ' berhasil dibuat.');
+    }
+
+    public function regenerateCheckinToken($id)
+    {
+        $venue = EventnerVenue::where('eventner_id', $this->eventnerId)->findOrFail($id);
+        $venue->update(['checkin_token' => Str::random(40)]);
+        session()->flash('success', 'Token gerbang ' . $venue->name . ' berhasil dirotasi. Tautan lama tidak berlaku lagi.');
+    }
+
+    public function revokeCheckinToken($id)
+    {
+        $venue = EventnerVenue::where('eventner_id', $this->eventnerId)->findOrFail($id);
+        $venue->update(['checkin_token' => null]);
+        session()->flash('success', 'Token gerbang ' . $venue->name . ' dicabut. Tempat ini kembali memakai token event.');
     }
 
     /**
@@ -123,7 +183,7 @@ class Index extends Component
 
     public function resetForm()
     {
-        $this->reset(['name', 'alamat', 'latitude', 'longitude', 'google_maps_url', 'isEditMode', 'editingId']);
+        $this->reset(['name', 'alamat', 'latitude', 'longitude', 'google_maps_url', 'ticket_kuota', 'ticket_price', 'isEditMode', 'editingId']);
         $this->is_active = true;
     }
 

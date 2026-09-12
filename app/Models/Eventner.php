@@ -204,6 +204,29 @@ class Eventner extends Model
             ->get();
     }
 
+    /**
+     * Apakah tiket dijual per tempat untuk event ini?
+     *
+     * Butuh minimal dua tempat yang benar-benar dijual. Kalau hanya satu (atau
+     * nol), pemilihan tempat tidak perlu ditanyakan ke pembeli — event
+     * produksi yang belum mengisi data tempat tetap berjualan seperti semula.
+     */
+    public function sellsTicketPerVenue(): bool
+    {
+        return $this->ticketVenues()->count() > 1;
+    }
+
+    /**
+     * Tempat yang boleh dipilih pembeli tiket. Tempat tanpa harga dan tanpa
+     * kuota dianggap belum diatur untuk tiket, jadi tidak ikut ditawarkan.
+     */
+    public function ticketVenues()
+    {
+        return $this->activeVenues()
+            ->filter(fn ($venue) => $venue->ticket_price !== null || $venue->ticket_kuota !== null)
+            ->values();
+    }
+
     public function tenants()
     {
         return $this->hasMany(Tenant::class);

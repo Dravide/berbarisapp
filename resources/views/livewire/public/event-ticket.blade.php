@@ -209,6 +209,17 @@
                                             <td class="px-4 py-3 bg-surface-container-low text-on-surface-variant font-medium">Nama Pembeli</td>
                                             <td class="px-4 py-3 text-deep-slate font-bold text-right">{{ $paidTicket->buyer_name }}</td>
                                         </tr>
+                                        @if($paidTicket->venue)
+                                            <tr>
+                                                <td class="px-4 py-3 bg-surface-container-low text-on-surface-variant font-medium">Tempat Pelaksanaan</td>
+                                                <td class="px-4 py-3 text-deep-slate font-bold text-right">
+                                                    {{ $paidTicket->venue->name }}
+                                                    @if($paidTicket->venue->alamat)
+                                                        <span class="block text-xs font-medium text-on-surface-variant">{{ $paidTicket->venue->alamat }}</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endif
                                         <tr>
                                             <td class="px-4 py-3 bg-surface-container-low text-on-surface-variant font-medium">Jumlah Tiket</td>
                                             <td class="px-4 py-3 text-deep-slate font-bold text-right">{{ $paidTicket->quantity }} tiket</td>
@@ -284,7 +295,8 @@
                                 @endif
                                 @php $ticketVenues = $eventner->activeVenues(); @endphp
                                 @if($ticketVenues->isNotEmpty())
-                                    {{-- Multi-tempat: tiket berlaku untuk seluruh event, jadi semua tempat dicetak. --}}
+                                    {{-- Semua tempat tetap disebut di sini sebagai informasi event;
+                                         tempat yang dibeli ditentukan di formulir sebelah. --}}
                                     <div class="flex items-start gap-2 text-deep-slate">
                                         <i class="ti ti-map-pin text-base text-primary mt-0.5 shrink-0"></i>
                                         <div class="flex flex-col gap-0.5">
@@ -304,11 +316,24 @@
                             <div class="flex justify-between items-center border-t border-outline-variant/30 pt-4">
                                 <div>
                                     <span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider block">Harga Tiket</span>
-                                    <h4 class="text-lg font-bold text-primary mb-0 mt-0.5">Rp {{ number_format($eventner->ticket_price, 0, ',', '.') }} <span class="text-xs text-on-surface-variant font-normal">/ tiket</span></h4>
+                                    <h4 class="text-lg font-bold text-primary mb-0 mt-0.5">
+                                        @if($eventner->sellsTicketPerVenue())
+                                            Mulai Rp {{ number_format($eventner->ticketVenues()->min(fn ($v) => $v->effectiveTicketPrice((int) $eventner->ticket_price)), 0, ',', '.') }}
+                                        @else
+                                            Rp {{ number_format($this->unitPrice, 0, ',', '.') }}
+                                        @endif
+                                        <span class="text-xs text-on-surface-variant font-normal">/ tiket</span>
+                                    </h4>
                                 </div>
-                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-600 border border-emerald-500/25">
-                                    <i class="ti ti-circle-check-filled"></i> Tersedia
-                                </span>
+                                @if($eventner->sellsTicketPerVenue() && $eventner->ticketVenues()->every(fn ($v) => $v->isTicketSoldOut()))
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-red-500/10 px-2.5 py-0.5 text-xs font-bold text-red-600 border border-red-500/25">
+                                        <i class="ti ti-circle-x-filled"></i> Habis
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-bold text-emerald-600 border border-emerald-500/25">
+                                        <i class="ti ti-circle-check-filled"></i> Tersedia
+                                    </span>
+                                @endif
                             </div>
 
                             @if($eventner->ticket_description)
@@ -331,6 +356,62 @@
                         </div>
 
                         <div class="p-6">
+                            {{-- Pilih Tempat — hanya bila event menjual tiket per tempat.
+                                 Tiap kartu menampilkan harga & sisa kuota sendiri supaya
+                                 pembeli tahu bedanya sebelum memilih. --}}
+                            @if($eventner->sellsTicketPerVenue())
+                                @php
+                                    $pilihanTempat = $eventner->ticketVenues();
+                                    $sisaTiket = $pilihanTempat->sum(fn ($v) => $v->remainingTicketSlots() ?? 0);
+                                @endphp
+                                <div class="mb-4">
+                                    <label class="text-sm font-bold text-deep-slate block mb-1.5">Tempat Pelaksanaan <span class="text-red-500">*</span></label>
+                                    <p class="text-[10px] text-on-surface-variant font-medium mb-2 leading-normal">
+                                        Lomba digelar di beberapa tempat yang berjauhan.
+                                        <strong class="text-deep-slate">Tiket ini hanya berlaku di tempat yang Anda pilih.</strong>
+                                    </p>
+                                    <div class="flex flex-col gap-2">
+                                        @foreach($pilihanTempat as $venue)
+                                            @php
+                                                $habis = $venue->isTicketSoldOut();
+                                                $sisa = $venue->remainingTicketSlots();
+                                                $dipilih = (int) $venueId === $venue->id;
+                                            @endphp
+                                            <label class="flex items-start gap-3 p-3 rounded-xl border transition {{ $habis ? 'border-outline-variant/30 bg-surface-container-low opacity-60 cursor-not-allowed' : ($dipilih ? 'border-primary bg-primary/5 cursor-pointer' : 'border-outline-variant/50 hover:border-primary/50 cursor-pointer') }}">
+                                                <input type="radio" name="venue" class="mt-1 shrink-0"
+                                                    value="{{ $venue->id }}"
+                                                    wire:model.live="venueId"
+                                                    @disabled($habis)>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                                                        <span class="text-sm font-bold text-deep-slate">{{ $venue->name }}</span>
+                                                        <span class="text-sm font-extrabold text-primary">
+                                                            Rp {{ number_format($venue->effectiveTicketPrice((int) $eventner->ticket_price), 0, ',', '.') }}
+                                                        </span>
+                                                    </div>
+                                                    @if($venue->alamat)
+                                                        <span class="text-xs text-on-surface-variant font-medium block mt-0.5">{{ $venue->alamat }}</span>
+                                                    @endif
+                                                    <span class="text-[10px] font-bold mt-1 block {{ $habis ? 'text-red-600' : 'text-emerald-600' }}">
+                                                        @if($habis)
+                                                            Tiket habis
+                                                        @elseif($sisa === null)
+                                                            Tiket tersedia
+                                                        @else
+                                                            Sisa {{ $sisa }} tiket
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            </label>
+                                        @endforeach
+                                    </div>
+                                    @error('venueId') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                                    @if($sisaTiket === 0)
+                                        <span class="text-red-500 text-xs font-semibold mt-1 block">Semua tempat sudah penuh. Hubungi panitia.</span>
+                                    @endif
+                                </div>
+                            @endif
+
                             {{-- Name Input --}}
                             <div class="mb-4">
                                 <label class="text-sm font-bold text-deep-slate block mb-1.5">Nama Lengkap <span class="text-red-500">*</span></label>
@@ -351,17 +432,28 @@
                                 <label class="text-sm font-bold text-deep-slate block mb-1.5">Jumlah Tiket <span class="text-red-500">*</span></label>
                                 <div class="flex max-w-[160px] border border-outline-variant/60 rounded-lg overflow-hidden h-11 bg-surface">
                                     <button type="button" wire:click="decrementQuantity" class="w-12 flex items-center justify-center font-bold text-lg text-primary hover:bg-primary/5 border-r border-outline-variant/60 transition cursor-pointer select-none">−</button>
-                                    <input type="number" wire:model="quantity" class="flex-1 text-center font-bold text-sm text-deep-slate border-none outline-none h-full w-full bg-transparent px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" min="1" max="{{ $eventner->ticket_max_per_order ?? 10 }}">
+                                    <input type="number" wire:model="quantity" class="flex-1 text-center font-bold text-sm text-deep-slate border-none outline-none h-full w-full bg-transparent px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" min="1" max="{{ $this->maxPerOrder }}">
                                     <button type="button" wire:click="incrementQuantity" class="w-12 flex items-center justify-center font-bold text-lg text-primary hover:bg-primary/5 border-l border-outline-variant/60 transition cursor-pointer select-none">+</button>
                                 </div>
-                                <span class="text-xs text-on-surface-variant font-medium mt-1.5 block">Maksimal {{ $eventner->ticket_max_per_order ?? 10 }} tiket per order</span>
+                                <span class="text-xs text-on-surface-variant font-medium mt-1.5 block">
+                                    Maksimal {{ $this->maxPerOrder }} tiket per order
+                                    @if($this->selectedVenue?->remainingTicketSlots() !== null)
+                                        &mdash; dibatasi sisa kuota {{ $this->selectedVenue->name }}
+                                    @endif
+                                </span>
                                 @error('quantity') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                             </div>
 
                             {{-- Price Summary Box --}}
                             <div class="bg-surface-container-low border border-outline-variant/40 rounded-xl p-4 mb-6">
+                                @if($this->selectedVenue)
+                                    <div class="flex justify-between items-center text-xs font-semibold text-on-surface-variant mb-1.5">
+                                        <span class="inline-flex items-center gap-1"><i class="ti ti-map-pin text-primary"></i> {{ $this->selectedVenue->name }}</span>
+                                        <span>{{ $this->selectedVenue->alamat }}</span>
+                                    </div>
+                                @endif
                                 <div class="flex justify-between items-center text-xs font-semibold text-on-surface-variant mb-2">
-                                    <span>Rp {{ number_format($eventner->ticket_price, 0, ',', '.') }} x {{ $quantity }} tiket</span>
+                                    <span>Rp {{ number_format($this->unitPrice, 0, ',', '.') }} x {{ $quantity }} tiket</span>
                                     <span>Rp {{ number_format($this->total, 0, ',', '.') }}</span>
                                 </div>
                                 <div class="border-t border-outline-variant/30 pt-2 flex justify-between items-center">

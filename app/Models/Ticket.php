@@ -16,6 +16,7 @@ class Ticket extends Model
 
     protected $fillable = [
         'eventner_id',
+        'venue_id',
         'order_code',
         'buyer_name',
         'buyer_email',
@@ -51,6 +52,12 @@ class Ticket extends Model
     public function eventner()
     {
         return $this->belongsTo(Eventner::class);
+    }
+
+    /** Tempat yang dibeli. null = tiket berlaku di semua gerbang. */
+    public function venue()
+    {
+        return $this->belongsTo(EventnerVenue::class, 'venue_id');
     }
 
     public function scopePaid($query)

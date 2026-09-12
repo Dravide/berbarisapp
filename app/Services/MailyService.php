@@ -177,6 +177,20 @@ class MailyService
         $orderCode = htmlspecialchars($ticket->order_code, ENT_QUOTES);
         $buyerName = htmlspecialchars($ticket->buyer_name, ENT_QUOTES);
 
+        // Tempat yang dibeli — tiket hanya berlaku di gerbang ini. Dicetak
+        // sebagai baris tersendiri supaya pembeli tidak salah datang ke lokasi lain.
+        $venueRow = '';
+        $gateStep = 'Datang ke lokasi event pada hari H.';
+        if ($ticket->venue) {
+            $venueName = htmlspecialchars($ticket->venue->name, ENT_QUOTES);
+            $venueAlamat = $ticket->venue->alamat
+                ? '<span style="color:#9ca3af;font-weight:400;"> &mdash; ' . htmlspecialchars($ticket->venue->alamat, ENT_QUOTES) . '</span>'
+                : '';
+
+            $venueRow = "<tr><td style='padding:6px 0;color:#9ca3af;'>Tempat Pelaksanaan</td><td style='padding:6px 0;font-weight:600;text-align:right;'>{$venueName}{$venueAlamat}</td></tr>";
+            $gateStep = "Datang ke <strong>{$venueName}</strong> pada hari H &mdash; tiket ini hanya berlaku di gerbang tersebut.";
+        }
+
         $qrBlock = $qrSrc !== ''
             ? "<div style='text-align:center;margin:20px 0;'>
                     <img src='{$qrSrc}' alt='QR Code' width='220' height='220' style='display:inline-block;border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:#fff;' />
@@ -201,6 +215,7 @@ class MailyService
                 <div style='background:#f8fafc;border-radius:10px;padding:16px;margin-bottom:20px;'>
                     <table style='width:100%;font-size:14px;color:#374151;'>
                         <tr><td style='padding:6px 0;color:#9ca3af;'>Kode Order</td><td style='padding:6px 0;font-weight:600;text-align:right;font-family:monospace;'>{$orderCode}</td></tr>
+                        {$venueRow}
                         <tr><td style='padding:6px 0;color:#9ca3af;'>Nama</td><td style='padding:6px 0;font-weight:600;text-align:right;'>{$buyerName}</td></tr>
                         <tr><td style='padding:6px 0;color:#9ca3af;'>Jumlah</td><td style='padding:6px 0;font-weight:600;text-align:right;'>{$qty} tiket</td></tr>
                         <tr><td style='padding:6px 0;color:#9ca3af;'>Harga / Tiket</td><td style='padding:6px 0;font-weight:600;text-align:right;'>Rp {$pricePer}</td></tr>
@@ -215,7 +230,7 @@ class MailyService
                     <p style='font-weight:600;color:#0062FF;margin:0 0 8px;font-size:14px;'>Cara Masuk Event:</p>
                     <ol style='color:#374151;font-size:13px;line-height:1.7;margin:0;padding-left:18px;'>
                         <li>Simpan atau screenshot email ini.</li>
-                        <li>Datang ke lokasi event pada hari H.</li>
+                        <li>{$gateStep}</li>
                         <li>Tunjukkan QR Code di atas kepada panitia di gerbang.</li>
                         <li>Panitia akan scan QR dan memberikan gelang/tanda masuk.</li>
                     </ol>

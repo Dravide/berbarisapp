@@ -81,10 +81,21 @@
                     <td class="value">{{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d F Y') }}</td>
                 </tr>
             @endif
-            @php $pdfVenues = $eventner->activeVenues(); @endphp
-            @if($pdfVenues->isNotEmpty())
-                {{-- Multi-tempat: satu tiket berlaku untuk seluruh event, jadi
-                     semua tempat dicetak berurutan. --}}
+            @php $pdfVenues = $ticket->venue ? collect([$ticket->venue]) : $eventner->activeVenues(); @endphp
+            @if($ticket->venue)
+                {{-- Tiket satu tempat: cetak HANYA tempat yang dibeli. Mencetak
+                     tempat lain akan membuat pembeli datang ke gerbang yang salah. --}}
+                <tr class="row">
+                    <td class="label">Tempat Pelaksanaan</td>
+                    <td class="value">
+                        {{ $ticket->venue->label }}
+                        <div style="font-size:8px;color:#888;font-weight:normal;">
+                            Tiket ini hanya berlaku di gerbang {{ $ticket->venue->name }}.
+                        </div>
+                    </td>
+                </tr>
+            @elseif($pdfVenues->isNotEmpty())
+                {{-- Tiket lama tanpa tempat: sebutkan semua tempat pelaksanaan. --}}
                 <tr class="row">
                     <td class="label">Tempat Pelaksanaan</td>
                     <td class="value">

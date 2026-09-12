@@ -125,6 +125,74 @@
                             </button>
                         </div>
                     @endif
+
+                    {{-- ===== TOKEN PER TEMPAT =====
+                         Tempat yang berjauhan butuh gerbang sendiri supaya tiket
+                         salah tempat bisa ditolak di lokasi, bukan di meja panitia
+                         pusat. Token ini terpisah dari token event di atas —
+                         merotasi token event tidak mematikannya. --}}
+                    @php $gateVenues = $eventner->activeVenues(); @endphp
+                    @if($gateVenues->count() > 1)
+                        <hr class="my-4">
+                        <h6 class="fw-semibold mb-2"><i class="ti ti-map-pin me-1"></i> Token per Tempat</h6>
+                        <p class="text-muted small mb-3">
+                            Buat link scan khusus untuk tiap tempat. Tiket yang dibeli untuk tempat lain
+                            akan ditolak di gerbang ini. Tempat tanpa token tetap memakai link scan di atas.
+                        </p>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Nama Tempat</th>
+                                        <th>Link Scan Gerbang</th>
+                                        <th class="text-end">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($gateVenues as $venue)
+                                        <tr>
+                                            <td class="fw-semibold">{{ $venue->name }}</td>
+                                            <td>
+                                                @if($venue->checkin_token)
+                                                    <div class="input-group input-group-sm">
+                                                        <input type="text" class="form-control" readonly
+                                                            value="{{ route('event.checkin.scan', $venue->checkin_token) }}"
+                                                            id="gateUrl{{ $venue->id }}">
+                                                        <button class="btn btn-outline-primary" type="button"
+                                                            onclick="navigator.clipboard.writeText(document.getElementById('gateUrl{{ $venue->id }}').value); this.innerHTML='<i class=\'ti ti-check\'></i>'; setTimeout(()=>this.innerHTML='<i class=\'ti ti-copy\'></i>', 1500)">
+                                                            <i class="ti ti-copy"></i>
+                                                        </button>
+                                                    </div>
+                                                @else
+                                                    <span class="text-muted small">Belum ada &mdash; pakai link scan event</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-end">
+                                                @if($venue->checkin_token)
+                                                    <button type="button" wire:click="regenerateVenueToken({{ $venue->id }})"
+                                                        class="btn btn-sm btn-outline-warning" wire:loading.attr="disabled"
+                                                        wire:confirm="Rotasi token gerbang {{ $venue->name }}? Link lama tidak berlaku lagi.">
+                                                        Rotate
+                                                    </button>
+                                                    <button type="button" wire:click="revokeVenueToken({{ $venue->id }})"
+                                                        class="btn btn-sm btn-outline-danger" wire:loading.attr="disabled"
+                                                        wire:confirm="Cabut token gerbang {{ $venue->name }}?">
+                                                        Cabut
+                                                    </button>
+                                                @else
+                                                    <button type="button" wire:click="generateVenueToken({{ $venue->id }})"
+                                                        class="btn btn-sm btn-outline-primary" wire:loading.attr="disabled">
+                                                        Buat Token
+                                                    </button>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
                 </div>
             </div>
             @endif

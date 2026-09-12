@@ -86,6 +86,19 @@
                         <option value="EXPIRED">EXPIRED</option>
                     </select>
                 </div>
+                {{-- Filter Tempat — hanya bila event punya tempat terdaftar --}}
+                @if($venueOptions->isNotEmpty())
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold text-muted">Tempat</label>
+                        <select class="form-select" wire:model.live="filterVenue">
+                            <option value="">Semua Tempat</option>
+                            @foreach($venueOptions as $venue)
+                                <option value="{{ $venue->id }}">{{ $venue->name }}</option>
+                            @endforeach
+                            <option value="none">Tanpa tempat (tiket lama)</option>
+                        </select>
+                    </div>
+                @endif
                 {{-- Filter Rentang Tanggal --}}
                 <div class="col-md-3">
                     <label class="form-label small fw-semibold text-muted">Rentang Tanggal (Dibuat)</label>
@@ -104,6 +117,52 @@
             </div>
         </div>
     </div>
+
+    {{-- Kuota per Tempat — hanya bila event punya tempat terdaftar --}}
+    @if($venueStats->isNotEmpty())
+        <div class="row g-3 mb-3">
+            @foreach($venueStats as $stat)
+                @php $v = $stat['venue']; @endphp
+                <div class="col-md-4">
+                    <div class="card h-100">
+                        <div class="card-body p-3">
+                            <h6 class="fw-semibold mb-2 text-primary">
+                                <i class="ti ti-map-pin"></i> {{ $v->name }}
+                            </h6>
+                            <div class="d-flex justify-content-between align-items-baseline mb-1">
+                                <span class="text-muted small">Terjual</span>
+                                <span class="fw-bold text-dark">
+                                    {{ $stat['sold'] }}
+                                    @if($v->ticket_kuota !== null)
+                                        <span class="text-muted fw-normal">/ {{ $v->ticket_kuota }}</span>
+                                    @endif
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-baseline mb-1">
+                                <span class="text-muted small">Sisa kuota</span>
+                                @if($stat['remaining'] === null)
+                                    <span class="fw-semibold text-muted">Tanpa batas</span>
+                                @else
+                                    <span class="fw-bold {{ $stat['remaining'] > 0 ? 'text-success' : 'text-danger' }}">
+                                        {{ $stat['remaining'] }}
+                                    </span>
+                                @endif
+                            </div>
+                            @if($stat['pending'] > 0)
+                                <div class="alert alert-warning py-1 px-2 mb-0 mt-2 small">
+                                    <i class="ti ti-clock"></i>
+                                    {{ $stat['pending'] }} tiket menunggu bayar &mdash; slot masih tertahan.
+                                    <button class="btn btn-sm btn-link p-0 ms-1 align-baseline" wire:click="syncPending">
+                                        Sinkronkan
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
 
     {{-- Daftar Tiket --}}
     <div class="card w-100">
@@ -178,6 +237,7 @@
                             <th class="border-bottom-0" width="50px"><h6 class="fw-semibold mb-0">#</h6></th>
                             <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Detail Pembeli</h6></th>
                             <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Kode Order</h6></th>
+                            <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Tempat</h6></th>
                             <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">Jumlah</h6></th>
                             <th class="border-bottom-0 text-end"><h6 class="fw-semibold mb-0">Total Bayar</h6></th>
                             <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Informasi Transaksi</h6></th>
@@ -202,6 +262,13 @@
                                     </div>
                                 </td>
                                 <td><span class="fw-semibold text-primary">{{ $t->order_code }}</span></td>
+                                <td>
+                                    @if($t->venue)
+                                        <span class="badge bg-light-warning text-warning"><i class="ti ti-map-pin"></i> {{ $t->venue->name }}</span>
+                                    @else
+                                        <span class="text-muted small">Semua gerbang</span>
+                                    @endif
+                                </td>
                                 <td class="text-center">
                                     <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-1 fs-3 rounded-pill">
                                         {{ $t->quantity }}
@@ -271,7 +338,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="text-center py-5">
+                                <td colspan="10" class="text-center py-5">
                                     <i class="ti ti-ticket-off fs-10 text-muted d-block mb-3"></i>
                                     <h6 class="fw-semibold text-muted">Tidak Ada Tiket</h6>
                                     <p class="text-muted mb-0">Belum ada data tiket yang ditemukan atau cocok dengan kriteria filter.</p>

@@ -2,13 +2,18 @@
 
 namespace App\Livewire\Public;
 
+use App\Exceptions\TicketQuotaExceededException;
 use App\Models\Eventner;
+use App\Models\EventnerVenue;
 use App\Models\Ticket;
 use App\Services\AutoGoPay;
+use App\Services\TicketQuota;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 
 #[Layout('layouts.frontend')]
@@ -20,6 +25,8 @@ class EventTicket extends Component
     public $buyerEmail;
     public $quantity = 1;
     public $confirmOrder;
+    /** Tempat yang dibeli. Wajib dipilih bila event menjual tiket per tempat. */
+    public $venueId;
 
     // Payment state
     public $qrImageUrl;
@@ -31,6 +38,7 @@ class EventTicket extends Component
 
     protected $queryString = [
         'confirmOrder' => ['except' => ''],
+        'venueId' => ['except' => ''],
     ];
 
     protected $rules = [
@@ -52,6 +60,11 @@ class EventTicket extends Component
             abort(404, 'Tiket tidak tersedia untuk event ini.');
         }
 
+        // Event satu tempat: pilih sendiri supaya pembeli tidak perlu memilih.
+        if (!$this->eventner->sellsTicketPerVenue() && !$this->venueId) {
+            $this->venueId = $this->eventner->ticketVenues()->first()?->id;
+        }
+
         // Cek jadwal penjualan
         if ($this->eventner->ticket_start && now()->lt($this->eventner->ticket_start)) {
             $this->view = 'scheduled';
@@ -66,10 +79,48 @@ class EventTicket extends Component
         }
     }
 
+    /**
+     * Tempat yang sedang dipilih, selalu di-scope ke event ini — venueId
+     * datang dari klien (query string), jadi tidak boleh dipercaya begitu saja.
+     */
+    #[Computed]
+    public function selectedVenue(): ?EventnerVenue
+    {
+        if (!$this->venueId) {
+            return null;
+        }
+
+        return $this->eventner->ticketVenues()->firstWhere('id', (int) $this->venueId);
+    }
+
+    /** Harga per tiket: harga tempat bila diisi, kalau tidak harga event. */
+    #[Computed]
+    public function unitPrice(): int
+    {
+        $venue = $this->selectedVenue;
+
+        return $venue
+            ? $venue->effectiveTicketPrice((int) $this->eventner->ticket_price)
+            : (int) $this->eventner->ticket_price;
+    }
+
+    /** Batas jumlah per transaksi: kuota tempat bila lebih kecil dari batas order. */
+    #[Computed]
+    public function maxPerOrder(): int
+    {
+        $max = (int) ($this->eventner->ticket_max_per_order ?? 10);
+        $remaining = $this->selectedVenue?->remainingTicketSlots();
+
+        if ($remaining !== null) {
+            $max = min($max, $remaining);
+        }
+
+        return max(1, $max);
+    }
+
     public function incrementQuantity()
     {
-        $max = $this->eventner->ticket_max_per_order ?? 10;
-        $this->quantity = min((int) $this->quantity + 1, $max);
+        $this->quantity = min((int) $this->quantity + 1, $this->maxPerOrder);
     }
 
     public function decrementQuantity()
@@ -77,9 +128,16 @@ class EventTicket extends Component
         $this->quantity = max((int) $this->quantity - 1, 1);
     }
 
+    /** Ganti tempat: jumlah tiket dikembalikan ke 1 supaya tidak melebihi kuota baru. */
+    public function updatedVenueId()
+    {
+        $this->quantity = 1;
+    }
+
     public function updatedQuantity()
     {
-        $max = $this->eventner->ticket_max_per_order ?? 10;
+        $max = $this->maxPerOrder;
+
         if ($this->quantity > $max) {
             $this->quantity = $max;
         }
@@ -90,7 +148,7 @@ class EventTicket extends Component
 
     public function getTotalProperty()
     {
-        return $this->quantity * $this->eventner->ticket_price;
+        return $this->quantity * $this->unitPrice;
     }
 
     public function submitTicket()
@@ -104,10 +162,27 @@ class EventTicket extends Component
 
         $this->validate();
 
-        $max = $this->eventner->ticket_max_per_order ?? 10;
+        // Tempat wajib bila event menjual tiket per tempat; harus milik event ini.
+        $perVenue = $this->eventner->sellsTicketPerVenue();
+        $this->validate([
+            'venueId' => $perVenue
+                ? ['required', Rule::exists('eventner_venues', 'id')->where('eventner_id', $this->eventner->id)->where('is_active', true)]
+                : ['nullable', Rule::exists('eventner_venues', 'id')->where('eventner_id', $this->eventner->id)],
+        ], [], ['venueId' => 'tempat pelaksanaan']);
+
+        $max = $this->maxPerOrder;
         $this->validate(['quantity' => "required|integer|min:1|max:{$max}"]);
 
-        $totalAmount = $this->total;
+        $venue = $this->selectedVenue;
+        $unitPrice = $this->unitPrice;
+        $totalAmount = $this->quantity * $unitPrice;
+
+        // Tolak lebih awal supaya tidak memanggil AutoGoPay untuk transaksi yang
+        // pasti gagal. Pengecekan yang mengikat tetap di dalam TicketQuota::reserve.
+        if ($venue && $venue->isTicketSoldOut()) {
+            session()->flash('error', 'Tiket untuk ' . $venue->name . ' sudah habis.');
+            return;
+        }
 
         try {
             // Generate QRIS via AutoGoPay
@@ -121,19 +196,27 @@ class EventTicket extends Component
 
             $data = $result['data'];
 
-            // Simpan ticket PENDING
-            $ticket = Ticket::create([
+            // Simpan ticket PENDING. Tiket ikut transaksi berkunci di dalam
+            // reserve() supaya dua pembeli terakhir tidak lolos bersamaan.
+            $create = fn (?EventnerVenue $locked) => Ticket::create([
                 'eventner_id' => $this->eventner->id,
+                'venue_id' => $locked?->id,
                 'buyer_name' => $this->buyerName,
                 'buyer_email' => $this->buyerEmail,
                 'buyer_phone' => null,
                 'quantity' => $this->quantity,
-                'price_per_ticket' => $this->eventner->ticket_price,
+                'price_per_ticket' => $unitPrice,
                 'total_amount' => $totalAmount,
                 'autogopay_transaction_id' => $data['transaction_id'],
                 'qr_url' => $data['qr_url'],
                 'status' => 'PENDING',
             ]);
+
+            // Tanpa tempat (event belum mengisi data tempat): buat langsung —
+            // tidak ada kuota yang perlu dijaga, tiket berlaku di semua gerbang.
+            $ticket = $venue
+                ? TicketQuota::reserve($venue, (int) $this->quantity, $create)
+                : $create(null);
 
             // Tampilkan QR code
             $this->qrImageUrl = $data['qr_url'];
@@ -144,6 +227,8 @@ class EventTicket extends Component
             $this->paymentConfirmed = false;
             $this->view = 'payment';
 
+        } catch (TicketQuotaExceededException $e) {
+            session()->flash('error', $e->getMessage());
         } catch (\Exception $e) {
             Log::error('AutoGoPay QRIS generation failed (ticket)', [
                 'eventner_id' => $this->eventner->id,

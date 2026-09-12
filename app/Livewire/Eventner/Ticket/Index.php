@@ -24,6 +24,7 @@ class Index extends Component
     public $eventner;
     public $search = '';
     public $filterStatus = '';
+    public $filterVenue = '';
     public $dateFrom = '';
     public $dateTo = '';
 
@@ -35,6 +36,7 @@ class Index extends Component
     protected $queryString = [
         'search' => ['except' => ''],
         'filterStatus' => ['except' => ''],
+        'filterVenue' => ['except' => ''],
         'dateFrom' => ['except' => ''],
         'dateTo' => ['except' => ''],
     ];
@@ -59,6 +61,11 @@ class Index extends Component
         $this->resetPage();
     }
 
+    public function updatingFilterVenue()
+    {
+        $this->resetPage();
+    }
+
     public function updatingDateFrom()
     {
         $this->resetPage();
@@ -71,7 +78,7 @@ class Index extends Component
 
     public function resetFilters()
     {
-        $this->reset(['search', 'filterStatus', 'dateFrom', 'dateTo']);
+        $this->reset(['search', 'filterStatus', 'filterVenue', 'dateFrom', 'dateTo']);
         $this->resetPage();
     }
 
@@ -240,6 +247,13 @@ class Index extends Component
             $query->where('status', $this->filterStatus);
         }
 
+        // Filter tempat — 'none' untuk tiket lama/tanpa tempat
+        if ($this->filterVenue === 'none') {
+            $query->whereNull('venue_id');
+        } elseif ($this->filterVenue !== '') {
+            $query->where('venue_id', (int) $this->filterVenue);
+        }
+
         // Filter rentang tanggal (berdasarkan dibuat)
         if ($this->dateFrom !== '') {
             $query->whereDate('created_at', '>=', $this->dateFrom);
@@ -248,7 +262,8 @@ class Index extends Component
             $query->whereDate('created_at', '<=', $this->dateTo);
         }
 
-        $tickets = $query->orderByDesc('created_at')
+        $tickets = $query->with('venue')
+            ->orderByDesc('created_at')
             ->orderByDesc('id')
             ->paginate(20);
 
@@ -271,12 +286,24 @@ class Index extends Component
             ->pluck('count', 'status')
             ->toArray();
 
+        // Sisa kuota per tempat. PENDING ikut menahan slot, jadi panitia harus
+        // bisa melihat berapa yang masih tertahan transaksi belum lunas —
+        // tanpa itu, kuota bisa terlihat penuh tanpa penjualan nyata.
+        $venueStats = $this->eventner->activeVenues()->map(fn ($venue) => [
+            'venue' => $venue,
+            'sold' => $venue->ticketsSoldCount(),
+            'pending' => (int) $venue->tickets()->where('status', 'PENDING')->sum('quantity'),
+            'remaining' => $venue->remainingTicketSlots(),
+        ]);
+
         return view('livewire.eventner.ticket.index', [
             'tickets' => $tickets,
             'summaryPaid' => $summaryPaid,
             'checkedIn' => $checkedIn,
             'totalTicketsCount' => $totalTicketsCount,
             'statusCounts' => $statusCounts,
+            'venueOptions' => $this->eventner->activeVenues(),
+            'venueStats' => $venueStats,
         ])->title('Tiket - ' . app_name());
     }
 }

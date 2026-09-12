@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Eventner\Ticket;
 
+use App\Models\EventnerVenue;
 use App\Traits\FeatureGatedComponent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -66,6 +67,46 @@ class Settings extends Component
         $this->eventner->checkin_token = null;
         $this->eventner->save();
         session()->flash('success', 'Akses check-in dicabut.');
+    }
+
+    /**
+     * Token gerbang per tempat.
+     *
+     * Disimpan di `eventner_venues.checkin_token`, bukan di tabel baru, dan
+     * sengaja tidak ikut ter-rotate saat token event dirotasi — link yang sudah
+     * dibagikan ke petugas gerbang tidak boleh mati mendadak.
+     */
+    public function generateVenueToken($venueId)
+    {
+        $venue = $this->findVenue($venueId);
+
+        if ($venue->checkin_token) {
+            session()->flash('error', 'Tempat ini sudah punya token gerbang.');
+            return;
+        }
+
+        $venue->update(['checkin_token' => Str::random(40)]);
+        session()->flash('success', 'Token gerbang ' . $venue->name . ' dibuat.');
+    }
+
+    public function regenerateVenueToken($venueId)
+    {
+        $venue = $this->findVenue($venueId);
+        $venue->update(['checkin_token' => Str::random(40)]);
+        session()->flash('success', 'Token gerbang ' . $venue->name . ' dirotasi. Link lama tidak berlaku lagi.');
+    }
+
+    public function revokeVenueToken($venueId)
+    {
+        $venue = $this->findVenue($venueId);
+        $venue->update(['checkin_token' => null]);
+        session()->flash('success', 'Token gerbang ' . $venue->name . ' dicabut. Tempat ini memakai link scan event.');
+    }
+
+    /** venueId datang dari klien — selalu dipastikan milik eventner ini. */
+    private function findVenue($venueId): EventnerVenue
+    {
+        return EventnerVenue::where('eventner_id', $this->eventner->id)->findOrFail($venueId);
     }
 
     public function save()

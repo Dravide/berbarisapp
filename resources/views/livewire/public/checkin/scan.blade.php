@@ -37,6 +37,12 @@
                             <i class="ti ti-qrcode"></i>
                             Check-in Tiket
                         </span>
+                        @if($gateVenueName)
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 border border-amber-500/25">
+                                <i class="ti ti-map-pin"></i>
+                                Gerbang: {{ $gateVenueName }}
+                            </span>
+                        @endif
                     </div>
                     <h1 class="font-display text-2xl font-extrabold tracking-tight text-deep-slate leading-tight sm:text-3xl">
                         {{ $eventner->nama_event }}
@@ -134,6 +140,7 @@
                         'expired' => ['bg' => 'bg-red-500/5', 'border' => 'border-red-500/30', 'icon' => 'ti-clock-off', 'iconBg' => 'bg-red-500', 'title' => 'Tiket Expired', 'subtitle' => 'Masa pembayaran sudah habis'],
                         'not_found' => ['bg' => 'bg-red-500/5', 'border' => 'border-red-500/30', 'icon' => 'ti-search-off', 'iconBg' => 'bg-red-500', 'title' => 'Tiket Tidak Ditemukan', 'subtitle' => 'Kode order tidak terdaftar di event ini'],
                         'not_ready' => ['bg' => 'bg-amber-500/5', 'border' => 'border-amber-500/30', 'icon' => 'ti-lock', 'iconBg' => 'bg-amber-500', 'title' => 'Tidak Bisa Check-in', 'subtitle' => 'Status tiket tidak memungkinkan check-in'],
+                        'wrong_venue' => ['bg' => 'bg-red-500/5', 'border' => 'border-red-500/30', 'icon' => 'ti-map-off', 'iconBg' => 'bg-red-500', 'title' => 'Salah Gerbang', 'subtitle' => 'Tiket ini bukan untuk tempat ini'],
                         default => ['bg' => 'bg-surface-container-low', 'border' => 'border-outline-variant/50', 'icon' => 'ti-info-circle', 'iconBg' => 'bg-cool-gray', 'title' => 'Hasil', 'subtitle' => ''],
                     };
                 @endphp
@@ -161,6 +168,14 @@
                                 <span class="text-sm text-on-surface-variant font-medium">Nama Pembeli</span>
                                 <span class="text-sm font-bold text-deep-slate">{{ $t->buyer_name }}</span>
                             </div>
+                            @if($t->venue)
+                                <div class="flex justify-between items-center py-3">
+                                    <span class="text-sm text-on-surface-variant font-medium">Tempat Tiket</span>
+                                    <span class="text-sm font-bold {{ $kind === 'wrong_venue' ? 'text-red-600' : 'text-deep-slate' }}">
+                                        <i class="ti ti-map-pin"></i> {{ $t->venue->name }}
+                                    </span>
+                                </div>
+                            @endif
                             <div class="flex justify-between items-center py-3">
                                 <span class="text-sm text-on-surface-variant font-medium">Jumlah</span>
                                 <span class="text-sm font-bold text-deep-slate">{{ $t->quantity }} tiket</span>
@@ -203,6 +218,20 @@
                                         Memproses...
                                     </span>
                                 </button>
+                            </div>
+                        @endif
+
+                        @if($kind === 'wrong_venue')
+                            <div class="px-5 pb-5 pt-2">
+                                <div class="flex items-start gap-2 rounded-lg bg-red-500/5 border border-red-500/20 px-4 py-3 text-xs font-semibold text-red-700">
+                                    <i class="ti ti-arrow-right text-base shrink-0 mt-0.5"></i>
+                                    <span>
+                                        Arahkan pembeli ke
+                                        <strong>{{ $t->venue->name ?? 'tempat yang tertera di tiket' }}</strong>.
+                                        Tiket ini tidak bisa dipakai masuk di
+                                        {{ $result['gate'] ?? 'gerbang ini' }}.
+                                    </span>
+                                </div>
                             </div>
                         @endif
 
