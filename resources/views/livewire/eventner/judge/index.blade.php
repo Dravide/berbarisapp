@@ -67,15 +67,17 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <div class="d-flex flex-wrap gap-1">
-                                                    @if($judge->assessmentCategories->isEmpty())
-                                                        <span class="badge bg-warning-subtle text-warning">Belum ada tugas</span>
-                                                    @else
-                                                        @foreach($judge->assessmentCategories as $cat)
-                                                            <span class="badge bg-success-subtle text-success">{{ $cat->name }}</span>
-                                                        @endforeach
-                                                    @endif
-                                                </div>
+                                                {{-- Rincian kategori tidak lagi dijejal di kolom —
+                                                     dibuka lewat modal, dipisah per tingkat lomba. --}}
+                                                @if($judge->assessmentCategories->isEmpty())
+                                                    <span class="badge bg-warning-subtle text-warning">Belum ada tugas</span>
+                                                @else
+                                                    <button type="button" class="btn btn-sm btn-outline-success fw-semibold"
+                                                            wire:click="openCategoriesModal({{ $judge->id }})">
+                                                        <i class="ti ti-list-check me-1"></i>
+                                                        {{ $judge->assessmentCategories->count() }} Kategori Penilaian
+                                                    </button>
+                                                @endif
                                             </td>
                                             <td class="text-end">
                                                 <button class="btn btn-sm btn-outline-secondary p-1 me-1" wire:click="openTabletModal({{ $judge->id }})" title="Akses Tablet Juri">
@@ -102,6 +104,57 @@
         </div>
 
     </div>
+
+    <!-- Modal Bagian / Kategori Penilaian Juri — dikelompokkan per tingkat lomba -->
+    @if($selectedCategoriesJudgeId)
+    @php $catJudge = $this->categoriesJudge; @endphp
+    <div class="modal fade show d-block" tabindex="-1" style="display:block; background-color: rgba(0,0,0,.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title text-white fw-semibold">
+                        <i class="ti ti-list-check me-1"></i> Kategori Penilaian Juri
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closeCategoriesModal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-success border-0 bg-success-subtle text-success mb-3">
+                        <i class="ti ti-user me-1"></i> Juri: <strong>{{ $catJudge?->name ?? '-' }}</strong>
+                    </div>
+
+                    @if($this->categoriesJudgeGrouped->isEmpty())
+                        <p class="text-muted mb-0">
+                            <i>Juri ini belum ditugaskan ke kategori penilaian mana pun.</i>
+                        </p>
+                    @else
+                        @foreach($this->categoriesJudgeGrouped as $group)
+                            <div class="mb-3">
+                                <div class="fw-semibold text-primary mb-2">
+                                    <i class="ti ti-school me-1"></i> {{ $group['name'] }}
+                                </div>
+                                <div class="bg-light p-3 rounded border">
+                                    @foreach($group['items'] as $cat)
+                                        <div class="d-flex align-items-center gap-2 {{ !$loop->last ? 'mb-2' : '' }}">
+                                            <i class="ti ti-check text-success"></i>
+                                            <span class="fw-medium">{{ $cat->name }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-outline-primary"
+                            wire:click="edit({{ $selectedCategoriesJudgeId }})">
+                        <i class="ti ti-edit me-1"></i> Ubah Tugas
+                    </button>
+                    <button type="button" class="btn btn-secondary" wire:click="closeCategoriesModal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Modal Akses Tablet Juri (QR + link) -->
     @if($selectedTabletJudgeId)

@@ -31,6 +31,9 @@ class Index extends Component
     /** Juri yang modal akses tablet-nya sedang terbuka. */
     public $selectedTabletJudgeId = null;
 
+    /** Juri yang modal rincian tugas/kategori penilaiannya sedang terbuka. */
+    public $selectedCategoriesJudgeId = null;
+
     protected $eventnerId;
 
     public function boot()
@@ -45,7 +48,9 @@ class Index extends Component
     #[Computed]
     public function judges()
     {
-        return Judge::with('assessmentCategories')
+        // competitionCategory.parent ikut dimuat: modal rincian tugas
+        // mengelompokkan kategori per tingkat lomba (full_name butuh induk).
+        return Judge::with('assessmentCategories.competitionCategory.parent')
             ->where('eventner_id', $this->eventnerId)
             ->latest()
             ->get();
@@ -93,12 +98,13 @@ class Index extends Component
      * competition_category (child), label = full_name ("LOBB — U13") sehingga
      * U13 dan U16 tampil terpisah meski induknya sama. Kategori yang menunjuk
      * langsung ke induk (parent, tanpa child) tetap jadi grup sendiri.
+     *
+     * Dipakai bersama oleh modal rincian tugas juri dan form tambah/edit.
      */
-    #[Computed]
-    public function availableCategoriesGrouped()
+    private function groupByCompetitionLevel($categories)
     {
         $grouped = [];
-        foreach ($this->availableCategories as $cat) {
+        foreach ($categories as $cat) {
             $cc = $cat->competitionCategory;
             if (!$cc) {
                 $grouped['Lainnya'] = [
@@ -113,7 +119,51 @@ class Index extends Component
                 'items' => ($grouped[$cc->id]['items'] ?? []) + [$cat->id => $cat],
             ];
         }
+
         return collect($grouped)->sortBy('name');
+    }
+
+    #[Computed]
+    public function availableCategoriesGrouped()
+    {
+        return $this->groupByCompetitionLevel($this->availableCategories);
+    }
+
+    /** Juri yang modal rincian tugasnya terbuka. */
+    #[Computed]
+    public function categoriesJudge()
+    {
+        if (!$this->selectedCategoriesJudgeId) {
+            return null;
+        }
+
+        return $this->judges->firstWhere('id', $this->selectedCategoriesJudgeId);
+    }
+
+    /**
+     * Tugas juri terpilih, dikelompokkan per tingkat lomba supaya urutan
+     * kategorinya terbaca: tingkat dulu, baru kategori penilaiannya.
+     */
+    #[Computed]
+    public function categoriesJudgeGrouped()
+    {
+        $judge = $this->categoriesJudge;
+
+        if (!$judge) {
+            return collect();
+        }
+
+        return $this->groupByCompetitionLevel($judge->assessmentCategories);
+    }
+
+    public function openCategoriesModal($id)
+    {
+        $this->selectedCategoriesJudgeId = $id;
+    }
+
+    public function closeCategoriesModal()
+    {
+        $this->selectedCategoriesJudgeId = null;
     }
 
     public function save()
@@ -187,6 +237,9 @@ class Index extends Component
         $this->phone_number = $judge->phone_number ?? '';
         $this->currentPhotoPath = $judge->photo;
         $this->selectedCategories = $judge->assessmentCategories->pluck('id')->toArray();
+
+        // Kalau edit dipicu dari modal rincian tugas, tutup dulu modal itu.
+        $this->selectedCategoriesJudgeId = null;
 
         // Buka modal setelah re-render selesai (dispatch diproses pasca-morph)
         $this->dispatch('open-judge-modal');
