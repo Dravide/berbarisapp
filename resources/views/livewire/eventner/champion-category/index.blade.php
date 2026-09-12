@@ -231,7 +231,7 @@
 
     {{-- ========== MODAL: Tambah/Edit Gelar Juara ========== --}}
     @if($showRankTitleForm)
-    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" wire:keydown.escape="resetRankTitleForm">
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);" wire:keydown.escape="cancelRankTitle">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary-subtle">
@@ -239,7 +239,7 @@
                         <i class="ti ti-medal me-2"></i>
                         {{ $editingRankTitleId ? 'Edit Gelar Juara' : 'Tambah Gelar Juara' }}
                     </h5>
-                    <button type="button" class="btn-close" wire:click="resetRankTitleForm"></button>
+                    <button type="button" class="btn-close" wire:click="cancelRankTitle"></button>
                 </div>
                 <div class="modal-body p-4">
                     <div class="mb-3">
@@ -264,7 +264,7 @@
                     </p>
                 </div>
                 <div class="modal-footer">
-                    <button wire:click="resetRankTitleForm" class="btn btn-outline-secondary px-4">Batal</button>
+                    <button wire:click="cancelRankTitle" class="btn btn-outline-secondary px-4">Batal</button>
                     <button wire:click="saveRankTitle" class="btn btn-primary px-4 fw-semibold">
                         <i class="ti ti-check me-1"></i> Simpan
                     </button>

@@ -333,6 +333,15 @@ class Index extends Component
         session()->flash('success', 'Gelar juara berhasil dihapus.');
     }
 
+    /**
+     * Tutup modal gelar juara. Livewire hanya bisa memanggil method public,
+     * jadi view memanggil ini — bukan resetRankTitleForm yang private.
+     */
+    public function cancelRankTitle()
+    {
+        $this->resetRankTitleForm();
+    }
+
     private function resetRankTitleForm()
     {
         $this->rankTitle = '';

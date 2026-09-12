@@ -83,4 +83,49 @@ class ChampionCategoryModalTest extends TestCase
         $this->assertStringContainsString('PBB Putri', $html2);
         $this->assertStringNotContainsString('PBB Putra', $html2);
     }
+
+    private function makeChampion(User $user): array
+    {
+        $eventner = Eventner::factory()->create(['user_id' => $user->id, 'status' => 'approved']);
+        $champion = ChampionCategory::create([
+            'eventner_id' => $eventner->id,
+            'name' => 'Juara Umum',
+            'quantity' => 3,
+        ]);
+
+        return [$eventner, $champion];
+    }
+
+    /**
+     * Tombol tutup/Batal/Escape modal gelar juara. Livewire hanya memanggil
+     * method public; dulu view memanggil resetRankTitleForm yang private
+     * sehingga tiap tutup modal melempar MethodNotFoundException.
+     */
+    public function test_tutup_modal_gelar_juara_tidak_melempar_method_not_found()
+    {
+        $user = User::factory()->eventner()->create(['is_active' => true]);
+        [, $champion] = $this->makeChampion($user);
+
+        Livewire::actingAs($user)
+            ->test(Index::class)
+            ->call('showAddRankTitle', $champion->id)
+            ->assertSet('showRankTitleForm', true)
+            ->call('cancelRankTitle')
+            ->assertSet('showRankTitleForm', false);
+    }
+
+    /** Tombol di view harus menunjuk method public, bukan private. */
+    public function test_view_memanggil_method_public_untuk_menutup_modal()
+    {
+        $user = User::factory()->eventner()->create(['is_active' => true]);
+        [, $champion] = $this->makeChampion($user);
+
+        $html = Livewire::actingAs($user)
+            ->test(Index::class)
+            ->call('showAddRankTitle', $champion->id)
+            ->html();
+
+        $this->assertStringContainsString('wire:click="cancelRankTitle"', $html);
+        $this->assertStringNotContainsString('resetRankTitleForm', $html);
+    }
 }
