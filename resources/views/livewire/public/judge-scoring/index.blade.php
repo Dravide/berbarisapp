@@ -3,62 +3,9 @@
     $scoreBtnBase = 'rounded-xl border font-bold transition select-none';
 @endphp
 
-@push('styles')
-    <style>[x-cloak] { display: none !important; }</style>
-@endpush
+<div class="min-h-screen bg-surface">
 
-<div class="min-h-screen bg-surface" x-data="{
-        online: navigator.onLine,
-        init() {
-            window.addEventListener('online', () => this.online = true);
-            window.addEventListener('offline', () => this.online = false);
-        }
-    }">
-
-    {{-- ========== BANNER KONEKSI PUTUS ========== --}}
-    <div x-show="!online" x-cloak
-         class="sticky top-0 z-50 bg-amber-500 text-white text-sm font-semibold px-4 py-2.5 text-center">
-        <i class="ti ti-wifi-off mr-1"></i>
-        Koneksi terputus — nilai belum tersimpan. Tunggu sampai koneksi kembali.
-    </div>
-
-    {{-- ========== HEADER ========== --}}
-    <div class="container-landing pt-6">
-        <div class="rounded-2xl border border-outline-variant/30 bg-white shadow-sm p-4 md:p-5">
-            <div class="flex items-center gap-4">
-                @if($eventner->logo_event)
-                    <img src="{{ asset('storage/' . $eventner->logo_event) }}"
-                         class="h-12 w-12 md:h-14 md:w-14 rounded-xl object-cover border border-outline-variant/30 shrink-0"
-                         alt="{{ $eventner->nama_event }}">
-                @else
-                    <div class="flex h-12 w-12 md:h-14 md:w-14 items-center justify-center rounded-xl bg-primary/10 text-primary border border-outline-variant/30 shrink-0">
-                        <i class="ti ti-gavel text-2xl"></i>
-                    </div>
-                @endif
-
-                <div class="min-w-0 flex-1">
-                    <p class="text-[10px] font-bold uppercase tracking-wider text-primary mb-0.5">
-                        <i class="ti ti-clipboard-check"></i> Penilaian Juri
-                    </p>
-                    <h1 class="font-display text-base md:text-lg font-bold text-on-surface truncate m-0">
-                        {{ $eventner->nama_event }}
-                    </h1>
-                </div>
-
-                <div class="text-right shrink-0">
-                    <p class="text-[10px] uppercase tracking-wider text-on-surface-variant m-0">Juri</p>
-                    <p class="text-sm font-bold text-on-surface m-0">{{ $judge->name }}</p>
-                    <span class="inline-flex items-center gap-1 text-[10px] font-semibold mt-0.5"
-                          :class="online ? 'text-emerald-600' : 'text-amber-600'">
-                        <span class="h-1.5 w-1.5 rounded-full" :class="online ? 'bg-emerald-500' : 'bg-amber-500'"></span>
-                        <span x-text="online ? 'Online' : 'Offline'">Online</span>
-                    </span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="container-landing py-6">
+    <div class="container-landing py-5">
 
         {{-- ========== 1. PILIH TINGKAT LOMBA ========== --}}
         @if($view === 'categories')
@@ -154,10 +101,29 @@
                         {{ $registration->nama_sekolah }}
                     </p>
                 </div>
-                <button type="button" wire:click="backToParticipants"
-                        class="shrink-0 text-xs font-semibold text-primary hover:underline">
-                    <i class="ti ti-arrow-left"></i> Daftar peserta
-                </button>
+
+                <div class="flex shrink-0 items-center gap-3">
+                    {{-- Dua cara mengisi: satu kriteria per layar (maju otomatis)
+                         atau semua kriteria sekaligus. Pilihan tidak mengubah
+                         nilai yang sudah tersimpan. --}}
+                    <div class="inline-flex rounded-xl border border-outline-variant/40 bg-white p-0.5">
+                        <button type="button" wire:click="setCriteriaMode('satu-satu')"
+                                class="rounded-[10px] px-3 py-1.5 text-[11px] font-bold transition
+                                    {{ $criteriaMode === 'satu-satu' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-primary' }}">
+                            <i class="ti ti-square-check"></i> Satu per Satu
+                        </button>
+                        <button type="button" wire:click="setCriteriaMode('semua')"
+                                class="rounded-[10px] px-3 py-1.5 text-[11px] font-bold transition
+                                    {{ $criteriaMode === 'semua' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-primary' }}">
+                            <i class="ti ti-list"></i> Semua
+                        </button>
+                    </div>
+
+                    <button type="button" wire:click="backToParticipants"
+                            class="text-xs font-semibold text-primary hover:underline">
+                        <i class="ti ti-arrow-left"></i> Daftar peserta
+                    </button>
+                </div>
             </div>
 
             @if($isFinalized)
@@ -172,78 +138,123 @@
                 </div>
             @endif
 
-            @forelse($categories as $cat)
-                <div class="rounded-2xl border border-outline-variant/30 bg-white shadow-sm mb-4 overflow-hidden">
-                    <div class="px-4 py-3 bg-primary/5 border-b border-outline-variant/20">
-                        <p class="font-display text-sm font-bold text-on-surface m-0">{{ $cat->name }}</p>
-                    </div>
+            @php $flatCriteria = $this->flatCriteria; @endphp
 
-                    @foreach($cat->subCategories as $sub)
-                        <div class="px-4 py-4 border-b border-outline-variant/20 last:border-b-0">
-                            <p class="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-3">
-                                {{ $sub->name }}
-                            </p>
-
-                            @foreach($sub->criterias as $criteria)
-                                @php
-                                    // Kelompokkan opsi per label — bentuk score_options bisa
-                                    // scalar atau {score,label} (sama seperti dashboard panitia).
-                                    $groups = [];
-                                    foreach ($criteria->score_options as $o) {
-                                        $sv = is_array($o) ? $o['score'] : $o;
-                                        $lb = is_array($o) ? ($o['label'] ?? null) : null;
-                                        $groups[$lb ?: (string) $sv][] = ['score' => $sv, 'label' => $lb];
-                                    }
-                                    // Judul grup hanya berguna bila opsinya memang berlabel.
-                                    $showGroupLabels = collect($groups)->keys()->contains(fn ($k) => !is_numeric($k));
-                                @endphp
-
-                                <div class="mb-4 last:mb-0">
-                                    <div class="flex items-baseline justify-between gap-2 mb-2">
-                                        <p class="text-sm font-semibold text-on-surface m-0">{{ $criteria->name }}</p>
-                                        @if(isset($scores[$criteria->id]) && $scores[$criteria->id] !== '' && $scores[$criteria->id] !== null)
-                                            <span class="text-[11px] font-bold text-emerald-600 shrink-0">
-                                                <i class="ti ti-check"></i> {{ $scores[$criteria->id] }}
-                                            </span>
-                                        @endif
-                                    </div>
-
-                                    @foreach($groups as $label => $opts)
-                                        @if($showGroupLabels)
-                                            <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1.5">
-                                                {{ $label }}
-                                            </p>
-                                        @endif
-
-                                        <div class="flex flex-wrap gap-2 mb-3 last:mb-0">
-                                            @foreach($opts as $opt)
-                                                @php $selected = isset($scores[$criteria->id]) && (string) $scores[$criteria->id] === (string) $opt['score']; @endphp
-                                                <button type="button"
-                                                        wire:click="setScore({{ $criteria->id }}, '{{ $opt['score'] }}')"
-                                                        wire:loading.attr="disabled"
-                                                        @disabled($isFinalized)
-                                                        class="{{ $scoreBtnBase }} min-w-[64px] min-h-[56px] px-5 text-lg
-                                                            {{ $selected
-                                                                ? 'bg-primary text-white border-primary shadow-sm'
-                                                                : 'bg-white text-on-surface border-outline-variant/50 hover:border-primary hover:text-primary' }}
-                                                            {{ $isFinalized ? 'opacity-50 cursor-not-allowed' : 'active:scale-95' }}">
-                                                    {{ $opt['score'] }}
-                                                </button>
-                                            @endforeach
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @endforeach
-                        </div>
-                    @endforeach
-                </div>
-            @empty
+            @if($flatCriteria === [])
                 <div class="rounded-2xl border border-outline-variant/30 bg-white p-8 text-center">
                     <p class="text-sm text-on-surface-variant m-0">
                         Belum ada rubrik penilaian untuk tingkat lomba ini. Hubungi panitia.
                     </p>
                 </div>
-            @endforelse
+            @elseif($criteriaMode === 'satu-satu')
+                {{-- ===== MODE SATU PER SATU =====
+                     Satu kriteria per layar; ketuk nilai → otomatis pindah ke
+                     kriteria berikutnya. Tombol nilai dibuat besar karena hanya
+                     ada satu kriteria yang perlu disentuh. --}}
+                @php $current = $this->currentCriteria; @endphp
+                <div class="rounded-2xl border border-outline-variant/30 bg-white shadow-sm overflow-hidden">
+                    <div class="px-4 py-3 bg-primary/5 border-b border-outline-variant/20 flex items-center justify-between gap-3">
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant m-0 truncate">
+                            {{ $current['category'] }} · {{ $current['sub'] }}
+                        </p>
+                        <span class="shrink-0 rounded-full bg-white border border-outline-variant/40 px-3 py-1 text-[11px] font-bold text-on-surface">
+                            {{ $currentCriteriaIndex + 1 }} / {{ count($flatCriteria) }}
+                        </span>
+                    </div>
+
+                    <div class="px-4 py-6">
+                        <p class="font-display text-xl font-bold text-on-surface text-center m-0 mb-6">
+                            {{ $current['name'] }}
+                        </p>
+
+                        @include('livewire.public.judge-scoring._score-options', [
+                            'criteriaId' => $current['id'],
+                            'scoreOptions' => $current['score_options'],
+                            'scores' => $scores,
+                            'isFinalized' => $isFinalized,
+                            'scoreBtnBase' => $scoreBtnBase,
+                            'buttonSize' => 'min-w-[76px] min-h-[64px] px-6 text-xl',
+                            'optionsWrapClass' => 'justify-center',
+                        ])
+                    </div>
+
+                    {{-- Sebelumnya / Berikutnya — penanda kriteria mana yang masih
+                         kosong supaya juri tahu harus kembali ke mana. --}}
+                    <div class="px-4 py-3 border-t border-outline-variant/20 flex items-center justify-between gap-3">
+                        <button type="button" wire:click="prevCriteria"
+                                @disabled($currentCriteriaIndex === 0)
+                                class="rounded-xl border border-outline-variant/40 bg-white px-4 py-2.5 text-sm font-bold text-on-surface transition
+                                    {{ $currentCriteriaIndex === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:border-primary hover:text-primary active:scale-95' }}">
+                            <i class="ti ti-arrow-left"></i> Sebelumnya
+                        </button>
+
+                        <button type="button" wire:click="nextCriteria"
+                                @disabled($currentCriteriaIndex >= count($flatCriteria) - 1)
+                                class="rounded-xl border border-outline-variant/40 bg-white px-4 py-2.5 text-sm font-bold text-on-surface transition
+                                    {{ $currentCriteriaIndex >= count($flatCriteria) - 1 ? 'opacity-40 cursor-not-allowed' : 'hover:border-primary hover:text-primary active:scale-95' }}">
+                            Berikutnya <i class="ti ti-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Pengintip progres: satu titik per kriteria, terisi = penuh.
+                     Titik kosong bisa diketuk untuk melompat langsung. --}}
+                <div class="mt-3 flex flex-wrap items-center justify-center gap-1.5">
+                    @foreach($flatCriteria as $i => $c)
+                        @php
+                            $val = $scores[$c['id']] ?? null;
+                            $isFilled = $val !== null && $val !== '';
+                        @endphp
+                        <button type="button" wire:click="goToCriteria({{ $i }})"
+                                title="{{ $c['name'] }}"
+                                class="h-7 w-7 rounded-lg border text-[10px] font-bold transition
+                                    {{ $i === $currentCriteriaIndex ? 'ring-2 ring-primary ring-offset-1' : '' }}
+                                    {{ $isFilled
+                                        ? 'bg-primary text-white border-primary'
+                                        : 'bg-white text-on-surface-variant border-outline-variant/50 hover:border-primary' }}">
+                            {{ $i + 1 }}
+                        </button>
+                    @endforeach
+                </div>
+            @else
+                {{-- ===== MODE SEMUA KRITERIA =====
+                     Kriteria dan tombol nilai berdampingan (label kiri, tombol
+                     kanan) supaya satu layar memuat lebih banyak kriteria dan
+                     juri tidak perlu menggulir. --}}
+                @foreach($categories as $cat)
+                    <div class="rounded-2xl border border-outline-variant/30 bg-white shadow-sm mb-4 overflow-hidden">
+                        <div class="px-4 py-3 bg-primary/5 border-b border-outline-variant/20">
+                            <p class="font-display text-sm font-bold text-on-surface m-0">{{ $cat->name }}</p>
+                        </div>
+
+                        @foreach($cat->subCategories as $sub)
+                            <div class="px-4 py-4 border-b border-outline-variant/20 last:border-b-0">
+                                <p class="text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-3">
+                                    {{ $sub->name }}
+                                </p>
+
+                                @foreach($sub->criterias as $criteria)
+                                    <div class="mb-4 last:mb-0 flex flex-wrap items-center gap-x-4 gap-y-2 md:flex-nowrap">
+                                        <p class="min-w-[9rem] flex-1 text-sm font-semibold text-on-surface m-0">
+                                            {{ $criteria->name }}
+                                        </p>
+
+                                        @include('livewire.public.judge-scoring._score-options', [
+                                            'criteriaId' => $criteria->id,
+                                            'scoreOptions' => $criteria->score_options,
+                                            'scores' => $scores,
+                                            'isFinalized' => $isFinalized,
+                                            'scoreBtnBase' => $scoreBtnBase,
+                                            'buttonSize' => 'min-w-[56px] min-h-[48px] px-4 text-base',
+                                            'optionsWrapClass' => 'shrink-0',
+                                        ])
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endforeach
+                    </div>
+                @endforeach
+            @endif
 
             {{-- Sticky bottom bar --}}
             <div class="sticky bottom-0 -mx-4 px-4 py-3 bg-surface/95 backdrop-blur border-t border-outline-variant/30 mt-6">

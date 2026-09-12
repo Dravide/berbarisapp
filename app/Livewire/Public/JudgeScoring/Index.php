@@ -20,7 +20,7 @@ use Livewire\Component;
  * Identitas juri diikat server-side dari token; klien tidak pernah
  * mengirim judge_id.
  */
-#[Layout('layouts.frontend')]
+#[Layout('layouts.judge')]
 #[Title('Penilaian Juri')]
 class Index extends Component
 {
@@ -43,6 +43,12 @@ class Index extends Component
     public array $scores = [];
     public bool $isFinalized = false;
     public string $saveStatus = ''; // '' | 'saved' | 'error'
+
+    /** Mode penilaian: 'satu-satu' (satu kriteria per layar, maju otomatis) | 'semua'. */
+    public string $criteriaMode = 'satu-satu';
+
+    /** Kriteria yang sedang ditampilkan pada mode satu-per-satu. */
+    public int $currentCriteriaIndex = 0;
 
     public function mount(string $token)
     {
@@ -122,6 +128,7 @@ class Index extends Component
         $this->selectedRegistrationId = $registration->id;
         $this->view = 'scoring';
         $this->loadCriteria();
+        $this->jumpToFirstUnfilled();
     }
 
     /** Muat kriteria yang boleh dinilai + nilai yang sudah tersimpan. */
@@ -176,6 +183,77 @@ class Index extends Component
             ->findOrFail($this->selectedRegistrationId);
     }
 
+    /**
+     * Daftar kriteria rata (kategori → sub → kriteria) untuk mode satu-per-satu.
+     *
+     * Mode "semua" tetap memakai struktur bertingkat $assessmentCategories;
+     * mode ini butuh urutan datar supaya bisa maju satu kriteria per layar.
+     */
+    public function getFlatCriteriaProperty(): array
+    {
+        return $this->assessmentCategories
+            ->flatMap(fn ($cat) => $cat->subCategories->flatMap(
+                fn ($sub) => $sub->criterias->map(fn ($c) => [
+                    'id' => (int) $c->id,
+                    'name' => $c->name,
+                    'category' => $cat->name,
+                    'sub' => $sub->name,
+                    'score_options' => $c->score_options,
+                ])
+            ))
+            ->values()
+            ->all();
+    }
+
+    /** Kriteria yang sedang tampil di mode satu-per-satu (null bila daftar kosong). */
+    public function getCurrentCriteriaProperty(): ?array
+    {
+        return $this->flatCriteria[$this->currentCriteriaIndex] ?? null;
+    }
+
+    /** Ganti mode penilaian tanpa mengubah nilai yang sudah tersimpan. */
+    public function setCriteriaMode(string $mode): void
+    {
+        $this->criteriaMode = $mode === 'semua' ? 'semua' : 'satu-satu';
+
+        // Hanya bermakna saat peserta sudah dipilih (kriteria sudah dimuat).
+        if ($this->selectedRegistrationId) {
+            $this->jumpToFirstUnfilled();
+        }
+    }
+
+    public function goToCriteria(int $index): void
+    {
+        $this->currentCriteriaIndex = max(0, min($index, count($this->flatCriteria) - 1));
+    }
+
+    public function nextCriteria(): void
+    {
+        $this->goToCriteria($this->currentCriteriaIndex + 1);
+    }
+
+    public function prevCriteria(): void
+    {
+        $this->goToCriteria($this->currentCriteriaIndex - 1);
+    }
+
+    /**
+     * Arahkan ke kriteria kosong pertama; kalau semua sudah terisi, tahan di
+     * kriteria terakhir supaya tombol finalisasi tetap di jangkauan.
+     */
+    private function jumpToFirstUnfilled(): void
+    {
+        foreach ($this->flatCriteria as $i => $criteria) {
+            $value = $this->scores[$criteria['id']] ?? null;
+            if ($value === null || $value === '') {
+                $this->currentCriteriaIndex = $i;
+                return;
+            }
+        }
+
+        $this->currentCriteriaIndex = max(0, count($this->flatCriteria) - 1);
+    }
+
     public function getAssessmentCategoriesProperty()
     {
         $compCategoryId = $this->registration->competition_category_id;
@@ -223,6 +301,12 @@ class Index extends Component
 
         $this->scores[$criteriaId] = $value;
         $this->saveStatus = 'saved';
+
+        // Mode satu-per-satu: begitu nilai diketuk, langsung ke kriteria
+        // berikutnya supaya juri tidak perlu menyentuh layar dua kali.
+        if ($this->criteriaMode === 'satu-satu' && !$this->isFinalized) {
+            $this->nextCriteria();
+        }
     }
 
     public function finalize()
@@ -262,6 +346,7 @@ class Index extends Component
         $this->scores = [];
         $this->isFinalized = false;
         $this->saveStatus = '';
+        $this->currentCriteriaIndex = 0;
     }
 
     public function render()
@@ -303,7 +388,7 @@ class Index extends Component
             'participants' => $participants,
         ])->layoutData([
             'eventner' => $this->eventner,
-            'robots' => 'noindex, nofollow',
+            'judge' => $this->judge,
         ])->title('Penilaian Juri - ' . $this->eventner->nama_event);
     }
 }

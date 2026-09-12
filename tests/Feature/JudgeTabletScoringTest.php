@@ -118,6 +118,20 @@ class JudgeTabletScoringTest extends TestCase
             ->assertSee('noindex, nofollow');
     }
 
+    /** Layout khusus juri — bukan layout frontend dengan nav + footer event. */
+    public function test_halaman_tablet_memakai_layout_juri_tanpa_navigasi_event()
+    {
+        $response = $this->tablet('/juri/' . $this->judge->access_token)->assertOk();
+
+        // Footer ringkas khas layout juri.
+        $response->assertSee('Nilai tersimpan otomatis', false);
+
+        // Navigasi event / footer marketing tidak boleh ikut.
+        $response->assertDontSee('Hak cipta dilindungi', false);
+        $response->assertDontSee('Daftar Eventner', false);
+        $response->assertDontSee('google-adsense-account', false);
+    }
+
     public function test_alamat_juri_lama_redirect_permanen_ke_host_entry()
     {
         config(['app.entry_host' => 'entry.berbaris.test']);
@@ -198,8 +212,72 @@ class JudgeTabletScoringTest extends TestCase
         ]);
     }
 
-    public function test_kriteria_di_luar_rubrik_juri_ditolak()
+    /** Mode satu-per-satu: ketuk nilai → otomatis ke kriteria berikutnya. */
+    public function test_mode_satu_per_satu_maju_otomatis_setelah_menilai()
     {
+        $criteria = $this->makeRubric(3);
+
+        Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judge->access_token])
+            ->call('selectCategory', $this->category->id)
+            ->call('selectParticipant', $this->registration->id)
+            ->assertSet('criteriaMode', 'satu-satu')
+            ->assertSet('currentCriteriaIndex', 0)
+            ->call('setScore', $criteria[0]->id, 10)
+            ->assertSet('currentCriteriaIndex', 1)
+            ->call('setScore', $criteria[1]->id, 20)
+            ->assertSet('currentCriteriaIndex', 2);
+    }
+
+    /** Maju otomatis berhenti di kriteria terakhir — tidak melewati batas. */
+    public function test_mode_satu_per_satu_tidak_melewati_kriteria_terakhir()
+    {
+        $criteria = $this->makeRubric(2);
+
+        Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judge->access_token])
+            ->call('selectCategory', $this->category->id)
+            ->call('selectParticipant', $this->registration->id)
+            ->call('setScore', $criteria[0]->id, 10)
+            ->call('setScore', $criteria[1]->id, 20)
+            ->assertSet('currentCriteriaIndex', 1);
+    }
+
+    /** Mode "semua" tidak memindahkan posisi saat nilai diketuk. */
+    public function test_mode_semua_tidak_memindahkan_kriteria_aktif()
+    {
+        $criteria = $this->makeRubric(2);
+
+        Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judge->access_token])
+            ->call('selectCategory', $this->category->id)
+            ->call('selectParticipant', $this->registration->id)
+            ->call('setCriteriaMode', 'semua')
+            ->assertSet('criteriaMode', 'semua')
+            ->call('goToCriteria', 0)
+            ->call('setScore', $criteria[0]->id, 10)
+            ->assertSet('currentCriteriaIndex', 0)
+            ->assertSet('scores.' . $criteria[0]->id, 10);
+    }
+
+    /** Menyentuh peserta membuka kriteria kosong pertama, bukan selalu nomor 1. */
+    public function test_kriteria_kosong_pertama_dipilih_saat_membuka_peserta()
+    {
+        $criteria = $this->makeRubric(3);
+
+        // Kriteria 2 sudah dinilai sebelumnya (mis. juri sempat menutup aplikasi).
+        AssessmentScore::create([
+            'eventner_id' => $this->eventner->id,
+            'registration_id' => $this->registration->id,
+            'assessment_criteria_id' => $criteria[0]->id,
+            'judge_id' => $this->judge->id,
+            'score' => 10,
+        ]);
+
+        Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judge->access_token])
+            ->call('selectCategory', $this->category->id)
+            ->call('selectParticipant', $this->registration->id)
+            ->assertSet('currentCriteriaIndex', 1);
+    }
+
+    public function test_kriteria_di_luar_rubrik_juri_ditolak()    {
         $this->makeRubric();
 
         // Rubrik milik juri lain
