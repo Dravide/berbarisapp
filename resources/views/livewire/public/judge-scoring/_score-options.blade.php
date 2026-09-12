@@ -1,25 +1,45 @@
 @php
     // Kelompokkan opsi per label — bentuk score_options bisa scalar atau
-    // {score,label} (sama seperti dashboard panitia).
+    // {score,label} (sama seperti dashboard panitia). Label yang sama
+    // digabung, jadi "Kurang 10" dan "Kurang 20" jadi satu blok.
     $groups = [];
     foreach ($scoreOptions as $o) {
         $sv = is_array($o) ? ($o['score'] ?? null) : $o;
         $lb = is_array($o) ? ($o['label'] ?? null) : null;
         $groups[$lb ?: (string) $sv][] = ['score' => $sv, 'label' => $lb];
     }
+
     // Judul grup hanya berguna bila opsinya memang berlabel.
     $showGroupLabels = collect($groups)->keys()->contains(fn ($k) => !is_numeric($k));
+
+    // Warna blok per label supaya juri mengenali tingkatan tanpa membaca:
+    // kurang merah, cukup kuning, baik biru, sangat baik hijau. "Sangat"
+    // diperiksa lebih dulu karena juga mengandung kata "baik".
+    $palet = function (string $label) {
+        $l = mb_strtolower(trim($label));
+        return match (true) {
+            str_contains($l, 'sangat') => 'text-emerald-700 border-emerald-300 bg-emerald-50',
+            str_contains($l, 'kurang') => 'text-rose-700 border-rose-300 bg-rose-50',
+            str_contains($l, 'cukup')  => 'text-amber-700 border-amber-300 bg-amber-50',
+            str_contains($l, 'baik')   => 'text-sky-700 border-sky-300 bg-sky-50',
+            default => 'text-on-surface-variant border-outline-variant/40 bg-surface',
+        };
+    };
+
     $filled = isset($scores[$criteriaId]) && $scores[$criteriaId] !== '' && $scores[$criteriaId] !== null;
 @endphp
 
-{{-- Tombol nilai. Kelompok berlabel disusun sebagai kolom: label di ATAS
-     tombol miliknya, bukan menyelip di antara tombol (terbaca seperti
-     tombol nilai tambahan). Ukuran tombol diatur $buttonSize pemanggil. --}}
-<div class="flex flex-wrap items-start gap-x-3 gap-y-2 {{ $optionsWrapClass ?? '' }}">
+{{-- Tombol nilai. Tiap label jadi blok sendiri (label di atas, tombol di
+     bawahnya, kotak berwarna pemisah) supaya tingkatan tidak tercampur saat
+     satu kriteria punya banyak opsi. Ukuran tombol diatur $buttonSize. --}}
+<div class="flex flex-wrap items-start gap-2 {{ $optionsWrapClass ?? '' }}">
     @foreach($groups as $label => $opts)
-        <div class="flex flex-col items-center gap-1">
-            @if($showGroupLabels)
-                <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant leading-none">
+        @php $berlabel = $showGroupLabels && !is_numeric($label); @endphp
+
+        <div class="flex flex-col items-center gap-1.5 rounded-xl border px-2.5 py-1.5
+                    {{ $berlabel ? $palet($label) : 'border-transparent px-0 py-0' }}">
+            @if($berlabel)
+                <span class="text-[10px] font-bold uppercase tracking-wide leading-none">
                     {{ $label }}
                 </span>
             @endif
