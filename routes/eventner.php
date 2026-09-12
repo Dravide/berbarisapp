@@ -15,6 +15,9 @@ Route::get('judges', App\Livewire\Eventner\Judge\Index::class)->name('eventner.j
 Route::get('judges/{judge}/format-pdf/{competitionCategoryId?}', [App\Http\Controllers\Eventner\FormatNilaiController::class, 'downloadPdfByJudge'])->name('eventner.judges.format-pdf');
 Route::get('competition-categories', App\Livewire\Eventner\CompetitionCategory\Index::class)->name('eventner.competition-categories.index');
 Route::get('participants', App\Livewire\Eventner\Participant\Index::class)->name('eventner.participants.index');
+// Didaftarkan SEBELUM rute {registration} — kalau tidak, "daftar-ulang" akan
+// ditangkap sebagai id registrasi dan berakhir 404.
+Route::get('participants/daftar-ulang', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadDaftarUlang'])->name('eventner.participants.daftar-ulang');
 Route::get('participants/{registration}/pdf', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadPdf'])->name('eventner.participants.pdf');
 Route::get('participants/{registration}/invoice', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadInvoice'])->name('eventner.participants.invoice');
 Route::get('participants/{registration}/qr', [App\Http\Controllers\Eventner\ParticipantController::class, 'qrCode'])->name('eventner.participants.qr');

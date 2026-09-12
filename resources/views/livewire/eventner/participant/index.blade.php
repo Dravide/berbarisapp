@@ -121,6 +121,32 @@
                     <a href="{{ route('eventner.participants.qr-batch', ['category_id' => $activeTab]) }}" target="_blank" class="btn btn-sm btn-outline-dark d-flex align-items-center gap-1" title="Cetak QR Semua Peserta">
                         <i class="ti ti-qrcode fs-4"></i> QR
                     </a>
+                    {{-- Daftar ulang: satu halaman per kategori lomba, berisi kolom
+                         tanda tangan untuk diisi tangan di meja panitia. --}}
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-sm btn-outline-dark dropdown-toggle d-flex align-items-center gap-1"
+                                data-bs-toggle="dropdown" aria-expanded="false" title="Unduh Format Daftar Ulang Peserta">
+                            <i class="ti ti-clipboard-check fs-4"></i> Daftar Ulang
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a href="{{ route('eventner.participants.daftar-ulang', ['category_id' => $activeTab]) }}"
+                                   target="_blank" class="dropdown-item">
+                                    <i class="ti ti-file-type-pdf me-1"></i>
+                                    Kategori Ini
+                                    <span class="d-block fs-2 text-muted ms-4">Halaman khusus kategori yang sedang dibuka</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('eventner.participants.daftar-ulang') }}"
+                                   target="_blank" class="dropdown-item">
+                                    <i class="ti ti-files me-1"></i>
+                                    Semua Kategori
+                                    <span class="d-block fs-2 text-muted ms-4">Satu halaman per kategori lomba</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                     <span class="badge bg-light text-dark d-flex align-items-center px-3">{{ $registrations->count() }} peserta</span>
                     <button wire:click="openModal(activeTab)" class="btn btn-primary btn-sm">
                         <i class="ti ti-plus me-1"></i> Tambah

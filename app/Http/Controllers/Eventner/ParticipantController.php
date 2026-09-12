@@ -125,6 +125,65 @@ class ParticipantController extends Controller
             ->download($filename);
     }
 
+    /**
+     * Daftar ulang peserta per kategori lomba.
+     *
+     * Satu halaman per kategori (tingkat lomba) berisi kolom tanda tangan
+     * untuk sekolah yang hadir saat daftar ulang di meja panitia — dicetak
+     * sekali, diisi tangan, bukan per sekolah.
+     *
+     * Tanpa parameter: PDF berisi SEMUA kategori (halaman dipisah), supaya
+     * panitia tidak perlu mengunduh satu per satu.
+     */
+    public function downloadDaftarUlang(Request $request)
+    {
+        $eventner = Auth::user()->eventner;
+        if (!$eventner) {
+            abort(403, 'Anda bukan Eventner yang sah.');
+        }
+
+        $categoryId = $request->query('category_id') ?: null;
+
+        // Hanya kategori (tingkat) milik eventner ini — cegah membaca kategori
+        // event lain lewat ?category_id=.
+        $categories = $eventner->competitionCategories()
+            ->whereNotNull('parent_id')
+            ->with('parent')
+            ->when($categoryId, fn ($q) => $q->where('id', $categoryId))
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        if ($categories->isEmpty()) {
+            abort(404, 'Kategori lomba tidak ditemukan.');
+        }
+
+        // Urutan daftar ulang: nomor tampil (hasil undian) bila sudah ada,
+        // sisanya urut nama sekolah — sama dengan urutan di halaman peserta.
+        $registrations = Registration::with('participants')
+            ->where('eventner_id', $eventner->id)
+            ->whereIn('competition_category_id', $categories->pluck('id'))
+            ->where('status_berkas', '!=', 'dibatalkan')
+            ->orderBy('urutan_tampil')
+            ->orderBy('nama_sekolah')
+            ->get()
+            ->groupBy('competition_category_id');
+
+        ini_set('memory_limit', '512M');
+
+        $filename = $categoryId
+            ? 'Daftar_Ulang_' . str_replace(['/', '\\', ' '], '_', $categories->first()->name) . '.pdf'
+            : 'Daftar_Ulang_Semua_Kategori.pdf';
+
+        return Pdf::loadView('eventner.participant.pdf_daftar_ulang', [
+            'eventner' => $eventner,
+            'categories' => $categories,
+            'registrations' => $registrations,
+        ])
+            ->setPaper('a4', 'portrait')
+            ->download($filename);
+    }
+
     public function qrCode(Registration $registration)
     {
         $eventner = Auth::user()->eventner;
