@@ -34,6 +34,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="robots" content="noindex, nofollow">
+    {{-- Token juri ada di URL. Tanpa ini, browser mengirim URL penuh —
+         termasuk token — lewat header Referer ke fonts.googleapis.com dan
+         jsdelivr saat halaman memuat resource dari sana. --}}
+    <meta name="referrer" content="no-referrer">
     <meta name="theme-color" content="{{ $primaryColor }}">
 
     <link rel="shortcut icon" type="image/png"
@@ -43,7 +47,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family={{ str_replace(' ', '+', $fontSans) }}:{{ $sansWeight }}&family={{ str_replace(' ', '+', $fontDisplay) }}:{{ $displayWeight }}&display=swap" rel="stylesheet">
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    {{-- Versi di-pin persis: "@latest" membuat CDN bebas menyajikan versi
+         apa pun tanpa sepengetahuan kita. --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/tabler-icons.min.css">
 
     <style>
         :root {

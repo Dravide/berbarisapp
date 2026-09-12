@@ -28,7 +28,11 @@ return Application::configure(basePath: dirname(__DIR__))
             // Tidak memakai middleware 'subdomain' — host ini bukan tenant, jadi
             // tidak ada Eventner yang perlu di-resolve. Pencocokan domain hanya
             // memakai host, jadi skema (kalau ada di ENTRY_HOST) dibuang dulu.
-            Route::middleware('web')
+            // throttle: token di path adalah satu-satunya gerbang, jadi batasi
+            // laju percobaan token acak/scraping. 120/menit cukup longgar untuk
+            // tablet juri (tiap ketukan nilai = satu request Livewire) tapi
+            // menutup enumerasi.
+            Route::middleware(['web', 'throttle:120,1'])
                 ->domain(judge_entry_host())
                 ->group(base_path('routes/entry.php'));
         },

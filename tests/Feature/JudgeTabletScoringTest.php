@@ -118,6 +118,26 @@ class JudgeTabletScoringTest extends TestCase
             ->assertSee('noindex, nofollow');
     }
 
+    /**
+     * Token ada di URL. Tanpa no-referrer, browser mengirim URL penuh itu ke
+     * fonts.googleapis.com/jsdelivr lewat header Referer saat halaman memuat
+     * resource dari sana — token nyangkut di access log pihak ketiga.
+     */
+    public function test_halaman_tablet_tidak_membocorkan_token_lewat_referer()
+    {
+        $this->tablet('/juri/' . $this->judge->access_token)
+            ->assertOk()
+            ->assertSee('name="referrer" content="no-referrer"', false);
+    }
+
+    /** Aset pihak ketiga di-pin ke versi persis, bukan "@latest". */
+    public function test_aset_pihak_ketiga_di_pin_versinya()
+    {
+        $html = $this->tablet('/juri/' . $this->judge->access_token)->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('@latest', $html);
+    }
+
     /** Layout khusus juri — bukan layout frontend dengan nav + footer event. */
     public function test_halaman_tablet_memakai_layout_juri_tanpa_navigasi_event()
     {
