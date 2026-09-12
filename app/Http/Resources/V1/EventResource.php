@@ -34,6 +34,21 @@ class EventResource extends JsonResource
             'ticket_price' => $this->ticket_price,
             'ticket_max_per_order' => $this->ticket_max_per_order,
             'ticket_description' => $this->ticket_description,
+            // Tanpa daftar ini aplikasi tidak bisa menampilkan pilihan tempat,
+            // sementara `purchase` menolak (422) event multi-tempat yang tidak
+            // mengirim venue_id. Dikirim juga saat kosong supaya klien bisa
+            // membedakan "event tanpa tempat" dari "field belum ada".
+            'ticket_venues' => $this->ticketVenues()->map(fn ($venue) => [
+                'id' => $venue->id,
+                'name' => $venue->name,
+                'alamat' => $venue->alamat,
+                'latitude' => $venue->latitude,
+                'longitude' => $venue->longitude,
+                'ticket_price' => $venue->effectiveTicketPrice((int) $this->ticket_price),
+                'ticket_kuota' => $venue->ticket_kuota,
+                'remaining' => $venue->remainingTicketSlots(),
+                'is_sold_out' => $venue->isTicketSoldOut(),
+            ]),
             'link_instagram' => $this->link_instagram,
             'link_tiktok' => $this->link_tiktok,
             'link_whatsapp' => $this->link_whatsapp,

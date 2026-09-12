@@ -56,13 +56,24 @@ class EventTicket extends Component
             $this->eventner = Eventner::approved()->where('slug', $slug)->firstOrFail();
         }
 
-        if (!$this->eventner->ticket_active || !$this->eventner->ticket_price) {
+        // Harga boleh datang dari event atau dari tempat — lihat
+        // Eventner::hasTicketPrice(). Memeriksa `ticket_price` saja akan
+        // menutup halaman tiket untuk event yang menjual per tempat.
+        if (!$this->eventner->ticket_active || !$this->eventner->hasTicketPrice()) {
             abort(404, 'Tiket tidak tersedia untuk event ini.');
         }
 
         // Event satu tempat: pilih sendiri supaya pembeli tidak perlu memilih.
         if (!$this->eventner->sellsTicketPerVenue() && !$this->venueId) {
             $this->venueId = $this->eventner->ticketVenues()->first()?->id;
+        }
+
+        // Kembali ke halaman ini dengan venueId di query string yang tidak lagi
+        // dijual (mis. kuotanya baru ditutup) tidak boleh diam-diam mengarah ke
+        // tempat lain — pilihan yang hilang dibiarkan kosong supaya pembeli
+        // memilih ulang dan melihat sisa kuota terbaru.
+        if ($this->venueId && !$this->eventner->ticketVenues()->contains('id', (int) $this->venueId)) {
+            $this->venueId = null;
         }
 
         // Cek jadwal penjualan
@@ -118,6 +129,20 @@ class EventTicket extends Component
         return max(1, $max);
     }
 
+    /**
+     * Batas jumlah tanpa melihat kuota tempat.
+     *
+     * Dipakai hanya saat tempat yang dipilih sedang penuh: `maxPerOrder` yang
+     * ikut menyusut jadi 1 membuat validasi lolos, sehingga pembeli melihat
+     * "Gagal membuat QRIS" padahal penyebabnya kuota habis. Dengan batas ini,
+     * validasi tetap gagal dan pesannya menyebut tempat yang penuh.
+     */
+    #[Computed]
+    public function hardMaxPerOrder(): int
+    {
+        return max(1, (int) ($this->eventner->ticket_max_per_order ?? 10));
+    }
+
     public function incrementQuantity()
     {
         $this->quantity = min((int) $this->quantity + 1, $this->maxPerOrder);
@@ -170,19 +195,24 @@ class EventTicket extends Component
                 : ['nullable', Rule::exists('eventner_venues', 'id')->where('eventner_id', $this->eventner->id)],
         ], [], ['venueId' => 'tempat pelaksanaan']);
 
-        $max = $this->maxPerOrder;
-        $this->validate(['quantity' => "required|integer|min:1|max:{$max}"]);
-
         $venue = $this->selectedVenue;
         $unitPrice = $this->unitPrice;
-        $totalAmount = $this->quantity * $unitPrice;
 
-        // Tolak lebih awal supaya tidak memanggil AutoGoPay untuk transaksi yang
-        // pasti gagal. Pengecekan yang mengikat tetap di dalam TicketQuota::reserve.
+        // Luapan kuota ditolak lebih dulu dan dengan batas tanpa-kuota, supaya
+        // pembeli melihat "sudah habis" — bukan error gagal bayar yang
+        // menyesatkan. Pengecekan yang mengikat tetap di dalam TicketQuota::reserve.
         if ($venue && $venue->isTicketSoldOut()) {
             session()->flash('error', 'Tiket untuk ' . $venue->name . ' sudah habis.');
             return;
         }
+
+        // Validasi pakai batas order, bukan batas kuota: kelebihan kuota
+        // dilaporkan oleh TicketQuota::reserve() dengan pesan yang menyebut
+        // tempat dan sisa tiketnya — lebih jelas daripada "maksimal N tiket".
+        $max = $this->hardMaxPerOrder;
+        $this->validate(['quantity' => "required|integer|min:1|max:{$max}"]);
+
+        $totalAmount = $this->quantity * $unitPrice;
 
         try {
             // Generate QRIS via AutoGoPay

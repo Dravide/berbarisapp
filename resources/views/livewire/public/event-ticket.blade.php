@@ -98,7 +98,10 @@
                             <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 mb-4">
                                 <span class="text-xs text-on-surface-variant font-medium block mb-1">Total Pembayaran</span>
                                 <h2 class="text-2xl font-extrabold text-emerald-600 leading-tight">Rp {{ number_format($paymentAmount, 0, ',', '.') }}</h2>
-                                <span class="text-[11px] text-on-surface-variant font-medium block mt-1">{{ $quantity }} tiket × Rp {{ number_format($eventner->ticket_price, 0, ',', '.') }}</span>
+                                {{-- Pakai harga tempat yang dipilih, bukan harga event: untuk
+                                     event multi-tempat keduanya berbeda, dan rincian yang salah
+                                     membuat pembeli mengira totalnya keliru. --}}
+                                <span class="text-[11px] text-on-surface-variant font-medium block mt-1">{{ $quantity }} tiket × Rp {{ number_format($this->unitPrice, 0, ',', '.') }}</span>
                             </div>
 
                             {{-- Timer --}}
@@ -318,7 +321,10 @@
                                     <span class="text-[10px] text-on-surface-variant font-bold uppercase tracking-wider block">Harga Tiket</span>
                                     <h4 class="text-lg font-bold text-primary mb-0 mt-0.5">
                                         @if($eventner->sellsTicketPerVenue())
-                                            Mulai Rp {{ number_format($eventner->ticketVenues()->min(fn ($v) => $v->effectiveTicketPrice((int) $eventner->ticket_price)), 0, ',', '.') }}
+                                            {{-- Harga "mulai dari" dihitung dari tempat yang benar-benar
+                                                 berharga. Tempat tanpa harga jatuh ke harga event (bisa 0),
+                                                 yang kalau diikutkan akan menampilkan "Mulai Rp 0". --}}
+                                            Mulai Rp {{ number_format($eventner->startingTicketPrice() ?? 0, 0, ',', '.') }}
                                         @else
                                             Rp {{ number_format($this->unitPrice, 0, ',', '.') }}
                                         @endif

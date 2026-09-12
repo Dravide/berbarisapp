@@ -222,9 +222,53 @@ class Eventner extends Model
      */
     public function ticketVenues()
     {
-        return $this->activeVenues()
+        // Kalau relasi `venues` sudah di-eager-load, pakai itu — halaman landing
+        // memanggil method ini per kartu, dan query per kartu tidak perlu.
+        $venues = $this->relationLoaded('venues')
+            ? $this->venues
+                ->where('is_active', true)
+                ->sortBy([['sort_order', 'asc'], ['id', 'asc']])
+                ->values()
+            : $this->activeVenues();
+
+        return $venues
             ->filter(fn ($venue) => $venue->ticket_price !== null || $venue->ticket_kuota !== null)
             ->values();
+    }
+
+    /**
+     * Apakah event ini punya harga tiket yang bisa dibayar?
+     *
+     * Harga bisa datang dari event (`ticket_price`) atau dari tempat
+     * (`eventner_venues.ticket_price`). Memeriksa `ticket_price` saja membuat
+     * halaman tiket dan menu navigasi hilang untuk event yang harganya hanya
+     * diisi per tempat — jadi semua penanda "tiket dijual" harus lewat sini.
+     *
+     * Konvensi harga 0 disamakan dengan perilaku lama: dianggap belum diisi.
+     */
+    public function hasTicketPrice(): bool
+    {
+        if ($this->ticket_price) {
+            return true;
+        }
+
+        return $this->ticketVenues()->contains(fn ($venue) => (bool) $venue->ticket_price);
+    }
+
+    /**
+     * Harga tiket termurah yang bisa dibeli — untuk label "mulai dari".
+     * null = tidak ada harga yang bisa ditampilkan.
+     */
+    public function startingTicketPrice(): ?int
+    {
+        $berharga = $this->ticketVenues()
+            ->filter(fn ($venue) => (bool) $venue->ticket_price);
+
+        if ($berharga->isNotEmpty()) {
+            return (int) $berharga->min(fn ($venue) => (int) $venue->ticket_price);
+        }
+
+        return $this->ticket_price ? (int) $this->ticket_price : null;
     }
 
     public function tenants()

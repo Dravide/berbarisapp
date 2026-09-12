@@ -34,9 +34,13 @@
                             </span>
                         </div>
                     @endif
-                    @if($event->ticket_price)
+                    {{-- Harga bisa datang dari event atau dari tempat. Menampilkan
+                         `ticket_price` saja membuat event yang menjual per tempat
+                         terlabel GRATIS di landing. --}}
+                    @php $mulaiHarga = $event->startingTicketPrice(); @endphp
+                    @if($mulaiHarga)
                     <span class="absolute bottom-3 left-3 rounded-full bg-deep-slate/85 px-3 py-1 text-xs font-bold text-secondary backdrop-blur">
-                        Rp {{ number_format($event->ticket_price, 0, ',', '.') }}
+                        @if($event->sellsTicketPerVenue())Mulai @endif Rp {{ number_format($mulaiHarga, 0, ',', '.') }}
                     </span>
                     @else
                     <span class="chip absolute bottom-3 left-3 backdrop-blur">GRATIS</span>

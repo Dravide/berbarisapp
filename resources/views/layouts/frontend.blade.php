@@ -228,7 +228,7 @@
                     <a href="{{ event_url($eventner, 'participant') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.participant') || request()->routeIs('subdomain.participant') ? 'text-primary bg-primary/5' : '' }}">Peserta</a>
                     <a href="{{ event_url($eventner, 'results') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.results') || request()->routeIs('subdomain.results') ? 'text-primary bg-primary/5' : '' }}">Hasil</a>
                     <a href="{{ event_url($eventner, 'vote') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.vote') || request()->routeIs('subdomain.vote') ? 'text-primary bg-primary/5' : '' }}">Vote</a>
-                    @if($eventner?->ticket_active && $eventner?->ticket_price)
+                    @if($eventner?->ticket_active && $eventner?->hasTicketPrice())
                         <a href="{{ event_url($eventner, 'ticket') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.ticket') || request()->routeIs('subdomain.ticket') ? 'text-primary bg-primary/5' : '' }}">Tiket</a>
                     @endif
                 @else
@@ -364,7 +364,7 @@
                 ['url' => event_url($eventner, 'results'), 'label' => 'Hasil', 'icon' => 'ti-trophy', 'active' => request()->routeIs('event.results') || request()->routeIs('subdomain.results')],
                 ['url' => event_url($eventner, 'vote'), 'label' => 'Vote', 'icon' => 'ti-heart-filled', 'active' => request()->routeIs('event.vote') || request()->routeIs('subdomain.vote')],
             ];
-            if ($eventner->ticket_active && $eventner->ticket_price) {
+            if ($eventner->ticket_active && $eventner->hasTicketPrice()) {
                 $bottomNavItems[] = ['url' => event_url($eventner, 'ticket'), 'label' => 'Tiket', 'icon' => 'ti-ticket', 'active' => request()->routeIs('event.ticket') || request()->routeIs('subdomain.ticket')];
             }
         @endphp

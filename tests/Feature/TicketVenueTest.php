@@ -294,6 +294,105 @@ class TicketVenueTest extends TestCase
         ]);
     }
 
+    /**
+     * Harga hanya di tempat, event.ticket_price kosong: halaman tiket harus
+     * tetap hidup — dulu `!ticket_price` membuatnya 404.
+     */
+    public function test_harga_hanya_di_tempat_tidak_menutup_halaman_tiket()
+    {
+        $this->fakeAutoGoPay();
+
+        [, $smaSatu, $smaDua] = $this->makeEventDuaTempat(['ticket_price' => null]);
+
+        $this->get('/event/' . $smaSatu->eventner->slug . '/ticket')->assertOk();
+
+        Livewire::test(EventTicket::class, ['slug' => $smaSatu->eventner->slug])
+            ->set('venueId', $smaDua->id)
+            ->assertSee('35.000')
+            ->set('buyerName', 'Budi')
+            ->set('buyerEmail', 'budi@email.com')
+            ->set('quantity', 1)
+            ->call('submitTicket')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('tickets', [
+            'venue_id' => $smaDua->id,
+            'price_per_ticket' => 35000,
+            'total_amount' => 35000,
+        ]);
+    }
+
+    /** "Mulai dari" dihitung dari tempat berharga, bukan dari harga event 0. */
+    public function test_harga_mulai_dari_mengabaikan_tempat_tanpa_harga()
+    {
+        [, $smaSatu] = $this->makeEventDuaTempat(['ticket_price' => 0]);
+
+        // Tempat tanpa harga jatuh ke harga event (0) — tidak boleh jadi "Mulai Rp 0".
+        $smaSatu->update(['ticket_price' => null]);
+
+        $html = $this->get('/event/' . $smaSatu->eventner->slug . '/ticket')->assertOk()->getContent();
+
+        $this->assertStringContainsString('Mulai Rp 35.000', $html);
+        $this->assertStringNotContainsString('Mulai Rp 0', $html);
+    }
+
+    /** Menu "Tiket" muncul walau harga hanya diisi di tempat. */
+    public function test_menu_tiket_muncul_saat_harga_hanya_di_tempat()
+    {
+        [, $smaSatu] = $this->makeEventDuaTempat(['ticket_price' => null]);
+
+        $html = $this->get('/event/' . $smaSatu->eventner->slug)->assertOk()->getContent();
+
+        // Event ber-subdomain memakai /tiket, tanpa subdomain /event/{slug}/ticket —
+        // jadi alamatnya dibandingkan lewat helper yang sama dengan view.
+        $this->assertStringContainsString(event_url($smaSatu->eventner, 'ticket'), $html);
+    }
+
+    /** venueId di query string yang tidak lagi dijual dibiarkan kosong. */
+    public function test_venue_tidak_valid_di_query_string_tidak_mengarah_ke_tempat_lain()
+    {
+        [$event, $smaSatu, $smaDua] = $this->makeEventDuaTempat();
+        $smaDua->update(['is_active' => false]);
+
+        Livewire::withQueryParams(['venueId' => $smaDua->id])
+            ->test(EventTicket::class, ['slug' => $event->slug])
+            ->assertSet('venueId', null)
+            ->assertSee($smaSatu->name);
+    }
+
+    /** Tempat penuh → pesan "sudah habis", bukan gagal QRIS. */
+    public function test_tempat_penuh_memberi_pesan_habis_bukan_gagal_qris()
+    {
+        $this->fakeAutoGoPay();
+        [$event, , $smaDua] = $this->makeEventDuaTempat();
+        $smaDua->update(['ticket_kuota' => 1]);
+
+        Ticket::create([
+            'eventner_id' => $event->id,
+            'venue_id' => $smaDua->id,
+            'order_code' => 'TCK-FULL-1',
+            'buyer_name' => 'Budi',
+            'buyer_email' => 'budi@email.com',
+            'quantity' => 1,
+            'price_per_ticket' => 35000,
+            'total_amount' => 35000,
+            'status' => 'PENDING',
+        ]);
+
+        Livewire::test(EventTicket::class, ['slug' => $event->slug])
+            ->set('venueId', $smaDua->id)
+            ->set('buyerName', 'Siti')
+            ->set('buyerEmail', 'siti@email.com')
+            ->set('quantity', 1)
+            ->call('submitTicket')
+            ->assertSet('view', 'form')
+            ->assertSee('sudah habis');
+
+        // Tidak ada transaksi AutoGoPay yang dibuat untuk pembelian yang gagal.
+        Http::assertNothingSent();
+        $this->assertSame(1, Ticket::where('venue_id', $smaDua->id)->count());
+    }
+
     /** Check-in menolak tiket tempat A di gerbang tempat B. */
     public function test_scan_menolak_tiket_dari_gerbang_lain()
     {

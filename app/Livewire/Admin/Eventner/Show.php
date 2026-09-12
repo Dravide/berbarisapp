@@ -67,7 +67,9 @@ class Show extends Component
                 'icon' => 'ti-ticket',
                 'count' => $e->tickets()->count(),
                 'count_label' => 'Tiket',
-                'meta' => $e->ticket_active ? 'Aktif — Rp ' . number_format((int) $e->ticket_price, 0, ',', '.') : 'Belum diaktifkan',
+                'meta' => $e->ticket_active
+                    ? ($e->hasTicketPrice() ? 'Aktif — Rp ' . number_format((int) $e->startingTicketPrice(), 0, ',', '.') : 'Aktif — harga belum diisi')
+                    : 'Belum diaktifkan',
             ],
             'vote' => [
                 'label' => 'Voting',

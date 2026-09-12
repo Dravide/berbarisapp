@@ -76,15 +76,24 @@ class LandingPage extends Component
             ->limit(12)
             ->get();
 
+        // Event yang menjual tiket per tempat tidak punya `eventners.ticket_price`,
+        // jadi penyaring harga dipindah ke hasTicketPrice() — kalau tidak, event
+        // itu hilang dari section E-Tiket di landing.
         $ticketEvents = Eventner::where('ticket_active', true)
-            ->whereNotNull('ticket_price')
+            ->with('venues')
+            ->where(function ($q) {
+                $q->whereNotNull('ticket_price')
+                  ->orWhereHas('venues', fn ($v) => $v->where('is_active', true)->whereNotNull('ticket_price'));
+            })
             ->where(function ($q) {
                 $q->whereNull('ticket_end')
                   ->orWhere('ticket_end', '>=', now());
             })
             ->orderBy('created_at', 'desc')
             ->limit(8)
-            ->get();
+            ->get()
+            ->filter(fn ($event) => $event->hasTicketPrice())
+            ->values();
 
         $voteEvents = Eventner::where('vote_active', true)
             ->where(function ($q) {
