@@ -148,9 +148,6 @@
                         </ul>
                     </div>
                     <span class="badge bg-light text-dark d-flex align-items-center px-3">{{ $registrations->count() }} peserta</span>
-                    <button wire:click="openModal(activeTab)" class="btn btn-primary btn-sm">
-                        <i class="ti ti-plus me-1"></i> Tambah
-                    </button>
                 </div>
             </div>
 
