@@ -119,19 +119,53 @@ class ParticipantDaftarUlangTest extends TestCase
             ->assertOk();
     }
 
-    /** Kategori induk (parent_id null) bukan tingkat lomba — tidak boleh ikut. */
-    public function test_kategori_induk_tidak_ikut_daftar_ulang()
+    /** Tanpa parameter: hanya tingkat (child) yang tampil, bukan induk. */
+    public function test_pdf_semua_kategori_hanya_memuat_tingkat_lomba()
     {
         $this->makeRegistration('SD Negeri 1');
 
-        $response = $this->actingAs($this->user)
-            ->get(route('eventner.participants.daftar-ulang'));
-
-        $response->assertOk();
-
-        // Kategori yang dipakai hanya child (U13), bukan induk (LOBB).
         $this->actingAs($this->user)
-            ->get(route('eventner.participants.daftar-ulang', ['category_id' => $this->category->parent_id]))
+            ->get(route('eventner.participants.daftar-ulang'))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
+
+    /**
+     * ?category_id= boleh berisi kategori INDUK (parent_id null) — panitia
+     * memilih dari daftar kategori, dan yang terpilih sering induk. Dulu ini
+     * 404; sekarang induk dipecah jadi semua tingkat di bawahnya.
+     */
+    public function test_kategori_induk_mengunduh_semua_tingkat_di_bawahnya()
+    {
+        $sibling = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => $this->category->parent_id,
+            'name' => 'U16',
+        ]);
+
+        $this->makeRegistration('SD Negeri 1');
+        $this->makeRegistration('SMP Negeri 1', $sibling);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('eventner.participants.daftar-ulang', ['category_id' => $this->category->parent_id]));
+
+        $response->assertOk()->assertHeader('content-type', 'application/pdf');
+
+        // Nama unduhan memakai nama induk, bukan tingkat pertama.
+        $this->assertStringContainsString('LOBB', $response->headers->get('content-disposition'));
+    }
+
+    /** Induk tanpa tingkat anak tidak menghasilkan PDF kosong — tetap 404. */
+    public function test_kategori_induk_tanpa_tingkat_anak_ditolak()
+    {
+        $emptyParent = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => null,
+            'name' => 'KOSONG',
+        ]);
+
+        $this->actingAs($this->user)
+            ->get(route('eventner.participants.daftar-ulang', ['category_id' => $emptyParent->id]))
             ->assertNotFound();
     }
 
