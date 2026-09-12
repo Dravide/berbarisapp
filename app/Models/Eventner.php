@@ -186,6 +186,24 @@ class Eventner extends Model
         return $this->hasMany(Sponsor::class);
     }
 
+    public function venues()
+    {
+        return $this->hasMany(EventnerVenue::class);
+    }
+
+    /**
+     * Tempat aktif berurutan. Dipakai semua view yang perlu mencetak daftar
+     * tempat event (tiket, check-in, rundown).
+     */
+    public function activeVenues()
+    {
+        return $this->venues()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+    }
+
     public function tenants()
     {
         return $this->hasMany(Tenant::class);

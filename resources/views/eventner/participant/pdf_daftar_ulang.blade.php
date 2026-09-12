@@ -101,7 +101,12 @@
                         @if($eventner->tanggal)
                             &middot; {{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d F Y') }}
                         @endif
-                        @if($eventner->venue) &middot; {{ $eventner->venue }} @endif
+                        @php
+                            // Konteks event: sebutkan semua tempat, bukan hanya satu.
+                            $duVenues = $eventner->activeVenues()->pluck('name');
+                            $duVenueText = $duVenues->isNotEmpty() ? $duVenues->implode(' / ') : $eventner->venue;
+                        @endphp
+                        @if($duVenueText) &middot; {{ $duVenueText }} @endif
                     </div>
                 </td>
             </tr>

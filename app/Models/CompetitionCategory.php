@@ -9,7 +9,7 @@ class CompetitionCategory extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['eventner_id', 'parent_id', 'name', 'tanggal_pelaksanaan', 'kuota', 'max_registrations_per_school', 'registration_fee', 'sort_order'];
+    protected $fillable = ['eventner_id', 'parent_id', 'venue_id', 'name', 'tanggal_pelaksanaan', 'kuota', 'max_registrations_per_school', 'registration_fee', 'sort_order'];
 
     protected function casts(): array
     {
@@ -31,6 +31,11 @@ class CompetitionCategory extends Model
     public function children()
     {
         return $this->hasMany(self::class, 'parent_id');
+    }
+
+    public function venue()
+    {
+        return $this->belongsTo(EventnerVenue::class, 'venue_id');
     }
 
     public function judges()

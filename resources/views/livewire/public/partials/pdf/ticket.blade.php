@@ -81,7 +81,19 @@
                     <td class="value">{{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d F Y') }}</td>
                 </tr>
             @endif
-            @if($eventner->lokasi)
+            @php $pdfVenues = $eventner->activeVenues(); @endphp
+            @if($pdfVenues->isNotEmpty())
+                {{-- Multi-tempat: satu tiket berlaku untuk seluruh event, jadi
+                     semua tempat dicetak berurutan. --}}
+                <tr class="row">
+                    <td class="label">Tempat Pelaksanaan</td>
+                    <td class="value">
+                        @foreach($pdfVenues as $venue)
+                            {{ $venue->label }}@if(!$loop->last)<br>@endif
+                        @endforeach
+                    </td>
+                </tr>
+            @elseif($eventner->lokasi)
                 <tr class="row">
                     <td class="label">Lokasi</td>
                     <td class="value">{{ $eventner->lokasi }}</td>

@@ -45,7 +45,13 @@
                         <i class="ti ti-building-skyscraper text-primary me-1"></i> Diselenggarakan oleh: <span class="text-primary font-bold">{{ $eventner->diselenggarakan_oleh }}</span>
                     </p>
                     <div class="flex flex-wrap items-center gap-3 mt-2 text-xs font-semibold text-on-surface-variant">
-                        @if($eventner->venue)
+                        @php $scanVenues = $eventner->activeVenues(); @endphp
+                        @if($scanVenues->isNotEmpty())
+                            {{-- Lomba bisa digelar di beberapa tempat; sebutkan semuanya di sini. --}}
+                            @foreach($scanVenues as $venue)
+                                <span><i class="ti ti-map-pin text-primary me-1"></i> {{ $venue->name }}</span>
+                            @endforeach
+                        @elseif($eventner->venue)
                             <span><i class="ti ti-map-pin text-primary me-1"></i> {{ $eventner->venue }}</span>
                         @endif
                         @if($eventner->tanggal)

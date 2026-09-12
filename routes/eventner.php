@@ -16,6 +16,7 @@ Route::get('judges', App\Livewire\Eventner\Judge\Index::class)->name('eventner.j
 // {judge} = kartu semua juri, satu juri per dua halaman.
 Route::get('judges/kartu-akses/{judge?}', [App\Http\Controllers\Eventner\JudgeCardController::class, 'download'])->name('eventner.judges.kartu-akses');
 Route::get('judges/{judge}/format-pdf/{competitionCategoryId?}', [App\Http\Controllers\Eventner\FormatNilaiController::class, 'downloadPdfByJudge'])->name('eventner.judges.format-pdf');
+Route::get('venues', App\Livewire\Eventner\Venue\Index::class)->name('eventner.venues.index');
 Route::get('competition-categories', App\Livewire\Eventner\CompetitionCategory\Index::class)->name('eventner.competition-categories.index');
 Route::get('participants', App\Livewire\Eventner\Participant\Index::class)->name('eventner.participants.index');
 // Didaftarkan SEBELUM rute {registration} — kalau tidak, "daftar-ulang" akan

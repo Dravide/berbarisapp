@@ -27,6 +27,13 @@
                     <small class="text-white/75"><i class="ti ti-drag-drop"></i> Drag &amp; drop untuk urutkan</small>
                 </div>
                 <div class="card-body p-4">
+                    @if($this->availableVenues->count() > 1)
+                        <div class="alert alert-info bg-primary-subtle text-primary border-0 fs-2 py-2 mb-3">
+                            <i class="ti ti-map-pin"></i>
+                            Event ini punya {{ $this->availableVenues->count() }} tempat pelaksanaan. Tentukan tempat tiap tingkat lomba
+                            supaya tertera di tiket peserta.
+                        </div>
+                    @endif
                     @if($this->parentCategories->isEmpty() && $this->orphanChildren->isEmpty())
                         <div class="text-center py-5">
                             <h5 class="fw-semibold text-muted">Belum ada Kategori Lomba</h5>
@@ -69,6 +76,11 @@
                                                                 <div class="d-flex flex-wrap gap-2 mt-1">
                                                                     @if($child->tanggal_pelaksanaan)
                                                                         <span class="badge bg-light-primary text-primary"><i class="ti ti-calendar"></i> {{ \Carbon\Carbon::parse($child->tanggal_pelaksanaan)->translatedFormat('d M Y') }}</span>
+                                                                    @endif
+                                                                    @if($child->venue)
+                                                                        <span class="badge bg-light-warning text-warning"><i class="ti ti-map-pin"></i> {{ $child->venue->name }}</span>
+                                                                    @elseif($this->availableVenues->count() > 1)
+                                                                        <span class="badge bg-danger-subtle text-danger"><i class="ti ti-map-pin-off"></i> Tempat belum ditentukan</span>
                                                                     @endif
                                                                     @if($child->kuota)
                                                                         <span class="badge bg-light-info text-info">{{ $child->registrations()->count() }} / {{ $child->kuota }}</span>
@@ -120,6 +132,9 @@
                                             <div class="flex-grow-1">
                                                 <h6 class="fw-semibold mb-0">{{ $orphan->name }}</h6>
                                                 <div class="d-flex flex-wrap gap-2 mt-1">
+                                                    @if($orphan->venue)
+                                                        <span class="badge bg-light-warning text-warning"><i class="ti ti-map-pin"></i> {{ $orphan->venue->name }}</span>
+                                                    @endif
                                                     @if($orphan->kuota)
                                                         <span class="badge bg-light-info text-info">{{ $orphan->registrations()->count() }} / {{ $orphan->kuota }}</span>
                                                     @endif
@@ -176,6 +191,26 @@
                                 <label class="form-label">Tanggal Pelaksanaan <span class="text-muted">(Opsional)</span></label>
                                 <input type="date" class="form-control" wire:model="tanggal_pelaksanaan">
                                 @error('tanggal_pelaksanaan') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Tempat Lomba <span class="text-muted">(Opsional)</span></label>
+                                <select class="form-select" wire:model="venueId">
+                                    <option value="">&mdash; Belum ditentukan &mdash;</option>
+                                    @foreach($this->availableVenues as $venue)
+                                        <option value="{{ $venue->id }}">{{ $venue->name }}{{ $venue->alamat ? ' — ' . $venue->alamat : '' }}</option>
+                                    @endforeach
+                                </select>
+                                @if($this->availableVenues->isEmpty())
+                                    <small class="form-text text-muted">
+                                        Belum ada tempat terdaftar.
+                                        <a href="{{ route('eventner.venues.index') }}" class="text-primary">Tambah tempat</a> dulu
+                                        bila lomba digelar di lebih dari satu lokasi.
+                                    </small>
+                                @else
+                                    <small class="form-text text-muted">Pilih tempat tingkat lomba ini digelar. Kelola daftar tempat di menu Tempat Lomba.</small>
+                                @endif
+                                @error('venueId') <span class="text-danger fs-2 d-block mt-1">{{ $message }}</span> @enderror
                             </div>
 
                             <div class="mb-3">

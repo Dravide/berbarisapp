@@ -15,8 +15,18 @@
     // Susun dulu data tiap juri — QR dirender sekali per juri, bukan di
     // tengah loop tampilan, supaya kegagalan render mudah ditangani.
     $cards = $judges->map(function ($judge) {
-        $levelNames = $judge->assessmentCategories
-            ->map(fn ($c) => $c->competitionCategory?->full_name)
+        $levels = $judge->assessmentCategories
+            ->map(fn ($c) => $c->competitionCategory)
+            ->filter()
+            ->unique('id')
+            ->values();
+
+        $levelNames = $levels->map(fn ($c) => $c->full_name)->values();
+
+        // Tempat tugas juri ini: gabung nama tempat unik dari tingkat yang
+        // dinilainya. Bisa lebih dari satu kalau lomba digelar di 2 lokasi.
+        $venueNames = $levels
+            ->map(fn ($c) => $c->venue?->name)
             ->filter()
             ->unique()
             ->values();
@@ -27,7 +37,7 @@
         // memaksa outputInterface (nama properti yang benar di v6).
         $qrImage = qr_data_uri($url, 12);
 
-        return compact('judge', 'levelNames', 'url', 'qrImage');
+        return compact('judge', 'levelNames', 'venueNames', 'url', 'qrImage');
     });
 @endphp
 <!DOCTYPE html>
@@ -130,7 +140,12 @@
                         @if($eventner->tanggal)
                             &middot; {{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d F Y') }}
                         @endif
-                        @if($eventner->venue) &middot; {{ $eventner->venue }} @endif
+                        @php
+                            // Konteks event: sebutkan semua tempat pelaksanaan.
+                            $kartuVenues = $eventner->activeVenues()->pluck('name');
+                            $kartuVenueText = $kartuVenues->isNotEmpty() ? $kartuVenues->implode(' / ') : $eventner->venue;
+                        @endphp
+                        @if($kartuVenueText) &middot; {{ $kartuVenueText }} @endif
                     </div>
                 </td>
             </tr>
@@ -172,6 +187,16 @@
                     {{ $level }}@if(!$loop->last), @endif
                 @empty
                     <span style="color:#c0392b;">—</span>
+                @endforelse
+            </td>
+        </tr>
+        <tr>
+            <td class="lbl">Tempat Bertugas</td>
+            <td class="val">
+                @forelse($venueNames as $venueName)
+                    {{ $venueName }}@if(!$loop->last), @endif
+                @empty
+                    &mdash;
                 @endforelse
             </td>
         </tr>

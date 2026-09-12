@@ -162,6 +162,15 @@
               <span class="hide-menu">QR Link Event</span>
             </a>
           </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.venues.*') ? 'active' : '' }}"
+              href="{{ route('eventner.venues.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-map-pin"></i>
+              </span>
+              <span class="hide-menu">Tempat Lomba</span>
+            </a>
+          </li>
 
           {{-- ============================================ --}}
           {{-- PESERTA --}}

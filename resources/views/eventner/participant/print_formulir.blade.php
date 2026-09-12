@@ -332,6 +332,10 @@
                 <td class="lbl">Kontak (HP / WA)</td>
                 <td>{{ $registration->no_hp }}</td>
             </tr>
+            <tr>
+                <td class="lbl">Tempat Lomba</td>
+                <td colspan="3">{{ $registration->competitionCategory?->venue?->label ?? '-' }}</td>
+            </tr>
         </table>
 
         <!-- STRUKTUR PASUKAN -->

@@ -4,8 +4,10 @@ namespace App\Livewire\Eventner\CompetitionCategory;
 
 use Livewire\Component;
 use App\Models\CompetitionCategory;
+use App\Models\EventnerVenue;
 use App\Models\Judge;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Computed;
 
@@ -18,6 +20,7 @@ class Index extends Component
     public $kuota = '';
     public $max_registrations_per_school = 1;
     public $registration_fee = '';
+    public $venueId = null;
     public $selectedJudges = [];
 
     public $isEditMode = false;
@@ -68,7 +71,7 @@ class Index extends Component
     {
         return CompetitionCategory::whereNull('parent_id')
             ->where('eventner_id', $this->eventnerId)
-            ->with(['children' => fn($q) => $q->with('judges', 'registrations')->orderBy('sort_order')])
+            ->with(['children' => fn($q) => $q->with('judges', 'registrations', 'venue')->orderBy('sort_order')])
             ->orderBy('sort_order')
             ->get();
     }
@@ -79,7 +82,7 @@ class Index extends Component
         return CompetitionCategory::whereNotNull('parent_id')
             ->where('eventner_id', $this->eventnerId)
             ->whereDoesntHave('parent', fn($q) => $q->where('eventner_id', $this->eventnerId))
-            ->with('judges', 'registrations')
+            ->with('judges', 'registrations', 'venue')
             ->orderBy('sort_order')
             ->get();
     }
@@ -97,6 +100,16 @@ class Index extends Component
     public function availableJudges()
     {
         return Judge::where('eventner_id', $this->eventnerId)->get();
+    }
+
+    #[Computed]
+    public function availableVenues()
+    {
+        return EventnerVenue::where('eventner_id', $this->eventnerId)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
     }
 
     public function toggleExpand($id)
@@ -124,6 +137,12 @@ class Index extends Component
             $rules['max_registrations_per_school'] = 'required|integer|min:1';
             $rules['tanggal_pelaksanaan'] = 'nullable|date';
             $rules['registration_fee'] = 'nullable|numeric|min:0';
+            // exists saja tidak cukup — venueId datang dari klien, jadi harus
+            // dipastikan tempatnya memang milik eventner ini (cegah IDOR).
+            $rules['venueId'] = [
+                'nullable',
+                Rule::exists('eventner_venues', 'id')->where('eventner_id', $this->eventnerId),
+            ];
         }
 
         $this->validate($rules);
@@ -137,11 +156,13 @@ class Index extends Component
             $data['kuota'] = null;
             $data['max_registrations_per_school'] = 1;
             $data['tanggal_pelaksanaan'] = null;
+            $data['venue_id'] = null;
         } else {
             $data['kuota'] = $this->kuota ?: null;
             $data['max_registrations_per_school'] = $this->max_registrations_per_school;
             $data['tanggal_pelaksanaan'] = $this->tanggal_pelaksanaan ?: null;
             $data['registration_fee'] = $this->registration_fee !== '' ? $this->registration_fee : null;
+            $data['venue_id'] = $this->venueId ?: null;
         }
 
         if ($this->isEditMode && $this->editingId) {
@@ -187,6 +208,7 @@ class Index extends Component
         $this->max_registrations_per_school = $cat->max_registrations_per_school ?? 1;
         $this->tanggal_pelaksanaan = $cat->tanggal_pelaksanaan ?? '';
         $this->registration_fee = $cat->registration_fee ?? '';
+        $this->venueId = $cat->venue_id;
         $this->selectedJudges = $cat->judges->pluck('id')->toArray();
     }
 
@@ -205,7 +227,7 @@ class Index extends Component
 
     public function resetForm()
     {
-        $this->reset(['name', 'parentId', 'kuota', 'max_registrations_per_school', 'tanggal_pelaksanaan', 'registration_fee', 'selectedJudges', 'isEditMode', 'editingId']);
+        $this->reset(['name', 'parentId', 'kuota', 'max_registrations_per_school', 'tanggal_pelaksanaan', 'registration_fee', 'venueId', 'selectedJudges', 'isEditMode', 'editingId']);
         $this->max_registrations_per_school = 1;
     }
 

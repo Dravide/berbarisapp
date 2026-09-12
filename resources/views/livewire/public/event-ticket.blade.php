@@ -282,7 +282,18 @@
                                         <span>{{ $tanggalLabel }}</span>
                                     </div>
                                 @endif
-                                @if($eventner->venue || $eventner->lokasi)
+                                @php $ticketVenues = $eventner->activeVenues(); @endphp
+                                @if($ticketVenues->isNotEmpty())
+                                    {{-- Multi-tempat: tiket berlaku untuk seluruh event, jadi semua tempat dicetak. --}}
+                                    <div class="flex items-start gap-2 text-deep-slate">
+                                        <i class="ti ti-map-pin text-base text-primary mt-0.5 shrink-0"></i>
+                                        <div class="flex flex-col gap-0.5">
+                                            @foreach($ticketVenues as $venue)
+                                                <span>{{ $venue->label }}</span>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @elseif($eventner->venue || $eventner->lokasi)
                                     <div class="flex items-start gap-2 text-deep-slate">
                                         <i class="ti ti-map-pin text-base text-primary mt-0.5 shrink-0"></i>
                                         <span>{{ $eventner->venue }} @if($eventner->venue && $eventner->lokasi) &mdash; @endif {{ $eventner->lokasi }}</span>

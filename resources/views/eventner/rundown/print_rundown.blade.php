@@ -222,10 +222,15 @@
             <div class="kop-text">
                 <h1 class="kop-title">{{ $eventner->nama_event }}</h1>
                 <p class="kop-sub">Diselenggarakan oleh: {{ $eventner->diselenggarakan_oleh }}</p>
+                @php
+                    // Konteks event: sebutkan semua tempat, bukan hanya satu.
+                    $rundownVenues = $eventner->activeVenues()->pluck('name');
+                    $rundownVenueText = $rundownVenues->isNotEmpty() ? $rundownVenues->implode(' / ') : $eventner->venue;
+                @endphp
                 @if($eventner->tanggal)
                     <p class="kop-sub">
                         {{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d F Y') }}
-                        @if($eventner->venue) — {{ $eventner->venue }} @endif
+                        @if($rundownVenueText) — {{ $rundownVenueText }} @endif
                     </p>
                 @endif
             </div>
