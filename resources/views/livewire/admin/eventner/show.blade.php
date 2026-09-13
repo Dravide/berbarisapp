@@ -366,7 +366,7 @@
                                     @endif
                                     @foreach($this->plans as $plan)
                                         <option value="{{ $plan->id }}">
-                                            {{ $plan->name }}@if(!$plan->is_active || $plan->is_contact) — tidak ditawarkan lagi @endif
+                                            {{ $plan->name }}@if(!$plan->is_active) — nonaktif @endif
                                         </option>
                                     @endforeach
                                 </select>

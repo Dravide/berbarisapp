@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Eventner;
 use App\Models\SaasPlan;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -43,13 +44,20 @@ class Index extends Component
     }
 
     /**
-     * Paket yang boleh dipasang admin. Paket "hubungi admin" (is_contact)
-     * adalah jalur prospek, bukan paket yang bisa di-assign.
+     * Paket yang boleh dipasang admin.
+     *
+     * Paket "hubungi admin" (is_contact) IKUT ditawarkan. is_contact hanya
+     * mengubah tombol di halaman harga publik menjadi "Hubungi Admin" —
+     * tidak ada hubungannya dengan fitur. PricingSettings::savePlan() tetap
+     * menyimpan feature_key paket contact justru supaya bisa dipasang admin
+     * (lihat komentarnya di sana). Menyaringnya di sini membuat paket
+     * seperti "Paket Sosial" atau "Hanya Voting" tidak pernah bisa dipakai.
+     *
+     * Yang tetap disaring: paket nonaktif.
      */
-    public function getPlansProperty()
+    public function getPlansProperty(): Collection
     {
         return SaasPlan::where('is_active', true)
-            ->where('is_contact', false)
             ->orderBy('sort_order')
             ->get();
     }
@@ -104,14 +112,14 @@ class Index extends Component
             $rules['username'] = 'required|string|max:255|unique:users';
             $rules['email'] = 'required|email|max:255|unique:users';
             // Paket wajib dipilih saat membuat. Pengubahannya di halaman detail.
-            // Paket "hubungi admin" (is_contact) bukan paket yang bisa di-assign.
+            // Paket nonaktif ditolak; paket is_contact boleh (lihat getPlansProperty).
             // Kondisi where ditulis 0/1, bukan false/true: cast binding Laravel
             // mengubah false menjadi string kosong, dan SQLite tidak pernah
             // mencocokkan '' dengan kolom boolean bernilai 0 (MySQL lolos karena
             // memaksa '' jadi angka).
             $rules['saas_plan_id'] = [
                 'required',
-                Rule::exists('saas_plans', 'id')->where('is_contact', 0)->where('is_active', 1),
+                Rule::exists('saas_plans', 'id')->where('is_active', 1),
             ];
         }
 

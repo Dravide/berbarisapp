@@ -126,24 +126,47 @@ class AdminAssignPlanTest extends TestCase
         $this->assertDatabaseMissing('eventners', ['nama_event' => 'Lomba Baris Berbaris 2026']);
     }
 
-    public function test_paket_khusus_hubungi_admin_tidak_bisa_dipasang()
+    /**
+     * is_contact hanya mengubah tombol di halaman harga publik jadi "Hubungi
+     * Admin" — tidak ada hubungannya dengan fitur. Paket seperti "Hanya Voting"
+     * justru lazim bertipe contact, jadi harus bisa dipasang admin.
+     */
+    public function test_paket_hubungi_admin_tetap_bisa_dipasang()
     {
         $admin = User::factory()->admin()->create(['is_active' => true]);
-        $contact = $this->makePlan('Paket Khusus', false, [], [
+        $contact = $this->makePlan('Hanya Voting', false, ['vote_settings', 'vote_results'], [
             'is_contact' => true,
             'contact_url' => 'https://wa.me/6281234567890',
         ]);
 
-        // Tidak muncul di daftar paket.
-        $this->assertFalse(
+        $this->assertTrue(
             (new Index())->plans->contains('id', $contact->id),
-            'Paket is_contact tidak boleh muncul sebagai pilihan admin.'
+            'Paket is_contact harus muncul sebagai pilihan admin.'
         );
 
-        // Dan tetap ditolak validasi kalau id-nya dipaksa lewat.
         Livewire::actingAs($admin)
             ->test(Index::class)
             ->set($this->formData(['saas_plan_id' => $contact->id]))
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $eventner = Eventner::where('nama_event', 'Lomba Baris Berbaris 2026')->firstOrFail();
+
+        $this->assertSame($contact->id, $eventner->saas_plan_id);
+        $this->assertTrue($eventner->canAccessFeature('vote_results'));
+        $this->assertFalse($eventner->canAccessFeature('tickets'), 'Fitur di luar paket tetap terkunci.');
+    }
+
+    public function test_paket_nonaktif_tidak_bisa_dipasang()
+    {
+        $admin = User::factory()->admin()->create(['is_active' => true]);
+        $mati = $this->makePlan('Paket Mati', false, ['tickets'], ['is_active' => false]);
+
+        $this->assertFalse((new Index())->plans->contains('id', $mati->id));
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->set($this->formData(['saas_plan_id' => $mati->id]))
             ->call('save')
             ->assertHasErrors(['saas_plan_id']);
     }
@@ -250,9 +273,15 @@ class AdminAssignPlanTest extends TestCase
         $this->assertTrue($component->plans->contains('id', $dipakai->id), 'Paket terpasang tetap ditawarkan.');
         $this->assertFalse($component->plans->contains('id', $lain->id), 'Paket nonaktif yang tidak dipakai tidak ditawarkan.');
 
+        // Dan menyimpan ulang paket yang sudah nonaktif itu tetap boleh.
         Livewire::actingAs($admin)
             ->test(Show::class, ['id' => $eventner->id])
-            ->assertSee('tidak ditawarkan lagi');
+            ->assertSee('nonaktif')
+            ->set('planId', $dipakai->id)
+            ->call('savePlan')
+            ->assertHasNoErrors();
+
+        $this->assertSame($dipakai->id, $eventner->refresh()->saas_plan_id);
     }
 
     public function test_ubah_paket_tanpa_memilih_ditolak()

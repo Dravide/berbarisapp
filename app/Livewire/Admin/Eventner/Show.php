@@ -61,20 +61,21 @@ class Show extends Component
     }
 
     /**
-     * Paket yang boleh dipasang admin. Paket "hubungi admin" (is_contact)
-     * adalah jalur prospek, bukan paket yang bisa di-assign, dan paket
-     * nonaktif tidak ditawarkan.
+     * Paket yang boleh dipasang admin.
+     *
+     * Paket "hubungi admin" (is_contact) IKUT ditawarkan — is_contact hanya
+     * mengubah tombol di halaman harga publik, bukan fitur. Lihat catatan di
+     * Admin\Eventner\Index::getPlansProperty().
      *
      * Pengecualian: paket yang sedang terpasang di event ini selalu ikut
-     * ditampilkan, walau sudah dinonaktifkan atau diubah jadi is_contact.
-     * Tanpa itu, select tidak punya opsi yang cocok dengan nilai saat ini
-     * dan admin terkunci — memilih apa pun berarti memindahkan event ini ke
-     * paket lain tanpa jalan kembali.
+     * ditampilkan, walau sudah dinonaktifkan. Tanpa itu, select tidak punya
+     * opsi yang cocok dengan nilai saat ini dan admin terkunci — menyimpan
+     * berarti memindahkan event ini ke paket lain tanpa jalan kembali.
      */
     public function getPlansProperty(): Collection
     {
         return SaasPlan::where(function ($q) {
-                $q->where(fn ($q) => $q->where('is_active', true)->where('is_contact', false))
+                $q->where('is_active', true)
                   ->orWhere('id', $this->eventner->saas_plan_id);
             })
             ->orderBy('sort_order')
@@ -86,8 +87,16 @@ class Show extends Component
         $this->validate([
             'planId' => [
                 'required',
-                // 0/1, bukan false/true — lihat catatan di Admin\Eventner\Index::save().
-                Rule::exists('saas_plans', 'id')->where('is_contact', 0)->where('is_active', 1),
+                // Paket nonaktif ditolak, kecuali paket yang sedang terpasang:
+                // tanpa pengecualian ini, menyimpan ulang event yang paketnya
+                // sudah dinonaktifkan akan gagal tanpa jalan keluar.
+                Rule::exists('saas_plans', 'id')->where(function ($q) {
+                    $q->where('is_active', 1);
+
+                    if ($this->eventner->saas_plan_id !== null) {
+                        $q->orWhere('id', $this->eventner->saas_plan_id);
+                    }
+                }),
             ],
         ], [], ['planId' => 'paket']);
 
