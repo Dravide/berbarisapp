@@ -222,6 +222,39 @@ class AdminAssignPlanTest extends TestCase
             ->assertSee('Paket gratis');
     }
 
+    /**
+     * Paket yang sudah terpasang tapi kemudian dinonaktifkan harus tetap
+     * muncul sebagai opsi. Kalau hilang, select tidak punya nilai yang cocok
+     * dan admin terkunci — menyimpan berarti memindahkan event ke paket lain.
+     */
+    public function test_paket_terpasang_yang_nonaktif_tetap_muncul_sebagai_opsi()
+    {
+        $admin = User::factory()->admin()->create(['is_active' => true]);
+        $dipakai = $this->makePlan('Paket Lama', false, ['tickets']);
+        $lain = $this->makePlan('Paket Baru', false, ['certificate'], ['sort_order' => 2]);
+
+        $eventner = Eventner::factory()->paid()->create([
+            'saas_plan_id' => $dipakai->id,
+            'registration_paid_at' => now(),
+        ]);
+
+        $dipakai->update(['is_active' => false]);
+
+        // Paket nonaktif lain tidak ikut muncul.
+        $lain->update(['is_active' => false]);
+
+        $component = new Show();
+        $component->eventnerId = $eventner->id;
+        $component->loadData();
+
+        $this->assertTrue($component->plans->contains('id', $dipakai->id), 'Paket terpasang tetap ditawarkan.');
+        $this->assertFalse($component->plans->contains('id', $lain->id), 'Paket nonaktif yang tidak dipakai tidak ditawarkan.');
+
+        Livewire::actingAs($admin)
+            ->test(Show::class, ['id' => $eventner->id])
+            ->assertSee('tidak ditawarkan lagi');
+    }
+
     public function test_ubah_paket_tanpa_memilih_ditolak()
     {
         $admin = User::factory()->admin()->create(['is_active' => true]);

@@ -365,7 +365,9 @@
                                         <option value="">Akses Penuh (legacy)</option>
                                     @endif
                                     @foreach($this->plans as $plan)
-                                        <option value="{{ $plan->id }}">{{ $plan->name }}</option>
+                                        <option value="{{ $plan->id }}">
+                                            {{ $plan->name }}@if(!$plan->is_active || $plan->is_contact) — tidak ditawarkan lagi @endif
+                                        </option>
                                     @endforeach
                                 </select>
                                 @error('planId') <div class="invalid-feedback">{{ $message }}</div> @enderror

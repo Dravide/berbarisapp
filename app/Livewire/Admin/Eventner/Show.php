@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Eventner;
 use App\Models\SaasPlan;
 use App\Models\Registration;
+use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 use App\Models\VoteTransaction;
 use App\Models\CompetitionCategory;
@@ -61,12 +62,21 @@ class Show extends Component
 
     /**
      * Paket yang boleh dipasang admin. Paket "hubungi admin" (is_contact)
-     * adalah jalur prospek, bukan paket yang bisa di-assign.
+     * adalah jalur prospek, bukan paket yang bisa di-assign, dan paket
+     * nonaktif tidak ditawarkan.
+     *
+     * Pengecualian: paket yang sedang terpasang di event ini selalu ikut
+     * ditampilkan, walau sudah dinonaktifkan atau diubah jadi is_contact.
+     * Tanpa itu, select tidak punya opsi yang cocok dengan nilai saat ini
+     * dan admin terkunci — memilih apa pun berarti memindahkan event ini ke
+     * paket lain tanpa jalan kembali.
      */
-    public function getPlansProperty()
+    public function getPlansProperty(): Collection
     {
-        return SaasPlan::where('is_active', true)
-            ->where('is_contact', false)
+        return SaasPlan::where(function ($q) {
+                $q->where(fn ($q) => $q->where('is_active', true)->where('is_contact', false))
+                  ->orWhere('id', $this->eventner->saas_plan_id);
+            })
             ->orderBy('sort_order')
             ->get();
     }
