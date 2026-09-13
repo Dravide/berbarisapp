@@ -26,13 +26,20 @@ class SearchLinks extends Component
     private function resolveUrls(array $groups): array
     {
         foreach ($groups as &$group) {
+            $group['items'] = array_values(array_filter($group['items'], fn($item) => !isset($item['condition']) || $item['condition']));
+
             foreach ($group['items'] as &$item) {
-                $path = $item['route'] ? route($item['route'], [], false) : '';
+                $path = $item['route'] ? route($item['route'], $item['params'] ?? [], false) : '';
                 $item['url'] = $path ? url($path) : '#';
                 $item['path'] = $path ? '/' . ltrim($path, '/') : '';
+                $item['target'] = $item['target'] ?? '_self';
+                unset($item['params'], $item['condition']);
             }
+            unset($item);
         }
-        return $groups;
+        unset($group);
+
+        return array_values(array_filter($groups, fn($group) => !empty($group['items'])));
     }
 
     private function adminLinks(): array
@@ -82,6 +89,18 @@ class SearchLinks extends Component
                         'icon' => 'ti ti-layout',
                         'locked' => false,
                     ],
+                    [
+                        'label' => 'Pengaturan Harga',
+                        'route' => 'admin.pricing-settings',
+                        'icon' => 'ti ti-currency-dollar',
+                        'locked' => false,
+                    ],
+                    [
+                        'label' => 'Pendapatan',
+                        'route' => 'admin.revenue',
+                        'icon' => 'ti ti-chart-line',
+                        'locked' => false,
+                    ],
                 ],
             ],
         ];
@@ -119,6 +138,12 @@ class SearchLinks extends Component
                         'icon' => 'ti ti-qrcode',
                         'locked' => false,
                     ],
+                    [
+                        'label' => 'Tempat Lomba',
+                        'route' => 'eventner.venues.index',
+                        'icon' => 'ti ti-map-pin',
+                        'locked' => false,
+                    ],
                 ],
             ],
             [
@@ -147,6 +172,12 @@ class SearchLinks extends Component
                         'route' => 'eventner.drawing.index',
                         'icon' => 'ti ti-arrows-shuffle',
                         'locked' => $locked('drawing'),
+                    ],
+                    [
+                        'label' => 'Rundown Acara',
+                        'route' => 'eventner.rundown.index',
+                        'icon' => 'ti ti-list-details',
+                        'locked' => $locked('rundown'),
                     ],
                 ],
             ],
@@ -212,6 +243,12 @@ class SearchLinks extends Component
                         'icon' => 'ti ti-file-invoice',
                         'locked' => $locked('vote_transactions'),
                     ],
+                    [
+                        'label' => 'Komentar Voting',
+                        'route' => 'eventner.vote-comments.index',
+                        'icon' => 'ti ti-messages',
+                        'locked' => $locked('vote_transactions'),
+                    ],
                 ],
             ],
             [
@@ -240,6 +277,24 @@ class SearchLinks extends Component
                         'icon' => 'ti ti-video',
                         'locked' => $locked('livestream'),
                     ],
+                    [
+                        'label' => 'Live Scoreboard',
+                        'route' => 'public.scoreboard',
+                        'params' => ['scoringCode' => $ev?->scoring_code],
+                        'icon' => 'ti ti-presentation',
+                        'locked' => false,
+                        'target' => '_blank',
+                        'condition' => (bool) $ev?->scoring_code,
+                    ],
+                    [
+                        'label' => 'Pengumuman Juara',
+                        'route' => 'public.champions',
+                        'params' => ['scoringCode' => $ev?->scoring_code],
+                        'icon' => 'ti ti-trophy',
+                        'locked' => false,
+                        'target' => '_blank',
+                        'condition' => (bool) $ev?->scoring_code,
+                    ],
                 ],
             ],
             [
@@ -261,6 +316,12 @@ class SearchLinks extends Component
                         'label' => 'Galeri',
                         'route' => 'eventner.gallery.index',
                         'icon' => 'ti ti-photo',
+                        'locked' => false,
+                    ],
+                    [
+                        'label' => 'Kirim Notifikasi',
+                        'route' => 'eventner.notification.index',
+                        'icon' => 'ti ti-bell',
                         'locked' => false,
                     ],
                 ],
@@ -296,6 +357,19 @@ class SearchLinks extends Component
                         'route' => 'eventner.bank-accounts.index',
                         'icon' => 'ti ti-building-bank',
                         'locked' => false,
+                    ],
+                    [
+                        'label' => 'TTD & Stempel',
+                        'route' => 'eventner.signatures.index',
+                        'icon' => 'ti ti-signature',
+                        'locked' => false,
+                    ],
+                    [
+                        'label' => 'Upgrade Paket',
+                        'route' => 'eventner.billing.upgrade',
+                        'icon' => 'ti ti-bolt',
+                        'locked' => false,
+                        'condition' => $ev && $ev->plan !== 'paid',
                     ],
                 ],
             ],

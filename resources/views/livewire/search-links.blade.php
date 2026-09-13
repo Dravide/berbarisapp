@@ -42,7 +42,7 @@
                                 </li>
                                 <template x-for="item in group.items" :key="item.label">
                                     <li class="p-1 mb-1 bg-hover-light-black rounded">
-                                        <a :href="item.url"
+                                        <a :href="item.url" :target="item.target"
                                             class="d-flex align-items-center gap-2 text-decoration-none">
                                             <i :class="item.icon + ' fs-5 text-muted flex-shrink-0'" style="width: 24px;"></i>
                                             <div class="flex-grow-1 min-width-0">
@@ -54,7 +54,8 @@
                                             <i class="ti ti-lock text-warning flex-shrink-0" style="font-size: 0.7rem;"
                                                 title="Fitur premium — upgrade untuk mengakses"
                                                 x-show="item.locked"></i>
-                                            <i class="ti ti-arrow-narrow-right text-muted fs-5 flex-shrink-0"
+                                            <i class="ti text-muted fs-5 flex-shrink-0"
+                                                :class="item.target === '_blank' ? 'ti-external-link' : 'ti-arrow-narrow-right'"
                                                 x-show="!item.locked"></i>
                                         </a>
                                     </li>
