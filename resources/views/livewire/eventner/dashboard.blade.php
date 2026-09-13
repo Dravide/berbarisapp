@@ -48,31 +48,9 @@
                 @endif
             @endif
 
-            {{-- Locked Features Panel --}}
-            {{-- Hanya untuk eventner trial yang habis dan tanpa paket terpasang:
-                 daftar terkuncinya sudah ikut tampil di header. --}}
-            @if($eventner->plan === 'free' && !$eventner->saasPlan && $isTrialExpired && !empty($lockedFeatures))
-                <div class="card border-warning-subtle bg-warning-subtle shadow-none mb-4">
-                    <div class="card-body py-3">
-                        <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="ti ti-lock text-warning-emphasis"></i>
-                                <h6 class="fw-semibold mb-0 text-warning-emphasis">Fitur Terkunci</h6>
-                            </div>
-                            <a href="{{ route('eventner.billing.upgrade') }}" class="btn btn-sm btn-warning fw-semibold">
-                                <i class="ti ti-bolt me-1"></i> Buka Semua Fitur
-                            </a>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            @foreach($lockedFeatures as $key => $label)
-                                <span class="badge bg-light text-muted border rounded-1 px-3 py-2">
-                                    <i class="ti ti-lock me-1"></i> {{ $label }}
-                                </span>
-                            @endforeach
-                        </div>
-                    </div>
-                </div>
-            @endif
+            {{-- Panel "Fitur Terkunci" dihapus: daftarnya sekarang ada di modal
+                 Fitur Paket, dan banner trial di atas sudah membawa tombol
+                 upgrade. --}}
 
             <!-- Header & Breadcrumb -->
             <div class="card bg-info-subtle shadow-none position-relative overflow-hidden mb-4">
@@ -89,44 +67,21 @@
                                 </ol>
                             </nav>
 
-                            {{-- Paket aktif + fitur yang bisa dipakai --}}
+                            {{-- Paket aktif — rincian fitur di modal. --}}
                             @if(!empty($planInfo))
-                                <div class="mt-2">
-                                    <div class="d-flex align-items-center flex-wrap gap-2">
-                                        <span class="badge bg-{{ $planInfo['status_class'] }} fs-2">
-                                            {{ $planInfo['status'] }}
-                                        </span>
-                                        <span class="fw-semibold fs-3">{{ $planInfo['name'] }}</span>
-                                        <a href="{{ route('eventner.billing.upgrade') }}"
-                                           class="text-decoration-none fs-2 text-muted">
-                                            <i class="ti ti-arrow-up-right"></i> Ubah paket
-                                        </a>
-                                    </div>
-
-                                    <div class="d-flex align-items-start flex-wrap gap-2 mt-2">
-                                        <span class="text-muted fs-2 text-nowrap">Fitur tersedia:</span>
-                                        @forelse($planInfo['included'] as $label)
-                                            <span class="badge bg-light text-dark border rounded-1 px-2 py-1">
-                                                <i class="ti ti-check text-success me-1"></i>{{ $label }}
-                                            </span>
-                                        @empty
-                                            <span class="text-muted fs-2">
-                                                Belum ada fitur premium. Fitur inti (peserta, juri, penilaian,
-                                                scoreboard) tetap tersedia.
-                                            </span>
-                                        @endforelse
-                                    </div>
-
-                                    @if(!empty($lockedFeatures))
-                                        <div class="d-flex align-items-start flex-wrap gap-2 mt-2">
-                                            <span class="text-muted fs-2 text-nowrap">Belum termasuk:</span>
-                                            @foreach($lockedFeatures as $key => $label)
-                                                <span class="badge bg-light text-muted border rounded-1 px-2 py-1">
-                                                    <i class="ti ti-lock me-1"></i>{{ $label }}
-                                                </span>
-                                            @endforeach
-                                        </div>
-                                    @endif
+                                <div class="d-flex align-items-center flex-wrap gap-2 mt-2">
+                                    <span class="badge bg-{{ $planInfo['status_class'] }} fs-2">
+                                        {{ $planInfo['status'] }}
+                                    </span>
+                                    <span class="fw-semibold fs-3">{{ $planInfo['name'] }}</span>
+                                    <button type="button" class="btn btn-sm btn-light border" data-bs-toggle="modal"
+                                        data-bs-target="#planInfoModal">
+                                        <i class="ti ti-info-circle me-1"></i> Fitur Paket
+                                    </button>
+                                    <a href="{{ route('eventner.billing.upgrade') }}"
+                                       class="text-decoration-none fs-2 text-muted">
+                                        <i class="ti ti-arrow-up-right"></i> Ubah paket
+                                    </a>
                                 </div>
                             @endif
                         </div>
@@ -138,6 +93,79 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Modal rincian paket: fitur yang bisa dipakai & yang belum termasuk --}}
+            @if(!empty($planInfo))
+                <div class="modal fade" id="planInfoModal" tabindex="-1" aria-labelledby="planInfoModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header border-bottom">
+                                <div>
+                                    <h5 class="modal-title fw-semibold mb-1" id="planInfoModalLabel">
+                                        {{ $planInfo['name'] }}
+                                    </h5>
+                                    <span class="badge bg-{{ $planInfo['status_class'] }} fs-2">
+                                        {{ $planInfo['status'] }}
+                                    </span>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <h6 class="fw-semibold mb-2">
+                                    <i class="ti ti-check text-success me-1"></i>Fitur yang bisa dipakai
+                                </h6>
+                                @if(!empty($planInfo['included']))
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @foreach($planInfo['included'] as $label)
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-1 px-3 py-2">
+                                                <i class="ti ti-check me-1"></i>{{ $label }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <p class="text-muted fs-3 mb-0">
+                                        Belum ada fitur premium di paket ini.
+                                    </p>
+                                @endif
+
+                                <p class="text-muted fs-2 mt-3 mb-0">
+                                    Fitur inti — data event, peserta, juri, penilaian, dan scoreboard —
+                                    selalu tersedia di semua paket.
+                                </p>
+
+                                @if(!empty($lockedFeatures))
+                                    <hr class="my-3">
+                                    <h6 class="fw-semibold mb-2">
+                                        <i class="ti ti-lock text-warning-emphasis me-1"></i>Belum termasuk
+                                    </h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @foreach($lockedFeatures as $key => $label)
+                                            <span class="badge bg-light text-muted border rounded-1 px-3 py-2">
+                                                <i class="ti ti-lock me-1"></i>{{ $label }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <p class="text-muted fs-2 mt-3 mb-0">
+                                        <i class="ti ti-check text-success me-1"></i>
+                                        Semua fitur premium terbuka untuk paket ini.
+                                    </p>
+                                @endif
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                                    Tutup
+                                </button>
+                                <a href="{{ route('eventner.billing.upgrade') }}" class="btn btn-primary">
+                                    <i class="ti ti-bolt me-1"></i> Ubah Paket
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             {{-- Quick Actions Bar --}}
             <div class="card shadow-none border mb-4">
