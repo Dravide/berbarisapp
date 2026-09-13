@@ -126,6 +126,41 @@ class Eventner extends Model
         return $this->belongsTo(SaasPlan::class, 'saas_plan_id');
     }
 
+    /**
+     * Paket dianggap aktif kalau berbayar, atau sudah pernah diaktifkan admin.
+     * Dipakai untuk badge status di admin, sidebar, dashboard, dan landing.
+     */
+    public function hasActivePlan(): bool
+    {
+        return $this->plan === 'paid' || $this->registration_paid_at !== null;
+    }
+
+    /**
+     * Pasang paket secara manual (grant admin) — langsung aktif, tanpa QRIS.
+     *
+     * `plan` wajib ikut dihitung dari is_free paketnya: paket gratis tidak
+     * menyimpan satu pun feature_key, jadi memasangnya sebagai 'paid' akan
+     * membuat canAccessFeature() mengunci semua fitur, bukan membukanya.
+     * `trial_ends_at` dinolkan supaya paket gratis langsung berlaku sebagai
+     * gratis, bukan trial. `registration_paid_at` dipakai sebagai penanda
+     * "diaktifkan" — nilainya dipertahankan kalau sudah pernah terisi.
+     */
+    public function assignPlan(SaasPlan $plan, ?string $source = null): void
+    {
+        $attributes = [
+            'plan' => $plan->is_free ? 'free' : 'paid',
+            'saas_plan_id' => $plan->id,
+            'registration_paid_at' => $this->registration_paid_at ?? now(),
+            'trial_ends_at' => null,
+        ];
+
+        if ($source !== null) {
+            $attributes['registration_source'] = $source;
+        }
+
+        $this->update($attributes);
+    }
+
     public function signatures()
     {
         return $this->hasMany(EventnerSignature::class);

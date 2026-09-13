@@ -8,7 +8,7 @@
     // CTA per kartu — auth eventner free → upgrade, lainnya → daftar
     $user = auth()->user();
     $eventner = $user && $user->role === 'Eventner' ? $user->eventner : null;
-    $hasPaid = $eventner && ($eventner->plan === 'paid' || $eventner->registration_paid_at);
+    $hasPaid = $eventner && $eventner->hasActivePlan();
 @endphp
 
 <section id="pricing" class="section-pad bg-surface">

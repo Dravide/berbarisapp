@@ -310,13 +310,18 @@
                         <div class="card-header bg-white d-flex justify-content-between align-items-center">
                             <h5 class="card-title fw-semibold mb-0">Paket SaaS</h5>
                             @php
-                                $hasPaid = $eventner->plan === 'paid' || $eventner->registration_paid_at;
+                                $hasPaid = $eventner->hasActivePlan();
                                 $trialLeft = $eventner->trialDaysLeft();
                             @endphp
-                            @if($eventner->plan === 'paid' && $hasPaid)
-                                <span class="badge bg-success fs-2">Aktif</span>
+                            {{-- Paket yang dipasang admin langsung aktif, termasuk paket
+                                 gratis (plan='free', trial_ends_at null). Karena itu cabang
+                                 pertama dikunci pada ada/tidaknya saasPlan, bukan pada
+                                 plan === 'paid' — kalau tidak, paket gratis jatuh ke
+                                 cabang trial dan tampil "Trial Berakhir". --}}
+                            @if($eventner->saasPlan)
+                                <span class="badge bg-success fs-2">{{ $hasPaid ? 'Aktif' : 'Belum Bayar' }}</span>
                             @elseif($eventner->plan === 'paid')
-                                <span class="badge bg-warning text-dark fs-2">Belum Bayar</span>
+                                <span class="badge bg-success fs-2">Aktif</span>
                             @elseif($eventner->isOnTrial())
                                 <span class="badge bg-warning text-dark fs-2">Trial {{ $trialLeft }} Hari</span>
                             @else
@@ -351,6 +356,26 @@
                                     {{ $eventner->plan === 'paid' ? 'Paket berbayar lama — semua fitur terbuka.' : 'Paket gratis — fitur dasar.' }}
                                 </p>
                             @endif
+
+                            <div class="border-top pt-3 mt-3">
+                                <label class="form-label fs-2" for="planId">Ubah Paket</label>
+                                <select class="form-select form-select-sm @error('planId') is-invalid @enderror"
+                                    id="planId" wire:model="planId">
+                                    @if($eventner->saas_plan_id === null)
+                                        <option value="">Akses Penuh (legacy)</option>
+                                    @endif
+                                    @foreach($this->plans as $plan)
+                                        <option value="{{ $plan->id }}">{{ $plan->name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('planId') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <button type="button" class="btn btn-sm btn-primary mt-2"
+                                    wire:click="savePlan" wire:loading.attr="disabled">
+                                    <span wire:loading.remove wire:target="savePlan">Simpan Paket</span>
+                                    <span wire:loading wire:target="savePlan">Menyimpan...</span>
+                                </button>
+                                <small class="text-muted d-block mt-2">Paket langsung aktif tanpa pembayaran.</small>
+                            </div>
                             <ul class="list-unstyled mb-0 small">
                                 <li class="d-flex justify-content-between">
                                     <span class="text-muted">Sumber Pendaftaran</span>

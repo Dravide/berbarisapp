@@ -4,8 +4,10 @@ namespace App\Livewire\Admin\Eventner;
 
 use Livewire\Component;
 use App\Models\Eventner;
+use App\Models\SaasPlan;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
@@ -26,7 +28,8 @@ class Index extends Component
     public $tanggal_pendaftaran = '';
     public $technical_meeting = '';
     public $tingkat_perlombaan = '';
-    
+    public $saas_plan_id = '';
+
     // User fields
     public $username = '';
     public $email = '';
@@ -37,6 +40,18 @@ class Index extends Component
     public function mount()
     {
         $this->loadEventners();
+    }
+
+    /**
+     * Paket yang boleh dipasang admin. Paket "hubungi admin" (is_contact)
+     * adalah jalur prospek, bukan paket yang bisa di-assign.
+     */
+    public function getPlansProperty()
+    {
+        return SaasPlan::where('is_active', true)
+            ->where('is_contact', false)
+            ->orderBy('sort_order')
+            ->get();
     }
 
     public function loadEventners()
@@ -58,7 +73,7 @@ class Index extends Component
 
     public function resetForm()
     {
-        $this->reset(['eventnerId', 'nama_event', 'diselenggarakan_oleh', 'lokasi', 'venue', 'tanggal', 'tanggal_pendaftaran', 'technical_meeting', 'tingkat_perlombaan', 'username', 'email', 'isEditMode']);
+        $this->reset(['eventnerId', 'nama_event', 'diselenggarakan_oleh', 'lokasi', 'venue', 'tanggal', 'tanggal_akhir', 'tanggal_pendaftaran', 'technical_meeting', 'tingkat_perlombaan', 'saas_plan_id', 'username', 'email', 'isEditMode']);
         $this->resetValidation();
     }
 
@@ -88,6 +103,16 @@ class Index extends Component
         } else {
             $rules['username'] = 'required|string|max:255|unique:users';
             $rules['email'] = 'required|email|max:255|unique:users';
+            // Paket wajib dipilih saat membuat. Pengubahannya di halaman detail.
+            // Paket "hubungi admin" (is_contact) bukan paket yang bisa di-assign.
+            // Kondisi where ditulis 0/1, bukan false/true: cast binding Laravel
+            // mengubah false menjadi string kosong, dan SQLite tidak pernah
+            // mencocokkan '' dengan kolom boolean bernilai 0 (MySQL lolos karena
+            // memaksa '' jadi angka).
+            $rules['saas_plan_id'] = [
+                'required',
+                Rule::exists('saas_plans', 'id')->where('is_contact', 0)->where('is_active', 1),
+            ];
         }
 
         $this->validate($rules);
@@ -127,14 +152,10 @@ class Index extends Component
                 'role' => 'Eventner',
             ]);
 
-            // Create Eventner — admin buat langsung full akses (tanpa saas_plan = legacy full)
-            Eventner::create([
+            // Create Eventner — paket dipilih admin, langsung aktif tanpa QRIS
+            $eventner = Eventner::create([
                 'user_id' => $user->id,
                 'status' => 'approved',
-                'plan' => 'paid',
-                'trial_ends_at' => null,
-                'registration_paid_at' => now(),
-                'registration_source' => 'admin',
                 'nama_event' => $this->nama_event,
                 'diselenggarakan_oleh' => $this->diselenggarakan_oleh,
                 'lokasi' => $this->lokasi,
@@ -145,6 +166,8 @@ class Index extends Component
                 'technical_meeting' => $this->technical_meeting,
                 'tingkat_perlombaan' => $this->tingkat_perlombaan,
             ]);
+
+            $eventner->assignPlan(SaasPlan::findOrFail($this->saas_plan_id), 'admin');
 
             session()->flash('success', 'Data Eventner dan Akun User (Password default: password) berhasil dibuat.');
         }

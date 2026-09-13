@@ -4,7 +4,9 @@ namespace App\Livewire\Admin\Eventner;
 
 use Livewire\Component;
 use App\Models\Eventner;
+use App\Models\SaasPlan;
 use App\Models\Registration;
+use Illuminate\Validation\Rule;
 use App\Models\VoteTransaction;
 use App\Models\CompetitionCategory;
 use App\Models\Judge;
@@ -22,6 +24,9 @@ class Show extends Component
     public $totalJudges = 0;
     public $recentRegistrations;
 
+    /** Paket yang sedang dipilih di kartu "Paket SaaS" ('' = legacy). */
+    public $planId = '';
+
     public function mount($id)
     {
         $this->eventnerId = $id;
@@ -32,6 +37,8 @@ class Show extends Component
     {
         $this->eventner = Eventner::with(['user', 'competitionCategories', 'saasPlan.features'])
             ->findOrFail($this->eventnerId);
+
+        $this->planId = $this->eventner->saas_plan_id ?? '';
 
         // Stats
         $this->totalRevenue = VoteTransaction::where('eventner_id', $this->eventnerId)
@@ -50,6 +57,36 @@ class Show extends Component
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
+    }
+
+    /**
+     * Paket yang boleh dipasang admin. Paket "hubungi admin" (is_contact)
+     * adalah jalur prospek, bukan paket yang bisa di-assign.
+     */
+    public function getPlansProperty()
+    {
+        return SaasPlan::where('is_active', true)
+            ->where('is_contact', false)
+            ->orderBy('sort_order')
+            ->get();
+    }
+
+    public function savePlan()
+    {
+        $this->validate([
+            'planId' => [
+                'required',
+                // 0/1, bukan false/true — lihat catatan di Admin\Eventner\Index::save().
+                Rule::exists('saas_plans', 'id')->where('is_contact', 0)->where('is_active', 1),
+            ],
+        ], [], ['planId' => 'paket']);
+
+        $plan = SaasPlan::findOrFail($this->planId);
+        $this->eventner->assignPlan($plan);
+
+        $this->loadData();
+
+        session()->flash('success', "Paket event berhasil diubah ke \"{$plan->name}\".");
     }
 
     /**

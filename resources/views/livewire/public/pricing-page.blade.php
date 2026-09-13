@@ -20,7 +20,7 @@
                 @php
                     $eventner = auth()->user()?->role === 'Eventner' ? auth()->user()->eventner : null;
                     $isOwned = $eventner && $eventner->saas_plan_id === $plan['id'];
-                    $hasPaid = $eventner && ($eventner->plan === 'paid' || $eventner->registration_paid_at);
+                    $hasPaid = $eventner && $eventner->hasActivePlan();
                 @endphp
                 <div class="surface-card relative flex flex-col overflow-hidden p-8 {{ $plan['highlight'] ? 'border-2 border-secondary' : '' }}">
                     @if($plan['highlight'])

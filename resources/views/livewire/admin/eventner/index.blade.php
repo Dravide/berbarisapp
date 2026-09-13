@@ -85,7 +85,7 @@
                                 </td>
                                 <td>
                                     @php
-                                        $hasPaid = $eventner->plan === 'paid' || $eventner->registration_paid_at;
+                                        $hasPaid = $eventner->hasActivePlan();
                                     @endphp
                                     @if($eventner->saasPlan)
                                         <span class="badge {{ $hasPaid ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning' }}">
@@ -217,6 +217,22 @@
                                 @error('tingkat_perlombaan') <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+                            @if(!$isEditMode)
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label" for="saas_plan_id">Paket SaaS <span
+                                            class="text-danger">*</span></label>
+                                    <select class="form-select @error('saas_plan_id') is-invalid @enderror"
+                                        id="saas_plan_id" wire:model="saas_plan_id">
+                                        <option value="">— Pilih Paket —</option>
+                                        @foreach($this->plans as $plan)
+                                            <option value="{{ $plan->id }}">{{ $plan->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('saas_plan_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    <small class="text-muted">Langsung aktif tanpa pembayaran. Bisa diubah nanti dari
+                                        halaman detail event.</small>
+                                </div>
+                            @endif
                         </div>
 
                         <div class="row mt-3 border-top pt-3">
