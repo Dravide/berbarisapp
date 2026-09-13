@@ -56,6 +56,71 @@
                 </div>
             </div>
         </div>
+    @elseif ($isActive)
+        {{-- Paket sudah aktif: halaman ini menjadi ringkasan, bukan penawaran. --}}
+        @php
+            $plan = $eventner->saasPlan;
+            $gated = config('eventner_features', []);
+            $included = [];
+            foreach ($gated as $key => $config) {
+                if (!$eventner->canAccessFeature($key)) {
+                    continue;
+                }
+                // Paket berbayar: hanya fitur yang tercantum di paket. Fitur
+                // ber-locked_free yang lolos tanpa tercantum (eventner legacy
+                // berbayar) tidak dilaporkan supaya daftarnya tidak menyesatkan.
+                if ($plan !== null && !$plan->features->pluck('feature_key')->contains($key)) {
+                    continue;
+                }
+                $included[] = $config['label'];
+            }
+        @endphp
+
+        <div class="card mb-4">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-3">
+                    <div>
+                        <h5 class="fw-semibold mb-1">{{ $plan?->name ?? 'Akses Penuh' }}</h5>
+                        <p class="text-muted small mb-0">
+                            @if ($eventner->registration_source === 'admin')
+                                Paket ini ditentukan oleh admin.
+                            @elseif ($plan)
+                                Diaktifkan {{ $eventner->registration_paid_at?->translatedFormat('d M Y') }}.
+                            @else
+                                Paket lama — semua fitur premium terbuka.
+                            @endif
+                        </p>
+                    </div>
+                    <span class="badge bg-success fs-2">Aktif</span>
+                </div>
+
+                <h6 class="fw-semibold mb-2">
+                    <i class="ti ti-check text-success me-1"></i>Fitur yang bisa dipakai
+                </h6>
+                @if (!empty($included))
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach ($included as $label)
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-1 px-3 py-2">
+                                <i class="ti ti-check me-1"></i>{{ $label }}
+                            </span>
+                        @endforeach
+                    </div>
+                @else
+                    <p class="text-muted fs-3 mb-0">Belum ada fitur premium di paket ini.</p>
+                @endif
+
+                <p class="text-muted small mt-3 mb-0">
+                    Fitur inti — data event, peserta, juri, penilaian, dan scoreboard — selalu tersedia.
+                </p>
+            </div>
+        </div>
+
+        @if ($plan === null || $eventner->registration_source === 'admin')
+            <div class="alert alert-info border-0 bg-info-subtle text-info-emphasis">
+                <i class="ti ti-info-circle me-2"></i>
+                Perubahan paket dilakukan oleh admin. Hubungi admin jika paket ini perlu diubah.
+            </div>
+        @endif
     @else
         {{-- ============================ --}}
         {{-- STATUS PLAN & PILIH PAKET --}}
@@ -64,6 +129,20 @@
             $isTrialExpired = $eventner->isTrialExpired();
             $trialDaysLeft = $eventner->trialDaysLeft();
             $paidPlans = $plans->filter(fn ($p) => !$p->is_free)->values();
+
+            // Paket terpasang tapi belum dibayar (eventner berbayar yang
+            // mendaftar sendiri). Kartu ini harus melaporkan paket itu apa
+            // adanya — bukan "Paket Gratis / Sedang Digunakan", yang akan
+            // membuat eventner mengira tidak ada yang perlu dibayar.
+            //
+            // Patokannya registration_paid_at, bukan hasActivePlan(): eventner
+            // berbayar sudah ber-plan 'paid' sejak mendaftar, sebelum membayar.
+            // Paket gratis bukan tunggakan — pendaftar gratis tetap dapat
+            // kartu trial di bawah, bukan "Belum Bayar".
+            $currentPlan = $eventner->saasPlan;
+            $awaitingPayment = $currentPlan !== null
+                && !$currentPlan->is_free
+                && $eventner->registration_paid_at === null;
         @endphp
 
         <div class="row g-4 mb-4">
@@ -72,17 +151,29 @@
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-start mb-3">
                             <div>
-                                <h5 class="fw-semibold mb-1">Paket Gratis</h5>
-                                <p class="text-muted small mb-0">Paket Anda saat ini</p>
+                                <h5 class="fw-semibold mb-1">{{ $currentPlan?->name ?? 'Paket Gratis' }}</h5>
+                                <p class="text-muted small mb-0">
+                                    {{ $awaitingPayment ? 'Dipilih, pembayaran belum diselesaikan' : 'Paket Anda saat ini' }}
+                                </p>
                             </div>
-                            <span class="badge {{ $isTrialExpired ? 'bg-danger' : 'bg-warning text-dark' }} fs-2">
-                                {{ $isTrialExpired ? 'Trial Berakhir' : 'Trial ' . $trialDaysLeft . ' Hari' }}
-                            </span>
+                            @if ($awaitingPayment)
+                                <span class="badge bg-danger fs-2">Belum Bayar</span>
+                            @else
+                                <span class="badge {{ $isTrialExpired ? 'bg-danger' : 'bg-warning text-dark' }} fs-2">
+                                    {{ $isTrialExpired ? 'Trial Berakhir' : 'Trial ' . $trialDaysLeft . ' Hari' }}
+                                </span>
+                            @endif
                         </div>
-                        <h3 class="fw-bold mb-3">Gratis</h3>
+                        <h3 class="fw-bold mb-3">
+                            {{ $awaitingPayment ? 'Rp ' . number_format($currentPlan->price, 0, ',', '.') : 'Gratis' }}
+                        </h3>
                         <ul class="list-unstyled d-flex flex-column gap-2 mb-4 small">
                             <li><i class="ti ti-check text-success me-2"></i>Fitur dasar: peserta, juri, input & rekap nilai, scoreboard</li>
-                            @if (!$isTrialExpired && $trialDaysLeft > 0)
+                            @if ($awaitingPayment)
+                                @foreach($currentPlan->features as $feature)
+                                    <li><i class="ti ti-check text-success me-2"></i>{{ config("eventner_features.{$feature->feature_key}.label", $feature->feature_key) }}</li>
+                                @endforeach
+                            @elseif (!$isTrialExpired && $trialDaysLeft > 0)
                                 <li><i class="ti ti-clock text-warning me-2"></i>Sementara bisa akses fitur premium (masih trial)</li>
                             @else
                                 @foreach(array_slice(config('eventner_features', []), 0, 6) as $key => $config)
@@ -90,7 +181,9 @@
                                 @endforeach
                             @endif
                         </ul>
-                        <span class="btn btn-light disabled w-100">Sedang Digunakan</span>
+                        <span class="btn btn-light disabled w-100">
+                            {{ $awaitingPayment ? 'Menunggu Pembayaran' : 'Sedang Digunakan' }}
+                        </span>
                     </div>
                 </div>
             </div>

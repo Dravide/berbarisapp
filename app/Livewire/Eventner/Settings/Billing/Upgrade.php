@@ -22,16 +22,48 @@ class Upgrade extends Component
     public ?string $paymentTransactionId = null;
     public ?SaasPlan $selectedPlan = null;
 
+    /** Paket sudah aktif — halaman ini jadi ringkasan, bukan pembelian. */
+    public bool $isActive = false;
+
+    /**
+     * Halaman ini melayani dua hal: menyelesaikan pembayaran paket yang belum
+     * dibayar, dan menjelaskan paket yang sudah aktif.
+     *
+     * Sumber kebenaran "sudah aktif" adalah registration_paid_at, BUKAN plan —
+     * lihat catatan yang sama di AutoGoPayWebhookController::handleEventnerSettlement().
+     * Eventner berbayar ber-plan 'paid' sejak mendaftar, sebelum membayar; kalau
+     * penjagaannya memakai plan, mereka tidak akan pernah sampai ke QRIS.
+     */
     public function mount()
     {
-        $this->eventner = Auth::user()->eventner;
-        if (!$this->eventner) {
-            abort(403);
+        $eventner = Auth::user()->eventner;
+
+        // Admin (atau akun tanpa data event) tidak punya apa pun untuk
+        // di-upgrade. Sebelumnya di sini abort(403), tapi akun admin memang
+        // tidak punya eventner, sementara properti $eventner bertipe
+        // non-nullable — halaman ini berakhir 500 (TypeError saat menugaskan
+        // null), bukan 403. Dialihkan saja.
+        if (!$eventner) {
+            return redirect()->route('dashboard');
         }
 
-        // Sudah paid — tidak ada yang perlu di-upgrade
-        if ($this->eventner->plan === 'paid') {
-            return redirect()->route('dashboard');
+        $this->eventner = $eventner;
+
+        // Sudah aktif: dibayar sendiri, atau paketnya diberikan admin
+        // (assignPlan mengisi registration_paid_at). Tampilkan ringkasan —
+        // bukan redirect, karena tautan "Ubah paket" di dashboard menunjuk ke
+        // sini dan redirect membuat tautan itu terasa mati.
+        if ($this->eventner->registration_paid_at !== null) {
+            $this->isActive = true;
+            return;
+        }
+
+        // Legacy: plan='paid' tanpa paket dan tanpa transaksi (pemberian manual
+        // dari sebelum modul paket ada). Akses penuh sudah aktif, jadi tidak ada
+        // yang bisa dibeli — halaman ini hanya menjelaskan.
+        if ($this->eventner->plan === 'paid' && $this->eventner->saas_plan_id === null) {
+            $this->isActive = true;
+            return;
         }
 
         // Transaksi pending sebelumnya? Tampilkan QR-nya lagi (belum settle)
@@ -55,7 +87,11 @@ class Upgrade extends Component
 
     public function generatePayment(?int $planId = null)
     {
-        if ($this->eventner->plan === 'paid') {
+        // Paket sudah aktif — jangan buat QRIS. Dulu dijaga pada plan === 'paid'
+        // saja, sehingga eventner ber-paket gratis yang memanggil ulang method
+        // ini bisa dipindahkan ke paket berbayar pertama tanpa disadari:
+        // generatePayment menulis saas_plan_id ke eventner.
+        if ($this->isActive || $this->eventner->registration_paid_at !== null) {
             return;
         }
 

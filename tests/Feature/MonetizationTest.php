@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\Eventner\Settings\Billing\Upgrade;
 use App\Models\Eventner;
+use App\Models\SaasPlan;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -170,12 +171,108 @@ class MonetizationTest extends TestCase
         $this->assertEquals('AGP-GEN-001', $user->eventner->fresh()->autogopay_transaction_id);
     }
 
-    public function test_upgrade_page_redirects_paid_eventner_to_dashboard()
+    /**
+     * Eventner legacy (plan='paid' tanpa paket) dulu dialihkan ke dashboard,
+     * sehingga tautan "Ubah paket" di dashboard terasa mati. Sekarang halaman
+     * ini menjelaskan paketnya alih-alih memantulkan.
+     */
+    public function test_upgrade_page_menampilkan_ringkasan_untuk_eventner_legacy()
     {
         $user = User::factory()->eventner()->create();
-        Eventner::factory()->create(['user_id' => $user->id, 'plan' => 'paid']);
+        Eventner::factory()->create(['user_id' => $user->id, 'plan' => 'paid', 'saas_plan_id' => null]);
 
         $this->actingAs($user)->get(route('eventner.billing.upgrade'))
+            ->assertOk()
+            ->assertSee('Akses Penuh')
+            ->assertSee('Aktif')
+            ->assertDontSee('Upgrade Sekarang');
+    }
+
+    /**
+     * Paket gratis yang dipasang admin menghasilkan plan='free' +
+     * registration_paid_at terisi. Halaman upgrade tidak boleh menganggapnya
+     * "tak punya paket" — paketnya sudah ditentukan admin, dan QRIS hanya
+     * akan memindahkannya ke paket berbayar pertama tanpa disadari.
+     */
+    public function test_upgrade_page_tidak_menawarkan_qris_untuk_paket_terpasang()
+    {
+        $this->fakeAutoGoPay();
+
+        $gratis = SaasPlan::create([
+            'name' => 'Gratis', 'slug' => 'gratis-upgrade-test',
+            'price' => 0, 'registration_fee' => 0,
+            'is_active' => true, 'is_free' => true, 'is_contact' => false, 'sort_order' => 0,
+        ]);
+
+        $user = User::factory()->eventner()->create();
+        $eventner = Eventner::factory()->create(['user_id' => $user->id]);
+        $eventner->assignPlan($gratis, 'admin');
+
+        Livewire::actingAs($user)->test(Upgrade::class)
+            ->assertSet('showPayment', false)
+            ->assertSee('ditentukan oleh admin')
+            ->assertDontSee('Upgrade Sekarang')
+            // Membuka halaman ini tidak boleh menyentuh paket terpasang.
+            ->call('generatePayment')
+            ->assertSet('showPayment', false);
+
+        $eventner->refresh();
+        $this->assertSame($gratis->id, $eventner->saas_plan_id, 'Paket admin tidak boleh tertimpa.');
+        $this->assertNull($eventner->autogopay_transaction_id);
+    }
+
+    /**
+     * Eventner berbayar yang belum membayar (assigned admin, atau daftar sendiri
+     * yang gagal generate QRIS) harus tetap bisa menyelesaikan pembayarannya.
+     * Pembayaran yang settle mengisi registration_paid_at.
+     */
+    public function test_upgrade_page_selesaikan_pembayaran_eventner_belum_bayar()
+    {
+        $this->fakeAutoGoPay();
+        Http::fake([
+            '*/qris/status' => Http::response([
+                'success' => true,
+                'data' => ['transaction_id' => 'AGP-UPG-001', 'transaction_status' => 'settlement'],
+            ], 200),
+        ]);
+
+        $plan = SaasPlan::create([
+            'name' => 'Event Penuh', 'slug' => 'penuh-upgrade-test',
+            'price' => 150000, 'registration_fee' => 50000,
+            'is_active' => true, 'is_free' => false, 'is_contact' => false, 'sort_order' => 1,
+        ]);
+        $plan->features()->createMany([['feature_key' => 'tickets']]);
+
+        $user = User::factory()->eventner()->create();
+        $eventner = Eventner::factory()->create(['user_id' => $user->id, 'plan' => 'paid']);
+        $eventner->update(['saas_plan_id' => $plan->id]);
+
+        // plan='paid' sejak daftar, tapi belum ada pembayaran — itulah yang
+        // membedakan "dipilih" dari "aktif".
+        $this->assertNull($eventner->registration_paid_at);
+
+        Livewire::actingAs($user)->test(Upgrade::class)
+            ->assertSee('Belum Bayar')
+            ->call('generatePayment', $plan->id)
+            ->assertSet('showPayment', true)
+            ->call('checkPayment')
+            ->assertRedirect(route('dashboard'));
+
+        $eventner->refresh();
+        $this->assertNotNull($eventner->registration_paid_at);
+        $this->assertSame('paid', $eventner->plan);
+        $this->assertSame($plan->id, $eventner->saas_plan_id);
+    }
+
+    /**
+     * Admin tidak punya eventner. Halaman upgrade tidak boleh 500 — cukup
+     * dialihkan, karena tidak ada yang bisa di-upgrade dari akun admin.
+     */
+    public function test_upgrade_page_aman_untuk_admin_tanpa_eventner()
+    {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)->get(route('eventner.billing.upgrade'))
             ->assertRedirect(route('dashboard'));
     }
 
