@@ -12,6 +12,7 @@ use App\Models\Judge;
 use App\Models\AssessmentScore;
 use App\Models\CompetitionCategory;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Config;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
@@ -49,6 +50,7 @@ class Dashboard extends Component
     public $trialDaysLeft = 0;
     public $isTrialExpired = false;
     public $lockedFeatures = [];
+    public $planInfo = [];
 
     // Chart data
     public $selectedChartCategory = null;
@@ -83,8 +85,116 @@ class Dashboard extends Component
         $this->trialDaysLeft = $this->eventner->trialDaysLeft();
         $this->isTrialExpired = $this->eventner->isTrialExpired();
         $this->lockedFeatures = $this->eventner->lockedFeatures();
+        $this->planInfo = $this->buildPlanInfo();
 
         $this->loadData();
+    }
+
+    /**
+     * Ringkasan paket untuk header dashboard: nama paket, statusnya, dan
+     * fitur apa saja yang boleh dipakai.
+     *
+     * Semua daftar diambil dari helper yang sama dengan penegakan akses
+     * (canAccessFeature/lockedFeatures), jadi header tidak akan pernah
+     * berbeda dari apa yang benar-benar bisa dibuka eventner ini.
+     *
+     * 'included' HANYA berisi fitur ber-locked_free (yakni yang tercatat di
+     * config/eventner_features.php). Fitur di luar config — dashboard,
+     * peserta, juri, input nilai, scoreboard — tersedia untuk semua paket,
+     * jadi menampilkannya hanya akan menambah derau tanpa informasi.
+     *
+     * Paket gratis tidak menyimpan satu pun feature_key, jadi 'included'-nya
+     * memang kosong: itu benar, bukan bug.
+     */
+    private function buildPlanInfo(): array
+    {
+        $e = $this->eventner;
+        $gated = Config::get('eventner_features', []);
+
+        // Kunci paket SaaS: satu-satunya sumber kebenaran soal fitur mana yang
+        // termasuk paket. Dipakai hanya kalau paketnya benar-benar terpasang.
+        $planKeys = ($e->plan === 'paid' && $e->saas_plan_id)
+            ? $e->saasPlan->features->pluck('feature_key')->all()
+            : null;
+
+        $included = [];
+        foreach ($gated as $key => $config) {
+            if (!$e->canAccessFeature($key)) {
+                continue;
+            }
+            // Untuk paket berbayar, hanya tampilkan yang memang tercantum di
+            // paket. Fitur ber-locked_free yang lolos tanpa tercantum (eventner
+            // berbayar legacy) tidak dilaporkan sebagai "termasuk" — daftarnya
+            // akan jadi seluruh isi config dan itu menyesatkan.
+            if ($planKeys !== null && !in_array($key, $planKeys, true)) {
+                continue;
+            }
+            $included[] = $config['label'];
+        }
+
+        return [
+            'name' => $this->planName(),
+            'status' => $this->planStatus(),
+            'status_class' => $this->planStatusClass(),
+            'trial_days_left' => $this->trialDaysLeft,
+            'included' => $included,
+        ];
+    }
+
+    private function planName(): string
+    {
+        $e = $this->eventner;
+
+        // Paket terpasang selalu menang, termasuk paket gratis yang baru
+        // dipasang admin — lihat catatan di admin/eventner/show.blade.php.
+        if ($e->saasPlan) {
+            return $e->saasPlan->is_free
+                ? $e->saasPlan->name . ' (gratis)'
+                : $e->saasPlan->name;
+        }
+
+        if ($e->plan === 'paid') {
+            return 'Akses Penuh';
+        }
+
+        if ($this->isOnTrial()) {
+            return 'Gratis (masa uji coba)';
+        }
+
+        return 'Gratis';
+    }
+
+    private function isOnTrial(): bool
+    {
+        return $this->trialDaysLeft > 0 && !$this->isTrialExpired;
+    }
+
+    private function planStatus(): string
+    {
+        $e = $this->eventner;
+
+        if ($e->saasPlan) {
+            return $e->hasActivePlan() ? 'Aktif' : 'Belum Bayar';
+        }
+
+        if ($e->plan === 'paid') {
+            return 'Aktif';
+        }
+
+        if ($e->isOnTrial()) {
+            return 'Trial ' . $this->trialDaysLeft . ' hari lagi';
+        }
+
+        return 'Trial Berakhir';
+    }
+
+    private function planStatusClass(): string
+    {
+        return match ($this->planStatus()) {
+            'Aktif' => 'success',
+            'Belum Bayar', 'Trial Berakhir' => 'danger',
+            default => 'warning',
+        };
     }
 
     public function loadData()

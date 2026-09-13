@@ -5,10 +5,12 @@ namespace Tests\Feature;
 use App\Models\CompetitionCategory;
 use App\Models\Eventner;
 use App\Models\Registration;
+use App\Models\SaasPlan;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Models\VoteTransaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -302,5 +304,168 @@ class EventnerDashboardTest extends TestCase
             ->assertSee('Check-in Tiket')
             ->assertDontSee('Pintasan Panitia')
             ->assertDontSee('Informasi Event Anda');
+    }
+
+    // ────────────────────────────────────────────────
+    // Penjelasan paket di header
+    // ────────────────────────────────────────────────
+
+    private function makePlan(string $name, array $features, array $attrs = []): SaasPlan
+    {
+        $plan = SaasPlan::create(array_merge([
+            'name' => $name,
+            'slug' => Str::slug($name) . '-' . Str::lower(Str::random(6)),
+            'price' => 150000,
+            'registration_fee' => 50000,
+            'is_active' => true,
+            'is_free' => false,
+            'is_contact' => false,
+            'sort_order' => 1,
+        ], $attrs));
+
+        $plan->features()->createMany(
+            collect($features)->map(fn ($key) => ['feature_key' => $key])->all()
+        );
+
+        return $plan;
+    }
+
+    /**
+     * Header harus menyebut paket yang terpasang dan fitur yang BENAR-BENAR
+     * bisa dipakai. Daftar fitur diambil dari canAccessFeature(), jadi fitur
+     * di luar paket tidak boleh ikut terdaftar sebagai tersedia.
+     */
+    public function test_header_menampilkan_paket_terpasang_dan_fiturnya()
+    {
+        [$user, $eventner] = $this->setupEventnerUser();
+
+        $plan = $this->makePlan('Paket Sosial', ['vote_settings', 'vote_results', 'tickets']);
+        $eventner->assignPlan($plan, 'admin');
+
+        $component = Livewire::actingAs($user)->test(\App\Livewire\Eventner\Dashboard::class);
+
+        $this->assertSame(
+            ['Tiket Event', 'Pengaturan Vote', 'Hasil Voting'],
+            $component->get('planInfo')['included'],
+            'Hanya fitur paket yang dilaporkan tersedia.'
+        );
+
+        $component
+            ->assertSee('Paket Sosial')
+            ->assertSee('Aktif')
+            ->assertSee('Fitur tersedia')
+            ->assertSee('Tiket Event')
+            ->assertSee('Hasil Voting')
+            // Fitur di luar paket masuk daftar "Belum termasuk", bukan "tersedia".
+            ->assertSee('Belum termasuk')
+            ->assertSee('Sertifikat');
+    }
+
+    /**
+     * Paket gratis tidak menyimpan feature_key sama sekali. Header tidak boleh
+     * menyimpulkan "semua terkunci" dari daftar kosong itu — fitur di luar
+     * config (peserta, juri, penilaian, scoreboard) tetap terbuka.
+     */
+    public function test_header_paket_gratis_tidak_menampilkan_fitur_premium()
+    {
+        [$user, $eventner] = $this->setupEventnerUser();
+
+        $plan = SaasPlan::create([
+            'name' => 'Gratis',
+            'slug' => 'gratis-' . Str::lower(Str::random(6)),
+            'price' => 0,
+            'registration_fee' => 0,
+            'is_active' => true,
+            'is_free' => true,
+            'is_contact' => false,
+            'sort_order' => 0,
+        ]);
+        // Meski fitur tidak sengaja tersimpan, paket gratis tetap harus kosong.
+        $plan->features()->createMany([['feature_key' => 'tickets']]);
+
+        $eventner->assignPlan($plan, 'admin');
+
+        $component = Livewire::actingAs($user)->test(\App\Livewire\Eventner\Dashboard::class);
+
+        $this->assertSame([], $component->get('planInfo')['included']);
+        $this->assertSame('Gratis (gratis)', $component->get('planInfo')['name']);
+        $this->assertSame('Aktif', $component->get('planInfo')['status']);
+
+        $component->assertSee('Belum ada fitur premium');
+    }
+
+    /** Eventner legacy (plan=paid tanpa paket) tetap akses penuh. */
+    public function test_header_eventner_legacy_menampilkan_akses_penuh()
+    {
+        [$user, $eventner] = $this->setupEventnerUser();
+        $eventner->update(['plan' => 'paid', 'saas_plan_id' => null, 'trial_ends_at' => null]);
+
+        $component = Livewire::actingAs($user)->test(\App\Livewire\Eventner\Dashboard::class);
+
+        $this->assertSame('Akses Penuh', $component->get('planInfo')['name']);
+        $this->assertSame('Aktif', $component->get('planInfo')['status']);
+        $this->assertSame([], $component->get('lockedFeatures'));
+
+        $component->assertSee('Akses Penuh')->assertDontSee('Belum termasuk');
+    }
+
+    /**
+     * Trial berjalan: semua fitur premium terbuka, jadi "Fitur tersedia"
+     * memuat seluruh isi config dan tidak ada yang terkunci.
+     */
+    public function test_header_menampilkan_trial_berjalan()
+    {
+        [$user, $eventner] = $this->setupEventnerUser();
+        $eventner->update(['plan' => 'free', 'trial_ends_at' => now()->addDays(5)]);
+
+        $component = Livewire::actingAs($user)->test(\App\Livewire\Eventner\Dashboard::class);
+
+        $this->assertSame('Gratis (masa uji coba)', $component->get('planInfo')['name']);
+        $this->assertSame('Trial 5 hari lagi', $component->get('planInfo')['status']);
+        $this->assertCount(14, $component->get('planInfo')['included']);
+        $this->assertSame([], $component->get('lockedFeatures'));
+
+        $component->assertSee('Fitur tersedia')->assertDontSee('Belum termasuk');
+    }
+
+    /** Trial habis: fitur premium terkunci dan disebut di header. */
+    public function test_header_menampilkan_trial_habis_dengan_fitur_terkunci()
+    {
+        [$user, $eventner] = $this->setupEventnerUser();
+        $eventner->update(['plan' => 'free', 'trial_ends_at' => now()->subDay()]);
+
+        $component = Livewire::actingAs($user)->test(\App\Livewire\Eventner\Dashboard::class);
+
+        $this->assertSame('Gratis', $component->get('planInfo')['name']);
+        $this->assertSame('Trial Berakhir', $component->get('planInfo')['status']);
+        $this->assertSame([], $component->get('planInfo')['included']);
+        $this->assertCount(14, $component->get('lockedFeatures'));
+
+        $component
+            ->assertSee('Trial Berakhir')
+            ->assertSee('Belum ada fitur premium')
+            ->assertSee('Belum termasuk')
+            // Panel Fitur Terkunci tetap ada untuk kasus trial habis tanpa paket.
+            ->assertSee('Fitur Terkunci');
+    }
+
+    /**
+     * Eventner berbayar yang dinonaktifkan paketnya (is_active=0) tidak lagi
+     * ditawarkan admin, tapi eventner yang sudah memakainya tidak boleh
+     * kehilangan aksesnya — dan header harus tetap melaporkannya "Aktif".
+     */
+    public function test_header_paket_nonaktif_yang_terpasang_tetap_aktif()
+    {
+        [$user, $eventner] = $this->setupEventnerUser();
+
+        $plan = $this->makePlan('Paket Lama', ['certificate']);
+        $eventner->assignPlan($plan, 'admin');
+        $plan->update(['is_active' => false]);
+
+        $component = Livewire::actingAs($user)->test(\App\Livewire\Eventner\Dashboard::class);
+
+        $this->assertSame('Paket Lama', $component->get('planInfo')['name']);
+        $this->assertSame('Aktif', $component->get('planInfo')['status']);
+        $this->assertSame(['Sertifikat'], $component->get('planInfo')['included']);
     }
 }

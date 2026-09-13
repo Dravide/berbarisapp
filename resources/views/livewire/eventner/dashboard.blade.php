@@ -22,8 +22,8 @@
             @endif
 
             {{-- Trial Banner --}}
-            @if($eventner->plan === 'free')
-                @if($isTrialExpired)
+            @if($eventner->plan === 'free' && !$eventner->saasPlan)
+                @if($isTrialExpired && !empty($lockedFeatures))
                     <div class="alert alert-warning border-0 rounded-3 shadow-sm d-flex align-items-center gap-3 mb-4" role="alert">
                         <i class="ti ti-clock-off fs-4 flex-shrink-0"></i>
                         <div class="flex-grow-1">
@@ -34,7 +34,7 @@
                             <i class="ti ti-bolt me-1"></i> Upgrade Sekarang
                         </a>
                     </div>
-                @elseif($trialDaysLeft > 0)
+                @elseif(!$isTrialExpired && $trialDaysLeft > 0)
                     <div class="alert alert-info border-0 rounded-3 shadow-sm d-flex align-items-center gap-3 mb-4" role="alert">
                         <i class="ti ti-clock-hour-4 fs-4 flex-shrink-0"></i>
                         <div class="flex-grow-1">
@@ -49,7 +49,9 @@
             @endif
 
             {{-- Locked Features Panel --}}
-            @if($eventner->plan === 'free' && $isTrialExpired && !empty($lockedFeatures))
+            {{-- Hanya untuk eventner trial yang habis dan tanpa paket terpasang:
+                 daftar terkuncinya sudah ikut tampil di header. --}}
+            @if($eventner->plan === 'free' && !$eventner->saasPlan && $isTrialExpired && !empty($lockedFeatures))
                 <div class="card border-warning-subtle bg-warning-subtle shadow-none mb-4">
                     <div class="card-body py-3">
                         <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
@@ -86,6 +88,47 @@
                                     <li class="breadcrumb-item" aria-current="page">Statistik Event</li>
                                 </ol>
                             </nav>
+
+                            {{-- Paket aktif + fitur yang bisa dipakai --}}
+                            @if(!empty($planInfo))
+                                <div class="mt-2">
+                                    <div class="d-flex align-items-center flex-wrap gap-2">
+                                        <span class="badge bg-{{ $planInfo['status_class'] }} fs-2">
+                                            {{ $planInfo['status'] }}
+                                        </span>
+                                        <span class="fw-semibold fs-3">{{ $planInfo['name'] }}</span>
+                                        <a href="{{ route('eventner.billing.upgrade') }}"
+                                           class="text-decoration-none fs-2 text-muted">
+                                            <i class="ti ti-arrow-up-right"></i> Ubah paket
+                                        </a>
+                                    </div>
+
+                                    <div class="d-flex align-items-start flex-wrap gap-2 mt-2">
+                                        <span class="text-muted fs-2 text-nowrap">Fitur tersedia:</span>
+                                        @forelse($planInfo['included'] as $label)
+                                            <span class="badge bg-light text-dark border rounded-1 px-2 py-1">
+                                                <i class="ti ti-check text-success me-1"></i>{{ $label }}
+                                            </span>
+                                        @empty
+                                            <span class="text-muted fs-2">
+                                                Belum ada fitur premium. Fitur inti (peserta, juri, penilaian,
+                                                scoreboard) tetap tersedia.
+                                            </span>
+                                        @endforelse
+                                    </div>
+
+                                    @if(!empty($lockedFeatures))
+                                        <div class="d-flex align-items-start flex-wrap gap-2 mt-2">
+                                            <span class="text-muted fs-2 text-nowrap">Belum termasuk:</span>
+                                            @foreach($lockedFeatures as $key => $label)
+                                                <span class="badge bg-light text-muted border rounded-1 px-2 py-1">
+                                                    <i class="ti ti-lock me-1"></i>{{ $label }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         </div>
                         <div class="col-3">
                             <div class="text-center mb-n5">
