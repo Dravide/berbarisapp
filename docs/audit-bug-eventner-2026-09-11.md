@@ -5,6 +5,25 @@
 - **Sifat:** read-only — tidak ada file aplikasi yang diubah
 - **Cakupan:** seluruh fitur role Eventner + halaman publik terkait (pendaftaran, vote, scoreboard, sertifikat, undian, penilaian, format nilai)
 - **Status:** 48 temuan. Semua sudah diverifikasi ulang langsung ke source (bukan hanya laporan reviewer).
+- **Perbaikan:** SELESAI SEMUA — 48/48 ditutup pada 2026-09-15. Lihat tabel di bawah.
+
+## Status perbaikan
+
+| Klaster | Commit | Isi | Regresi |
+|---|---|---|---|
+| #1–#9 (KRITIS) | `c170ac7` | akses lintas tenant, kehilangan data akibat FK cascade | `DrawingAuthTest` (6), `TenantIsolationTest` (10) |
+| #10–#18 (TINGGI) | `dbea5cc` | peringkat & total tidak konsisten, uang vote kedaluwarsa | `ScoreConsistencyTest` (6), `VoteRevenueAndExpiryTest` (6) |
+| #19–#22, #24, #25, #31, #33, #36, #45 | `1bc9f3d` | gate fitur, nilai terkunci, scope sertifikat/tingkat | — |
+| #23, #26–#29 | `a7af4d3` | undian ikut jumlah peserta, juara lintas tingkat | `DrawingAndRecapTest` (7) |
+| #30, #32, #34, #35, #37, #38 | `36e9bf6` | opsi skor satu parser, kategori rubrik vs juara, paket yatim, token QR, siklus QRIS | `FormatNilaiBuilderTest` (4), `PaymentLifecycleTest` (10) |
+| #39–#44, #46–#48 | `7479959` | band tier, template sertifikat, nomor baris impor, reorder per tab, skala editor, jadwal vote, jumlah vote booster | `VoteAndCertificateEdgeTest` (8) |
+
+Suite saat penutupan: **370 lulus (1205 assertions)**.
+
+Catatan tambahan saat perbaikan:
+- **#48** `EventScoring` dihapus (bukan hanya `judge_id`-nya ditambal) — penilaian juri sudah dilayani `JudgeScoring` lewat `/juri/{token}`. Dead code `Builder::previewCopy`/`executeCopy`/`openCopyModal`/`closeCopyModal` ikut dibuang.
+- **#40** ditutup dengan dua perubahan: urutan simpan/buang berkas dibalik, dan template aktif sekarang bisa dipilih operator (tombol "Pakai") karena sebelumnya `is_active` default `true` pada setiap template baru membuat yang terpakai selalu yang paling lama.
+- **#30** memunculkan masalah turunan di `PortalController`: cast `(int)` membaca rentang `"0 – 25"` sebagai 0 sehingga skor maksimal jatuh ke cadangan 100. Ditutup lewat `ScoreOptions::maxValue()`.
 
 ## Ringkasan
 
@@ -242,6 +261,8 @@ Pembayaran yang masuk setelah kedaluwarsa tidak pernah dikreditkan.
 
 ## RENDAH
 
+Seluruh baris di bawah sudah ditutup — lihat "Status perbaikan" di atas.
+
 | # | Lokasi | Masalah |
 |---|---|---|
 | 34 | `app/Traits/HasFeatureGates.php:50-51` | `$this->saasPlan->features` — `saasPlan` bisa null karena `eventners.saas_plan_id` pakai `nullOnDelete` (`2026_09_09_000001:33`) |
@@ -292,3 +313,9 @@ Dead code lain: `Builder::previewCopy`, `executeCopy`, `openCopyModal`, `closeCo
 2. **#10–#18** — menyangkut uang dan penentuan juara. Perlu satu sumber kebenaran (satukan ke `ChampionCalculator`).
 3. **#19–#33** — bug fungsional dan UX.
 4. **#34–#48** — perbaikan bertahap.
+
+Keempatnya sudah dikerjakan pada 2026-09-15 (lihat "Status perbaikan"). Tema yang berulang saat menutupnya, untuk audit berikutnya:
+
+- **Satu aturan, satu tempat.** Banyak temuan muncul karena aturan yang sama ditulis dua kali dengan isi berbeda: pemisah opsi skor (blade vs Builder, #30), predikat tier (filter vs `tierOf()`, #39), jadwal vote (`mount()` vs `submitVote()`, #46), offset nomor baris (Import vs `normalizeRows()`, #41). Menyatukan ke satu helper selalu menutupnya sekaligus.
+- **Kegagalan senyap lebih berbahaya daripada error.** Beberapa temuan (#37 lapor sukses saat `claimPaid()` kalah, #40 hapus berkas sebelum simpan, #32 hapus kategori mencabut rubrik juara) tidak melempar apa pun — datanya cuma jadi salah. Saat menyentuh alur uang atau berkas, periksa hasil operasinya, jangan asumsikan berhasil.
+- **Default kolom adalah keputusan produk.** `certificate_templates.is_active` default `true` (#40) membuat setiap template baru ikut aktif dan yang terpilih selalu yang tertua. Default yang "aman secara teknis" bisa mengunci operator tanpa jalan keluar.
