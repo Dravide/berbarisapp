@@ -357,6 +357,51 @@ class Eventner extends Model
     }
 
     /**
+     * Hitung ulang registration_status dari tanggal — satu sumber kebenaran.
+     *
+     * Dipakai baik oleh halaman publik maupun pengaturan profil supaya badge
+     * yang dilihat panitia persis sama dengan yang dilihat peserta.
+     *
+     * Deadline Pendaftaran kosong berarti panitia belum menetapkan batas
+     * pendaftaran. Karena peserta biasanya diinput manual oleh panitia,
+     * deadline kosong = pendaftaran publik ditutup. Panitia yang memang mau
+     * membuka pendaftaran wajib mengisi deadline-nya dulu.
+     */
+    public function computeRegistrationStatus(): string
+    {
+        $tglPendaftaran = $this->tanggal_pendaftaran
+            ? \Carbon\Carbon::parse($this->tanggal_pendaftaran)
+            : null;
+
+        if (!$tglPendaftaran) {
+            return 'closed';
+        }
+
+        $now = now();
+
+        if ($now->gt($tglPendaftaran)) {
+            return 'closed';
+        }
+
+        $tglEvent = $this->tanggal ? \Carbon\Carbon::parse($this->tanggal) : null;
+        if ($tglEvent && $now->gt($tglEvent)) {
+            return 'closed';
+        }
+
+        $tglEventAkhir = $this->tanggal_akhir ? \Carbon\Carbon::parse($this->tanggal_akhir) : null;
+        if ($tglEventAkhir && $now->gt($tglEventAkhir)) {
+            return 'closed';
+        }
+
+        $tm = $this->technical_meeting ? \Carbon\Carbon::parse($this->technical_meeting) : null;
+        if ($tm && $now->lt($tm)) {
+            return 'booking';
+        }
+
+        return 'open';
+    }
+
+    /**
      * Hari-H pelaksanaan event sudah dimulai/belum.
      * Hari-H = tanggal (hari pertama pelaksanaan, event multi-hari pun sama).
      */

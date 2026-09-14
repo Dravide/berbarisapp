@@ -131,20 +131,11 @@
                             <div class="card-body">
                                 <label class="form-label fw-bold d-block">Status Pendaftaran <small class="text-muted fw-normal">(Otomatis berdasarkan tanggal)</small></label>
                                 @php
-                                    $now = now();
-                                    $tm = $technical_meeting ? \Carbon\Carbon::parse($technical_meeting) : null;
-                                    $tglPendaftaran = $tanggal_pendaftaran ? \Carbon\Carbon::parse($tanggal_pendaftaran) : null;
-                                    $tglEvent = $tanggal ? \Carbon\Carbon::parse($tanggal) : null;
-
-                                    if ($tglPendaftaran && $now->gt($tglPendaftaran)) {
-                                        $computedStatus = 'closed';
-                                    } elseif ($tglEvent && $now->gt($tglEvent)) {
-                                        $computedStatus = 'closed';
-                                    } elseif ($tm && $now->lt($tm)) {
-                                        $computedStatus = 'booking';
-                                    } else {
-                                        $computedStatus = 'open';
-                                    }
+                                    // Status tersimpan, dihitung ulang tiap simpan oleh
+                                    // Eventner::computeRegistrationStatus(). Jangan
+                                    // duplikasi logika tanggalnya di sini.
+                                    $computedStatus = $this->registration_status ?? 'open';
+                                    $deadlineKosong = blank($tanggal_pendaftaran);
                                 @endphp
                                 <div class="d-flex align-items-center gap-3 mt-2">
                                     @if($computedStatus === 'open')
@@ -161,7 +152,13 @@
                                         <span class="badge bg-danger fs-4 px-3 py-2 rounded-pill">
                                             <i class="ti ti-lock me-1"></i> Tutup (Closed)
                                         </span>
-                                        <small class="text-muted">Pendaftaran telah ditutup.</small>
+                                        <small class="text-muted">
+                                            @if($deadlineKosong)
+                                                Deadline Pendaftaran belum diset, jadi pendaftaran publik ditutup. Isi tanggalnya untuk membuka kembali.
+                                            @else
+                                                Pendaftaran telah ditutup.
+                                            @endif
+                                        </small>
                                     @endif
                                 </div>
                                 <div class="mt-2 p-3 bg-light rounded-3 border small">

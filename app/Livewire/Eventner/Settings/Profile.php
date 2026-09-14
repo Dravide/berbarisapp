@@ -166,26 +166,17 @@ class Profile extends Component
             'theme_bg' => 'nullable|image|max:2048',
         ]);
 
-        // Auto-compute registration_status from dates
-        $now = now();
-        $tm = $this->technical_meeting ? \Carbon\Carbon::parse($this->technical_meeting) : null;
-        $tglPendaftaran = $this->tanggal_pendaftaran ? \Carbon\Carbon::parse($this->tanggal_pendaftaran) : null;
-        $tglEvent = $this->tanggal ? \Carbon\Carbon::parse($this->tanggal) : null;
-        $tglEventAkhir = $this->tanggal_akhir ? \Carbon\Carbon::parse($this->tanggal_akhir) : null;
-
-        if ($tglPendaftaran && $now->gt($tglPendaftaran)) {
-            $this->registration_status = 'closed';
-        } elseif ($tglEvent && $now->gt($tglEvent)) {
-            $this->registration_status = 'closed';
-        } elseif ($tglEventAkhir && $now->gt($tglEventAkhir)) {
-            $this->registration_status = 'closed';
-        } elseif ($tm && $now->lt($tm)) {
-            $this->registration_status = 'booking';
-        } else {
-            $this->registration_status = 'open';
-        }
-
         $eventner = Eventner::where('user_id', Auth::id())->findOrFail($this->eventnerId);
+
+        // Status pendaftaran dihitung dari tanggal oleh model — jangan
+        // diduplikasi di sini, badge profil harus cocok dengan halaman publik.
+        // Instance sementara: tanggalnya belum ditulis ke DB saat ini.
+        $this->registration_status = (new Eventner([
+            'tanggal' => $this->tanggal,
+            'tanggal_akhir' => $this->tanggal_akhir ?: null,
+            'tanggal_pendaftaran' => $this->tanggal_pendaftaran ?: null,
+            'technical_meeting' => $this->technical_meeting ?: null,
+        ]))->computeRegistrationStatus();
 
         if ($this->newLogo) {
             // Delete old logo if exists
