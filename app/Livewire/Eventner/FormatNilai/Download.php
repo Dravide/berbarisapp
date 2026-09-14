@@ -11,11 +11,16 @@ use App\Models\AssessmentCategory;
 use App\Models\CompetitionCategory;
 use App\Models\Judge;
 use App\Models\Registration;
+use App\Traits\FeatureGatedComponent;
 use Illuminate\Support\Facades\Auth;
 
 #[Layout('layouts.admin')]
 class Download extends Component
 {
+    use FeatureGatedComponent;
+
+    protected string $requiredFeature = 'format_nilai';
+
     // Dikunci — diisi dari Auth di mount(). Dump PDF di-scope ke id ini.
     #[Locked]
     public $eventnerId;
@@ -36,6 +41,11 @@ class Download extends Component
         if (!$eventner) {
             abort(403, 'Anda bukan Eventner yang sah.');
         }
+
+        // Gerbang fitur berbayar. Halaman Builder sudah dijaga trait ini;
+        // halaman unduh punya route sendiri, jadi harus dijaga sendiri juga.
+        $this->bootFeatureGate();
+
         $this->eventnerId = $eventner->id;
     }
 
@@ -74,7 +84,14 @@ class Download extends Component
             ->where('eventner_id', $this->eventnerId);
 
         if ($this->selectedLevelId) {
-            $q->where('competition_category_id', $this->selectedLevelId);
+            // Rubrik global (competition_category_id NULL) berlaku untuk semua
+            // tingkat, jadi ikut — sama seperti panel Input Nilai. Dulu hanya
+            // rubrik milik tingkat ini yang terunduh, sehingga lembar penilaian
+            // kehilangan kriteria yang sebenarnya ikut dinilai.
+            $q->where(function ($sq) {
+                $sq->where('competition_category_id', $this->selectedLevelId)
+                   ->orWhereNull('competition_category_id');
+            });
         }
 
         if ($this->selectedJudgeId) {

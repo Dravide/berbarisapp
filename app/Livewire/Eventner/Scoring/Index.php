@@ -52,14 +52,43 @@ class Index extends Component
             abort(403, 'Anda belum memiliki data Event terdaftar.');
         }
 
+        // selectedCategoryId datang dari query string, jadi bisa berisi id
+        // apa pun — termasuk id kategori tenant lain atau id yang sudah
+        // dihapus. Dulu nilainya langsung dipercaya dan halaman peserta
+        // dirender tanpa $selectedCategory, sehingga view meledak saat
+        // membaca $selectedCategory->full_name.
+        if ($this->selectedCategoryId && !$this->findOwnCategory($this->selectedCategoryId)) {
+            $this->selectedCategoryId = null;
+        }
+
         if ($this->selectedCategoryId) {
             $this->view = 'participants';
         }
     }
 
+    /**
+     * Cari kategori lomba milik eventner ini. Satu tempat untuk scoping
+     * tenant — jangan pakai find() mentah di komponen ini.
+     */
+    private function findOwnCategory($id): ?CompetitionCategory
+    {
+        if (!$id) {
+            return null;
+        }
+
+        return CompetitionCategory::where('eventner_id', $this->eventner->id)->find($id);
+    }
+
     public function selectCategory($id)
     {
-        $this->selectedCategoryId = $id;
+        $category = $this->findOwnCategory($id);
+
+        if (!$category) {
+            $this->dispatch('toast', type: 'error', message: 'Kategori lomba tidak ditemukan.');
+            return;
+        }
+
+        $this->selectedCategoryId = $category->id;
         $this->view = 'participants';
     }
 
@@ -171,12 +200,37 @@ class Index extends Component
         }
     }
 
+    /**
+     * Apakah nilai registrasi + juri ini sudah difinalisasi di database?
+     *
+     * Dulu keputusannya diambil dari properti $isFinalized, yang hanya dimuat
+     * sekali saat peserta dibuka. Properti itu tidak ikut berubah kalau
+     * finalisasi dilakukan di tempat lain — tombol "Finalisasi Semua",
+     * halaman juri, atau tab lain — sehingga panel yang masih terbuka bisa
+     * menimpa nilai yang sudah dikunci tanpa peringatan.
+     */
+    private function hasFinalizedScores(): bool
+    {
+        if (!$this->selectedRegistrationId || !$this->selectedJudgeId) {
+            return false;
+        }
+
+        return AssessmentScore::where('registration_id', $this->selectedRegistrationId)
+            ->where('eventner_id', $this->eventner->id)
+            ->where('judge_id', $this->selectedJudgeId)
+            ->where('is_finalized', true)
+            ->exists();
+    }
+
     public function saveScores()
     {
         if ($this->simulateMode) return;
 
-        if (!$this->selectedJudgeId || $this->isFinalized) {
+        if (!$this->selectedJudgeId || $this->hasFinalizedScores()) {
+            // Sinkronkan juga penanda di layar supaya tombolnya ikut terkunci.
+            $this->isFinalized = $this->hasFinalizedScores();
             $this->saveStatus = 'error';
+            session()->flash('scoring_error', 'Nilai sudah difinalisasi dan dikunci — tidak bisa diubah lagi.');
             return;
         }
 
@@ -207,12 +261,18 @@ class Index extends Component
 
     public function finalizeScores()
     {
-        if ($this->simulateMode || !$this->selectedJudgeId || $this->isFinalized) {
+        if ($this->simulateMode || !$this->selectedJudgeId || $this->hasFinalizedScores()) {
             return;
         }
 
         // Simpan dulu nilai di layar supaya ikut tervalidasi & terkunci.
         $this->saveScores();
+
+        // Pengurangan ikut disimpan. Dulu finalisasi hanya menyimpan nilai,
+        // padahal layar menampilkan "NILAI AKHIR" yang sudah dikurangi
+        // potongan dari form — potongan itu lalu hilang begitu halaman
+        // dimuat ulang, dan angka yang dilihat operator tidak pernah ada.
+        $this->saveDeductions();
 
         $result = app(ScoreFinalizationService::class)->finalize(
             $this->eventner->id,
@@ -308,6 +368,14 @@ class Index extends Component
             return;
         }
 
+        // Nilai terkunci tidak boleh dihapus — reset berarti mengosongkan
+        // kolom input, bukan membuka kembali penilaian yang sudah final.
+        if ($this->hasFinalizedScores()) {
+            $this->saveStatus = 'error';
+            session()->flash('scoring_error', 'Nilai sudah difinalisasi dan dikunci — tidak bisa direset. Buka kunci lewat panitia terlebih dahulu.');
+            return;
+        }
+
         AssessmentScore::where('registration_id', $this->selectedRegistrationId)
             ->where('eventner_id', $this->eventner->id)
             ->where('judge_id', $this->selectedJudgeId)
@@ -363,6 +431,15 @@ class Index extends Component
             return;
         }
 
+        // Pengurangan ikut terkunci bersama nilainya: ia dipakai sebagai
+        // pemecah seri saat menentukan juara, jadi mengubahnya setelah
+        // finalisasi sama saja mengubah hasil lomba.
+        if ($this->hasFinalizedScores()) {
+            $this->deductionSaveStatus = 'error';
+            session()->flash('scoring_error', 'Nilai sudah difinalisasi dan dikunci — pengurangan tidak bisa diubah lagi.');
+            return;
+        }
+
         foreach ($this->deductions as $criteriaId => $amount) {
             if ($amount === '' || $amount === null || (float) $amount == 0) {
                 // Remove if set to 0 or empty
@@ -396,8 +473,25 @@ class Index extends Component
 
         if ($this->selectedCategoryId) {
             // Scoping ke eventner sendiri — cegah enumerasi kategori/registrasi tenant lain.
-            $selectedCategory = CompetitionCategory::where('eventner_id', $this->eventner->id)
-                ->find($this->selectedCategoryId);
+            $selectedCategory = $this->findOwnCategory($this->selectedCategoryId);
+
+            // Kategori bisa hilang di antara mount dan render (dihapus di
+            // tab lain, atau id dari query string). Kembali ke daftar
+            // kategori daripada merender halaman peserta tanpa kategorinya.
+            if (!$selectedCategory) {
+                $this->selectedCategoryId = null;
+                $this->view = 'categories';
+
+                return view('livewire.eventner.scoring.index', [
+                    'participants' => collect(),
+                    'selectedCategory' => null,
+                    'categories' => $this->eventner->competitionCategories()
+                        ->whereNotNull('parent_id')->with('parent')->get()->loadCount('registrations'),
+                    'assessmentCategories' => collect(),
+                    'judgeTotals' => collect(),
+                    'totalDeductions' => 0,
+                ])->title('Input Nilai - ' . $this->eventner->nama_event);
+            }
 
             $query = Registration::where('eventner_id', $this->eventner->id)
                 ->where('competition_category_id', $this->selectedCategoryId);

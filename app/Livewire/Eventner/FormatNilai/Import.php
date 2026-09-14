@@ -45,12 +45,32 @@ class Import extends Component
 
     public function mount(string $activeTab = '')
     {
-        $this->activeTab = $activeTab;
+        $this->activeTab = $this->normalizeActiveTab($activeTab);
     }
 
     public function setActiveTab($id)
     {
-        $this->activeTab = $id;
+        $this->activeTab = $this->normalizeActiveTab($id);
+    }
+
+    /**
+     * Validasi bahwa $id benar-benar id tingkat milik eventner ini.
+     * Kembalikan '' (global) bila bukan.
+     *
+     * activeTab ditulis langsung sebagai competition_category_id ke
+     * assessment_categories, sedangkan nilainya berasal dari klien — tanpa
+     * pemeriksaan ini, rubrik hasil import bisa ditempelkan ke tingkat milik
+     * event lain dan tidak akan pernah muncul di halaman mana pun.
+     */
+    protected function normalizeActiveTab($id): string
+    {
+        if ($id === '' || $id === null) {
+            return '';
+        }
+
+        $ada = CompetitionCategory::where('eventner_id', $this->eventnerId())->find($id);
+
+        return $ada ? (string) $ada->id : '';
     }
 
     /** Tingkat lomba (child / parent tanpa child) milik eventner. */
@@ -183,7 +203,11 @@ class Import extends Component
         }
 
         $normalized = session($this->previewSessionKey);
-        $targetCompetitionCategoryId = $this->activeTab !== '' ? (int) $this->activeTab : null;
+
+        // targetCompetitionCategoryId ditulis ke DB, jadi jangan percaya
+        // nilai properti begitu saja — periksa ulang kepemilikannya.
+        $activeTab = $this->normalizeActiveTab($this->activeTab);
+        $targetCompetitionCategoryId = $activeTab !== '' ? (int) $activeTab : null;
 
         try {
             DB::transaction(function () use ($eventnerId, $normalized, $targetCompetitionCategoryId) {

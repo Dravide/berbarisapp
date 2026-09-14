@@ -13,6 +13,11 @@ class UploadController extends Controller
     {
         $token = PersonalAccessToken::findToken($request->bearerToken());
         abort_unless($token, 401);
+
+        // Token harus milik model Registration — cegah token model lain
+        // dipakai sebagai ID registrasi (sama seperti PortalController).
+        abort_unless($token->tokenable_type === Registration::class, 403);
+
         return Registration::findOrFail($token->tokenable_id);
     }
 

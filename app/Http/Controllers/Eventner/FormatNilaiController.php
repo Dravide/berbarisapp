@@ -21,10 +21,7 @@ class FormatNilaiController extends Controller
 {
     public function downloadPdf()
     {
-        $eventner = Auth::user()->eventner;
-        if (! $eventner) {
-            abort(403, 'Anda bukan Eventner yang sah.');
-        }
+        $eventner = $this->gatedEventner();
 
         $categories = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias'])
             ->where('eventner_id', $eventner->id)
@@ -50,10 +47,7 @@ class FormatNilaiController extends Controller
      */
     public function downloadTemplate()
     {
-        $eventner = Auth::user()->eventner;
-        if (! $eventner) {
-            abort(403, 'Anda bukan Eventner yang sah.');
-        }
+        $eventner = $this->gatedEventner();
 
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
@@ -139,17 +133,22 @@ class FormatNilaiController extends Controller
      */
     public function downloadPdfByChild($competitionCategoryId)
     {
-        $eventner = Auth::user()->eventner;
-        if (! $eventner) {
-            abort(403, 'Anda bukan Eventner yang sah.');
-        }
+        $eventner = $this->gatedEventner();
 
         $child = CompetitionCategory::where('eventner_id', $eventner->id)
             ->findOrFail($competitionCategoryId);
 
         $categories = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias'])
             ->where('eventner_id', $eventner->id)
-            ->where('competition_category_id', $child->id)
+            // Rubrik global (competition_category_id NULL) berlaku untuk
+            // semua tingkat, jadi harus ikut — sama seperti panel Input Nilai
+            // dan ScoreFinalizationService. Dulu hanya rubrik milik tingkat
+            // ini yang terunduh, sehingga kriteria global hilang dari lembar
+            // penilaian padahal ikut dinilai.
+            ->where(function ($q) use ($child) {
+                $q->where('competition_category_id', $child->id)
+                  ->orWhereNull('competition_category_id');
+            })
             ->orderBy('sort_order')
             ->get();
 
@@ -173,10 +172,7 @@ class FormatNilaiController extends Controller
      */
     public function downloadPdfByJudge($judgeId, $competitionCategoryId = null)
     {
-        $eventner = Auth::user()->eventner;
-        if (! $eventner) {
-            abort(403, 'Anda bukan Eventner yang sah.');
-        }
+        $eventner = $this->gatedEventner();
 
         $judge = Judge::where('eventner_id', $eventner->id)
             ->with('assessmentCategories')
@@ -190,7 +186,9 @@ class FormatNilaiController extends Controller
             CompetitionCategory::where('eventner_id', $eventner->id)
                 ->findOrFail($competitionCategoryId);
 
+            // Rubrik global (NULL) ikut, seperti di panel Input Nilai.
             $categories = $categories->filter(fn ($cat) => $cat->competition_category_id == $competitionCategoryId
+                || $cat->competition_category_id === null
             );
         }
 
@@ -220,10 +218,7 @@ class FormatNilaiController extends Controller
      */
     public function unduhPdf(Request $request)
     {
-        $eventner = Auth::user()->eventner;
-        if (! $eventner) {
-            abort(403, 'Anda bukan Eventner yang sah.');
-        }
+        $eventner = $this->gatedEventner();
 
         $mode = $request->query('mode', 'kosong');
         if (! in_array($mode, ['kosong', 'peserta', 'daftar'], true)) {
@@ -240,7 +235,12 @@ class FormatNilaiController extends Controller
 
         if ($levelId) {
             CompetitionCategory::where('eventner_id', $eventner->id)->findOrFail($levelId);
-            $q->where('competition_category_id', $levelId);
+            // Rubrik global (NULL) berlaku di semua tingkat — ikutkan, sama
+            // seperti panel Input Nilai dan ScoreFinalizationService.
+            $q->where(function ($sq) use ($levelId) {
+                $sq->where('competition_category_id', $levelId)
+                   ->orWhereNull('competition_category_id');
+            });
         }
 
         if ($judgeId) {
@@ -301,10 +301,7 @@ class FormatNilaiController extends Controller
 
     public function copyForm($categoryId)
     {
-        $eventner = Auth::user()->eventner;
-        if (! $eventner) {
-            abort(403, 'Anda bukan Eventner yang sah.');
-        }
+        $eventner = $this->gatedEventner();
 
         $source = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias'])
             ->where('eventner_id', $eventner->id)
@@ -326,10 +323,7 @@ class FormatNilaiController extends Controller
 
     public function copyExecute(Request $request, $categoryId)
     {
-        $eventner = Auth::user()->eventner;
-        if (! $eventner) {
-            abort(403, 'Anda bukan Eventner yang sah.');
-        }
+        $eventner = $this->gatedEventner();
 
         $request->validate([
             'target_competition_category_id' => 'required|exists:competition_categories,id',
@@ -372,5 +366,29 @@ class FormatNilaiController extends Controller
 
         return redirect()->route('eventner.format-nilai.builder')
             ->with('success', "Rubrik '{$source->name}' berhasil disalin ke {$target->full_name}.");
+    }
+
+    /**
+     * Eventner pemilik sesi, sekaligus gerbang fitur Format Penilaian.
+     *
+     * Seluruh aksi di controller ini bagian dari fitur berbayar
+     * "format_nilai". Halaman Builder sudah menjaga dirinya sendiri lewat
+     * FeatureGatedComponent, tapi route unduh/template/copy bisa dibuka
+     * langsung dengan URL, jadi gerbangnya harus ada di sini juga — sama
+     * seperti CertificateController::downloadCertificateByToken.
+     */
+    private function gatedEventner()
+    {
+        $eventner = Auth::user()->eventner;
+
+        if (! $eventner) {
+            abort(403, 'Anda bukan Eventner yang sah.');
+        }
+
+        if (! $eventner->canAccessFeature('format_nilai')) {
+            abort(403, 'Fitur Format Penilaian belum aktif untuk event ini.');
+        }
+
+        return $eventner;
     }
 }

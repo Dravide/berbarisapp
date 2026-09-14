@@ -423,7 +423,8 @@
                                                             </button>
                                                             @foreach($deductionCrit->deduction_options as $option)
                                                                 <button type="button"
-                                                                    wire:click="$set('deductions.{{ $deductionCrit->id }}', {{ $option }})"
+                                                                    @if(!$isFinalized) wire:click="$set('deductions.{{ $deductionCrit->id }}', {{ $option }})" @endif
+                                                                    {{ $isFinalized ? 'disabled' : '' }}
                                                                     class="btn btn-sm {{ isset($deductions[$deductionCrit->id]) && $deductions[$deductionCrit->id] == $option ? 'btn-danger' : 'btn-outline-danger' }} px-2">
                                                                     {{ $option }}
                                                                 </button>
@@ -462,9 +463,10 @@
                                     @else
                                         <button wire:click="saveDeductions"
                                                 class="btn btn-danger w-100 py-2 fw-semibold mt-3"
+                                                {{ $isFinalized ? 'disabled' : '' }}
                                                 wire:loading.attr="disabled">
                                             <span wire:loading.remove wire:target="saveDeductions">
-                                                <i class="ti ti-device-floppy me-1"></i> Simpan Pengurangan
+                                                <i class="ti ti-device-floppy me-1"></i> {{ $isFinalized ? 'Pengurangan Terkunci' : 'Simpan Pengurangan' }}
                                             </span>
                                             <span wire:loading wire:target="saveDeductions">
                                                 <span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...

@@ -50,7 +50,12 @@ class CertificateController extends Controller
             ->with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias'])
             ->findOrFail($championCategoryId);
 
-        $competitionCategory = CompetitionCategory::findOrFail($competitionCategoryId);
+        // Scoping ke eventner sendiri. Dulu findOrFail() mentah, jadi rubrik
+        // juara milik event A bisa dipasangkan dengan peserta event B — nilai
+        // yang tidak cocok rubriknya lalu jatuh ke other_total dan ikut
+        // menentukan juara.
+        $competitionCategory = CompetitionCategory::where('eventner_id', $eventner->id)
+            ->findOrFail($competitionCategoryId);
 
         // Build criteria weight maps
         $criteriaMap = [];
@@ -339,17 +344,36 @@ class CertificateController extends Controller
                 abort(404);
             }
 
-            $registration = $tokenReg->npsn
-                ? Registration::where('eventner_id', $tokenReg->eventner_id)
-                    ->where('npsn', $tokenReg->npsn)
-                    ->where('competition_category_id', $competitionCategory->id)
-                    ->first()
-                : null;
+            // Pasukan lain dari sekolah yang SAMA.
+            //
+            // NPSN adalah identitas sekolah, dan satu sekolah boleh punya
+            // beberapa pasukan dengan nama berbeda ("… (Regu B)") — jadi
+            // kuncinya NPSN. Nama yang sama dipakai lebih dulu sebagai
+            // preferensi supaya sekolah dengan NPSN kembar (salah ketik)
+            // mengambil barisnya sendiri, bukan baris sekolah lain, dan
+            // urutannya deterministik (dulu pemenangnya baris mana saja yang
+            // lebih dulu dikembalikan database).
+            $namaNorm = mb_strtolower(trim((string) $tokenReg->nama_sekolah));
 
-            $registration ??= Registration::where('eventner_id', $tokenReg->eventner_id)
-                ->where('competition_category_id', $competitionCategory->id)
-                ->whereRaw('LOWER(TRIM(nama_sekolah)) = ?', [mb_strtolower(trim((string) $tokenReg->nama_sekolah))])
-                ->first();
+            $query = Registration::where('eventner_id', $tokenReg->eventner_id)
+                ->where('competition_category_id', $competitionCategory->id);
+
+            if ($tokenReg->npsn) {
+                $query->where(function ($sq) use ($tokenReg, $namaNorm) {
+                    $sq->where('npsn', $tokenReg->npsn)
+                       ->orWhereRaw('LOWER(TRIM(nama_sekolah)) = ?', [$namaNorm]);
+                });
+
+                $registration = (clone $query)
+                    ->orderByRaw('CASE WHEN LOWER(TRIM(nama_sekolah)) = ? THEN 0 ELSE 1 END', [$namaNorm])
+                    ->orderBy('id')
+                    ->first();
+            } else {
+                $registration = $query
+                    ->whereRaw('LOWER(TRIM(nama_sekolah)) = ?', [$namaNorm])
+                    ->orderBy('id')
+                    ->first();
+            }
 
             abort_unless($registration, 404);
             $registration->loadMissing(['eventner', 'participants']);

@@ -163,9 +163,11 @@ class Builder extends Component
 
         $maxOrder = AssessmentCategory::where('eventner_id', $this->eventnerId)->max('sort_order') ?? 0;
 
+        $activeTab = $this->normalizeActiveTab($this->activeTab);
+
         AssessmentCategory::create([
             'eventner_id' => $this->eventnerId,
-            'competition_category_id' => $this->activeTab !== '' ? $this->activeTab : null,
+            'competition_category_id' => $activeTab !== '' ? $activeTab : null,
             'name' => strip_tags($this->newCategoryName),
             'sort_order' => $maxOrder + 1,
         ]);
@@ -962,7 +964,25 @@ class Builder extends Component
 
     public function selectTab($id)
     {
-        $this->activeTab = $id !== '' && $id !== null ? (string) $id : '';
+        $this->activeTab = $this->normalizeActiveTab($id);
+    }
+
+    /**
+     * activeTab ditulis langsung sebagai competition_category_id ke
+     * assessment_categories, dan nilainya berasal dari klien. Tanpa
+     * pemeriksaan ini, kategori penilaian baru bisa ditempelkan ke tingkat
+     * milik event lain — barisnya tersimpan tapi tidak pernah tampil di
+     * halaman mana pun, karena semua query sudah di-scope per eventner.
+     */
+    private function normalizeActiveTab($id): string
+    {
+        if ($id === '' || $id === null) {
+            return '';
+        }
+
+        $ada = CompetitionCategory::where('eventner_id', $this->eventnerId)->find($id);
+
+        return $ada ? (string) $ada->id : '';
     }
 
     public function previewCopy($sourceId)
@@ -1007,7 +1027,8 @@ class Builder extends Component
             return;
         }
 
-        $targetId = $this->activeTab !== '' ? $this->activeTab : null;
+        $activeTab = $this->normalizeActiveTab($this->activeTab);
+        $targetId = $activeTab !== '' ? $activeTab : null;
 
         foreach ($sourceCategories as $cat) {
             $maxOrder = AssessmentCategory::where('eventner_id', $this->eventnerId)->max('sort_order') ?? 0;
