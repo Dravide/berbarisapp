@@ -131,35 +131,49 @@
                             <div class="card-body">
                                 <label class="form-label fw-bold d-block">Status Pendaftaran <small class="text-muted fw-normal">(Otomatis berdasarkan tanggal)</small></label>
                                 @php
-                                    // Status tersimpan, dihitung ulang tiap simpan oleh
-                                    // Eventner::computeRegistrationStatus(). Jangan
-                                    // duplikasi logika tanggalnya di sini.
+                                    // Statusnya dari accessor model — selalu segar, dan
+                                    // tidak boleh dihitung ulang di sini.
                                     $computedStatus = $this->registration_status ?? 'open';
-                                    $deadlineKosong = blank($tanggal_pendaftaran);
+                                    $deadline = $tanggal_pendaftaran ? \Carbon\Carbon::parse($tanggal_pendaftaran) : null;
                                 @endphp
                                 <div class="d-flex align-items-center gap-3 mt-2">
                                     @if($computedStatus === 'open')
                                         <span class="badge bg-success fs-4 px-3 py-2 rounded-pill">
                                             <i class="ti ti-circle-check me-1"></i> Open Registration
                                         </span>
-                                        <small class="text-muted">Peserta dapat mendaftar dan mengisi data lengkap.</small>
+                                        <small class="text-muted">Peserta dapat mendaftar sendiri dan mengisi data lengkap.</small>
                                     @elseif($computedStatus === 'booking')
                                         <span class="badge bg-primary fs-4 px-3 py-2 rounded-pill">
                                             <i class="ti ti-bookmark me-1"></i> Booking Only
                                         </span>
-                                        <small class="text-muted">Menunggu Technical Meeting. Hanya booking slot yang diperbolehkan.</small>
+                                        <small class="text-muted">Menunggu Technical Meeting. Peserta hanya bisa booking slot.</small>
+                                    @elseif($deadline && $deadline->isPast())
+                                        <span class="badge bg-danger fs-4 px-3 py-2 rounded-pill">
+                                            <i class="ti ti-lock me-1"></i> Tutup (Closed)
+                                        </span>
+                                        <small class="text-muted">
+                                            Deadline Pendaftaran ({{ $deadline->translatedFormat('d M Y') }}) sudah lewat.
+                                            Geser tanggalnya ke depan untuk membuka pendaftaran lagi.
+                                        </small>
                                     @else
                                         <span class="badge bg-danger fs-4 px-3 py-2 rounded-pill">
                                             <i class="ti ti-lock me-1"></i> Tutup (Closed)
                                         </span>
                                         <small class="text-muted">
-                                            @if($deadlineKosong)
-                                                Deadline Pendaftaran belum diset, jadi pendaftaran publik ditutup. Isi tanggalnya untuk membuka kembali.
-                                            @else
-                                                Pendaftaran telah ditutup.
-                                            @endif
+                                            Deadline Pendaftaran belum diset, jadi pendaftaran mandiri ditutup.
+                                            Isi tanggalnya untuk membukanya.
                                         </small>
                                     @endif
+
+                                    {{-- Jalan keluar panitia: mereka tetap bisa menambah
+                                         pendaftar sendiri dari halaman Peserta tanpa
+                                         membuka pendaftaran publik. --}}
+                                    <div class="alert alert-light border small mb-0 mt-2 py-2 px-3">
+                                        <i class="ti ti-info-circle me-1"></i>
+                                        Mau input peserta sendiri tanpa membuka pendaftaran publik?
+                                        Tambahkan lewat
+                                        <a href="{{ route('eventner.participants.index') }}" class="fw-semibold">halaman Peserta</a>.
+                                    </div>
                                 </div>
                                 <div class="mt-2 p-3 bg-light rounded-3 border small">
                                     <div class="d-flex flex-wrap gap-4">

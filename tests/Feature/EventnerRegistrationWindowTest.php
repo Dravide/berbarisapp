@@ -93,6 +93,36 @@ class EventnerRegistrationWindowTest extends TestCase
         $this->get("/event/{$eventner->slug}")->assertDontSee('Daftar Sekarang', false);
     }
 
+    /**
+     * Panitia harus tahu dua hal: kenapa tertutup, dan bahwa mereka tetap
+     * bisa menambah pendaftar sendiri tanpa membuka pendaftaran publik.
+     */
+    public function test_profil_menjelaskan_alasan_dan_jalur_input_manual(): void
+    {
+        $eventner = $this->buatStatusEventner('closed');
+        $eventner->update(['tanggal_pendaftaran' => null]);
+
+        Livewire::actingAs($eventner->user)
+            ->test(\App\Livewire\Eventner\Settings\Profile::class)
+            ->assertSee('Deadline Pendaftaran belum diset')
+            ->assertSee('halaman Peserta')
+            ->assertSee(route('eventner.participants.index'), false);
+    }
+
+    public function test_profil_menyebut_tanggal_saat_deadline_sudah_lewat(): void
+    {
+        $eventner = $this->buatStatusEventner('open');
+        $eventner->update([
+            'tanggal_pendaftaran' => now()->subMonth()->toDateString(),
+            'tanggal' => now()->addMonth()->toDateString(),
+        ]);
+
+        Livewire::actingAs($eventner->user)
+            ->test(\App\Livewire\Eventner\Settings\Profile::class)
+            ->assertSee('sudah lewat')
+            ->assertDontSee('Deadline Pendaftaran belum diset');
+    }
+
     public function test_simpan_profil_mengunci_status_saat_deadline_kosong(): void
     {
         $eventner = $this->buatStatusEventner('open');
