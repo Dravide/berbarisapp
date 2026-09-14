@@ -167,6 +167,10 @@ class PublicPagesTest extends TestCase
             'status' => 'approved',
             'ticket_active' => true,
             'ticket_price' => 25000,
+            // Tombol "Daftar Sekarang" hanya muncul saat pendaftaran terbuka;
+            // deadline kosong berarti ditutup.
+            'tanggal_pendaftaran' => now()->addMonth()->toDateString(),
+            'tanggal' => now()->addMonths(2)->toDateString(),
         ]);
 
         $response = $this->get("/event/{$eventner->slug}");

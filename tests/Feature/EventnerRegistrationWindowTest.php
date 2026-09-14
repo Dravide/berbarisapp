@@ -75,6 +75,24 @@ class EventnerRegistrationWindowTest extends TestCase
             ->assertSee('Pendaftaran Ditutup');
     }
 
+    /**
+     * Inti perbaikannya: kolom tersimpan bisa basi, pembacaan tidak boleh.
+     */
+    public function test_status_basi_di_kolom_tidak_dipakai_halaman_publik(): void
+    {
+        $eventner = $this->buatStatusEventner('open');
+        $eventner->update([
+            'tanggal_pendaftaran' => now()->subMonth()->toDateString(),
+            'tanggal' => now()->addMonth()->toDateString(),
+        ]);
+
+        // Kolomnya memang masih 'open' — hanya accessor yang menyegarkan.
+        $this->assertSame('open', $eventner->fresh()->getRawOriginal('registration_status'));
+
+        $this->assertSame('closed', $eventner->fresh()->registration_status);
+        $this->get("/event/{$eventner->slug}")->assertDontSee('Daftar Sekarang', false);
+    }
+
     public function test_simpan_profil_mengunci_status_saat_deadline_kosong(): void
     {
         $eventner = $this->buatStatusEventner('open');

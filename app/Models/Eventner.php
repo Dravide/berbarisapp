@@ -357,6 +357,33 @@ class Eventner extends Model
     }
 
     /**
+     * Status pendaftaran yang selalu segar — dihitung saat dibaca.
+     *
+     * Kolom registration_status cuma diisi ulang saat panitia menyimpan
+     * profil, jadi nilainya bisa basi: deadline lewat sementara kolomnya
+     * masih 'open' dan halaman publik tetap menerima pendaftar. Accessor
+     * ini membuat semua pembaca (halaman publik, magic link, event detail,
+     * badge profil) selalu dapat hasil hitung terkini tanpa perlu
+     * sentuh file pembacanya satu per satu.
+     *
+     * Kolomnya tetap ditulis ke DB supaya listing admin punya nilai nyata.
+     *
+     * Kalau modelnya di-select sebagian tanpa kolom tanggal, nilai mentah
+     * dari DB dikembalikan apa adanya — jangan menuduh 'closed' hanya
+     * karena kolomnya tidak ikut di-query.
+     */
+    public function getRegistrationStatusAttribute($value): string
+    {
+        foreach (['tanggal_pendaftaran', 'tanggal', 'tanggal_akhir', 'technical_meeting'] as $kolom) {
+            if (!array_key_exists($kolom, $this->attributes)) {
+                return $value ?? 'open';
+            }
+        }
+
+        return $this->computeRegistrationStatus();
+    }
+
+    /**
      * Hitung ulang registration_status dari tanggal — satu sumber kebenaran.
      *
      * Dipakai baik oleh halaman publik maupun pengaturan profil supaya badge
