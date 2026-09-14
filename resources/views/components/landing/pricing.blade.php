@@ -23,6 +23,30 @@
             @foreach($plans as $plan)
                 @php
                     $isOwned = $eventner && $eventner->saas_plan_id === $plan['id'];
+
+                    // Daftar fitur dipadatkan: sisanya disembunyikan di balik toggle
+                    // supaya kartu tidak memanjang ke bawah saat semua fitur aktif.
+                    if ($plan['is_free']) {
+                        $features = [
+                            'Dashboard event & profil',
+                            'Kategori lomba & pendaftaran peserta',
+                            'Manajemen juri & input nilai',
+                            'Rekap nilai & scoreboard publik',
+                            'QR check-in peserta',
+                        ];
+                    } else {
+                        $features = array_merge(
+                            ['Semua fitur paket gratis'],
+                            array_map(
+                                fn ($key) => config("eventner_features.{$key}.label", $key),
+                                $plan['features']
+                            ),
+                            [$plan['is_contact'] ? 'Aktivasi oleh admin setelah konfirmasi' : 'Aktivasi otomatis setelah bayar']
+                        );
+                    }
+
+                    $visibleFeatures = array_slice($features, 0, 5);
+                    $hiddenFeatures = array_slice($features, 5);
                 @endphp
                 <div class="surface-card relative flex flex-col overflow-hidden p-8 {{ $plan['highlight'] ? 'border-2 border-secondary' : '' }}">
                     @if($plan['highlight'])
@@ -46,21 +70,26 @@
                         @endif
                     </div>
                     <ul class="mt-6 flex flex-1 flex-col gap-3 text-sm">
-                        @if($plan['is_free'])
-                            <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> Dashboard event & profil</li>
-                            <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> Kategori lomba & pendaftaran peserta</li>
-                            <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> Manajemen juri & input nilai</li>
-                            <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> Rekap nilai & scoreboard publik</li>
-                            <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> QR check-in peserta</li>
-                        @else
-                            <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> Semua fitur paket gratis</li>
-                            @foreach($plan['features'] as $featureKey)
-                                @php $label = config("eventner_features.{$featureKey}.label", $featureKey); @endphp
-                                <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> {{ $label }}</li>
-                            @endforeach
-                            <li class="flex items-center gap-2"><i class="ti ti-check text-secondary"></i> {{ $plan['is_contact'] ? 'Aktivasi oleh admin setelah konfirmasi' : 'Aktivasi otomatis setelah bayar' }}</li>
-                        @endif
+                        @foreach($visibleFeatures as $feature)
+                            <li class="flex items-start gap-2"><i class="ti ti-check mt-0.5 shrink-0 text-secondary"></i> <span>{{ $feature }}</span></li>
+                        @endforeach
                     </ul>
+
+                    @if($hiddenFeatures)
+                        <details class="pricing-more mt-3 text-sm">
+                            <summary class="inline-flex cursor-pointer list-none items-center gap-1 font-semibold text-primary hover:underline">
+                                <i class="ti ti-chevron-down transition-transform"></i>
+                                <span class="pricing-more-open">Lihat {{ count($hiddenFeatures) }} fitur lain</span>
+                                <span class="pricing-more-close">Sembunyikan fitur</span>
+                            </summary>
+                            <ul class="mt-3 flex flex-col gap-3">
+                                @foreach($hiddenFeatures as $feature)
+                                    <li class="flex items-start gap-2"><i class="ti ti-check mt-0.5 shrink-0 text-secondary"></i> <span>{{ $feature }}</span></li>
+                                @endforeach
+                            </ul>
+                        </details>
+                    @endif
+
                     <div class="mt-8">
                         @if($plan['is_contact'])
                             <a href="{{ $plan['contact_url'] ?: '#contact' }}" target="_blank" rel="noopener"

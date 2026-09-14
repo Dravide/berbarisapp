@@ -124,6 +124,13 @@
         @apply hover:-translate-y-1.5 hover:border-primary/40 hover:shadow-[0_20px_50px_rgba(0,98,255,0.22)];
     }
 
+    /* Pricing — toggle fitur tersembunyi (native details, tanpa JS) */
+    .pricing-more > summary::-webkit-details-marker { display: none; }
+    .pricing-more .pricing-more-close { display: none; }
+    .pricing-more[open] .pricing-more-close { display: inline; }
+    .pricing-more[open] .pricing-more-open { display: none; }
+    .pricing-more[open] > summary .ti-chevron-down { @apply rotate-180; }
+
     /* Glassmorphism navbar/overlays */
     .glass-nav {
         @apply border-b border-outline-variant/50 bg-white/80 backdrop-blur-md;
