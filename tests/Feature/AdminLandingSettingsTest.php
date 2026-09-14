@@ -120,6 +120,58 @@ class AdminLandingSettingsTest extends TestCase
         $this->assertStringContainsString('Pendaftaran', $html);
     }
 
+    public function test_gambar_about_menang_atas_video_bawaan()
+    {
+        Setting::set('landing_about', json_encode([
+            'heading' => 'Platform Event & Kompetisi Terpadu',
+            'description' => 'Deskripsi',
+            'image' => 'landing/about.jpg',
+            'video' => 'https://videos.pexels.com/video-files/3209259/3209259-hd_1920_1080_25fps.mp4',
+            'points' => [],
+        ]));
+        Setting::set('landing_sections_order', json_encode(['about']));
+        Setting::set('landing_sections_active', json_encode(['about' => true]));
+
+        $html = Livewire::test(PublicLandingPage::class)->html();
+
+        // Periksa markup section About saja — snapshot Livewire memuat JSON
+        // mentah pengaturan, jadi pencarian di seluruh HTML bisa menyesatkan.
+        $about = $this->aboutSectionMarkup($html);
+
+        $this->assertStringContainsString('<img', $about);
+        $this->assertStringContainsString('landing/about.jpg', $about);
+        $this->assertStringNotContainsString('<video', $about);
+    }
+
+    /** Potongan markup <section id="about"> dari HTML halaman landing. */
+    private function aboutSectionMarkup(string $html): string
+    {
+        $start = strpos($html, '<section id="about"');
+        $this->assertNotFalse($start, 'Section about tidak ditemukan di halaman landing.');
+
+        $end = strpos($html, '</section>', $start);
+
+        return substr($html, $start, $end - $start);
+    }
+
+    public function test_video_about_dipakai_saat_gambar_kosong()
+    {
+        Setting::set('landing_about', json_encode([
+            'heading' => 'Platform Event & Kompetisi Terpadu',
+            'description' => 'Deskripsi',
+            'image' => '',
+            'video' => 'https://contoh.test/promo.mp4',
+            'points' => [],
+        ]));
+        Setting::set('landing_sections_order', json_encode(['about']));
+        Setting::set('landing_sections_active', json_encode(['about' => true]));
+
+        $about = $this->aboutSectionMarkup(Livewire::test(PublicLandingPage::class)->html());
+
+        $this->assertStringContainsString('<video', $about);
+        $this->assertStringContainsString('https://contoh.test/promo.mp4', $about);
+    }
+
     public function test_help_support_faq_comes_from_setting()
     {
         $user = User::factory()->create();

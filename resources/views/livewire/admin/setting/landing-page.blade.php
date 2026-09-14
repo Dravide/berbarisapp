@@ -199,6 +199,11 @@
                                                     </div>
                                                 @endif
                                                 <input type="file" class="form-control" wire:model="about_image" accept="image/*">
+                                                <div class="mt-2">
+                                                    <label class="form-label small">Video URL (opsional)</label>
+                                                    <input type="text" class="form-control form-control-sm" wire:model="about_video" placeholder="https://.../video.mp4">
+                                                    <small class="text-muted">Hanya dipakai kalau gambar di atas kosong. Kosongkan untuk memakai gambar.</small>
+                                                </div>
                                             </div>
                                             <div class="col-md-6">
                                                 <div class="border rounded p-3">
