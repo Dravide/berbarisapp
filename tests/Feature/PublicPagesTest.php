@@ -22,6 +22,43 @@ class PublicPagesTest extends TestCase
         $response->assertStatus(200);
     }
 
+    public function test_penyelenggara_menampilkan_tanggal_pelaksanaan()
+    {
+        Eventner::factory()->create([
+            'status' => 'approved',
+            'tanggal' => '2026-10-05',
+            'tanggal_akhir' => null,
+        ]);
+
+        $html = $this->penyelenggaraSection($this->get('/')->getContent());
+
+        $this->assertStringContainsString('05 Okt 2026', $html);
+    }
+
+    public function test_penyelenggara_menampilkan_rentang_tanggal()
+    {
+        Eventner::factory()->create([
+            'status' => 'approved',
+            'tanggal' => '2026-10-05',
+            'tanggal_akhir' => '2026-10-07',
+        ]);
+
+        $html = $this->penyelenggaraSection($this->get('/')->getContent());
+
+        $this->assertStringContainsString('05 Okt 2026', $html);
+        $this->assertStringContainsString('07 Okt 2026', $html);
+    }
+
+    /** Potongan markup <section id="eventners"> dari HTML halaman landing. */
+    private function penyelenggaraSection(string $html): string
+    {
+        $start = strpos($html, '<section id="eventners"');
+        $this->assertNotFalse($start, 'Section penyelenggara tidak ditemukan di halaman landing.');
+        $end = strpos($html, '</section>', $start);
+
+        return substr($html, $start, $end - $start);
+    }
+
     public function test_event_detail_loads()
     {
         $eventner = Eventner::factory()->create([

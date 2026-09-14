@@ -35,7 +35,14 @@
                     <h3 class="text-base font-bold leading-snug text-deep-slate transition-colors duration-200 group-hover:text-primary">{{ $eventner->nama_event }}</h3>
                     <p class="mt-1 text-xs text-on-surface-variant">{{ $eventner->diselenggarakan_oleh }}</p>
 
-                    <div class="mt-4 flex items-center gap-4 border-t border-outline-variant/50 pt-3 text-xs text-on-surface-variant">
+                    <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-outline-variant/50 pt-3 text-xs text-on-surface-variant">
+                        @if($eventner->tanggal)
+                        <span class="inline-flex items-center gap-1">
+                            <i class="ti ti-calendar-event text-primary"></i>
+                            {{-- Rentang ditulis sekali: event sehari tidak perlu mengulang bulan. --}}
+                            {{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d M Y') }}@if($eventner->tanggal_akhir)<span class="text-on-surface-variant/60">&ndash;{{ \Carbon\Carbon::parse($eventner->tanggal_akhir)->translatedFormat('d M Y') }}</span>@endif
+                        </span>
+                        @endif
                         @if($eventner->lokasi)
                         <span class="inline-flex items-center gap-1">
                             <i class="ti ti-map-pin text-primary"></i>
