@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\VoteTransaction;
 use App\Models\Eventner;
+use App\Models\Setting;
 use App\Services\AutoGoPay;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -51,7 +52,7 @@ class AutoGoPayWebhookController extends Controller
 
             if ($status === 'settlement') {
                 $this->handleSettlement($transactionId, $transaction);
-                $this->handleEventnerSettlement($transactionId);
+                $this->handleEventnerSettlement($transactionId, $transaction);
             } elseif ($status === 'expire') {
                 $this->handleExpired($transactionId);
                 $this->handleEventnerExpired($transactionId);
@@ -120,12 +121,34 @@ class AutoGoPayWebhookController extends Controller
         }
     }
 
-    private function handleEventnerSettlement(string $transactionId): void
+    private function handleEventnerSettlement(string $transactionId, array $transactionData = []): void
     {
         $eventner = Eventner::where('autogopay_transaction_id', $transactionId)->first();
         // Idempotent: registration_paid_at terisi = transaksi ini sudah diproses.
         // Jangan pakai plan==='paid' — eventner yang daftar paid sudah ber-plan paid sebelum bayar.
         if (!$eventner || $eventner->registration_paid_at) {
+            return;
+        }
+
+        // Nominal dicek dulu, sama seperti vote & tiket di handleSettlement().
+        // Tanpa ini, payload bertanda tangan dengan transaction_id benar tapi
+        // amount palsu tetap mengaktifkan paket.
+        //
+        // Catatan: bila QR lama digenerasi ulang, settle untuk QR yang sudah
+        // mati tidak lagi menemukan eventner (transaction id-nya sudah
+        // diganti), jadi tidak ada aktivasi ganda.
+        $expected = $eventner->saasPlan?->price
+            ?? (int) Setting::get('eventner_plan_price', 150000);
+        $paidAmount = $transactionData['amount'] ?? null;
+
+        if ($paidAmount !== null && (int) $paidAmount < (int) $expected) {
+            Log::warning('Eventner webhook: amount mismatch', [
+                'transaction_id' => $transactionId,
+                'eventner_id' => $eventner->id,
+                'expected' => (int) $expected,
+                'paid' => (int) $paidAmount,
+            ]);
+
             return;
         }
 

@@ -46,14 +46,21 @@ trait HasFeatureGates
      */
     public function canAccessFeature(string $feature): bool
     {
-        // Multi-paket via DB
-        if ($this->plan === 'paid' && $this->saas_plan_id) {
-            return $this->saasPlan->features->pluck('feature_key')->contains($feature);
+        // Paid plan legacy — semua fitur terbuka.
+        //
+        // Harus diperiksa SEBELUM jalur paket: saas_plan_id bisa yatim
+        // (relasinya nullOnDelete, jadi paketnya ada yang dihapus admin), dan
+        // eventner legacy memang tidak pernah punya paket. Dulu jalur paket
+        // memakai `saas_plan_id` polos lalu membaca ->features, sehingga
+        // eventner ber-paket-dihapus melempar error, bukan jatuh ke aturan
+        // legacy di bawah.
+        if ($this->plan === 'paid' && ! $this->saasPlan) {
+            return true;
         }
 
-        // Paid plan legacy — semua fitur terbuka
+        // Multi-paket via DB
         if ($this->plan === 'paid') {
-            return true;
+            return $this->saasPlan->features->pluck('feature_key')->contains($feature);
         }
 
         // Free plan — cek trial
@@ -83,8 +90,14 @@ trait HasFeatureGates
      */
     public function lockedFeatures(): array
     {
+        // Legacy / paket yatim — tidak ada paket untuk dibaca, jadi tidak ada
+        // yang terkunci (lihat canAccessFeature()).
+        if ($this->plan === 'paid' && ! $this->saasPlan) {
+            return [];
+        }
+
         // Multi-paket via DB
-        if ($this->plan === 'paid' && $this->saas_plan_id) {
+        if ($this->plan === 'paid') {
             $planKeys = $this->saasPlan->features->pluck('feature_key')->all();
 
             $locked = [];

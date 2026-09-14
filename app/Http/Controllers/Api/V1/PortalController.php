@@ -160,13 +160,9 @@ class PortalController extends Controller
                     $scoreRecord = $scores->firstWhere('assessment_criteria_id', $criteria->id);
                     $nilai = $scoreRecord ? (float) $scoreRecord->score : 0;
 
-                    // Hitung maks dari score_options
-                    $options = $criteria->score_options ?? [];
-                    $maxScore = 0;
-                    foreach ($options as $opt) {
-                        $val = is_array($opt) ? (int) ($opt['score'] ?? 0) : (int) $opt;
-                        if ($val > $maxScore) $maxScore = $val;
-                    }
+                    // Hitung maks dari score_options. Rentang ("0 – 25")
+                    // diambil batas atasnya — lihat ScoreOptions::maxValue().
+                    $maxScore = \App\Support\ScoreOptions::maxValue($criteria->score_options ?? []);
                     if ($maxScore === 0) $maxScore = 100;
 
                     $bobot = (float) ($criteria->weight ?? 1);

@@ -601,14 +601,9 @@
 
                 {{-- Preview --}}
                 @php
-                    $previewScores = [];
-                    foreach($labelGroups as $g) {
-                        $label = trim($g['label'] ?? '');
-                        $scoresRaw = str_replace([' &ndash; ', ' - ', '&ndash;', ';'], ',', $g['scores'] ?? '');
-                        foreach(array_filter(array_map('trim', explode(',', $scoresRaw))) as $s) {
-                            $previewScores[] = $label ? "$s ($label)" : $s;
-                        }
-                    }
+                    // Sumber yang sama dengan saveCriteriaModal(), jadi badge di
+                    // sini tidak mungkin lagi berbeda dengan yang tersimpan.
+                    $previewScores = $this->scoreOptionPreview;
                 @endphp
                 @if(!empty($previewScores))
                 <div class="bg-light p-3 rounded border">

@@ -70,7 +70,18 @@ class Upgrade extends Component
         if ($this->eventner->autogopay_transaction_id && !$this->eventner->registration_paid_at) {
             try {
                 $status = app(AutoGoPay::class)->checkStatus($this->eventner->autogopay_transaction_id);
-                if (($status['success'] ?? false) && ($status['data']['transaction_status'] ?? '') !== 'expire') {
+                $txStatus = $status['data']['transaction_status'] ?? '';
+
+                // QR yang sudah mati di gateway jangan ditawarkan lagi — dulu
+                // hanya 'expire' yang disaring, sehingga QR 'cancel' tetap
+                // ditampilkan padahal tidak bisa dibayar lagi.
+                if (in_array($txStatus, ['expire', 'cancel'], true)) {
+                    $this->eventner->update([
+                        'autogopay_transaction_id' => null,
+                        'qr_url' => null,
+                        'qr_string' => null,
+                    ]);
+                } elseif (($status['success'] ?? false) && $txStatus !== 'expire') {
                     $this->paymentTransactionId = $this->eventner->autogopay_transaction_id;
                     $this->paymentQrUrl = $this->eventner->qr_url;
                     $this->paymentAmount = $this->eventner->saasPlan?->price
@@ -101,6 +112,23 @@ class Upgrade extends Component
 
         $price = $plan?->price ?? (int) Setting::get('eventner_plan_price', 150000);
 
+        // QR lama dibatalkan dulu. Dulu transaction id-nya ditimpa begitu
+        // saja, jadi QR yang masih tampil di layar pembeli tetap bisa
+        // dibayar, padahal webhook-nya sudah tidak dikenali lagi
+        // (handleEventnerSettlement mencocokkan hanya lewat transaction id
+        // yang tersimpan). Pembayarannya masuk, paketnya tidak pernah aktif.
+        //
+        // Batalnya HARUS berhasil: kalau gateway menolak membatalkan, QR yang
+        // beredar tetap sah dan kita akan meninggalkan pembeli dengan dua QR
+        // yang sama-sama bisa dibayar. Lebih baik tidak membuat yang baru.
+        $lama = $this->eventner->autogopay_transaction_id;
+
+        if ($lama && ! $this->cancelOldQris($lama)) {
+            session()->flash('error', 'QR lama tidak bisa dibatalkan di sisi gateway. Coba lagi sebentar lagi, atau tunggu QR itu kedaluwarsa.');
+
+            return;
+        }
+
         try {
             $result = app(AutoGoPay::class)->generateQris($price);
 
@@ -125,6 +153,46 @@ class Upgrade extends Component
             Log::error('Upgrade: QRIS generation failed', ['error' => $e->getMessage()]);
             session()->flash('error', 'Gagal membuat QRIS. Silakan coba lagi nanti.');
         }
+    }
+
+    /**
+     * Batalkan QR yang masih tercatat di eventner ini.
+     *
+     * @return bool true bila sudah tidak ada QR beredar (berhasil dibatalkan
+     *              atau memang sudah tidak aktif di gateway).
+     */
+    private function cancelOldQris(string $transactionId): bool
+    {
+        try {
+            $hasil = app(AutoGoPay::class)->cancelTransaction($transactionId);
+        } catch (\Throwable $e) {
+            Log::warning('Upgrade: pembatalan QR lama gagal', [
+                'eventner_id' => $this->eventner->id,
+                'transaction_id' => $transactionId,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+
+        // Gateway sudah menganggapnya mati (expire/cancel) → sama saja dengan
+        // berhasil dibatalkan.
+        $status = $hasil['data']['transaction_status'] ?? null;
+        if (in_array($status, ['expire', 'cancel'], true)) {
+            return true;
+        }
+
+        if (($hasil['success'] ?? false) === true) {
+            return true;
+        }
+
+        Log::warning('Upgrade: gateway menolak pembatalan QR lama', [
+            'eventner_id' => $this->eventner->id,
+            'transaction_id' => $transactionId,
+            'response' => $hasil,
+        ]);
+
+        return false;
     }
 
     public function checkPayment()

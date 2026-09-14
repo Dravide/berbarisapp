@@ -6,6 +6,7 @@ use App\Models\AssessmentCategory;
 use App\Models\AssessmentCriteria;
 use App\Models\AssessmentScore;
 use App\Models\AssessmentSubCategory;
+use App\Models\ChampionCategory;
 use App\Models\CompetitionCategory;
 use App\Models\DeductionCategory;
 use App\Models\DeductionCriteria;
@@ -195,6 +196,35 @@ class Builder extends Component
 
             return;
         }
+
+        // Rubrik kategori ini bisa dipakai kategori juara (champion_assessment
+        // menunjuk ke assessment_SUB_categories). Pivot itu cascade, jadi
+        // menghapus kategori diam-diam mencabut rubrik dari kategori juara —
+        // juara yang tadinya dihitung dari kategori ini langsung kehilangan
+        // kriterianya tanpa peringatan. Tampilkan dulu kategori juara mana
+        // yang akan kehilangan rubriknya.
+        $championNames = ChampionCategory::where('eventner_id', $this->eventnerId)
+            ->whereHas('assessmentSubCategories', function ($q) use ($category) {
+                $q->whereIn('assessment_sub_categories.assessment_category_id', [$category->id]);
+            })
+            ->pluck('name');
+
+        if ($championNames->isNotEmpty()) {
+            session()->flash(
+                'error',
+                'Tidak bisa menghapus kategori: rubriknya dipakai kategori juara '
+                . $championNames->implode(', ')
+                . '. Lepaskan rubrik itu dari kategori juara dulu.'
+            );
+
+            return;
+        }
+
+        // Kategori pengurangan menunjuk ke assessment_categories dengan
+        // nullOnDelete, jadi barisnya TIDAK ikut terhapus — ia jadi yatim dan
+        // hilang dari halaman Input Nilai (yang menyaring NOT NULL). Nilainya
+        // ikut tak terhitung, padahal masih tersimpan. Hapus sekalian.
+        $category->deductionCategories()->delete();
 
         $category->delete();
     }
@@ -389,6 +419,24 @@ class Builder extends Component
 
         if ($this->anyCriteriaHasScores($sub->criterias->pluck('id'))) {
             session()->flash('error', 'Tidak bisa menghapus sub-kategori: sudah ada nilai yang masuk.');
+
+            return;
+        }
+
+        // Sama seperti deleteCategory(): champion_assessment menunjuk ke sub
+        // kategori dengan cascade, jadi menghapusnya mencabut rubrik dari
+        // kategori juara tanpa peringatan.
+        $championNames = ChampionCategory::where('eventner_id', $this->eventnerId)
+            ->whereHas('assessmentSubCategories', fn ($q) => $q->where('assessment_sub_categories.id', $sub->id))
+            ->pluck('name');
+
+        if ($championNames->isNotEmpty()) {
+            session()->flash(
+                'error',
+                'Tidak bisa menghapus sub-kategori: rubriknya dipakai kategori juara '
+                . $championNames->implode(', ')
+                . '. Lepaskan rubrik itu dari kategori juara dulu.'
+            );
 
             return;
         }
@@ -592,9 +640,10 @@ class Builder extends Component
             $label = trim($group['label'] ?? '');
             $scoresRaw = $group['scores'] ?? '';
 
-            $scoresStr = str_replace([' – ', ' - ', '–', ';'], ',', $scoresRaw);
-            $parts = array_map('trim', explode(',', $scoresStr));
-            $parts = array_filter($parts, fn ($v) => $v !== '');
+            // Parser yang sama dengan preview di blade — lihat ScoreOptions.
+            // Dulu keduanya punya daftar pemisah berbeda, jadi yang dilihat
+            // operator di preview bukan yang tersimpan.
+            $parts = \App\Support\ScoreOptions::split($scoresRaw);
 
             if (! empty($label)) {
                 $hasLabels = true;
@@ -656,6 +705,29 @@ class Builder extends Component
         }
 
         $this->closeCriteriaModal();
+    }
+
+    /**
+     * Teks preview badge dari kelompok label yang sedang diketik.
+     *
+     * Dipakai blade supaya preview dan hasil simpan tidak bisa lagi berbeda:
+     * keduanya memanggil parser yang sama.
+     *
+     * @return array<int, string>
+     */
+    public function getScoreOptionPreviewProperty(): array
+    {
+        $preview = [];
+
+        foreach ($this->labelGroups as $group) {
+            $label = trim($group['label'] ?? '');
+
+            foreach (\App\Support\ScoreOptions::split($group['scores'] ?? '') as $score) {
+                $preview[] = $label !== '' ? "{$score} ({$label})" : $score;
+            }
+        }
+
+        return $preview;
     }
 
     // ============================================================

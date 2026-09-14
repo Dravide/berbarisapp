@@ -38,8 +38,15 @@ class QrController extends Controller
             return response()->json(['message' => 'QR tidak valid.'], 404);
         }
 
-        // Buat atau ambil token
-        $token = $registration->createToken('mobile-app')->plainTextToken;
+        // Scan = awal sesi aplikasi. Dulu createToken() dipanggil setiap
+        // scan tanpa mencabut yang lama, jadi tabel personal_access_tokens
+        // tumbuh satu baris per scan dan SEMUA token lama tetap sah
+        // selamanya — satu QR yang pernah dipindai belasan kali meninggalkan
+        // belasan kunci abadi. Sekarang token lama dicabut dulu, dan yang
+        // baru punya masa berlaku.
+        $registration->tokens()->delete();
+
+        $token = $registration->createToken('mobile-app', ['*'], now()->addDays(30))->plainTextToken;
 
         return response()->json([
             'token' => $token,

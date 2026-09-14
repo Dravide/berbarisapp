@@ -53,6 +53,14 @@ class SyncPendingPayments implements ShouldQueue, ShouldBeUnique
 
     public function handle(): void
     {
+        // Satu kunci bersama dengan command payment:sync-pending — lihat
+        // PaymentSyncLock. withoutOverlapping() mengunci per-jadwal, bukan
+        // antar-jadwal, jadi keduanya bisa menembak /qris/status bersamaan.
+        \App\Support\PaymentSyncLock::run(fn () => $this->sync());
+    }
+
+    private function sync(): void
+    {
         // Selalu dijalankan, termasuk saat tidak ada transaksi vote/tiket pending —
         // pendaftaran nyangkut tidak berhubungan dengan transaksi pending, dan
         // handle() punya early return kalau daftar transaksinya kosong.

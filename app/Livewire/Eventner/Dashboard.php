@@ -113,7 +113,9 @@ class Dashboard extends Component
 
         // Kunci paket SaaS: satu-satunya sumber kebenaran soal fitur mana yang
         // termasuk paket. Dipakai hanya kalau paketnya benar-benar terpasang.
-        $planKeys = ($e->plan === 'paid' && $e->saas_plan_id)
+        // Paket bisa sudah dihapus admin (relasi nullOnDelete) — tanpa
+        // pemeriksaan saasPlan, halaman dashboard melempar error.
+        $planKeys = ($e->plan === 'paid' && $e->saasPlan)
             ? $e->saasPlan->features->pluck('feature_key')->all()
             : null;
 

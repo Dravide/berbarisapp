@@ -15,6 +15,17 @@ class SyncPendingTransactions extends Command
 
     public function handle(): int
     {
+        // Satu kunci bersama dengan job SyncPendingPayments — lihat
+        // PaymentSyncLock. withoutOverlapping() hanya mengunci per-jadwal,
+        // jadi tanpa ini command tiap menit bisa beradu dengan job tiap lima
+        // menit untuk transaksi yang sama.
+        \App\Support\PaymentSyncLock::run(fn () => $this->sync());
+
+        return 0;
+    }
+
+    private function sync(): int
+    {
         $service = new AutoGoPay();
         $synced = 0;
 
