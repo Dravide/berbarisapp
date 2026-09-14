@@ -70,7 +70,12 @@
                 </ul>
             </div>
 
-            <livewire:eventner.format-nilai.import :activeTab="$activeTab" :key="'import-'.$activeTab" />
+            {{-- Tanpa :key — kunci yang berubah per tab menghancurkan komponen
+                 Import setiap kali operator berpindah tingkat, dan bersamanya
+                 pratinjau hasil unggah yang belum disimpan. Sekarang satu
+                 komponen yang sama hidup terus; $activeTab-nya ikut berubah
+                 lewat binding di bawah. --}}
+            <livewire:eventner.format-nilai.import :activeTab="$activeTab" />
         </div>
     </div>
 

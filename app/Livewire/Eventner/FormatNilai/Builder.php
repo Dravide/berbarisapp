@@ -37,13 +37,6 @@ class Builder extends Component
 
     public $errorMessage = '';
 
-    // Copy format (lama)
-    public $showCopyModal = false;
-
-    public $copySourceId = null;
-
-    public $copyPreviewData = [];
-
     // Salin Ke (baru) — dari kategori sumber ke tingkat target
     public $showCopyToModal = false;
 
@@ -933,10 +926,20 @@ class Builder extends Component
 
     public function reorderCategories($id, $position)
     {
-        $categories = AssessmentCategory::where('eventner_id', $this->eventnerId)
-            ->orderBy('sort_order')
-            ->pluck('id')
-            ->toArray();
+        // Daftar yang diurutkan HARUS sama dengan yang dirender — yaitu hanya
+        // kategori milik tab aktif. Dulu di sini di-pluck seluruh kategori
+        // eventner, padahal $position datang dari DOM yang cuma memuat satu
+        // tab. Di tab mana pun selain yang pertama, posisinya jadi menunjuk
+        // kategori milik tingkat lain, sehingga urutan yang tersimpan meleset
+        // dan kategori bisa berpindah tingkat tanpa disadari.
+        $query = AssessmentCategory::where('eventner_id', $this->eventnerId)
+            ->orderBy('sort_order');
+
+        if ($this->activeTab !== '') {
+            $query->where('competition_category_id', $this->activeTab);
+        }
+
+        $categories = $query->pluck('id')->toArray();
 
         // Remove the dragged item from its current position
         $key = array_search($id, $categories);
@@ -1055,116 +1058,6 @@ class Builder extends Component
         $ada = CompetitionCategory::where('eventner_id', $this->eventnerId)->find($id);
 
         return $ada ? (string) $ada->id : '';
-    }
-
-    public function previewCopy($sourceId)
-    {
-        if (! $sourceId) {
-            $this->copyPreviewData = [];
-
-            return;
-        }
-
-        $sourceCategories = AssessmentCategory::where('eventner_id', $this->eventnerId)
-            ->where('competition_category_id', $sourceId)
-            ->with(['subCategories.criterias', 'deductionCategories.criterias'])
-            ->get();
-
-        $this->copyPreviewData = $sourceCategories->map(fn ($cat) => [
-            'name' => $cat->name,
-            'sub_count' => $cat->subCategories->count(),
-            'criteria_count' => $cat->subCategories->sum(fn ($s) => $s->criterias->count()),
-            'deduction_count' => $cat->deductionCategories->count(),
-            'deduction_criteria_count' => $cat->deductionCategories->sum(fn ($d) => $d->criterias->count()),
-        ])->toArray();
-    }
-
-    public function executeCopy()
-    {
-        if (! $this->copySourceId) {
-            session()->flash('error', 'Pilih tingkat sumber terlebih dahulu.');
-
-            return;
-        }
-
-        $sourceCategories = AssessmentCategory::where('eventner_id', $this->eventnerId)
-            ->where('competition_category_id', $this->copySourceId)
-            ->with(['subCategories.criterias', 'deductionCategories.criterias'])
-            ->get();
-
-        if ($sourceCategories->isEmpty()) {
-            session()->flash('error', 'Tingkat sumber tidak memiliki format penilaian.');
-            $this->closeCopyModal();
-
-            return;
-        }
-
-        $activeTab = $this->normalizeActiveTab($this->activeTab);
-        $targetId = $activeTab !== '' ? $activeTab : null;
-
-        foreach ($sourceCategories as $cat) {
-            $maxOrder = AssessmentCategory::where('eventner_id', $this->eventnerId)->max('sort_order') ?? 0;
-
-            $newCat = AssessmentCategory::create([
-                'eventner_id' => $this->eventnerId,
-                'competition_category_id' => $targetId,
-                'name' => $cat->name,
-                'sort_order' => $maxOrder + 1,
-            ]);
-
-            foreach ($cat->subCategories as $subIndex => $sub) {
-                $newSub = AssessmentSubCategory::create([
-                    'assessment_category_id' => $newCat->id,
-                    'name' => $sub->name,
-                    'sort_order' => $subIndex + 1,
-                ]);
-
-                foreach ($sub->criterias as $crit) {
-                    AssessmentCriteria::create([
-                        'assessment_sub_category_id' => $newSub->id,
-                        'name' => $crit->name,
-                        'score_options' => $crit->score_options,
-                        'weight' => $crit->weight ?? 1,
-                        'sort_order' => $crit->sort_order,
-                    ]);
-                }
-            }
-
-            foreach ($cat->deductionCategories as $dedIndex => $dedCat) {
-                $newDed = DeductionCategory::create([
-                    'eventner_id' => $this->eventnerId,
-                    'assessment_category_id' => $newCat->id,
-                    'name' => $dedCat->name,
-                    'sort_order' => $dedIndex + 1,
-                ]);
-
-                foreach ($dedCat->criterias as $dedCrit) {
-                    DeductionCriteria::create([
-                        'deduction_category_id' => $newDed->id,
-                        'name' => $dedCrit->name,
-                        'deduction_options' => $dedCrit->deduction_options,
-                        'sort_order' => $dedCrit->sort_order,
-                    ]);
-                }
-            }
-        }
-
-        session()->flash('success', 'Format penilaian berhasil disalin ('.$sourceCategories->count().' kategori).');
-        $this->closeCopyModal();
-    }
-
-    public function openCopyModal()
-    {
-        $this->showCopyModal = true;
-        $this->copySourceId = null;
-        $this->copyPreviewData = [];
-    }
-
-    public function closeCopyModal()
-    {
-        $this->showCopyModal = false;
-        $this->copySourceId = null;
-        $this->copyPreviewData = [];
     }
 
     // ============================================================

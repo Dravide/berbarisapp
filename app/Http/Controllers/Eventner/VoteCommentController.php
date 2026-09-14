@@ -48,10 +48,8 @@ class VoteCommentController extends Controller
             $query->where('registration_id', $filterRegistration);
         }
 
-        // Filter tier
-        if ($filterTier !== '' && isset(VoteCommentIndex::TIERS[$filterTier])) {
-            $query->where('votes_earned', '>=', VoteCommentIndex::TIERS[$filterTier]);
-        }
+        // Filter tier — band yang sama dengan halaman daftar, bukan ">= min".
+        VoteCommentIndex::applyTierFilter($query, $filterTier);
 
         // Filter tanggal
         if ($dateFrom !== '') {

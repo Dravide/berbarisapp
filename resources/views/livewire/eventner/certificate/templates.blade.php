@@ -102,13 +102,25 @@
                                     @endif
                                 </div>
                             </td>
-                            <td class="fw-semibold">{{ $tpl['name'] }}</td>
+                            <td class="fw-semibold">
+                                {{ $tpl['name'] }}
+                                @if($tpl['is_active'])
+                                    <span class="badge bg-success-subtle text-success ms-1">Dipakai</span>
+                                @endif
+                            </td>
                             <td class="text-muted">{{ $tpl['width'] }} × {{ $tpl['height'] }} mm</td>
                             <td>
                                 <span class="badge bg-info-subtle text-info">{{ $tpl['fields_count'] }}</span>
                             </td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-1">
+                                    @unless($tpl['is_active'])
+                                        <button class="btn btn-sm btn-success"
+                                            wire:click="setActiveTemplate({{ $tpl['id'] }})"
+                                            title="Pakai template ini untuk unduhan sertifikat">
+                                            <i class="ti ti-check me-1"></i> Pakai
+                                        </button>
+                                    @endunless
                                     <a href="{{ route('eventner.certificate.editor', $tpl['id']) }}"
                                        class="btn btn-sm btn-outline-primary">
                                         <i class="ti ti-edit me-1"></i> Atur Field

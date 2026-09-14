@@ -34,7 +34,7 @@ class Index extends Component
         'dateTo' => ['except' => ''],
     ];
 
-    /** Band vote per tier (filter tier = band terkecil yang dicapai). */
+    /** Band vote per tier — dipakai untuk label, bukan untuk menyaring. */
     public const TIERS = [
         'mvp' => 1000,
         'legend' => 500,
@@ -42,6 +42,9 @@ class Index extends Component
         'hot' => 50,
         'populer' => 10,
     ];
+
+    /** Urutan tier dari tertinggi ke terendah — batas atas tiap band. */
+    private const TIER_ORDER = ['mvp', 'legend', 'elite', 'hot', 'populer'];
 
     public function mount()
     {
@@ -92,6 +95,47 @@ class Index extends Component
         };
     }
 
+    /**
+     * Rentang vote satu tier: [min, max] — max null berarti tanpa batas atas.
+     *
+     * Satu-satunya sumber batas band. Sebelumnya penyaring tier memakai
+     * "votes_earned >= TIERS[tier]" polos, sehingga memilih "Legend"
+     * (>=500) juga memuat semua komentar MVP (>=1000) — padahal badge di
+     * barisnya tertulis MVP. Tier itu band, jadi batas atasnya juga milik
+     * tier di atasnya dikurangi satu.
+     *
+     * @return array{0:int,1:int|null}
+     */
+    public static function bandOf(string $tier): array
+    {
+        $min = self::TIERS[$tier] ?? 0;
+        $pos = array_search($tier, self::TIER_ORDER, true);
+
+        // Tier di atasnya (kalau ada) memberi batas atas eksklusif.
+        $diAtas = $pos !== false && $pos > 0 ? self::TIER_ORDER[$pos - 1] : null;
+        $max = $diAtas !== null ? self::TIERS[$diAtas] - 1 : null;
+
+        return [$min, $max];
+    }
+
+    /** Terapkan penyaring tier ke query — dipakai juga oleh ekspor CSV. */
+    public static function applyTierFilter($query, string $tier)
+    {
+        if ($tier === '' || ! isset(self::TIERS[$tier])) {
+            return $query;
+        }
+
+        [$min, $max] = self::bandOf($tier);
+
+        $query->where('votes_earned', '>=', $min);
+
+        if ($max !== null) {
+            $query->where('votes_earned', '<=', $max);
+        }
+
+        return $query;
+    }
+
     public function render()
     {
         $eventner = auth()->user()->eventner;
@@ -127,11 +171,8 @@ class Index extends Component
             $query->where('registration_id', $this->filterRegistration);
         }
 
-        // Filter tier (band terkecil yang dicapai)
-        if ($this->filterTier !== '' && isset(self::TIERS[$this->filterTier])) {
-            $min = self::TIERS[$this->filterTier];
-            $query->where('votes_earned', '>=', $min);
-        }
+        // Filter tier — satu band penuh, bukan "minimal sekian".
+        self::applyTierFilter($query, $this->filterTier);
 
         // Filter rentang tanggal bayar
         if ($this->dateFrom !== '') {

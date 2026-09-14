@@ -118,6 +118,35 @@ class EventVote extends Component
         $this->voteCount = max(1, (int)$this->voteCount - 1);
     }
 
+    /**
+     * Apakah voting sedang terbuka — satu-satunya sumber aturan ini.
+     *
+     * mount() memeriksa jadwal (vote_start/vote_end) untuk memilih tampilan,
+     * tapi submitVote() hanya memeriksa vote_active. Karena view == 'payment'
+     * TIDAK pernah dikembalikan ke 'closed'/'scheduled' oleh mount(), pembeli
+     * yang membuka halaman sebelum vote_start masih memegang form lama: ia
+     * bisa menekan bayar setelah voting ditutup (atau sebelum dibuka) dan
+     * QRIS-nya tetap dibuat — uangnya masuk, suaranya tidak pernah sah.
+     *
+     * @return array{0:bool,1:string} [terbuka, pesan alasan bila tertutup]
+     */
+    public function votingState(): array
+    {
+        if (! $this->eventner->vote_active) {
+            return [false, 'Fitur Vote Online sudah ditutup.'];
+        }
+
+        if ($this->eventner->vote_start && now()->lt($this->eventner->vote_start)) {
+            return [false, 'Voting belum dibuka.'];
+        }
+
+        if ($this->eventner->vote_end && now()->gt($this->eventner->vote_end)) {
+            return [false, 'Voting sudah ditutup.'];
+        }
+
+        return [true, ''];
+    }
+
     public function submitVote()
     {
         if (RateLimiter::tooManyAttempts('vote-submit:' . request()->ip(), $maxAttempts = 5)) {
@@ -127,8 +156,12 @@ class EventVote extends Component
 
         RateLimiter::hit('vote-submit:' . request()->ip(), $decaySeconds = 60);
 
-        if (!$this->eventner->vote_active) {
-            session()->flash('error', 'Fitur Vote Online sudah ditutup.');
+        [$terbuka, $pesan] = $this->votingState();
+
+        if (! $terbuka) {
+            session()->flash('error', $pesan);
+            $this->view = $terbuka ? $this->view : 'participants';
+
             return;
         }
 
@@ -228,11 +261,20 @@ class EventVote extends Component
 
             if ($status === 'settlement') {
                 // Atomic claim — siapa yang duluan klaim yang menang.
-                if ($tx) {
-                    $tx->claimPaid();
+                //
+                // claimPaid() mengembalikan false bila barisnya sudah PAID
+                // atau sudah tidak bisa diklaim. Dulu hasilnya diabaikan dan
+                // halaman selalu bilang "berhasil", padahal bisa saja klaim
+                // itu kalah dari webhook/polling lain — pembeli melihat sukses
+                // untuk suara yang tidak pernah bertambah.
+                $terklaim = $tx ? $tx->claimPaid() : false;
+
+                if ($terklaim || ($tx && $tx->fresh()?->status === 'PAID')) {
+                    $this->paymentConfirmed = true;
+                    $this->view = 'success';
+                } else {
+                    session()->flash('error', 'Pembayaran belum bisa dikonfirmasi. Tunggu sebentar, lalu buka lagi halaman ini.');
                 }
-                $this->paymentConfirmed = true;
-                $this->view = 'success';
             } elseif ($status === 'expire') {
                 if ($expired) {
                     $this->view = 'participants';
@@ -263,6 +305,27 @@ class EventVote extends Component
         $this->paymentAmount = null;
         $this->paymentConfirmed = false;
         $this->view = 'participants';
+    }
+
+    /**
+     * Jumlah vote yang BENAR-BENAR tercatat untuk transaksi yang baru dibayar.
+     *
+     * voteCount cuma jumlah yang diketik pembeli; yang tersimpan di
+     * votes_earned sudah dikali vote booster aktif. Halaman sukses dulu
+     * mencetak voteCount apa adanya, jadi saat booster jalan pembeli melihat
+     * angka yang lebih kecil daripada yang benar-benar masuk ke peringkat.
+     */
+    public function getCreditedVotesProperty(): int
+    {
+        if ($this->currentTransactionId) {
+            $tx = VoteTransaction::find($this->currentTransactionId);
+
+            if ($tx) {
+                return (int) $tx->votes_earned;
+            }
+        }
+
+        return (int) $this->voteCount;
     }
 
     public function getActiveBoosterProperty()

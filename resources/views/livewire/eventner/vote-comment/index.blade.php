@@ -79,10 +79,10 @@
                     <label class="form-label small fw-semibold text-muted">Tier</label>
                     <select class="form-select" wire:model.live="filterTier">
                         <option value="">Semua Tier</option>
-                        <option value="populer">⭐ Populer (≥10)</option>
-                        <option value="hot">🔥 Hot (≥50)</option>
-                        <option value="elite">💎 Elite (≥100)</option>
-                        <option value="legend">⚡ Legend (≥500)</option>
+                        <option value="populer">⭐ Populer (10–49)</option>
+                        <option value="hot">🔥 Hot (50–99)</option>
+                        <option value="elite">💎 Elite (100–499)</option>
+                        <option value="legend">⚡ Legend (500–999)</option>
                         <option value="mvp">👑 MVP (≥1000)</option>
                     </select>
                 </div>

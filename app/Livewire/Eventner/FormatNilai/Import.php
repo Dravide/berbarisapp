@@ -141,12 +141,15 @@ class Import extends Component
             return;
         }
 
-        // Lewati baris header bila ada.
+        // Lewati baris header bila ada. Offset-nya diteruskan supaya nomor
+        // baris di pesan error tetap cocok dengan nomor baris di Excel.
+        $rowOffset = 0;
         if (FormatNilaiImport::isHeaderRow($rows[0])) {
             array_shift($rows);
+            $rowOffset = 1;
         }
 
-        $normalized = FormatNilaiImport::normalizeRows($rows);
+        $normalized = FormatNilaiImport::normalizeRows($rows, $rowOffset);
 
         if (empty($normalized['rubrik']) && empty($normalized['pengurangan'])) {
             session()->flash('import_error', 'Tidak ada data Rubrik/Pengurangan valid yang ditemukan di file.');

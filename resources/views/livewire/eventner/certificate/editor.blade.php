@@ -115,7 +115,12 @@
                             $xp = ($field['x'] / $template['width']) * 100;
                             $yp = ($field['y'] / $template['height']) * 100;
                             $mw = $field['max_width'] ? ($field['max_width'] / $template['width'] * 100) : null;
-                            $qrPct = $template['height'] > 0 ? ($field['font_size'] / $template['height'] * 100) : 0;
+                            // QR: font_size = sisi kotak dalam mm. Kanvas mewakili
+                            // LEBAR template, jadi persentasenya dibagi lebar, bukan
+                            // tinggi. Dulu dibagi tinggi, sehingga di A4 landscape
+                            // (297×210) kotak QR di editor tampil 297/210 = 1,41×
+                            // lebih besar daripada yang tercetak di PDF.
+                            $qrPct = $template['width'] > 0 ? ($field['font_size'] / $template['width'] * 100) : 0;
                             // Saat preview aktif: isi field = data juara asli (mail-merge)
                             $isLivePreview = $showPreview && $previewData && !isset($previewData['error']);
                         @endphp
@@ -184,7 +189,7 @@
                                         left: {{ round($xp, 3) }}%;
                                         top: {{ round($yp, 3) }}%;
                                         transform: translate(-50%, -50%);
-                                        font-size: {{ $field['font_size'] }}pt;
+                                        font-size: {{ round($field['font_size'] * 96 / 72, 2) }}px;
                                         color: {{ $field['font_color'] }};
                                         text-align: {{ $field['text_align'] }};
                                         font-weight: {{ $field['font_weight'] }};

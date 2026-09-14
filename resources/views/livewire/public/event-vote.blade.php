@@ -147,7 +147,10 @@
                         {{-- Success Body --}}
                         <div class="p-6 text-center">
                             <div class="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-5 mb-6 text-sm text-emerald-800">
-                                <strong>{{ $voteCount }} vote</strong> untuk tim pilihan Anda telah berhasil ditambahkan dan dihitung di sistem real-time kami.
+                                <strong>{{ number_format($this->creditedVotes, 0, ',', '.') }} vote</strong> untuk tim pilihan Anda telah berhasil ditambahkan dan dihitung di sistem real-time kami.
+                                @if($this->creditedVotes > $voteCount)
+                                    <span class="block mt-1 text-xs text-emerald-700">Termasuk bonus vote booster yang sedang aktif.</span>
+                                @endif
                             </div>
                             @if($voterComment)
                                 <div class="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6 text-left">

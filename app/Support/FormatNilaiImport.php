@@ -142,14 +142,18 @@ class FormatNilaiImport
     /**
      * Normalisasi seluruh baris menjadi struktur bertingkat siap-simpan.
      *
-     * @param  array<int, array<int, mixed>>  $rows  2D array dari spreadsheet (tanpa header).
+     * @param  array<int, array<int, mixed>>  $rows  2D array dari spreadsheet (TANPA header —
+     *                                               Import::uploadExcel() sudah membuangnya).
+     * @param  int  $rowOffset  Jumlah baris yang sudah dibuang SEBELUM $rows. Dipakai hanya
+     *                          untuk nomor baris di pesan error, supaya yang ditampilkan
+     *                          cocok dengan nomor baris di Excel. Bukan 0 saat header ada.
      * @return array{
      *   rubrik: array<int, array{name:string,subCategories:array<int,array{name:string,criterias:array<int,array{name:string,score_options:array,weight:float}>}>}>,
      *   pengurangan: array<int, array{rubrik_index:int,name:string,criterias:array<int,array{name:string,deduction_options:array}>}>,
      *   errors: array<int, array{row:int,message:string}>
      * }
      */
-    public static function normalizeRows(array $rows): array
+    public static function normalizeRows(array $rows, int $rowOffset = 0): array
     {
         $result = [
             'rubrik' => [],
@@ -168,7 +172,11 @@ class FormatNilaiImport
             $sub = $cell(self::COL_SUB);
             $kriteria = $cell(self::COL_KRITERIA);
             $bobot = $cell(self::COL_BOBOT);
-            $rowNo = $rowIndex + 1; // +1 header, +1 1-based
+            // 1-based, plus baris yang sudah dibuang pemanggil (header).
+            // Dulu offset header di-hardcode 1, padahal array-nya datang
+            // SUDAH tanpa header — semua nomor baris di pesan error meleset
+            // satu, dan operator menyunting baris yang salah.
+            $rowNo = $rowOffset + $rowIndex + 1;
 
             if ($tipe === '') {
                 continue; // baris kosong

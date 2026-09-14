@@ -142,19 +142,34 @@ class Templates extends Component
         if ($this->editingTemplate) {
             $tpl = CertificateTemplate::where('eventner_id', $this->eventner->id)->findOrFail($this->editingTemplate);
 
+            // Berkas baru disimpan DULU, berkas lama dibuang setelah barisnya
+            // benar-benar tersimpan. Dulu urutannya dibalik: file_path lama
+            // dihapus lebih dulu, lalu store() dipanggil. Bila store() gagal
+            // (disk penuh, izin, unggahan batal), barisnya masih menunjuk
+            // berkas yang sudah hilang — sertifikat event ini langsung rusak
+            // permanen tanpa satu pun peringatan.
+            $fileLama = $tpl->file_path;
+
             if ($this->templateImage) {
                 $this->validate(['templateImage' => 'image|max:10240']);
-                if ($tpl->file_path) {
-                    Storage::disk('public')->delete($tpl->file_path);
-                }
                 $data['file_path'] = $this->templateImage->store('certificate-templates', 'public');
             }
 
             $tpl->update($data);
+
+            if (isset($data['file_path']) && $fileLama && $fileLama !== $data['file_path']) {
+                Storage::disk('public')->delete($fileLama);
+            }
+
             session()->flash('success', 'Template berhasil diperbarui.');
         } else {
             $this->validate(['templateImage' => 'required|image|max:10240']);
             $data['file_path'] = $this->templateImage->store('certificate-templates', 'public');
+
+            // Template pertama langsung jadi default; berikutnya TIDAK, supaya
+            // template baru tidak diam-diam merebut unduhan yang sedang jalan.
+            // Operator memilih sendiri lewat tombol "Pakai".
+            $data['is_active'] = ! CertificateTemplate::where('eventner_id', $this->eventner->id)->exists();
 
             CertificateTemplate::create($data);
             session()->flash('success', 'Template berhasil dibuat.');
@@ -175,6 +190,33 @@ class Templates extends Component
 
         $this->loadTemplates();
         session()->flash('success', 'Template berhasil dihapus.');
+    }
+
+    /**
+     * Jadikan satu template sebagai template aktif (default).
+     *
+     * Unduhan sertifikat lewat tautan token tidak menyebut template mana pun:
+     * controller mengambil satu baris is_active secara diam-diam. Migration
+     * memberi default is_active = true, jadi SETIAP template baru ikut aktif
+     * dan yang terpilih adalah yang id-nya terkecil — yaitu yang paling lama.
+     * Akibatnya template yang baru dibuat dan dirapikan tidak pernah terpakai,
+     * tanpa cara apa pun bagi operator untuk menggantinya.
+     *
+     * Sekarang hanya boleh ada satu aktif per event; memilih satu mematikan
+     * sisanya.
+     */
+    public function setActiveTemplate($id)
+    {
+        $tpl = CertificateTemplate::where('eventner_id', $this->eventner->id)->findOrFail($id);
+
+        CertificateTemplate::where('eventner_id', $this->eventner->id)
+            ->where('id', '!=', $tpl->id)
+            ->update(['is_active' => false]);
+
+        $tpl->update(['is_active' => true]);
+
+        $this->loadTemplates();
+        session()->flash('success', 'Template "' . $tpl->name . '" dipakai untuk unduhan sertifikat.');
     }
 
     // ── PDF helpers ────────────────────────────────────────────────────
