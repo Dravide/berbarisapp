@@ -473,6 +473,58 @@ class MonetizationTest extends TestCase
     }
 
     /**
+     * Voting harus opt-in. Dulu kolom vote_active default true dan tak pernah
+     * di-set saat akun dibuat, jadi setiap event baru membuka voting tanpa
+     * jadwal (vote_start/vote_end NULL = tanpa batas waktu).
+     */
+    public function test_eventner_baru_tidak_langsung_mengaktifkan_voting()
+    {
+        Livewire::test(\App\Livewire\Public\EventnerRegister::class)
+            ->set('plan', 'free')
+            ->set('name', 'Panitia Baru')
+            ->set('username', 'panitia_vote')
+            ->set('email', 'vote@example.com')
+            ->set('password', 'password123')
+            ->set('password_confirmation', 'password123')
+            ->set('nama_event', 'Event Vote Baru')
+            ->set('lokasi', 'Bandung')
+            ->set('agreeTerms', true)
+            ->call('save');
+
+        $eventner = Eventner::where('nama_event', 'Event Vote Baru')->firstOrFail();
+
+        $this->assertFalse((bool) $eventner->vote_active);
+    }
+
+    public function test_admin_membuat_eventner_tanpa_voting_menyala()
+    {
+        $admin = User::factory()->admin()->create();
+
+        $plan = SaasPlan::where('is_free', true)->first();
+
+        // Sebagian database uji belum punya paket gratis — pakai paket apa pun
+        // yang aktif, yang diuji di sini hanya nilai awal vote_active.
+        if (! $plan) {
+            $plan = SaasPlan::query()->where('is_active', true)->orderBy('sort_order')->first();
+            $plan->update(['is_free' => true]);
+        }
+
+        Livewire::actingAs($admin)->test(\App\Livewire\Admin\Eventner\Index::class)
+            ->set('nama_event', 'Event Admin Baru')
+            ->set('diselenggarakan_oleh', 'Panitia')
+            ->set('username', 'admin_event_vote')
+            ->set('email', 'adminevent@example.com')
+            ->set('lokasi', 'Jakarta')
+            ->set('tanggal', now()->addMonth()->toDateString())
+            ->set('saas_plan_id', $plan->id)
+            ->call('save');
+
+        $eventner = Eventner::where('nama_event', 'Event Admin Baru')->firstOrFail();
+
+        $this->assertFalse((bool) $eventner->vote_active);
+    }
+
+    /**
      * Jalur polling dulu tidak mengisi qr_code_path (komentar lama: hanya webhook
      * yang mengisi karena punya amount untuk verifikasi). Akibatnya tiket yang
      * terkonfirmasi lewat polling jadi PAID tanpa QR masuk sama sekali.

@@ -32,7 +32,21 @@ class EventnerFactory extends Factory
             'slug' => Str::slug($nama) . '-' . Str::random(5),
             'registration_status' => 'open',
             'trial_ends_at' => now()->addDays(30),
+            'vote_active' => false,
         ];
+    }
+
+    /**
+     * Eventner dengan voting menyala — test yang menguji jalur voting
+     * harus memintanya eksplisit, bukan mengandalkan default.
+     */
+    public function voteAktif(): static
+    {
+        return $this->state(fn () => [
+            'vote_active' => true,
+            'vote_start' => now()->subDay(),
+            'vote_end' => now()->addWeek(),
+        ]);
     }
 
     /**

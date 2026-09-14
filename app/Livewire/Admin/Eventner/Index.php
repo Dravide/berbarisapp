@@ -173,6 +173,8 @@ class Index extends Component
                 'tanggal_pendaftaran' => $this->tanggal_pendaftaran,
                 'technical_meeting' => $this->technical_meeting,
                 'tingkat_perlombaan' => $this->tingkat_perlombaan,
+                // Sama seperti pendaftaran mandiri: voting tidak ikut menyala.
+                'vote_active' => false,
             ]);
 
             $eventner->assignPlan(SaasPlan::findOrFail($this->saas_plan_id), 'admin');

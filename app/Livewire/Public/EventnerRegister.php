@@ -101,6 +101,9 @@ class EventnerRegister extends Component
             'diselenggarakan_oleh' => $this->name,
             'lokasi' => $this->lokasi,
             'tanggal' => now()->addMonth()->toDateString(),
+            // Voting opt-in: penyelenggara menyalakannya sendiri di
+            // Pengaturan Vote, jangan dibuka otomatis tanpa jadwal.
+            'vote_active' => false,
         ]);
 
         if ($paidPlan && $fee > 0) {
