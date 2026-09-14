@@ -137,7 +137,7 @@
                         <th>Nama Sekolah / Kontingen</th>
                         <th>Danton</th>
                         <th class="num-col" style="width: 100px;">Total Vote</th>
-                        <th class="num-col" style="width: 120px;">Estimasi Pendapatan</th>
+                        <th class="num-col" style="width: 120px;">Pendapatan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -147,7 +147,8 @@
                             <td class="name-col">{{ $reg->display_name }}</td>
                             <td>{{ $reg->danton_nama ?: '-' }}</td>
                             <td class="val-col num-val">{{ number_format($reg->total_votes ?: 0, 0, ',', '.') }}</td>
-                            <td class="val-col money-val">Rp {{ number_format(($reg->total_votes ?: 0) * $pricePerVote, 0, ',', '.') }}</td>
+                            {{-- Nominal transaksi PAID, bukan total vote × harga: votes_earned sudah termasuk multiplier booster. --}}
+                            <td class="val-col money-val">Rp {{ number_format($reg->total_amount ?: 0, 0, ',', '.') }}</td>
                         </tr>
                     @empty
                         <tr>

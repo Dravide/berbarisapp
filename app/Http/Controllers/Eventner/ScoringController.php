@@ -16,6 +16,28 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class ScoringController extends Controller
 {
+    /**
+     * Peta bobot kriteria => weight, dari kategori penilaian yang sudah
+     * ter-load. Dipakai agar penjumlahan nilai di rekap mengikuti bobot —
+     * sama seperti ScoreRecap dan papan skor publik.
+     *
+     * @param  \Illuminate\Support\Collection  $assessmentCategories
+     * @return array<int, int|float>
+     */
+    private function criteriaWeights($assessmentCategories): array
+    {
+        $map = [];
+        foreach ($assessmentCategories as $cat) {
+            foreach ($cat->subCategories as $sub) {
+                foreach ($sub->criterias as $crit) {
+                    $map[$crit->id] = $crit->weight ?? 1;
+                }
+            }
+        }
+
+        return $map;
+    }
+
     public function downloadCsv(Request $request)
     {
         $eventner = Auth::user()->eventner;
@@ -37,6 +59,12 @@ class ScoringController extends Controller
             })
             ->get();
 
+        // Bobot kriteria per id — nilai harus dikalikan bobot saat dijumlah,
+        // sama seperti rekap panitia dan papan skor publik. Dulu CSV/PDF
+        // menjumlah mentah, jadi kriteria berbobot 2 tertulis separuh dari
+        // nilai yang dipakai menentukan juara.
+        $criteriaWeights = $this->criteriaWeights($assessmentCategories);
+
         // Get participants - filtered by competition category if specified
         $participantsQuery = Registration::where('eventner_id', $eventner->id);
         $competitionCategory = null;
@@ -54,10 +82,16 @@ class ScoringController extends Controller
             ->get()
             ->groupBy('registration_id');
 
-        // Petakan deduction_criteria_id => assessment_category_id (hanya yang menempel kategori)
+        // Petakan deduction_criteria_id => assessment_category_id (hanya yang menempel
+        // kategori penilaian yang ikut rekap ini). Pengurangan dari format nilai
+        // kategori lain dibiarkan di luar — kalau ikut dijumlah, kolom
+        // "Pengurangan" tidak lagi cocok dengan selisih kolom kategorinya.
+        $assessmentCategoryIds = $assessmentCategories->pluck('id');
+
         $deductionCats = DeductionCategory::with('criterias')
             ->where('eventner_id', $eventner->id)
             ->whereNotNull('assessment_category_id')
+            ->whereIn('assessment_category_id', $assessmentCategoryIds)
             ->get();
         $critToAssessment = [];
         foreach ($deductionCats as $dc) {
@@ -84,31 +118,28 @@ class ScoringController extends Controller
 
             $categoryTotals = [];
             $grandTotal = 0;
-
             foreach ($assessmentCategories as $cat) {
                 $catTotal = 0;
                 foreach ($cat->subCategories as $sub) {
                     foreach ($sub->criterias as $crit) {
-                        $catTotal += $criteriaTotals[$crit->id] ?? 0;
+                        $catTotal += ($criteriaTotals[$crit->id] ?? 0) * ($criteriaWeights[$crit->id] ?? 1);
                     }
                 }
                 $categoryTotals[$cat->id] = $catTotal;
                 $grandTotal += $catTotal;
             }
 
-            // Pengurangan per kategori
+            // Pengurangan per kategori — magnitude-nya positif, dikurangkan
+            // dari total. Tanda di DB tidak dipercaya (bisa -5 maupun 5).
             $participantDeductions = $allDeductions->get($participant->id, collect());
             $deductionByCat = [];
             $totalDeduction = 0;
             foreach ($participantDeductions as $d) {
                 $aid = $critToAssessment[$d->deduction_criteria_id] ?? null;
                 if ($aid !== null) {
-                    $amt = (float) $d->amount;
-                    if ($amt > 0) {
-                        $amt = -$amt;
-                    }
-                    $deductionByCat[$aid] = ($deductionByCat[$aid] ?? 0) + $amt;
-                    $totalDeduction += $amt;
+                    $amt = $d->magnitude;
+                    $deductionByCat[$aid] = ($deductionByCat[$aid] ?? 0) - $amt;
+                    $totalDeduction -= $amt;
                 }
             }
             $finalScore = $grandTotal + $totalDeduction;
@@ -126,6 +157,20 @@ class ScoringController extends Controller
 
         // Sort by final score descending (ranking)
         usort($scoringData, fn($a, $b) => $b['finalScore'] <=> $a['finalScore']);
+
+        // Peringkat seri: nilai akhir sama berarti peringkat sama, dan
+        // peringkat berikutnya melompat — sama seperti halaman Rekap Nilai
+        // dan papan skor publik. Dulu kolom Rank cuma nomor urut baris.
+        $rank = 1;
+        $previousScore = null;
+        foreach ($scoringData as $index => &$row) {
+            if ($previousScore !== null && $row['finalScore'] < $previousScore) {
+                $rank = $index + 1;
+            }
+            $row['rank'] = $rank;
+            $previousScore = $row['finalScore'];
+        }
+        unset($row);
 
         $data = [
             'eventner' => $eventner,
@@ -198,7 +243,7 @@ class ScoringController extends Controller
                 $row[] = $data['grandTotal'];
                 $row[] = $data['totalDeduction'] != 0 ? $data['totalDeduction'] : 0;
                 $row[] = $data['finalScore'];
-                $row[] = $index + 1;
+                $row[] = $data['rank'];
                 fputcsv($file, $row);
             }
 
@@ -240,6 +285,8 @@ class ScoringController extends Controller
             ->where('registration_id', $registrationId)
             ->get();
 
+        $criteriaWeights = $this->criteriaWeights($assessmentCategories);
+
         // Sum scores per criteria across all judges
         $criteriaTotals = [];
         foreach ($allScores as $score) {
@@ -254,7 +301,7 @@ class ScoringController extends Controller
             $catTotal = 0;
             foreach ($cat->subCategories as $sub) {
                 foreach ($sub->criterias as $crit) {
-                    $catTotal += $criteriaTotals[$crit->id] ?? 0;
+                    $catTotal += ($criteriaTotals[$crit->id] ?? 0) * ($criteriaWeights[$crit->id] ?? 1);
                 }
             }
             $categoryTotals[$cat->id] = $catTotal;
@@ -292,7 +339,7 @@ class ScoringController extends Controller
                 $cTotal = 0;
                 foreach ($cat->subCategories as $sub) {
                     foreach ($sub->criterias as $crit) {
-                        $cTotal += $jScores[$crit->id] ?? 0;
+                        $cTotal += ($jScores[$crit->id] ?? 0) * ($criteriaWeights[$crit->id] ?? 1);
                     }
                 }
                 $catTotals[$cat->id] = $cTotal;
@@ -328,10 +375,8 @@ class ScoringController extends Controller
         $categoryDeductions = [];
         $totalDeduction = 0;
         foreach ($scoreDeductions as $d) {
-            $amt = (float) $d->amount;
-            if ($amt > 0) {
-                $amt = -$amt;
-            }
+            // Magnitude: tanda di DB tidak dipercaya, selalu dikurangkan.
+            $amt = -$d->magnitude;
 
             $aid = $critToAssessment[$d->deduction_criteria_id] ?? null;
             if ($aid !== null) {

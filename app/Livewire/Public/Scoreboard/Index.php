@@ -8,6 +8,7 @@ use App\Models\Registration;
 use App\Models\AssessmentScore;
 use App\Models\ChampionCategory;
 use App\Models\CompetitionCategory;
+use App\Models\ScoreDeduction;
 use Livewire\Attributes\Layout;
 
 #[Layout('layouts.scoreboard')]
@@ -121,6 +122,14 @@ class Index extends Component
             ->get()
             ->groupBy('registration_id');
 
+        // Pengurangan ikut dihitung. Dulu papan ini menjumlah nilai saja,
+        // sementara rekap panitia dan penentuan juara mengurangi potongan —
+        // jadi papan skor bisa menampilkan peringkat yang berbeda dari hasil.
+        $allDeductions = ScoreDeduction::where('eventner_id', $this->eventner->id)
+            ->whereIn('registration_id', $participants->pluck('id'))
+            ->get()
+            ->groupBy('registration_id');
+
         // Build criteria filter if champion category is selected
         $criteriaMap = null;
         if ($this->selectedChampionCategoryId && $this->championCategory) {
@@ -148,6 +157,11 @@ class Index extends Component
                     $weight = $score->assessmentCriteria->weight ?? 1;
                     $total += (int) $score->score * $weight;
                 }
+            }
+
+            // Magnitude: tanda di DB tidak dipercaya, selalu dikurangkan.
+            foreach ($allDeductions->get($participant->id, collect()) as $d) {
+                $total -= $d->magnitude;
             }
 
             $rankings[] = [

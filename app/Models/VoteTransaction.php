@@ -37,6 +37,27 @@ class VoteTransaction extends Model
         'created_at' => 'datetime',
     ];
 
+    /**
+     * Klaim atomik transaksi ini sebagai lunas.
+     *
+     * Menerima PENDING **dan** EXPIRED. QRIS bisa kedaluwarsa di sisi
+     * AutoGoPay sementara pembeli tetap menyelesaikan pembayarannya (QR
+     * sudah terlanjur discan, atau webhook kedaluwarsanya telat sampai).
+     * Kalau hanya PENDING yang diterima, uang yang benar-benar masuk tidak
+     * pernah dikreditkan sebagai vote dan transaksinya nyangkut selamanya.
+     *
+     * PENDING → PAID dan EXPIRED → PAID sama-sama sah: satu baris = satu
+     * transaksi AutoGoPay, jadi tidak ada risiko dobel kredit. Return false
+     * kalau barisnya sudah PAID/FAILED — artinya jalur lain lebih dulu
+     * mengklaim, jangan diproses lagi.
+     */
+    public function claimPaid(): bool
+    {
+        return (bool) static::where('id', $this->id)
+            ->whereIn('status', ['PENDING', 'EXPIRED'])
+            ->update(['status' => 'PAID', 'paid_at' => now()]);
+    }
+
     public function eventner()
     {
         return $this->belongsTo(Eventner::class);

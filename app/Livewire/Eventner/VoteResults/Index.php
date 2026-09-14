@@ -61,6 +61,14 @@ class Index extends Component
                     ->withSum(['voteTransactions as total_votes' => function ($query) {
                         $query->where('status', 'PAID');
                     }], 'votes_earned')
+                    // Pendapatan per kontingen diambil dari nominal transaksi
+                    // yang benar-benar dibayar, bukan dikalikan harga per vote.
+                    // votes_earned sudah termasuk multiplier booster, jadi
+                    // mengalikannya dengan harga memberi angka yang lebih besar
+                    // dari uang yang masuk.
+                    ->withSum(['voteTransactions as total_amount' => function ($query) {
+                        $query->where('status', 'PAID');
+                    }], 'amount')
                     ->orderByDesc('total_votes')
                     ->get();
             }
@@ -69,6 +77,9 @@ class Index extends Component
         return view('livewire.eventner.vote-results.index', [
             'results' => $results,
             'summary' => $summary,
+            // Harga per vote yang berlaku — dipakai label konversi, bukan
+            // angka 1.000 yang di-hardcode. Eventner boleh memasang harga lain.
+            'votePrice' => $eventner?->vote_price ?: 1000,
         ])->title('Hasil Voting - ' . app_name());
     }
 }

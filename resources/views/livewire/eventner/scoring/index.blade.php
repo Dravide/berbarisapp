@@ -224,7 +224,9 @@
                                 foreach ($sub->criterias as $crit) {
                                     $val = $scores[$crit->id] ?? null;
                                     if ($val !== '' && $val !== null) {
-                                        $categoryTotal += (int) $val;
+                                        // Dikalikan bobot — sama seperti rekap panitia
+                                        // dan papan skor publik.
+                                        $categoryTotal += (int) $val * ($crit->weight ?? 1);
                                     }
                                 }
                             }
@@ -363,7 +365,8 @@
                                             foreach ($sub->criterias as $crit) {
                                                 $val = $scores[$crit->id] ?? null;
                                                 if ($val !== '' && $val !== null) {
-                                                    $catSub += (int) $val;
+                                                    // Dikalikan bobot, konsisten dengan subtotal di atas.
+                                                    $catSub += (int) $val * ($crit->weight ?? 1);
                                                 }
                                             }
                                         }

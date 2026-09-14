@@ -213,11 +213,11 @@ class EventVote extends Component
             return;
         }
 
-        if ($tx && $tx->status === 'EXPIRED') {
-            $this->view = 'participants';
-            session()->flash('error', 'Pembayaran kedaluwarsa. Silakan coba lagi.');
-            return;
-        }
+        // Status EXPIRED tidak langsung dipercaya sebagai akhir: pembeli bisa
+        // menyelesaikan pembayaran setelah QR dinyatakan kedaluwarsa. Karena
+        // itu tetap dicek ke gateway — kalau ternyata settlement, vote-nya
+        // dikreditkan (claimPaid menerima PENDING maupun EXPIRED).
+        $expired = $tx && $tx->status === 'EXPIRED';
 
         // Fallback: cek langsung ke AutoGoPay API
         try {
@@ -227,15 +227,19 @@ class EventVote extends Component
             $status = $result['data']['transaction_status'] ?? 'pending';
 
             if ($status === 'settlement') {
-                // Atomic claim — siapa yang duluan update PENDING → PAID yang menang.
+                // Atomic claim — siapa yang duluan klaim yang menang.
                 if ($tx) {
-                    VoteTransaction::where('id', $tx->id)
-                        ->where('status', 'PENDING')
-                        ->update(['status' => 'PAID', 'paid_at' => now()]);
+                    $tx->claimPaid();
                 }
                 $this->paymentConfirmed = true;
                 $this->view = 'success';
             } elseif ($status === 'expire') {
+                if ($expired) {
+                    $this->view = 'participants';
+                    session()->flash('error', 'Pembayaran kedaluwarsa. Silakan coba lagi.');
+                    return;
+                }
+
                 if ($tx) {
                     VoteTransaction::where('id', $tx->id)
                         ->where('status', 'PENDING')

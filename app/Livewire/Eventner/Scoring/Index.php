@@ -435,6 +435,19 @@ class Index extends Component
             }
         }
 
+        // Bobot kriteria per id. Nilai harus dikalikan bobot saat dijumlah —
+        // sama seperti rekap panitia dan papan skor publik. Dulu total per
+        // juri di panel ini menjumlah mentah, jadi kriteria berbobot 2
+        // tertulis separuh dari angka yang dipakai menentukan juara.
+        $criteriaWeights = [];
+        foreach ($assessmentCategories as $cat) {
+            foreach ($cat->subCategories as $sub) {
+                foreach ($sub->criterias as $crit) {
+                    $criteriaWeights[$crit->id] = $crit->weight ?? 1;
+                }
+            }
+        }
+
         // Calculate per-judge totals for the current registration
         $judgeTotals = collect();
         if ($this->view === 'scoring' && $this->selectedRegistration && count($this->judges) > 0) {
@@ -445,7 +458,7 @@ class Index extends Component
                     $filled = collect($this->scores)->filter(fn($v) => $v !== '' && $v !== null)->count();
                     $judgeTotals->push([
                         'judge' => $judge,
-                        'total' => $isMine ? collect($this->scores)->sum(fn($v) => ($v === '' || $v === null) ? 0 : (float) $v) : 0,
+                        'total' => $isMine ? collect($this->scores)->sum(fn($v, $k) => ($v === '' || $v === null) ? 0 : (float) $v * ($criteriaWeights[$k] ?? 1)) : 0,
                         'filled' => $isMine ? $filled : 0,
                     ]);
                 }
@@ -458,7 +471,7 @@ class Index extends Component
 
                 foreach ($this->judges as $judge) {
                     $judgeScores = $allJudgeScores->get($judge->id, collect());
-                    $total = $judgeScores->sum(fn($s) => (int) $s->score);
+                    $total = $judgeScores->sum(fn($s) => (int) $s->score * ($criteriaWeights[$s->assessment_criteria_id] ?? 1));
                     $filled = $judgeScores->count();
                     $judgeTotals->push([
                         'judge' => $judge,

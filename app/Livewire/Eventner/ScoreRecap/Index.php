@@ -86,9 +86,16 @@ class Index extends Component
                 ->get()
                 ->groupBy('registration_id');
 
-            // Map deduction_criteria_id => assessment_category_id (target kategori penilaian)
-            $critToAssessment = \App\Models\DeductionCriteria::whereHas('category', function ($q) {
-                    $q->where('eventner_id', $this->eventner->id);
+            // Map deduction_criteria_id => assessment_category_id (target kategori penilaian).
+            // Hanya kategori penilaian yang ikut halaman ini — kalau tidak,
+            // pengurangan dari format nilai kategori lain ikut terhitung di
+            // kolom Total Pengurangan padahal tidak muncul di kolom kategori
+            // mana pun, sehingga kolom-kolomnya tidak lagi saling menjumlah.
+            $assessmentCategoryIds = $assessmentCategories->pluck('id');
+
+            $critToAssessment = \App\Models\DeductionCriteria::whereHas('category', function ($q) use ($assessmentCategoryIds) {
+                    $q->where('eventner_id', $this->eventner->id)
+                      ->whereIn('assessment_category_id', $assessmentCategoryIds);
                 })
                 ->with('category:deduction_categories.id,assessment_category_id')
                 ->get()
@@ -113,11 +120,8 @@ class Index extends Component
                 foreach ($participantDeductions as $d) {
                     $aid = $critToAssessment[$d->deduction_criteria_id] ?? null;
                     if ($aid !== null) {
-                        $amt = (float) $d->amount;
-                        if ($amt > 0) {
-                            $amt = -$amt;
-                        }
-                        $deductionByCat[$aid] = ($deductionByCat[$aid] ?? 0) + $amt;
+                        // Magnitude: tanda di DB tidak dipercaya, selalu dikurangkan.
+                        $deductionByCat[$aid] = ($deductionByCat[$aid] ?? 0) - $d->magnitude;
                     }
                 }
 
@@ -155,6 +159,22 @@ class Index extends Component
 
             // Sort by final score descending
             usort($data, fn($a, $b) => $b['finalScore'] <=> $a['finalScore']);
+
+            // Peringkat seri: nilai akhir sama berarti peringkat sama, dan
+            // peringkat berikutnya melompat — sama seperti papan skor publik.
+            // Dulu nomor urut array, jadi dua peserta bernilai identik tetap
+            // ditulis peringkat 1 dan 2.
+            $rank = 1;
+            $previousScore = null;
+            foreach ($data as $index => &$row) {
+                if ($previousScore !== null && $row['finalScore'] < $previousScore) {
+                    $rank = $index + 1;
+                }
+                $row['rank'] = $rank;
+                $previousScore = $row['finalScore'];
+            }
+            unset($row);
+
             $scoringData = collect($data);
         }
 

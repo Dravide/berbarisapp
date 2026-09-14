@@ -74,14 +74,14 @@
                                 @foreach($scoringData as $index => $data)
                                     <tr>
                                         <td class="text-center">
-                                            @if($index === 0)
+                                            @if($data['rank'] === 1)
                                                 <span class="badge bg-warning text-dark fw-semibold">🥇 1</span>
-                                            @elseif($index === 1)
+                                            @elseif($data['rank'] === 2)
                                                 <span class="badge bg-secondary text-white fw-semibold">🥈 2</span>
-                                            @elseif($index === 2)
+                                            @elseif($data['rank'] === 3)
                                                 <span class="badge bg-success text-white fw-semibold">🥉 3</span>
                                             @else
-                                                <span class="text-muted fw-semibold">{{ $index + 1 }}</span>
+                                                <span class="text-muted fw-semibold">{{ $data['rank'] }}</span>
                                             @endif
                                         </td>
                                         <td>

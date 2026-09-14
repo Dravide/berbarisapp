@@ -79,11 +79,7 @@ class AutoGoPayWebhookController extends Controller
                 return;
             }
 
-            $claimed = VoteTransaction::where('id', $vote->id)
-                ->where('status', 'PENDING')
-                ->update(['status' => 'PAID', 'paid_at' => now()]);
-
-            if ($claimed) {
+            if ($vote->claimPaid()) {
                 Log::info('Vote payment confirmed via webhook', ['transaction_id' => $transactionId, 'vote_id' => $vote->id]);
             }
 

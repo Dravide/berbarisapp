@@ -83,13 +83,19 @@ class Ticket extends Model
      * luar method ini tidak memicu model event, jadi tiket bisa jadi PAID tanpa
      * qr_code_path dan QR-nya tidak muncul di halaman pembeli.
      *
-     * Return false kalau barisnya bukan PENDING lagi — artinya jalur lain
+     * Menerima PENDING **dan** EXPIRED. QRIS bisa kedaluwarsa di sisi
+     * AutoGoPay sementara pembeli tetap menyelesaikan pembayarannya (QR
+     * sudah terlanjur discan, atau webhook kedaluwarsanya telat sampai).
+     * Kalau hanya PENDING yang diterima, tiket yang sudah dibayar tidak
+     * pernah terbit QR-nya dan uangnya nyangkut.
+     *
+     * Return false kalau barisnya sudah PAID/FAILED — artinya jalur lain
      * (webhook vs polling) sudah lebih dulu mengklaim, jadi jangan kirim email.
      */
     public function claimPaid(): bool
     {
         return (bool) static::where('id', $this->id)
-            ->where('status', 'PENDING')
+            ->whereIn('status', ['PENDING', 'EXPIRED'])
             ->update([
                 'status' => 'PAID',
                 'paid_at' => now(),

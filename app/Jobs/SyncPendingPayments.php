@@ -25,8 +25,25 @@ class SyncPendingPayments implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    /** Batas umur transaksi yang dicek (jam) — transaksi lebih tua dianggap selesai. */
-    public int $maxAgeHours = 6;
+    /**
+     * Batas umur transaksi PENDING yang dicek (jam).
+     *
+     * Dipatok 24 jam, bukan 6: QRIS AutoGoPay berumur jauh lebih panjang,
+     * dan pembeli bisa menyelesaikan pembayaran setelah QR-nya tercatat
+     * kedaluwarsa di sisi gateway (QR terlanjur discan, webhook telat).
+     * Dengan jendela 6 jam, transaksi seperti itu berhenti direkonsiliasi
+     * dan uangnya tidak pernah dikreditkan.
+     */
+    public int $maxAgeHours = 24;
+
+    /**
+     * Batas umur transaksi EXPIRED yang masih dicek ulang (jam).
+     *
+     * Transaksi yang sudah ditandai EXPIRED tetap direkonsiliasi selama
+     * jendela ini: kalau gateway ternyata mencatat settlement, statusnya
+     * dinaikkan ke PAID — jalur EXPIRED → PAID.
+     */
+    public int $expiredGraceHours = 24;
 
     /** Batch maksimal per siklus (pool paralel, sekali jalan ~10 detik). */
     public int $batchSize = 100;
@@ -42,7 +59,9 @@ class SyncPendingPayments implements ShouldQueue, ShouldBeUnique
         $this->cleanupAbandonedRegistrations();
 
         $since = now()->subHours($this->maxAgeHours);
+        $graceSince = now()->subHours($this->expiredGraceHours);
 
+        // Transaksi yang masih bisa dibayar.
         $pendingVotes = VoteTransaction::where('status', 'PENDING')
             ->whereNotNull('autogopay_transaction_id')
             ->where('created_at', '>=', $since)
@@ -53,7 +72,21 @@ class SyncPendingPayments implements ShouldQueue, ShouldBeUnique
             ->where('created_at', '>=', $since)
             ->get();
 
-        $total = $pendingVotes->count() + $pendingTickets->count();
+        // Transaksi yang sudah ditandai kedaluwarsa tapi mungkin sudah lunas
+        // di sisi gateway — jalur EXPIRED → PAID. Tanpa ini, pembayaran yang
+        // masuk setelah QR dinyatakan kedaluwarsa tidak pernah dikreditkan.
+        $expiredVotes = VoteTransaction::where('status', 'EXPIRED')
+            ->whereNotNull('autogopay_transaction_id')
+            ->where('updated_at', '>=', $graceSince)
+            ->get();
+
+        $expiredTickets = Ticket::where('status', 'EXPIRED')
+            ->whereNotNull('autogopay_transaction_id')
+            ->where('updated_at', '>=', $graceSince)
+            ->get();
+
+        $total = $pendingVotes->count() + $pendingTickets->count()
+            + $expiredVotes->count() + $expiredTickets->count();
         if ($total === 0) {
             return;
         }
@@ -62,6 +95,8 @@ class SyncPendingPayments implements ShouldQueue, ShouldBeUnique
         $service = new AutoGoPay();
         $txnIds = $pendingVotes->pluck('autogopay_transaction_id')
             ->merge($pendingTickets->pluck('autogopay_transaction_id'))
+            ->merge($expiredVotes->pluck('autogopay_transaction_id'))
+            ->merge($expiredTickets->pluck('autogopay_transaction_id'))
             ->unique()
             ->values()
             ->all();
@@ -113,6 +148,40 @@ class SyncPendingPayments implements ShouldQueue, ShouldBeUnique
 
                 if ($claimed) {
                     $synced++;
+                }
+            }
+        }
+
+        // Jalur EXPIRED → PAID: pembayaran yang masuk setelah QR dinyatakan
+        // kedaluwarsa tetap dikreditkan. Hanya naik status, tidak pernah mundur.
+        foreach ($expiredVotes as $tx) {
+            if (AutoGoPay::mapStatus($statuses[$tx->autogopay_transaction_id] ?? null) !== 'PAID') {
+                continue;
+            }
+
+            if ($tx->claimPaid()) {
+                $synced++;
+                Log::info("Auto-sync: vote {$tx->autogopay_transaction_id} EXPIRED → PAID (pembayaran masuk setelah kedaluwarsa)");
+            }
+        }
+
+        foreach ($expiredTickets as $ticket) {
+            if (AutoGoPay::mapStatus($statuses[$ticket->autogopay_transaction_id] ?? null) !== 'PAID') {
+                continue;
+            }
+
+            // claimPaid() sekaligus menerbitkan QR masuk, sama seperti jalur lain.
+            if ($ticket->claimPaid()) {
+                $synced++;
+                Log::info("Auto-sync: ticket {$ticket->autogopay_transaction_id} EXPIRED → PAID (pembayaran masuk setelah kedaluwarsa)");
+
+                try {
+                    app(\App\Services\MailyService::class)->sendTicketConfirmation($ticket->fresh());
+                } catch (\Exception $e) {
+                    Log::warning('Maily.id: sendTicketConfirmation failed (expired recovery)', [
+                        'error' => $e->getMessage(),
+                        'order' => $ticket->order_code,
+                    ]);
                 }
             }
         }

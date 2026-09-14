@@ -37,6 +37,12 @@ class VoteResultsController extends Controller
                 ->withSum(['voteTransactions as total_votes' => function ($query) {
                     $query->where('status', 'PAID');
                 }], 'votes_earned')
+                // Pendapatan per kontingen = nominal transaksi yang benar-benar
+                // dibayar. votes_earned sudah termasuk multiplier booster, jadi
+                // mengalikannya dengan harga per vote melebih-lebihkan uang masuk.
+                ->withSum(['voteTransactions as total_amount' => function ($query) {
+                    $query->where('status', 'PAID');
+                }], 'amount')
                 ->orderByDesc('total_votes')
                 ->get(['id', 'nama_sekolah', 'label_pasukan', 'logo_sekolah', 'danton_nama']);
         }

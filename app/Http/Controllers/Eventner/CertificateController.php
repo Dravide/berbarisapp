@@ -120,7 +120,7 @@ class CertificateController extends Controller
             }
 
             $deductions = $allDeductions->get($participant->id, collect());
-            $totalDeduction = $deductions->sum('amount');
+            $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 
             $participantScores[] = [
                 'participant' => $participant,
@@ -140,6 +140,15 @@ class CertificateController extends Controller
             if ($a['deduction'] !== $b['deduction']) return $a['deduction'] <=> $b['deduction'];
             return $a['urutan_tampil'] <=> $b['urutan_tampil'];
         });
+
+        // Peserta tanpa nilai (skor 0) bukan juara — dibuang SEBELUM peringkat
+        // dihitung. Tanpa filter ini sertifikat tercetak "Juara N" untuk
+        // peserta bernilai nol, padahal ChampionCalculator (dipakai route
+        // token dan preview editor) menyebutnya PESERTA.
+        $participantScores = array_values(array_filter(
+            $participantScores,
+            fn ($ps) => $ps['total'] > 0
+        ));
 
         // Take top N and assign ranks/titles
         $participantScores = array_slice($participantScores, 0, $championCategory->quantity);

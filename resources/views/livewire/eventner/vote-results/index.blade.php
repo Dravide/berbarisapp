@@ -59,7 +59,7 @@
                     <p class="text-muted mb-0">Berdasarkan total nominal yang berhasil terverifikasi (PAID)</p>
                 </div>
                 <div class="text-end d-flex align-items-center gap-2">
-                    <span class="badge bg-primary rounded-pill px-3 py-2">1 Vote = Rp 1.000</span>
+                    <span class="badge bg-primary rounded-pill px-3 py-2">1 Vote = Rp {{ number_format($votePrice, 0, ',', '.') }}</span>
                     <a href="{{ route('eventner.vote-results.pdf') }}" class="btn btn-danger btn-sm rounded-pill px-3">
                         <i class="ti ti-file-type-pdf me-1"></i> Rekap PDF
                     </a>
@@ -129,7 +129,7 @@
                                                 <small class="text-muted">Suara</small>
                                             </td>
                                             <td>
-                                                <span class="fw-bold text-success">Rp {{ number_format(($reg->total_votes ?: 0) * 1000, 0, ',', '.') }}</span>
+                                                <span class="fw-bold text-success">Rp {{ number_format($reg->total_amount ?: 0, 0, ',', '.') }}</span>
                                             </td>
                                             <td>
                                                 {{-- Progress bar visual --}}

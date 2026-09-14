@@ -288,11 +288,10 @@ class EventTicket extends Component
             return;
         }
 
-        if ($ticket && $ticket->status === 'EXPIRED') {
-            $this->view = 'form';
-            session()->flash('error', 'Pembayaran kedaluwarsa. Silakan coba lagi.');
-            return;
-        }
+        // Status EXPIRED tidak dipercaya sebagai akhir: pembeli bisa
+        // menyelesaikan pembayaran setelah QR dinyatakan kedaluwarsa. Tetap
+        // dicek ke gateway — claimPaid menerima PENDING maupun EXPIRED.
+        $expired = $ticket && $ticket->status === 'EXPIRED';
 
         // Fallback: cek langsung ke AutoGoPay API
         try {
@@ -304,7 +303,7 @@ class EventTicket extends Component
             if ($status === 'settlement') {
                 if ($ticket) {
                     // Klaim atomik sekaligus membuat QR tiket masuk — hanya
-                    // pemenang (PENDING → PAID) yang lanjut kirim email.
+                    // pemenang yang lanjut kirim email.
                     if ($ticket->claimPaid()) {
                         try {
                             app(\App\Services\MailyService::class)->sendTicketConfirmation($ticket->fresh());
@@ -320,6 +319,12 @@ class EventTicket extends Component
                 $this->confirmOrder = $ticket->order_code;
                 $this->view = 'confirmation';
             } elseif ($status === 'expire') {
+                if ($expired) {
+                    $this->view = 'form';
+                    session()->flash('error', 'Pembayaran kedaluwarsa. Silakan coba lagi.');
+                    return;
+                }
+
                 if ($ticket) {
                     Ticket::where('id', $ticket->id)
                         ->where('status', 'PENDING')

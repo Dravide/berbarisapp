@@ -123,7 +123,7 @@ class EventResult extends Component
                 }
 
                 $deductions = $allDeductions->get($participant->id, collect());
-                $totalDeduction = $deductions->sum('amount');
+                $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 
                 $participantScores[] = [
                     'participant' => $participant,

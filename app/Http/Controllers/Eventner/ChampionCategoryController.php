@@ -219,7 +219,7 @@ class ChampionCategoryController extends Controller
 
             $deductions = $allDeductions->get($participant->id, collect());
             // abs() per-baris: opsi pengurangan bisa tersimpan -5 maupun 5.
-            $totalDeduction = $deductions->sum(fn($d) => abs((float) $d->amount));
+            $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 
             $participantScores[] = [
                 'participant' => $participant,

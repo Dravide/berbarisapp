@@ -475,7 +475,7 @@ class Index extends Component
                     }
 
                     $deductions = $allDeductions->get($participant->id, collect());
-                    $totalDeduction = $deductions->sum('amount');
+                    $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 
                     $participantScores[] = [
                         'participant' => $participant,
@@ -503,6 +503,15 @@ class Index extends Component
 
                     return $a['urutan_tampil'] <=> $b['urutan_tampil'];
                 });
+
+                // Peserta tanpa nilai (skor 0) bukan juara — dibuang SEBELUM
+                // peringkat dihitung, sama seperti ChampionCalculator dan
+                // /champions. Dulu halaman ini menampilkan mereka sebagai
+                // "Juara N" padahal halaman lain menyebutnya PESERTA.
+                $participantScores = array_values(array_filter(
+                    $participantScores,
+                    fn ($ps) => $ps['total'] > 0
+                ));
 
                 // Only take Top N based on quantity
                 $participantScores = array_slice($participantScores, 0, $champion->quantity);

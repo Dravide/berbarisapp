@@ -95,7 +95,7 @@ class ChampionCalculator
             }
 
             $deductions = $allDeductions->get($participant->id, collect());
-            $totalDeduction = $deductions->sum('amount');
+            $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 
             $participantScores[] = [
                 'participant' => $participant,
@@ -125,9 +125,22 @@ class ChampionCalculator
 
         $participantScores = array_slice($participantScores, 0, $championCategory->quantity);
 
+        // Peringkat seri: dua peserta seri kalau SEMUA kunci pengurutnya sama
+        // (total, tiebreak, nilai kriteria lain, besar pengurangan) — sama
+        // seperti papan skor publik dan Rekap Nilai, yang memakai nilai akhir.
+        // Dulu nomor urut array, jadi dua peserta bernilai identik tetap
+        // ditulis Juara 1 dan Juara 2. urutan_tampil tidak ikut: itu cuma
+        // penentu terakhir supaya urutannya stabil, bukan penentu juara.
         $winners = [];
+        $rank = 0;
+        $previousKey = null;
         foreach ($participantScores as $index => $ps) {
-            $rank = $index + 1;
+            $key = [$ps['total'], $ps['tiebreak_total'], $ps['other_total'], $ps['deduction']];
+            if ($previousKey !== $key) {
+                $rank = $index + 1;
+            }
+            $previousKey = $key;
+
             $title = null;
             foreach ($championCategory->rankTitles as $rt) {
                 if ($rt->coversRank($rank)) {

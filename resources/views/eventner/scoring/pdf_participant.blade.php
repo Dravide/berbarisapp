@@ -280,7 +280,7 @@
                             // Check if any criteria in this category has deductions
                             $hasActiveDeductions = false;
                             foreach($deductionCat->criterias as $crit) {
-                                if (isset($scoreDeductions[$crit->id]) && $scoreDeductions[$crit->id]->amount != 0) {
+                                if (isset($scoreDeductions[$crit->id]) && $scoreDeductions[$crit->id]->magnitude != 0) {
                                     $hasActiveDeductions = true;
                                     break;
                                 }
@@ -297,10 +297,10 @@
                                 <tbody>
                                     @foreach($deductionCat->criterias as $deductionCrit)
                                         @php
-                                            $deductionAmount = $scoreDeductions[$deductionCrit->id]->amount ?? 0;
-                                            if ($deductionAmount > 0) {
-                                                $deductionAmount = -$deductionAmount;
-                                            }
+                                            // Magnitude: tanda di DB tidak dipercaya, selalu ditampilkan negatif.
+                                            $deductionAmount = isset($scoreDeductions[$deductionCrit->id])
+                                                ? -$scoreDeductions[$deductionCrit->id]->magnitude
+                                                : 0;
                                         @endphp
                                         @if($deductionAmount != 0)
                                             <tr>
@@ -325,7 +325,7 @@
                     @php
                         $hasActiveDeductions = false;
                         foreach($deductionCat->criterias as $crit) {
-                            if (isset($scoreDeductions[$crit->id]) && $scoreDeductions[$crit->id]->amount != 0) {
+                            if (isset($scoreDeductions[$crit->id]) && $scoreDeductions[$crit->id]->magnitude != 0) {
                                 $hasActiveDeductions = true;
                                 break;
                             }
@@ -342,10 +342,10 @@
                             <tbody>
                                 @foreach($deductionCat->criterias as $deductionCrit)
                                     @php
-                                        $deductionAmount = $scoreDeductions[$deductionCrit->id]->amount ?? 0;
-                                        if ($deductionAmount > 0) {
-                                            $deductionAmount = -$deductionAmount;
-                                        }
+                                        // Magnitude: tanda di DB tidak dipercaya, selalu ditampilkan negatif.
+                                        $deductionAmount = isset($scoreDeductions[$deductionCrit->id])
+                                            ? -$scoreDeductions[$deductionCrit->id]->magnitude
+                                            : 0;
                                     @endphp
                                     @if($deductionAmount != 0)
                                         <tr>
