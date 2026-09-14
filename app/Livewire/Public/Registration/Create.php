@@ -67,7 +67,10 @@ class Create extends Component
     {
         if (empty($this->selectedCategories)) return null;
 
-        $cats = \App\Models\CompetitionCategory::whereIn('id', $this->selectedCategories)->get();
+        // Hanya kategori milik event ini — $selectedCategories datang dari DOM.
+        $cats = CompetitionCategory::where('eventner_id', $this->eventner->id)
+            ->whereIn('id', $this->selectedCategories)
+            ->get();
         $names = $cats->pluck('name')->unique()->values();
 
         return $names->count() === 1 ? $names->first() : null;
@@ -75,7 +78,9 @@ class Create extends Component
 
     public function toggleCategory($catId)
     {
-        $cat = \App\Models\CompetitionCategory::find($catId);
+        // Scope ke eventner: tanpa ini id kategori event lain bisa
+        // ditambahkan ke keranjang dan ikut terdaftar di submit().
+        $cat = CompetitionCategory::where('eventner_id', $this->eventner->id)->find($catId);
         if (!$cat) return;
 
         if (in_array($catId, $this->selectedCategories)) {
@@ -141,7 +146,11 @@ class Create extends Component
             'school_email' => 'required|email|max:255',
         ]);
 
-        $categories = CompetitionCategory::whereIn('id', $this->selectedCategories)->get();
+        // Gerbang terakhir: apa pun yang tersisa di keranjang, hanya kategori
+        // milik event ini yang boleh dibuatkan pendaftaran.
+        $categories = CompetitionCategory::where('eventner_id', $this->eventner->id)
+            ->whereIn('id', $this->selectedCategories)
+            ->get();
         if ($categories->isEmpty()) {
             $this->step = 1;
             return;

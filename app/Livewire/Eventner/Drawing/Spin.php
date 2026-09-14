@@ -19,7 +19,15 @@ class Spin extends Component
     #[Locked]
     public $eventnerId;
 
-    // Dikunci — cuma verifyCode() yang bisa set true.
+    // Kode yang benar-benar sudah diverifikasi pada sesi ini. null = belum ada.
+    // Disimpan sebagai nilai kode, bukan sekadar boolean, supaya bisa
+    // dibandingkan ulang dengan DB: kalau panitia mengganti kodenya, nilai
+    // lama tidak lagi cocok dan sesi otomatis tertutup.
+    #[Locked]
+    public $grantedCode = null;
+
+    // Dihitung ulang dari DB tiap request (lihat boot()). Dipakai view untuk
+    // memilih tampil terkunci atau isi halaman.
     #[Locked]
     public $isAuthenticated = false;
 
@@ -44,8 +52,13 @@ class Spin extends Component
         $this->eventnerId = $eventner->id;
 
         if (!$eventner->drawing_code) {
-            $this->isAuthenticated = true;
+            $this->grantedCode = '';
         }
+        // Kalau kode sudah dipasang, halaman terkunci sampai verifyCode()
+        // dijalankan.
+        $this->boot(); // boot() bawaan Livewire jalan sebelum mount, saat
+                       // eventnerId masih kosong — jadi dihitung ulang di sini
+                       // supaya render pertama sudah memakai nilai yang benar.
 
         if ($eventner) {
             $this->categories = $eventner->competitionCategories()
@@ -60,6 +73,28 @@ class Spin extends Component
         }
 
         $this->loadNextSchool();
+    }
+
+    /**
+     * Segarkan status gerbang dari DB sebelum aksi apa pun dijalankan.
+     *
+     * Dulu gerbangnya cuma properti $isAuthenticated yang dikirim di
+     * snapshot Livewire. Snapshot itu ditandatangani, tapi isinya berasal
+     * dari request pertama: halaman publik dibuka saat kode belum dipasang
+     * (true), panitia lalu memasang kode, dan snapshot lama tetap membawa
+     * true — gerbangnya tidak pernah menutup lagi. Karena itu kode dibaca
+     * ulang dari DB, dan yang dianggap sah hanya sesi yang kodenya masih
+     * sama dengan kode yang berlaku sekarang.
+     */
+    public function boot()
+    {
+        if (!$this->eventnerId) {
+            return;
+        }
+
+        $kodeBerlaku = Eventner::whereKey($this->eventnerId)->value('drawing_code');
+
+        $this->isAuthenticated = !$kodeBerlaku || $this->grantedCode === $kodeBerlaku;
     }
 
     public function switchTab($categoryId)
@@ -96,6 +131,8 @@ class Spin extends Component
 
         $category = \App\Models\CompetitionCategory::where('eventner_id', $this->eventnerId)
             ->find($this->activeTab);
+        if (!$category) return;
+
         $totalInCategory = $category->kuota ?? Registration::where('eventner_id', $this->eventnerId)
             ->where('competition_category_id', $this->activeTab)
             ->count();
@@ -136,9 +173,12 @@ class Spin extends Component
 
     public function verifyCode()
     {
-        $eventner = Eventner::findOrFail($this->eventnerId);
-        if (!$eventner->drawing_code || $this->inputCode === $eventner->drawing_code) {
-            $this->isAuthenticated = true;
+        $kodeBerlaku = Eventner::whereKey($this->eventnerId)->value('drawing_code');
+
+        if (!$kodeBerlaku || $this->inputCode === $kodeBerlaku) {
+            $this->grantedCode = (string) $kodeBerlaku;
+            $this->inputCode = '';
+            $this->boot();
         } else {
             $this->addError('inputCode', 'Kode akses salah!');
         }

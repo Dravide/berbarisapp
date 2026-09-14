@@ -15,6 +15,7 @@ use chillerlan\QRCode\QROptions;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Component;
 
@@ -26,6 +27,10 @@ class Editor extends Component
     protected string $requiredFeature = 'certificate';
 
     public $eventner;
+    // Dikunci — diisi dari route di mount(). loadTemplate() men-scope, tapi
+    // dulu `deleteField()` menghapus LEBIH DULU baru men-scope, sehingga id
+    // template tenant lain bisa dihapus. Locked menutup jalur itu di sumbernya.
+    #[Locked]
     public $templateId;
     public $template;
     public $textFields = [];
@@ -198,9 +203,19 @@ class Editor extends Component
 
     public function deleteField($id)
     {
-        CertificateTextField::where('certificate_template_id', $this->templateId)
+        // Pastikan template ini benar milik eventner yang login SEBELUM
+        // menghapus. Dulu penghapusan dijalankan lebih dulu dan scope baru
+        // dicek di loadTemplate() — sudah terlambat, barisnya sudah hilang.
+        $this->loadTemplate();
+
+        $deleted = CertificateTextField::where('certificate_template_id', $this->templateId)
             ->where('id', $id)
             ->delete();
+
+        if (!$deleted) {
+            session()->flash('error', 'Field teks tidak ditemukan.');
+            return;
+        }
 
         if ($this->selectedFieldId == $id) {
             $this->selectedFieldId = null;

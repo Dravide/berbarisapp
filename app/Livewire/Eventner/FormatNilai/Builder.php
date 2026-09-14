@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -26,6 +27,9 @@ class Builder extends Component
 
     protected string $requiredFeature = 'format_nilai';
 
+    // Dikunci — diisi dari Auth di mount(). Semua query builder di-scope ke
+    // id ini, jadi klien tidak boleh menulisnya ke tenant lain.
+    #[Locked]
     public $eventnerId;
 
     public $activeTab = ''; // '' = global/semua tingkat, child_id = specific

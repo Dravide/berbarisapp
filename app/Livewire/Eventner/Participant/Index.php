@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use App\Models\AssessmentScore;
 use App\Models\Registration;
+use Illuminate\Validation\Rule;
 
 #[Layout('layouts.admin')]
 class Index extends Component
@@ -87,8 +88,16 @@ class Index extends Component
 
     public function save()
     {
+        $eventner = auth()->user()->eventner;
+
         $this->validate([
-            'competition_category_id' => 'required|exists:competition_categories,id',
+            // Kategori harus milik eventner ini. `exists` polos menerima id
+            // kategori tenant lain, sehingga pendaftar kita bisa dicemplungkan
+            // ke kategori event orang.
+            'competition_category_id' => [
+                'required',
+                Rule::exists('competition_categories', 'id')->where('eventner_id', $eventner->id),
+            ],
             'npsn' => 'required|string|max:20',
             'nama_sekolah' => 'required|string|max:255',
             'no_hp' => 'required|string|max:20',
@@ -96,8 +105,6 @@ class Index extends Component
             'nama_pelatih' => 'nullable|string|max:255',
             'jumlah_pasukan' => 'required|integer|min:1',
         ]);
-
-        $eventner = auth()->user()->eventner;
 
         if ($this->editId) {
             $reg = Registration::where('eventner_id', $eventner->id)->findOrFail($this->editId);
@@ -150,7 +157,21 @@ class Index extends Component
     public function delete($id)
     {
         $eventner = auth()->user()->eventner;
-        Registration::where('eventner_id', $eventner->id)->findOrFail($id)->delete();
+        $reg = Registration::where('eventner_id', $eventner->id)->findOrFail($id);
+
+        // vote_transactions.registration_id cascade — menghapus pendaftar ikut
+        // membuang transaksi vote yang SUDAH DIBAYAR, sehingga pendapatan yang
+        // sudah masuk hilang dari rekap dan tidak bisa dipulihkan.
+        $voteBerbayar = \App\Models\VoteTransaction::where('registration_id', $reg->id)
+            ->where('status', 'PAID')
+            ->count();
+
+        if ($voteBerbayar > 0) {
+            session()->flash('error', 'Tidak bisa menghapus: ada ' . $voteBerbayar . ' transaksi vote yang sudah dibayar untuk pendaftar ini. Menghapusnya akan membuang pendapatan tersebut dari rekap.');
+            return;
+        }
+
+        $reg->delete();
         session()->flash('success', 'Data pendaftar berhasil dihapus.');
     }
 

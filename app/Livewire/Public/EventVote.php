@@ -93,7 +93,19 @@ class EventVote extends Component
 
     public function selectTeam($id)
     {
-        $this->selectedRegistrationId = $id;
+        // Peserta yang boleh divote HANYA milik event ini. Tampaknya id-nya
+        // memang cuma dirender dari daftar event ini, tapi $id datang dari
+        // DOM dan bisa diganti klien — tanpa cek ini suara (dan uang) bisa
+        // dibukukan ke peserta event lain.
+        $milikEventIni = Registration::where('eventner_id', $this->eventner->id)->find($id);
+
+        if (!$milikEventIni) {
+            $this->selectedRegistrationId = null;
+            session()->flash('error', 'Peserta tidak ditemukan pada event ini.');
+            return;
+        }
+
+        $this->selectedRegistrationId = $milikEventIni->id;
     }
 
     public function incrementVote()

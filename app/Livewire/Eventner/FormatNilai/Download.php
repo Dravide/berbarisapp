@@ -4,6 +4,7 @@ namespace App\Livewire\Eventner\FormatNilai;
 
 use Livewire\Component;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Computed;
 use App\Models\AssessmentCategory;
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\Auth;
 #[Layout('layouts.admin')]
 class Download extends Component
 {
+    // Dikunci — diisi dari Auth di mount(). Dump PDF di-scope ke id ini.
+    #[Locked]
     public $eventnerId;
 
     // Filter

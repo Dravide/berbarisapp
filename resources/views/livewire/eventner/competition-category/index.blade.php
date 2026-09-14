@@ -108,7 +108,7 @@
                                                                 <i class="ti ti-edit fs-4"></i>
                                                             </button>
                                                             <button class="btn btn-sm btn-outline-danger p-1" wire:click="delete({{ $child->id }})" title="Hapus Tingkat"
-                                                                wire:confirm="Hapus tingkat lomba ini?">
+                                                                wire:confirm="Hapus tingkat lomba ini? Tingkat yang masih punya pendaftar tidak akan terhapus.">
                                                                 <i class="ti ti-trash fs-4"></i>
                                                             </button>
                                                         </div>

@@ -262,7 +262,7 @@
                                                             </button>
                                                         </li>
                                                         <li>
-                                                            <button type="button" class="dropdown-item text-danger" wire:click="delete({{ $reg->id }})" wire:confirm="Yakin ingin menghapus pendaftar ini?">
+                                                            <button type="button" class="dropdown-item text-danger" wire:click="delete({{ $reg->id }})" wire:confirm="Yakin ingin menghapus pendaftar ini? Penghapusan juga membuang nilai dan potongannya.">
                                                                 <i class="ti ti-trash me-2"></i>Hapus
                                                             </button>
                                                         </li>

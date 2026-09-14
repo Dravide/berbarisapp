@@ -127,9 +127,17 @@ class Index extends Component
 
         $rules = [
             'name' => 'required|string|max:255',
-            'parentId' => 'nullable|exists:competition_categories,id',
+            // parentId & selectedJudges datang dari klien: tanpa scope,
+            // kategori bisa dipasang di bawah Jenis Lomba tenant lain, dan
+            // juri tenant lain bisa ditempelkan ke kategori kita.
+            'parentId' => [
+                'nullable',
+                Rule::exists('competition_categories', 'id')->where('eventner_id', $this->eventnerId),
+            ],
             'selectedJudges' => 'array',
-            'selectedJudges.*' => 'exists:judges,id',
+            'selectedJudges.*' => [
+                Rule::exists('judges', 'id')->where('eventner_id', $this->eventnerId),
+            ],
         ];
 
         if (!$isParent) {
@@ -218,6 +226,16 @@ class Index extends Component
 
         if ($cat->isParent() && $cat->children()->exists()) {
             session()->flash('error', 'Tidak bisa menghapus: Jenis Lomba ini masih memiliki ' . $cat->children()->count() . ' Tingkat Lomba. Hapus tingkatnya terlebih dahulu.');
+            return;
+        }
+
+        // Foreign key-nya cascade: menghapus tingkat lomba ikut menghapus
+        // pendaftar, peserta, nilai juri, dan potongannya — tanpa SoftDeletes,
+        // jadi tidak bisa dikembalikan. Undian/penilaian yang sudah jalan
+        // tidak boleh hilang karena satu klik; peserta harus dipindah atau
+        // dihapus dulu.
+        if ($cat->registrations()->exists()) {
+            session()->flash('error', 'Tidak bisa menghapus: masih ada ' . $cat->registrations()->count() . ' pendaftar di tingkat ini, beserta nilai dan potongannya. Hapus pendaftarnya dulu di halaman Peserta bila memang sudah tidak dipakai.');
             return;
         }
 
