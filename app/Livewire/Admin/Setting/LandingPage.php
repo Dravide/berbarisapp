@@ -358,6 +358,9 @@ class LandingPage extends Component
                 Storage::disk('public')->delete($heroBg);
             }
             $heroBg = $this->hero_background_image->store('landing', 'public');
+            // Simpan path baru sebagai "current" supaya simpan kedua kali
+            // tidak menghapus gambar yang baru diunggah lalu menulis path kosong.
+            $this->hero_bg_current = $heroBg;
         }
         Setting::set('landing_hero', json_encode([
             'heading' => $this->hero_heading,
@@ -387,6 +390,7 @@ class LandingPage extends Component
                 Storage::disk('public')->delete($aboutImage);
             }
             $aboutImage = $this->about_image->store('landing', 'public');
+            $this->about_image_current = $aboutImage;
         }
         Setting::set('landing_about', json_encode([
             'heading' => $this->about_heading,
@@ -403,6 +407,7 @@ class LandingPage extends Component
                 Storage::disk('public')->delete($ctaImage);
             }
             $ctaImage = $this->cta_image->store('landing', 'public');
+            $this->cta_image_current = $ctaImage;
         }
         Setting::set('landing_cta', json_encode([
             'heading' => $this->cta_heading,
@@ -447,16 +452,20 @@ class LandingPage extends Component
 
         // Save Gallery (process uploaded images)
         $galleryItems = $this->gallery_items;
-        foreach ($galleryItems as $i => &$item) {
+        foreach ($galleryItems as &$item) {
             if (isset($item['image_upload']) && $item['image_upload']) {
                 if (! empty($item['image'])) {
                     Storage::disk('public')->delete($item['image']);
                 }
                 $item['image'] = $item['image_upload']->store('landing/gallery', 'public');
             }
+            // `image_upload` ikut dibuang dari state komponen, bukan hanya dari
+            // salinan lokal — kalau tidak, preview gambar baru tidak pernah
+            // muncul dan upload yang sama diproses ulang di simpan berikutnya.
             unset($item['image_upload']);
         }
         unset($item);
+        $this->gallery_items = $galleryItems;
         Setting::set('landing_gallery', json_encode([
             'title' => $this->gallery_title,
             'items' => $galleryItems,

@@ -9,6 +9,8 @@ use App\Models\Eventner;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -37,6 +39,50 @@ class AdminLandingSettingsTest extends TestCase
         $schedule = json_decode(Setting::get('landing_schedule'), true);
         $this->assertEquals('Jadwal Event', $schedule['title']);
         $this->assertEquals('Pembukaan', $schedule['items'][0]['title']);
+    }
+
+    public function test_gambar_hero_tetap_ada_setelah_simpan_dua_kali()
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+
+        $comp = Livewire::actingAs($admin)->test(LandingPage::class);
+        $comp->set('hero_background_image', UploadedFile::fake()->image('hero.jpg', 800, 600))
+            ->call('save');
+
+        $first = json_decode(Setting::get('landing_hero'), true)['background_image'];
+        $this->assertNotEmpty($first);
+        Storage::disk('public')->assertExists($first);
+
+        // Simpan lagi tanpa memilih gambar baru — gambar lama tidak boleh hilang.
+        $comp->call('save');
+
+        $second = json_decode(Setting::get('landing_hero'), true)['background_image'];
+        $this->assertSame($first, $second);
+        Storage::disk('public')->assertExists($second);
+    }
+
+    public function test_gambar_galeri_tersimpan_dan_muncul_di_state()
+    {
+        Storage::fake('public');
+        $admin = User::factory()->admin()->create();
+
+        $comp = Livewire::actingAs($admin)->test(LandingPage::class);
+        $comp->call('addGalleryItem')
+            ->set('gallery_items.0.image_upload', UploadedFile::fake()->image('galeri.png', 400, 300))
+            ->set('gallery_items.0.caption', 'Foto Pembukaan')
+            ->call('save');
+
+        $saved = json_decode(Setting::get('landing_gallery'), true)['items'][0];
+        $this->assertNotEmpty($saved['image']);
+        $this->assertSame('Foto Pembukaan', $saved['caption']);
+        Storage::disk('public')->assertExists($saved['image']);
+
+        // State komponen harus mencerminkan path tersimpan supaya preview muncul
+        // dan upload yang sama tidak diproses ulang di simpan berikutnya.
+        $state = $comp->get('gallery_items')[0];
+        $this->assertSame($saved['image'], $state['image']);
+        $this->assertArrayNotHasKey('image_upload', $state);
     }
 
     public function test_admin_toggles_auto_statistics()
