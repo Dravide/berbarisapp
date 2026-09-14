@@ -227,7 +227,11 @@
                     <a href="{{ event_url($eventner, 'detail') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.detail') || request()->routeIs('subdomain.detail') ? 'text-primary bg-primary/5' : '' }}">Info</a>
                     <a href="{{ event_url($eventner, 'participant') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.participant') || request()->routeIs('subdomain.participant') ? 'text-primary bg-primary/5' : '' }}">Peserta</a>
                     <a href="{{ event_url($eventner, 'results') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.results') || request()->routeIs('subdomain.results') ? 'text-primary bg-primary/5' : '' }}">Hasil</a>
-                    <a href="{{ event_url($eventner, 'vote') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.vote') || request()->routeIs('subdomain.vote') ? 'text-primary bg-primary/5' : '' }}">Vote</a>
+                    {{-- Vote disembunyikan bila penyelenggara mematikannya di
+                         /eventner/vote-settings — pola sama dengan Tiket. --}}
+                    @if($eventner?->vote_active)
+                        <a href="{{ event_url($eventner, 'vote') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.vote') || request()->routeIs('subdomain.vote') ? 'text-primary bg-primary/5' : '' }}">Vote</a>
+                    @endif
                     @if($eventner?->ticket_active && $eventner?->hasTicketPrice())
                         <a href="{{ event_url($eventner, 'ticket') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.ticket') || request()->routeIs('subdomain.ticket') ? 'text-primary bg-primary/5' : '' }}">Tiket</a>
                     @endif
@@ -287,7 +291,9 @@
                             <li><a href="{{ event_url($eventner, 'detail') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Info Event</a></li>
                             <li><a href="{{ event_url($eventner, 'participant') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Daftar Peserta</a></li>
                             <li><a href="{{ event_url($eventner, 'results') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Hasil Perlombaan</a></li>
-                            <li><a href="{{ event_url($eventner, 'vote') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Voting</a></li>
+                            @if($eventner?->vote_active)
+                                <li><a href="{{ event_url($eventner, 'vote') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Voting</a></li>
+                            @endif
                             @if($eventner?->ticket_active)
                                 <li><a href="{{ event_url($eventner, 'ticket') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Beli Tiket</a></li>
                             @endif
@@ -362,8 +368,11 @@
                 ['url' => event_url($eventner, 'detail'), 'label' => 'Info', 'icon' => 'ti-info-circle', 'active' => request()->routeIs('event.detail') || request()->routeIs('subdomain.detail')],
                 ['url' => event_url($eventner, 'participant'), 'label' => 'Peserta', 'icon' => 'ti-users', 'active' => request()->routeIs('event.participant') || request()->routeIs('subdomain.participant')],
                 ['url' => event_url($eventner, 'results'), 'label' => 'Hasil', 'icon' => 'ti-trophy', 'active' => request()->routeIs('event.results') || request()->routeIs('subdomain.results')],
-                ['url' => event_url($eventner, 'vote'), 'label' => 'Vote', 'icon' => 'ti-heart-filled', 'active' => request()->routeIs('event.vote') || request()->routeIs('subdomain.vote')],
             ];
+            // Vote mengikuti saklar /eventner/vote-settings, sama seperti Tiket.
+            if ($eventner->vote_active) {
+                $bottomNavItems[] = ['url' => event_url($eventner, 'vote'), 'label' => 'Vote', 'icon' => 'ti-heart-filled', 'active' => request()->routeIs('event.vote') || request()->routeIs('subdomain.vote')];
+            }
             if ($eventner->ticket_active && $eventner->hasTicketPrice()) {
                 $bottomNavItems[] = ['url' => event_url($eventner, 'ticket'), 'label' => 'Tiket', 'icon' => 'ti-ticket', 'active' => request()->routeIs('event.ticket') || request()->routeIs('subdomain.ticket')];
             }
@@ -372,9 +381,11 @@
              style="padding-bottom: env(safe-area-inset-bottom);" aria-label="Navigasi utama">
             <div class="flex h-16 items-stretch">
                 @foreach($bottomNavItems as $item)
-                    <a href="{{ $item['url'] }}" class="flex-1 flex flex-col items-center justify-center gap-1 text-decoration-none {{ $item['active'] ? 'text-primary' : 'text-on-surface-variant' }}" aria-current="{{ $item['active'] ? 'page' : 'false' }}">
+                    <a href="{{ $item['url'] }}" data-nav="{{ strtolower($item['label']) }}" class="flex-1 flex flex-col items-center justify-center gap-1 text-decoration-none {{ $item['active'] ? 'text-primary' : 'text-on-surface-variant' }}" aria-current="{{ $item['active'] ? 'page' : 'false' }}">
                         <i class="ti {{ $item['icon'] }} text-xl"></i>
                         <span class="text-[10px] font-bold leading-none">{{ $item['label'] }}</span>
+                        {{-- data-nav dipakai test untuk mengunci item mana yang
+                             tampil, tanpa bergantung pada ikon/label. --}}
                     </a>
                 @endforeach
             </div>

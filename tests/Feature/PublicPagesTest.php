@@ -167,6 +167,9 @@ class PublicPagesTest extends TestCase
             'status' => 'approved',
             'ticket_active' => true,
             'ticket_price' => 25000,
+            // Menu Vote dan Tiket masing-masing ikut saklarnya — keduanya
+            // harus menyala supaya bar-nya lengkap.
+            'vote_active' => true,
             // Tombol "Daftar Sekarang" hanya muncul saat pendaftaran terbuka;
             // deadline kosong berarti ditutup.
             'tanggal_pendaftaran' => now()->addMonth()->toDateString(),
