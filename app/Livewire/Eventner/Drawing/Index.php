@@ -6,6 +6,7 @@ use App\Traits\FeatureGatedComponent;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Registration;
+use App\Models\AssessmentScore;
 use App\Models\CompetitionCategory;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -107,6 +108,18 @@ class Index extends Component
 
     public function resetDrawing()
     {
+        // Guard yang sama dengan Tukar Pasukan: urutan tampil menempel ke
+        // registrasi, dan mengganti nomor setelah nilai masuk membuat undian
+        // tidak lagi cocok dengan penilaian yang sudah berjalan.
+        $sudahDinilai = AssessmentScore::where('eventner_id', $this->eventner->id)
+            ->whereHas('registration', fn ($q) => $q->where('competition_category_id', $this->activeTab))
+            ->exists();
+
+        if ($sudahDinilai) {
+            session()->flash('error', 'Undian tidak bisa di-reset: sudah ada nilai juri pada kategori ini. Hapus nilai dulu di halaman Input Nilai.');
+            return;
+        }
+
         Registration::where('eventner_id', $this->eventner->id)
             ->where('competition_category_id', $this->activeTab)
             ->update(['urutan_tampil' => null]);

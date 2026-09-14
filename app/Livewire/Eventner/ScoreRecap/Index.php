@@ -29,9 +29,20 @@ class Index extends Component
             abort(403, 'Anda belum memiliki data Event terdaftar.');
         }
 
-        // Default to first category if none selected
+        // Default ke kategori pertama yang punya peserta. Dulu memakai
+        // competitionCategories->first() apa adanya — itu bisa kategori
+        // INDUK, sedangkan registrasi selalu menempel ke kategori anak, dan
+        // pilihan di layar hanya menampilkan anak. Akibatnya rekap tampak
+        // kosong saat halaman pertama dibuka.
         if (!$this->selectedCategoryId) {
-            $first = $this->eventner->competitionCategories->first();
+            $daftar = $this->eventner->competitionCategories()
+                ->whereNotNull('parent_id')
+                ->withCount('registrations')
+                ->orderBy('sort_order')
+                ->get();
+
+            $first = $daftar->firstWhere('registrations_count', '>', 0) ?? $daftar->first();
+
             if ($first) {
                 $this->selectedCategoryId = $first->id;
             }
@@ -41,6 +52,15 @@ class Index extends Component
     public function selectCategory($id)
     {
         $this->selectedCategoryId = $id;
+    }
+
+    public function updatedSelectedCategoryId()
+    {
+        // selectedCategoryId juga bisa datang dari klien — scope ulang.
+        if ($this->selectedCategoryId
+            && !CompetitionCategory::where('eventner_id', $this->eventner->id)->find($this->selectedCategoryId)) {
+            $this->selectedCategoryId = null;
+        }
     }
 
     public function render()

@@ -133,9 +133,14 @@ class Spin extends Component
             ->find($this->activeTab);
         if (!$category) return;
 
-        $totalInCategory = $category->kuota ?? Registration::where('eventner_id', $this->eventnerId)
+        // Batas nomor = jumlah peserta yang benar-benar ada. Dulu memakai
+        // kuota kategori, jadi kuota 5 dengan 8 pendaftar menyisakan 3
+        // peserta yang tidak akan pernah dapat nomor undian.
+        $jumlahPeserta = Registration::where('eventner_id', $this->eventnerId)
             ->where('competition_category_id', $this->activeTab)
             ->count();
+
+        $totalInCategory = max($jumlahPeserta, count($usedNumbers));
 
         $availableNumbers = array_diff(range(1, max(1, $totalInCategory)), $usedNumbers);
         

@@ -108,6 +108,22 @@ class Index extends Component
 
         if ($this->editId) {
             $reg = Registration::where('eventner_id', $eventner->id)->findOrFail($this->editId);
+
+            $pindahKategori = (int) $reg->competition_category_id !== (int) $this->competition_category_id;
+
+            if ($pindahKategori) {
+                // Nomor undian dan nilai menempel pada kategori lomba.
+                // Memindahkan peserta ke kategori lain tanpa membersihkan
+                // urutan_tampil meninggalkan nomor undian kategori lama yang
+                // bentrok dengan peserta kategori baru.
+                $punyaNilai = AssessmentScore::where('registration_id', $reg->id)->exists();
+
+                if ($punyaNilai) {
+                    $this->addError('competition_category_id', 'Peserta sudah punya nilai juri. Hapus nilainya dulu di halaman Input Nilai sebelum memindahkan kategori.');
+                    return;
+                }
+            }
+
             $reg->update([
                 'nama_sekolah' => strip_tags($this->nama_sekolah),
                 'npsn' => strip_tags($this->npsn),
@@ -115,6 +131,8 @@ class Index extends Component
                 'no_hp' => strip_tags($this->no_hp),
                 'school_email' => $this->school_email ? strip_tags($this->school_email) : null,
                 'competition_category_id' => $this->competition_category_id,
+                // Ganti kategori = undian diulang dari nol untuk peserta ini.
+                ...($pindahKategori ? ['urutan_tampil' => null] : []),
             ]);
             session()->flash('success', 'Data pendaftar berhasil diperbarui.');
         } else {

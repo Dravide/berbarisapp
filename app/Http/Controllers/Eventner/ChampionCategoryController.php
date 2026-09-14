@@ -101,21 +101,34 @@ class ChampionCategoryController extends Controller
             ]])
             : static::groupByLevel($championCategories, $eventner);
 
+        // Peserta yang dibandingkan untuk sebuah kategori juara = gabungan
+        // peserta SELURUH tingkat yang rubriknya tercakup, bukan hanya tingkat
+        // bagian tempat ia ditampilkan — kalau tidak, kategori juara lintas
+        // tingkat akan dihitung terhadap separuh pesertanya saja.
         $rankings = [];
-        foreach ($sections as $section) {
-            $participants = $section['level']
-                ? $registrationsByLevel->get((string) $section['level']->id, collect())
-                : collect(); // kelompok rubrik global: tak ada tingkat yang bisa dicocokkan
+        foreach ($championCategories as $champion) {
+            if ($competitionCategoryId) {
+                $participants = $registrationsByLevel->get((string) $competitionCategoryId, collect());
+            } else {
+                $levelIds = $champion->assessmentSubCategories
+                    ->map(fn($s) => $s->category?->competition_category_id)
+                    ->filter()
+                    ->unique();
 
-            foreach ($section['champions'] as $champion) {
-                $rankings[$champion->id] = $this->rankParticipants(
-                    $champion,
-                    $participants,
-                    $allScores,
-                    $allDeductions,
-                    $allCriteriaWeightMap
-                );
+                // Tanpa tingkat yang bisa dicocokkan (rubrik global) tidak ada
+                // peserta yang bisa dibandingkan — biarkan kosong.
+                $participants = $levelIds->isEmpty()
+                    ? collect()
+                    : $levelIds->flatMap(fn($id) => $registrationsByLevel->get((string) $id, collect()));
             }
+
+            $rankings[$champion->id] = $this->rankParticipants(
+                $champion,
+                $participants,
+                $allScores,
+                $allDeductions,
+                $allCriteriaWeightMap
+            );
         }
 
         $competitionCategory = $competitionCategoryId
@@ -141,28 +154,54 @@ class ChampionCategoryController extends Controller
      */
     public static function groupByLevel(Collection $championCategories, $eventner): Collection
     {
-        $levelIds = $championCategories
-            ->map(fn($c) => $c->assessmentSubCategories
+        // Tingkat yang dicakup tiap kategori juara. Satu kategori juara bisa
+        // mencakup lebih dari satu tingkat bila rubriknya menempel pada
+        // beberapa sub kategori dari tingkat berbeda.
+        $levelsOf = $championCategories->mapWithKeys(function ($c) {
+            $ids = $c->assessmentSubCategories
                 ->map(fn($s) => $s->category?->competition_category_id)
                 ->filter()
-                ->first() ?? '')
-            ->unique();
+                ->unique()
+                ->values();
+
+            return [$c->id => $ids];
+        });
+
+        $levelIds = $levelsOf->flatten()->unique()->values();
 
         $levels = CompetitionCategory::where('eventner_id', $eventner->id)
             ->with('parent')
-            ->whereIn('id', $levelIds->filter()->values())
+            ->whereIn('id', $levelIds)
             ->get()
             ->keyBy(fn($l) => (string) $l->id);
 
-        return $championCategories
-            ->groupBy(fn($c) => (string) ($c->assessmentSubCategories
-                ->map(fn($s) => $s->category?->competition_category_id)
-                ->filter()
-                ->first() ?? ''))
-            ->map(fn($champions, $levelId) => [
-                'level' => $levelId === '' ? null : $levels->get((string) $levelId),
-                'champions' => $champions->values(),
-            ])
+        $sections = collect();
+
+        // Satu bagian per tingkat; kategori juara yang rubriknya mencakup
+        // tingkat itu ikut di dalamnya. Dulu hanya tingkat PERTAMA yang
+        // dipakai (->first()), jadi kategori juara lintas tingkat hanya
+        // muncul di satu bagian dan hilang dari bagian tingkat lainnya.
+        foreach ($levels as $level) {
+            $champions = $championCategories
+                ->filter(fn($c) => $levelsOf[$c->id]->contains($level->id))
+                ->values();
+
+            if ($champions->isNotEmpty()) {
+                $sections->push(['level' => $level, 'champions' => $champions]);
+            }
+        }
+
+        // Kategori juara tanpa rubrik (atau rubriknya tanpa tingkat) masuk
+        // kelompok global — ditempatkan paling akhir.
+        $global = $championCategories
+            ->filter(fn($c) => $levelsOf[$c->id]->isEmpty())
+            ->values();
+
+        if ($global->isNotEmpty()) {
+            $sections->push(['level' => null, 'champions' => $global]);
+        }
+
+        return $sections
             ->sortBy(fn($s) => $s['level'] ? $s['level']->full_name : "\u{FFFF}")
             ->values();
     }
