@@ -122,6 +122,12 @@
                                  style="cursor:pointer;">
                                 <div class="card-body p-3">
                                     <div class="d-flex align-items-center gap-3">
+                                        {{-- Nomor undian = urutan tampil. Daftar diurutkan
+                                             dengan angka ini, jadi juri bisa mencocokkan
+                                             layar dengan panggilan di lapangan. --}}
+                                        @if($reg->urutan_tampil)
+                                            <span class="badge bg-dark-subtle text-dark flex-shrink-0" style="min-width:2rem;">{{ $reg->urutan_tampil }}</span>
+                                        @endif
                                         @if($reg->logo_sekolah)
                                             <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" class="rounded-circle border" width="44" height="44" style="object-fit:cover;" alt="">
                                         @else

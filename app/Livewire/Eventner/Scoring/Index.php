@@ -493,8 +493,16 @@ class Index extends Component
                 ])->title('Input Nilai - ' . $this->eventner->nama_event);
             }
 
+            // Urut sesuai nomor undian — juri menilai mengikuti urutan tampil,
+            // jadi daftarnya harus sama dengan yang dipanggil di lapangan.
+            // Peserta tanpa nomor undian (belum diundi) ditaruh paling bawah,
+            // lalu dirapikan per nama sekolah. Pola yang sama dipakai PDF
+            // format nilai (FormatNilaiController) supaya semua daftar cetak
+            // maupun layar menampilkan urutan yang identik.
             $query = Registration::where('eventner_id', $this->eventner->id)
-                ->where('competition_category_id', $this->selectedCategoryId);
+                ->where('competition_category_id', $this->selectedCategoryId)
+                ->orderByRaw('COALESCE(urutan_tampil, 999999)')
+                ->orderBy('nama_sekolah');
 
             if ($this->search) {
                 $query->where(function ($q) {
