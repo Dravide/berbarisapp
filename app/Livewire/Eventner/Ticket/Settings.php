@@ -6,6 +6,7 @@ use App\Models\EventnerVenue;
 use App\Traits\FeatureGatedComponent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 
@@ -112,11 +113,11 @@ class Settings extends Component
     public function save()
     {
         $this->validate([
-            'ticket_price' => 'required_if:ticket_active,true|nullable|numeric|min:0',
+            'ticket_price' => ($this->butuhHargaDefault() ? 'required' : 'nullable') . '|numeric|min:0',
             'ticket_max_per_order' => 'required|integer|min:1|max:100',
             'ticket_description' => 'nullable|string|max:1000',
         ], [
-            'ticket_price.required_if' => 'Harga tiket wajib diisi jika tiket aktif.',
+            'ticket_price.required' => 'Harga default wajib diisi selama masih ada tempat yang belum punya harga sendiri.',
             'ticket_price.min' => 'Harga tiket minimal 0.',
         ]);
 
@@ -124,12 +125,51 @@ class Settings extends Component
             'ticket_active' => $this->ticket_active,
             'ticket_start' => $this->ticket_start ?: null,
             'ticket_end' => $this->ticket_end ?: null,
-            'ticket_price' => $this->ticket_active ? $this->ticket_price : null,
+            // Harga default TIDAK dikosongkan saat tiket dimatikan — tempat yang
+            // belum punya harga sendiri memakainya sebagai fallback
+            // (EventnerVenue::effectiveTicketPrice), jadi menghapusnya di sini
+            // membuat tiket tempat itu diam-diam jadi gratis.
+            'ticket_price' => $this->ticket_price === '' ? null : $this->ticket_price,
             'ticket_description' => $this->ticket_description ?: null,
             'ticket_max_per_order' => $this->ticket_max_per_order,
         ]);
 
         session()->flash('success', 'Pengaturan tiket berhasil disimpan.');
+    }
+
+    /**
+     * Masih perlukah harga default diisi?
+     *
+     * Harga per tempat menang atas harga event (lihat
+     * EventnerVenue::effectiveTicketPrice()). Jadi angka di halaman ini hanya
+     * dipakai tempat yang belum punya harga sendiri — kalau semua tempat
+     * sudah berharga, tidak ada yang membacanya dan tidak perlu dipaksa diisi.
+     */
+    public function butuhHargaDefault(): bool
+    {
+        if (! $this->ticket_active) {
+            return false;
+        }
+
+        $dijual = $this->eventner->ticketVenues();
+
+        return $dijual->isEmpty() || $dijual->contains(fn ($venue) => $venue->ticket_price === null);
+    }
+
+    /**
+     * Harga tiket per tempat — sumber kebenaran harga yang benar-benar dibayar
+     * pembeli. Ditampilkan di sini supaya penyelenggara tidak mengira angka di
+     * halaman ini berlaku seragam padahal tempat bisa menimpanya.
+     */
+    #[Computed]
+    public function hargaPerTempat()
+    {
+        return $this->eventner->activeVenues()->map(fn ($venue) => [
+            'id' => $venue->id,
+            'name' => $venue->name,
+            'harga' => $venue->ticket_price,
+            'dijual' => $venue->ticket_price !== null || $venue->ticket_kuota !== null,
+        ]);
     }
 
     public function render()

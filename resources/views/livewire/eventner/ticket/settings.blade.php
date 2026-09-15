@@ -52,8 +52,12 @@
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label fw-semibold">Harga Per Tiket (Rp) <span class="text-danger">*</span></label>
+                                <label class="form-label fw-semibold">Harga Default Per Tiket (Rp) @if($this->butuhHargaDefault())<span class="text-danger">*</span>@endif</label>
                                 <input type="number" wire:model="ticket_price" class="form-control" placeholder="Contoh: 50000" min="0" step="1000">
+                                <small class="form-text text-muted">
+                                    Dipakai tempat pelaksanaan yang belum punya harga sendiri.
+                                    Harga yang diisi di <a href="{{ route('eventner.venues.index') }}">Tempat Pelaksanaan</a> selalu menang atas angka ini.
+                                </small>
                                 @error('ticket_price') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                             </div>
 
@@ -68,6 +72,47 @@
                                 <textarea wire:model="ticket_description" class="form-control" rows="3" placeholder="Informasi tambahan tentang tiket, syarat & ketentuan, dll."></textarea>
                                 @error('ticket_description') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                             </div>
+
+                            {{-- Daftar harga yang BENAR-BENAR dibayar pembeli. Tanpa ini
+                                 penyelenggara mengira harga default berlaku seragam,
+                                 padahal tempat bisa menimpanya. --}}
+                            @if($this->hargaPerTempat->isNotEmpty())
+                                <hr class="my-4">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <h6 class="fw-semibold mb-0"><i class="ti ti-map-pin me-1"></i> Harga per Tempat Pelaksanaan</h6>
+                                    <a href="{{ route('eventner.venues.index') }}" class="btn btn-sm btn-outline-primary">Kelola</a>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Tempat</th>
+                                                <th>Harga Berlaku</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($this->hargaPerTempat as $tempat)
+                                                <tr>
+                                                    <td class="fw-semibold">
+                                                        {{ $tempat['name'] }}
+                                                        @unless($tempat['dijual'])
+                                                            <span class="badge bg-light text-muted ms-1">tidak dijual</span>
+                                                        @endunless
+                                                    </td>
+                                                    <td>
+                                                        @if($tempat['harga'] !== null)
+                                                            <span class="text-dark">Rp {{ number_format($tempat['harga'], 0, ',', '.') }}</span>
+                                                            <span class="badge bg-light-primary text-primary ms-1">menimpa default</span>
+                                                        @else
+                                                            <span class="text-muted">Ikut harga default</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @endif
                         </div>
                     @endif
 

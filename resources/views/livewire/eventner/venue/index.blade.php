@@ -77,13 +77,14 @@
                                             @php $stat = $this->ticketStats[$venue->id]; @endphp
                                             <td>
                                                 @if($venue->ticket_price === null && $venue->ticket_kuota === null)
-                                                    <span class="fs-2 text-muted">Ikut harga event</span>
+                                                    <span class="fs-2 text-muted">Ikut harga default event</span>
                                                 @else
                                                     <div class="fs-2 text-dark">
                                                         @if($venue->ticket_price !== null)
                                                             Rp {{ number_format($venue->ticket_price, 0, ',', '.') }}
+                                                            <span class="badge bg-light-primary text-primary fs-2">menimpa default</span>
                                                         @else
-                                                            <span class="text-muted">Harga event</span>
+                                                            <span class="text-muted">Ikut harga default</span>
                                                         @endif
                                                     </div>
                                                 @endif
@@ -193,12 +194,14 @@
                         <p class="fs-2 text-muted mb-2">
                             Tiket untuk tempat ini &mdash; kosongkan bila tempat ini tidak dijual terpisah.
                             Kalau ada lebih dari satu tempat berjualan, pembeli memilih tempat saat membeli.
+                            Harga di sini <strong>menang</strong> atas harga default di
+                            <a href="{{ route('eventner.tickets.settings') }}">Pengaturan Tiket</a>.
                         </p>
                         <div class="row">
                             <div class="col-6 mb-3">
                                 <label class="form-label">Harga Tiket <span class="text-muted">(Rp)</span></label>
                                 <input type="number" class="form-control" wire:model="ticket_price" placeholder="35000" min="0" step="1000">
-                                <small class="form-text text-muted">Kosong = ikut harga event.</small>
+                                <small class="form-text text-muted">Kosong = pakai harga default event.</small>
                                 @error('ticket_price') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                             </div>
                             <div class="col-6 mb-3">
