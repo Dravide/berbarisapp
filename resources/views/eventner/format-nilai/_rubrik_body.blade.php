@@ -117,3 +117,38 @@
         @endif
     </div>
 @endforeach
+
+{{-- Pengurangan global: berlaku semua tingkat lomba, memotong NILAI AKHIR
+     di luar kolom kategori. Ditulis sekali di akhir, bukan per kategori. --}}
+@if(($globalDeductionCategories ?? collect())->isNotEmpty())
+    <div class="cat-section">
+        <div class="deduction-head">Pengurangan Nilai (Global — Berlaku Semua Tingkat Lomba)</div>
+        <p class="global-note">Tidak menempel pada kategori mana pun — memotong NILAI AKHIR langsung, di luar kolom kategori di atas.</p>
+        @foreach($globalDeductionCategories as $deductionCat)
+            <div class="sub-head">{{ $deductionCat->name }}</div>
+            @if($deductionCat->criterias->isNotEmpty())
+                <table class="ded">
+                    <thead>
+                        <tr>
+                            <th width="40%">Kriteria Pengurangan</th>
+                            <th width="60%" style="text-align:center;">Opsi Pengurangan</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($deductionCat->criterias as $deductionCrit)
+                        <tr>
+                            <td>{{ $deductionCrit->name }}</td>
+                            <td style="text-align:center;">
+                                0
+                                @foreach($deductionCrit->deduction_options as $opt)
+                                    &nbsp;{{ $opt }}
+                                @endforeach
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+        @endforeach
+    </div>
+@endif

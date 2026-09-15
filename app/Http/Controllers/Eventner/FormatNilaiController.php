@@ -7,6 +7,7 @@ use App\Models\AssessmentCategory;
 use App\Models\AssessmentCriteria;
 use App\Models\AssessmentSubCategory;
 use App\Models\CompetitionCategory;
+use App\Models\DeductionCategory;
 use App\Models\Judge;
 use App\Models\Registration;
 use App\Support\FormatNilaiImport;
@@ -19,6 +20,19 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class FormatNilaiController extends Controller
 {
+    /**
+     * Rubrik pengurangan global — dicetak sekali di akhir PDF, terpisah dari
+     * kelompok per kategori yang menempel pada AssessmentCategory.
+     */
+    private function globalDeductionCategories($eventner)
+    {
+        return DeductionCategory::with('criterias')
+            ->where('eventner_id', $eventner->id)
+            ->global()
+            ->orderBy('sort_order')
+            ->get();
+    }
+
     public function downloadPdf()
     {
         $eventner = $this->gatedEventner();
@@ -31,6 +45,7 @@ class FormatNilaiController extends Controller
         $data = [
             'eventner' => $eventner,
             'categories' => $categories,
+            'globalDeductionCategories' => $this->globalDeductionCategories($eventner),
             'childName' => null,
             'judgeName' => null,
         ];
@@ -155,6 +170,7 @@ class FormatNilaiController extends Controller
         $data = [
             'eventner' => $eventner,
             'categories' => $categories,
+            'globalDeductionCategories' => $this->globalDeductionCategories($eventner),
             'childName' => $child->full_name,
             'judgeName' => null,
         ];
@@ -197,6 +213,7 @@ class FormatNilaiController extends Controller
         $data = [
             'eventner' => $eventner,
             'categories' => $categories,
+            'globalDeductionCategories' => $this->globalDeductionCategories($eventner),
             'childName' => $competitionCategoryId
                 ? CompetitionCategory::where('eventner_id', $eventner->id)->find($competitionCategoryId)->full_name
                 : null,
@@ -258,6 +275,7 @@ class FormatNilaiController extends Controller
         $data = [
             'eventner' => $eventner,
             'categories' => $categories,
+            'globalDeductionCategories' => $this->globalDeductionCategories($eventner),
             'mode' => $mode,
             'judgeName' => $judgeId ? Judge::where('eventner_id', $eventner->id)->find($judgeId)->name : null,
             'childName' => $levelId ? CompetitionCategory::where('eventner_id', $eventner->id)->find($levelId)->full_name : null,

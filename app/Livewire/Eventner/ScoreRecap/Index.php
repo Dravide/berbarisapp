@@ -115,11 +115,24 @@ class Index extends Component
 
             $critToAssessment = \App\Models\DeductionCriteria::whereHas('category', function ($q) use ($assessmentCategoryIds) {
                     $q->where('eventner_id', $this->eventner->id)
+                      ->where('scope', \App\Models\DeductionCategory::SCOPE_CATEGORY)
                       ->whereIn('assessment_category_id', $assessmentCategoryIds);
                 })
                 ->with('category:deduction_categories.id,assessment_category_id')
                 ->get()
                 ->pluck('category.assessment_category_id', 'id')
+                ->toArray();
+
+            // Pengurangan global tidak menempel pada kolom kategori mana pun,
+            // jadi ia tidak muncul di $critToAssessment. Daftar id kriterianya
+            // dipakai untuk memisahkannya dari pengurangan per kategori —
+            // nilainya tetap mengurangi NILAI AKHIR.
+            $globalCriteriaIds = \App\Models\DeductionCriteria::whereHas('category', function ($q) {
+                    $q->where('eventner_id', $this->eventner->id)
+                      ->where('scope', \App\Models\DeductionCategory::SCOPE_GLOBAL);
+                })
+                ->pluck('id')
+                ->flip()
                 ->toArray();
 
             $data = [];
@@ -134,13 +147,21 @@ class Index extends Component
                     $criteriaTotals[$cid] = ($criteriaTotals[$cid] ?? 0) + ((int) $score->score * $criteriaWeight);
                 }
 
-                // Distribusikan pengurangan ke kategori penilaian targetnya
+                // Distribusikan pengurangan ke kategori penilaian targetnya.
+                // Pengurangan global dikumpulkan terpisah.
                 $participantDeductions = $allDeductions->get($participant->id, collect());
                 $deductionByCat = [];
+                $globalDeduction = 0;
                 foreach ($participantDeductions as $d) {
+                    // Magnitude: tanda di DB tidak dipercaya, selalu dikurangkan.
+                    if (isset($globalCriteriaIds[$d->deduction_criteria_id])) {
+                        $globalDeduction += $d->magnitude;
+
+                        continue;
+                    }
+
                     $aid = $critToAssessment[$d->deduction_criteria_id] ?? null;
                     if ($aid !== null) {
-                        // Magnitude: tanda di DB tidak dipercaya, selalu dikurangkan.
                         $deductionByCat[$aid] = ($deductionByCat[$aid] ?? 0) - $d->magnitude;
                     }
                 }
@@ -164,7 +185,11 @@ class Index extends Component
                     $finalScore += $catTotal + $catDeduction;
                 }
 
-                $totalDeduction = array_sum($deductionByCat); // total pengurangan (negatif)
+                $finalScore -= $globalDeduction;
+
+                // Total pengurangan = kolom kategori + global, supaya angka di
+                // kolom Pengurangan cocok dengan selisih grandTotal - finalScore.
+                $totalDeduction = array_sum($deductionByCat) - $globalDeduction; // negatif
 
                 $data[] = [
                     'participant' => $participant,
@@ -172,6 +197,7 @@ class Index extends Component
                     'categoryTotals' => $categoryTotals,
                     'categoryDeductions' => $categoryDeductions,
                     'grandTotal' => $grandTotal,
+                    'globalDeduction' => $globalDeduction,
                     'totalDeduction' => $totalDeduction,
                     'finalScore' => $finalScore,
                 ];

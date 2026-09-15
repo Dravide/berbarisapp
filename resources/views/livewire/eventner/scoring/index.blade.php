@@ -409,7 +409,7 @@
                             @endif
 
                             {{-- ========== PENGURANGAN NILAI ========== --}}
-                            @if(count($deductionCategories) > 0)
+                            @if(count($deductionCategories) > 0 || count($globalDeductionCategories) > 0)
                                 <div class="border border-danger rounded p-3 mb-4">
                                     <p class="text-danger small fw-semibold text-uppercase mb-3"><i class="ti ti-minus-circle me-1"></i> Pengurangan Nilai (per Kategori)</p>
                                     @php $dedByAssessment = $deductionCategories->groupBy('assessment_category_id'); @endphp
@@ -442,18 +442,44 @@
                                         @endif
                                     @endforeach
 
+                                    {{-- Pengurangan global: sanksi yang berlaku semua tingkat
+                                         lomba. Memotong NILAI AKHIR, di luar kolom kategori. --}}
+                                    @if(count($globalDeductionCategories) > 0)
+                                        <div class="border-top pt-3 mt-3">
+                                            <p class="text-danger small fw-semibold text-uppercase mb-2">
+                                                <i class="ti ti-world me-1"></i> Pengurangan Global
+                                                <span class="badge bg-danger-subtle text-danger ms-1">semua tingkat lomba</span>
+                                            </p>
+                                            @foreach($globalDeductionCategories as $deductionCat)
+                                                <p class="text-muted small fw-bold mb-2">{{ $deductionCat->name }}</p>
+                                                @foreach($deductionCat->criterias as $deductionCrit)
+                                                    <div class="mb-3">
+                                                        <span class="d-block small fw-semibold mb-1">{{ $deductionCrit->name }}</span>
+                                                        <div class="d-flex flex-wrap gap-1">
+                                                            <button type="button"
+                                                                wire:click="$set('deductions.{{ $deductionCrit->id }}', 0)"
+                                                                class="btn btn-sm {{ (isset($deductions[$deductionCrit->id]) && $deductions[$deductionCrit->id] == 0) || !isset($deductions[$deductionCrit->id]) ? 'btn-success' : 'btn-outline-success' }} px-2">
+                                                                0
+                                                            </button>
+                                                            @foreach($deductionCrit->deduction_options as $option)
+                                                                <button type="button"
+                                                                    @if(!$isFinalized) wire:click="$set('deductions.{{ $deductionCrit->id }}', {{ $option }})" @endif
+                                                                    {{ $isFinalized ? 'disabled' : '' }}
+                                                                    class="btn btn-sm {{ isset($deductions[$deductionCrit->id]) && $deductions[$deductionCrit->id] == $option ? 'btn-danger' : 'btn-outline-danger' }} px-2">
+                                                                    {{ $option }}
+                                                                </button>
+                                                            @endforeach
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            @endforeach
+                                        </div>
+                                    @endif
+
                                     {{-- Deduction summary --}}
-                                    @php
-                                        $totalDeductions = 0;
-                                        foreach ($deductions as $amount) {
-                                            if ($amount !== '' && $amount !== null) {
-                                                $totalDeductions += abs((float) $amount);
-                                            }
-                                        }
-                                    @endphp
                                     <div class="d-flex justify-content-between align-items-center pt-2 border-top">
                                         <span class="fw-semibold text-danger small">Total Pengurangan</span>
-                                        <span class="fw-bold text-danger">-{{ $totalDeductions }}</span>
+                                        <span class="fw-bold text-danger">-{{ $totalDeductionsKategori + $totalDeductionsGlobal }}</span>
                                     </div>
 
                                     @if($deductionSaveStatus === 'saved')
@@ -489,9 +515,13 @@
                                             <span class="small">Nilai Juri</span>
                                             <span class="fw-semibold">{{ $judgeTotals->sum('total') }}</span>
                                         </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="small">Pengurangan Kategori</span>
+                                            <span class="fw-semibold {{ $totalDeductionsKategori > 0 ? 'text-danger' : 'text-white text-opacity-50' }}">-{{ $totalDeductionsKategori }}</span>
+                                        </div>
                                         <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <span class="small">Pengurangan</span>
-                                            <span class="fw-semibold text-danger">-{{ $totalDeductions }}</span>
+                                            <span class="small">Pengurangan Global</span>
+                                            <span class="fw-semibold {{ $totalDeductionsGlobal > 0 ? 'text-danger' : 'text-white text-opacity-50' }}">-{{ $totalDeductionsGlobal }}</span>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center pt-2 border-top border-light">
                                             <span class="fw-bold">NILAI AKHIR</span>

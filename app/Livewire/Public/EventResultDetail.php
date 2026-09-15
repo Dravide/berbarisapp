@@ -89,13 +89,15 @@ class EventResultDetail extends Component
         // Urutkan juri by nama
         $judges = collect($judgeMap)->sortBy(fn($j) => strtolower($j->name ?? ''))->values();
 
-        // Potongan nilai
+        // Potongan nilai. Pakai magnitude, bukan kolom amount mentah: tanda di
+        // DB tidak dipercaya (operator bisa mengetik -5 atau 5), dan amount
+        // positif akan MENAMBAH skor kalau dijumlahkan langsung.
         $deductions = ScoreDeduction::where('registration_id', $this->registration->id)
             ->orderBy('amount')
             ->get();
 
         $grandTotal = array_sum($judgeScores);
-        $totalDeduction = (int) $deductions->sum('amount');
+        $totalDeduction = (int) $deductions->sum(fn ($d) => $d->magnitude);
         $finalTotal = $grandTotal - $totalDeduction;
 
         return view('livewire.public.event-result-detail', [

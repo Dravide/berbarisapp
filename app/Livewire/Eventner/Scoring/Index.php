@@ -37,6 +37,7 @@ class Index extends Component
     // Deduction support
     public $deductions = []; // [deduction_criteria_id => amount]
     public $deductionCategories = [];
+    public $globalDeductionCategories = [];
     public $deductionSaveStatus = '';
 
     protected $queryString = [
@@ -395,13 +396,23 @@ class Index extends Component
 
         $this->deductionCategories = DeductionCategory::with('criterias')
             ->where('eventner_id', $this->eventner->id)
-            ->whereNotNull('assessment_category_id')
+            ->category()
             ->whereHas('assessmentCategory', function ($q) use ($compCategoryId) {
                 $q->where(function ($sq) use ($compCategoryId) {
                     $sq->where('competition_category_id', $compCategoryId)
                        ->orWhereNull('competition_category_id');
                 });
             })
+            ->orderBy('sort_order')
+            ->get();
+
+        // Pengurangan global berlaku semua tingkat lomba, jadi tidak difilter
+        // competition_category_id seperti di atas. Nilainya tetap masuk peta
+        // $this->deductions yang sama — dijumlahkan ke NILAI AKHIR, bukan ke
+        // kolom kategori mana pun.
+        $this->globalDeductionCategories = DeductionCategory::with('criterias')
+            ->where('eventner_id', $this->eventner->id)
+            ->global()
             ->orderBy('sort_order')
             ->get();
 
@@ -490,6 +501,8 @@ class Index extends Component
                     'assessmentCategories' => collect(),
                     'judgeTotals' => collect(),
                     'totalDeductions' => 0,
+                    'totalDeductionsKategori' => 0,
+                    'totalDeductionsGlobal' => 0,
                 ])->title('Input Nilai - ' . $this->eventner->nama_event);
             }
 
@@ -584,15 +597,32 @@ class Index extends Component
             }
         }
 
-        // Calculate total deductions for current registration
-        $totalDeductions = 0;
+        // Total pengurangan dipecah dua supaya operator melihat dari mana
+        // angkanya datang: per kategori memotong kolom kategori itu, global
+        // memotong NILAI AKHIR. Keduanya tetap dikurangkan dari nilai juri.
+        $totalDeductionsKategori = 0;
+        $totalDeductionsGlobal = 0;
         if ($this->view === 'scoring') {
-            foreach ($this->deductions as $amount) {
-                if ($amount !== '' && $amount !== null) {
-                    $totalDeductions += abs((float) $amount);
+            $globalCriteriaIds = $this->globalDeductionCategories
+                ->flatMap->criterias
+                ->pluck('id')
+                ->map(fn ($id) => (string) $id)
+                ->all();
+
+            foreach ($this->deductions as $criteriaId => $amount) {
+                if ($amount === '' || $amount === null) {
+                    continue;
+                }
+
+                if (in_array((string) $criteriaId, $globalCriteriaIds, true)) {
+                    $totalDeductionsGlobal += abs((float) $amount);
+                } else {
+                    $totalDeductionsKategori += abs((float) $amount);
                 }
             }
         }
+
+        $totalDeductions = $totalDeductionsKategori + $totalDeductionsGlobal;
 
         return view('livewire.eventner.scoring.index', [
             'participants' => $participants,
@@ -601,6 +631,8 @@ class Index extends Component
             'assessmentCategories' => $assessmentCategories,
             'judgeTotals' => $judgeTotals,
             'totalDeductions' => $totalDeductions,
+            'totalDeductionsKategori' => $totalDeductionsKategori,
+            'totalDeductionsGlobal' => $totalDeductionsGlobal,
         ])->title('Input Nilai - ' . $this->eventner->nama_event);
     }
 }

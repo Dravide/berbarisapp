@@ -142,6 +142,21 @@ class Builder extends Component
     }
 
     /**
+     * Rubrik pengurangan global — berlaku untuk semua tingkat lomba, tidak
+     * menempel pada kategori penilaian mana pun. Sengaja tidak difilter
+     * activeTab: satu daftar dipakai bersama semua tingkat lomba.
+     */
+    #[Computed]
+    public function globalDeductionCategories()
+    {
+        return DeductionCategory::with('criterias')
+            ->where('eventner_id', $this->eventnerId)
+            ->global()
+            ->orderBy('sort_order')
+            ->get();
+    }
+
+    /**
      * Setelah import Excel sukses (dari komponen Import), reset cache computed
      * agar kategori hasil import langsung tampil tanpa refresh halaman.
      */
@@ -858,6 +873,75 @@ class Builder extends Component
     public function cancelEditDeductionCategory()
     {
         $this->reset('editingDeductionCategoryId', 'editDeductionCategoryName');
+    }
+
+    // ============================================================
+    // PENGURANGAN GLOBAL — berlaku semua tingkat lomba
+    //
+    // assessment_category_id sengaja NULL: kelompok ini tidak memotong
+    // kolom kategori mana pun, melainkan NILAI AKHIR. Pembedaannya lewat
+    // kolom `scope`, bukan lewat NULL, karena NULL juga dipakai data lama
+    // yang belum ditentukan targetnya.
+    // ============================================================
+
+    public $newGlobalDeductionCategoryName = '';
+
+    public function addGlobalDeductionCategory()
+    {
+        $name = $this->newGlobalDeductionCategoryName;
+
+        if (trim($name) === '') {
+            session()->flash('error_dedcat_global', 'Nama kelompok pengurangan wajib diisi.');
+
+            return;
+        }
+
+        $maxOrder = DeductionCategory::where('eventner_id', $this->eventnerId)->global()->max('sort_order') ?? 0;
+
+        DeductionCategory::create([
+            'eventner_id' => $this->eventnerId,
+            'assessment_category_id' => null,
+            'scope' => DeductionCategory::SCOPE_GLOBAL,
+            'name' => strip_tags($name),
+            'sort_order' => $maxOrder + 1,
+        ]);
+
+        $this->newGlobalDeductionCategoryName = '';
+    }
+
+    public function startEditGlobalDeductionCategory($id)
+    {
+        $cat = DeductionCategory::where('eventner_id', $this->eventnerId)->findOrFail($id);
+        $this->editingDeductionCategoryId = $id;
+        $this->editDeductionCategoryName = $cat->name;
+    }
+
+    public function saveEditGlobalDeductionCategory()
+    {
+        $this->validate(['editDeductionCategoryName' => 'required|string|max:255']);
+
+        DeductionCategory::where('eventner_id', $this->eventnerId)
+            ->global()
+            ->findOrFail($this->editingDeductionCategoryId)
+            ->update(['name' => strip_tags($this->editDeductionCategoryName)]);
+
+        $this->reset('editingDeductionCategoryId', 'editDeductionCategoryName');
+    }
+
+    public function deleteGlobalDeductionCategory($id)
+    {
+        $category = DeductionCategory::where('eventner_id', $this->eventnerId)
+            ->global()
+            ->with('criterias')
+            ->findOrFail($id);
+
+        if ($this->anyDeductionHasScores($category->criterias->pluck('id'))) {
+            session()->flash('error', 'Tidak bisa menghapus kelompok pengurangan: sudah ada nilai pengurangan yang masuk.');
+
+            return;
+        }
+
+        $category->delete();
     }
 
     // Edit Deduction Criteria

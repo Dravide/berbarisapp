@@ -351,7 +351,10 @@ class ScoringController extends Controller
             ];
         }
 
-        // Pengurangan (baik menempel pada kategori maupun umum)
+        // Pengurangan (baik menempel pada kategori maupun global).
+        // Ini halaman rekap per peserta: pengurangan kategori mengisi kolom
+        // kategorinya, pengurangan global tidak menyentuh kolom mana pun —
+        // keduanya tetap dipotongkan ke total akhir.
         $deductionCategories = DeductionCategory::with(['criterias', 'assessmentCategory'])
             ->where('eventner_id', $eventner->id)
             ->orderBy('sort_order')

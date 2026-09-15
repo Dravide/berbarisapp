@@ -368,6 +368,145 @@
                             @endforeach
                         </div>
                     @endif
+
+                    {{-- ========== PENGURANGAN NILAI GLOBAL ==========
+                         Sengaja di luar loop kategori: sanksi seperti keterlambatan
+                         atau pelanggaran disiplin berlaku untuk semua tingkat lomba,
+                         jadi tidak masuk akal bila harus diketik ulang di tiap
+                         kategori. Potongannya memotong NILAI AKHIR, di luar kolom
+                         PBB/Formasi/dll. --}}
+                    <div class="card w-100 mt-4 border border-danger">
+                        <div class="card-header bg-danger-subtle d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-semibold text-danger">
+                                <i class="ti ti-minus-circle me-1"></i> Pengurangan Nilai Global
+                            </h5>
+                            <span class="badge bg-danger">berlaku semua tingkat lomba</span>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="fs-2 text-muted mb-3">
+                                Tidak menempel ke kategori mana pun. Memotong <strong>NILAI AKHIR</strong> langsung,
+                                di luar kolom PBB/Formasi/dll, dan ikut diperhitungkan sebagai pemecah seri.
+                            </p>
+
+                            @if(session()->has('error'))
+                                <div class="alert alert-danger py-2 fs-2"><i class="ti ti-alert-circle me-1"></i> {{ session('error') }}</div>
+                            @endif
+
+                            @if($this->globalDeductionCategories->isNotEmpty())
+                                @foreach($this->globalDeductionCategories as $deductionCat)
+                                    <div class="card mb-3 border border-danger-subtle" wire:key="dedcat-global-{{ $deductionCat->id }}">
+                                        <div class="card-header bg-danger-subtle d-flex justify-content-between align-items-center py-2">
+                                            @if($editingDeductionCategoryId == $deductionCat->id)
+                                                <div class="d-flex align-items-center gap-2 flex-grow-1">
+                                                    <input type="text" class="form-control form-control-sm" wire:model="editDeductionCategoryName" wire:keydown.enter="saveEditGlobalDeductionCategory" wire:keydown.escape="cancelEditDeductionCategory" placeholder="Nama kelompok pengurangan...">
+                                                    <button class="btn btn-sm btn-success" wire:click="saveEditGlobalDeductionCategory" title="Simpan"><i class="ti ti-check"></i></button>
+                                                    <button class="btn btn-sm btn-outline-secondary" wire:click="cancelEditDeductionCategory" title="Batal"><i class="ti ti-x"></i></button>
+                                                </div>
+                                            @else
+                                                <h6 class="mb-0 fw-semibold text-danger">{{ $deductionCat->name }}</h6>
+                                                <div class="d-flex gap-1">
+                                                    <button class="btn btn-sm btn-outline-primary border-0 p-1" wire:click="startEditGlobalDeductionCategory({{ $deductionCat->id }})" title="Edit">
+                                                        <i class="ti ti-pencil fs-5"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger border-0 p-1" wire:click="deleteGlobalDeductionCategory({{ $deductionCat->id }})" title="Hapus" wire:confirm="Hapus kelompok pengurangan ini beserta seluruh kriterianya?">
+                                                        <i class="ti ti-trash fs-5"></i>
+                                                    </button>
+                                                </div>
+                                            @endif
+                                        </div>
+                                        <div class="card-body p-3">
+                                            @if($deductionCat->criterias->isNotEmpty())
+                                                <div class="table-responsive mb-3">
+                                                    <table class="table table-sm align-middle mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th class="border-0 fw-semibold">Kriteria Pengurangan</th>
+                                                                <th class="border-0 fw-semibold" width="40%">Opsi Pengurangan</th>
+                                                                <th class="border-0 fw-semibold text-center" width="80px">Aksi</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @foreach($deductionCat->criterias as $deductionCrit)
+                                                                @if($editingDeductionCriteriaId == $deductionCrit->id)
+                                                                <tr class="table-warning">
+                                                                    <td>
+                                                                        <input type="text" class="form-control form-control-sm" wire:model="editDeductionCriteriaName" wire:keydown.enter="saveEditDeductionCriteria" wire:keydown.escape="cancelEditDeductionCriteria" placeholder="Nama kriteria">
+                                                                    </td>
+                                                                    <td>
+                                                                        <input type="text" class="form-control form-control-sm" wire:model="editDeductionCriteriaOptions" placeholder="-5,-10,-15" wire:keydown.enter="saveEditDeductionCriteria">
+                                                                        <span class="text-muted fs-2">Negatif, pisah koma</span>
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <div class="d-flex justify-content-center gap-1">
+                                                                            <button class="btn btn-sm btn-success p-1" wire:click="saveEditDeductionCriteria"><i class="ti ti-check"></i></button>
+                                                                            <button class="btn btn-sm btn-outline-secondary p-1" wire:click="cancelEditDeductionCriteria"><i class="ti ti-x"></i></button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                                @else
+                                                                <tr>
+                                                                    <td class="fw-semibold">{{ $deductionCrit->name }}</td>
+                                                                    <td>
+                                                                        <div class="d-flex flex-wrap gap-1">
+                                                                            @foreach($deductionCrit->deduction_options as $opt)
+                                                                                <span class="badge bg-danger">{{ $opt }}</span>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        <div class="d-flex justify-content-center gap-1">
+                                                                            <button class="btn btn-sm btn-outline-primary p-1" wire:click="startEditDeductionCriteria({{ $deductionCrit->id }})"><i class="ti ti-pencil"></i></button>
+                                                                            <button class="btn btn-sm btn-outline-danger p-1" wire:click="deleteDeductionCriteria({{ $deductionCrit->id }})"><i class="ti ti-trash"></i></button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                                @endif
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            @else
+                                                <p class="text-muted fs-3 mb-3"><i>Belum ada kriteria pengurangan.</i></p>
+                                            @endif
+
+                                            <div class="bg-light p-3 border border-dashed">
+                                                <h6 class="fs-3 fw-semibold mb-2">Tambah Kriteria Pengurangan</h6>
+                                                <div class="row align-items-end g-2">
+                                                    <div class="col-md-5">
+                                                        <input type="text" class="form-control form-control-sm" wire:model="newDeductionCriteriaNames.{{ $deductionCat->id }}" placeholder="Nama (Cth: Terlambat masuk)">
+                                                    </div>
+                                                    <div class="col-md-5">
+                                                        <input type="text" class="form-control form-control-sm" wire:model="newDeductionCriteriaOptions.{{ $deductionCat->id }}" placeholder="Opsi pengurangan (Cth: -5,-10,-15)">
+                                                    </div>
+                                                    <div class="col-md-2">
+                                                        <button class="btn btn-sm btn-danger w-100" wire:click="addDeductionCriteria({{ $deductionCat->id }})">
+                                                            <i class="ti ti-plus me-1"></i>Tambah
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            @else
+                                <p class="text-muted fs-3 mb-3"><i>Belum ada pengurangan nilai global.</i></p>
+                            @endif
+
+                            <div class="bg-light p-3 border border-dashed border-danger-subtle">
+                                <h6 class="fs-3 fw-semibold mb-2 text-danger"><i class="ti ti-plus me-1"></i> Tambah Kelompok Pengurangan Global</h6>
+                                @if(session()->has('error_dedcat_global'))
+                                    <div class="text-danger fs-2 mb-2"><i class="ti ti-alert-circle"></i> {{ session('error_dedcat_global') }}</div>
+                                @endif
+                                <div class="d-flex gap-2">
+                                    <input type="text" class="form-control form-control-sm" wire:model="newGlobalDeductionCategoryName" placeholder="Nama kelompok (Cth: Sanksi Lapangan)">
+                                    <button class="btn btn-sm btn-danger text-nowrap" wire:click="addGlobalDeductionCategory">
+                                        <i class="ti ti-plus me-1"></i> Kelompok
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {{-- ========== END PENGURANGAN GLOBAL ========== --}}
                 </div>
             </div>
         </div>
@@ -403,7 +542,7 @@
                     <h6 class="fw-semibold text-primary"><i class="ti ti-info-circle me-1"></i> Petunjuk Pengisian Skor</h6>
                     <p class="fs-2 mb-0">Isi opsi nilai secara manual dengan pemisah koma (,). Kustomisasi ini membebaskan penilaian Anda, misal: <br><code>1, 2, 3, 4, 5</code> atau <br><code>50, 60, 70, 80, 90, 100</code>.</p>
                     <hr class="my-2">
-                    <p class="fs-2 mb-0 text-danger"><i class="ti ti-minus-circle me-1"></i> Pengurangan nilai hanya mempengaruhi kategori penilaian tempat ia dibuat, bukan total keseluruhan.</p>
+                    <p class="fs-2 mb-0 text-danger"><i class="ti ti-minus-circle me-1"></i> Pengurangan di dalam kategori hanya memotong kolom kategori itu. Pengurangan di luar kolom kategori diatur sebagai <strong>Pengurangan Nilai Global</strong> di bagian bawah.</p>
                 </div>
             </div>
 

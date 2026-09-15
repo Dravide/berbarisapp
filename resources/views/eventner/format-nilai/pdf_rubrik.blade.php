@@ -55,6 +55,7 @@
 
         /* PENGURANGAN */
         .deduction-head { background: #fde8e8; padding: 4px 10px; font-size: 8px; font-weight: bold; color: #b00020; text-transform: uppercase; letter-spacing: 0.5px; border-left: 1px solid #f5c6c6; border-right: 1px solid #f5c6c6; }
+.global-note { padding: 4px 10px 6px; font-size: 8px; color: #7f1d1d; font-style: italic; border-left: 1px solid #f5c6c6; border-right: 1px solid #f5c6c6; margin: 0 0 6px; }
         table.ded { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
         table.ded th { background: #fdf2f2; padding: 4px 8px; font-size: 7px; font-weight: bold; text-transform: uppercase; color: #b00020; text-align: left; border: 1px solid #f5c6c6; }
         table.ded td { padding: 4px 8px; border: 1px solid #f5c6c6; font-size: 10px; }
