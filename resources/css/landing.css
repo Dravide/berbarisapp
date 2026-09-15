@@ -150,6 +150,20 @@
         @apply inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary;
     }
 
+    /* Event yang sudah terlaksana — dibedakan dari yang masih akan datang */
+    .chip-past {
+        @apply inline-flex items-center rounded-full bg-cool-gray/20 px-3 py-1 text-xs font-semibold text-on-surface-variant;
+    }
+    .card-past {
+        @apply opacity-75;
+    }
+    .card-past .card-past-media {
+        @apply grayscale;
+    }
+    .card-past .card-past-title {
+        @apply text-on-surface-variant;
+    }
+
     /* Input fields */
     .field-input {
         @apply rounded-md border border-cool-gray/40 bg-surface-container-lowest px-4 py-2.5 text-sm text-on-surface transition focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15;

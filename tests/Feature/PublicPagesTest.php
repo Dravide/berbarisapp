@@ -49,6 +49,56 @@ class PublicPagesTest extends TestCase
         $this->assertStringContainsString('07 Okt 2026', $html);
     }
 
+    /** Event yang sudah selesai ditandai "Terlaksana" dan kartunya diredam. */
+    public function test_penyelenggara_menandai_event_terlaksana()
+    {
+        $eventner = Eventner::factory()->create([
+            'status' => 'approved',
+            'nama_event' => 'Lomba Lampau',
+            'tanggal' => now()->subMonths(2)->toDateString(),
+            'tanggal_akhir' => null,
+        ]);
+
+        $html = $this->penyelenggaraSection($this->get('/')->getContent());
+
+        $this->assertStringContainsString('Terlaksana', $html);
+        $this->assertStringContainsString('chip-past', $html);
+        $this->assertStringContainsString('card-past', $html);
+        $this->assertStringContainsString('Lihat Hasil', $html);
+    }
+
+    /** Event yang belum lewat tidak boleh ikut ditandai. */
+    public function test_penyelenggara_tidak_menandai_event_akan_datang()
+    {
+        Eventner::factory()->create([
+            'status' => 'approved',
+            'tanggal' => now()->addMonths(2)->toDateString(),
+            'tanggal_akhir' => null,
+        ]);
+
+        $html = $this->penyelenggaraSection($this->get('/')->getContent());
+
+        $this->assertStringNotContainsString('Terlaksana', $html);
+        $this->assertStringContainsString('Lihat Event', $html);
+    }
+
+    /**
+     * Tanggal akhir yang masih hari ini belum dihitung terlaksana — event
+     * sehari tidak boleh berubah jadi "Terlaksana" begitu lewat tengah malam.
+     */
+    public function test_penyelenggara_memakai_tanggal_akhir_sebagai_penentu()
+    {
+        Eventner::factory()->create([
+            'status' => 'approved',
+            'tanggal' => now()->subDays(3)->toDateString(),
+            'tanggal_akhir' => now()->addDay()->toDateString(),
+        ]);
+
+        $html = $this->penyelenggaraSection($this->get('/')->getContent());
+
+        $this->assertStringNotContainsString('Terlaksana', $html);
+    }
+
     /** Potongan markup <section id="eventners"> dari HTML halaman landing. */
     private function penyelenggaraSection(string $html): string
     {

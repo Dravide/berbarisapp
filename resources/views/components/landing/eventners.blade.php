@@ -13,9 +13,15 @@
 
         <div class="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             @foreach($eventners as $eventner)
-            <div class="surface-card surface-card-hover group flex flex-col overflow-hidden p-0">
+            {{-- Event yang tanggal akhirnya sudah lewat ditandai "Terlaksana":
+                 poster diredam, kartu diredupkan, dan tautannya jadi "Lihat Hasil". --}}
+            @php
+                $tanggalSelesai = $eventner->tanggal_akhir ?: $eventner->tanggal;
+                $sudahTerlaksana = $tanggalSelesai && \Carbon\Carbon::parse($tanggalSelesai)->endOfDay()->isPast();
+            @endphp
+            <div class="surface-card surface-card-hover group flex flex-col overflow-hidden p-0 {{ $sudahTerlaksana ? 'card-past' : '' }}">
                 {{-- Poster banner --}}
-                <a href="{{ event_url($eventner, 'detail') }}" class="relative block aspect-[4/3] overflow-hidden">
+                <a href="{{ event_url($eventner, 'detail') }}" class="card-past-media relative block aspect-[4/3] overflow-hidden">
                     @if($eventner->poster)
                         <img src="{{ Storage::url($eventner->poster) }}" alt="{{ $eventner->nama_event }}" class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
                     @else
@@ -28,11 +34,15 @@
                     @if($eventner->tingkat_perlombaan)
                     <span class="chip absolute left-3 top-3 backdrop-blur">{{ $eventner->tingkat_perlombaan }}</span>
                     @endif
+                    @if($sudahTerlaksana)
+                    {{-- Ditandai di kanan supaya tidak menutup chip tingkat perlombaan. --}}
+                    <span class="chip-past absolute right-3 top-3 backdrop-blur">Terlaksana</span>
+                    @endif
                 </a>
 
                 {{-- Body --}}
                 <div class="flex flex-1 flex-col p-5">
-                    <h3 class="text-base font-bold leading-snug text-deep-slate transition-colors duration-200 group-hover:text-primary">{{ $eventner->nama_event }}</h3>
+                    <h3 class="card-past-title text-base font-bold leading-snug text-deep-slate transition-colors duration-200 group-hover:text-primary">{{ $eventner->nama_event }}</h3>
                     <p class="mt-1 text-xs text-on-surface-variant">{{ $eventner->diselenggarakan_oleh }}</p>
 
                     <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-outline-variant/50 pt-3 text-xs text-on-surface-variant">
@@ -56,7 +66,7 @@
                     </div>
 
                     <a href="{{ event_url($eventner, 'detail') }}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary transition group-hover:gap-2">
-                        Lihat Event
+                        {{ $sudahTerlaksana ? 'Lihat Hasil' : 'Lihat Event' }}
                         <i class="ti ti-arrow-right"></i>
                     </a>
                 </div>
