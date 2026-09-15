@@ -33,11 +33,11 @@
                         </div>
                     @else
                         <div class="table-responsive">
-                            <table class="table align-middle mb-0">
+                            <table class="table align-middle mb-0 w-100">
                                 <thead class="table-light">
                                     <tr>
                                         <th class="ps-0 border-0 fw-semibold text-dark">Nama Tempat</th>
-                                        <th class="border-0 fw-semibold text-dark">Alamat</th>
+                                        <th class="border-0 fw-semibold text-dark" style="width: 240px;">Alamat</th>
                                         <th class="border-0 fw-semibold text-dark text-center">Dipakai</th>
                                         <th class="border-0 fw-semibold text-dark">Tiket</th>
                                         <th class="border-0 fw-semibold text-dark">Gerbang</th>
@@ -60,9 +60,10 @@
                                                     <span class="fs-2 text-muted">Belum ada link peta</span>
                                                 @endif
                                             </td>
-                                            <td>
+                                            {{-- Kolom alamat dikunci lebarnya: alamat panjang dipotong, teks penuh di title. --}}
+                                            <td style="max-width: 240px;">
                                                 @if($venue->alamat)
-                                                    <span class="text-dark">{{ $venue->alamat }}</span>
+                                                    <div class="text-dark text-truncate" title="{{ $venue->alamat }}">{{ $venue->alamat }}</div>
                                                 @else
                                                     <span class="text-muted">&mdash;</span>
                                                 @endif
