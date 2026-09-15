@@ -71,8 +71,10 @@ class LandingPage extends Component
 
     public function render()
     {
+        // Urut tanggal pelaksanaan, bukan tanggal dibuat — penyelenggara yang
+        // eventnya paling dekat tampil di depan, bukan yang paling baru daftar.
         $eventners = Eventner::withCount('registrations')
-            ->orderBy('created_at', 'desc')
+            ->orderBy('tanggal')
             ->limit(12)
             ->get();
 
