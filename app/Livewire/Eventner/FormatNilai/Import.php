@@ -257,11 +257,12 @@ class Import extends Component
                     $dedCat = DeductionCategory::create([
                         'eventner_id' => $eventnerId,
                         'assessment_category_id' => $assessmentCategoryId,
-                        // File Excel tidak punya cara menyatakan "berlaku semua
-                        // tingkat lomba" — tiap baris Pengurangan selalu menempel
-                        // pada kategori rubrik aktif. Ditulis eksplisit supaya
-                        // perilakunya terkunci; pengurangan global dibuat manual
-                        // di Builder.
+                        // File Excel tidak punya cara menyatakan "berlaku untuk
+                        // seluruh kategori di tingkat ini" — tiap baris
+                        // Pengurangan selalu menempel pada kategori rubrik
+                        // aktif. Ditulis eksplisit supaya perilakunya terkunci;
+                        // pengurangan tingkat dibuat manual di Builder.
+                        'competition_category_id' => $targetCompetitionCategoryId,
                         'scope' => DeductionCategory::SCOPE_CATEGORY,
                         'name' => strip_tags($dedGroup['name']),
                         'sort_order' => $dedMaxOrder + 1,

@@ -317,8 +317,12 @@
             @endif
         @endforeach
 
-        {{-- 2. Pengurangan Umum (Tanpa Kategori) --}}
-        @php $generalDeds = $deductionCategories->whereNull('assessment_category_id'); @endphp
+        {{-- 2. Pengurangan Tingkat (semua kategori penilaian di tingkat ini) --}}
+        @php
+            $generalDeds = $deductionCategories
+                ->where('scope', \App\Models\DeductionCategory::SCOPE_GLOBAL)
+                ->where('competition_category_id', $registration->competition_category_id);
+        @endphp
         @if($generalDeds->isNotEmpty())
             @foreach($generalDeds as $deductionCat)
                 @if($deductionCat->criterias->isNotEmpty())
@@ -335,7 +339,7 @@
                         <table class="krit">
                             <thead>
                                 <tr>
-                                    <th style="color:#c0392b;">{{ $deductionCat->name }} (Umum)</th>
+                                    <th style="color:#c0392b;">{{ $deductionCat->name }} (Tingkat)</th>
                                     <th style="width:80px; text-align:center;">Pengurangan</th>
                                 </tr>
                             </thead>

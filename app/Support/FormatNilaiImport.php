@@ -14,9 +14,9 @@ namespace App\Support;
  * - Baris kosong / Tipe tak dikenal → dilewati (dictatat sebagai error baris).
  *
  * Batasan: jalur import ini selalu menghasilkan pengurangan scope 'category'.
- * Tidak ada kolom di file yang bisa menyatakan kelompok "berlaku semua tingkat
- * lomba" (scope 'global'); kelompok seperti itu hanya bisa dibuat manual di
- * halaman Format Nilai.
+ * Tidak ada kolom di file yang bisa menyatakan kelompok "berlaku untuk semua
+ * kategori penilaian di tingkat ini" (scope 'global'); kelompok seperti itu
+ * hanya bisa dibuat manual di halaman Format Nilai.
  *
  * Label & skor dipisah menjadi kolom berpasangan. Untuk tiap pasangan:
  *   - Label kosong → skor polos (mis. "5").

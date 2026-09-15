@@ -442,13 +442,14 @@
                                         @endif
                                     @endforeach
 
-                                    {{-- Pengurangan global: sanksi yang berlaku semua tingkat
-                                         lomba. Memotong NILAI AKHIR, di luar kolom kategori. --}}
+                                    {{-- Pengurangan tingkat: sanksi yang berlaku untuk semua
+                                         kategori penilaian di tingkat lomba peserta ini. Memotong
+                                         NILAI AKHIR, di luar kolom kategori. --}}
                                     @if(count($globalDeductionCategories) > 0)
                                         <div class="border-top pt-3 mt-3">
                                             <p class="text-danger small fw-semibold text-uppercase mb-2">
-                                                <i class="ti ti-world me-1"></i> Pengurangan Global
-                                                <span class="badge bg-danger-subtle text-danger ms-1">semua tingkat lomba</span>
+                                                <i class="ti ti-world me-1"></i> Pengurangan Tingkat
+                                                <span class="badge bg-danger-subtle text-danger ms-1">semua kategori di tingkat ini</span>
                                             </p>
                                             @foreach($globalDeductionCategories as $deductionCat)
                                                 <p class="text-muted small fw-bold mb-2">{{ $deductionCat->name }}</p>
@@ -520,7 +521,7 @@
                                             <span class="fw-semibold {{ $totalDeductionsKategori > 0 ? 'text-danger' : 'text-white text-opacity-50' }}">-{{ $totalDeductionsKategori }}</span>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <span class="small">Pengurangan Global</span>
+                                            <span class="small">Pengurangan Tingkat</span>
                                             <span class="fw-semibold {{ $totalDeductionsGlobal > 0 ? 'text-danger' : 'text-white text-opacity-50' }}">-{{ $totalDeductionsGlobal }}</span>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center pt-2 border-top border-light">

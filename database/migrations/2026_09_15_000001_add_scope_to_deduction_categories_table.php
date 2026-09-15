@@ -11,8 +11,10 @@ return new class extends Migration
      *
      * - 'category' (default, perilaku lama): menempel pada satu Kategori
      *   Penilaian dan hanya memotong kolom kategori itu.
-     * - 'global': berlaku untuk semua tingkat lomba, tidak menempel pada
-     *   kategori mana pun, dan memotong NILAI AKHIR di luar kolom kategori.
+     * - 'global': berlaku untuk semua kategori penilaian di dalam SATU tingkat
+     *   lomba (lihat competition_category_id di migrasi 2026_09_15_000002),
+     *   tidak menempel pada kategori penilaian mana pun, dan memotong NILAI
+     *   AKHIR di luar kolom kategori.
      *
      * Tidak bisa hanya mengandalkan assessment_category_id NULL sebagai
      * penanda, karena NULL sudah punya arti lain: baris lama yang belum

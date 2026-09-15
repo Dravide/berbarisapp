@@ -69,10 +69,12 @@ class ChampionCategoryController extends Controller
             abort(404, 'Kategori juara tidak ditemukan.');
         }
 
-        // Ambil data deduction
+        // Ambil data deduction. Pengurangan ber-scope 'global' hanya berlaku di
+        // tingkat lombanya sendiri.
         $allDeductions = ScoreDeduction::where('eventner_id', $eventner->id)
             ->get()
             ->groupBy('registration_id');
+        $deductionLevelMap = \App\Models\DeductionCategory::levelMapOfCriteria($eventner->id);
 
         // Ambil semua kriteria beserta bobotnya untuk menghitung other_total
         $allCriteriaWeightMap = AssessmentCriteria::whereIn(
@@ -127,7 +129,8 @@ class ChampionCategoryController extends Controller
                 $participants,
                 $allScores,
                 $allDeductions,
-                $allCriteriaWeightMap
+                $allCriteriaWeightMap,
+                $deductionLevelMap
             );
         }
 
@@ -213,6 +216,7 @@ class ChampionCategoryController extends Controller
      * @param  Collection<string, Collection<int, AssessmentScore>>  $allScores
      * @param  Collection<string, Collection<int, ScoreDeduction>>  $allDeductions
      * @param  array<int, int|float|null>  $allCriteriaWeightMap
+     * @param  array<int, int|null>  $deductionLevelMap  tingkat lomba tiap kriteria pengurangan ber-scope 'global'
      * @return array<int, array<string, mixed>>
      */
     private function rankParticipants(
@@ -220,7 +224,8 @@ class ChampionCategoryController extends Controller
         Collection $participants,
         Collection $allScores,
         Collection $allDeductions,
-        array $allCriteriaWeightMap
+        array $allCriteriaWeightMap,
+        array $deductionLevelMap = []
     ): array {
         $criteriaMap = [];
         foreach ($champion->assessmentSubCategories as $sub) {
@@ -256,8 +261,12 @@ class ChampionCategoryController extends Controller
                 }
             }
 
-            $deductions = $allDeductions->get($participant->id, collect());
             // abs() per-baris: opsi pengurangan bisa tersimpan -5 maupun 5.
+            $deductions = \App\Models\DeductionCategory::applicableToLevel(
+                $allDeductions->get($participant->id, collect()),
+                $participant->competition_category_id,
+                $deductionLevelMap
+            );
             $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 
             $participantScores[] = [

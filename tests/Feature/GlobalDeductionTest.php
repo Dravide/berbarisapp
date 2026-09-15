@@ -22,13 +22,15 @@ use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
- * Pengurangan Nilai Global di Struktur Rubrik Penilaian.
+ * Pengurangan Nilai Tingkat di Struktur Rubrik Penilaian.
  *
  * Sanksi seperti keterlambatan atau pelanggaran disiplin berlaku untuk semua
- * tingkat lomba, jadi tidak bisa dibuat menempel pada satu kategori penilaian
- * saja. Kelompok ber-scope 'global' tidak menempel ke kategori mana pun:
- * potongannya mengurangi NILAI AKHIR di luar kolom kategori, dan tetap ikut
- * pemecah seri juara.
+ * kategori penilaian DI SATU TINGKAT LOMBA, jadi tidak bisa dibuat menempel
+ * pada satu kategori penilaian saja. Kelompok ber-scope 'global' tidak
+ * menempel ke kategori penilaian mana pun, tetapi terikat pada satu tingkat
+ * lomba (competition_category_id): potongannya mengurangi NILAI AKHIR di luar
+ * kolom kategori, ikut pemecah seri juara, dan TIDAK boleh menyentuh peserta
+ * tingkat lain.
  */
 class GlobalDeductionTest extends TestCase
 {
@@ -87,10 +89,12 @@ class GlobalDeductionTest extends TestCase
             'nama_sekolah' => 'SMP Global',
         ]);
 
-        // Kelompok pengurangan global: tidak menempel ke kategori mana pun.
+        // Kelompok pengurangan tingkat: tidak menempel ke kategori penilaian
+        // mana pun, tetapi milik satu tingkat lomba.
         $this->globalCat = DeductionCategory::create([
             'eventner_id' => $this->eventner->id,
             'assessment_category_id' => null,
+            'competition_category_id' => $this->lomba->id,
             'scope' => DeductionCategory::SCOPE_GLOBAL,
             'name' => 'Sanksi Lapangan',
             'sort_order' => 1,
@@ -136,8 +140,11 @@ class GlobalDeductionTest extends TestCase
             ->call('selectParticipant', $this->reg->id);
     }
 
-    /** Builder menyimpan kelompok global tanpa menempel ke kategori mana pun. */
-    public function test_builder_membuat_kelompok_global_tanpa_kategori()
+    /**
+     * Builder menyimpan kelompok tingkat: tidak menempel ke kategori
+     * penilaian mana pun, tetapi terikat pada tingkat lomba aktif.
+     */
+    public function test_builder_membuat_kelompok_tingkat_tanpa_kategori_penilaian()
     {
         Livewire::test(Builder::class)
             ->set('newGlobalDeductionCategoryName', 'Atribut Tidak Lengkap')
@@ -149,7 +156,31 @@ class GlobalDeductionTest extends TestCase
 
         $this->assertSame(DeductionCategory::SCOPE_GLOBAL, $cat->scope);
         $this->assertNull($cat->assessment_category_id);
+        $this->assertSame(
+            $this->lomba->id,
+            $cat->competition_category_id,
+            'Kelompok tingkat harus terikat pada tingkat lomba yang sedang dipilih.'
+        );
         $this->assertTrue($cat->isGlobal());
+    }
+
+    /**
+     * Tanpa "Tambah" apa pun, tab "Semua Tingkat" harus tetap menghasilkan
+     * kelompok yang punya tingkat — bukan kelompok tanpa tingkat yang tidak
+     * akan pernah tampil di panel Input Nilai.
+     */
+    public function test_builder_mengisi_tingkat_saat_tab_semua_tingkat()
+    {
+        Livewire::test(Builder::class)
+            ->set('activeTab', '')
+            ->set('newGlobalDeductionCategoryName', 'Sanksi Umum')
+            ->call('addGlobalDeductionCategory');
+
+        $cat = DeductionCategory::where('eventner_id', $this->eventner->id)
+            ->where('name', 'Sanksi Umum')
+            ->firstOrFail();
+
+        $this->assertNotNull($cat->competition_category_id);
     }
 
     /** Nama kelompok global wajib diisi — tidak boleh tersimpan kosong. */
@@ -163,22 +194,78 @@ class GlobalDeductionTest extends TestCase
         $this->assertSame(1, DeductionCategory::global()->count());
     }
 
-    /** Kelompok global tidak muncul sebagai pengurangan per kategori. */
+    /** Kelompok tingkat tidak muncul sebagai pengurangan per kategori. */
     public function test_kelompok_global_tidak_terbaca_sebagai_per_kategori()
     {
         $this->assertSame(0, DeductionCategory::category()->count());
         $this->assertSame(1, DeductionCategory::global()->count());
     }
 
-    /** Panel input nilai memuat kelompok global walaupun tidak menempel kategori. */
-    public function test_panel_operator_menampilkan_pengurangan_global()
+    /** Panel input nilai memuat kelompok tingkat walaupun tidak menempel kategori. */
+    public function test_panel_operator_menampilkan_pengurangan_tingkat()
     {
         $this->panel()
-            ->assertSee('Pengurangan Global')
+            ->assertSee('Pengurangan Tingkat')
             ->assertSee('Terlambat masuk lapangan');
     }
 
-    /** Nilai pengurangan global tersimpan lewat jalur yang sama. */
+    /**
+     * Inti koreksi: sanksi satu tingkat lomba tidak boleh muncul — apalagi
+     * memotong nilai — peserta tingkat lomba lain.
+     */
+    public function test_kelompok_tingkat_tidak_bocor_ke_tingkat_lain()
+    {
+        $lombaLain = CompetitionCategory::factory()->child(
+            CompetitionCategory::find($this->lomba->parent_id)
+        )->for($this->eventner, 'eventner')->create(['name' => 'PBB Putri']);
+
+        $regLain = Registration::factory()->for($this->eventner, 'eventner')->create([
+            'competition_category_id' => $lombaLain->id,
+            'nama_sekolah' => 'SMP Tingkat Lain',
+        ]);
+
+        // Panel peserta tingkat ini: kelompoknya tampil.
+        $this->panel()->assertSee('Terlambat masuk lapangan');
+
+        // Panel peserta tingkat lain: kelompok tingkat pertama tidak ikut.
+        Livewire::test(ScoringIndex::class)
+            ->call('selectCategory', $lombaLain->id)
+            ->call('selectParticipant', $regLain->id)
+            ->assertDontSee('Terlambat masuk lapangan')
+            ->assertDontSee('Pengurangan Tingkat');
+    }
+
+    /** Ketentuan tingkat juga berlaku di rekapitulasi nilai. */
+    public function test_rekap_tidak_memotong_peserta_tingkat_lain()
+    {
+        $lombaLain = CompetitionCategory::factory()->child(
+            CompetitionCategory::find($this->lomba->parent_id)
+        )->for($this->eventner, 'eventner')->create(['name' => 'PBB Putri']);
+
+        $regLain = Registration::factory()->for($this->eventner, 'eventner')->create([
+            'competition_category_id' => $lombaLain->id,
+            'nama_sekolah' => 'SMP Tingkat Lain',
+        ]);
+
+        $this->nilai(80);
+        ScoreDeduction::create([
+            'eventner_id' => $this->eventner->id,
+            'registration_id' => $regLain->id,
+            'deduction_criteria_id' => $this->globalKrit->id,
+            'amount' => -40,
+        ]);
+
+        $komponen = Livewire::test(\App\Livewire\Eventner\ScoreRecap\Index::class)
+            ->call('selectCategory', $lombaLain->id);
+
+        $baris = collect($komponen->viewData('scoringData'))->firstWhere('participant.id', $regLain->id);
+
+        $this->assertNotNull($baris);
+        $this->assertEquals(0, $baris['globalDeduction'], 'Sanksi tingkat lain tidak boleh memotong.');
+        $this->assertEquals(0, $baris['totalDeduction']);
+    }
+
+    /** Nilai pengurangan tingkat tersimpan lewat jalur yang sama. */
     public function test_nilai_pengurangan_global_tersimpan()
     {
         $this->panel()
@@ -192,7 +279,7 @@ class GlobalDeductionTest extends TestCase
     }
 
     /**
-     * Inti permintaan: pengurangan global memotong NILAI AKHIR, tetapi nilai
+     * Inti permintaan: pengurangan tingkat memotong NILAI AKHIR, tetapi nilai
      * kolom kategori tidak berubah — sanksinya tidak menyentuh rubrik.
      */
     public function test_global_memotong_nilai_akhir_tanpa_menyentuh_kolom_kategori()
@@ -204,7 +291,7 @@ class GlobalDeductionTest extends TestCase
             ->html();
 
         // NILAI AKHIR = 80 - 15 = 65, tapi Nilai Juri tetap 80.
-        $this->assertStringContainsString('Pengurangan Global', $html);
+        $this->assertStringContainsString('Pengurangan Tingkat', $html);
         $this->assertStringContainsString('Pengurangan Kategori', $html);
 
         $komponen = $this->panel()->set("deductions.{$this->globalKrit->id}", -15);
@@ -240,7 +327,7 @@ class GlobalDeductionTest extends TestCase
         $this->assertEquals(35, $komponen->viewData('totalDeductions'));
     }
 
-    /** Rekapitulasi ikut memotong nilai akhir dengan pengurangan global. */
+    /** Rekapitulasi ikut memotong nilai akhir dengan pengurangan tingkat. */
     public function test_rekap_memasukkan_global_ke_total_pengurangan()
     {
         $this->nilai(80);
@@ -264,8 +351,8 @@ class GlobalDeductionTest extends TestCase
     }
 
     /**
-     * Pengurangan global ikut pemecah seri juara: dua peserta bernilai sama,
-     * yang kena sanksi global berperingkat lebih bawah.
+     * Pengurangan tingkat ikut pemecah seri juara: dua peserta bernilai sama,
+     * yang kena sanksi berperingkat lebih bawah.
      */
     public function test_global_ikut_pemecah_seri_juara()
     {
@@ -274,7 +361,7 @@ class GlobalDeductionTest extends TestCase
             'nama_sekolah' => 'SMP Bersih',
         ]);
 
-        // Peserta utama bernilai sama, tapi kena sanksi global.
+        // Peserta utama bernilai sama, tapi kena sanksi tingkat.
         $this->nilai(100);
         AssessmentScore::create([
             'eventner_id' => $this->eventner->id,
@@ -303,8 +390,54 @@ class GlobalDeductionTest extends TestCase
         $this->assertSame(
             'SMP Bersih',
             $winners[0]['registration']->nama_sekolah,
-            'Peserta tanpa sanksi global harus menang saat nilainya seri.'
+            'Peserta tanpa sanksi tingkat harus menang saat nilainya seri.'
         );
+    }
+
+    /**
+     * Pemecah seri juara juga tidak boleh menghitung sanksi tingkat lain —
+     * bila bocor, peserta tingkat lain yang bersih bisa tergeser.
+     */
+    public function test_pemecah_seri_juara_tidak_terpengaruh_sanksi_tingkat_lain()
+    {
+        $lombaLain = CompetitionCategory::factory()->child(
+            CompetitionCategory::find($this->lomba->parent_id)
+        )->for($this->eventner, 'eventner')->create(['name' => 'PBB Putri']);
+
+        $regLain = Registration::factory()->for($this->eventner, 'eventner')->create([
+            'competition_category_id' => $lombaLain->id,
+            'nama_sekolah' => 'SMP Tingkat Lain',
+        ]);
+
+        // Sanksi milik tingkat lain ditempelkan ke peserta tingkat ini.
+        ScoreDeduction::create([
+            'eventner_id' => $this->eventner->id,
+            'registration_id' => $this->reg->id,
+            'deduction_criteria_id' => $this->globalKrit->id,
+            'amount' => -40,
+        ]);
+
+        $this->assertEquals(
+            0,
+            DeductionCategory::applicableToLevel(
+                ScoreDeduction::where('registration_id', $this->reg->id)->get(),
+                $lombaLain->id,
+                DeductionCategory::levelMapOfCriteria($this->eventner->id)
+            )->sum(fn ($d) => $d->magnitude),
+            'Sanksi tingkat PBB Beregu bukan milik PBB Putri.'
+        );
+
+        $this->assertEquals(
+            40,
+            DeductionCategory::applicableToLevel(
+                ScoreDeduction::where('registration_id', $this->reg->id)->get(),
+                $this->lomba->id,
+                DeductionCategory::levelMapOfCriteria($this->eventner->id)
+            )->sum(fn ($d) => $d->magnitude),
+            'Sanksi tingkat PBB Beregu tetap berlaku di tingkatnya sendiri.'
+        );
+
+        $this->assertNotNull($regLain->id);
     }
 
     /**

@@ -73,6 +73,10 @@ class EventResult extends Component
             ->get()
             ->groupBy('registration_id');
 
+        // Pengurangan ber-scope 'global' hanya berlaku di tingkat lombanya
+        // sendiri — sanksi tingkat lain tidak boleh ikut terpotong.
+        $deductionLevelMap = \App\Models\DeductionCategory::levelMapOfCriteria($this->eventner->id);
+
         $allCriteriaWeightMap = \App\Models\AssessmentCriteria::whereIn(
             'assessment_sub_category_id',
             \App\Models\AssessmentSubCategory::whereIn(
@@ -123,6 +127,11 @@ class EventResult extends Component
                 }
 
                 $deductions = $allDeductions->get($participant->id, collect());
+                $deductions = \App\Models\DeductionCategory::applicableToLevel(
+                    $deductions,
+                    $participant->competition_category_id,
+                    $deductionLevelMap
+                );
                 $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 
                 $participantScores[] = [

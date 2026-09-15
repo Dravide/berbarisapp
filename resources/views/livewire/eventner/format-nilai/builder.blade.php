@@ -369,23 +369,26 @@
                         </div>
                     @endif
 
-                    {{-- ========== PENGURANGAN NILAI GLOBAL ==========
+                    {{-- ========== PENGURANGAN NILAI TINGKAT ==========
                          Sengaja di luar loop kategori: sanksi seperti keterlambatan
-                         atau pelanggaran disiplin berlaku untuk semua tingkat lomba,
-                         jadi tidak masuk akal bila harus diketik ulang di tiap
-                         kategori. Potongannya memotong NILAI AKHIR, di luar kolom
-                         PBB/Formasi/dll. --}}
+                         atau pelanggaran disiplin berlaku untuk semua kategori
+                         penilaian DI TINGKAT INI, jadi tidak masuk akal bila harus
+                         diketik ulang di tiap kategori. Potongannya memotong NILAI
+                         AKHIR, di luar kolom PBB/Formasi/dll, dan hanya menyentuh
+                         peserta yang mendaftar di tingkat ini. --}}
                     <div class="card w-100 mt-4 border border-danger">
                         <div class="card-header bg-danger-subtle d-flex justify-content-between align-items-center">
                             <h5 class="mb-0 fw-semibold text-danger">
-                                <i class="ti ti-minus-circle me-1"></i> Pengurangan Nilai Global
+                                <i class="ti ti-minus-circle me-1"></i> Pengurangan Nilai Tingkat
                             </h5>
-                            <span class="badge bg-danger">berlaku semua tingkat lomba</span>
+                            <span class="badge bg-danger">semua kategori penilaian di tingkat ini</span>
                         </div>
                         <div class="card-body p-4">
                             <p class="fs-2 text-muted mb-3">
-                                Tidak menempel ke kategori mana pun. Memotong <strong>NILAI AKHIR</strong> langsung,
-                                di luar kolom PBB/Formasi/dll, dan ikut diperhitungkan sebagai pemecah seri.
+                                Tidak menempel ke kategori penilaian mana pun, tetapi terikat pada
+                                <strong>tingkat lomba yang sedang dipilih</strong> di tab atas. Memotong
+                                <strong>NILAI AKHIR</strong> langsung, di luar kolom PBB/Formasi/dll, dan ikut
+                                diperhitungkan sebagai pemecah seri.
                             </p>
 
                             @if(session()->has('error'))
@@ -489,11 +492,11 @@
                                     </div>
                                 @endforeach
                             @else
-                                <p class="text-muted fs-3 mb-3"><i>Belum ada pengurangan nilai global.</i></p>
+                                <p class="text-muted fs-3 mb-3"><i>Belum ada pengurangan nilai untuk tingkat ini.</i></p>
                             @endif
 
                             <div class="bg-light p-3 border border-dashed border-danger-subtle">
-                                <h6 class="fs-3 fw-semibold mb-2 text-danger"><i class="ti ti-plus me-1"></i> Tambah Kelompok Pengurangan Global</h6>
+                                <h6 class="fs-3 fw-semibold mb-2 text-danger"><i class="ti ti-plus me-1"></i> Tambah Kelompok Pengurangan Tingkat</h6>
                                 @if(session()->has('error_dedcat_global'))
                                     <div class="text-danger fs-2 mb-2"><i class="ti ti-alert-circle"></i> {{ session('error_dedcat_global') }}</div>
                                 @endif
@@ -506,7 +509,7 @@
                             </div>
                         </div>
                     </div>
-                    {{-- ========== END PENGURANGAN GLOBAL ========== --}}
+                    {{-- ========== END PENGURANGAN TINGKAT ========== --}}
                 </div>
             </div>
         </div>
@@ -542,7 +545,7 @@
                     <h6 class="fw-semibold text-primary"><i class="ti ti-info-circle me-1"></i> Petunjuk Pengisian Skor</h6>
                     <p class="fs-2 mb-0">Isi opsi nilai secara manual dengan pemisah koma (,). Kustomisasi ini membebaskan penilaian Anda, misal: <br><code>1, 2, 3, 4, 5</code> atau <br><code>50, 60, 70, 80, 90, 100</code>.</p>
                     <hr class="my-2">
-                    <p class="fs-2 mb-0 text-danger"><i class="ti ti-minus-circle me-1"></i> Pengurangan di dalam kategori hanya memotong kolom kategori itu. Pengurangan di luar kolom kategori diatur sebagai <strong>Pengurangan Nilai Global</strong> di bagian bawah.</p>
+                    <p class="fs-2 mb-0 text-danger"><i class="ti ti-minus-circle me-1"></i> Pengurangan di dalam kategori hanya memotong kolom kategori itu. Pengurangan yang berlaku untuk seluruh kategori di tingkat lomba ini diatur sebagai <strong>Pengurangan Nilai Tingkat</strong> di bagian bawah.</p>
                 </div>
             </div>
 

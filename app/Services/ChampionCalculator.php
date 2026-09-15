@@ -7,6 +7,7 @@ use App\Models\AssessmentCriteria;
 use App\Models\AssessmentScore;
 use App\Models\AssessmentSubCategory;
 use App\Models\ChampionCategory;
+use App\Models\DeductionCategory;
 use App\Models\Eventner;
 use App\Models\Registration;
 use App\Models\ScoreDeduction;
@@ -71,6 +72,11 @@ class ChampionCalculator
             ->get()
             ->groupBy('registration_id');
 
+        // Pengurangan ber-scope 'global' hanya berlaku di tingkat lombanya
+        // sendiri. Tanpa saringan ini, sanksi siswa tingkat A ikut memotong
+        // nilai peserta tingkat B pada pemecah seri.
+        $deductionLevelMap = DeductionCategory::levelMapOfCriteria($eventner->id);
+
         $participantScores = [];
         foreach ($participants as $participant) {
             $scores = $allScores->get($participant->id, collect());
@@ -95,6 +101,11 @@ class ChampionCalculator
             }
 
             $deductions = $allDeductions->get($participant->id, collect());
+            $deductions = DeductionCategory::applicableToLevel(
+                $deductions,
+                $participant->competition_category_id,
+                $deductionLevelMap
+            );
             $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 
             $participantScores[] = [

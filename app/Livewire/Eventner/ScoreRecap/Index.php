@@ -123,13 +123,16 @@ class Index extends Component
                 ->pluck('category.assessment_category_id', 'id')
                 ->toArray();
 
-            // Pengurangan global tidak menempel pada kolom kategori mana pun,
+            // Pengurangan tingkat tidak menempel pada kolom kategori mana pun,
             // jadi ia tidak muncul di $critToAssessment. Daftar id kriterianya
             // dipakai untuk memisahkannya dari pengurangan per kategori —
-            // nilainya tetap mengurangi NILAI AKHIR.
+            // nilainya tetap mengurangi NILAI AKHIR. Hanya kelompok milik
+            // tingkat yang sedang direkap; sanksi tingkat lain bukan milik
+            // peserta di sini dan tidak boleh ikut memotong.
             $globalCriteriaIds = \App\Models\DeductionCriteria::whereHas('category', function ($q) {
                     $q->where('eventner_id', $this->eventner->id)
-                      ->where('scope', \App\Models\DeductionCategory::SCOPE_GLOBAL);
+                      ->where('scope', \App\Models\DeductionCategory::SCOPE_GLOBAL)
+                      ->forLevel($this->selectedCategoryId);
                 })
                 ->pluck('id')
                 ->flip()
@@ -187,7 +190,7 @@ class Index extends Component
 
                 $finalScore -= $globalDeduction;
 
-                // Total pengurangan = kolom kategori + global, supaya angka di
+                // Total pengurangan = kolom kategori + tingkat, supaya angka di
                 // kolom Pengurangan cocok dengan selisih grandTotal - finalScore.
                 $totalDeduction = array_sum($deductionByCat) - $globalDeduction; // negatif
 

@@ -3,6 +3,7 @@
 namespace App\Livewire\Public;
 
 use App\Models\AssessmentScore;
+use App\Models\DeductionCategory;
 use App\Models\Eventner;
 use App\Models\Registration;
 use App\Models\ScoreDeduction;
@@ -92,9 +93,15 @@ class EventResultDetail extends Component
         // Potongan nilai. Pakai magnitude, bukan kolom amount mentah: tanda di
         // DB tidak dipercaya (operator bisa mengetik -5 atau 5), dan amount
         // positif akan MENAMBAH skor kalau dijumlahkan langsung.
-        $deductions = ScoreDeduction::where('registration_id', $this->registration->id)
-            ->orderBy('amount')
-            ->get();
+        // Hanya pengurangan yang berlaku untuk tingkat lomba peserta ini —
+        // sanksi tingkat lain tidak ikut memotong rincian nilainya.
+        $deductions = DeductionCategory::applicableToLevel(
+            ScoreDeduction::where('registration_id', $this->registration->id)
+                ->orderBy('amount')
+                ->get(),
+            $this->registration->competition_category_id,
+            DeductionCategory::levelMapOfCriteria($this->eventner->id)
+        );
 
         $grandTotal = array_sum($judgeScores);
         $totalDeduction = (int) $deductions->sum(fn ($d) => $d->magnitude);

@@ -419,10 +419,12 @@ class Index extends Component
                 ->get()
                 ->groupBy('registration_id');
 
-            // Ambil data deduction
+            // Ambil data deduction. Pengurangan ber-scope 'global' hanya
+            // berlaku di tingkat lombanya sendiri.
             $allDeductions = ScoreDeduction::where('eventner_id', $this->eventner->id)
                 ->get()
                 ->groupBy('registration_id');
+            $deductionLevelMap = \App\Models\DeductionCategory::levelMapOfCriteria($this->eventner->id);
 
             // Ambil semua kriteria beserta bobotnya untuk menghitung other_total
             $allCriteriaWeightMap = AssessmentCriteria::whereIn(
@@ -474,7 +476,11 @@ class Index extends Component
                         }
                     }
 
-                    $deductions = $allDeductions->get($participant->id, collect());
+                    $deductions = \App\Models\DeductionCategory::applicableToLevel(
+                        $allDeductions->get($participant->id, collect()),
+                        $participant->competition_category_id,
+                        $deductionLevelMap
+                    );
                     $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 
                     $participantScores[] = [

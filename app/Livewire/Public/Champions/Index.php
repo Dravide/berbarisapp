@@ -73,10 +73,13 @@ class Index extends Component
             ->get()
             ->groupBy('registration_id');
 
-        // Ambil data deduction
+        // Ambil data deduction. Pengurangan ber-scope 'global' hanya berlaku di
+        // tingkat lombanya sendiri — sanksi tingkat lain tidak boleh ikut
+        // terpotong pada pemecah seri.
         $allDeductions = \App\Models\ScoreDeduction::where('eventner_id', $this->eventner->id)
             ->get()
             ->groupBy('registration_id');
+        $deductionLevelMap = \App\Models\DeductionCategory::levelMapOfCriteria($this->eventner->id);
 
         // Ambil semua kriteria beserta bobotnya untuk menghitung other_total
         $allCriteriaWeightMap = \App\Models\AssessmentCriteria::whereIn(
@@ -129,6 +132,11 @@ class Index extends Component
                 }
 
                 $deductions = $allDeductions->get($participant->id, collect());
+                $deductions = \App\Models\DeductionCategory::applicableToLevel(
+                    $deductions,
+                    $participant->competition_category_id,
+                    $deductionLevelMap
+                );
                 $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 
                 $participantScores[] = [

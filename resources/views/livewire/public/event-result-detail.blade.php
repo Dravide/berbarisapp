@@ -216,7 +216,7 @@
                             @foreach($deductions as $d)
                                 <div class="flex items-center justify-between text-xs">
                                     <span class="text-on-surface-variant">{{ $d->note ?: 'Potongan nilai' }}</span>
-                                    <span class="font-semibold text-red-500">-{{ number_format($d->amount, 0) }}</span>
+                                    <span class="font-semibold text-red-500">-{{ number_format($d->magnitude, 0) }}</span>
                                 </div>
                             @endforeach
                         </div>

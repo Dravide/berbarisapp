@@ -130,6 +130,10 @@ class Index extends Component
             ->get()
             ->groupBy('registration_id');
 
+        // Pengurangan ber-scope 'global' hanya berlaku di tingkat lombanya
+        // sendiri — sanksi tingkat lain tidak ikut memotong peringkat.
+        $deductionLevelMap = \App\Models\DeductionCategory::levelMapOfCriteria($this->eventner->id);
+
         // Build criteria filter if champion category is selected
         $criteriaMap = null;
         if ($this->selectedChampionCategoryId && $this->championCategory) {
@@ -160,7 +164,12 @@ class Index extends Component
             }
 
             // Magnitude: tanda di DB tidak dipercaya, selalu dikurangkan.
-            foreach ($allDeductions->get($participant->id, collect()) as $d) {
+            $participantDeductions = \App\Models\DeductionCategory::applicableToLevel(
+                $allDeductions->get($participant->id, collect()),
+                $participant->competition_category_id,
+                $deductionLevelMap
+            );
+            foreach ($participantDeductions as $d) {
                 $total -= $d->magnitude;
             }
 

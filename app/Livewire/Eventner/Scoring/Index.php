@@ -406,13 +406,15 @@ class Index extends Component
             ->orderBy('sort_order')
             ->get();
 
-        // Pengurangan global berlaku semua tingkat lomba, jadi tidak difilter
-        // competition_category_id seperti di atas. Nilainya tetap masuk peta
-        // $this->deductions yang sama — dijumlahkan ke NILAI AKHIR, bukan ke
-        // kolom kategori mana pun.
+        // Pengurangan tingkat: berlaku untuk semua kategori penilaian tetapi
+        // hanya milik SATU tingkat lomba, jadi difilter competition_category_id
+        // peserta ini — sanksi tingkat lain tidak boleh ikut memotong nilainya.
+        // Nilainya tetap masuk peta $this->deductions yang sama, dijumlahkan ke
+        // NILAI AKHIR, bukan ke kolom kategori mana pun.
         $this->globalDeductionCategories = DeductionCategory::with('criterias')
             ->where('eventner_id', $this->eventner->id)
             ->global()
+            ->forLevel($compCategoryId)
             ->orderBy('sort_order')
             ->get();
 

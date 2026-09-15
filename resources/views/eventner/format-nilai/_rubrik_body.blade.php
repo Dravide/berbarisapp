@@ -118,12 +118,13 @@
     </div>
 @endforeach
 
-{{-- Pengurangan global: berlaku semua tingkat lomba, memotong NILAI AKHIR
-     di luar kolom kategori. Ditulis sekali di akhir, bukan per kategori. --}}
+{{-- Pengurangan tingkat: berlaku untuk semua kategori penilaian di tingkat
+     lombanya, memotong NILAI AKHIR di luar kolom kategori. Ditulis sekali di
+     akhir, bukan per kategori. --}}
 @if(($globalDeductionCategories ?? collect())->isNotEmpty())
     <div class="cat-section">
-        <div class="deduction-head">Pengurangan Nilai (Global — Berlaku Semua Tingkat Lomba)</div>
-        <p class="global-note">Tidak menempel pada kategori mana pun — memotong NILAI AKHIR langsung, di luar kolom kategori di atas.</p>
+        <div class="deduction-head">Pengurangan Nilai (Per Tingkat Lomba — Berlaku Semua Kategori Penilaian)</div>
+        <p class="global-note">Terikat pada satu tingkat lomba{{ ($childName ?? null) ? ' (' . $childName . ')' : '' }} — memotong NILAI AKHIR langsung, di luar kolom kategori di atas.</p>
         @foreach($globalDeductionCategories as $deductionCat)
             <div class="sub-head">{{ $deductionCat->name }}</div>
             @if($deductionCat->criterias->isNotEmpty())

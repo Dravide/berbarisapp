@@ -94,10 +94,13 @@ class CertificateController extends Controller
             ->get()
             ->groupBy('registration_id');
 
-        // Get deductions
+        // Get deductions. Pengurangan ber-scope 'global' hanya berlaku di
+        // tingkat lombanya sendiri — jangan sampai sanksi tingkat lain ikut
+        // memotong nilai yang dipakai mengurutkan penerima sertifikat.
         $allDeductions = ScoreDeduction::where('eventner_id', $eventner->id)
             ->get()
             ->groupBy('registration_id');
+        $deductionLevelMap = \App\Models\DeductionCategory::levelMapOfCriteria($eventner->id);
 
         // Calculate rankings
         $participantScores = [];
@@ -124,7 +127,11 @@ class CertificateController extends Controller
                 }
             }
 
-            $deductions = $allDeductions->get($participant->id, collect());
+            $deductions = \App\Models\DeductionCategory::applicableToLevel(
+                $allDeductions->get($participant->id, collect()),
+                $participant->competition_category_id,
+                $deductionLevelMap
+            );
             $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 
             $participantScores[] = [

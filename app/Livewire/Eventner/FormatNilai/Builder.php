@@ -142,9 +142,10 @@ class Builder extends Component
     }
 
     /**
-     * Rubrik pengurangan global — berlaku untuk semua tingkat lomba, tidak
-     * menempel pada kategori penilaian mana pun. Sengaja tidak difilter
-     * activeTab: satu daftar dipakai bersama semua tingkat lomba.
+     * Rubrik pengurangan tingkat — berlaku untuk semua kategori penilaian di
+     * dalam satu tingkat lomba, tidak menempel pada kategori penilaian mana
+     * pun. Difilter activeTab: tiap tingkat punya daftar sanksinya sendiri,
+     * sama seperti rubrik penilaiannya.
      */
     #[Computed]
     public function globalDeductionCategories()
@@ -152,6 +153,7 @@ class Builder extends Component
         return DeductionCategory::with('criterias')
             ->where('eventner_id', $this->eventnerId)
             ->global()
+            ->forLevel($this->activeTab !== '' ? $this->activeTab : null)
             ->orderBy('sort_order')
             ->get();
     }
@@ -876,15 +878,37 @@ class Builder extends Component
     }
 
     // ============================================================
-    // PENGURANGAN GLOBAL — berlaku semua tingkat lomba
+    // PENGURANGAN TINGKAT — berlaku seluruh kategori penilaian satu tingkat
     //
-    // assessment_category_id sengaja NULL: kelompok ini tidak memotong
-    // kolom kategori mana pun, melainkan NILAI AKHIR. Pembedaannya lewat
-    // kolom `scope`, bukan lewat NULL, karena NULL juga dipakai data lama
-    // yang belum ditentukan targetnya.
+    // assessment_category_id sengaja NULL: kelompok ini tidak memotong kolom
+    // kategori mana pun, melainkan NILAI AKHIR. Yang diikat justru tingkat
+    // lombanya (competition_category_id = activeTab), karena sanksi satu
+    // tingkat tidak boleh ikut memotong nilai peserta tingkat lain.
+    // Pembedaannya lewat kolom `scope`, bukan lewat NULL, karena NULL juga
+    // dipakai data lama yang belum ditentukan targetnya.
     // ============================================================
 
     public $newGlobalDeductionCategoryName = '';
+
+    /**
+     * Tingkat lomba yang jadi pemilik kelompok baru.
+     *
+     * activeTab '' berarti tab "Semua Tingkat": tidak ada tingkat yang bisa
+     * dipakai sebagai pemilik, jadi jatuh ke tingkat pertama yang ada. Bila
+     * eventner belum punya tingkat sama sekali, kembalikan null supaya
+     * pemanggil bisa menolak dengan pesan yang jelas — kelompok tanpa tingkat
+     * tidak akan pernah muncul di panel Input Nilai.
+     */
+    private function ownerCompetitionCategoryId()
+    {
+        if ($this->activeTab !== '') {
+            return $this->normalizeActiveTab($this->activeTab);
+        }
+
+        $first = $this->competitionCategories->first();
+
+        return $first ? (string) $first->id : null;
+    }
 
     public function addGlobalDeductionCategory()
     {
@@ -896,11 +920,20 @@ class Builder extends Component
             return;
         }
 
+        $ownerId = $this->ownerCompetitionCategoryId();
+
+        if (! $ownerId) {
+            session()->flash('error_dedcat_global', 'Buat tingkat lomba terlebih dahulu sebelum menambah pengurangan.');
+
+            return;
+        }
+
         $maxOrder = DeductionCategory::where('eventner_id', $this->eventnerId)->global()->max('sort_order') ?? 0;
 
         DeductionCategory::create([
             'eventner_id' => $this->eventnerId,
             'assessment_category_id' => null,
+            'competition_category_id' => $ownerId,
             'scope' => DeductionCategory::SCOPE_GLOBAL,
             'name' => strip_tags($name),
             'sort_order' => $maxOrder + 1,

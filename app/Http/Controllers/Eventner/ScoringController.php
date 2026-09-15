@@ -90,7 +90,7 @@ class ScoringController extends Controller
 
         $deductionCats = DeductionCategory::with('criterias')
             ->where('eventner_id', $eventner->id)
-            ->whereNotNull('assessment_category_id')
+            ->category()
             ->whereIn('assessment_category_id', $assessmentCategoryIds)
             ->get();
         $critToAssessment = [];
@@ -99,6 +99,19 @@ class ScoringController extends Controller
                 $critToAssessment[$c->id] = $dc->assessment_category_id;
             }
         }
+
+        // Pengurangan tingkat: tidak menempel pada kolom kategori mana pun,
+        // tetapi hanya milik tingkat lomba yang sedang direkap. Tanpa saringan
+        // ini, sanksi tingkat lain ikut terpotong dari peserta di sini.
+        $levelDeductionCriteriaIds = DeductionCategory::with('criterias')
+            ->where('eventner_id', $eventner->id)
+            ->global()
+            ->forLevel($categoryId)
+            ->get()
+            ->flatMap->criterias
+            ->pluck('id')
+            ->flip()
+            ->toArray();
         $allDeductions = ScoreDeduction::where('eventner_id', $eventner->id)
             ->whereIn('registration_id', $participants->pluck('id'))
             ->get()
@@ -135,6 +148,14 @@ class ScoringController extends Controller
             $deductionByCat = [];
             $totalDeduction = 0;
             foreach ($participantDeductions as $d) {
+                // Pengurangan tingkat tidak mengisi kolom kategori mana pun —
+                // nilainya hanya masuk total.
+                if (isset($levelDeductionCriteriaIds[$d->deduction_criteria_id])) {
+                    $totalDeduction -= $d->magnitude;
+
+                    continue;
+                }
+
                 $aid = $critToAssessment[$d->deduction_criteria_id] ?? null;
                 if ($aid !== null) {
                     $amt = $d->magnitude;
@@ -351,9 +372,9 @@ class ScoringController extends Controller
             ];
         }
 
-        // Pengurangan (baik menempel pada kategori maupun global).
+        // Pengurangan (baik menempel pada kategori maupun tingkat).
         // Ini halaman rekap per peserta: pengurangan kategori mengisi kolom
-        // kategorinya, pengurangan global tidak menyentuh kolom mana pun —
+        // kategorinya, pengurangan tingkat tidak menyentuh kolom mana pun —
         // keduanya tetap dipotongkan ke total akhir.
         $deductionCategories = DeductionCategory::with(['criterias', 'assessmentCategory'])
             ->where('eventner_id', $eventner->id)
@@ -364,7 +385,8 @@ class ScoringController extends Controller
             ->where('registration_id', $registrationId)
             ->get();
 
-        // Petakan deduction_criteria_id => assessment_category_id
+        // Petakan deduction_criteria_id => assessment_category_id. Pengurangan
+        // tingkat tidak punya kolom kategori, jadi tidak ikut dipetakan.
         $critToAssessment = [];
         foreach ($deductionCategories as $dc) {
             foreach ($dc->criterias as $c) {
