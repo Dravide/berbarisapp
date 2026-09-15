@@ -126,4 +126,38 @@ class EventnerVenueTest extends TestCase
         $this->assertStringContainsString('SMA 1', $html);
         $this->assertStringContainsString('SMA 2', $html);
     }
+
+    /** Detail tempat pindah ke modal — alamat & token gerbang hanya dirender saat dibuka. */
+    public function test_detail_tempat_tampil_di_modal()
+    {
+        [$user, $eventner] = $this->makeEventner();
+
+        $venue = EventnerVenue::factory()->create([
+            'eventner_id' => $eventner->id,
+            'name' => 'SMA 1',
+            'alamat' => 'Jl. Melati No. 3, Bandung',
+        ]);
+
+        Livewire::actingAs($user)->test(VenueIndex::class)
+            ->assertSet('showDetailModal', false)
+            ->call('openDetail', $venue->id)
+            ->assertSet('showDetailModal', true)
+            ->assertSee('Jl. Melati No. 3, Bandung')
+            ->assertSee('Buat token gerbang')
+            ->call('closeDetailModal')
+            ->assertSet('showDetailModal', false);
+    }
+
+    /** Form tidak lagi menetap di halaman — tersembunyi sampai tombol Tambah diklik. */
+    public function test_form_tempat_baru_tampil_setelah_tombol_tambah()
+    {
+        [$user] = $this->makeEventner();
+
+        Livewire::actingAs($user)->test(VenueIndex::class)
+            ->assertSet('showFormModal', false)
+            ->call('create')
+            ->assertSet('showFormModal', true)
+            ->assertSet('isEditMode', false)
+            ->assertSee('Tambah Tempat');
+    }
 }

@@ -28,6 +28,12 @@ class Index extends Component
     public $isEditMode = false;
     public $editingId = null;
 
+    // Modal: form tambah/edit dan panel detail tempat. Detail dipisah dari
+    // tabel supaya kolom tabel tidak melebar oleh alamat & token gerbang.
+    public $showFormModal = false;
+    public $showDetailModal = false;
+    public $detailId = null;
+
     protected $eventnerId;
 
     public function boot()
@@ -102,6 +108,7 @@ class Index extends Component
         }
 
         $this->resetForm();
+        $this->showFormModal = false;
         $this->dispatch('$refresh');
     }
 
@@ -118,6 +125,49 @@ class Index extends Component
         $this->is_active = $venue->is_active;
         $this->ticket_kuota = $venue->ticket_kuota === null ? '' : (string) $venue->ticket_kuota;
         $this->ticket_price = $venue->ticket_price === null ? '' : (string) $venue->ticket_price;
+
+        $this->showDetailModal = false;
+        $this->detailId = null;
+        $this->showFormModal = true;
+    }
+
+    /** Form dipindah ke modal, jadi tombol "Tambah Tempat" harus membukanya. */
+    public function create()
+    {
+        $this->resetForm();
+        $this->showFormModal = true;
+    }
+
+    public function openDetail($id)
+    {
+        $venue = EventnerVenue::where('eventner_id', $this->eventnerId)->findOrFail($id);
+        $this->detailId = $venue->id;
+        $this->showDetailModal = true;
+    }
+
+    public function closeFormModal()
+    {
+        $this->showFormModal = false;
+        $this->resetForm();
+    }
+
+    public function closeDetailModal()
+    {
+        $this->showDetailModal = false;
+        $this->detailId = null;
+    }
+
+    /** Tempat yang sedang dibuka di panel detail (null bila modal tertutup). */
+    #[Computed]
+    public function detailVenue()
+    {
+        if (! $this->detailId) {
+            return null;
+        }
+
+        return EventnerVenue::where('eventner_id', $this->eventnerId)
+            ->withCount('competitionCategories')
+            ->find($this->detailId);
     }
 
     /**
@@ -185,6 +235,7 @@ class Index extends Component
     {
         $this->reset(['name', 'alamat', 'latitude', 'longitude', 'google_maps_url', 'ticket_kuota', 'ticket_price', 'isEditMode', 'editingId']);
         $this->is_active = true;
+        $this->resetValidation();
     }
 
     public function render()
