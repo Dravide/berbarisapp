@@ -218,4 +218,43 @@ class DataSekolah
     {
         return self::PERINGKAT_STATUS[(string) $status] ?? 0;
     }
+
+    /**
+     * Tambahkan magic link tiap sekolah ke hasil `kelompokkan()`.
+     *
+     * Tautannya diambil dari baris INDUK (`registrasi_induk` = id terkecil), jadi
+     * semua pasukan satu sekolah menunjuk tautan yang sama — portal memang
+     * menampilkan seluruh pasukan sekolah itu, bukan satu baris saja.
+     *
+     * Dipisah dari QR-nya dengan sengaja: rekap tabel memuat puluhan sekolah dan
+     * tidak menampilkan satu QR pun, jadi merender QR di sana hanya membuang
+     * waktu render puluhan PNG. Yang butuh QR memanggil `denganQr()` setelahnya.
+     *
+     * @param  Collection<int, array>  $sekolah
+     */
+    public static function denganTautan(Collection $sekolah): Collection
+    {
+        return $sekolah->map(function (array $s) {
+            $token = $s['registrasi_induk']->magic_token;
+
+            return [...$s, 'url' => $token ? route('magic.link', $token) : ''];
+        });
+    }
+
+    /**
+     * Tambahkan gambar QR ke baris yang sudah punya `url`.
+     *
+     * QR WAJIB PNG — dompdf membuang SVG diam-diam, dan `qr_data_uri()`
+     * mengembalikan null saat gagal (bukan melempar). Pemanggil harus tahan
+     * terhadap null: halamannya tetap tercetak, hanya tanpa gambarnya.
+     *
+     * @param  Collection<int, array>  $sekolah  hasil denganTautan(), punya kunci 'url'
+     */
+    public static function denganQr(Collection $sekolah, int $scale = 8): Collection
+    {
+        return $sekolah->map(fn (array $s) => [
+            ...$s,
+            'qr' => ($s['url'] ?? '') !== '' ? qr_data_uri($s['url'], $scale) : null,
+        ]);
+    }
 }

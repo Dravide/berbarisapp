@@ -295,6 +295,44 @@ class ParticipantDataSekolahTest extends TestCase
         $this->assertArrayNotHasKey('kategori', $hasil[0]);
     }
 
+    /** Tautan menambah kunci `url` tanpa merusak hasil pengelompokan. */
+    public function test_dengan_tautan_menambah_url_per_sekolah()
+    {
+        $reg = $this->makeRegistration('SMP Negeri 1', ['npsn' => '11111111']);
+
+        $hasil = DataSekolah::denganTautan(DataSekolah::kelompokkan($this->kumpulkan()));
+
+        $this->assertSame(route('magic.link', $reg->magic_token), $hasil[0]['url']);
+        $this->assertSame(1, $hasil[0]['jumlah_pasukan']);
+    }
+
+    /**
+     * Token kosong: `url` jadi string kosong, bukan route tanpa token.
+     *
+     * Registrasi dibuat dengan `make()` — `create()` melewati event `creating`
+     * yang selalu mengisi magic_token, jadi data tanpa token hanya bisa
+     * ditiru lewat instance yang belum disimpan (baris lama memang bisa begitu).
+     */
+    public function test_dengan_tautan_dengan_token_kosong()
+    {
+        $reg = Registration::factory()->make(['magic_token' => null]);
+
+        $hasil = DataSekolah::denganTautan(collect([[
+            'nama_sekolah' => 'SMP Negeri 1',
+            'registrasi_induk' => $reg,
+        ]]));
+
+        $this->assertSame('', $hasil[0]['url']);
+    }
+
+    /** `denganQr` tahan terhadap url kosong — jangan render QR dari string kosong. */
+    public function test_dengan_qr_melewati_url_kosong()
+    {
+        $hasil = DataSekolah::denganQr(collect([['url' => '']]));
+
+        $this->assertNull($hasil[0]['qr']);
+    }
+
     // ── Rute & PDF ───────────────────────────────────────────────────────
 
     public function test_unduh_tabel_data_sekolah()
@@ -316,6 +354,75 @@ class ParticipantDataSekolahTest extends TestCase
             ->get(route('eventner.participants.kartu-sekolah'))
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf');
+    }
+
+    /** Tabel rekap memuat magic link tiap sekolah, bukan hanya kartunya. */
+    public function test_tabel_data_sekolah_memuat_magic_link()
+    {
+        $reg = $this->makeRegistration('SMP Negeri 1', ['npsn' => '11111111']);
+
+        $html = $this->renderRekap();
+
+        $this->assertStringContainsString('Tautan Portal Sekolah', $html);
+        $this->assertStringContainsString(route('magic.link', $reg->magic_token), $html);
+    }
+
+    /** Satu tautan per sekolah — tiga pasukan tidak mencetak tiga tautan berbeda. */
+    public function test_tabel_data_sekolah_menautkan_satu_tautan_per_sekolah()
+    {
+        $a = $this->makeRegistration('SMP Negeri 1', ['npsn' => '11111111', 'label_pasukan' => 'A']);
+        $b = $this->makeRegistration('SMP Negeri 1', ['npsn' => '11111111', 'label_pasukan' => 'B']);
+        $c = $this->makeRegistration('SMP Negeri 1', ['npsn' => '11111111', 'label_pasukan' => 'C']);
+
+        $html = $this->renderRekap();
+
+        // Baris induk = id terkecil; tautan pasukan lain tidak ikut tampil.
+        $this->assertStringContainsString(route('magic.link', $a->magic_token), $html);
+        $this->assertStringNotContainsString(route('magic.link', $b->magic_token), $html);
+        $this->assertStringNotContainsString(route('magic.link', $c->magic_token), $html);
+    }
+
+    /** Magic link kosong (data lama) tetap tercetak, dengan keterangan. */
+    public function test_tabel_data_sekolah_tanpa_magic_link_tetap_tercetak()
+    {
+        // Koleksi sekolah disusun langsung, bukan lewat DB: `Registration::create()`
+        // selalu mengisi magic_token, jadi baris tanpa tautan hanya bisa muncul
+        // dari data lama — dan yang diuji di sini justru perilaku view terhadapnya.
+        $html = view('eventner.participant.pdf_data_sekolah', [
+            'eventner' => $this->eventner,
+            'sekolah' => collect([[
+                'kunci' => 'SEKOLAH:SMP NEGERI 1',
+                'npsn' => null,
+                'nama_sekolah' => 'SMP Negeri 1',
+                'kabupaten' => '',
+                'jumlah_pasukan' => 1,
+                'jumlah_kategori' => 1,
+                'jumlah_anggota' => 0,
+                'status' => 'Menunggu',
+                'label_status' => 'Menunggu Verifikasi',
+                'pelatih' => '',
+                'no_hp' => '',
+                'email' => '',
+                'url' => '',
+            ]]),
+        ])->render();
+
+        $this->assertStringContainsString('SMP Negeri 1', $html);
+        $this->assertStringContainsString('Belum ada tautan', $html);
+    }
+
+    /** Render view rekap langsung — dompdf tidak perlu jalan untuk cek isinya. */
+    private function renderRekap(): string
+    {
+        $eventner = $this->eventner;
+
+        return view('eventner.participant.pdf_data_sekolah', [
+            'eventner' => $eventner,
+            'sekolah' => DataSekolah::denganTautan(DataSekolah::kelompokkan(
+                $this->kumpulkan(),
+                DataSekolah::fieldKabupatenId(RegistrationField::forEventner($eventner))
+            )),
+        ])->render();
     }
 
     /** Rekap tidak ikut kategori yang sedang dibuka — semua kategori event. */

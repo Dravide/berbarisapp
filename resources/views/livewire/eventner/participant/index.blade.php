@@ -164,7 +164,7 @@
                                    target="_blank" class="dropdown-item">
                                     <i class="ti ti-file-type-pdf me-1"></i>
                                     Semua Sekolah dalam Satu Tabel
-                                    <span class="d-block fs-2 text-muted ms-4">Rekap seluruh sekolah, siap dicetak</span>
+                                    <span class="d-block fs-2 text-muted ms-4">Rekap seluruh sekolah + tautan portalnya, siap dicetak</span>
                                 </a>
                             </li>
                             <li>

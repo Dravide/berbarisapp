@@ -232,10 +232,12 @@ class ParticipantController extends Controller
     {
         [$eventner, $registrations] = $this->registrasiEvent();
 
-        $sekolah = DataSekolah::kelompokkan(
+        // Tanpa QR: rekap tidak menampilkan satu pun, dan merendernya di sini
+        // berarti puluhan PNG sia-sia untuk setiap unduhan.
+        $sekolah = DataSekolah::denganTautan(DataSekolah::kelompokkan(
             $registrations,
             DataSekolah::fieldKabupatenId(RegistrationField::forEventner($eventner))
-        );
+        ));
 
         $namaEvent = str_replace(['/', '\\', ' '], '_', (string) $eventner->nama_event);
 
@@ -289,18 +291,10 @@ class ParticipantController extends Controller
             DataSekolah::fieldKabupatenId(RegistrationField::forEventner($eventner))
         );
 
-        // QR dibangun di sini, bukan di view: helper-nya mengembalikan null saat
-        // gagal, dan satu tempat yang jelas lebih mudah ditelusuri daripada
-        // panggilan tersebar di dalam blade.
-        $sekolah = $sekolah->map(function (array $s) {
-            $token = $s['registrasi_induk']->magic_token;
-
-            return [
-                ...$s,
-                'url' => $token ? route('magic.link', $token) : '',
-                'qr' => $token ? qr_data_uri(route('magic.link', $token), 8) : null,
-            ];
-        });
+        $sekolah = DataSekolah::denganQr(DataSekolah::denganTautan(DataSekolah::kelompokkan(
+            $registrations,
+            DataSekolah::fieldKabupatenId(RegistrationField::forEventner($eventner))
+        )));
 
         return Pdf::loadView('eventner.participant.pdf_kartu_sekolah', [
             'eventner' => $eventner,

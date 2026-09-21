@@ -76,13 +76,21 @@
         .nama { font-weight: bold; }
         .sub { font-size: 7.5px; color: #777; }
 
-        .col-no { width: 26px; }
-        .col-npsn { width: 62px; }
-        .col-kab { width: 92px; }
-        .col-angka { width: 46px; }
-        .col-status { width: 84px; }
-        .col-hp { width: 84px; }
-        .col-email { width: 110px; }
+        .col-no { width: 24px; }
+        .col-npsn { width: 58px; }
+        .col-kab { width: 84px; }
+        .col-angka { width: 40px; }
+        .col-status { width: 72px; }
+        .col-kontak { width: 132px; }
+        .col-tautan { width: 168px; }
+
+        /* Kontak bertingkat: nama pelatih tebal, HP & email kecil di bawahnya. */
+        .kontak-nama { font-weight: bold; }
+        .kontak-kecil { font-size: 7.5px; color: #666; }
+
+        /* Tautan portal sengaja dibiarkan patah di mana saja: URL panjang tanpa
+             spasi akan melebarkan kolomnya dan mendorong kolom lain keluar halaman. */
+        .tautan-url { font-size: 7.5px; color: #1a5fb4; word-break: break-all; }
 
         .badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 7px; font-weight: bold; }
         .badge-ok { background: #e8f7f0; color: #198754; }
@@ -128,7 +136,8 @@
     <div class="judul">Data Sekolah Pendaftar</div>
     <div class="subjudul">
         {{ $sekolah->count() }} sekolah &bull; {{ $totalPasukan }} pasukan &bull; {{ $totalAnggota }} anggota &bull;
-        Seluruh kategori lomba &bull; Dicetak: {{ now()->translatedFormat('d F Y H:i') }} WIB
+        Seluruh kategori lomba &bull; Tautan portal berlaku untuk seluruh pasukan sekolah itu &bull;
+        Dicetak: {{ now()->translatedFormat('d F Y H:i') }} WIB
     </div>
 
     @if($sekolah->isEmpty())
@@ -145,9 +154,8 @@
                     <th class="col-angka center">Kategori</th>
                     <th class="col-angka center">Anggota</th>
                     <th class="col-status center">Status</th>
-                    <th>Pelatih</th>
-                    <th class="col-hp">No. HP</th>
-                    <th class="col-email">Email Sekolah</th>
+                    <th class="col-kontak">Pelatih / Kontak</th>
+                    <th class="col-tautan">Tautan Portal Sekolah</th>
                 </tr>
             </thead>
             <tbody>
@@ -176,9 +184,34 @@
                                 <span class="muted">—</span>
                             @endif
                         </td>
-                        <td>{{ $s['pelatih'] ?: '—' }}</td>
-                        <td class="nowrap">{{ $s['no_hp'] ?: '—' }}</td>
-                        <td>{{ $s['email'] ?: '—' }}</td>
+                        {{-- Pelatih, HP, dan email jadi satu sel bertingkat: tiga
+                             kolom terpisah tidak muat lagi setelah kolom tautan
+                             masuk, dan pada kertas yang dicari panitia adalah
+                             "siapa yang bisa dihubungi", bukan kolom mana. --}}
+                        <td>
+                            @if($s['pelatih'] || $s['no_hp'] || $s['email'])
+                                @if($s['pelatih'])
+                                    <div class="kontak-nama">{{ $s['pelatih'] }}</div>
+                                @endif
+                                @if($s['no_hp'])
+                                    <div class="kontak-kecil">{{ $s['no_hp'] }}</div>
+                                @endif
+                                @if($s['email'])
+                                    <div class="kontak-kecil">{{ $s['email'] }}</div>
+                                @endif
+                            @else
+                                <span class="muted">—</span>
+                            @endif
+                        </td>
+                        <td class="tautan">
+                            @if($s['url'])
+                                {{-- Diberi <a> supaya bisa diklik saat PDF dibuka
+                                     di layar; saat dicetak yang terbaca teksnya. --}}
+                                <a href="{{ $s['url'] }}" class="tautan-url">{{ $s['url'] }}</a>
+                            @else
+                                <span class="muted">Belum ada tautan</span>
+                            @endif
+                        </td>
                     </tr>
                 @endforeach
             </tbody>
@@ -188,14 +221,14 @@
                     <td class="center">{{ $totalPasukan }}</td>
                     <td class="center">{{ $sekolah->sum('jumlah_kategori') }}</td>
                     <td class="center">{{ $totalAnggota }}</td>
-                    <td colspan="4"></td>
+                    <td colspan="3"></td>
                 </tr>
             </tfoot>
         </table>
 
         <div class="foot">
-            Satu baris = satu sekolah. Sekolah dengan beberapa pasukan digabung di sini &mdash;
-            rincian per pasukan ada di halaman Daftar Peserta.
+            Satu baris = satu sekolah &bull; Tautan portal berlaku untuk seluruh pasukan sekolah itu.
+            Sekolah dengan beberapa pasukan digabung di sini &mdash; rincian per pasukan ada di halaman Daftar Peserta.
             <br>
             {{ $eventner->nama_event }} &mdash; Generated by {{ app_name() }}
         </div>
