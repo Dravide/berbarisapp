@@ -17,6 +17,13 @@ use Illuminate\Database\Migrations\Migration;
  *
  * Idempoten: ensureDefaults() memakai firstOrCreate, jadi aman dijalankan ulang
  * dan tidak menimpa perubahan panitia.
+ *
+ * Urutan berkas penting: migrasi ini menulis lewat model, dan kolom yang
+ * ditulisnya (`section`, `sub_fields`, `wilayah_level`) baru ada setelah
+ * 2026_09_16_000004 dan 2026_09_18_000002. Dijalankan lebih awal, ia gagal di
+ * basis data yang sudah punya event — "Unknown column 'wilayah_level'" — tapi
+ * lolos di migrate:fresh karena saat itu belum ada event untuk diisi. Karena itu
+ * namanya sengaja 2026_09_18_000003, setelah kedua penambah kolom itu.
  */
 return new class extends Migration
 {
