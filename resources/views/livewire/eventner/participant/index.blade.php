@@ -150,6 +150,33 @@
                             </li>
                         </ul>
                     </div>
+                    {{-- Data sekolah: rekap & kartu berorientasi SEKOLAH, bukan
+                         pendaftar. Tidak ikut tab aktif — sekolah yang mendaftar
+                         di kategori lain jangan hilang dari rekap. --}}
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-sm btn-outline-dark dropdown-toggle d-flex align-items-center gap-1"
+                                data-bs-toggle="dropdown" aria-expanded="false" title="Unduh Data Sekolah & Kartu Magic Link">
+                            <i class="ti ti-building-community fs-4"></i> Data Sekolah
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a href="{{ route('eventner.participants.data-sekolah') }}"
+                                   target="_blank" class="dropdown-item">
+                                    <i class="ti ti-file-type-pdf me-1"></i>
+                                    Semua Sekolah dalam Satu Tabel
+                                    <span class="d-block fs-2 text-muted ms-4">Rekap seluruh sekolah, siap dicetak</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('eventner.participants.kartu-sekolah') }}"
+                                   target="_blank" class="dropdown-item">
+                                    <i class="ti ti-qrcode me-1"></i>
+                                    Kartu Magic Link per Sekolah
+                                    <span class="d-block fs-2 text-muted ms-4">Satu halaman per sekolah, berisi QR &amp; tautan portal</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                     <span class="badge bg-light text-dark d-flex align-items-center px-3">{{ $registrations->count() }} peserta</span>
                 </div>
             </div>

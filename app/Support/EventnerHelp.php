@@ -55,6 +55,7 @@ class EventnerHelp
                     'Unduh Formulir PDF atau Invoice dari kolom Aksi bila diperlukan.',
                     'Cetak QR kontingen untuk kebutuhan check-in.',
                     'Salin Magic Link atau Preview Portal untuk membagikan tautan pendaftaran ke sekolah.',
+                    'Gunakan menu Data Sekolah untuk mengunduh rekap semua sekolah dalam satu tabel PDF, atau kartu berisi QR dan magic link satu halaman per sekolah untuk dibagikan ke sekolah.',
                 ],
                 'tips' => [
                     'Tambahkan data kontingen terlebih dahulu sebelum mengatur urutan undian.',

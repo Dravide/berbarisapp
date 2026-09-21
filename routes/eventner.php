@@ -25,6 +25,10 @@ Route::get('participants/daftar-ulang', [App\Http\Controllers\Eventner\Participa
 // Satu segmen, jadi harus didaftarkan SEBELUM rute {registration} di bawah —
 // kalau tidak, "template" ditangkap sebagai id registrasi dan berakhir 404.
 Route::get('participants/template', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadTemplate'])->name('eventner.participants.template');
+// Rekap sekolah (tabel) & kartu akses sekolah (QR magic link). Satu segmen juga,
+// jadi alasannya sama dengan dua rute di atas.
+Route::get('participants/data-sekolah', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadDataSekolah'])->name('eventner.participants.data-sekolah');
+Route::get('participants/kartu-sekolah', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadKartuSekolah'])->name('eventner.participants.kartu-sekolah');
 Route::get('participants/{registration}/pdf', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadPdf'])->name('eventner.participants.pdf');
 Route::get('participants/{registration}/invoice', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadInvoice'])->name('eventner.participants.invoice');
 Route::get('participants/{registration}/qr', [App\Http\Controllers\Eventner\ParticipantController::class, 'qrCode'])->name('eventner.participants.qr');

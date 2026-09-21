@@ -110,7 +110,16 @@ class JudgeAccessCardTest extends TestCase
         $html = $this->renderCard();
 
         $this->assertStringContainsString('data:image/png;base64,', $html);
-        $this->assertStringNotContainsString('svg', strtolower($html));
+
+        // Data-URI dilepas dulu sebelum mencari "svg": isi base64 PNG memakai
+        // seluruh alfabet base64, termasuk huruf s, v, dan g, sehingga string
+        // "svg" bisa muncul acak di dalam gambar yang sah dan tes ini gagal
+        // sesekali tanpa ada yang berubah. Yang diperiksa adalah markah gambar
+        // di luar data-URI, tempat QRCode sebenarnya menulis <svg>.
+        $tanpaDataUri = preg_replace('#data:image/[a-z+]+;base64,[A-Za-z0-9+/=]+#', '', $html);
+
+        $this->assertStringNotContainsString('<svg', strtolower($tanpaDataUri));
+        $this->assertStringNotContainsString('image/svg', strtolower($tanpaDataUri));
         $this->assertStringContainsString(judge_entry_url($this->judge->access_token), $html);
         $this->assertStringContainsString('entry.berbaris.test/juri/' . $this->judge->access_token, $html);
     }

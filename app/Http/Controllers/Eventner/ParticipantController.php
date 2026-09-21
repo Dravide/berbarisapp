@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Eventner;
 use App\Http\Controllers\Controller;
 use App\Models\Registration;
 use App\Models\RegistrationField;
+use App\Support\DataSekolah;
 use App\Support\PendaftarImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -215,6 +216,128 @@ class ParticipantController extends Controller
         ])
             ->setPaper('a4', 'portrait')
             ->download($filename);
+    }
+
+    /**
+     * Rekap semua sekolah dalam satu tabel PDF.
+     *
+     * Tidak ikut kategori yang sedang dibuka: pertanyaan yang dijawab halaman ini
+     * adalah "siapa saja sekolah yang mendaftar di event ini", dan menyaringnya
+     * per kategori akan menyembunyikan sekolah yang mendaftar di tingkat lain.
+     *
+     * Orientasi landscape karena kolomnya sepuluh — portrait memaksa kolom
+     * terakhir terpotong di dompdf, dan itu tidak terlihat sampai dicetak.
+     */
+    public function downloadDataSekolah()
+    {
+        [$eventner, $registrations] = $this->registrasiEvent();
+
+        $sekolah = DataSekolah::kelompokkan(
+            $registrations,
+            DataSekolah::fieldKabupatenId(RegistrationField::forEventner($eventner))
+        );
+
+        $namaEvent = str_replace(['/', '\\', ' '], '_', (string) $eventner->nama_event);
+
+        return Pdf::loadView('eventner.participant.pdf_data_sekolah', [
+            'eventner' => $eventner,
+            'sekolah' => $sekolah,
+        ])
+            ->setPaper('a4', 'landscape')
+            ->download('Data_Sekolah_'.$namaEvent.'.pdf');
+    }
+
+    /**
+     * Kartu akses sekolah: satu halaman per sekolah, berisi QR magic link dan
+     * penjelasan apa yang bisa dilakukan sekolah lewat tautan itu.
+     *
+     * ?registrasi=<id> membatasi ke satu sekolah saja supaya kartu bisa dicetak
+     * ulang sendiri. Parameternya id registrasi, bukan kunci sekolah: kunci berisi
+     * ":" dan "|" sehingga tidak layak ditaruh di query string.
+     */
+    public function downloadKartuSekolah(Request $request)
+    {
+        [$eventner, $registrations] = $this->registrasiEvent();
+
+        $namaBerkas = 'Kartu_Akses_Sekolah.pdf';
+
+        if ($request->filled('registrasi')) {
+            // Di-scope ke eventner pemilik lewat registrasiEvent() di atas: id
+            // registrasi event lain tidak akan ditemukan di koleksi ini.
+            $terpilih = $registrations->firstWhere('id', (int) $request->query('registrasi'));
+
+            if (! $terpilih) {
+                abort(404, 'Pendaftar tidak ditemukan.');
+            }
+
+            $kunci = DataSekolah::kunciSekolah($terpilih->npsn, $terpilih->nama_sekolah);
+            $registrations = $registrations->filter(
+                fn ($r) => DataSekolah::kunciSekolah($r->npsn, $r->nama_sekolah) === $kunci
+            );
+
+            // Satu sekolah saja: nama berkasnya menyebut sekolah itu supaya
+            // panitia tidak perlu membuka PDF untuk tahu kartu siapa ini, dan
+            // supaya beberapa kartu yang diunduh berurutan tidak saling menimpa
+            // di folder Unduhan.
+            $namaBerkas = 'Kartu_Akses_'
+                .str_replace(['/', '\\', ' ', '—'], '_', (string) $terpilih->nama_sekolah)
+                .'.pdf';
+        }
+
+        $sekolah = DataSekolah::kelompokkan(
+            $registrations,
+            DataSekolah::fieldKabupatenId(RegistrationField::forEventner($eventner))
+        );
+
+        // QR dibangun di sini, bukan di view: helper-nya mengembalikan null saat
+        // gagal, dan satu tempat yang jelas lebih mudah ditelusuri daripada
+        // panggilan tersebar di dalam blade.
+        $sekolah = $sekolah->map(function (array $s) {
+            $token = $s['registrasi_induk']->magic_token;
+
+            return [
+                ...$s,
+                'url' => $token ? route('magic.link', $token) : '',
+                'qr' => $token ? qr_data_uri(route('magic.link', $token), 8) : null,
+            ];
+        });
+
+        return Pdf::loadView('eventner.participant.pdf_kartu_sekolah', [
+            'eventner' => $eventner,
+            'sekolah' => $sekolah,
+        ])
+            ->setPaper('a4', 'portrait')
+            ->download($namaBerkas);
+    }
+
+    /**
+     * Registrasi satu event, siap dipakai rekap maupun kartu.
+     *
+     * @return array{0: \App\Models\Eventner, 1: \Illuminate\Support\Collection<int, Registration>}
+     */
+    private function registrasiEvent(): array
+    {
+        $eventner = Auth::user()->eventner;
+        if (! $eventner) {
+            abort(403, 'Anda bukan Eventner yang sah.');
+        }
+
+        $registrations = Registration::with(['participants', 'fieldValues'])
+            ->where('eventner_id', $eventner->id)
+            ->where('status_berkas', '!=', 'dibatalkan')
+            ->orderBy('nama_sekolah')
+            ->orderBy('id')
+            ->get();
+
+        if ($registrations->isEmpty()) {
+            abort(404, 'Belum ada pendaftar di event ini.');
+        }
+
+        // Puluhan QR dalam satu request — sama seperti kartu akses juri, yang
+        // menaikkan batas ini karena satu render bisa memuat lusinan gambar.
+        ini_set('memory_limit', '512M');
+
+        return [$eventner, $registrations];
     }
 
     /**
