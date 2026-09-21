@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\WilayahService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -257,7 +258,12 @@ class Registration extends Model
                 return [
                     'key' => $field->field_key,
                     'label' => $field->label,
-                    'value' => $nilai !== null && $nilai !== '' ? (string) $nilai : null,
+                    // Field wilayah hanya menampilkan namanya di sini — kode BPS
+                    // tetap tersimpan utuh dan tetap dikirim lewat field_key-nya
+                    // sendiri kalau pemanggil butuh. Lihat WilayahService::nama().
+                    'value' => $nilai !== null && $nilai !== ''
+                        ? ($field->type === 'wilayah' ? WilayahService::nama((string) $nilai) : (string) $nilai)
+                        : null,
                     'url' => ($field->isFile() && $nilai) ? asset('storage/' . ltrim($nilai, '/')) : null,
                     'type' => $field->type,
                     'is_file' => $field->isFile(),
@@ -345,7 +351,13 @@ class Registration extends Model
             'diselenggarakan_oleh' => $eventner?->diselenggarakan_oleh ?? '',
             // Field buatan panitia (field builder) — mis. asal_kabupaten atau
             // nama_pembina — dipakai sebagai placeholder sertifikat.
-            default         => $this->getFieldValue($fieldKey) ?? '',
+            //
+            // WilayahService::nama() membuang kode BPS dari field wilayah supaya
+            // sertifikat mencetak "JAWA BARAT, KAB. BOGOR", bukan
+            // "32 - JAWA BARAT / 32.01 - KAB. BOGOR". Nilai yang bukan hasil
+            // gabung kode dilewatkan apa adanya, jadi cabang ini tetap aman
+            // untuk semua field buatan panitia yang lain.
+            default         => WilayahService::nama($this->getFieldValue($fieldKey)),
         };
     }
 

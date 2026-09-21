@@ -389,6 +389,102 @@ class WilayahFieldTest extends TestCase
         $this->assertSame('32.01', $komponen->get('wilayah')['asal_kabupaten']['kabupaten']);
     }
 
+    // ── Tampilan nama saja ──────────────────────────────────────────────
+
+    /**
+     * Rekap, PDF, dan API menampilkan namanya saja; kode BPS tidak ikut tercetak.
+     *
+     * Kode tetap tersimpan utuh supaya rekap masih bisa dikelompokkan per kode,
+     * jadi pemotongannya harus terjadi di lapisan tampil — bukan saat menyimpan.
+     */
+    public function test_tampilan_membuang_kode()
+    {
+        $this->assertSame(
+            'JAWA BARAT, KAB. BOGOR',
+            WilayahService::nama('32 - JAWA BARAT / 32.01 - KAB. BOGOR')
+        );
+
+        // Provinsi saja, tanpa garis miring menggantung.
+        $this->assertSame('JAWA BARAT', WilayahService::nama('32 - JAWA BARAT'));
+
+        // Tiga tingkat.
+        $this->assertSame(
+            'JAWA BARAT, KAB. BOGOR, Cibinong',
+            WilayahService::nama('32 - JAWA BARAT / 32.01 - KAB. BOGOR / 32.01.01 - Cibinong')
+        );
+    }
+
+    /**
+     * Nilai lama era teks bebas dikembalikan apa adanya — memotongnya justru
+     * menghapus isinya.
+     */
+    public function test_tampilan_tidak_merusak_nilai_lama()
+    {
+        $this->assertSame('Cianjur', WilayahService::nama('Cianjur'));
+        $this->assertSame('', WilayahService::nama(''));
+        $this->assertSame('', WilayahService::nama(null));
+    }
+
+    /** Nilai wilayah yang tersimpan tetap memuat kode, hanya tampilannya yang bersih. */
+    public function test_kode_tetap_tersimpan_saat_tampilan_dibersihkan()
+    {
+        $this->siapkanHttp();
+        $this->field()->update(['wilayah_level' => 'kabupaten']);
+
+        $reg = Registration::factory()->for($this->eventner, 'eventner')->create([
+            'competition_category_id' => $this->category->id,
+        ]);
+
+        RegistrationFieldValue::create([
+            'registration_id' => $reg->id,
+            'registration_field_id' => $this->field()->id,
+            'value' => '32 - JAWA BARAT / 32.01 - KAB. BOGOR',
+        ]);
+
+        $reg->load('fieldValues');
+
+        // Yang dibaca view: nama saja.
+        $this->assertSame(
+            'JAWA BARAT, KAB. BOGOR',
+            $reg->fieldValuesForDisplay()->firstWhere('key', 'asal_kabupaten')['value']
+        );
+
+        // Yang ada di DB dan di single-field read: kode masih utuh.
+        $this->assertSame('32 - JAWA BARAT / 32.01 - KAB. BOGOR', $reg->getFieldValue('asal_kabupaten'));
+    }
+
+    /** Placeholder sertifikat juga mencetak namanya saja, bukan kodenya. */
+    public function test_placeholder_sertifikat_membuang_kode()
+    {
+        $this->siapkanHttp();
+
+        $reg = Registration::factory()->for($this->eventner, 'eventner')->create([
+            'competition_category_id' => $this->category->id,
+        ]);
+
+        RegistrationFieldValue::create([
+            'registration_id' => $reg->id,
+            'registration_field_id' => $this->field()->id,
+            'value' => '32 - JAWA BARAT / 32.01 - KAB. BOGOR',
+        ]);
+
+        $reg->load('fieldValues');
+
+        $this->assertSame('JAWA BARAT, KAB. BOGOR', $reg->resolveCertificateField('asal_kabupaten'));
+
+        // Field buatan panitia yang bukan wilayah tidak ikut dipotong.
+        RegistrationFieldValue::create([
+            'registration_id' => $reg->id,
+            'registration_field_id' => RegistrationField::where('eventner_id', $this->eventner->id)
+                ->where('field_key', 'nama_pembina')->value('id'),
+            'value' => 'Ibu Sri - Pembina Utama',
+        ]);
+
+        $reg = $reg->fresh(['fieldValues']);
+
+        $this->assertSame('Ibu Sri - Pembina Utama', $reg->resolveCertificateField('nama_pembina'));
+    }
+
     // ── API mati ────────────────────────────────────────────────────────
 
     /**

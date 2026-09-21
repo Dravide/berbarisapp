@@ -569,6 +569,8 @@
                                         <td class="px-5 py-3.5 text-deep-slate font-medium">
                                             @if($field->type === 'select')
                                                 {{ collect($field->options ?? [])->firstWhere('value', $nilaiTampil)['label'] ?? $nilaiTampil }}
+                                            @elseif($field->type === 'wilayah')
+                                                {{ \App\Services\WilayahService::nama($nilaiTampil) }}
                                             @else
                                                 {{ $nilaiTampil }}
                                             @endif

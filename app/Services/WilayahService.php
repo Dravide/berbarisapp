@@ -167,6 +167,47 @@ class WilayahService
     }
 
     /**
+     * Nama tampil suatu nilai wilayah — kode dibuang.
+     *
+     * Yang tersimpan tetap `"32 - JAWA BARAT / 32.01 - KAB. BOGOR"` supaya kode
+     * BPS tidak hilang dan rekap bisa dikelompokkan; yang dibaca panitia dan
+     * pendaftar cukup namanya. Karena itu pemotongan dilakukan di lapisan
+     * tampil, bukan saat menyimpan.
+     *
+     * Nilai yang bukan hasil gabung() (teks bebas era lama seperti "Cianjur")
+     * dikembalikan apa adanya — memotongnya justru akan menghapus isinya.
+     */
+    public static function nama(?string $nilai): string
+    {
+        $teks = trim((string) $nilai);
+
+        if ($teks === '' || ! self::berbentukKode($teks)) {
+            return $teks;
+        }
+
+        $nama = [];
+
+        foreach (explode('/', $teks) as $potongan) {
+            // Formatnya "<kode> - <nama>"; kode dipastikan ada oleh
+            // berbentukKode(), jadi yang tersisa setelah pemisah pertama adalah
+            // namanya. Nama sendiri tidak pernah mengandung " - ".
+            $pisah = strpos($potongan, ' - ');
+
+            if ($pisah === false) {
+                continue;
+            }
+
+            $bagian = trim(substr($potongan, $pisah + 3));
+
+            if ($bagian !== '') {
+                $nama[] = $bagian;
+            }
+        }
+
+        return implode(', ', $nama);
+    }
+
+    /**
      * Baca balik nilai tersimpan jadi kode per tingkat.
      *
      * Dipakai untuk mengisi ulang dropdown saat peserta membuka form yang sudah

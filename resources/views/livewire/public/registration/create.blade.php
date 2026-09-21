@@ -349,6 +349,8 @@
                                                         $opsiTerpilih = collect($field->options ?? [])->firstWhere('value', $nilai);
                                                     @endphp
                                                     <p class="font-bold text-deep-slate m-0">{{ $opsiTerpilih['label'] ?? $nilai }}</p>
+                                                @elseif($field->type === 'wilayah')
+                                                    <p class="font-bold text-deep-slate m-0">{{ \App\Services\WilayahService::nama($nilai) }}</p>
                                                 @else
                                                     <p class="font-bold text-deep-slate m-0">{{ $nilai }}</p>
                                                 @endif
