@@ -109,6 +109,58 @@ class InvoiceDownloadTest extends TestCase
             ->assertForbidden();
     }
 
+    /**
+     * Sejak `npsn` boleh kosong (migrasi 2026_09_21), penggabungan per sekolah
+     * TIDAK boleh memakai NPSN kosong sebagai penanda: di MySQL `= NULL` tidak
+     * pernah cocok, dan bila dianggap cocok, semua pendaftar tanpa NPSN dari
+     * sekolah berbeda akan tercetak dalam satu kwitansi.
+     */
+    public function test_invoice_does_not_merge_npsn_less_registrations_of_different_schools(): void
+    {
+        $reg = $this->makePaidRegistration();
+        $reg->update(['npsn' => null, 'nama_sekolah' => 'SMP Negeri 1 Uji']);
+
+        // Sekolah BERBEDA, sama-sama tanpa NPSN, sudah paid.
+        Registration::factory()->for($reg->eventner, 'eventner')->pasukan('B')->create([
+            'npsn' => null,
+            'nama_sekolah' => 'SMP Negeri 2 Uji',
+            'payment_status' => 'paid',
+            'total_fee' => 300000,
+            'payment_verified_at' => now(),
+        ]);
+
+        $response = $this->actingAs($reg->user)
+            ->get(route('eventner.participants.invoice', $reg->id));
+
+        $response->assertOk();
+
+        // Nama berkas memakai sekolah pendaftar ini — bukan sekolah lain, dan
+        // bukan nama gabungan.
+        $disposition = $response->headers->get('Content-Disposition');
+        $this->assertStringContainsString('SMP_Negeri_1_Uji', $disposition);
+    }
+
+    /** Pasukan lain dari sekolah tanpa NPSN yang SAMA tetap digabung. */
+    public function test_invoice_merges_npsn_less_pasukan_of_same_school(): void
+    {
+        $reg = $this->makePaidRegistration();
+        $reg->update(['npsn' => null, 'nama_sekolah' => 'SMP Negeri 1 Uji']);
+
+        Registration::factory()->for($reg->eventner, 'eventner')->pasukan('B')->create([
+            'npsn' => null,
+            'nama_sekolah' => 'SMP Negeri 1 Uji',
+            'payment_status' => 'paid',
+            'total_fee' => 300000,
+            'payment_verified_at' => now(),
+        ]);
+
+        $response = $this->actingAs($reg->user)
+            ->get(route('eventner.participants.invoice', $reg->id));
+
+        $response->assertOk();
+        $this->assertStringContainsString('SMP_Negeri_1_Uji', $response->headers->get('Content-Disposition'));
+    }
+
     public function test_invoice_forbidden_when_pending_verification(): void
     {
         $reg = $this->makePaidRegistration();

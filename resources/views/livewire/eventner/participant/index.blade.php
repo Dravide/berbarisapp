@@ -78,9 +78,12 @@
         <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="card-title fw-semibold mb-0">Kelola Sekolah Pendaftar</h5>
-                <button wire:click="openModal('{{ $activeTab }}')" class="btn btn-primary d-flex align-items-center gap-2">
-                    <i class="ti ti-plus"></i> Tambah Pendaftar
-                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <livewire:eventner.participant.import :activeTab="$activeTab" />
+                    <button wire:click="openModal('{{ $activeTab }}')" class="btn btn-primary d-flex align-items-center gap-2">
+                        <i class="ti ti-plus"></i> Tambah Pendaftar
+                    </button>
+                </div>
             </div>
 
             <!-- Kategori Select + Pencarian -->

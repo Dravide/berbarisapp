@@ -51,6 +51,7 @@ class EventnerHelp
                     'Filter berdasarkan kategori lomba dan status (Draft, Menunggu Verifikasi, Finalized, Ditolak, Dibatalkan).',
                     'Klik Verifikasi pada pendaftar untuk memeriksa dan menyetujui datanya.',
                     'Gunakan Tambah Pendaftar untuk memasukkan kontingen secara manual.',
+                    'Gunakan Import Pendaftar untuk memasukkan banyak kontingen sekaligus dari Excel — unduh dulu Template-nya, lalu data ditampilkan sebagai pratinjau sebelum disimpan.',
                     'Unduh Formulir PDF atau Invoice dari kolom Aksi bila diperlukan.',
                     'Cetak QR kontingen untuk kebutuhan check-in.',
                     'Salin Magic Link atau Preview Portal untuk membagikan tautan pendaftaran ke sekolah.',

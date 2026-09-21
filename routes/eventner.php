@@ -22,6 +22,9 @@ Route::get('participants', App\Livewire\Eventner\Participant\Index::class)->name
 // Didaftarkan SEBELUM rute {registration} — kalau tidak, "daftar-ulang" akan
 // ditangkap sebagai id registrasi dan berakhir 404.
 Route::get('participants/daftar-ulang', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadDaftarUlang'])->name('eventner.participants.daftar-ulang');
+// Satu segmen, jadi harus didaftarkan SEBELUM rute {registration} di bawah —
+// kalau tidak, "template" ditangkap sebagai id registrasi dan berakhir 404.
+Route::get('participants/template', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadTemplate'])->name('eventner.participants.template');
 Route::get('participants/{registration}/pdf', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadPdf'])->name('eventner.participants.pdf');
 Route::get('participants/{registration}/invoice', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadInvoice'])->name('eventner.participants.invoice');
 Route::get('participants/{registration}/qr', [App\Http\Controllers\Eventner\ParticipantController::class, 'qrCode'])->name('eventner.participants.qr');

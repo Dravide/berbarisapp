@@ -9,6 +9,7 @@ use App\Models\AssessmentScore;
 use App\Models\CompetitionCategory;
 use App\Models\Registration;
 use App\Models\RegistrationField;
+use App\Support\PendaftarImport;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
@@ -68,6 +69,18 @@ class Index extends Component
         }
     }
 
+    /**
+     * Beri tahu komponen import (nested) bahwa kategori tujuan berubah.
+     *
+     * Tanpa ini, panitia yang mengganti kategori setelah modal import terbuka
+     * akan menyimpan ke kategori lama — komponen nested tidak ikut re-render
+     * saat properti induknya berubah.
+     */
+    public function updatedActiveTab($value)
+    {
+        $this->dispatch('pesan:ganti-kategori', id: $value);
+    }
+
     public function openModal($categoryId = null)
     {
         $this->resetForm();
@@ -86,21 +99,12 @@ class Index extends Component
      * Kategori milik event panitia yang boleh jadi tujuan pendaftaran: tingkat
      * lomba, atau induk lama tanpa anak.
      *
-     * Id kategori datang dari DOM, jadi `exists` polos tidak cukup — id induk
-     * atau id event lain bisa ikut terkirim dan membuat pendaftaran mendarat
-     * di luar tingkat lomba.
+     * Logikanya hidup di PendaftarImport supaya halaman import memakai definisi
+     * yang sama — id kategori datang dari DOM, jadi `exists` polos tidak cukup.
      */
     private function kategoriTerpilih($categoryId): ?\App\Models\CompetitionCategory
     {
-        $eventner = auth()->user()->eventner;
-
-        if (!$eventner) {
-            return null;
-        }
-
-        return CompetitionCategory::where('eventner_id', $eventner->id)
-            ->selectable()
-            ->find($categoryId);
+        return PendaftarImport::kategoriUntukPendaftaran(auth()->user()->eventner, $categoryId);
     }
 
     public function closeModal()
@@ -134,33 +138,21 @@ class Index extends Component
             ->filter(fn ($f) => $f->builtin_source !== null && property_exists($this, $f->builtin_source));
     }
 
-    /** Aturan validasi dibangun dari baris builder, bukan literal. */
+    /**
+     * Aturan validasi dibangun dari baris builder, bukan literal.
+     *
+     * Pemetaannya hidup di PendaftarImport supaya modal ini dan import Excel
+     * tidak bisa berbeda diam-diam.
+     */
     private function aturanFieldModal(): array
     {
-        $aturan = [];
-
-        foreach ($this->fieldsModal() as $field) {
-            $aturan[$field->builtin_source] = match ($field->builtin_source) {
-                'school_email' => ($field->is_required ? 'required' : 'nullable') . '|email|max:255',
-                'npsn' => ($field->is_required ? 'required' : 'nullable') . '|string|max:20',
-                default => $field->validationRule($field->is_required),
-            };
-        }
-
-        return $aturan;
+        return PendaftarImport::aturanDari($this->fieldsModal());
     }
 
     /** Pesan error memakai label panitia, bukan nama kolom. */
     public function pesanFieldModal(): array
     {
-        $pesan = [];
-
-        foreach ($this->fieldsModal() as $field) {
-            $pesan[$field->builtin_source . '.required'] = $field->label . ' wajib diisi.';
-            $pesan[$field->builtin_source . '.email'] = $field->label . ' harus berupa alamat email yang valid.';
-        }
-
-        return $pesan;
+        return PendaftarImport::pesanDari($this->fieldsModal());
     }
 
     public function save()
