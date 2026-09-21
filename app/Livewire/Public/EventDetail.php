@@ -62,11 +62,21 @@ class EventDetail extends Component
 
     /**
      * Leaderboard voting: top kontingen per kategori lomba.
-     * Hanya tampil kalau vote sudah dimulai — atau sudah selesai (vote_end terlewat).
+     *
+     * Hanya tampil kalau vote-nya memang diaktifkan eventner. Dulu papan ini
+     * muncul cukup dengan terisinya `vote_start`, sehingga event yang fitur
+     * votingnya OFF tetap menampilkan "Voter Tertinggi per Kategori" berisi
+     * angka nol — dan mengundang orang mengklik tombol Vote yang tidak bisa
+     * dipakai. `vote_active` adalah sakelar yang sama dengan yang dipakai
+     * EventVote::mount(), jadi papan ini tidak bisa lagi hidup sendiri.
      */
     #[Computed]
     public function voteLeaderboard()
     {
+        if (! $this->eventner->vote_active) {
+            return collect();
+        }
+
         $now = now();
         $voteStart = $this->eventner->vote_start ? \Carbon\Carbon::parse($this->eventner->vote_start) : null;
         $voteEnd = $this->eventner->vote_end ? \Carbon\Carbon::parse($this->eventner->vote_end) : null;
