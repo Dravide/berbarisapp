@@ -286,11 +286,6 @@ class ParticipantController extends Controller
                 .'.pdf';
         }
 
-        $sekolah = DataSekolah::kelompokkan(
-            $registrations,
-            DataSekolah::fieldKabupatenId(RegistrationField::forEventner($eventner))
-        );
-
         $sekolah = DataSekolah::denganQr(DataSekolah::denganTautan(DataSekolah::kelompokkan(
             $registrations,
             DataSekolah::fieldKabupatenId(RegistrationField::forEventner($eventner))
