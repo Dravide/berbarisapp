@@ -33,6 +33,15 @@ class RegistrationResource extends JsonResource
             'bukti_pendaftaran' => $this->bukti_pendaftaran ? asset('storage/' . $this->bukti_pendaftaran) : null,
             'payment_proof' => $this->payment_proof ? asset('storage/' . $this->payment_proof) : null,
 
+            // Field builder: isian tambahan panitia (mis. asal kabupaten) plus
+            // field bawaan yang labelnya diubah — key = field_key. Hanya
+            // dikirim bila relasinya sudah di-eager-load, supaya daftar
+            // registrasi tidak menembak satu query per baris.
+            'field_values' => $this->whenLoaded('fieldValues', fn () =>
+                $this->fieldValuesForDisplay()
+                    ->mapWithKeys(fn ($f) => [$f['key'] => $f['value']])
+            ),
+
             'event' => $this->whenLoaded('eventner', fn () => [
                 'id' => $this->eventner->id,
                 'nama_event' => $this->eventner->nama_event,

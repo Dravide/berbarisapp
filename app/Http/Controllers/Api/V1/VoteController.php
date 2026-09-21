@@ -8,6 +8,7 @@ use App\Models\Registration;
 use App\Models\VoteBooster;
 use App\Models\VoteTransaction;
 use App\Services\AutoGoPay;
+use App\Services\PendingPaymentGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -63,6 +64,32 @@ class VoteController extends Controller
         $totalVotes = $request->vote_count * $multiplier;
         $amount = $request->vote_count * $basePrice;
 
+        // Sudah punya QR hidup untuk email ini? Balas QR yang sama.
+        //
+        // Sengaja HTTP 200 dengan amplop `data` yang sama plus penanda
+        // `reused`, bukan 4xx: yang diminta klien adalah QR yang bisa dibayar,
+        // dan itu yang dikirim. Status galat akan memaksa rilis aplikasi
+        // Flutter lebih dulu hanya untuk menampilkan QR yang sudah ada.
+        $lama = PendingPaymentGuard::find(VoteTransaction::class, $event->id, $request->voter_email);
+
+        if ($lama) {
+            return response()->json([
+                'data' => [
+                    'transaction_id' => $lama->id,
+                    'autogopay_transaction_id' => $lama->autogopay_transaction_id,
+                    'qr_url' => $lama->qr_url,
+                    // qr_string sengaja tidak dikirim: nilainya tidak disimpan
+                    // di DB, dan mengarang ulang isinya akan salah.
+                    'qr_string' => null,
+                    'expiry_time' => PendingPaymentGuard::expiryForDisplay($lama)->toIso8601String(),
+                    'amount' => (int) $lama->amount,
+                    'votes_earned' => (int) $lama->votes_earned,
+                    'vote_multiplier' => $multiplier,
+                    'reused' => true,
+                ],
+            ]);
+        }
+
         try {
             $service = new AutoGoPay();
             $result = $service->generateQris($amount);
@@ -81,9 +108,11 @@ class VoteController extends Controller
                 'amount' => $amount,
                 'votes_earned' => $totalVotes,
                 'voter_name' => $request->voter_name,
-                'voter_email' => $request->voter_email,
+                'voter_email' => PendingPaymentGuard::normalizeEmail($request->voter_email),
                 'comment' => strip_tags($request->comment ?? ''),
                 'status' => 'PENDING',
+                'expires_at' => PendingPaymentGuard::deadlineFrom($data['expiry_time'] ?? null),
+                'payable_until' => PendingPaymentGuard::payableUntil($data['expiry_time'] ?? null),
             ]);
 
             return response()->json([
@@ -96,6 +125,7 @@ class VoteController extends Controller
                     'amount' => $amount,
                     'votes_earned' => $totalVotes,
                     'vote_multiplier' => $multiplier,
+                    'reused' => false,
                 ],
             ]);
         } catch (\Exception $e) {

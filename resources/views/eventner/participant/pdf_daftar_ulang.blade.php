@@ -154,12 +154,19 @@
                             <td class="center">{{ $reg->urutan_tampil ?: '-' }}</td>
                             <td class="name-col">
                                 {{ $reg->display_name }}
-                                @if($reg->nama_pelatih)
-                                    <div class="sub">Pelatih: {{ $reg->nama_pelatih }}</div>
-                                @endif
-                                @if($reg->no_hp)
-                                    <div class="sub">{{ $reg->no_hp }}</div>
-                                @endif
+                                @php
+                                    // Ringkasan identitas dari definisi field event:
+                                    // label hasil suntingan panitia ikut tercetak.
+                                    // Berkas tidak dicetak, hanya ditandai ada/belum.
+                                    $ringkas = $reg->fieldValuesForDisplay();
+                                @endphp
+                                @foreach($ringkas as $isian)
+                                    @continue($isian['key'] === 'nama_sekolah')
+                                    <div class="sub">
+                                        {{ $isian['label'] }}:
+                                        {{ $isian['is_file'] ? ($isian['value'] ? 'Terlampir' : '—') : ($isian['value'] ?: '—') }}
+                                    </div>
+                                @endforeach
                             </td>
                             <td class="center">{{ $reg->participants->count() }}</td>
                             <td class="center">

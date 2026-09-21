@@ -84,7 +84,7 @@ class CertificateController extends Controller
         // Get participants for this competition category
         $participants = Registration::where('eventner_id', $eventner->id)
             ->where('competition_category_id', $competitionCategoryId)
-            ->with('participants')
+            ->with(['participants', 'fieldValues'])
             ->orderBy('nama_sekolah')
             ->get();
 
@@ -338,7 +338,7 @@ class CertificateController extends Controller
      */
     public function downloadCertificateByToken(string $token, ?CompetitionCategory $competitionCategory = null)
     {
-        $tokenReg = Registration::with(['eventner', 'participants'])
+        $tokenReg = Registration::with(['eventner', 'participants', 'fieldValues'])
             ->where('magic_token', $token)
             ->firstOrFail();
 
@@ -383,7 +383,7 @@ class CertificateController extends Controller
             }
 
             abort_unless($registration, 404);
-            $registration->loadMissing(['eventner', 'participants']);
+            $registration->loadMissing(['eventner', 'participants', 'fieldValues']);
         } else {
             $registration = $tokenReg;
         }

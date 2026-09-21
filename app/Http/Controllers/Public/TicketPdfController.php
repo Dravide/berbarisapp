@@ -15,8 +15,26 @@ class TicketPdfController extends Controller
         $resolved = app()->bound('current_eventner') ? app('current_eventner') : null;
         $eventner = $resolved ?: Eventner::approved()->where('slug', $slug)->firstOrFail();
 
+        return $this->renderTicketPdf($eventner, $orderCode);
+    }
+
+    /**
+     * Varian subdomain (/tiket/{orderCode}/pdf). Event sudah dibinding
+     * middleware, dan route-nya tidak punya segmen slug.
+     *
+     * $subdomain wajib ada di posisi pertama: Laravel menyisipkan parameter
+     * domain SEBELUM parameter path, jadi tanpa itu $orderCode menerima nama
+     * subdomain dan setiap unduhan berakhir 404.
+     */
+    public function downloadFromSubdomain($subdomain = null, $orderCode = null)
+    {
+        return $this->renderTicketPdf(app('current_eventner'), $orderCode);
+    }
+
+    private function renderTicketPdf(Eventner $eventner, ?string $orderCode)
+    {
         $ticket = Ticket::where('eventner_id', $eventner->id)
-            ->where('order_code', strtoupper(trim($orderCode)))
+            ->where('order_code', strtoupper(trim((string) $orderCode)))
             ->whereIn('status', ['PAID', 'CHECKED_IN'])
             ->firstOrFail();
 

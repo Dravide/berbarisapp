@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Ticket;
 use App\Models\VoteTransaction;
 use App\Services\AutoGoPay;
+use App\Services\PendingPaymentGuard;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -26,6 +27,17 @@ class SyncPendingTransactions extends Command
 
     private function sync(): int
     {
+        // Bebaskan dulu QR yang tenggat bayarnya sudah lewat jauh tapi tidak
+        // pernah dilaporkan gateway (webhook kedaluwarsa hilang). Tanpa ini
+        // barisnya tetap PENDING selamanya — jendela rekonsiliasi di bawah
+        // berbasis created_at, jadi baris yang lebih tua dari 24 jam tidak
+        // pernah dicek lagi dan PendingPaymentGuard memblokir emailnya terus.
+        $dibebaskan = PendingPaymentGuard::sweepExpired();
+
+        if ($dibebaskan > 0) {
+            Log::info("Sync: {$dibebaskan} transaksi PENDING kedaluwarsa dibebaskan secara lokal.");
+        }
+
         $service = new AutoGoPay();
         $synced = 0;
 

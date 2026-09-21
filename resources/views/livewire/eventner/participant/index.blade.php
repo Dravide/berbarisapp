@@ -312,31 +312,29 @@
                             @error('competition_category_id') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                         </div>
                         <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">NPSN <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model="npsn" placeholder="Nomor Pokok Sekolah Nasional" required>
-                                @error('npsn') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Nama Sekolah <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model="nama_sekolah" placeholder="Nama sekolah sesuai data resmi" required>
-                                @error('nama_sekolah') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">No HP / WhatsApp <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" wire:model="no_hp" placeholder="08xxxxxxxxxx" required>
-                                @error('no_hp') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Email Sekolah</label>
-                                <input type="email" class="form-control" wire:model="school_email" placeholder="Alamat email sekolah">
-                                @error('school_email') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-semibold">Nama Pelatih</label>
-                                <input type="text" class="form-control" wire:model="nama_pelatih" placeholder="Nama pelatih / pembina">
-                                @error('nama_pelatih') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                            </div>
+                            @foreach($this->fieldsModal() as $field)
+                                @php $properti = $field->builtin_source; @endphp
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">
+                                        {{ $field->label }}
+                                        @if($field->is_required) <span class="text-danger">*</span> @endif
+                                    </label>
+                                    @if($field->type === 'select')
+                                        <select class="form-select" wire:model="{{ $properti }}" @if($field->is_required) required @endif>
+                                            <option value="">— Pilih {{ $field->label }} —</option>
+                                            @foreach(($field->options ?? []) as $opsi)
+                                                <option value="{{ $opsi['value'] }}">{{ $opsi['label'] }}</option>
+                                            @endforeach
+                                        </select>
+                                    @else
+                                        <input type="{{ $properti === 'school_email' ? 'email' : ($field->type === 'number' ? 'number' : 'text') }}"
+                                            class="form-control" wire:model="{{ $properti }}"
+                                            placeholder="{{ $field->help_text ?: $field->label }}"
+                                            @if($field->is_required) required @endif>
+                                    @endif
+                                    @error($properti) <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                </div>
+                            @endforeach
                             @if(!$editId)
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Jumlah Pasukan <span class="text-danger">*</span></label>
@@ -396,96 +394,86 @@
                     @endif
 
                     {{-- Row 1: Berkas Checklist --}}
+                    @php
+                        // Isian berkas mengikuti field builder event ini, bukan
+                        // kolom tetap — panitia bebas menambah/menghapus berkas.
+                        // Untuk kwitansi, bukti bayar dari portal dipakai sebagai
+                        // cadangan karena sudah lebih dulu ada.
+                        $berkasCeklis = $selectedRegistration->fieldValuesForDisplay()
+                            ->filter(fn ($f) => $f['is_file'])
+                            ->map(function ($f) use ($selectedRegistration) {
+                                if (!$f['value'] && $f['key'] === 'bukti_pendaftaran' && $selectedRegistration->payment_proof) {
+                                    $f['value'] = $selectedRegistration->payment_proof;
+                                    $f['url'] = asset('storage/' . ltrim($selectedRegistration->payment_proof, '/'));
+                                }
+
+                                return $f;
+                            });
+                    @endphp
                     <div class="p-4 pb-0">
                         <h5 class="fw-bold mb-3 text-uppercase small text-primary"><i class="ti ti-file-check me-1"></i> Ceklis Berkas Persyaratan</h5>
                     </div>
-                    <div class="row g-0 px-4">
-                        {{-- Logo Sekolah --}}
-                        <div class="col-md-4 p-3 border-end border-bottom">
-                            <div class="d-flex align-items-start gap-3">
-                                <div class="flex-shrink-0">
-                                    @if($selectedRegistration->logo_sekolah)
-                                        <img src="{{ asset('storage/' . $selectedRegistration->logo_sekolah) }}" class="rounded-3 border" style="width:60px;height:60px;object-fit:cover;">
-                                    @else
-                                        <div class="bg-danger bg-opacity-10 rounded-3 d-flex align-items-center justify-content-center border border-danger border-opacity-25" style="width:60px;height:60px;">
-                                            <i class="ti ti-photo-off text-danger fs-4"></i>
-                                        </div>
-                                    @endif
-                                </div>
-                                <div>
-                                    <h6 class="fw-bold mb-0">Logo Sekolah</h6>
-                                    @if($selectedRegistration->logo_sekolah)
-                                        <a href="{{ asset('storage/' . $selectedRegistration->logo_sekolah) }}" target="_blank" class="small text-primary"><i class="ti ti-external-link"></i> Lihat</a>
-                                        <span class="badge bg-success-subtle text-success ms-2"><i class="ti ti-check"></i></span>
-                                    @else
-                                        <span class="badge bg-danger-subtle text-danger mt-1"><i class="ti ti-x"></i> Belum diunggah</span>
-                                    @endif
-                                </div>
-                            </div>
+                    @if($berkasCeklis->isEmpty())
+                        <div class="px-4">
+                            <p class="text-muted small mb-0">Event ini tidak meminta berkas unggahan.</p>
                         </div>
-                        {{-- Surat Tugas --}}
-                        <div class="col-md-4 p-3 border-end border-bottom">
-                            <div class="d-flex align-items-start gap-3">
-                                <div class="flex-shrink-0">
-                                    @if($selectedRegistration->surat_tugas)
-                                        <div class="bg-success bg-opacity-10 rounded-3 d-flex align-items-center justify-content-center border border-success border-opacity-25" style="width:60px;height:60px;">
-                                            <i class="ti ti-file-text text-success fs-4"></i>
+                    @else
+                        <div class="row g-0 px-4">
+                            @foreach($berkasCeklis as $berkas)
+                                <div class="col-md-4 p-3 border-end border-bottom">
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="flex-shrink-0">
+                                            @if($berkas['value'] && $berkas['type'] === 'image')
+                                                <img src="{{ $berkas['url'] }}" class="rounded-3 border" style="width:60px;height:60px;object-fit:cover;">
+                                            @elseif($berkas['value'])
+                                                <div class="bg-success bg-opacity-10 rounded-3 d-flex align-items-center justify-content-center border border-success border-opacity-25" style="width:60px;height:60px;">
+                                                    <i class="ti ti-file-text text-success fs-4"></i>
+                                                </div>
+                                            @else
+                                                <div class="rounded-3 d-flex align-items-center justify-content-center border {{ $berkas['is_required'] ? 'bg-danger bg-opacity-10 border-danger border-opacity-25' : 'bg-light text-muted' }}" style="width:60px;height:60px;">
+                                                    <i class="ti {{ $berkas['type'] === 'image' ? 'ti-photo-off' : 'ti-file-off' }} fs-4 {{ $berkas['is_required'] ? 'text-danger' : 'text-muted' }}"></i>
+                                                </div>
+                                            @endif
                                         </div>
-                                    @else
-                                        <div class="rounded-3 d-flex align-items-center justify-content-center border {{ $selectedRegistration->eventner->surat_tugas_required ? 'bg-danger bg-opacity-10 border-danger border-opacity-25' : 'bg-light text-muted' }}" style="width:60px;height:60px;">
-                                            <i class="ti ti-file-off fs-4 {{ $selectedRegistration->eventner->surat_tugas_required ? 'text-danger' : 'text-muted' }}"></i>
+                                        <div>
+                                            <h6 class="fw-bold mb-0">{{ $berkas['label'] }}</h6>
+                                            @if($berkas['value'])
+                                                <a href="{{ $berkas['url'] }}" target="_blank" class="small text-primary"><i class="ti ti-external-link"></i> Lihat</a>
+                                                <span class="badge bg-success-subtle text-success ms-2"><i class="ti ti-check"></i></span>
+                                            @elseif($berkas['is_required'])
+                                                <span class="badge bg-danger-subtle text-danger mt-1"><i class="ti ti-x"></i> Wajib, belum ada</span>
+                                            @else
+                                                <span class="text-muted small mt-1">Tidak wajib</span>
+                                            @endif
                                         </div>
-                                    @endif
+                                    </div>
                                 </div>
-                                <div>
-                                    <h6 class="fw-bold mb-0">Surat Tugas</h6>
-                                    @if($selectedRegistration->surat_tugas)
-                                        <a href="{{ asset('storage/' . $selectedRegistration->surat_tugas) }}" target="_blank" class="small text-primary"><i class="ti ti-external-link"></i> Lihat</a>
-                                        <span class="badge bg-success-subtle text-success ms-2"><i class="ti ti-check"></i></span>
-                                    @else
-                                        @if($selectedRegistration->eventner->surat_tugas_required)
-                                            <span class="badge bg-danger-subtle text-danger mt-1"><i class="ti ti-x"></i> Wajib, belum ada</span>
-                                        @else
-                                            <span class="text-muted small mt-1">Tidak wajib</span>
-                                        @endif
-                                    @endif
-                                </div>
-                            </div>
+                            @endforeach
                         </div>
-                        {{-- Kwitansi --}}
-                        <div class="col-md-4 p-3 border-bottom">
-                            <div class="d-flex align-items-start gap-3">
-                                <div class="flex-shrink-0">
-                                    @if($selectedRegistration->bukti_pendaftaran || $selectedRegistration->payment_proof)
-                                        <img src="{{ asset('storage/' . ($selectedRegistration->bukti_pendaftaran ?: $selectedRegistration->payment_proof)) }}" class="rounded-3 border" style="width:60px;height:60px;object-fit:cover;">
-                                    @else
-                                        <div class="rounded-3 d-flex align-items-center justify-content-center border {{ $selectedRegistration->eventner->kwitansi_required ? 'bg-danger bg-opacity-10 border-danger border-opacity-25' : 'bg-light text-muted' }}" style="width:60px;height:60px;">
-                                            <i class="ti ti-receipt-off fs-4 {{ $selectedRegistration->eventner->kwitansi_required ? 'text-danger' : 'text-muted' }}"></i>
-                                        </div>
-                                    @endif
-                                </div>
-                                <div>
-                                    <h6 class="fw-bold mb-0">Kwitansi</h6>
-                                    @if($selectedRegistration->bukti_pendaftaran || $selectedRegistration->payment_proof)
-                                        <a href="{{ asset('storage/' . ($selectedRegistration->bukti_pendaftaran ?: $selectedRegistration->payment_proof)) }}" target="_blank" class="small text-primary"><i class="ti ti-external-link"></i> Lihat</a>
-                                        <span class="badge bg-success-subtle text-success ms-2"><i class="ti ti-check"></i></span>
-                                    @else
-                                        @if($selectedRegistration->eventner->kwitansi_required)
-                                            <span class="badge bg-danger-subtle text-danger mt-1"><i class="ti ti-x"></i> Wajib, belum ada</span>
-                                        @else
-                                            <span class="text-muted small mt-1">Tidak wajib</span>
-                                        @endif
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    @endif
+
+                    @php
+                        // Label & visibilitas baris ini dari definisi field event,
+                        // bukan literal — panitia mematikannya di builder, kolomnya
+                        // hilang dari modal verifikasi.
+                        $pelatihField = \App\Models\RegistrationField::bySource($selectedRegistration->eventner, 'nama_pelatih');
+                        $fotoPelatihField = \App\Models\RegistrationField::bySource($selectedRegistration->eventner, 'foto_pelatih');
+                        $dantonNamaField = \App\Models\RegistrationField::bySource($selectedRegistration->eventner, 'danton_nama');
+                        $dantonNisnField = \App\Models\RegistrationField::bySource($selectedRegistration->eventner, 'danton_nisn');
+                        $dantonFotoField = \App\Models\RegistrationField::bySource($selectedRegistration->eventner, 'danton_foto');
+                        $grupAnggota = \App\Models\RegistrationField::bySource($selectedRegistration->eventner, 'peserta');
+                        $subNama = $grupAnggota?->subField('nama');
+                        $subNisn = $grupAnggota?->subField('nisn');
+                        $subFoto = $grupAnggota?->subField('foto');
+                    @endphp
 
                     {{-- Row 2: Pelatih & Danton --}}
+                    @if(($pelatihField?->is_active) || ($dantonNamaField?->is_active))
                     <div class="p-4 pb-0">
-                        <h5 class="fw-bold mb-3 text-uppercase small text-primary"><i class="ti ti-user-check me-1"></i> Data Pelatih & Danton</h5>
+                        <h5 class="fw-bold mb-3 text-uppercase small text-primary"><i class="ti ti-user-check me-1"></i> {{ \App\Models\RegistrationField::SECTIONS['pelatih'] }} &amp; {{ \App\Models\RegistrationField::SECTIONS['danton'] }}</h5>
                     </div>
                     <div class="row g-0 px-4">
+                        @if($pelatihField?->is_active)
                         <div class="col-md-6 p-3 border-end border-bottom">
                             <div class="d-flex align-items-center gap-3">
                                 @if($selectedRegistration->foto_pelatih)
@@ -498,12 +486,14 @@
                                 <div>
                                     <h6 class="fw-bold mb-1">{{ $selectedRegistration->nama_pelatih ?: '---' }}</h6>
                                     <small class="text-muted"><i class="ti ti-phone me-1"></i>{{ $selectedRegistration->no_hp }}</small>
-                                    @if(!$selectedRegistration->foto_pelatih)
-                                        <span class="badge bg-warning-subtle text-warning ms-2"><i class="ti ti-alert-circle"></i> Foto belum ada</span>
+                                    @if(!$selectedRegistration->foto_pelatih && $fotoPelatihField?->is_active)
+                                        <span class="badge bg-warning-subtle text-warning ms-2"><i class="ti ti-alert-circle"></i> {{ $fotoPelatihField->label }} belum ada</span>
                                     @endif
                                 </div>
                             </div>
                         </div>
+                        @endif
+                        @if($dantonNamaField?->is_active)
                         <div class="col-md-6 p-3 border-bottom">
                             <div class="d-flex align-items-center gap-3">
                                 @if($selectedRegistration->danton_foto)
@@ -515,18 +505,23 @@
                                 @endif
                                 <div>
                                     <h6 class="fw-bold mb-1">{{ $selectedRegistration->danton_nama ?: '---' }}</h6>
-                                    <small class="text-muted">NISN: {{ $selectedRegistration->danton_nisn ?: '-' }}</small>
-                                    @if(!$selectedRegistration->danton_foto || !$selectedRegistration->danton_nama)
+                                    @if($dantonNisnField?->is_active)
+                                        <small class="text-muted">{{ $dantonNisnField->label }}: {{ $selectedRegistration->danton_nisn ?: '-' }}</small>
+                                    @endif
+                                    @if((!$selectedRegistration->danton_foto && $dantonFotoField?->is_active) || !$selectedRegistration->danton_nama)
                                         <span class="badge bg-warning-subtle text-warning ms-2"><i class="ti ti-alert-circle"></i> Belum lengkap</span>
                                     @endif
                                 </div>
                             </div>
                         </div>
+                        @endif
                     </div>
+                    @endif
 
                     {{-- Row 3: Anggota Pasukan --}}
+                    @if($grupAnggota)
                     <div class="p-4 pb-0">
-                        <h5 class="fw-bold mb-3 text-uppercase small text-primary"><i class="ti ti-users-group me-1"></i> Anggota Pasukan
+                        <h5 class="fw-bold mb-3 text-uppercase small text-primary"><i class="ti ti-users-group me-1"></i> {{ $grupAnggota->label }}
                             <span class="badge bg-primary-subtle text-primary ms-2 fs-2">{{ $selectedRegistration->participants->count() }} orang</span>
                         </h5>
                     </div>
@@ -537,9 +532,9 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th class="ps-3" style="width:40px;">No</th>
-                                            <th style="width:60px;">Foto</th>
-                                            <th>Nama</th>
-                                            <th>NISN</th>
+                                            @if($subFoto)<th style="width:60px;">{{ $subFoto['label'] }}</th>@endif
+                                            @if($subNama)<th>{{ $subNama['label'] }}</th>@endif
+                                            @if($subNisn)<th>{{ $subNisn['label'] }}</th>@endif
                                             <th class="text-center" style="width:80px;">Status</th>
                                         </tr>
                                     </thead>
@@ -547,6 +542,7 @@
                                         @foreach($selectedRegistration->participants as $idx => $p)
                                             <tr>
                                                 <td class="ps-3 fw-bold text-muted">{{ $idx + 1 }}</td>
+                                                @if($subFoto)
                                                 <td>
                                                     @if($p->foto)
                                                         <img src="{{ asset('storage/' . $p->foto) }}" class="rounded-2 border" style="width:36px;height:44px;object-fit:cover;">
@@ -556,8 +552,9 @@
                                                         </div>
                                                     @endif
                                                 </td>
-                                                <td class="fw-semibold">{{ $p->nama }}</td>
-                                                <td class="text-muted small">{{ $p->nisn ?: '-' }}</td>
+                                                @endif
+                                                @if($subNama)<td class="fw-semibold">{{ $p->nama }}</td>@endif
+                                                @if($subNisn)<td class="text-muted small">{{ $p->nisn ?: '-' }}</td>@endif
                                                 <td class="text-center">
                                                     @if($p->foto)
                                                         <span class="badge bg-success-subtle text-success"><i class="ti ti-check"></i></span>
@@ -573,27 +570,30 @@
                         @else
                             <div class="text-center py-5 bg-light rounded-3 border border-dashed text-muted">
                                 <i class="ti ti-users-off fs-8 d-block mb-2"></i>
-                                <span class="fw-semibold">Belum ada data anggota pasukan.</span>
+                                <span class="fw-semibold">Belum ada data {{ strtolower($grupAnggota->label) }}.</span>
                             </div>
                         @endif
                     </div>
+                    @endif
 
                     {{-- Verdict Summary --}}
                     <div class="p-4 pt-0">
                         @php
                             $checkCount = 0; $totalChecks = 0;
-                            // Logo
-                            $totalChecks++; if($selectedRegistration->logo_sekolah) $checkCount++;
-                            // Surat tugas
-                            if($selectedRegistration->eventner->surat_tugas_required) { $totalChecks++; if($selectedRegistration->surat_tugas) $checkCount++; }
-                            // Kwitansi
-                            if($selectedRegistration->eventner->kwitansi_required) { $totalChecks++; if($selectedRegistration->bukti_pendaftaran || $selectedRegistration->payment_proof) $checkCount++; }
-                            // Pelatih
-                            $totalChecks++; if($selectedRegistration->nama_pelatih) $checkCount++;
-                            // Danton
-                            $totalChecks++; if($selectedRegistration->danton_nama) $checkCount++;
-                            // Anggota
-                            if($selectedRegistration->participants->count() > 0) { $totalChecks++; $checkCount++; }
+
+                            // Isian wajib dari field builder, termasuk berkas —
+                            // daftarnya mengikuti pengaturan panitia, bukan kolom tetap.
+                            foreach ($selectedRegistration->fieldValuesForDisplay() as $f) {
+                                if (!$f['is_required']) continue;
+                                $totalChecks++;
+                                if ($f['value']) $checkCount++;
+                            }
+
+                            // Field bawaan (pelatih, danton, berkas) sudah masuk
+                            // hitungan di atas lewat fieldValuesForDisplay(). Yang
+                            // tersisa hanya grup anggota — nilainya di tabel
+                            // participants, bukan nilai tunggal.
+                            if($grupAnggota && $selectedRegistration->participants->count() > 0) { $totalChecks++; $checkCount++; }
                             $pct = $totalChecks > 0 ? round($checkCount / $totalChecks * 100) : 0;
                             $verdictColor = $pct == 100 ? 'success' : ($pct >= 60 ? 'warning' : 'danger');
                         @endphp

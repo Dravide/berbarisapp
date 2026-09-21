@@ -43,9 +43,16 @@
                     <div class="d-flex align-items-center gap-2 mb-1">
                         <h4 class="fw-semibold mb-0">{{ $schoolInfo['nama_sekolah'] }}</h4>
                         <span class="badge bg-dark rounded-1">NPSN {{ $schoolInfo['npsn'] }}</span>
-                        <a href="{{ route('admin.schools.edit', $schoolInfo['npsn']) }}" class="btn btn-sm btn-warning ms-auto">
-                            <i class="ti ti-edit me-1"></i> Edit
-                        </a>
+                        <div class="ms-auto d-flex gap-2">
+                            <a href="{{ route('admin.schools.edit', $schoolInfo['npsn']) }}" class="btn btn-sm btn-warning">
+                                <i class="ti ti-edit me-1"></i> Edit
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline-danger"
+                                wire:click="deleteSchool"
+                                wire:confirm="Hapus sekolah {{ $schoolInfo['nama_sekolah'] }} (NPSN {{ $schoolInfo['npsn'] }})? Tindakan ini permanen.">
+                                <i class="ti ti-trash me-1"></i> Hapus Sekolah
+                            </button>
+                        </div>
                     </div>
                     <div class="d-flex flex-wrap gap-3 text-muted" style="font-size: 0.85rem;">
                         @if($schoolInfo['no_hp'])
@@ -141,6 +148,7 @@
                             <th class="fw-semibold">Status</th>
                             <th class="fw-semibold">Final</th>
                             <th class="fw-semibold">Tanggal</th>
+                            <th class="fw-semibold text-end">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -151,9 +159,34 @@
                                     <small class="text-muted">{{ $reg->eventner->diselenggarakan_oleh ?? '' }}</small>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary-subtle text-secondary rounded-1 px-2 py-1">
-                                        {{ $reg->competitionCategory->nama ?? '-' }}
-                                    </span>
+                                    @php
+                                        // Kategori nyangkut = milik event lain, atau kategori induk
+                                        // yang seharusnya tidak dipilih pendaftar.
+                                        $kategori = $reg->competitionCategory;
+                                        $lintasEvent = $kategori && (int) $kategori->eventner_id !== (int) $reg->eventner_id;
+                                        $kategoriInduk = $kategori && $kategori->isParent() && ($kategori->children_count ?? 0) > 0;
+                                    @endphp
+
+                                    @if($lintasEvent)
+                                        <span class="badge bg-danger-subtle text-danger rounded-1 px-2 py-1">
+                                            <i class="ti ti-alert-triangle me-1"></i>{{ $kategori->full_name }}
+                                        </span>
+                                        <div><small class="text-danger" style="font-size: 0.72rem;">Kategori milik event lain — harus diperbaiki</small></div>
+                                    @elseif($kategoriInduk)
+                                        <span class="badge bg-warning-subtle text-warning rounded-1 px-2 py-1">
+                                            <i class="ti ti-alert-triangle me-1"></i>{{ $kategori->full_name }}
+                                        </span>
+                                        <div><small class="text-warning" style="font-size: 0.72rem;">Kategori induk, bukan tingkat</small></div>
+                                    @elseif($kategori)
+                                        <span class="badge bg-secondary-subtle text-secondary rounded-1 px-2 py-1">
+                                            {{ $kategori->full_name }}
+                                        </span>
+                                    @else
+                                        <span class="badge bg-danger-subtle text-danger rounded-1 px-2 py-1">
+                                            <i class="ti ti-alert-triangle me-1"></i>Kategori hilang
+                                        </span>
+                                        <div><small class="text-danger" style="font-size: 0.72rem;">Kategori sudah dihapus — harus diperbaiki</small></div>
+                                    @endif
                                 </td>
                                 <td>
                                     @if($reg->label_pasukan)
@@ -197,10 +230,24 @@
                                 <td>
                                     <small class="text-muted">{{ $reg->created_at->translatedFormat('d M Y') }}</small>
                                 </td>
+                                <td class="text-end">
+                                    <div class="d-flex gap-1 justify-content-end">
+                                        <button type="button" class="btn btn-sm btn-outline-primary"
+                                            wire:click="openCategoryModal({{ $reg->id }})" title="Ubah Kategori">
+                                            <i class="ti ti-category"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                            wire:click="deleteRegistration({{ $reg->id }})"
+                                            wire:confirm="Hapus pendaftaran {{ $reg->display_name }} pada event {{ $reg->eventner->nama_event ?? '-' }}? Peserta dan nilainya ikut terhapus permanen."
+                                            title="Hapus Pendaftaran">
+                                            <i class="ti ti-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="text-center py-5">
+                                <td colspan="8" class="text-center py-5">
                                     <i class="ti ti-inbox text-muted fs-2 d-block mb-2"></i>
                                     <span class="text-muted">Tidak ada data pendaftaran.</span>
                                 </td>
@@ -211,4 +258,58 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Ubah Kategori --}}
+    @if($showCategoryModal && $editingRegistration)
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-semibold">Ubah Kategori Lomba</h5>
+                        <button type="button" class="btn-close" wire:click="closeCategoryModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <div class="fw-semibold">{{ $editingRegistration->display_name }}</div>
+                            <small class="text-muted">{{ $editingRegistration->eventner->nama_event ?? '-' }}</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Kategori Saat Ini</label>
+                            <input type="text" class="form-control" disabled
+                                value="{{ $editingRegistration->competitionCategory->full_name ?? 'Kategori sudah dihapus' }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Kategori Baru <span class="text-danger">*</span></label>
+
+                            @if($categoryOptions->isEmpty())
+                                <div class="alert alert-warning mb-0">
+                                    <i class="ti ti-alert-triangle me-1"></i>
+                                    Event ini belum punya satu pun kategori lomba. Buat kategorinya dulu di halaman
+                                    Kategori Lomba sebelum memindahkan pendaftaran.
+                                </div>
+                            @else
+                                <select class="form-select @error('newCategoryId') is-invalid @enderror" wire:model="newCategoryId">
+                                    <option value="">-- Pilih Kategori --</option>
+                                    @foreach($categoryOptions as $cat)
+                                        <option value="{{ $cat->id }}">{{ $cat->full_name }}</option>
+                                    @endforeach
+                                </select>
+                                @error('newCategoryId') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                <small class="text-muted">Hanya kategori milik event ini. Nomor undian pendaftaran ini akan direset.</small>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" wire:click="closeCategoryModal">Batal</button>
+                        <button type="button" class="btn btn-primary" wire:click="saveCategory"
+                            @if($categoryOptions->isEmpty()) disabled @endif>
+                            <i class="ti ti-device-floppy me-1"></i> Simpan Kategori
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

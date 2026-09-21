@@ -318,35 +318,46 @@
         <div class="title">Formulir Pendaftaran Pasukan</div>
 
         <!-- DATA KONTINGEN -->
+        @php
+            // Identitas dari definisi field event — label hasil suntingan
+            // panitia ikut tercetak, berkas ditandai ada/belum.
+            $grupAnggota = $registration->fieldDefinitionsForEvent()->firstWhere('type', 'group');
+            $subAnggota = fn (string $key) => $grupAnggota?->subField($key);
+            $labelStruktur = fn (string $sumber, string $fallback) => $registration->fieldLabelFor($sumber) ?? $fallback;
+        @endphp
         <div class="section-title">I. Identitas Kontingen / Sekolah</div>
         <table class="table-detail">
             <tr>
-                <td class="lbl" style="width:18%;">Nama Sekolah</td>
-                <td style="width:32%;">{{ $registration->display_name }}</td>
-                <td class="lbl" style="width:18%;">NPSN</td>
-                <td style="width:32%;">{{ $registration->npsn }}</td>
-            </tr>
-            <tr>
                 <td class="lbl">Kategori Lomba</td>
                 <td><strong>{{ $registration->competitionCategory->full_name ?? '-' }}</strong></td>
-                <td class="lbl">Kontak (HP / WA)</td>
-                <td>{{ $registration->no_hp }}</td>
-            </tr>
-            <tr>
                 <td class="lbl">Tempat Lomba</td>
-                <td colspan="3">{{ $registration->competitionCategory?->venue?->label ?? '-' }}</td>
+                <td>{{ $registration->competitionCategory?->venue?->label ?? '-' }}</td>
             </tr>
+            @foreach($registration->fieldValuesForDisplay() as $isian)
+                <tr>
+                    <td class="lbl">{{ $isian['label'] }}</td>
+                    <td colspan="3">
+                        @if($isian['is_file'])
+                            {{ $isian['value'] ? 'Terlampir' : '—' }}
+                        @elseif($isian['key'] === 'nama_sekolah')
+                            {{ $registration->display_name }}
+                        @else
+                            {{ $isian['value'] ?: '—' }}
+                        @endif
+                    </td>
+                </tr>
+            @endforeach
         </table>
 
         <!-- STRUKTUR PASUKAN -->
         <div class="section-title">II. Struktur Official &amp; Danton</div>
         <table class="table-detail">
             <tr>
-                <td class="lbl" style="width:18%;">Pelatih / Official</td>
+                <td class="lbl" style="width:18%;">{{ $labelStruktur('nama_pelatih', 'Pelatih / Official') }}</td>
                 <td style="width:32%;">
                     <strong>{{ $registration->nama_pelatih ?? '-' }}</strong>
                 </td>
-                <td class="lbl" style="width:18%; text-align: center;">Foto Pelatih</td>
+                <td class="lbl" style="width:18%; text-align: center;">{{ $labelStruktur('foto_pelatih', 'Foto Pelatih') }}</td>
                 <td style="width:32%; text-align: center;">
                     <div class="foto-container">
                         @if($registration->foto_pelatih)
@@ -358,12 +369,12 @@
                 </td>
             </tr>
             <tr>
-                <td class="lbl">Komandan Ton (Danton)</td>
+                <td class="lbl">{{ $labelStruktur('danton_nama', 'Komandan Ton (Danton)') }}</td>
                 <td>
                     <strong>{{ $registration->danton_nama ?? '-' }}</strong>
-                    <p style="margin: 3px 0 0 0; font-size:11px;">NISN: {{ $registration->danton_nisn ?? '-' }}</p>
+                    <p style="margin: 3px 0 0 0; font-size:11px;">{{ $labelStruktur('danton_nisn', 'NISN') }}: {{ $registration->danton_nisn ?? '-' }}</p>
                 </td>
-                <td class="lbl" style="text-align: center;">Foto Danton</td>
+                <td class="lbl" style="text-align: center;">{{ $labelStruktur('danton_foto', 'Foto Danton') }}</td>
                 <td style="text-align: center;">
                     <div class="foto-container">
                         @if($registration->danton_foto)
@@ -377,7 +388,7 @@
         </table>
 
         <!-- DAFTAR ANGGOTA PASUKAN -->
-        <div class="section-title">III. Daftar Anggota Pasukan</div>
+        <div class="section-title">III. {{ $grupAnggota?->label ?? 'Daftar Anggota Pasukan' }}</div>
         <div class="member-grid">
                 @forelse($participants as $index => $participant)
                     @if($index % 3 === 0) <div class="member-row"> @endif
@@ -391,7 +402,9 @@
                         </div>
                         <div class="member-info">
                             <strong>{{ $participant->nama }}</strong>
-                            <span>NISN: {{ $participant->nisn ?: '-' }}</span>
+                            @if($subAnggota('nisn'))
+                                <span>{{ $subAnggota('nisn')['label'] }}: {{ $participant->nisn ?: '-' }}</span>
+                            @endif
                         </div>
                     </div>
                     @if($index % 3 === 2 || $loop->last) </div> @endif
@@ -417,7 +430,7 @@
         <table class="signature-table">
             <tr>
                 <td>
-                    <p><strong>Pelatih / Official</strong></p>
+                    <p><strong>{{ $labelStruktur('nama_pelatih', 'Pelatih / Official') }}</strong></p>
                     <div class="signature-space"></div>
                     <p class="signature-name">{{ $registration->nama_pelatih ?? '............................' }}</p>
                 </td>

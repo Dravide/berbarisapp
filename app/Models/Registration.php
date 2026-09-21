@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Sanctum\HasApiTokens;
@@ -51,6 +52,10 @@ class Registration extends Model
 
     /**
      * Nama tampil: sekolah + label pasukan (A/B/C) jika ada.
+     *
+     * Sengaja membaca kolom langsung, bukan lewat getFieldValue(): properti ini
+     * ada di $appends sehingga ikut dipanggil setiap serialisasi (termasuk
+     * daftar API) — jalur field builder akan memaksa query definisi per baris.
      */
     public function getDisplayNameAttribute(): string
     {
@@ -62,6 +67,11 @@ class Registration extends Model
     protected $hidden = ['password'];
 
     protected $appends = ['display_name'];
+
+    /** Cache per-instance untuk definisi field & nilainya — bukan kolom DB. */
+    protected ?array $fieldValuesCache = null;
+
+    protected ?Collection $fieldDefinitionsCache = null;
 
     protected static function boot()
     {
@@ -123,6 +133,138 @@ class Registration extends Model
     public function deviceTokens()
     {
         return $this->hasMany(DeviceToken::class, 'registration_id');
+    }
+
+    /**
+     * Jawaban field buatan panitia (registration_field_values).
+     *
+     * Field bawaan menyimpan nilainya di kolom tabel ini, bukan di sini — lihat
+     * RegistrationField::defaults().
+     */
+    public function fieldValues()
+    {
+        return $this->hasMany(RegistrationFieldValue::class);
+    }
+
+    /**
+     * Semua jawaban field, dipetakan `field_key` => nilai.
+     *
+     * Satu pintu baca untuk field builder: field bawaan diambil dari kolom
+     * nyata lewat builtin_source, field baru dari registration_field_values.
+     * Di-cache per instance supaya view yang memanggil berkali-kali (ceklist,
+     * PDF, sertifikat) tidak menembak query berulang.
+     */
+    public function fieldValuesMap(): array
+    {
+        if ($this->fieldValuesCache !== null) {
+            return $this->fieldValuesCache;
+        }
+
+        $nilai = [];
+
+        foreach ($this->fieldDefinitions() as $field) {
+            // Field group (daftar anggota) tidak punya nilai tunggal —
+            // nilainya hidup di tabel participants.
+            if ($field->isGroup()) {
+                continue;
+            }
+
+            $nilai[$field->field_key] = $field->builtin_source
+                ? ($this->{$field->builtin_source} ?? null)
+                : null;
+        }
+
+        foreach ($this->fieldValues as $value) {
+            $field = $value->field;
+
+            if (! $field) {
+                continue;
+            }
+
+            $nilai[$field->field_key] = $value->value;
+        }
+
+        // Field yang definisinya sudah hilang tapi nilainya masih ada (mis.
+        // field nonaktif pada registrasi lama) tetap bisa dibaca lewat key-nya.
+        return $this->fieldValuesCache = array_filter($nilai, fn ($v) => $v !== null && $v !== '');
+    }
+
+    /** Definisi field milik event registrasi ini (termasuk yang nonaktif). */
+    protected function fieldDefinitions(): Collection
+    {
+        return $this->fieldDefinitionsCache ??= RegistrationField::where('eventner_id', $this->eventner_id)
+            ->orderBy('sort_order')
+            ->get();
+    }
+
+    /**
+     * Definisi field event ini untuk view (PDF/print) — satu query per baris
+     * registrasi, bukan per pemanggilan.
+     */
+    public function fieldDefinitionsForEvent(): Collection
+    {
+        return $this->fieldDefinitions();
+    }
+
+    /**
+     * Label builder untuk satu `builtin_source`; null bila barisnya tidak ada
+     * atau dinonaktifkan panitia (pemanggil memakai itu sebagai sinyal).
+     */
+    public function fieldLabelFor(string $source): ?string
+    {
+        $field = $this->fieldDefinitions()->firstWhere('builtin_source', $source);
+
+        return $field && $field->is_active ? $field->label : null;
+    }
+
+    /**
+     * Nilai satu field berdasarkan `field_key`, null bila kosong.
+     *
+     * Fallback terakhir: kolom bernama sama di tabel registrations — supaya
+     * pemanggil lama (mis. `label_pasukan`) tetap dapat nilai walau event-nya
+     * belum punya definisi field.
+     */
+    public function getFieldValue(string $fieldKey): ?string
+    {
+        $map = $this->fieldValuesMap();
+
+        if (array_key_exists($fieldKey, $map)) {
+            return $map[$fieldKey];
+        }
+
+        $langsung = $this->getAttribute($fieldKey);
+
+        return $langsung !== null && $langsung !== '' ? (string) $langsung : null;
+    }
+
+    /**
+     * Field yang aktif + nilainya, urut sesuai urutan formulir — satu-satunya
+     * yang dipanggil view untuk menampilkan data dinamis.
+     *
+     * @return \Illuminate\Support\Collection<int, array{key: string, label: string, value: ?string, url: ?string, type: string, is_file: bool, is_required: bool}>
+     */
+    public function fieldValuesForDisplay(?Collection $fields = null): \Illuminate\Support\Collection
+    {
+        $fields ??= $this->fieldDefinitions()->where('is_active', true);
+
+        return $fields
+            ->filter(fn ($field) => $field->is_active && ! $field->isGroup())
+            ->map(function ($field) {
+                $nilai = $field->builtin_source
+                    ? ($this->{$field->builtin_source} ?? null)
+                    : ($this->fieldValues->firstWhere('registration_field_id', $field->id)?->value ?? null);
+
+                return [
+                    'key' => $field->field_key,
+                    'label' => $field->label,
+                    'value' => $nilai !== null && $nilai !== '' ? (string) $nilai : null,
+                    'url' => ($field->isFile() && $nilai) ? asset('storage/' . ltrim($nilai, '/')) : null,
+                    'type' => $field->type,
+                    'is_file' => $field->isFile(),
+                    'is_required' => (bool) $field->is_required,
+                ];
+            })
+            ->values();
     }
 
     public function isUnpaid(): bool
@@ -201,7 +343,9 @@ class Registration extends Model
             'peringkat'     => (string) ($winner['rank'] ?? ''),
             'total_skor'    => isset($winner['total']) ? number_format((float) $winner['total'], 0, ',', '.') : '',
             'diselenggarakan_oleh' => $eventner?->diselenggarakan_oleh ?? '',
-            default         => '',
+            // Field buatan panitia (field builder) — mis. asal_kabupaten atau
+            // nama_pembina — dipakai sebagai placeholder sertifikat.
+            default         => $this->getFieldValue($fieldKey) ?? '',
         };
     }
 

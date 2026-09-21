@@ -99,6 +99,16 @@ class Eventner extends Model
             }
         });
 
+        static::created(function ($model) {
+            // Event baru harus langsung punya definisi field pendaftaran.
+            // fieldValuesForDisplay(), cetakan PDF, dan daftar placeholder
+            // sertifikat membaca definisinya dari registration_fields — tanpa
+            // barisnya, formulirnya tercetak kosong. Builder & portal juga
+            // memanggil ensureDefaults() sebagai jaring kedua, tapi jalur
+            // pendaftaran event (Public\EventnerRegister) tidak melewatinya.
+            \App\Models\RegistrationField::ensureDefaults($model);
+        });
+
         static::updating(function ($model) {
             if ($model->isDirty('nama_event')) {
                 $baseSlug = \Illuminate\Support\Str::slug($model->nama_event);
@@ -112,6 +122,20 @@ class Eventner extends Model
                 }
 
                 $model->slug = $slug;
+            }
+        });
+
+        static::updated(function ($model) {
+            // Kolom toggle lama masih disunting langsung (pengaturan profil
+            // event, data lama, seeder). Sumber kebenarannya sekarang baris
+            // builder, jadi perubahan kolom itu ikut dipindahkan ke sana.
+            foreach ([
+                'surat_tugas_required' => 'surat_tugas',
+                'kwitansi_required' => 'bukti_pendaftaran',
+            ] as $kolom => $sumber) {
+                if ($model->wasChanged($kolom)) {
+                    \App\Models\RegistrationField::sinkronDariToggleLama($model, $sumber, (bool) $model->{$kolom});
+                }
             }
         });
     }
@@ -344,6 +368,25 @@ class Eventner extends Model
     public function championCategories()
     {
         return $this->hasMany(ChampionCategory::class);
+    }
+
+    /**
+     * Definisi field formulir pendaftaran milik event ini (field builder).
+     */
+    public function registrationFields()
+    {
+        return $this->hasMany(RegistrationField::class)->orderBy('sort_order');
+    }
+
+    /**
+     * Field pendaftaran yang aktif saja — dipakai form publik & portal.
+     */
+    public function activeRegistrationFields()
+    {
+        return $this->hasMany(RegistrationField::class)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id');
     }
 
     public function overlaySetting()

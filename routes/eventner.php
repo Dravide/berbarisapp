@@ -37,6 +37,11 @@ Route::get('vote-transactions/csv', [App\Http\Controllers\Eventner\VoteTransacti
 Route::get('vote-comments', App\Livewire\Eventner\VoteComment\Index::class)->name('eventner.vote-comments.index');
 Route::get('vote-comments/csv', [App\Http\Controllers\Eventner\VoteCommentController::class, 'downloadCsv'])->name('eventner.vote-comments.csv');
 Route::get('profile', App\Livewire\Eventner\Settings\Profile::class)->name('eventner.profile.index');
+// Akun (baris `users`), bukan profil event (baris `eventners`) — halaman
+// terpisah karena izinnya beda: admin boleh menyunting profil event siapa pun,
+// tapi hanya pemilik akun yang boleh mengganti password-nya.
+Route::get('password', App\Livewire\Eventner\Settings\Password::class)->name('eventner.password.index');
+Route::get('registration-fields', App\Livewire\Eventner\RegistrationField\Index::class)->name('eventner.registration-fields.index');
 Route::get('bank-accounts', App\Livewire\Eventner\Settings\BankAccount::class)->name('eventner.bank-accounts.index');
 Route::get('signatures', App\Livewire\Eventner\Settings\Signature::class)->name('eventner.signatures.index');
 Route::get('score-recap', App\Livewire\Eventner\ScoreRecap\Index::class)->name('eventner.score-recap.index');

@@ -74,6 +74,8 @@ Route::prefix('v1')->group(function () {
         Route::post('/upload/pelatih-foto', [UploadController::class, 'pelatih']);
         Route::post('/upload/danton-foto', [UploadController::class, 'danton']);
         Route::post('/upload/payment-proof', [UploadController::class, 'paymentProof']);
+        // Field builder: field_id dari daftar field event, bukan nama kolom.
+        Route::post('/upload/field', [UploadController::class, 'registrationField']);
 
         // Scores & Ranking
         Route::get('/scores', [PortalController::class, 'scores']);

@@ -325,7 +325,8 @@ class EventnerHelp
                     'Atur Status Pendaftaran (Open Registration, Booking Only, Tutup) dan Deadline Pendaftaran.',
                     'Isi informasi acara: nama, penyelenggara, deskripsi, lokasi, venue, dan koordinat.',
                     'Atur jadwal penting: tanggal pelaksanaan, akhir pendaftaran, dan technical meeting.',
-                    'Tentukan Berkas Pendaftaran Wajib dan tautan tambahan.',
+                    'Atur tautan tambahan (Instagram, TikTok, dan lainnya).',
+                    'Berkas pendaftaran diatur di halaman Field Pendaftaran.',
                 ],
                 'tips' => [
                     'Status pendaftaran otomatis mengikuti tanggal yang diisi. Kolom ketua pelaksana pada cetak dokumen memakai QR event.',

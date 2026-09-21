@@ -112,4 +112,22 @@ class FrontendNavGatingTest extends TestCase
             $html
         );
     }
+
+    /**
+     * Footer "Powered by" harus menunjuk ke laman utama platform, bukan ke
+     * subdomain event. url('/') mengikuti host request — saat dibuka dari
+     * kejurdalampung.berbaris.app ia menghasilkan link balik ke subdomain itu
+     * sendiri, jadi link-nya membangun dari config('app.url').
+     */
+    public function test_footer_powered_by_menunjuk_laman_utama()
+    {
+        $eventner = $this->eventner();
+
+        $html = $this->get("/event/{$eventner->slug}")->getContent();
+
+        $this->assertStringContainsString(
+            'Powered by <a href="' . e(platform_url('/')) . '"',
+            $html
+        );
+    }
 }

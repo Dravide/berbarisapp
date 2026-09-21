@@ -102,6 +102,20 @@
                                 <span class="text-amber-800 text-xs font-semibold">Menunggu Pembayaran...</span>
                             </div>
 
+                            {{-- Gerbang menolak membuat QR baru untuk email ini:
+                                 yang tampil di atas adalah QR lama yang belum selesai. --}}
+                            @if($reusedExisting)
+                                <div class="text-left bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-4">
+                                    <span class="text-xs font-bold text-amber-600 inline-flex items-center gap-1 mb-1">
+                                        <i class="ti ti-alert-triangle"></i> QR sebelumnya masih aktif
+                                    </span>
+                                    <p class="text-[11px] text-on-surface-variant leading-relaxed m-0">
+                                        Anda masih punya QR yang belum dibayar. Selesaikan yang di atas, atau
+                                        batalkan dulu kalau ingin menggantinya dengan yang baru.
+                                    </p>
+                                </div>
+                            @endif
+
                             {{-- Instructions --}}
                             <div class="text-left bg-surface-container-low border border-outline-variant/40 rounded-xl p-4 mb-4">
                                 <span class="text-xs font-bold text-deep-slate inline-flex items-center gap-1 mb-2">
@@ -116,8 +130,10 @@
                             </div>
 
                             {{-- Cancel Button --}}
-                            <button wire:click="resetPayment" class="text-xs font-bold text-on-surface-variant hover:text-red-500 transition inline-flex items-center gap-1 bg-transparent border-none cursor-pointer">
-                                <i class="ti ti-arrow-left"></i> Batal &amp; Kembali
+                            <button wire:click="resetPayment"
+                                    wire:confirm="Batalkan QR ini? QR yang sudah tampil tidak akan bisa dibayar lagi."
+                                    class="text-xs font-bold text-on-surface-variant hover:text-red-500 transition inline-flex items-center gap-1 bg-transparent border-none cursor-pointer">
+                                <i class="ti ti-x"></i> Batalkan QR &amp; Kembali
                             </button>
 
                             {{-- QRIS Logo --}}

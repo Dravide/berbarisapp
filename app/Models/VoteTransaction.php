@@ -30,11 +30,15 @@ class VoteTransaction extends Model
         'comment',
         'status',
         'paid_at',
+        'expires_at',
+        'payable_until',
     ];
 
     protected $casts = [
         'paid_at' => 'datetime',
         'created_at' => 'datetime',
+        'expires_at' => 'datetime',
+        'payable_until' => 'datetime',
     ];
 
     /**

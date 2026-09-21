@@ -114,17 +114,20 @@
     </div>
 
     <table class="info">
+        @php
+            // Identitas dicetak dari definisi field event — label hasil suntingan
+            // panitia ikut tercetak, berkas ditandai ada/belum.
+            $isianIdentitas = $primary->fieldValuesForDisplay();
+        @endphp
+        @foreach($isianIdentitas as $isian)
         <tr>
-            <td class="lbl">Sekolah</td>
-            <td class="val">{{ $primary->nama_sekolah }}</td>
-            <td class="lbl">NPSN</td>
-            <td>{{ $primary->npsn }}</td>
+            <td class="lbl">{{ $isian['label'] }}</td>
+            <td class="val" colspan="3">{{ $isian['is_file'] ? ($isian['value'] ? 'Terlampir' : '—') : ($isian['value'] ?: '—') }}</td>
         </tr>
+        @endforeach
         <tr>
-            <td class="lbl">Pelatih</td>
-            <td>{{ $primary->nama_pelatih ?? '-' }}</td>
             <td class="lbl">Diverifikasi</td>
-            <td>{{ $verifiedDate }}</td>
+            <td colspan="3">{{ $verifiedDate }}</td>
         </tr>
         @if($bankAccount)
         <tr>

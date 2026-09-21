@@ -14,6 +14,8 @@ use App\Support\FormatNilaiImport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -329,9 +331,12 @@ class FormatNilaiController extends Controller
             ->where('eventner_id', $eventner->id)
             ->findOrFail($categoryId);
 
-        // Tingkat tujuan: child category milik eventner, beda dari tingkat sumber
+        // Tingkat tujuan: tingkat lomba milik eventner, beda dari tingkat sumber.
+        // selectable() menyingkirkan induk yang punya anak — rubrik yang
+        // ditempelkan ke induk tidak pernah tampil di tab mana pun, karena
+        // Builder hanya menawarkan tingkat lomba.
         $targets = CompetitionCategory::where('eventner_id', $eventner->id)
-            ->whereNotNull('parent_id')
+            ->selectable()
             ->where('id', '!=', $source->competition_category_id)
             ->with('parent')
             ->orderBy('name')
@@ -348,7 +353,25 @@ class FormatNilaiController extends Controller
         $eventner = $this->gatedEventner();
 
         $request->validate([
-            'target_competition_category_id' => 'required|exists:competition_categories,id',
+            // exists polos menerima id tingkat milik event lain (lantas 404 dari
+            // findOrFail di bawah) dan id induk ber-anak — induk bukan tujuan
+            // sah, rubrik yang menempel di sana tidak pernah tampil.
+            'target_competition_category_id' => [
+                'required',
+                Rule::exists('competition_categories', 'id')
+                    ->where('eventner_id', $eventner->id)
+                    ->where(function ($q) {
+                        $q->whereNotNull('parent_id');
+                        $q->orWhere(function ($sq) {
+                            $sq->whereNull('parent_id')
+                                ->whereNotExists(function ($sub) {
+                                    $sub->select(DB::raw(1))
+                                        ->from('competition_categories as anak')
+                                        ->whereColumn('anak.parent_id', 'competition_categories.id');
+                                });
+                        });
+                    }),
+            ],
         ]);
 
         $source = AssessmentCategory::with(['subCategories.criterias'])

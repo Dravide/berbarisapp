@@ -356,7 +356,7 @@
             {{-- Bottom copyright --}}
             <div class="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row">
                 <p class="m-0">&copy; {{ date('Y') }} {{ $eventner?->diselenggarakan_oleh ?? get_setting('site_title', 'Berbaris App') }}. Hak cipta dilindungi.</p>
-                <p class="m-0">Powered by <a href="{{ url('/') }}" class="text-secondary hover:text-secondary hover:underline text-decoration-none transition font-semibold">{{ app_name() }}</a></p>
+                <p class="m-0">Powered by <a href="{{ platform_url('/') }}" class="text-secondary hover:text-secondary hover:underline text-decoration-none transition font-semibold">{{ app_name() }}</a></p>
             </div>
         </div>
     </footer>

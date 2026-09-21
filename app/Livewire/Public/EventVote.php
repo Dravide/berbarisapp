@@ -8,6 +8,7 @@ use App\Models\Registration;
 use App\Models\VoteBooster;
 use App\Models\VoteTransaction;
 use App\Services\AutoGoPay;
+use App\Services\PendingPaymentGuard;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Component;
@@ -33,6 +34,12 @@ class EventVote extends Component
     public $autoGoPayTransactionId;
     public $paymentAmount;
     public $paymentConfirmed = false;
+
+    /**
+     * QR yang ditampilkan adalah QR lama milik email ini, bukan yang baru
+     * diterbitkan. Dipakai view untuk menampilkan pemberitahuan.
+     */
+    public $reusedExisting = false;
 
     protected $queryString = [
         'search' => ['except' => ''],
@@ -183,6 +190,26 @@ class EventVote extends Component
         $totalVotes = $this->voteCount * $multiplier;
         $amount = $this->voteCount * $basePrice; // harga tetap per transaksi
 
+        // Sudah punya QR hidup untuk email ini? Buka yang lama — jangan
+        // menumpuk QR baru di gateway (lihat PendingPaymentGuard).
+        $lama = PendingPaymentGuard::find(
+            VoteTransaction::class,
+            $this->eventner->id,
+            $this->voterEmail,
+        );
+
+        if ($lama) {
+            // Label di kartu pembayaran dibaca dari state, jadi jumlahnya harus
+            // disamakan dengan baris lama — kalau tidak, pembeli melihat
+            // "10 transaksi" di atas QR yang sebenarnya bernilai 3.
+            $this->voteCount = max(1, (int) round($lama->amount / max(1, $basePrice)));
+            $this->voterName = $lama->voter_name ?: $this->voterName;
+            $this->voterComment = $lama->comment ?: $this->voterComment;
+            $this->showExistingPayment($lama);
+
+            return;
+        }
+
         try {
             // Generate QRIS via AutoGoPay
             $service = new AutoGoPay();
@@ -195,7 +222,8 @@ class EventVote extends Component
 
             $data = $result['data'];
 
-            // Simpan transaksi PENDING
+            // Simpan transaksi PENDING. Email dinormalkan supaya gerbang
+            // menemukan baris ini walau pembeli mengetik huruf besar/kecil beda.
             $transaction = VoteTransaction::create([
                 'eventner_id' => $this->eventner->id,
                 'registration_id' => $this->selectedRegistrationId,
@@ -204,19 +232,14 @@ class EventVote extends Component
                 'amount' => $amount,
                 'votes_earned' => $totalVotes,
                 'voter_name' => $this->voterName,
-                'voter_email' => $this->voterEmail,
+                'voter_email' => PendingPaymentGuard::normalizeEmail($this->voterEmail),
                 'comment' => strip_tags($this->voterComment),
                 'status' => 'PENDING',
+                'expires_at' => PendingPaymentGuard::deadlineFrom($data['expiry_time'] ?? null),
+                'payable_until' => PendingPaymentGuard::payableUntil($data['expiry_time'] ?? null),
             ]);
 
-            // Tampilkan QR code
-            $this->qrImageUrl = $data['qr_url'];
-            $this->expiryTime = $data['expiry_time'];
-            $this->currentTransactionId = $transaction->id;
-            $this->autoGoPayTransactionId = $data['transaction_id'];
-            $this->paymentAmount = $amount;
-            $this->paymentConfirmed = false;
-            $this->view = 'payment';
+            $this->showPayment($transaction);
 
         } catch (\Exception $e) {
             Log::error('AutoGoPay QRIS generation failed (vote)', [
@@ -227,6 +250,38 @@ class EventVote extends Component
 
             session()->flash('error', 'Gagal membuat QRIS: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Tampilkan QR dari baris transaksi yang SUDAH ada.
+     *
+     * `expiryTime` diambil dari kolom `expires_at`, bukan dari balasan gateway:
+     * hitungan mundur di view harus menunjukkan sisa waktu QR lama, dan
+     * memanggil ulang /qris/status hanya untuk itu berarti satu panggilan
+     * gateway tambahan pada setiap klik "Bayar".
+     */
+    private function showExistingPayment(VoteTransaction $transaction): void
+    {
+        $this->qrImageUrl = $transaction->qr_url;
+        $this->expiryTime = PendingPaymentGuard::expiryForDisplay($transaction)->toIso8601String();
+        $this->currentTransactionId = $transaction->id;
+        $this->autoGoPayTransactionId = $transaction->autogopay_transaction_id;
+        $this->paymentAmount = $transaction->amount;
+        $this->paymentConfirmed = false;
+        $this->reusedExisting = true;
+        $this->view = 'payment';
+    }
+
+    private function showPayment(VoteTransaction $transaction): void
+    {
+        $this->qrImageUrl = $transaction->qr_url;
+        $this->expiryTime = PendingPaymentGuard::expiryForDisplay($transaction)->toIso8601String();
+        $this->currentTransactionId = $transaction->id;
+        $this->autoGoPayTransactionId = $transaction->autogopay_transaction_id;
+        $this->paymentAmount = $transaction->amount;
+        $this->paymentConfirmed = false;
+        $this->reusedExisting = false;
+        $this->view = 'payment';
     }
 
     /**
@@ -296,14 +351,36 @@ class EventVote extends Component
         }
     }
 
+    /**
+     * Batalkan QR yang sedang ditampilkan lalu kembali ke daftar peserta.
+     *
+     * Sebelumnya method ini hanya membersihkan state Livewire: baris PENDING
+     * dan QR di gateway tetap hidup dan tetap bisa dibayar, jadi pembeli yang
+     * mengira sudah membatalkan tetap meninggalkan QR beredar.
+     *
+     * Kalau gateway menolak membatalkan, state-nya sengaja TIDAK dibersihkan —
+     * QR-nya masih bisa dibayar, jadi menutup layarnya hanya menyembunyikan
+     * masalah sekaligus menahan pembeli tanpa penjelasan.
+     */
     public function resetPayment()
     {
+        if ($this->currentTransactionId) {
+            $row = VoteTransaction::find($this->currentTransactionId);
+
+            if ($row && ! PendingPaymentGuard::release($row)) {
+                session()->flash('error', 'QR tidak bisa dibatalkan di sisi gateway. Coba lagi sebentar lagi, atau tunggu QR-nya kedaluwarsa.');
+
+                return;
+            }
+        }
+
         $this->qrImageUrl = null;
         $this->expiryTime = null;
         $this->currentTransactionId = null;
         $this->autoGoPayTransactionId = null;
         $this->paymentAmount = null;
         $this->paymentConfirmed = false;
+        $this->reusedExisting = false;
         $this->view = 'participants';
     }
 

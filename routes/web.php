@@ -40,6 +40,11 @@ Route::get('/reg/{token}', App\Livewire\Public\MagicLink\Registration::class)->n
 Route::get('/reg/{token}/pdf', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadFormulir'])->name('magic.link.formulir');
 Route::get('/reg/{token}/invoice', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadInvoiceByToken'])->name('magic.link.invoice');
 Route::get('/reg/{token}/certificate', [App\Http\Controllers\Eventner\CertificateController::class, 'downloadCertificateByToken'])->name('magic.link.certificate');
+// Unggah/batal berkas field pendaftaran (field builder). Endpoint HTTP, bukan
+// Livewire: properti upload Livewire harus ada saat compile sedangkan field
+// berkas jumlahnya dinamis. Kredensialnya magic_token di URL.
+Route::post('/reg/{token}/field/{fieldId}', [App\Http\Controllers\Public\RegistrationFieldUploadController::class, 'store'])->name('magic.link.field.upload');
+Route::delete('/reg/{token}/field/{fieldId}', [App\Http\Controllers\Public\RegistrationFieldUploadController::class, 'destroy'])->name('magic.link.field.destroy');
 // Sertifikat per mata lomba: sertifikat HANYA untuk satu registrasi ini
 // (tanpa perlu token registrasi pasukan juara tsb).
 Route::get('/reg/{token}/{competitionCategory}/certificate', [App\Http\Controllers\Eventner\CertificateController::class, 'downloadCertificateByToken'])->name('magic.link.certificate.category');

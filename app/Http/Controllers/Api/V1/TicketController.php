@@ -8,6 +8,7 @@ use App\Models\Eventner;
 use App\Models\EventnerVenue;
 use App\Models\Ticket;
 use App\Services\AutoGoPay;
+use App\Services\PendingPaymentGuard;
 use App\Services\TicketQuota;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -112,7 +113,7 @@ class TicketController extends Controller
                 'venue_id' => $locked?->id,
                 'order_code' => $orderCode,
                 'buyer_name' => $request->buyer_name,
-                'buyer_email' => $request->buyer_email,
+                'buyer_email' => PendingPaymentGuard::normalizeEmail($request->buyer_email),
                 'buyer_phone' => $request->buyer_phone,
                 'quantity' => $request->quantity,
                 'price_per_ticket' => $price,
@@ -146,7 +147,37 @@ class TicketController extends Controller
             ]);
         }
 
-        // Berbayar — generate QRIS
+        // Berbayar — generate QRIS. Dicek setelah cabang gratis: pembeli tiket
+        // gratis tidak punya baris PENDING, jadi tidak ada QR yang bisa
+        // dibuka ulang dan penjaganya tidak perlu dijalankan.
+        //
+        // Sudah punya QR hidup untuk email ini? Balas QR yang sama. Sengaja
+        // HTTP 200 dengan amplop `data` yang sama plus penanda `reused`:
+        // klien lama yang tidak mengenal medan itu tetap mendapat QR yang bisa
+        // dibayar, dan aplikasi Flutter tidak perlu rilis dulu.
+        $lama = PendingPaymentGuard::find(Ticket::class, $event->id, $request->buyer_email);
+
+        if ($lama) {
+            return response()->json([
+                'data' => [
+                    'order_code' => $lama->order_code,
+                    'quantity' => $lama->quantity,
+                    'total_amount' => (int) $lama->total_amount,
+                    'qr_url' => $lama->qr_url,
+                    // qr_string tidak disimpan di DB — lihat catatan di
+                    // VoteController::calculate().
+                    'qr_string' => null,
+                    'expiry_time' => PendingPaymentGuard::expiryForDisplay($lama)->toIso8601String(),
+                    'autogopay_transaction_id' => $lama->autogopay_transaction_id,
+                    'ticket_id' => $lama->id,
+                    'venue_id' => $lama->venue_id,
+                    'venue_name' => $lama->venue?->name,
+                    'status' => 'PENDING',
+                    'reused' => true,
+                ],
+            ]);
+        }
+
         try {
             $service = new AutoGoPay();
             $result = $service->generateQris($totalAmount);
@@ -161,12 +192,8 @@ class TicketController extends Controller
                 'autogopay_transaction_id' => $data['transaction_id'],
                 'qr_url' => $data['qr_url'],
                 'status' => 'PENDING',
-            ];
-
-            $extra = [
-                'autogopay_transaction_id' => $data['transaction_id'],
-                'qr_url' => $data['qr_url'],
-                'status' => 'PENDING',
+                'expires_at' => PendingPaymentGuard::deadlineFrom($data['expiry_time'] ?? null),
+                'payable_until' => PendingPaymentGuard::payableUntil($data['expiry_time'] ?? null),
             ];
 
             try {
@@ -191,6 +218,7 @@ class TicketController extends Controller
                     'venue_id' => $ticket->venue_id,
                     'venue_name' => $venue?->name,
                     'status' => 'PENDING',
+                    'reused' => false,
                 ],
             ]);
         } catch (\Exception $e) {

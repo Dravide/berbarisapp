@@ -40,4 +40,11 @@ return [
         'base_url' => env('AUTOGOPAY_BASE_URL', 'https://v1-gateway.autogopay.site'),
     ],
 
+    // Data wilayah BPS (provinsi/kabupaten/kecamatan) untuk field asal daerah
+    // di form pendaftaran. Berkas JSON statis, tanpa API key sama sekali —
+    // base_url disediakan supaya bisa dipindah ke cermin sendiri tanpa ubah kode.
+    'datawilayah' => [
+        'base_url' => env('DATAWILAYAH_BASE_URL', 'https://api.datawilayah.com'),
+    ],
+
 ];

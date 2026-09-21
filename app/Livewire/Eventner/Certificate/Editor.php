@@ -35,6 +35,12 @@ class Editor extends Component
     public $template;
     public $textFields = [];
 
+    /**
+     * Placeholder yang bisa dipakai template ini: field bawaan + field builder
+     * milik event (dihitung sekali saat template dimuat, bukan tiap render).
+     */
+    public $availableFieldKeys = [];
+
     // Field management
     public $selectedFieldId = null;
     public $newFieldKey = '';
@@ -88,6 +94,8 @@ class Editor extends Component
             'file_path' => $tpl->file_path,
         ];
 
+        $this->availableFieldKeys = $tpl->availableFieldsForEvent();
+
         $this->textFields = $tpl->textFields->map(function ($f) {
             return [
                 'id' => $f->id,
@@ -110,7 +118,7 @@ class Editor extends Component
     {
         $this->validate(['newFieldKey' => 'required|string']);
 
-        $availableFields = CertificateTemplate::availableFields();
+        $availableFields = $this->availableFieldKeys ?: CertificateTemplate::availableFields();
         $key = $this->newFieldKey;
         $label = $availableFields[$key] ?? $key;
 
@@ -231,7 +239,7 @@ class Editor extends Component
 
     public function getAvailableFieldKeysProperty()
     {
-        return CertificateTemplate::availableFields();
+        return $this->availableFieldKeys ?: CertificateTemplate::availableFields();
     }
 
     public function getUsedFieldKeysProperty()
@@ -249,7 +257,7 @@ class Editor extends Component
     {
         $ev = $this->eventner;
 
-        return [
+        $contoh = [
             'nama_sekolah'         => 'SD Negeri 1 Contoh',
             'nama_peserta'         => 'Andi Pratama',
             'gelar_juara'          => 'Juara 1',
@@ -266,6 +274,25 @@ class Editor extends Component
             'total_skor'           => '2.850',
             'diselenggarakan_oleh' => $ev?->diselenggarakan_oleh ?: 'Diselenggarakan Oleh Contoh',
         ];
+
+        // Field builder ikut dapat contoh nilai supaya canvas tidak menampilkan
+        // label kosong. Field pilihan memakai opsi pertamanya.
+        foreach ($this->availableFieldKeys as $key => $label) {
+            if (isset($contoh[$key])) {
+                continue;
+            }
+
+            $field = $this->eventner
+                ? \App\Models\RegistrationField::where('eventner_id', $this->eventner->id)
+                    ->where('field_key', $key)
+                    ->first()
+                : null;
+
+            $contoh[$key] = $field?->default_value
+                ?: ($field?->options[0]['label'] ?? $label);
+        }
+
+        return $contoh;
     }
 
     public function getChampionCategoriesProperty()

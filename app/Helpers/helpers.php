@@ -26,6 +26,23 @@ if (!function_exists('app_name')) {
     }
 }
 
+if (!function_exists('platform_url')) {
+    /**
+     * URL laman utama platform (root domain, bukan subdomain event).
+     *
+     * Dibangun dari config('app.url') — bukan url('/') — karena url() mengikuti
+     * host request: dipanggil dari kejurdalampung.berbaris.app akan menghasilkan
+     * link ke subdomain event itu sendiri, bukan ke berbaris.app.
+     */
+    function platform_url(string $path = '/'): string
+    {
+        $base = rtrim((string) config('app.url'), '/');
+        $path = '/' . ltrim($path, '/');
+
+        return $base . ($path === '/' ? '' : $path);
+    }
+}
+
 if (!function_exists('judge_entry_host')) {
     /**
      * Host (tanpa skema) halaman input nilai juri, mis. "entry.berbaris.app".

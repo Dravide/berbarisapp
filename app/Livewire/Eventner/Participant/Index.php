@@ -6,7 +6,10 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use App\Models\AssessmentScore;
+use App\Models\CompetitionCategory;
 use App\Models\Registration;
+use App\Models\RegistrationField;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 #[Layout('layouts.admin')]
@@ -41,9 +44,12 @@ class Index extends Component
     {
         $eventner = auth()->user()->eventner;
         if ($eventner) {
-            // Only show child categories (leaf nodes) with parent eager-loaded
+            // Satu definisi dengan formulir pendaftaran: tingkat lomba, atau
+            // induk lama tanpa anak. Menyaring `parent_id` saja membuat event
+            // dengan kategori flat lama tampil tanpa tab sama sekali —
+            // pendaftarannya ada, tapi tidak pernah muncul di halaman ini.
             $this->categories = $eventner->competitionCategories()
-                ->whereNotNull('parent_id')
+                ->selectable()
                 ->with('parent')
                 ->get()
                 ->toArray();
@@ -54,18 +60,47 @@ class Index extends Component
         }
     }
 
+    /** Tab aktif juga datang dari DOM — di-scope ke kategori yang boleh dipakai. */
     public function switchTab($categoryId)
     {
-        $this->activeTab = $categoryId;
+        if ($this->kategoriTerpilih($categoryId)) {
+            $this->activeTab = $categoryId;
+        }
     }
 
     public function openModal($categoryId = null)
     {
         $this->resetForm();
+
         if ($categoryId) {
-            $this->competition_category_id = $categoryId;
+            // Kategori bawaan modal harus tingkat lomba. Tab induk (dipakai
+            // untuk cetak QR / daftar ulang semua tingkat) bukan tujuan
+            // pendaftaran, jadi tidak dioper ke pilihan kategori.
+            $this->competition_category_id = $this->kategoriTerpilih($categoryId)?->id ?? '';
         }
+
         $this->showModal = true;
+    }
+
+    /**
+     * Kategori milik event panitia yang boleh jadi tujuan pendaftaran: tingkat
+     * lomba, atau induk lama tanpa anak.
+     *
+     * Id kategori datang dari DOM, jadi `exists` polos tidak cukup — id induk
+     * atau id event lain bisa ikut terkirim dan membuat pendaftaran mendarat
+     * di luar tingkat lomba.
+     */
+    private function kategoriTerpilih($categoryId): ?\App\Models\CompetitionCategory
+    {
+        $eventner = auth()->user()->eventner;
+
+        if (!$eventner) {
+            return null;
+        }
+
+        return CompetitionCategory::where('eventner_id', $eventner->id)
+            ->selectable()
+            ->find($categoryId);
     }
 
     public function closeModal()
@@ -86,25 +121,75 @@ class Index extends Component
         $this->jumlah_pasukan = 1;
     }
 
+    /**
+     * Field yang boleh diisi panitia di modal ini: kolom identitas registrations
+     * yang punya baris builder aktif DAN punya properti di komponen ini (Livewire
+     * menolak memvalidasi nama properti yang tidak ada). Field yang dimatikan
+     * panitia tidak dirender dan tidak ikut divalidasi/ditulis.
+     */
+    public function fieldsModal()
+    {
+        return RegistrationField::forEventner(auth()->user()->eventner)
+            ->reject(fn ($f) => $f->isFile() || $f->isGroup())
+            ->filter(fn ($f) => $f->builtin_source !== null && property_exists($this, $f->builtin_source));
+    }
+
+    /** Aturan validasi dibangun dari baris builder, bukan literal. */
+    private function aturanFieldModal(): array
+    {
+        $aturan = [];
+
+        foreach ($this->fieldsModal() as $field) {
+            $aturan[$field->builtin_source] = match ($field->builtin_source) {
+                'school_email' => ($field->is_required ? 'required' : 'nullable') . '|email|max:255',
+                'npsn' => ($field->is_required ? 'required' : 'nullable') . '|string|max:20',
+                default => $field->validationRule($field->is_required),
+            };
+        }
+
+        return $aturan;
+    }
+
+    /** Pesan error memakai label panitia, bukan nama kolom. */
+    public function pesanFieldModal(): array
+    {
+        $pesan = [];
+
+        foreach ($this->fieldsModal() as $field) {
+            $pesan[$field->builtin_source . '.required'] = $field->label . ' wajib diisi.';
+            $pesan[$field->builtin_source . '.email'] = $field->label . ' harus berupa alamat email yang valid.';
+        }
+
+        return $pesan;
+    }
+
     public function save()
     {
         $eventner = auth()->user()->eventner;
 
-        $this->validate([
-            // Kategori harus milik eventner ini. `exists` polos menerima id
-            // kategori tenant lain, sehingga pendaftar kita bisa dicemplungkan
-            // ke kategori event orang.
+        $this->validate(array_merge([
+            // Kategori harus milik eventner ini, dan harus tingkat lomba.
+            // `exists` polos menerima id kategori tenant lain, sehingga
+            // pendaftar kita bisa dicemplungkan ke kategori event orang;
+            // tanpa selectable() id induk juga ikut diterima.
             'competition_category_id' => [
                 'required',
-                Rule::exists('competition_categories', 'id')->where('eventner_id', $eventner->id),
+                Rule::exists('competition_categories', 'id')
+                    ->where('eventner_id', $eventner->id)
+                    ->where(function ($q) {
+                        $q->whereNotNull('parent_id');
+                        $q->orWhere(function ($sq) {
+                            $sq->whereNull('parent_id')
+                                ->whereNotExists(function ($sub) {
+                                    $sub->select(DB::raw(1))
+                                        ->from('competition_categories as anak')
+                                        ->whereColumn('anak.parent_id', 'competition_categories.id');
+                                });
+                        });
+                    }),
             ],
-            'npsn' => 'required|string|max:20',
-            'nama_sekolah' => 'required|string|max:255',
-            'no_hp' => 'required|string|max:20',
-            'school_email' => 'nullable|email|max:255',
-            'nama_pelatih' => 'nullable|string|max:255',
             'jumlah_pasukan' => 'required|integer|min:1',
-        ]);
+        ], $this->aturanFieldModal()), $this->pesanFieldModal());
 
         if ($this->editId) {
             $reg = Registration::where('eventner_id', $eventner->id)->findOrFail($this->editId);
@@ -124,28 +209,37 @@ class Index extends Component
                 }
             }
 
+            // Hanya field yang masih aktif di builder yang ditulis — mematikan
+            // field di builder tidak boleh menghapus isian lama diam-diam.
+            $data = [];
+
+            foreach ($this->fieldsModal() as $field) {
+                $nilai = $this->{$field->builtin_source} ?? null;
+                $data[$field->builtin_source] = $nilai !== null && $nilai !== '' ? strip_tags((string) $nilai) : null;
+            }
+
             $reg->update([
-                'nama_sekolah' => strip_tags($this->nama_sekolah),
-                'npsn' => strip_tags($this->npsn),
-                'nama_pelatih' => $this->nama_pelatih ? strip_tags($this->nama_pelatih) : null,
-                'no_hp' => strip_tags($this->no_hp),
-                'school_email' => $this->school_email ? strip_tags($this->school_email) : null,
+                ...$data,
                 'competition_category_id' => $this->competition_category_id,
                 // Ganti kategori = undian diulang dari nol untuk peserta ini.
                 ...($pindahKategori ? ['urutan_tampil' => null] : []),
             ]);
             session()->flash('success', 'Data pendaftar berhasil diperbarui.');
         } else {
+            $data = [];
+
+            foreach ($this->fieldsModal() as $field) {
+                $nilai = $this->{$field->builtin_source} ?? null;
+                $data[$field->builtin_source] = $nilai !== null && $nilai !== '' ? strip_tags((string) $nilai) : null;
+            }
+
             $letters = range('A', 'Z');
             for ($i = 0; $i < $this->jumlah_pasukan; $i++) {
                 $suffix = $this->jumlah_pasukan > 1 ? ' (' . $letters[$i] . ')' : '';
                 Registration::create([
+                    ...$data,
                     'eventner_id' => $eventner->id,
                     'nama_sekolah' => strip_tags($this->nama_sekolah) . $suffix,
-                    'npsn' => strip_tags($this->npsn),
-                    'nama_pelatih' => $this->nama_pelatih ? strip_tags($this->nama_pelatih) : null,
-                    'no_hp' => strip_tags($this->no_hp),
-                    'school_email' => $this->school_email ? strip_tags($this->school_email) : null,
                     'competition_category_id' => $this->competition_category_id,
                     'status_berkas' => 'Menunggu',
                 ]);
@@ -196,10 +290,10 @@ class Index extends Component
     public function openVerifyModal($id)
     {
         $eventner = auth()->user()->eventner;
-        $this->selectedRegistration = Registration::with('participants')
+        $this->selectedRegistration = Registration::with(['participants', 'fieldValues'])
             ->where('eventner_id', $eventner->id)
             ->findOrFail($id);
-        
+
         $this->showVerifyModal = true;
     }
 

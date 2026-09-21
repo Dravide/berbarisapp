@@ -28,6 +28,7 @@ class QrController extends Controller
                 'competitionCategory',
                 'participants',
                 'paymentBankAccount',
+                'fieldValues',
                 'voteTransactions' => function ($q) {
                     $q->where('status', 'PAID');
                 },

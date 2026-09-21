@@ -261,37 +261,54 @@
                             </h3>
                         </div>
                         <div class="p-6">
-                            <div class="grid gap-5 md:grid-cols-2">
-                                <div>
-                                    <label class="text-sm font-bold text-deep-slate block mb-1.5">NPSN <span class="text-red-500">*</span></label>
-                                    <input type="text" wire:model.blur="npsn" placeholder="Masukkan Nomor Pokok Sekolah Nasional" maxlength="20" class="field-input w-full">
-                                    @error('npsn') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                </div>
-                                <div>
-                                    <label class="text-sm font-bold text-deep-slate block mb-1.5">Nama Sekolah <span class="text-red-500">*</span></label>
-                                    <input type="text" wire:model="nama_sekolah" placeholder="Masukkan nama sekolah resmi" class="field-input w-full">
-                                    @error('nama_sekolah') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                </div>
-                                <div>
-                                    <label class="text-sm font-bold text-deep-slate block mb-1.5">No. HP / WhatsApp <span class="text-red-500">*</span></label>
-                                    <input type="text" wire:model="no_hp" placeholder="Masukkan No. HP Pelatih/Pembina" class="field-input w-full">
-                                    @error('no_hp') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                </div>
-                                <div>
-                                    <label class="text-sm font-bold text-deep-slate block mb-1.5">Email Penanggung Jawab <span class="text-red-500">*</span></label>
-                                    <input type="email" wire:model="school_email" placeholder="contoh@email.com" class="field-input w-full" required>
-                                    <span class="text-[10px] text-on-surface-variant font-medium mt-1 block leading-normal">Magic link dikirim ke email ini untuk akses dashboard kontingen.</span>
-                                    @error('school_email') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                </div>
-                                <div>
-                                    <label class="text-sm font-bold text-deep-slate block mb-1.5">Nama Pelatih / Pembina <span class="text-red-500">*</span></label>
-                                    <input type="text" wire:model="nama_pelatih" placeholder="Masukkan nama pelatih" class="field-input w-full" required>
-                                    @error('nama_pelatih') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                </div>
-                                <div>
-                                    {{-- Spacing --}}
-                                </div>
+                            <p class="text-sm text-on-surface-variant mb-5" style="margin-top: 0;">
+                                Isi data di bawah ini. Field yang bertanda <span class="text-red-500 font-bold">*</span> wajib diisi.
+                                Berkas unggahan dilengkapi setelah booking, dari link yang dikirim ke email Anda.
+                            </p>
 
+                            <div class="grid gap-5 md:grid-cols-2">
+                                @foreach($this->fields as $field)
+                                    @php
+                                        $namaField = 'fieldValues.' . $field->field_key;
+                                        $nilai = $this->nilaiField($field);
+                                        $id = 'field_' . $field->field_key;
+                                    @endphp
+                                    <div class="{{ in_array($field->type, ['textarea'], true) ? 'md:col-span-2' : '' }}">
+                                        <label for="{{ $id }}" class="text-sm font-bold text-deep-slate block mb-1.5">
+                                            {{ $field->label }}
+                                            @if($field->is_required) <span class="text-red-500">*</span> @endif
+                                        </label>
+
+                                        @if($field->type === 'textarea')
+                                            <textarea id="{{ $id }}" rows="3" wire:model="{{ $namaField }}"
+                                                placeholder="{{ $field->help_text }}" class="field-input w-full"></textarea>
+                                        @elseif($field->type === 'select')
+                                            <select id="{{ $id }}" wire:model="{{ $namaField }}" class="field-input w-full">
+                                                <option value="">— Pilih {{ $field->label }} —</option>
+                                                @foreach($field->options ?? [] as $opsi)
+                                                    <option value="{{ $opsi['value'] }}">{{ $opsi['label'] ?? $opsi['value'] }}</option>
+                                                @endforeach
+                                            </select>
+                                        @elseif($field->type === 'wilayah')
+                                            @include('livewire.public.partials._wilayah-field', [
+                                                'field' => $field,
+                                                'kelas' => 'field-input w-full',
+                                            ])
+                                        @elseif($field->type === 'date')
+                                            <input type="date" id="{{ $id }}" wire:model="{{ $namaField }}" class="field-input w-full">
+                                        @elseif($field->type === 'number')
+                                            <input type="number" id="{{ $id }}" wire:model="{{ $namaField }}" class="field-input w-full">
+                                        @else
+                                            <input type="text" id="{{ $id }}" wire:model="{{ $namaField }}"
+                                                placeholder="{{ $field->help_text }}" class="field-input w-full">
+                                        @endif
+
+                                        @if($field->help_text && $field->type !== 'text')
+                                            <span class="text-[10px] text-on-surface-variant font-medium mt-1 block leading-normal">{{ $field->help_text }}</span>
+                                        @endif
+                                        @error($namaField) <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                                    </div>
+                                @endforeach
                             </div>
 
                             <div class="flex justify-between items-center mt-8 border-t border-outline-variant/30 pt-6">
@@ -322,24 +339,24 @@
                             </h4>
                             <div class="bg-surface-container-low border border-outline-variant/40 rounded-xl p-4 mb-6">
                                 <div class="grid gap-4 sm:grid-cols-2 text-sm leading-normal">
-                                    <div>
-                                        <span class="text-xs text-on-surface-variant font-medium block">NPSN</span>
-                                        <p class="font-bold text-deep-slate m-0">{{ $npsn }}</p>
-                                    </div>
-                                    <div>
-                                        <span class="text-xs text-on-surface-variant font-medium block">Nama Sekolah</span>
-                                        <p class="font-bold text-deep-slate m-0">{{ $nama_sekolah }}</p>
-                                    </div>
-                                    <div>
-                                        <span class="text-xs text-on-surface-variant font-medium block">No. HP / WhatsApp</span>
-                                        <p class="font-bold text-deep-slate m-0">{{ $no_hp }}</p>
-                                    </div>
-                                    @if($school_email)
+                                    @foreach($this->fields as $field)
+                                        @php $nilai = $this->nilaiField($field); @endphp
                                         <div>
-                                            <span class="text-xs text-on-surface-variant font-medium block">Email</span>
-                                            <p class="font-bold text-deep-slate m-0">{{ $school_email }}</p>
+                                            <span class="text-xs text-on-surface-variant font-medium block">{{ $field->label }}</span>
+                                            @if($nilai !== '')
+                                                @if($field->type === 'select')
+                                                    @php
+                                                        $opsiTerpilih = collect($field->options ?? [])->firstWhere('value', $nilai);
+                                                    @endphp
+                                                    <p class="font-bold text-deep-slate m-0">{{ $opsiTerpilih['label'] ?? $nilai }}</p>
+                                                @else
+                                                    <p class="font-bold text-deep-slate m-0">{{ $nilai }}</p>
+                                                @endif
+                                            @else
+                                                <p class="text-on-surface-variant m-0">&mdash;</p>
+                                            @endif
                                         </div>
-                                    @endif
+                                    @endforeach
                                 </div>
                             </div>
 

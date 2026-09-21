@@ -31,6 +31,8 @@ class Ticket extends Model
         'paid_at',
         'checked_in_at',
         'checked_in_by',
+        'expires_at',
+        'payable_until',
     ];
 
     protected static function boot()
@@ -47,6 +49,8 @@ class Ticket extends Model
     protected $casts = [
         'paid_at' => 'datetime',
         'checked_in_at' => 'datetime',
+        'expires_at' => 'datetime',
+        'payable_until' => 'datetime',
     ];
 
     public function eventner()

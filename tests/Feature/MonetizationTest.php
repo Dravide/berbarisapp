@@ -795,6 +795,70 @@ class MonetizationTest extends TestCase
     }
 
     /**
+     * Route PDF lewat subdomain harus benar-benar ada, bukan cuma URL-nya
+     * berbentuk benar — tes di atas hanya memeriksa string. Tanpa route-nya,
+     * tombol di halaman tiket dan tautan email tiket menuju 404 (hanya
+     * kelihatan di produksi karena tes memakai route slug).
+     */
+    public function test_tiket_pdf_terbuka_lewat_subdomain(): void
+    {
+        Storage::fake('public');
+
+        $eventner = Eventner::factory()->create(['status' => 'approved', 'subdomain' => 'smk1', 'slug' => 'smk1']);
+
+        $ticket = Ticket::create([
+            'eventner_id' => $eventner->id,
+            'buyer_name' => 'Fajar',
+            'buyer_email' => 'fajar@example.com',
+            'quantity' => 1,
+            'price_per_ticket' => 50000,
+            'total_amount' => 50000,
+            'autogopay_transaction_id' => 'AGP-PDF-SUB',
+            'status' => 'PENDING',
+        ]);
+        $ticket->claimPaid();
+
+        // Host harus absolut: SymfonyRequest::create menimpa HTTP_HOST dari URL.
+        // Root domain diambil dari config supaya tes tidak ikut berubah kalau
+        // APP_URL diganti (route domain-nya dibentuk dari nilai yang sama).
+        $this->get($this->subdomainUrl('smk1', '/tiket/' . $ticket->order_code . '/pdf'))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
+    }
+
+    /** Order code event lain tidak bocor lewat jalur subdomain. */
+    public function test_tiket_pdf_subdomain_menolak_order_code_event_lain(): void
+    {
+        Storage::fake('public');
+
+        $eventner = Eventner::factory()->create(['status' => 'approved', 'subdomain' => 'smk1', 'slug' => 'smk1']);
+        $lain = Eventner::factory()->create(['status' => 'approved', 'subdomain' => 'smp2', 'slug' => 'smp2']);
+
+        $punyaEventLain = Ticket::create([
+            'eventner_id' => $lain->id,
+            'buyer_name' => 'Gita',
+            'buyer_email' => 'gita@example.com',
+            'quantity' => 1,
+            'price_per_ticket' => 50000,
+            'total_amount' => 50000,
+            'autogopay_transaction_id' => 'AGP-PDF-SUB-2',
+            'status' => 'PENDING',
+        ]);
+        $punyaEventLain->claimPaid();
+
+        $this->get($this->subdomainUrl('smk1', '/tiket/' . $punyaEventLain->order_code . '/pdf'))
+            ->assertNotFound();
+    }
+
+    /** URL absolut di host tenant — route subdomain dibentuk dari APP_URL. */
+    private function subdomainUrl(string $subdomain, string $path): string
+    {
+        $root = parse_url(config('app.url'), PHP_URL_HOST);
+
+        return 'http://' . $subdomain . '.' . $root . $path;
+    }
+
+    /**
      * Email tiket ikut menautkan PDF-nya.
      *
      * Catatan: Maily.id tidak menerima attachment — parameter body-nya hanya

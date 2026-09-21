@@ -5,13 +5,18 @@ namespace App\Livewire\Public\MagicLink;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\MengelolaWilayah;
 use App\Models\Registration as RegistrationModel;
 use App\Models\Participant;
+use App\Models\RegistrationField;
+use App\Models\RegistrationFieldValue;
+use Livewire\Attributes\Computed;
 
 #[Layout('layouts.frontend')]
 class Registration extends Component
 {
     use WithFileUploads;
+    use MengelolaWilayah;
 
     public $token;
     public $portalUrl;
@@ -21,15 +26,34 @@ class Registration extends Component
     // Active tab for managing which registration
     public $activeRegId;
 
-    // Form fields
-    public $logoSekolah;
-    public $suratTugas;
-    public $fotoPelatih;
-    public $buktiPendaftaran;
+    // Nilai nama pelatih tidak punya properti sendiri: baris builder
+    // `nama_pelatih` mengalir lewat `fieldValues` seperti field teks lain.
+    // Foto pelatih, danton, dan berkas diunggah lewat endpoint HTTP generik
+    // (magic.link.field.upload) — properti upload Livewire harus ada saat
+    // compile, sedangkan field builder jumlahnya dinamis.
     public $dantonNama = '';
     public $dantonNisn = '';
-    public $dantonFoto;
-    public $namaPelatih = '';
+
+    /**
+     * Field yang di portal punya properti Livewire sendiri, bukan lewat
+     * `fieldValues` — properti -> builtin_source.
+     *
+     * Dipakai agar satu field tidak divalidasi dua kali dengan nama berbeda:
+     * kartu Danton mengikat `dantonNama`, sedangkan `fieldValues.danton_nama`
+     * tidak pernah diisi apa pun dan akan selalu gagal "wajib diisi".
+     */
+    public const SUMBER_PROPRIET_SENDIRI = [
+        'danton_nama' => 'dantonNama',
+        'danton_nisn' => 'dantonNisn',
+    ];
+
+    /**
+     * Nilai field buatan panitia (tanpa kolom di registrations), key = field_key.
+     *
+     * Field berkas tidak di sini: berkas diunggah lewat endpoint khusus
+     * (magic.link.field.upload) dan langsung tersimpan.
+     */
+    public array $fieldValues = [];
 
     public $paymentProof;
     public $participants = [];
@@ -40,15 +64,18 @@ class Registration extends Component
     public function mount($token)
     {
         $this->portalUrl = url()->current();
-        $this->registration = RegistrationModel::with(['eventner', 'competitionCategory', 'participants'])
+        $this->registration = RegistrationModel::with(['eventner', 'competitionCategory', 'participants', 'fieldValues'])
             ->where('magic_token', $token)
             ->firstOrFail();
 
         $this->token = $token;
         $this->activeRegId = $this->registration->id;
 
+        // Event bisa saja belum pernah membuka builder-nya.
+        RegistrationField::ensureDefaults($this->registration->eventner);
+
         // Load all registrations from the same school (same NPSN + same event)
-        $this->siblingRegistrations = RegistrationModel::with(['competitionCategory', 'participants'])
+        $this->siblingRegistrations = RegistrationModel::with(['competitionCategory', 'participants', 'fieldValues'])
             ->where('eventner_id', $this->registration->eventner_id)
             ->where('npsn', $this->registration->npsn)
             ->where('status_berkas', '!=', 'dibatalkan')
@@ -57,17 +84,229 @@ class Registration extends Component
         $this->loadFormData();
     }
 
+    /**
+     * Field builder yang tampil di portal, urut sesuai builder.
+     *
+     * Semua tipe ikut — termasuk berkas — karena di sini pendaftar sudah
+     * memegang tautan portal dan memang waktunya melengkapi berkas.
+     */
+    #[Computed]
+    public function fields()
+    {
+        return RegistrationField::forEventner($this->registration->eventner);
+    }
+
+    /** Field non-berkas yang bukan group: nilainya ikut disimpan saat tombol simpan ditekan. */
+    #[Computed]
+    public function textFields()
+    {
+        return $this->fields->reject(fn ($f) => $f->isFile() || $f->isGroup())->values();
+    }
+
+    #[Computed]
+    public function fileFields()
+    {
+        return $this->fields->filter(fn ($f) => $f->isFile())->values();
+    }
+
+    /** Field berulang (daftar anggota pasukan). */
+    #[Computed]
+    public function groupFields()
+    {
+        return $this->fields->filter(fn ($f) => $f->isGroup())->values();
+    }
+
+    /**
+     * Baris builder untuk satu `builtin_source`, null bila event ini belum
+     * punya barisnya. Dipakai view untuk label kartu tetap (danton, pelatih).
+     */
+    public function barisField(string $source): ?RegistrationField
+    {
+        return $this->fields->firstWhere('builtin_source', $source);
+    }
+
+    /** Definisi satu field berdasarkan id — untuk blok unggahan berkas. */
+    public function fieldById(int $id): ?RegistrationField
+    {
+        return $this->fields->firstWhere('id', $id);
+    }
+
+    /** Nilai bidang teks, dihitung dari registrasi yang sedang aktif. */
+    public function nilaiField(RegistrationField $field): string
+    {
+        if ($field->builtin_source) {
+            return (string) ($this->registration->{$field->builtin_source} ?? '');
+        }
+
+        return (string) ($this->registration->fieldValues
+            ->firstWhere('registration_field_id', $field->id)?->value ?? '');
+    }
+
+    /**
+     * Aturan validasi field teks, dibangun dari definisi di DB.
+     *
+     * Termasuk field yang punya properti sendiri di portal (nama danton, NISN
+     * danton) dan sub-field grup peserta (nama anggota): label, wajib, dan
+     * tampil atau tidaknya semuanya dari baris builder, jadi mematikan
+     * "Nama Danton" di builder benar-benar melonggarkan validasinya.
+     */
+    private function aturanField(): array
+    {
+        $aturan = [];
+
+        foreach ($this->textFields as $field) {
+            // Danton punya propertinya sendiri (dantonNama/dantonNisn) —
+            // aturannya dibuat di bawah, bukan lewat fieldValues.
+            if (self::SUMBER_PROPRIET_SENDIRI[$field->builtin_source] ?? null) {
+                continue;
+            }
+
+            $aturanDasar = $field->builtin_source === 'school_email'
+                ? ($field->is_required ? 'required|email|max:255' : 'nullable|email|max:255')
+                : $field->validationRule($field->is_required);
+
+            // Field wilayah dapat rule tambahan: memastikan yang dikirim memang
+            // hasil pilihan dropdown, bukan kode yang disusun sendiri.
+            if ($field->type === 'wilayah') {
+                $this->tambahAturanWilayah($aturan, $field, $aturanDasar);
+                continue;
+            }
+
+            $aturan['fieldValues.' . $field->field_key] = $aturanDasar;
+        }
+
+        foreach (['dantonNama' => 'danton_nama', 'dantonNisn' => 'danton_nisn'] as $properti => $source) {
+            $aturan[$properti] = $this->aturanSumber($source, 'string|max:255');
+        }
+
+        $peserta = $this->barisField('peserta');
+
+        if ($peserta) {
+            foreach ($peserta->sub_fields['items'] ?? [] as $sub) {
+                if (($sub['type'] ?? 'text') !== 'text') {
+                    continue;
+                }
+
+                $aturan['participants.*.' . $sub['key']] = ($sub['is_required'] ?? false)
+                    ? 'required|string|max:255'
+                    : 'nullable|string|max:255';
+            }
+        }
+
+        return $aturan;
+    }
+
+    /**
+     * Aturan untuk satu baris builder, dari properti milik portal.
+     *
+     * Field nonaktif tidak menghasilkan aturan sama sekali; field aktif yang
+     * tidak diwajibkan jadi nullable.
+     */
+    private function aturanSumber(string $source, string $rule): string
+    {
+        $field = $this->barisField($source);
+
+        return ($field && $field->is_required) ? 'required|' . $rule : 'nullable|' . $rule;
+    }
+
+    private function pesanField(): array
+    {
+        $pesan = [];
+
+        foreach ($this->textFields as $field) {
+            $pesan['fieldValues.' . $field->field_key . '.required'] = $field->label . ' wajib diisi.';
+            $pesan['fieldValues.' . $field->field_key . '.in'] = 'Pilihan ' . $field->label . ' tidak valid.';
+            $pesan['fieldValues.' . $field->field_key . '.numeric'] = $field->label . ' harus berupa angka.';
+            $pesan['fieldValues.' . $field->field_key . '.date'] = $field->label . ' harus berupa tanggal yang valid.';
+        }
+
+        if ($labelDanton = $this->labelSumber('danton_nama')) {
+            $pesan['dantonNama.required'] = $labelDanton . ' wajib diisi.';
+        }
+
+        if ($labelNisn = $this->labelSumber('danton_nisn')) {
+            $pesan['dantonNisn.string'] = $labelNisn . ' harus berupa teks.';
+        }
+
+        if ($peserta = $this->barisField('peserta')) {
+            foreach ($peserta->sub_fields['items'] ?? [] as $sub) {
+                $pesan['participants.*.' . $sub['key'] . '.required'] = ($sub['label'] ?? 'Isian') . ' wajib diisi.';
+            }
+        }
+
+        return $pesan;
+    }
+
+    /** Label satu baris builder, null bila barisnya tidak ada/nonaktif. */
+    public function labelSumber(string $source): ?string
+    {
+        $field = $this->barisField($source);
+
+        return $field?->is_active ? $field->label : null;
+    }
+
+    /**
+     * Tulis nilai field teks ke tempatnya masing-masing: kolom registrations
+     * untuk field bawaan, registration_field_values untuk field buatan panitia.
+     */
+    private function simpanFieldTeks(RegistrationModel $reg): void
+    {
+        foreach ($this->textFields as $field) {
+            // Danton punya properti sendiri: nilainya diambil dari situ, bukan
+            // dari fieldValues yang tidak pernah terisi (lihat tulisDanton()).
+            if (self::SUMBER_PROPRIET_SENDIRI[$field->builtin_source] ?? null) {
+                continue;
+            }
+
+            $nilai = $this->fieldValues[$field->field_key] ?? null;
+            $nilai = $nilai !== null && $nilai !== '' ? strip_tags((string) $nilai) : null;
+
+            if ($field->isGroup()) {
+                continue;
+            }
+
+            if ($field->builtin_source) {
+                $reg->{$field->builtin_source} = $nilai;
+                continue;
+            }
+
+            RegistrationFieldValue::updateOrCreate(
+                [
+                    'registration_id' => $reg->id,
+                    'registration_field_id' => $field->id,
+                ],
+                ['value' => $nilai]
+            );
+        }
+    }
+
+    /**
+     * Simpan danton dari propertinya sendiri, tapi hanya untuk field yang
+     * barisnya masih ada dan aktif di builder.
+     *
+     * Field yang dimatikan panitia tidak dirender dan tidak divalidasi; tanpa
+     * penjagaan ini menyimpan draft akan mengosongkan isian lama diam-diam.
+     */
+    private function tulisDanton(RegistrationModel $reg): void
+    {
+        foreach (self::SUMBER_PROPRIET_SENDIRI as $sumber => $properti) {
+            $field = $this->barisField($sumber);
+
+            if (! $field) {
+                continue;
+            }
+
+            $reg->{$sumber} = strip_tags((string) $this->{$properti});
+        }
+    }
+
+
     public function switchRegistration($regId)
     {
         if ($regId == $this->activeRegId) return;
 
         // Cache current draft state before switching away
-        $this->draftCache[$this->activeRegId] = [
-            'participants' => $this->participants,
-            'dantonNama'   => $this->dantonNama,
-            'dantonNisn'   => $this->dantonNisn,
-            'namaPelatih'  => $this->namaPelatih,
-        ];
+        $this->draftCache[$this->activeRegId] = $this->draftSaatIni();
 
         $reg = $this->siblingRegistrations->firstWhere('id', $regId);
         if (!$reg) return;
@@ -81,17 +320,32 @@ class Registration extends Component
             $this->participants = $c['participants'];
             $this->dantonNama   = $c['dantonNama'];
             $this->dantonNisn   = $c['dantonNisn'];
-            $this->namaPelatih  = $c['namaPelatih'];
+            $this->fieldValues  = $c['fieldValues'] ?? [];
         } else {
             $this->loadFormData();
         }
+    }
+
+    /**
+     * Isian yang belum disimpan milik registrasi yang sedang dibuka.
+     *
+     * Dipakai saat pindah tab registrasi: tanpa ini, isian field builder hilang
+     * begitu pendaftar mengecek pasukan lain lalu kembali.
+     */
+    private function draftSaatIni(): array
+    {
+        return [
+            'participants' => $this->participants,
+            'dantonNama'   => $this->dantonNama,
+            'dantonNisn'   => $this->dantonNisn,
+            'fieldValues'  => $this->fieldValues,
+        ];
     }
 
     private function loadFormData()
     {
         $this->dantonNama = $this->registration->danton_nama ?? '';
         $this->dantonNisn = $this->registration->danton_nisn ?? '';
-        $this->namaPelatih = $this->registration->nama_pelatih ?? '';
 
         if ($this->registration->participants->count() > 0) {
             $this->participants = [];
@@ -99,19 +353,32 @@ class Registration extends Component
                 $this->participants[] = ['nama' => $p->nama, 'nisn' => $p->nisn ?? '', 'foto' => null, 'existing_foto' => $p->foto];
             }
         } else {
+            // Jumlah baris kosong ikut builder, bukan angka tetap.
+            $jumlah = $this->groupFields->first()?->defaultRows() ?? 12;
+
             $this->participants = [];
-            for ($i = 0; $i < 12; $i++) {
+            for ($i = 0; $i < $jumlah; $i++) {
                 $this->participants[] = ['nama' => '', 'nisn' => '', 'foto' => null, 'existing_foto' => null];
             }
         }
 
-        // Reset file uploads
-        $this->logoSekolah = null;
-        $this->suratTugas = null;
-        $this->fotoPelatih = null;
-        $this->buktiPendaftaran = null;
-        $this->dantonFoto = null;
-        $this->paymentProof = null;
+        // Nilai field teks dari DB — berkas tidak ikut, karena diunggah lewat
+        // endpoint sendiri dan statusnya dibaca langsung dari registrasi.
+        $this->fieldValues = [];
+        foreach ($this->textFields as $field) {
+            $this->fieldValues[$field->field_key] = $this->nilaiField($field);
+        }
+
+        // Field wilayah dipulihkan ke pilihannya semula supaya dropdown tampil
+        // sudah terisi, bukan kosong seolah pesertanya belum pernah memilih.
+        $this->wilayah = [];
+        $this->muatWilayahTersimpan($this->textFields);
+    }
+
+    /** Nilai awal field wilayah: nilai yang tersimpan di DB untuk registrasi ini. */
+    protected function nilaiWilayahAwal(RegistrationField $field): string
+    {
+        return trim($this->fieldValues[$field->field_key] ?? '');
     }
 
     public function submitPaymentProof()
@@ -160,27 +427,18 @@ class Registration extends Component
             }
         }
 
-        $this->validate([
-            'namaPelatih' => 'required|string|max:255',
-            'dantonNama' => 'required|string|max:255',
-            'participants.*.nama' => 'required|string|max:255',
-        ], [
-            'namaPelatih.required' => 'Nama pelatih wajib diisi.',
-            'dantonNama.required' => 'Nama danton wajib diisi.',
-            'participants.*.nama.required' => 'Nama peserta wajib diisi.',
-        ]);
+        $this->validate(array_merge($this->aturanField()), $this->pesanField());
 
-        $reg->nama_pelatih = strip_tags($this->namaPelatih);
-        $reg->danton_nama = strip_tags($this->dantonNama);
-        $reg->danton_nisn = strip_tags($this->dantonNisn);
+        $this->tulisDanton($reg);
+        $this->simpanFieldTeks($reg);
         $reg->status_berkas = 'confirmed';
         $reg->save();
 
         $this->saveParticipants();
 
         // Refresh
-        $this->registration = $reg->fresh(['participants']);
-        $this->siblingRegistrations = RegistrationModel::with(['competitionCategory', 'participants'])
+        $this->registration = $reg->fresh(['participants', 'fieldValues']);
+        $this->siblingRegistrations = RegistrationModel::with(['competitionCategory', 'participants', 'fieldValues'])
             ->where('eventner_id', $this->registration->eventner_id)
             ->where('npsn', $this->registration->npsn)
             ->where('status_berkas', '!=', 'dibatalkan')
@@ -188,12 +446,7 @@ class Registration extends Component
 
         // Re-sync form state with what was just saved
         $this->loadFormData();
-        $this->draftCache[$this->activeRegId] = [
-            'participants' => $this->participants,
-            'dantonNama'   => $this->dantonNama,
-            'dantonNisn'   => $this->dantonNisn,
-            'namaPelatih'  => $this->namaPelatih,
-        ];
+        $this->draftCache[$this->activeRegId] = $this->draftSaatIni();
 
         session()->flash('success', 'Konfirmasi berhasil! Data pasukan telah dikirim untuk diverifikasi panitia.');
     }
@@ -216,54 +469,32 @@ class Registration extends Component
         }
 
         $rules = [
-            'logoSekolah' => 'nullable|image|max:3072',
-            'suratTugas' => 'nullable|file|mimes:pdf,jpg,png|max:5120',
-            'fotoPelatih' => 'nullable|image|max:3072',
-            'dantonNama' => 'required|string|max:255',
-            'dantonNisn' => 'nullable|string|max:20',
-            'dantonFoto' => 'nullable|image|max:3072',
-            'namaPelatih' => 'required|string|max:255',
-            'participants.*.nama' => 'required|string|max:255',
-            'participants.*.nisn' => 'nullable|string|max:20',
             'participants.*.foto' => 'nullable|image|max:3072',
         ];
 
-        if ($isFinal) {
-            if ($reg->eventner->surat_tugas_required) {
-                $rules['suratTugas'] = 'required_without:registration.surat_tugas|file|mimes:pdf,jpg,png|max:5120';
-            }
-        }
-
-        $this->validate($rules, [
-            'logoSekolah.image' => 'File Logo Sekolah harus berupa gambar.',
-            'suratTugas.file' => 'File Surat Tugas harus berupa dokumen.',
-            'suratTugas.mimes' => 'File Surat Tugas harus PDF, JPG, atau PNG.',
-            'suratTugas.required_without' => 'Surat Tugas wajib diunggah.',
-            'buktiPendaftaran.image' => 'File Kwitansi harus berupa gambar.',
-            'buktiPendaftaran.required_without' => 'Kwitansi pendaftaran wajib diunggah.',
-            'fotoPelatih.image' => 'Foto pelatih harus berupa gambar.',
-            'dantonNama.required' => 'Nama Danton wajib diisi.',
-            'namaPelatih.required' => 'Nama pelatih wajib diisi.',
-            'participants.*.nama.required' => 'Nama peserta wajib diisi.',
+        $pesan = [
             'participants.*.foto.image' => 'Foto peserta harus berupa gambar.',
-        ]);
+        ];
 
-        if ($this->logoSekolah) {
-            $reg->logo_sekolah = $this->logoSekolah->store('registrations/logos', 'public');
-        }
-        if ($this->suratTugas) {
-            $reg->surat_tugas = $this->suratTugas->store('registrations/surat', 'public');
-        }
-        if ($this->fotoPelatih) {
-            $reg->foto_pelatih = $this->fotoPelatih->store('registrations/pelatih', 'public');
+        $berkasWajib = $this->berkasWajibBelumAda();
+
+        if ($isFinal && $berkasWajib->isNotEmpty()) {
+            foreach ($berkasWajib as $field) {
+                $this->addError('fields.' . $field->id, $field->label . ' wajib diunggah sebelum data difinalisasi.');
+            }
+
+            session()->flash('error', 'Masih ada berkas wajib yang belum diunggah: ' . $berkasWajib->pluck('label')->implode(', ') . '.');
+
+            return;
         }
 
-        $reg->nama_pelatih = strip_tags($this->namaPelatih);
-        $reg->danton_nama = strip_tags($this->dantonNama);
-        $reg->danton_nisn = strip_tags($this->dantonNisn);
-        if ($this->dantonFoto) {
-            $reg->danton_foto = $this->dantonFoto->store('registrations/danton', 'public');
-        }
+        // Aturan semua field — teks, danton, dan sub-field grup peserta —
+        // dibangun dari baris builder. Berkas tidak di sini karena sudah
+        // tersimpan langsung oleh endpoint unggahan.
+        $this->validate(array_merge($rules, $this->aturanField()), array_merge($pesan, $this->pesanField()));
+
+        $this->tulisDanton($reg);
+        $this->simpanFieldTeks($reg);
 
         if ($isFinal) {
             $reg->is_finalized = true;
@@ -276,32 +507,63 @@ class Registration extends Component
         $this->saveParticipants();
 
         // Refresh
-        $this->registration = $reg->fresh(['participants']);
-        $this->siblingRegistrations = RegistrationModel::with(['competitionCategory', 'participants'])
+        $this->registration = $reg->fresh(['participants', 'fieldValues']);
+        $this->siblingRegistrations = RegistrationModel::with(['competitionCategory', 'participants', 'fieldValues'])
             ->where('eventner_id', $this->registration->eventner_id)
             ->where('npsn', $this->registration->npsn)
             ->where('status_berkas', '!=', 'dibatalkan')
             ->get();
 
-        $this->logoSekolah = null;
-        $this->suratTugas = null;
-        $this->fotoPelatih = null;
-        $this->buktiPendaftaran = null;
-        $this->dantonFoto = null;
-
         // Re-sync form state with what was just saved (staged fotos consumed, existing_foto updated)
         $this->loadFormData();
-        $this->draftCache[$this->activeRegId] = [
-            'participants' => $this->participants,
-            'dantonNama'   => $this->dantonNama,
-            'dantonNisn'   => $this->dantonNisn,
-            'namaPelatih'  => $this->namaPelatih,
-        ];
+        $this->draftCache[$this->activeRegId] = $this->draftSaatIni();
 
         session()->flash('success', $isFinal
             ? 'Data berhasil difinalisasi dan dikirim ke panitia!'
             : 'Draft berhasil disimpan!'
         );
+    }
+
+    /**
+     * Field berkas aktif yang wajib tapi belum ada isinya.
+     *
+     * Berkas diunggah lewat endpoint sendiri, jadi statusnya dibaca dari
+     * kolom registrations / registration_field_values — bukan dari properti
+     * Livewire.
+     *
+     * @return \Illuminate\Support\Collection<int, RegistrationField>
+     */
+    private function berkasWajibBelumAda()
+    {
+        return $this->fileFields
+            ->filter(fn ($field) => $field->is_required)
+            ->filter(function ($field) {
+                $nilai = $field->builtin_source
+                    ? $this->registration->{$field->builtin_source}
+                    : $this->registration->fieldValues
+                        ->firstWhere('registration_field_id', $field->id)?->value;
+
+                return ! $nilai;
+            })
+            ->values();
+    }
+
+    /** Field berkas aktif + nilai & URL-nya, untuk blok unggahan di view. */
+    #[Computed]
+    public function berkasFields()
+    {
+        return $this->fileFields->map(function ($field) {
+            $nilai = $field->builtin_source
+                ? $this->registration->{$field->builtin_source}
+                : $this->registration->fieldValues
+                    ->firstWhere('registration_field_id', $field->id)?->value;
+
+            return [
+                'field' => $field,
+                'path' => $nilai,
+                'url' => $nilai ? asset('storage/' . ltrim($nilai, '/')) : null,
+            ];
+        });
     }
 
     private function saveParticipants()

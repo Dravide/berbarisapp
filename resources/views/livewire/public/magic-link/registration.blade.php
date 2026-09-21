@@ -54,11 +54,11 @@
             <div class="md:col-span-1">
                 <div class="surface-card p-4 border border-outline-variant/40 bg-white text-xs font-semibold">
                     <div class="flex justify-between items-center mb-2 pb-2 border-b border-outline-variant/30">
-                        <span class="text-on-surface-variant">Sekolah</span>
+                        <span class="text-on-surface-variant">{{ $this->labelSumber('nama_sekolah') ?? 'Sekolah' }}</span>
                         <span class="text-deep-slate font-bold text-right truncate max-w-[150px]">{{ $registration->display_name }}</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="text-on-surface-variant">NPSN</span>
+                        <span class="text-on-surface-variant">{{ $this->labelSumber('npsn') ?? \App\Models\RegistrationField::SECTIONS['umum'] }}</span>
                         <span class="text-deep-slate font-bold font-mono text-right">{{ $registration->npsn }}</span>
                     </div>
                 </div>
@@ -358,7 +358,7 @@
                         </span>
                         @if($registration->nama_pelatih)
                             <span class="inline-flex items-center gap-1 rounded-md bg-surface-container px-2.5 py-1 text-xs font-semibold text-deep-slate border border-outline-variant/30">
-                                <i class="ti ti-user text-on-surface-variant"></i> Pelatih: {{ $registration->nama_pelatih }}
+                                <i class="ti ti-user text-on-surface-variant"></i> {{ $this->labelSumber('nama_pelatih') ?? 'Pelatih' }}: {{ $registration->nama_pelatih }}
                             </span>
                         @endif
                         @if($registration->participants->count() > 0)
@@ -509,11 +509,11 @@
                                     <td class="px-5 py-3.5 text-deep-slate font-bold">{{ $registration->competitionCategory->full_name }}</td>
                                 </tr>
                                 <tr>
-                                    <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">Nama Sekolah</th>
+                                    <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">{{ $this->labelSumber('nama_sekolah') ?? 'Nama Sekolah' }}</th>
                                     <td class="px-5 py-3.5 text-deep-slate font-bold">{{ $registration->display_name }}</td>
                                 </tr>
                                 <tr>
-                                    <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">Data Pelatih</th>
+                                    <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">{{ \App\Models\RegistrationField::SECTIONS['pelatih'] }}</th>
                                     <td class="px-5 py-3.5">
                                         <div class="flex items-center gap-3">
                                             @if($registration->foto_pelatih)
@@ -521,7 +521,7 @@
                                             @endif
                                             <div>
                                                 <div class="font-bold text-deep-slate leading-tight mb-0.5">{{ $registration->nama_pelatih }}</div>
-                                                <span class="text-xs text-on-surface-variant block">No. HP: {{ $registration->no_hp }}</span>
+                                                <span class="text-xs text-on-surface-variant block">{{ $this->labelSumber('no_hp') ?? 'No. HP' }}: {{ $registration->no_hp }}</span>
                                             </div>
                                         </div>
                                     </td>
@@ -529,18 +529,22 @@
                                 <tr>
                                     <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">Berkas Persyaratan</th>
                                     <td class="px-5 py-3.5">
-                                        <div class="flex flex-wrap gap-2">
-                                            @if($registration->logo_sekolah)
-                                                <a href="{{ asset('storage/' . $registration->logo_sekolah) }}" target="_blank" class="btn-ghost py-1.5 px-3 text-xs leading-normal font-bold inline-flex items-center gap-1 text-decoration-none"><i class="ti ti-photo"></i> Logo</a>
-                                            @endif
-                                            @if($registration->surat_tugas)
-                                                <a href="{{ asset('storage/' . $registration->surat_tugas) }}" target="_blank" class="btn-ghost py-1.5 px-3 text-xs leading-normal font-bold inline-flex items-center gap-1 text-decoration-none"><i class="ti ti-file-text"></i> Surat Tugas</a>
-                                            @endif
+                                        @php $berkasAda = $this->berkasFields->filter(fn ($b) => $b['path']); @endphp
+                                        @if($berkasAda->isEmpty())
+                                            <span class="text-xs text-on-surface-variant italic">Belum ada berkas diunggah.</span>
+                                        @else
+                                            <div class="flex flex-wrap gap-2">
+                                                @foreach($berkasAda as $berkas)
+                                                    <a href="{{ $berkas['url'] }}" target="_blank" class="btn-ghost py-1.5 px-3 text-xs leading-normal font-bold inline-flex items-center gap-1 text-decoration-none">
+                                                        <i class="ti {{ $berkas['field']->type === 'image' ? 'ti-photo' : 'ti-file-text' }}"></i> {{ $berkas['field']->label }}
+                                                    </a>
+                                                @endforeach
                                             </div>
+                                        @endif
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">Data Danton</th>
+                                    <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">{{ \App\Models\RegistrationField::SECTIONS['danton'] }}</th>
                                     <td class="px-5 py-3.5">
                                         <div class="flex items-center gap-3">
                                             @if($registration->danton_foto)
@@ -548,18 +552,41 @@
                                             @endif
                                             <div>
                                                 <div class="font-bold text-deep-slate leading-tight mb-0.5">{{ $registration->danton_nama }}</div>
-                                                <span class="text-xs text-on-surface-variant block">NISN: {{ $registration->danton_nisn ?: '-' }}</span>
+                                                <span class="text-xs text-on-surface-variant block">{{ $this->barisField('danton_nisn')?->label ?? 'NISN' }}: {{ $registration->danton_nisn ?: '-' }}</span>
                                             </div>
                                         </div>
                                     </td>
                                 </tr>
+                                @foreach($this->textFields as $field)
+                                    @php $nilaiTampil = $this->nilaiField($field); @endphp
+                                    {{-- Kartu pelatih & danton di atas sudah menampilkan
+                                         section-nya; di sini hanya isian umum. Berkas
+                                         sudah punya barisnya sendiri di atas. --}}
+                                    @continue($field->isFile() || $field->section !== 'umum')
+                                    @continue($nilaiTampil === '')
+                                    <tr wire:key="ro-{{ $field->id }}">
+                                        <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">{{ $field->label }}</th>
+                                        <td class="px-5 py-3.5 text-deep-slate font-medium">
+                                            @if($field->type === 'select')
+                                                {{ collect($field->options ?? [])->firstWhere('value', $nilaiTampil)['label'] ?? $nilaiTampil }}
+                                            @else
+                                                {{ $nilaiTampil }}
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
                             </tbody>
                         </table>
                     </div>
 
+                    @php
+                        $grupPeserta = $this->groupFields->first();
+                        $subNama = $grupPeserta?->subField('nama');
+                        $subNisn = $grupPeserta?->subField('nisn');
+                    @endphp
                     <div class="bg-surface-container px-5 py-3 border-t border-b border-outline-variant/40">
                         <h3 class="font-display text-sm font-bold text-deep-slate inline-flex items-center gap-1.5 mb-0">
-                            <i class="ti ti-users-group"></i> Daftar Pasukan ({{ $registration->participants->count() }} Anggota)
+                            <i class="ti ti-users-group"></i> {{ $grupPeserta?->label ?? 'Daftar Pasukan' }} ({{ $registration->participants->count() }} Anggota)
                         </h3>
                     </div>
                     <div class="overflow-x-auto">
@@ -567,9 +594,9 @@
                             <thead class="bg-surface-container-low border-b border-outline-variant/30 font-bold text-deep-slate">
                                 <tr>
                                     <th class="px-5 py-2.5 text-center w-12">No</th>
-                                    <th class="px-5 py-2.5 w-16">Foto</th>
-                                    <th class="px-5 py-2.5">Nama Lengkap</th>
-                                    <th class="px-5 py-2.5 w-40">NISN</th>
+                                    <th class="px-5 py-2.5 w-16">{{ $grupPeserta?->subField('foto')['label'] ?? 'Foto' }}</th>
+                                    <th class="px-5 py-2.5">{{ $subNama['label'] ?? 'Nama Lengkap' }}</th>
+                                    <th class="px-5 py-2.5 w-40">{{ $subNisn['label'] ?? 'NISN' }}</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-outline-variant/30">
@@ -622,62 +649,60 @@
                         <div class="p-6">
                             <p class="text-sm text-on-surface-variant mb-6 leading-relaxed">Pengisian berkas &amp; anggota belum dibuka secara resmi. Silakan persiapkan berkas berikut untuk mempermudah proses input nanti:</p>
 
+                            @php
+                                // Daftar persiapan ini disusun dari definisi field
+                                // event — panitia mengubah label di builder, isi
+                                // pratinjau ikut berubah.
+                                $teksPratinjau = $this->textFields->groupBy(fn ($f) => $f->section ?: 'umum');
+                                $berkasPratinjau = collect($this->berkasFields)->groupBy(fn ($b) => $b['field']->section ?: 'umum');
+                                $grupPratinjau = $this->groupFields->first();
+                                $ikonPratinjau = ['umum' => 'ti-clipboard-text', 'pelatih' => 'ti-user', 'danton' => 'ti-medal-2'];
+                            @endphp
+
                             <div class="grid gap-5 sm:grid-cols-2">
-                                <div class="bg-primary/5 border border-primary/10 rounded-xl p-4 flex flex-col gap-3">
-                                    <div class="flex items-center gap-2.5">
-                                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                            <i class="ti ti-user text-base"></i>
-                                        </div>
-                                        <h4 class="font-display text-sm font-bold text-deep-slate m-0">Data Pelatih</h4>
-                                    </div>
-                                    <ul class="list-disc pl-4 text-xs text-on-surface-variant space-y-1.5 leading-relaxed m-0 font-medium">
-                                        <li>Nama lengkap pelatih/pembina</li>
-                                        <li>Pas foto pelatih (format JPG/PNG, background merah/biru)</li>
-                                    </ul>
-                                </div>
+                                @foreach(\App\Models\RegistrationField::SECTIONS as $slug => $judulSection)
+                                    @php
+                                        $teksSection = $teksPratinjau->get($slug, collect());
+                                        $berkasSection = $berkasPratinjau->get($slug, collect());
+                                    @endphp
+                                    @continue($teksSection->isEmpty() && $berkasSection->isEmpty())
 
-                                <div class="bg-primary/5 border border-primary/10 rounded-xl p-4 flex flex-col gap-3">
-                                    <div class="flex items-center gap-2.5">
-                                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                            <i class="ti ti-file-text text-base"></i>
+                                    <div class="bg-primary/5 border border-primary/10 rounded-xl p-4 flex flex-col gap-3">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                                <i class="ti {{ $ikonPratinjau[$slug] ?? 'ti-clipboard-text' }} text-base"></i>
+                                            </div>
+                                            <h4 class="font-display text-sm font-bold text-deep-slate m-0">{{ $judulSection }}</h4>
                                         </div>
-                                        <h4 class="font-display text-sm font-bold text-deep-slate m-0">Berkas Persyaratan</h4>
+                                        <ul class="list-disc pl-4 text-xs text-on-surface-variant space-y-1.5 leading-relaxed m-0 font-medium">
+                                            @foreach($teksSection as $field)
+                                                <li>{{ $field->label }}@if($field->is_required) <span class="text-red-500">*</span> @endif</li>
+                                            @endforeach
+                                            @foreach($berkasSection as $berkas)
+                                                <li>
+                                                    {{ $berkas['field']->label }} ({{ $berkas['field']->type === 'image' ? 'JPG/PNG' : 'PDF/JPG/PNG' }})
+                                                    @if($berkas['field']->is_required) <span class="text-red-500">*</span> @endif
+                                                </li>
+                                            @endforeach
+                                        </ul>
                                     </div>
-                                    <ul class="list-disc pl-4 text-xs text-on-surface-variant space-y-1.5 leading-relaxed m-0 font-medium">
-                                        <li>Logo sekolah resmi (format JPG/PNG)</li>
-                                        @if($registration->eventner->surat_tugas_required)
-                                            <li>Surat Tugas / Rekomendasi Kepala Sekolah (format PDF/JPG)</li>
-                                        @endif
-                                    </ul>
-                                </div>
+                                @endforeach
 
-                                <div class="bg-amber-500/5 border border-amber-500/10 rounded-xl p-4 flex flex-col gap-3">
-                                    <div class="flex items-center gap-2.5">
-                                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10 text-amber-600">
-                                            <i class="ti ti-medal-2 text-base"></i>
+                                @if($grupPratinjau)
+                                    <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 flex flex-col gap-3">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+                                                <i class="ti ti-users-group text-base"></i>
+                                            </div>
+                                            <h4 class="font-display text-sm font-bold text-deep-slate m-0">{{ $grupPratinjau->label }}</h4>
                                         </div>
-                                        <h4 class="font-display text-sm font-bold text-deep-slate m-0">Komandan Pleton (Danton)</h4>
+                                        <ul class="list-disc pl-4 text-xs text-on-surface-variant space-y-1.5 leading-relaxed m-0 font-medium">
+                                            @foreach($grupPratinjau->sub_fields['items'] ?? [] as $sub)
+                                                <li>{{ $sub['label'] }}@if($sub['is_required'] ?? false) <span class="text-red-500">*</span> @endif</li>
+                                            @endforeach
+                                        </ul>
                                     </div>
-                                    <ul class="list-disc pl-4 text-xs text-on-surface-variant space-y-1.5 leading-relaxed m-0 font-medium">
-                                        <li>Nama lengkap danton</li>
-                                        <li>NISN danton</li>
-                                        <li>Pas foto danton (format JPG/PNG)</li>
-                                    </ul>
-                                </div>
-
-                                <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 flex flex-col gap-3">
-                                    <div class="flex items-center gap-2.5">
-                                        <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
-                                            <i class="ti ti-users-group text-base"></i>
-                                        </div>
-                                        <h4 class="font-display text-sm font-bold text-deep-slate m-0">Anggota Pasukan</h4>
-                                    </div>
-                                    <ul class="list-disc pl-4 text-xs text-on-surface-variant space-y-1.5 leading-relaxed m-0 font-medium">
-                                        <li>Nama lengkap anggota</li>
-                                        <li>NISN setiap anggota</li>
-                                        <li>Pas foto seragam setiap anggota (format JPG/PNG)</li>
-                                    </ul>
-                                </div>
+                                @endif
                             </div>
 
                             <div class="mt-5 p-4 bg-primary/5 rounded-xl border border-primary/20 text-xs text-primary leading-normal font-semibold">
@@ -697,173 +722,292 @@
                 @endphp
 
                 @if($showForm)
+                @php
+                    // Kartu dirender per section, isinya loop field builder.
+                    // Field yang dinonaktifkan panitia tidak muncul di sini —
+                    // termasuk nama pelatih, foto pelatih, dan danton.
+                    $teksPerSection = $this->textFields->groupBy(fn ($f) => $f->section ?: 'umum');
+                    $berkasPerSection = collect($this->berkasFields)->groupBy(fn ($b) => $b['field']->section ?: 'umum');
+                    $grupPeserta = $this->groupFields->first();
+                    $dantonAktif = $this->textFields->where('section', 'danton')->isNotEmpty()
+                        || collect($this->berkasFields)->contains(fn ($b) => $b['field']->section === 'danton');
+                @endphp
                 <fieldset {{ $isLocked ? 'disabled' : '' }} class="flex flex-col gap-6">
 
-                    {{-- Data Pelatih Card --}}
-                    <div class="surface-card overflow-hidden">
-                        <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40">
-                            <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">
-                                <i class="ti ti-user text-primary"></i> Data Pelatih
-                            </h3>
-                        </div>
-                        <div class="p-6">
-                            <div class="grid gap-5 md:grid-cols-2">
-                                <div>
-                                    <label class="text-sm font-bold text-deep-slate block mb-1.5">Nama Pelatih <span class="text-red-500">*</span></label>
-                                    <input type="text" wire:model="namaPelatih" class="field-input w-full" placeholder="Nama lengkap pelatih">
-                                    @error('namaPelatih') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                </div>
-                                <div>
-                                    <label class="text-sm font-bold text-deep-slate block mb-1.5">No. HP (WhatsApp)</label>
-                                    <input type="text" value="{{ $registration->no_hp }}" disabled class="field-input w-full bg-surface-container-low text-on-surface-variant cursor-not-allowed">
-                                    <span class="text-[10px] text-on-surface-variant font-medium mt-1 block">Nomor HP registrasi awal (tidak dapat diubah).</span>
-                                </div>
-                                <div class="md:col-span-2">
-                                    <label class="text-sm font-bold text-deep-slate block mb-1.5">Foto Resmi Pelatih</label>
-                                    <div wire:ignore wire:key="pond-{{ $activeRegId }}-pelatih" x-data="{ pond: null }" x-init="
-                                        pond = FilePond.create($refs.input, {
-                                            credits: false,
-                                            labelIdle: 'Tarik & Letakkan berkas foto atau <span class=\'filepond--label-action\'>Pilih File</span>',
-                                            server: {
-                                                process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
-                                                    @this.upload('fotoPelatih', file, load, error, progress)
-                                                },
-                                                revert: (filename, load) => {
-                                                    @this.removeUpload('fotoPelatih', filename, load)
-                                                },
-                                            },
-                                        });
-                                    ">
-                                        <input type="file" x-ref="input" accept="image/*">
-                                    </div>
-                                    @error('fotoPelatih') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                    @if($registration->foto_pelatih)
-                                        <span class="text-xs font-bold text-emerald-600 mt-2 block inline-flex items-center gap-1"><i class="ti ti-circle-check-filled"></i> Berkas foto berhasil diunggah</span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <form wire:submit.prevent="submit(false)" class="flex flex-col gap-6">
-                        {{-- Documents Requirements Card --}}
-                        <div class="surface-card overflow-hidden">
-                            <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40">
-                                <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">
-                                    <i class="ti ti-files text-primary"></i> Berkas Persyaratan
-                                </h3>
-                            </div>
-                            <div class="p-6">
-                                <div class="grid gap-5 md:grid-cols-2">
-                                    {{-- Logo Sekolah --}}
-                                    <div>
-                                        <label class="text-sm font-bold text-deep-slate block mb-1.5">Logo Sekolah</label>
-                                        <div wire:ignore wire:key="pond-{{ $activeRegId }}-logo" x-data="{ pond: null }" x-init="
-                                            pond = FilePond.create($refs.input, {
-                                                credits: false,
-                                                labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
-                                                server: {
-                                                    process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
-                                                        @this.upload('logoSekolah', file, load, error, progress)
-                                                    },
-                                                    revert: (filename, load) => {
-                                                        @this.removeUpload('logoSekolah', filename, load)
-                                                    },
-                                                },
-                                            });
-                                        ">
-                                            <input type="file" x-ref="input" accept="image/*">
-                                        </div>
-                                        @error('logoSekolah') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                        @if($registration->logo_sekolah)
-                                            <span class="text-xs font-bold text-emerald-600 mt-2 block inline-flex items-center gap-1"><i class="ti ti-circle-check-filled"></i> Logo berhasil diunggah</span>
-                                        @endif
-                                    </div>
+                        @foreach(\App\Models\RegistrationField::SECTIONS as $slug => $judulSection)
+                            {{-- Section danton punya kartunya sendiri di bawah:
+                                 inputnya terikat ke properti dantonNama/dantonNisn,
+                                 bukan ke fieldValues. Merendernya di sini juga
+                                 membuat satu field tampil dua kali. --}}
+                            @continue($slug === 'danton')
 
-                                    {{-- Surat Tugas --}}
-                                    @if($registration->eventner->surat_tugas_required)
-                                        <div>
-                                            <label class="text-sm font-bold text-deep-slate block mb-1.5">Surat Tugas (.pdf/.jpg)</label>
-                                            <div wire:ignore wire:key="pond-{{ $activeRegId }}-surat" x-data="{ pond: null }" x-init="
-                                                pond = FilePond.create($refs.input, {
-                                                    credits: false,
-                                                    labelIdle: 'Tarik & Letakkan berkas atau <span class=\'filepond--label-action\'>Pilih File</span>',
-                                                    server: {
-                                                        process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
-                                                            @this.upload('suratTugas', file, load, error, progress)
-                                                        },
-                                                        revert: (filename, load) => {
-                                                            @this.removeUpload('suratTugas', filename, load)
-                                                        },
-                                                    },
-                                                });
-                                            ">
-                                                <input type="file" x-ref="input">
+                            @php
+                                $teksSection = $teksPerSection->get($slug, collect());
+                                $berkasSection = $berkasPerSection->get($slug, collect());
+                            @endphp
+                            @continue($teksSection->isEmpty() && $berkasSection->isEmpty())
+
+                            <div class="surface-card overflow-hidden">
+                                <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40">
+                                    <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">
+                                        <i class="ti {{ $slug === 'pelatih' ? 'ti-user' : ($slug === 'danton' ? 'ti-star text-amber-500' : 'ti-clipboard-text text-primary') }}"></i> {{ $judulSection }}
+                                    </h3>
+                                </div>
+                                <div class="p-6">
+                                    <div class="grid gap-5 md:grid-cols-2">
+                                        @foreach($teksSection as $field)
+                                            @php
+                                                $kunci = 'fieldValues.' . $field->field_key;
+                                                $nilai = $this->nilaiField($field);
+                                            @endphp
+                                            <div wire:key="text-{{ $field->id }}" class="{{ $field->type === 'textarea' ? 'md:col-span-2' : '' }}">
+                                                <label class="text-sm font-bold text-deep-slate block mb-1.5">
+                                                    {{ $field->label }}
+                                                    @if($field->is_required) <span class="text-red-500">*</span> @endif
+                                                </label>
+
+                                                @if($field->type === 'textarea')
+                                                    <textarea wire:model="{{ $kunci }}" rows="3" class="field-input w-full" placeholder="{{ $field->help_text ?: $field->label }}">{{ $nilai }}</textarea>
+                                                @elseif($field->type === 'select')
+                                                    <select wire:model="{{ $kunci }}" class="field-input w-full">
+                                                        <option value="">— Pilih {{ $field->label }} —</option>
+                                                        @foreach(($field->options ?? []) as $opsi)
+                                                            <option value="{{ $opsi['value'] }}">{{ $opsi['label'] }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                @elseif($field->type === 'wilayah')
+                                                    @include('livewire.public.partials._wilayah-field', [
+                                                        'field' => $field,
+                                                        'kelas' => 'field-input w-full',
+                                                    ])
+                                                @else
+                                                    <input type="{{ $field->type === 'number' ? 'number' : ($field->type === 'date' ? 'date' : 'text') }}"
+                                                        wire:model="{{ $kunci }}" class="field-input w-full" placeholder="{{ $field->help_text ?: $field->label }}">
+                                                @endif
+
+                                                @error($kunci) <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                                                @if($field->help_text && ! in_array($field->type, ['textarea']))
+                                                    <span class="text-[10px] text-on-surface-variant font-medium mt-1 block leading-normal">{{ $field->help_text }}</span>
+                                                @endif
                                             </div>
-                                            @error('suratTugas') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                            @if($registration->surat_tugas)
-                                                <span class="text-xs font-bold text-emerald-600 mt-2 block inline-flex items-center gap-1"><i class="ti ti-circle-check-filled"></i> Surat tugas berhasil diunggah</span>
-                                            @endif
-                                        </div>
-                                    @endif
+                                        @endforeach
+
+                                        @foreach($berkasSection as $berkas)
+                                            @php
+                                                $field = $berkas['field'];
+                                                $fieldId = 'pond-' . $activeRegId . '-field-' . $field->id;
+                                                $uploadUrl = route('magic.link.field.upload', ['token' => $token, 'fieldId' => $field->id]);
+                                                $deleteUrl = route('magic.link.field.destroy', ['token' => $token, 'fieldId' => $field->id]);
+                                                // Dua-duanya HARUS MIME, dan HARUS sama.
+                                                //
+                                                // FilePondPluginFileValidateType memetakan
+                                                // atribut `accept` ke opsi `acceptedFileTypes`
+                                                // (SET_ATTRIBUTE_TO_OPTION_MAP), dan core merge
+                                                // atribut SETELAH opsi JS — jadi `accept` menimpa
+                                                // array yang kita tulis di FilePond.create().
+                                                // Memberi ekstensi di `accept` membuat daftar
+                                                // yang benar-benar dipakai berisi ".pdf", yang
+                                                // tidak pernah cocok dengan file.type
+                                                // ("application/pdf") — plugin hanya mengerti
+                                                // MIME dan wildcard, ekstensi "not enabled yet".
+                                                // Efeknya berkas yang benar ditolak "File is of
+                                                // invalid type" tanpa pernah sampai ke server.
+                                                //
+                                                // Wildcard image/* dulu lolos karena kedua sisi
+                                                // kebetulan sama; daftar eksplisit tidak.
+                                                $tipes = $field->type === 'image'
+                                                    ? 'image/*'
+                                                    : 'application/pdf,image/jpeg,image/png';
+                                                $mimeDiterima = $field->type === 'image'
+                                                    ? '[\'image/*\']'
+                                                    : '[\'application/pdf\', \'image/jpeg\', \'image/png\']';
+                                                $batas = number_format($field->max_kb ?: 5120, 0, ',', '.');
+                                            @endphp
+                                            {{-- Unggahan lewat endpoint HTTP, bukan properti Livewire:
+                                                 field builder jumlahnya dinamis sedangkan properti
+                                                 upload Livewire harus ada saat compile. --}}
+                                            <div wire:key="{{ $fieldId }}" class="md:col-span-2">
+                                                <label class="text-sm font-bold text-deep-slate block mb-1.5">
+                                                    {{ $field->label }}
+                                                    @if($field->is_required) <span class="text-red-500">*</span> @endif
+                                                    <span class="font-normal text-on-surface-variant">(maks. {{ $batas }} KB)</span>
+                                                </label>
+                                                <div wire:ignore x-data="{ pond: null }" x-init="
+                                                    pond = FilePond.create($refs.input, {
+                                                        credits: false,
+                                                        acceptedFileTypes: {!! $mimeDiterima !!},
+                                                        labelFileTypeNotAllowed: 'Tipe berkas tidak diizinkan. Gunakan {{ $field->type === 'image' ? 'gambar (JPG/PNG)' : 'PDF, JPG, atau PNG' }}.',
+                                                        labelIdle: 'Tarik & Letakkan berkas atau <span class=\'filepond--label-action\'>Pilih File</span>',
+                                                        server: {
+                                                            process: (fieldName, file, metadata, load, error, progress, abort) => {
+                                                                const data = new FormData();
+                                                                data.append('file', file);
+                                                                data.append('_token', '{{ csrf_token() }}');
+
+                                                                const request = new XMLHttpRequest();
+                                                                request.open('POST', '{{ $uploadUrl }}');
+                                                                request.upload.onprogress = (e) => progress(e.lengthComputable, e.loaded, e.total);
+                                                                request.onload = () => {
+                                                                    if (request.status >= 200 && request.status < 300) {
+                                                                        load(request.responseText);
+                                                                    } else {
+                                                                        let pesan = 'Berkas gagal diunggah.';
+                                                                        try { pesan = JSON.parse(request.responseText).message || pesan; } catch (e) {}
+                                                                        error(pesan);
+                                                                    }
+                                                                };
+                                                                request.onerror = () => error('Berkas gagal diunggah. Periksa koneksi Anda.');
+                                                                request.send(data);
+
+                                                                return {
+                                                                    abort: () => {
+                                                                        request.abort();
+                                                                        abort();
+                                                                    },
+                                                                };
+                                                            },
+                                                            revert: (uniqueFileId, load, error) => {
+                                                                fetch('{{ $deleteUrl }}', {
+                                                                    method: 'DELETE',
+                                                                    headers: {
+                                                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                                        'Accept': 'application/json',
+                                                                    },
+                                                                }).then((res) => res.ok ? load() : error('Berkas gagal dihapus.'));
+                                                            },
+                                                        },
+                                                    });
+                                                ">
+                                                    <input type="file" x-ref="input" accept="{{ $tipes }}">
+                                                </div>
+                                                @error('fields.' . $field->id) <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                                                @if($berkas['path'])
+                                                    <span class="text-xs font-bold text-emerald-600 mt-2 inline-flex items-center gap-1">
+                                                        <i class="ti ti-circle-check-filled"></i> Berkas sudah diunggah
+                                                        <a href="{{ $berkas['url'] }}" target="_blank" class="text-primary underline ml-1">Lihat</a>
+                                                    </span>
+                                                @elseif($field->is_required)
+                                                    <span class="text-[10px] text-on-surface-variant font-medium mt-1 block leading-normal">Wajib diunggah sebelum data difinalisasi.</span>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        @endforeach
+                        @if($dantonAktif)
                         <div class="surface-card overflow-hidden">
                             <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40">
                                 <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">
-                                    <i class="ti ti-star text-amber-500"></i> Komandan Pleton (Danton)
+                                    <i class="ti ti-star text-amber-500"></i> {{ \App\Models\RegistrationField::SECTIONS['danton'] }}
                                 </h3>
                             </div>
                             <div class="p-6">
                                 <div class="grid gap-5 md:grid-cols-12">
+                                    @php
+                                        $dantonNamaField = $this->barisField('danton_nama');
+                                        $dantonNisnField = $this->barisField('danton_nisn');
+                                        $dantonFotoField = $this->barisField('danton_foto');
+                                        $fotoBerkas = collect($this->berkasFields)->firstWhere('field.id', $dantonFotoField?->id);
+                                    @endphp
+                                    @if($dantonNamaField)
                                     <div class="md:col-span-5">
-                                        <label class="text-sm font-bold text-deep-slate block mb-1.5">Nama Danton <span class="text-red-500">*</span></label>
-                                        <input type="text" wire:model="dantonNama" class="field-input w-full" placeholder="Nama lengkap danton">
+                                        <label class="text-sm font-bold text-deep-slate block mb-1.5">
+                                            {{ $dantonNamaField->label }}
+                                            @if($dantonNamaField->is_required) <span class="text-red-500">*</span> @endif
+                                        </label>
+                                        <input type="text" wire:model="dantonNama" class="field-input w-full" placeholder="{{ $dantonNamaField->help_text ?: $dantonNamaField->label }}">
                                         @error('dantonNama') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                                     </div>
+                                    @endif
+                                    @if($dantonNisnField)
                                     <div class="md:col-span-3">
-                                        <label class="text-sm font-bold text-deep-slate block mb-1.5">NISN</label>
-                                        <input type="text" wire:model="dantonNisn" class="field-input w-full" placeholder="NISN danton">
+                                        <label class="text-sm font-bold text-deep-slate block mb-1.5">
+                                            {{ $dantonNisnField->label }}
+                                            @if($dantonNisnField->is_required) <span class="text-red-500">*</span> @endif
+                                        </label>
+                                        <input type="text" wire:model="dantonNisn" class="field-input w-full" placeholder="{{ $dantonNisnField->help_text ?: $dantonNisnField->label }}">
                                         @error('dantonNisn') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                                     </div>
+                                    @endif
+                                    @if($dantonFotoField && $fotoBerkas)
                                     <div class="md:col-span-4">
-                                        <label class="text-sm font-bold text-deep-slate block mb-1.5">Pas Foto Danton</label>
+                                        <label class="text-sm font-bold text-deep-slate block mb-1.5">
+                                            {{ $dantonFotoField->label }}
+                                            @if($dantonFotoField->is_required) <span class="text-red-500">*</span> @endif
+                                            <span class="font-normal text-on-surface-variant">(maks. {{ number_format($dantonFotoField->max_kb ?: 5120, 0, ',', '.') }} KB)</span>
+                                        </label>
+                                        {{-- Unggahan lewat endpoint HTTP generik, sama seperti
+                                             berkas lain — bukan properti upload Livewire. --}}
                                         <div wire:ignore wire:key="pond-{{ $activeRegId }}-danton" x-data="{ pond: null }" x-init="
                                             pond = FilePond.create($refs.input, {
                                                 credits: false,
                                                 labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
                                                 server: {
-                                                    process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
-                                                        @this.upload('dantonFoto', file, load, error, progress)
+                                                    process: (fieldName, file, metadata, load, error, progress, abort) => {
+                                                        const data = new FormData();
+                                                        data.append('file', file);
+                                                        data.append('_token', '{{ csrf_token() }}');
+
+                                                        const request = new XMLHttpRequest();
+                                                        request.open('POST', '{{ route('magic.link.field.upload', ['token' => $token, 'fieldId' => $dantonFotoField->id]) }}');
+                                                        request.upload.onprogress = (e) => progress(e.lengthComputable, e.loaded, e.total);
+                                                        request.onload = () => {
+                                                            if (request.status >= 200 && request.status < 300) {
+                                                                load(request.responseText);
+                                                            } else {
+                                                                let pesan = 'Berkas gagal diunggah.';
+                                                                try { pesan = JSON.parse(request.responseText).message || pesan; } catch (e) {}
+                                                                error(pesan);
+                                                            }
+                                                        };
+                                                        request.onerror = () => error('Berkas gagal diunggah. Periksa koneksi Anda.');
+                                                        request.send(data);
+
+                                                        return { abort: () => { request.abort(); abort(); } };
                                                     },
-                                                    revert: (filename, load) => {
-                                                        @this.removeUpload('dantonFoto', filename, load)
+                                                    revert: (uniqueFileId, load, error) => {
+                                                        fetch('{{ route('magic.link.field.destroy', ['token' => $token, 'fieldId' => $dantonFotoField->id]) }}', {
+                                                            method: 'DELETE',
+                                                            headers: {
+                                                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                                                'Accept': 'application/json',
+                                                            },
+                                                        }).then((res) => res.ok ? load() : error('Berkas gagal dihapus.'));
                                                     },
                                                 },
                                             });
                                         ">
                                             <input type="file" x-ref="input" accept="image/*">
                                         </div>
-                                        @error('dantonFoto') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                                        @error('fields.' . $dantonFotoField->id) <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                                         @if($registration->danton_foto)
                                             <span class="text-xs font-bold text-emerald-600 mt-2 block inline-flex items-center gap-1"><i class="ti ti-circle-check-filled"></i> Foto danton berhasil diunggah</span>
                                             <div class="mt-2">
                                                 <a href="{{ asset('storage/' . $registration->danton_foto) }}" target="_blank" title="Lihat foto">
-                                                    <img src="{{ asset('storage/' . $registration->danton_foto) }}" class="h-24 w-20 rounded-lg object-cover border border-outline-variant/30 shadow-sm" alt="Pas Foto Danton">
+                                                    <img src="{{ asset('storage/' . $registration->danton_foto) }}" class="h-24 w-20 rounded-lg object-cover border border-outline-variant/30 shadow-sm" alt="{{ $dantonFotoField->label }}">
                                                 </a>
                                             </div>
                                         @endif
                                     </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
+                        @endif
 
-                        {{-- Passukan / Anggota Pasukan Card --}}
+                        {{-- Anggota Pasukan — sub-field & jumlah baris dari builder group --}}
+                        @php
+                            $subNamaPeserta = $grupPeserta?->subField('nama');
+                            $subNisnPeserta = $grupPeserta?->subField('nisn');
+                            $subFotoPeserta = $grupPeserta?->subField('foto');
+                        @endphp
+                        @if($grupPeserta)
                         <div class="surface-card overflow-hidden">
                             <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40 flex justify-between items-center">
                                 <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-0">
-                                    <i class="ti ti-users-group text-primary"></i> Anggota Pasukan
+                                    <i class="ti ti-users-group text-primary"></i> {{ $grupPeserta->label }}
                                 </h3>
                                 @if(!$isLocked)
                                     <button type="button" wire:click="addParticipant" class="btn-ghost py-1.5 px-3.5 text-xs font-bold leading-normal inline-flex items-center gap-1 transition cursor-pointer">
@@ -877,18 +1021,32 @@
                                         <div class="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 mt-8">
                                             {{ $index + 1 }}
                                         </div>
+                                        @if($subNamaPeserta)
                                         <div class="flex-1 min-w-[200px]">
-                                            <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase tracking-wider">Nama Lengkap <span class="text-red-500">*</span></label>
-                                            <input type="text" wire:model="participants.{{ $index }}.nama" class="field-input w-full" placeholder="Nama lengkap anggota">
+                                            <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase tracking-wider">
+                                                {{ $subNamaPeserta['label'] }}
+                                                @if($subNamaPeserta['is_required'] ?? false) <span class="text-red-500">*</span> @endif
+                                            </label>
+                                            <input type="text" wire:model="participants.{{ $index }}.nama" class="field-input w-full" placeholder="{{ $subNamaPeserta['label'] }}">
                                             @error('participants.'.$index.'.nama') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                                         </div>
+                                        @endif
+                                        @if($subNisnPeserta)
                                         <div class="flex-1 min-w-[120px]">
-                                            <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase tracking-wider">NISN</label>
-                                            <input type="text" wire:model="participants.{{ $index }}.nisn" class="field-input w-full" placeholder="NISN anggota">
+                                            <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase tracking-wider">
+                                                {{ $subNisnPeserta['label'] }}
+                                                @if($subNisnPeserta['is_required'] ?? false) <span class="text-red-500">*</span> @endif
+                                            </label>
+                                            <input type="text" wire:model="participants.{{ $index }}.nisn" class="field-input w-full" placeholder="{{ $subNisnPeserta['label'] }}">
                                             @error('participants.'.$index.'.nisn') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
                                         </div>
+                                        @endif
+                                        @if($subFotoPeserta)
                                         <div class="flex-1 min-w-[160px]">
-                                            <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase tracking-wider">Pas Foto Anggota</label>
+                                            <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase tracking-wider">
+                                                {{ $subFotoPeserta['label'] }}
+                                                @if($subFotoPeserta['is_required'] ?? false) <span class="text-red-500">*</span> @endif
+                                            </label>
                                             <div wire:ignore wire:key="pond-{{ $activeRegId }}-p-{{ $index }}" x-data="{ pond: null }" x-init="
                                                 pond = FilePond.create($refs.input, {
                                                     credits: false,
@@ -909,11 +1067,12 @@
                                                 <span class="text-xs font-bold text-emerald-600 mt-2 block inline-flex items-center gap-1"><i class="ti ti-circle-check-filled"></i> Foto diunggah</span>
                                                 <div class="mt-2">
                                                     <a href="{{ asset('storage/' . $participant['existing_foto']) }}" target="_blank" title="Lihat foto">
-                                                        <img src="{{ asset('storage/' . $participant['existing_foto']) }}" class="h-20 w-16 rounded object-cover border border-outline-variant/30 shadow-sm" alt="Pas Foto Anggota">
+                                                        <img src="{{ asset('storage/' . $participant['existing_foto']) }}" class="h-20 w-16 rounded object-cover border border-outline-variant/30 shadow-sm" alt="{{ $subFotoPeserta['label'] }}">
                                                     </a>
                                                 </div>
                                             @endif
                                         </div>
+                                        @endif
                                         @if(count($participants) > 1 && !$isLocked)
                                             <div class="pt-8">
                                                 <button type="button" wire:click="removeParticipant({{ $index }})" class="flex h-10 w-10 items-center justify-center rounded-xl border border-red-500/30 text-red-500 hover:bg-red-50 transition cursor-pointer">
@@ -925,6 +1084,7 @@
                                 @endforeach
                             </div>
                         </div>
+                        @endif
 
                         {{-- Action Buttons --}}
                         @if(!$isLocked)

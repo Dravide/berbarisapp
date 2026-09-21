@@ -7,6 +7,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Models\VoteTransaction;
 use App\Services\AutoGoPay;
+use App\Services\PendingPaymentGuard;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -65,6 +66,11 @@ class SyncPendingPayments implements ShouldQueue, ShouldBeUnique
         // pendaftaran nyangkut tidak berhubungan dengan transaksi pending, dan
         // handle() punya early return kalau daftar transaksinya kosong.
         $this->cleanupAbandonedRegistrations();
+
+        // Bebaskan QR yang tenggat bayarnya sudah lewat jauh tapi tidak pernah
+        // dilaporkan gateway. Dijalankan SEBELUM query di bawah supaya baris
+        // yang baru dibebaskan langsung masuk jendela pulih EXPIRED → PAID.
+        PendingPaymentGuard::sweepExpired();
 
         $since = now()->subHours($this->maxAgeHours);
         $graceSince = now()->subHours($this->expiredGraceHours);

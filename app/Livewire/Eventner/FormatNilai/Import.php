@@ -61,6 +61,10 @@ class Import extends Component
      * assessment_categories, sedangkan nilainya berasal dari klien — tanpa
      * pemeriksaan ini, rubrik hasil import bisa ditempelkan ke tingkat milik
      * event lain dan tidak akan pernah muncul di halaman mana pun.
+     *
+     * selectable(): id induk ber-anak juga ditolak — bukan tingkat lomba, dan
+     * rubriknya sama-sama tidak pernah tampil karena halaman penilaian hanya
+     * memilih dari tingkat lomba.
      */
     protected function normalizeActiveTab($id): string
     {
@@ -68,7 +72,9 @@ class Import extends Component
             return '';
         }
 
-        $ada = CompetitionCategory::where('eventner_id', $this->eventnerId())->find($id);
+        $ada = CompetitionCategory::where('eventner_id', $this->eventnerId())
+            ->selectable()
+            ->find($id);
 
         return $ada ? (string) $ada->id : '';
     }
@@ -82,12 +88,7 @@ class Import extends Component
     public function competitionCategories()
     {
         return CompetitionCategory::where('eventner_id', $this->eventnerId())
-            ->where(function ($q) {
-                $q->whereNotNull('parent_id')
-                    ->orWhere(function ($sq) {
-                        $sq->whereNull('parent_id')->whereDoesntHave('children');
-                    });
-            })
+            ->selectable()
             ->with('parent')
             ->orderBy('name')
             ->get();

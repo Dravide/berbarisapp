@@ -284,6 +284,10 @@
                         {{-- ==================== --}}
                         {{-- D. BERKAS PERSYARATAN --}}
                         {{-- ==================== --}}
+                        {{-- Toggle lama dipindahkan ke halaman Field Pendaftaran.
+                             Kolomnya tidak dihapus — halaman portal/panitia lama
+                             masih membacanya — tapi panitia mengatur berkas dari
+                             satu tempat sekarang. --}}
                         <div class="card border shadow-none mb-4">
                             <div class="card-header bg-light py-3">
                                 <h6 class="fw-semibold mb-0">
@@ -291,15 +295,14 @@
                                 </h6>
                             </div>
                             <div class="card-body">
-                                <small class="d-block text-muted mb-3">Nonaktifkan toggle untuk menghilangkan field upload di form publik pendaftaran. Berkas yang sudah diunggah tetap tersimpan.</small>
-                                <div class="form-check form-switch mb-2">
-                                    <input class="form-check-input" type="checkbox" wire:model.live="surat_tugas_required" id="suratTugasRequired">
-                                    <label class="form-check-label fw-bold text-muted" for="suratTugasRequired">Surat Tugas</label>
-                                </div>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" wire:model.live="kwitansi_required" id="kwitansiRequired">
-                                    <label class="form-check-label fw-bold text-muted" for="kwitansiRequired">Kwitansi Pendaftaran</label>
-                                </div>
+                                <p class="mb-3 small text-muted">
+                                    Berkas yang diminta saat pendaftaran (logo sekolah, surat tugas, kwitansi, dan berkas
+                                    tambahan) sekarang diatur di halaman <strong>Field Pendaftaran</strong> — di sana juga
+                                    bisa menambah field baru, mengubah label, dan mengatur urutannya.
+                                </p>
+                                <a href="{{ route('eventner.registration-fields.index') }}" class="btn btn-primary btn-sm">
+                                    <i class="ti ti-forms me-1"></i> Buka Field Pendaftaran
+                                </a>
                             </div>
                         </div>
 

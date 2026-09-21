@@ -113,15 +113,7 @@ class Builder extends Component
     public function competitionCategories()
     {
         return CompetitionCategory::where('eventner_id', $this->eventnerId)
-            ->where(function ($q) {
-                // Child categories (hierarchy)
-                $q->whereNotNull('parent_id');
-                // OR: parent categories with no children (old flat data, backward compat)
-                $q->orWhere(function ($sq) {
-                    $sq->whereNull('parent_id')
-                        ->whereDoesntHave('children');
-                });
-            })
+            ->selectable()
             ->with('parent')
             ->orderBy('name')
             ->get();
@@ -356,8 +348,10 @@ class Builder extends Component
                 ->where('eventner_id', $this->eventnerId)
                 ->findOrFail($sourceId);
 
-            // Validasi target tingkat milik eventner ini
+            // Tingkat tujuan harus milik eventner ini DAN tingkat lomba —
+            // induk ber-anak bukan tujuan sah (rubriknya jadi yatim).
             CompetitionCategory::where('eventner_id', $this->eventnerId)
+                ->selectable()
                 ->findOrFail($targetCompetitionCategoryId);
         } catch (\Throwable $e) {
             $this->dispatch('copy:done', ['success' => false, 'message' => 'Kategori atau tingkat tujuan tidak ditemukan.']);
@@ -1165,6 +1159,10 @@ class Builder extends Component
      * pemeriksaan ini, kategori penilaian baru bisa ditempelkan ke tingkat
      * milik event lain — barisnya tersimpan tapi tidak pernah tampil di
      * halaman mana pun, karena semua query sudah di-scope per eventner.
+     *
+     * selectable(): id induk ber-anak juga ditolak — induk bukan tingkat lomba,
+     * dan rubrik yang menempel di sana sama-sama tidak pernah tampil karena
+     * pemilih tingkat di halaman ini hanya menawarkan tingkat lomba.
      */
     private function normalizeActiveTab($id): string
     {
@@ -1172,7 +1170,9 @@ class Builder extends Component
             return '';
         }
 
-        $ada = CompetitionCategory::where('eventner_id', $this->eventnerId)->find($id);
+        $ada = CompetitionCategory::where('eventner_id', $this->eventnerId)
+            ->selectable()
+            ->find($id);
 
         return $ada ? (string) $ada->id : '';
     }

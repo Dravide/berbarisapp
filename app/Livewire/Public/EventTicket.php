@@ -7,6 +7,7 @@ use App\Models\Eventner;
 use App\Models\EventnerVenue;
 use App\Models\Ticket;
 use App\Services\AutoGoPay;
+use App\Services\PendingPaymentGuard;
 use App\Services\TicketQuota;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -35,6 +36,16 @@ class EventTicket extends Component
     public $autoGoPayTransactionId;
     public $paymentAmount;
     public $paymentConfirmed = false;
+
+    /** Rincian dari baris tiket yang QR-nya sedang tampil (bukan dari form). */
+    public $paymentQuantity;
+    public $paymentUnitPrice;
+
+    /**
+     * QR yang ditampilkan adalah QR lama milik email ini, bukan yang baru
+     * diterbitkan. Dipakai view untuk menampilkan pemberitahuan.
+     */
+    public $reusedExisting = false;
 
     protected $queryString = [
         'confirmOrder' => ['except' => ''],
@@ -187,6 +198,25 @@ class EventTicket extends Component
 
         $this->validate();
 
+        // Sudah punya QR hidup untuk email ini? Buka yang lama. Dicek SEBELUM
+        // validasi tempat dan penjaga kuota: pemakaian ulang tidak membuat
+        // tiket baru sama sekali, jadi kuota tempat tidak boleh tersentuh dua
+        // kali dan pilihan tempat yang baru diketik tidak relevan.
+        $lama = PendingPaymentGuard::find(
+            Ticket::class,
+            $this->eventner->id,
+            $this->buyerEmail,
+        );
+
+        if ($lama) {
+            $this->quantity = $lama->quantity;
+            $this->venueId = $lama->venue_id;
+            $this->buyerName = $lama->buyer_name ?: $this->buyerName;
+            $this->showExistingPayment($lama);
+
+            return;
+        }
+
         // Tempat wajib bila event menjual tiket per tempat; harus milik event ini.
         $perVenue = $this->eventner->sellsTicketPerVenue();
         $this->validate([
@@ -232,7 +262,7 @@ class EventTicket extends Component
                 'eventner_id' => $this->eventner->id,
                 'venue_id' => $locked?->id,
                 'buyer_name' => $this->buyerName,
-                'buyer_email' => $this->buyerEmail,
+                'buyer_email' => PendingPaymentGuard::normalizeEmail($this->buyerEmail),
                 'buyer_phone' => null,
                 'quantity' => $this->quantity,
                 'price_per_ticket' => $unitPrice,
@@ -240,6 +270,8 @@ class EventTicket extends Component
                 'autogopay_transaction_id' => $data['transaction_id'],
                 'qr_url' => $data['qr_url'],
                 'status' => 'PENDING',
+                'expires_at' => PendingPaymentGuard::deadlineFrom($data['expiry_time'] ?? null),
+                'payable_until' => PendingPaymentGuard::payableUntil($data['expiry_time'] ?? null),
             ]);
 
             // Tanpa tempat (event belum mengisi data tempat): buat langsung —
@@ -248,14 +280,7 @@ class EventTicket extends Component
                 ? TicketQuota::reserve($venue, (int) $this->quantity, $create)
                 : $create(null);
 
-            // Tampilkan QR code
-            $this->qrImageUrl = $data['qr_url'];
-            $this->expiryTime = $data['expiry_time'];
-            $this->currentTicketId = $ticket->id;
-            $this->autoGoPayTransactionId = $data['transaction_id'];
-            $this->paymentAmount = $totalAmount;
-            $this->paymentConfirmed = false;
-            $this->view = 'payment';
+            $this->showPayment($ticket);
 
         } catch (TicketQuotaExceededException $e) {
             session()->flash('error', $e->getMessage());
@@ -268,6 +293,42 @@ class EventTicket extends Component
 
             session()->flash('error', 'Gagal membuat QRIS: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Tampilkan QR dari tiket yang SUDAH ada (pemakaian ulang).
+     *
+     * Rincian jumlah dan harga diambil dari barisnya, bukan dari state form:
+     * pembeli bisa saja mengetik jumlah lain sebelum menekan Bayar lagi, dan
+     * kartu yang mencetak "3 tiket × Rp 50.000" di atas QR bernilai 2 tiket
+     * adalah tiket dukungan.
+     */
+    private function showExistingPayment(Ticket $ticket): void
+    {
+        $this->qrImageUrl = $ticket->qr_url;
+        $this->expiryTime = PendingPaymentGuard::expiryForDisplay($ticket)->toIso8601String();
+        $this->currentTicketId = $ticket->id;
+        $this->autoGoPayTransactionId = $ticket->autogopay_transaction_id;
+        $this->paymentAmount = $ticket->total_amount;
+        $this->paymentQuantity = $ticket->quantity;
+        $this->paymentUnitPrice = (int) $ticket->price_per_ticket;
+        $this->paymentConfirmed = false;
+        $this->reusedExisting = true;
+        $this->view = 'payment';
+    }
+
+    private function showPayment(Ticket $ticket): void
+    {
+        $this->qrImageUrl = $ticket->qr_url;
+        $this->expiryTime = PendingPaymentGuard::expiryForDisplay($ticket)->toIso8601String();
+        $this->currentTicketId = $ticket->id;
+        $this->autoGoPayTransactionId = $ticket->autogopay_transaction_id;
+        $this->paymentAmount = $ticket->total_amount;
+        $this->paymentQuantity = $ticket->quantity;
+        $this->paymentUnitPrice = (int) $ticket->price_per_ticket;
+        $this->paymentConfirmed = false;
+        $this->reusedExisting = false;
+        $this->view = 'payment';
     }
 
     /**
@@ -347,14 +408,38 @@ class EventTicket extends Component
         return $ticket->generateEntryQr();
     }
 
+    /**
+     * Batalkan QR yang sedang ditampilkan lalu kembali ke form.
+     *
+     * Sebelumnya method ini hanya membersihkan state Livewire: baris PENDING
+     * dan QR di gateway tetap hidup dan tetap bisa dibayar. Sekaligus tiketnya
+     * masih menahan kuota tempat sampai reconciler membebaskannya.
+     *
+     * Kalau gateway menolak membatalkan, state-nya sengaja TIDAK dibersihkan —
+     * QR-nya masih bisa dibayar, jadi menutup layarnya hanya menyembunyikan
+     * masalah sekaligus menahan pembeli tanpa penjelasan.
+     */
     public function resetPayment()
     {
+        if ($this->currentTicketId) {
+            $ticket = Ticket::find($this->currentTicketId);
+
+            if ($ticket && ! PendingPaymentGuard::release($ticket)) {
+                session()->flash('error', 'QR tidak bisa dibatalkan di sisi gateway. Coba lagi sebentar lagi, atau tunggu QR-nya kedaluwarsa.');
+
+                return;
+            }
+        }
+
         $this->qrImageUrl = null;
         $this->expiryTime = null;
         $this->currentTicketId = null;
         $this->autoGoPayTransactionId = null;
         $this->paymentAmount = null;
+        $this->paymentQuantity = null;
+        $this->paymentUnitPrice = null;
         $this->paymentConfirmed = false;
+        $this->reusedExisting = false;
         $this->view = 'form';
     }
 

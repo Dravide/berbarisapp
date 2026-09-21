@@ -20,6 +20,10 @@ Route::get('/hasil', App\Livewire\Public\EventResult::class)->name('subdomain.re
 Route::get('/hasil/{registration}', App\Livewire\Public\EventResultDetail::class)->name('subdomain.results.detail');
 Route::get('/vote', App\Livewire\Public\EventVote::class)->name('subdomain.vote');
 Route::get('/tiket', App\Livewire\Public\EventTicket::class)->name('subdomain.ticket');
+// Unduh tiket PDF dari subdomain. event_url() menyusun /tiket/{orderCode}/pdf
+// untuk event ber-subdomain (dan MailyService memakainya di email tiket), jadi
+// tanpa baris ini tombolnya menunjuk ke 404 — hanya kelihatan di produksi.
+Route::get('/tiket/{orderCode}/pdf', [App\Http\Controllers\Public\TicketPdfController::class, 'downloadFromSubdomain'])->name('subdomain.ticket.pdf');
 Route::get('/daftar', App\Livewire\Public\Registration\Create::class)->name('subdomain.register');
 Route::get('/drawing', App\Livewire\Eventner\Drawing\Spin::class)->name('subdomain.drawing.spin');
 Route::get('/hasil-drawing', App\Livewire\Eventner\Drawing\Results::class)->name('subdomain.drawing.results');

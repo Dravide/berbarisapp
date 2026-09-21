@@ -78,4 +78,25 @@ class CompetitionCategory extends Model
     {
         return !is_null($this->parent_id);
     }
+
+    /**
+     * Kategori yang boleh dipilih pendaftar: tingkat (anak), atau induk lama
+     * tanpa anak dari data flat sebelum hierarki diperkenalkan.
+     *
+     * Induk yang PUNYA anak sengaja disaring. Menyaring di daftar formulir saja
+     * tidak cukup: id kategori datang dari DOM, jadi id induk bisa tetap dikirim
+     * dan membuat pendaftaran mendarat di tingkat induk — bukan di tingkat
+     * lomba. Scope ini jadi satu-satunya definisi "boleh dipilih", dipakai
+     * render (tampil), toggleCategory (masuk keranjang), dan submit (dibuat).
+     */
+    public function scopeSelectable($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNotNull('parent_id');
+
+            $q->orWhere(function ($sq) {
+                $sq->whereNull('parent_id')->whereDoesntHave('children');
+            });
+        });
+    }
 }

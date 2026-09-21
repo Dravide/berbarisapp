@@ -40,6 +40,39 @@ class CertificateTemplate extends Model
     /**
      * All available text field keys that can be placed on a certificate.
      * Maps field_key => display label.
+     *
+     * Versi instance menambahkan field builder milik event ini (mis. "Asal
+     * Kabupaten") supaya panitia bisa memakai isian sendiri sebagai placeholder
+     * sertifikat tanpa perlu ubah kode.
+     */
+    public function availableFieldsForEvent(): array
+    {
+        $dasar = static::availableFields();
+
+        $eventner = $this->eventner;
+
+        if (! $eventner) {
+            return $dasar;
+        }
+
+        foreach (RegistrationField::forEventner($eventner) as $field) {
+            // Grup anggota tidak punya nilai tunggal, berkas tidak bisa jadi
+            // teks sertifikat. Selain itu baris builder selalu menang — label
+            // hasil suntingan panitia yang dipakai, termasuk untuk field bawaan
+            // seperti nama_sekolah / nama_pelatih.
+            if ($field->isFile() || $field->isGroup()) {
+                continue;
+            }
+
+            $dasar[$field->field_key] = $field->label;
+        }
+
+        return $dasar;
+    }
+
+    /**
+     * All available text field keys that can be placed on a certificate.
+     * Maps field_key => display label.
      */
     public static function availableFields(): array
     {

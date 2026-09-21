@@ -154,6 +154,15 @@
             </a>
           </li>
           <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.registration-fields.*') ? 'active' : '' }}"
+              href="{{ route('eventner.registration-fields.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-forms"></i>
+              </span>
+              <span class="hide-menu">Field Pendaftaran</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('eventner.event-qr.*') ? 'active' : '' }}"
               href="{{ route('eventner.event-qr.index') }}" aria-expanded="false">
               <span>
@@ -459,6 +468,15 @@
                 <i class="ti ti-bell"></i>
               </span>
               <span class="hide-menu">Kirim Notifikasi</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.password.*') ? 'active' : '' }}"
+              href="{{ route('eventner.password.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-lock"></i>
+              </span>
+              <span class="hide-menu">Ganti Password</span>
             </a>
           </li>
 

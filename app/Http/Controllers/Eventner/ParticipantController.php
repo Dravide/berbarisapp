@@ -34,7 +34,7 @@ class ParticipantController extends Controller
 
     public function downloadFormulir(string $token)
     {
-        $registration = Registration::with(['participants', 'competitionCategory', 'eventner'])
+        $registration = Registration::with(['participants', 'competitionCategory', 'eventner', 'fieldValues'])
             ->where('magic_token', $token)
             ->firstOrFail();
 
@@ -91,7 +91,7 @@ class ParticipantController extends Controller
         $eventner = $registration->eventner;
 
         // Gabung semua pasukan sekolah ini (NPSN sama) yang sudah diverifikasi.
-        $registrations = Registration::with(['competitionCategory', 'paymentBankAccount'])
+        $registrations = Registration::with(['competitionCategory', 'paymentBankAccount', 'fieldValues'])
             ->where('eventner_id', $eventner->id)
             ->where('npsn', $registration->npsn)
             ->where('payment_status', 'paid')
@@ -180,7 +180,7 @@ class ParticipantController extends Controller
 
         // Urutan daftar ulang: nomor tampil (hasil undian) bila sudah ada,
         // sisanya urut nama sekolah — sama dengan urutan di halaman peserta.
-        $registrations = Registration::with('participants')
+        $registrations = Registration::with(['participants', 'fieldValues'])
             ->where('eventner_id', $eventner->id)
             ->whereIn('competition_category_id', $categories->pluck('id'))
             ->where('status_berkas', '!=', 'dibatalkan')
