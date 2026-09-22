@@ -253,6 +253,57 @@ class DataSekolah
             ->values();
     }
 
+    /**
+     * Angka ringkas untuk blok "Rekapitulasi" di kaki rekap.
+     *
+     * `baris` sengaja dibedakan dari `sekolah_unik`: satu sekolah yang mendaftar
+     * di dua kategori punya satu baris di tiap bagian, jadi menjumlahkan baris
+     * akan melebihkan jumlah sekolah. Keduanya dilaporkan supaya catatannya
+     * jujur, bukan sekadar angka besar yang terlihat bagus.
+     *
+     * Status dihitung dari sekolah UNIK, memakai status paling jauh di antara
+     * baris-barisnya — satu sekolah tidak boleh terhitung dua kali hanya karena
+     * statusnya berbeda antar kategori.
+     *
+     * @param  Collection<int, array{kategori: mixed, sekolah: Collection<int, array>}>  $perKategori
+     * @return array{kategori: int, baris: int, sekolah_unik: int, lintas_kategori: int, pasukan: int, anggota: int, status: array<string, int>}
+     */
+    public static function rekapitulasi(Collection $perKategori): array
+    {
+        $semuaBaris = $perKategori->flatMap(fn (array $bagian) => $bagian['sekolah']);
+
+        $unik = [];
+        foreach ($semuaBaris as $s) {
+            $kunci = $s['kunci'];
+
+            if (! isset($unik[$kunci]) || self::peringkatStatus($s['status']) > self::peringkatStatus($unik[$kunci]['status'])) {
+                $unik[$kunci] = $s;
+            }
+        }
+
+        $status = [];
+        foreach ($unik as $s) {
+            $label = self::labelStatus($s['status']);
+            $status[$label] = ($status[$label] ?? 0) + 1;
+        }
+
+        // Sekolah yang muncul di lebih dari satu bagian kategori — inilah yang
+        // membuat "baris tabel" > "sekolah unik", jadi jumlahnya dilaporkan
+        // supaya selisihnya bisa dipertanggungjawabkan dari catatan itu sendiri.
+        $jumlahBarisPerKunci = $semuaBaris->countBy('kunci');
+        $lintasKategori = $jumlahBarisPerKunci->filter(fn (int $n) => $n > 1)->count();
+
+        return [
+            'kategori' => $perKategori->count(),
+            'baris' => $semuaBaris->count(),
+            'sekolah_unik' => count($unik),
+            'lintas_kategori' => $lintasKategori,
+            'pasukan' => (int) $semuaBaris->sum('jumlah_pasukan'),
+            'anggota' => (int) $semuaBaris->sum('jumlah_anggota'),
+            'status' => $status,
+        ];
+    }
+
     /** Peringkat status; status tak dikenal dianggap paling lemah supaya tidak menutupi yang jelas. */
     private static function peringkatStatus(?string $status): int
     {

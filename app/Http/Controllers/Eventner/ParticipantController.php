@@ -251,6 +251,7 @@ class ParticipantController extends Controller
         return Pdf::loadView('eventner.participant.pdf_data_sekolah', [
             'eventner' => $eventner,
             'perKategori' => $perKategori,
+            'rekap' => DataSekolah::rekapitulasi($perKategori),
         ])
             ->setPaper('a4', 'landscape')
             ->download('Data_Sekolah_'.$namaEvent.'.pdf');

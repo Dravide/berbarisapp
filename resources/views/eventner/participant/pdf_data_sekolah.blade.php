@@ -11,9 +11,9 @@
         $p = public_path('storage/' . $eventner->logo_event);
         if (file_exists($p) && is_file($p)) $safeLogo = $p;
     }
-    $totalSekolah = $perKategori->sum(fn ($b) => $b['sekolah']->count());
-    $totalPasukan = $perKategori->sum(fn ($b) => $b['sekolah']->sum('jumlah_pasukan'));
-    $totalAnggota = $perKategori->sum(fn ($b) => $b['sekolah']->sum('jumlah_anggota'));
+    $totalSekolah = $rekap['sekolah_unik'];
+    $totalPasukan = $rekap['pasukan'];
+    $totalAnggota = $rekap['anggota'];
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -120,6 +120,42 @@
         .badge-off { background: #eef1f4; color: #6c757d; }
 
         .kosong { font-size: 9px; color: #999; font-style: italic; padding: 14px; border: 1px dashed #ddd; text-align: center; }
+
+        /* CATATAN REKAPAN (kaki dokumen) */
+        .catatan {
+            margin-top: 18px;
+            border: 1px solid #ccd3da;
+            border-top: 3px solid #2c3e50;
+            padding: 10px 12px;
+            page-break-inside: avoid;
+        }
+        .catatan-judul {
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 7px;
+        }
+        table.catatan-tabel { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+        table.catatan-tabel td {
+            border: 1px solid #e3e7ea;
+            padding: 5px 7px;
+            background: #fbfcfd;
+            width: 25%;
+            vertical-align: top;
+        }
+        .catatan-angka { font-size: 13px; font-weight: bold; }
+        .catatan-label { font-size: 7.5px; color: #666; text-transform: uppercase; letter-spacing: .4px; }
+        .catatan-status { font-size: 8px; margin-bottom: 8px; }
+        .catatan-status .badge { margin-right: 3px; }
+        .catatan-sumber {
+            font-size: 8px;
+            color: #555;
+            border-top: 1px solid #e3e7ea;
+            padding-top: 7px;
+            margin: 0;
+        }
+        .catatan-catatan { font-size: 7.5px; color: #777; margin: 5px 0 0; }
 
         .foot { margin-top: 14px; padding-top: 6px; border-top: 1px solid #ddd; text-align: center; font-size: 7px; color: #aaa; }
     </style>
@@ -264,6 +300,74 @@
                 </table>
             </div>
         @endforeach
+
+        {{-- CATATAN REKAPAN: angka akhir dokumen.
+             "Baris tabel" sengaja ditampilkan terpisah dari "sekolah unik":
+             satu sekolah yang mendaftar di dua kategori punya satu baris di tiap
+             bagian, jadi tanpa pembedaan itu jumlah sekolah akan terlihat
+             berlebih dibanding daftar sekolah yang sebenarnya. --}}
+        <div class="catatan">
+            <div class="catatan-judul">Rekapitulasi</div>
+
+            <table class="catatan-tabel">
+                <tr>
+                    <td>
+                        <div class="catatan-angka">{{ number_format($totalSekolah, 0, ',', '.') }}</div>
+                        <div class="catatan-label">Sekolah unik</div>
+                    </td>
+                    <td>
+                        <div class="catatan-angka">{{ number_format($rekap['baris'], 0, ',', '.') }}</div>
+                        <div class="catatan-label">Baris tabel</div>
+                    </td>
+                    <td>
+                        <div class="catatan-angka">{{ number_format($totalPasukan, 0, ',', '.') }}</div>
+                        <div class="catatan-label">Pasukan</div>
+                    </td>
+                    <td>
+                        <div class="catatan-angka">{{ number_format($totalAnggota, 0, ',', '.') }}</div>
+                        <div class="catatan-label">Anggota</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <div class="catatan-angka">{{ number_format($rekap['kategori'], 0, ',', '.') }}</div>
+                        <div class="catatan-label">Kategori membentuk tabel di atas</div>
+                    </td>
+                    <td colspan="2">
+                        <div class="catatan-angka">
+                            {{ $totalSekolah > 0 ? number_format($totalAnggota / $totalSekolah, 1, ',', '.') : '0' }}
+                        </div>
+                        <div class="catatan-label">Rata-rata anggota per sekolah</div>
+                    </td>
+                </tr>
+            </table>
+
+            <div class="catatan-status">
+                <span class="muted">Status seluruh sekolah (dihitung sekali per sekolah):</span>
+                @foreach($rekap['status'] as $label => $jumlah)
+                    <span class="badge {{ $label === 'Terverifikasi' ? 'badge-ok' : ($label === 'Ditolak' ? 'badge-no' : ($label === 'Menunggu Verifikasi' ? 'badge-wait' : 'badge-off')) }}">{{ $label }}: {{ $jumlah }}</span>
+                @endforeach
+            </div>
+
+            <p class="catatan-sumber">
+                <b>{{ $totalPasukan }}</b> pendaftaran pasukan dari <b>{{ $totalSekolah }}</b> sekolah,
+                dicetak sebagai {{ $rekap['baris'] }} baris.
+                @if($rekap['lintas_kategori'] > 0)
+                    {{ $rekap['lintas_kategori'] }} sekolah mendaftar di lebih dari satu kategori, sehingga
+                    barisnya muncul di setiap bagian kategorinya.
+                @else
+                    Tidak ada sekolah yang mendaftar di lebih dari satu kategori.
+                @endif
+            </p>
+            {{-- Pemisah ditulis apa adanya, bukan &mdash;/&bull;: subset font PDF
+                 di sini tidak punya glifnya, jadi tanda itu hilang diam-diam dan
+                 kata-katanya menempel ("baris1sekolah"). --}}
+            <p class="catatan-catatan">
+                Registrasi berstatus <i>dibatalkan</i> tidak dihitung di mana pun.
+                Tautan portal berlaku untuk seluruh pasukan sekolah yang sama, jadi satu tautan cukup per sekolah.
+                Kolom Kabupaten/Kota bertanda "-" berarti fieldnya tidak dipakai di event ini.
+            </p>
+        </div>
 
         <div class="foot">
             Satu baris = satu sekolah &bull; Tautan portal berlaku untuk seluruh pasukan sekolah itu.

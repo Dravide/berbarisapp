@@ -388,26 +388,29 @@ class ParticipantDataSekolahTest extends TestCase
         // Koleksi sekolah disusun langsung, bukan lewat DB: `Registration::create()`
         // selalu mengisi magic_token, jadi baris tanpa tautan hanya bisa muncul
         // dari data lama — dan yang diuji di sini justru perilaku view terhadapnya.
+        $perKategori = collect([[
+            'kategori' => $this->category,
+            'sekolah' => collect([[
+                'kunci' => 'SEKOLAH:SMP NEGERI 1',
+                'npsn' => null,
+                'nama_sekolah' => 'SMP Negeri 1',
+                'kabupaten' => '',
+                'jumlah_pasukan' => 1,
+                'jumlah_kategori' => 1,
+                'jumlah_anggota' => 0,
+                'status' => 'Menunggu',
+                'label_status' => 'Menunggu Verifikasi',
+                'pelatih' => '',
+                'no_hp' => '',
+                'email' => '',
+                'url' => '',
+            ]]),
+        ]]);
+
         $html = view('eventner.participant.pdf_data_sekolah', [
             'eventner' => $this->eventner,
-            'perKategori' => collect([[
-                'kategori' => $this->category,
-                'sekolah' => collect([[
-                    'kunci' => 'SEKOLAH:SMP NEGERI 1',
-                    'npsn' => null,
-                    'nama_sekolah' => 'SMP Negeri 1',
-                    'kabupaten' => '',
-                    'jumlah_pasukan' => 1,
-                    'jumlah_kategori' => 1,
-                    'jumlah_anggota' => 0,
-                    'status' => 'Menunggu',
-                    'label_status' => 'Menunggu Verifikasi',
-                    'pelatih' => '',
-                    'no_hp' => '',
-                    'email' => '',
-                    'url' => '',
-                ]]),
-            ]]),
+            'perKategori' => $perKategori,
+            'rekap' => DataSekolah::rekapitulasi($perKategori),
         ])->render();
 
         $this->assertStringContainsString('SMP Negeri 1', $html);
@@ -419,14 +422,17 @@ class ParticipantDataSekolahTest extends TestCase
     {
         $eventner = $this->eventner;
 
+        $perKategori = DataSekolah::denganTautanPerKategori(DataSekolah::perKategori(
+            $this->kumpulkan(),
+            $eventner->competitionCategories()->selectable()
+                ->orderBy('sort_order')->orderBy('name')->get(),
+            DataSekolah::fieldKabupatenId(RegistrationField::forEventner($eventner))
+        ));
+
         return view('eventner.participant.pdf_data_sekolah', [
             'eventner' => $eventner,
-            'perKategori' => DataSekolah::denganTautanPerKategori(DataSekolah::perKategori(
-                $this->kumpulkan(),
-                $eventner->competitionCategories()->selectable()
-                    ->orderBy('sort_order')->orderBy('name')->get(),
-                DataSekolah::fieldKabupatenId(RegistrationField::forEventner($eventner))
-            )),
+            'perKategori' => $perKategori,
+            'rekap' => DataSekolah::rekapitulasi($perKategori),
         ])->render();
     }
 
@@ -548,6 +554,98 @@ class ParticipantDataSekolahTest extends TestCase
             route('magic.link', $reg->magic_token),
             $perKategori[0]['sekolah'][0]['url']
         );
+    }
+
+    // ── Catatan rekapan (kaki dokumen) ────────────────────────────────────
+
+    /**
+     * Sekolah lintas kategori: "baris tabel" lebih besar dari "sekolah unik".
+     *
+     * Ini inti catatannya — tanpa pembedaan itu jumlah sekolah terlihat
+     * berlebih dibanding daftar sekolah yang sebenarnya.
+     */
+    public function test_rekapitulasi_membedakan_baris_tabel_dari_sekolah_unik()
+    {
+        $lain = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => $this->parent->id,
+            'name' => 'U16',
+        ]);
+
+        $this->makeRegistration('SMP Negeri 1', ['npsn' => '11111111']);
+        $this->makeRegistration('SMP Negeri 1', ['npsn' => '11111111'], $lain);
+        $this->makeRegistration('SMP Negeri 2', ['npsn' => '22222222']);
+
+        $rekap = DataSekolah::rekapitulasi(DataSekolah::perKategori(
+            $this->kumpulkan(),
+            $this->eventner->competitionCategories()->selectable()->get()
+        ));
+
+        $this->assertSame(2, $rekap['kategori']);
+        $this->assertSame(3, $rekap['baris']);      // 2 di U13 + 1 di U16
+        $this->assertSame(2, $rekap['sekolah_unik']); // SMP 1 & SMP 2
+        $this->assertSame(1, $rekap['lintas_kategori']); // hanya SMP 1
+        $this->assertSame(3, $rekap['pasukan']);
+    }
+
+    /** Tanpa sekolah lintas kategori, "baris" sama dengan "sekolah unik". */
+    public function test_rekapitulasi_tanpa_lintas_kategori_angkanya_sama()
+    {
+        $this->makeRegistration('SMP Negeri 1', ['npsn' => '11111111']);
+        $this->makeRegistration('SMP Negeri 2', ['npsn' => '22222222']);
+
+        $rekap = DataSekolah::rekapitulasi(DataSekolah::perKategori(
+            $this->kumpulkan(),
+            $this->eventner->competitionCategories()->selectable()->get()
+        ));
+
+        $this->assertSame($rekap['sekolah_unik'], $rekap['baris']);
+        $this->assertSame(0, $rekap['lintas_kategori']);
+    }
+
+    /** Sekolah lintas kategori berstatus berbeda dihitung SEKALI, ambil yang paling jauh. */
+    public function test_rekapitulasi_menghitung_status_sekali_per_sekolah()
+    {
+        $lain = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => $this->parent->id,
+            'name' => 'U16',
+        ]);
+
+        $this->makeRegistration('SMP Negeri 1', ['npsn' => '11111111', 'status_berkas' => 'confirmed']);
+        $this->makeRegistration('SMP Negeri 1', ['npsn' => '11111111', 'status_berkas' => 'Terverifikasi'], $lain);
+
+        $rekap = DataSekolah::rekapitulasi(DataSekolah::perKategori(
+            $this->kumpulkan(),
+            $this->eventner->competitionCategories()->selectable()->get()
+        ));
+
+        $this->assertSame(['Terverifikasi' => 1], $rekap['status']);
+    }
+
+    /** Catatan rekapan ikut tercetak di kaki dokumen, dengan angkanya. */
+    public function test_rekap_mencetak_catatan_rekapan()
+    {
+        $this->makeRegistration('SMP Negeri 1', ['npsn' => '11111111']);
+
+        $html = $this->renderRekap();
+
+        $this->assertStringContainsString('Rekapitulasi', $html);
+        $this->assertStringContainsString('Sekolah unik', $html);
+        $this->assertStringContainsString('Baris tabel', $html);
+        $this->assertStringContainsString('Rata-rata anggota per sekolah', $html);
+        $this->assertStringContainsString('Status seluruh sekolah', $html);
+        $this->assertStringContainsString('pendaftaran pasukan dari', $html);
+    }
+
+    /** Tanpa pendaftar: catatannya tidak dibagi nol. */
+    public function test_rekapitulasi_tanpa_data_tidak_membagi_nol()
+    {
+        $rekap = DataSekolah::rekapitulasi(collect());
+
+        $this->assertSame(0, $rekap['kategori']);
+        $this->assertSame(0, $rekap['sekolah_unik']);
+        $this->assertSame([], $rekap['status']);
     }
 
     /** Rekap tidak ikut kategori yang sedang dibuka — semua kategori event. */
