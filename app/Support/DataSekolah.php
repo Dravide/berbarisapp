@@ -213,6 +213,46 @@ class DataSekolah
             ->values();
     }
 
+    /**
+     * Pecah hasil `kelompokkan()` menjadi satu bagian per kategori lomba.
+     *
+     * Rekap tabel dikelompokkan kategori karena pendaftaran memang per kategori:
+     * satu sekolah yang mengirim pasukan di dua tingkat muncul SEKALI di tiap
+     * bagian. Menampilkannya sekali saja (di kategori pertama) akan membuat
+     * jumlah pasukan sebuah bagian tidak cocok dengan isinya, dan panitia yang
+     * mencetak halaman ini untuk meja pendaftaran ulang membaca angka itu
+     * sebagai kebenaran.
+     *
+     * Kategori yang tidak punya satu pun pendaftar tidak dibuatkan bagiannya —
+     * judul kosong di atas tabel kosong hanya memakan kertas. Kategori
+     * pengelompokannya kategori TINGKAT yang bisa dipilih pendaftar, jadi
+     * pendaftaran lama yang mendarat di induk (data flat sebelum hierarki)
+     * tidak akan muncul di sini — sama seperti ia memang tidak punya tab di
+     * halaman peserta.
+     *
+     * @param  Collection<int, Registration>  $registrations  dengan participants + fieldValues ter-eager-load
+     * @param  Collection<int, \App\Models\CompetitionCategory>  $categories  sudah urut sesuai keinginan pemanggil
+     * @return Collection<int, array{kategori: \App\Models\CompetitionCategory, sekolah: Collection<int, array>}>
+     */
+    public static function perKategori(Collection $registrations, Collection $categories, ?int $fieldKabupatenId = null): Collection
+    {
+        return $categories
+            ->map(function ($kategori) use ($registrations, $fieldKabupatenId) {
+                $milikKategori = $registrations->where('competition_category_id', $kategori->id);
+
+                if ($milikKategori->isEmpty()) {
+                    return null;
+                }
+
+                return [
+                    'kategori' => $kategori,
+                    'sekolah' => self::kelompokkan($milikKategori->values(), $fieldKabupatenId),
+                ];
+            })
+            ->filter()
+            ->values();
+    }
+
     /** Peringkat status; status tak dikenal dianggap paling lemah supaya tidak menutupi yang jelas. */
     private static function peringkatStatus(?string $status): int
     {
@@ -255,6 +295,24 @@ class DataSekolah
         return $sekolah->map(fn (array $s) => [
             ...$s,
             'qr' => ($s['url'] ?? '') !== '' ? qr_data_uri($s['url'], $scale) : null,
+        ]);
+    }
+
+    /**
+     * Versi `denganTautan()` untuk hasil `perKategori()`.
+     *
+     * Tautannya sama untuk semua bagian (satu sekolah satu tautan portal, tak
+     * peduli kategori mana yang dibuka), tapi tetap dihitung per bagian supaya
+     * tiap baris membawa kunci `url` yang sama seperti pada rekap satu tabel —
+     * view tidak perlu tahu bentuk mana yang sedang dirender.
+     *
+     * @param  Collection<int, array{kategori: mixed, sekolah: Collection<int, array>}>  $perKategori
+     */
+    public static function denganTautanPerKategori(Collection $perKategori): Collection
+    {
+        return $perKategori->map(fn (array $bagian) => [
+            ...$bagian,
+            'sekolah' => self::denganTautan($bagian['sekolah']),
         ]);
     }
 }

@@ -163,8 +163,8 @@
                                 <a href="{{ route('eventner.participants.data-sekolah') }}"
                                    target="_blank" class="dropdown-item">
                                     <i class="ti ti-file-type-pdf me-1"></i>
-                                    Semua Sekolah dalam Satu Tabel
-                                    <span class="d-block fs-2 text-muted ms-4">Rekap seluruh sekolah + tautan portalnya, siap dicetak</span>
+                                    Rekap Sekolah per Kategori
+                                    <span class="d-block fs-2 text-muted ms-4">Satu tabel per kategori lomba, lengkap dengan tautan portalnya</span>
                                 </a>
                             </li>
                             <li>

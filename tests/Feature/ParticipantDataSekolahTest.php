@@ -390,20 +390,23 @@ class ParticipantDataSekolahTest extends TestCase
         // dari data lama — dan yang diuji di sini justru perilaku view terhadapnya.
         $html = view('eventner.participant.pdf_data_sekolah', [
             'eventner' => $this->eventner,
-            'sekolah' => collect([[
-                'kunci' => 'SEKOLAH:SMP NEGERI 1',
-                'npsn' => null,
-                'nama_sekolah' => 'SMP Negeri 1',
-                'kabupaten' => '',
-                'jumlah_pasukan' => 1,
-                'jumlah_kategori' => 1,
-                'jumlah_anggota' => 0,
-                'status' => 'Menunggu',
-                'label_status' => 'Menunggu Verifikasi',
-                'pelatih' => '',
-                'no_hp' => '',
-                'email' => '',
-                'url' => '',
+            'perKategori' => collect([[
+                'kategori' => $this->category,
+                'sekolah' => collect([[
+                    'kunci' => 'SEKOLAH:SMP NEGERI 1',
+                    'npsn' => null,
+                    'nama_sekolah' => 'SMP Negeri 1',
+                    'kabupaten' => '',
+                    'jumlah_pasukan' => 1,
+                    'jumlah_kategori' => 1,
+                    'jumlah_anggota' => 0,
+                    'status' => 'Menunggu',
+                    'label_status' => 'Menunggu Verifikasi',
+                    'pelatih' => '',
+                    'no_hp' => '',
+                    'email' => '',
+                    'url' => '',
+                ]]),
             ]]),
         ])->render();
 
@@ -418,11 +421,133 @@ class ParticipantDataSekolahTest extends TestCase
 
         return view('eventner.participant.pdf_data_sekolah', [
             'eventner' => $eventner,
-            'sekolah' => DataSekolah::denganTautan(DataSekolah::kelompokkan(
+            'perKategori' => DataSekolah::denganTautanPerKategori(DataSekolah::perKategori(
                 $this->kumpulkan(),
+                $eventner->competitionCategories()->selectable()
+                    ->orderBy('sort_order')->orderBy('name')->get(),
                 DataSekolah::fieldKabupatenId(RegistrationField::forEventner($eventner))
             )),
         ])->render();
+    }
+
+    // ── Pengelompokan per kategori ───────────────────────────────────────
+
+    /** Inti permintaan: satu bagian tabel per kategori lomba, bukan satu tabel besar. */
+    public function test_rekap_memecah_tabel_per_kategori()
+    {
+        $lain = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => $this->parent->id,
+            'name' => 'U16',
+        ]);
+
+        $this->makeRegistration('SMP Negeri 1', ['npsn' => '11111111']);
+        $this->makeRegistration('SMP Negeri 2', ['npsn' => '22222222'], $lain);
+
+        $bagian = DataSekolah::perKategori(
+            $this->kumpulkan(),
+            $this->eventner->competitionCategories()->selectable()->orderBy('sort_order')->get()
+        );
+
+        $this->assertCount(2, $bagian);
+
+        // Urutan mengikuti sort_order (acak di factory), jadi bagiannya dicari
+        // lewat nama — yang diuji di sini "terpisah per kategori", bukan urutannya.
+        $perNama = $bagian->keyBy(fn ($b) => $b['kategori']->name);
+
+        $this->assertSame('SMP Negeri 1', $perNama['U13']['sekolah'][0]['nama_sekolah']);
+        $this->assertSame('SMP Negeri 2', $perNama['U16']['sekolah'][0]['nama_sekolah']);
+
+        // View mencetak nama kategori sebagai judul tiap bagian.
+        $html = $this->renderRekap();
+        $this->assertStringContainsString('U13', $html);
+        $this->assertStringContainsString('U16', $html);
+    }
+
+    /**
+     * Sekolah yang mendaftar di dua kategori muncul di dua bagian.
+     *
+     * Sengaja TIDAK diringkas ke kategori pertama: angka "pasukan" per bagian
+     * harus cocok dengan isi bagian itu sendiri, dan panitia mencetak halaman
+     * ini per meja pendaftaran ulang.
+     */
+    public function test_sekolah_lintas_kategori_muncul_di_tiap_bagian()
+    {
+        $lain = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => $this->parent->id,
+            'name' => 'U16',
+        ]);
+
+        $this->makeRegistration('SMP Negeri 1', ['npsn' => '11111111']);
+        $this->makeRegistration('SMP Negeri 1', ['npsn' => '11111111'], $lain);
+
+        $bagian = DataSekolah::perKategori(
+            $this->kumpulkan(),
+            $this->eventner->competitionCategories()->selectable()->orderBy('sort_order')->get()
+        );
+
+        $this->assertCount(2, $bagian);
+        foreach ($bagian as $b) {
+            $this->assertCount(1, $b['sekolah']);
+            $this->assertSame(1, $b['sekolah']->first()['jumlah_pasukan']);
+        }
+    }
+
+    /** Kategori tanpa pendaftar tidak dibuatkan bagiannya — tidak ada tabel kosong. */
+    public function test_kategori_tanpa_pendaftar_tidak_dibuatkan_bagian()
+    {
+        CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => $this->parent->id,
+            'name' => 'U16',
+        ]);
+
+        $this->makeRegistration('SMP Negeri 1');
+
+        $bagian = DataSekolah::perKategori(
+            $this->kumpulkan(),
+            $this->eventner->competitionCategories()->selectable()->orderBy('sort_order')->get()
+        );
+
+        $this->assertCount(1, $bagian);
+        $this->assertSame('U13', $bagian[0]['kategori']->name);
+    }
+
+    /** Dinamis: kategori buatan panitia ikut jadi bagian, tanpa daftar tetap di kode. */
+    public function test_kategori_buatan_panitia_ikut_jadi_bagian()
+    {
+        $baru = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => $this->parent->id,
+            'name' => 'Campuran',
+        ]);
+
+        $this->makeRegistration('SMP Negeri 3', ['npsn' => '33333333'], $baru);
+
+        $bagian = DataSekolah::perKategori(
+            $this->kumpulkan(),
+            $this->eventner->competitionCategories()->selectable()->orderBy('sort_order')->get()
+        );
+
+        $this->assertCount(1, $bagian);
+        $this->assertSame('Campuran', $bagian[0]['kategori']->name);
+    }
+
+    /** Tautan tetap ada setelah dipecah per kategori. */
+    public function test_bagian_per_kategori_membawa_tautan_sekolah()
+    {
+        $reg = $this->makeRegistration('SMP Negeri 1', ['npsn' => '11111111']);
+
+        $perKategori = DataSekolah::denganTautanPerKategori(DataSekolah::perKategori(
+            $this->kumpulkan(),
+            $this->eventner->competitionCategories()->selectable()->get()
+        ));
+
+        $this->assertSame(
+            route('magic.link', $reg->magic_token),
+            $perKategori[0]['sekolah'][0]['url']
+        );
     }
 
     /** Rekap tidak ikut kategori yang sedang dibuka — semua kategori event. */
@@ -518,7 +643,7 @@ class ParticipantDataSekolahTest extends TestCase
         Livewire::actingAs($this->user)
             ->test(\App\Livewire\Eventner\Participant\Index::class)
             ->assertSee('Data Sekolah')
-            ->assertSee('Semua Sekolah dalam Satu Tabel')
+            ->assertSee('Rekap Sekolah per Kategori')
             ->assertSee('Kartu Magic Link per Sekolah');
     }
 }

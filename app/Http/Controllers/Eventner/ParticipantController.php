@@ -219,13 +219,18 @@ class ParticipantController extends Controller
     }
 
     /**
-     * Rekap semua sekolah dalam satu tabel PDF.
+     * Rekap semua sekolah, dikelompokkan per kategori lomba.
      *
-     * Tidak ikut kategori yang sedang dibuka: pertanyaan yang dijawab halaman ini
-     * adalah "siapa saja sekolah yang mendaftar di event ini", dan menyaringnya
-     * per kategori akan menyembunyikan sekolah yang mendaftar di tingkat lain.
+     * Satu blok tabel per kategori, bukan satu tabel besar dengan kolom
+     * kategori: kolomnya jadi sepuluh dan pendaftaran memang per kategori, jadi
+     * yang dibutuhkan panitia adalah lembar yang bisa dipakai satu meja per
+     * tingkat lomba.
      *
-     * Orientasi landscape karena kolomnya sepuluh — portrait memaksa kolom
+     * Tidak ikut tab yang sedang dibuka di halaman peserta: pertanyaan yang
+     * dijawab halaman ini adalah "siapa saja sekolah yang mendaftar di setiap
+     * kategori", dan menyaringnya ke satu tab akan menyembunyikan sisanya.
+     *
+     * Orientasi landscape karena kolomnya banyak — portrait memaksa kolom
      * terakhir terpotong di dompdf, dan itu tidak terlihat sampai dicetak.
      */
     public function downloadDataSekolah()
@@ -234,8 +239,10 @@ class ParticipantController extends Controller
 
         // Tanpa QR: rekap tidak menampilkan satu pun, dan merendernya di sini
         // berarti puluhan PNG sia-sia untuk setiap unduhan.
-        $sekolah = DataSekolah::denganTautan(DataSekolah::kelompokkan(
+        $perKategori = DataSekolah::denganTautanPerKategori(DataSekolah::perKategori(
             $registrations,
+            $eventner->competitionCategories()->selectable()
+                ->orderBy('sort_order')->orderBy('name')->get(),
             DataSekolah::fieldKabupatenId(RegistrationField::forEventner($eventner))
         ));
 
@@ -243,7 +250,7 @@ class ParticipantController extends Controller
 
         return Pdf::loadView('eventner.participant.pdf_data_sekolah', [
             'eventner' => $eventner,
-            'sekolah' => $sekolah,
+            'perKategori' => $perKategori,
         ])
             ->setPaper('a4', 'landscape')
             ->download('Data_Sekolah_'.$namaEvent.'.pdf');
