@@ -13,7 +13,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
-#[Layout('layouts.auth')]
+// Halaman tamu memakai layout ringan berbasis Tailwind (sama bahasa desain
+// dengan landing/pricing/login), bukan layouts.auth milik template admin.
+#[Layout('layouts.auth-clean')]
 class EventnerRegister extends Component
 {
     public $name = '';

@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
-#[Layout('layouts.auth')]
+// Halaman tamu memakai layout ringan berbasis Tailwind (sama bahasa desain
+// dengan landing/pricing), bukan layouts.auth milik template admin.
+#[Layout('layouts.auth-clean')]
 class Login extends Component
 {
     public $login = '';
