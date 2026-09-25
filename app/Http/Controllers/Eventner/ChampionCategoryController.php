@@ -51,7 +51,7 @@ class ChampionCategoryController extends Controller
         $competitionCategoryId = $request->query('competition_category_id');
         $championCategoryId = $request->query('champion_category_id');
 
-        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'assessmentSubCategories.category'])
+        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'assessmentSubCategories.category', 'rankTitles'])
             ->where('eventner_id', $eventner->id)
             ->when($championCategoryId, fn($q) => $q->where('id', $championCategoryId))
             ->get();
@@ -301,6 +301,13 @@ class ChampionCategoryController extends Controller
 
         foreach ($participantScores as $index => &$ps) {
             $ps['rank'] = $index + 1;
+        }
+        unset($ps);
+
+        // Gelar juara per peringkat (mis. "Juara Utama 1"). Tanpa gelar yang
+        // diatur, 'title' null dan PDF menampilkan "Juara N" seperti biasa.
+        foreach ($participantScores as &$ps) {
+            $ps['title'] = $champion->titleForRank($ps['rank']);
         }
         unset($ps);
 

@@ -436,15 +436,7 @@ class Editor extends Component
 
         // Gelar: sama seperti CertificateController (tambah nomor posisi dalam
         // grup; fallback "Juara {rank}" bila rank title tidak meng-cover)
-        $title = null;
-        foreach ($category->rankTitles as $rt) {
-            if ($rt->coversRank($winner['rank'])) {
-                $title = $rt->rank_start !== $rt->rank_end
-                    ? $rt->title . ' ' . ($winner['rank'] - $rt->rank_start + 1)
-                    : $rt->title;
-                break;
-            }
-        }
+        $title = $category->titleForRank($winner['rank']);
         if (!$title) {
             $title = 'Juara ' . $winner['rank'];
         }

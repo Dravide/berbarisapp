@@ -175,18 +175,9 @@ class Index extends Component
             foreach ($participantScores as $index => &$ps) {
                 $rank = $index + 1;
                 $ps['rank'] = $rank;
-                $ps['title'] = null;
-
-                foreach ($champion->rankTitles as $rt) {
-                    if ($rt->coversRank($rank)) {
-                        // Nomor posisi dalam grup bila rank title meng-cover
-                        // lebih dari satu peringkat — sama seperti /hasil.
-                        $ps['title'] = $rt->rank_start !== $rt->rank_end
-                            ? $rt->title . ' ' . ($rank - $rt->rank_start + 1)
-                            : $rt->title;
-                        break;
-                    }
-                }
+                // Gelar + nomor posisi dalam grup (mis. "Juara Utama 1") dihitung
+                // di ChampionCategory supaya sama dengan /hasil dan sertifikat.
+                $ps['title'] = $champion->titleForRank($rank);
             }
             unset($ps);
 

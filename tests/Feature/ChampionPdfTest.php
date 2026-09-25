@@ -142,4 +142,136 @@ class ChampionPdfTest extends TestCase
         $responseAll->assertStatus(200);
         $responseAll->assertHeader('Content-Type', 'application/pdf');
     }
+
+    /**
+     * Gelar juara sebelumnya tidak pernah muncul di PDF karena controller dan
+     * view-nya tidak menyentuh rankTitles. Gelar yang mencakup lebih dari satu
+     * peringkat harus dipecah per posisi (mis. "Juara Utama 1", "Juara Utama 2").
+     */
+    public function test_pdf_menampilkan_gelar_dengan_nomor_posisi(): void
+    {
+        $user = User::factory()->eventner()->create(['is_active' => true]);
+        $eventner = Eventner::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'approved',
+            'logo_event' => null,
+        ]);
+        $this->actingAs($user);
+
+        $level = CompetitionCategory::factory()->create([
+            'eventner_id' => $eventner->id,
+            'name' => 'SMP',
+        ]);
+
+        $ac = AssessmentCategory::create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $level->id,
+            'name' => 'Rubrik',
+            'sort_order' => 1,
+        ]);
+        $sub = AssessmentSubCategory::create(['assessment_category_id' => $ac->id, 'name' => 'Sub', 'sort_order' => 1]);
+        $crit = AssessmentCriteria::create([
+            'assessment_sub_category_id' => $sub->id,
+            'name' => 'Teknik',
+            'score_options' => [['score' => 10]],
+            'weight' => 1,
+            'sort_order' => 1,
+        ]);
+
+        $champion = ChampionCategory::create([
+            'eventner_id' => $eventner->id,
+            'name' => 'Juara Umum',
+            'quantity' => 3,
+        ]);
+        $champion->assessmentSubCategories()->sync([$sub->id]);
+
+        // Dua peserta dengan nilai berbeda supaya peringkatnya pasti 1 dan 2.
+        foreach ([['SMP Satu', 10], ['SMP Dua', 8]] as $i => [$nama, $nilai]) {
+            $reg = Registration::factory()->for($eventner, 'eventner')->create([
+                'competition_category_id' => $level->id,
+                'nama_sekolah' => $nama,
+            ]);
+            \App\Models\AssessmentScore::create([
+                'eventner_id' => $eventner->id,
+                'registration_id' => $reg->id,
+                'assessment_criteria_id' => $crit->id,
+                'score' => $nilai,
+            ]);
+        }
+
+        \App\Models\ChampionRankTitle::create([
+            'champion_category_id' => $champion->id,
+            'title' => 'Juara Utama',
+            'rank_start' => 1,
+            'rank_end' => 3,
+            'sort_order' => 1,
+        ]);
+
+        $data = app(\App\Http\Controllers\Eventner\ChampionCategoryController::class)
+            ->pdfData(\Illuminate\Http\Request::create('/eventner/champion-categories/pdf', 'GET', [
+                'competition_category_id' => $level->id,
+                'champion_category_id' => $champion->id,
+            ]));
+
+        $titles = collect($data['rankings'][$champion->id])->pluck('title')->all();
+        $this->assertSame(['Juara Utama 1', 'Juara Utama 2'], $titles);
+
+        $html = view('eventner.champion-category.pdf_ranking', $data)->render();
+        $this->assertStringContainsString('Juara Utama 1', $html);
+        $this->assertStringContainsString('Juara Utama 2', $html);
+    }
+
+    /**
+     * Tanpa rank title, PDF tetap menulis "Juara N" sebagai ganti gelar kosong.
+     */
+    public function test_pdf_tanpa_gelar_memakai_fallback_juara_n(): void
+    {
+        $user = User::factory()->eventner()->create(['is_active' => true]);
+        $eventner = Eventner::factory()->create([
+            'user_id' => $user->id,
+            'status' => 'approved',
+            'logo_event' => null,
+        ]);
+        $this->actingAs($user);
+
+        $level = CompetitionCategory::factory()->create(['eventner_id' => $eventner->id]);
+        $ac = AssessmentCategory::create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $level->id,
+            'name' => 'Rubrik',
+            'sort_order' => 1,
+        ]);
+        $sub = AssessmentSubCategory::create(['assessment_category_id' => $ac->id, 'name' => 'Sub', 'sort_order' => 1]);
+        $crit = AssessmentCriteria::create([
+            'assessment_sub_category_id' => $sub->id,
+            'name' => 'Teknik',
+            'score_options' => [['score' => 10]],
+            'weight' => 1,
+            'sort_order' => 1,
+        ]);
+        $champion = ChampionCategory::create(['eventner_id' => $eventner->id, 'name' => 'Juara Umum', 'quantity' => 3]);
+        $champion->assessmentSubCategories()->sync([$sub->id]);
+
+        $reg = Registration::factory()->for($eventner, 'eventner')->create([
+            'competition_category_id' => $level->id,
+            'nama_sekolah' => 'SMP Satu',
+        ]);
+        \App\Models\AssessmentScore::create([
+            'eventner_id' => $eventner->id,
+            'registration_id' => $reg->id,
+            'assessment_criteria_id' => $crit->id,
+            'score' => 10,
+        ]);
+
+        $data = app(\App\Http\Controllers\Eventner\ChampionCategoryController::class)
+            ->pdfData(\Illuminate\Http\Request::create('/eventner/champion-categories/pdf', 'GET', [
+                'competition_category_id' => $level->id,
+                'champion_category_id' => $champion->id,
+            ]));
+
+        $this->assertNull($data['rankings'][$champion->id][0]['title']);
+
+        $html = view('eventner.champion-category.pdf_ranking', $data)->render();
+        $this->assertStringContainsString('Juara 1', $html);
+    }
 }

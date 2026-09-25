@@ -526,14 +526,9 @@ class Index extends Component
                     $rank = $index + 1;
                     $ps['rank'] = $rank;
 
-                    // Find matching rank title
-                    $ps['title'] = null;
-                    foreach ($champion->rankTitles as $rt) {
-                        if ($rt->coversRank($rank)) {
-                            $ps['title'] = $rt->title;
-                            break;
-                        }
-                    }
+                    // Gelar + nomor posisi dalam grup, sama dengan /hasil,
+                    // /champions, dan PDF rekap.
+                    $ps['title'] = $champion->titleForRank($rank);
                 }
                 unset($ps);
 

@@ -753,15 +753,7 @@ class Registration extends Component
      */
     private function gelarJuara(\App\Models\ChampionCategory $championCategory, int $rank): string
     {
-        foreach ($championCategory->rankTitles as $rt) {
-            if ($rt->coversRank($rank)) {
-                return $rt->rank_start !== $rt->rank_end
-                    ? $rt->title . ' ' . ($rank - $rt->rank_start + 1)
-                    : $rt->title;
-            }
-        }
-
-        return 'Juara ' . $rank;
+        return $championCategory->titleForRank($rank) ?? 'Juara ' . $rank;
     }
 
     public function render()

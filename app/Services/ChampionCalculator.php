@@ -152,24 +152,13 @@ class ChampionCalculator
             }
             $previousKey = $key;
 
-            $title = null;
-            foreach ($championCategory->rankTitles as $rt) {
-                if ($rt->coversRank($rank)) {
-                    // Nomor posisi dalam grup bila rank title meng-cover
-                    // lebih dari satu peringkat.
-                    $title = $rt->rank_start !== $rt->rank_end
-                        ? $rt->title . ' ' . ($rank - $rt->rank_start + 1)
-                        : $rt->title;
-                    break;
-                }
-            }
+            $title = $championCategory->titleForRank($rank);
             $winners[] = [
                 'registration' => $ps['participant'],
                 'rank' => $rank,
                 'title' => $title ?: 'Juara ' . $rank,
                 'total' => $ps['total'],
-            ];
-        }
+            ];        }
 
         return [$eventner, $championCategory, $winners];
     }

@@ -196,12 +196,7 @@ class Index extends Component
             // Determine matching rank title if champion category is selected
             $item['title'] = null;
             if ($this->selectedChampionCategoryId && $this->championCategory) {
-                foreach ($this->championCategory->rankTitles as $rt) {
-                    if ($rt->coversRank($rank)) {
-                        $item['title'] = $rt->title;
-                        break;
-                    }
-                }
+                $item['title'] = $this->championCategory->titleForRank($rank);
             }
 
             // Compare with previous ranks

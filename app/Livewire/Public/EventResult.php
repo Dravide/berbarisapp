@@ -170,15 +170,7 @@ class EventResult extends Component
             foreach ($participantScores as $index => &$ps) {
                 $rank = $index + 1;
                 $ps['rank'] = $rank;
-                $ps['title'] = null;
-
-                foreach ($champion->rankTitles as $rt) {
-                    if ($rt->coversRank($rank)) {
-                        $positionInGroup = $rank - $rt->rank_start + 1;
-                        $ps['title'] = $rt->title . ' ' . $positionInGroup;
-                        break;
-                    }
-                }
+                $ps['title'] = $champion->titleForRank($rank);
             }
             unset($ps);
 

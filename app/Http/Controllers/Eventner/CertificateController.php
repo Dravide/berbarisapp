@@ -168,18 +168,9 @@ class CertificateController extends Controller
         $winners = [];
         foreach ($participantScores as $index => $ps) {
             $rank = $index + 1;
-            $title = null;
-            foreach ($championCategory->rankTitles as $rt) {
-                if ($rt->coversRank($rank)) {
-                    // Sama seperti halaman /hasil: tambah nomor posisi dalam grup
-                    // jika rank title meng-cover lebih dari 1 peringkat.
-                    $positionInGroup = $rank - $rt->rank_start + 1;
-                    $title = $rt->rank_start !== $rt->rank_end
-                        ? $rt->title . ' ' . $positionInGroup
-                        : $rt->title;
-                    break;
-                }
-            }
+            // Sama seperti halaman /hasil: gelar + nomor posisi dalam grup bila
+            // rank title meng-cover lebih dari 1 peringkat.
+            $title = $championCategory->titleForRank($rank);
             // Fallback bila rank title tidak meng-cover peringkat ini
             if (!$title) {
                 $title = 'Juara ' . $rank;
@@ -438,16 +429,7 @@ class CertificateController extends Controller
 
                 // Gelar: sama seperti downloadPdf — nomor posisi dalam grup
                 // rank title bila meng-cover lebih dari 1 peringkat.
-                $title = null;
-                foreach ($championCategory->rankTitles as $rt) {
-                    if ($rt->coversRank($winner['rank'])) {
-                        $positionInGroup = $winner['rank'] - $rt->rank_start + 1;
-                        $title = $rt->rank_start !== $rt->rank_end
-                            ? $rt->title . ' ' . $positionInGroup
-                            : $rt->title;
-                        break;
-                    }
-                }
+                $title = $championCategory->titleForRank($winner['rank']);
                 $title = $title ?: 'Juara ' . $winner['rank'];
 
                 // Per peserta: sertifikat untuk tiap anggota pasukan

@@ -36,6 +36,28 @@ class ChampionCategory extends Model
         return $this->hasMany(ChampionRankTitle::class)->orderBy('sort_order')->orderBy('rank_start');
     }
 
+    /**
+     * Gelar untuk satu peringkat, mis. "Juara Utama 1". Satu gelar yang
+     * mencakup lebih dari satu peringkat (mis. Rank 1-3 = "Juara Utama")
+     * dipecah per posisi supaya tiap juara dapat gelar yang berbeda; gelar
+     * yang hanya mencakup satu peringkat dipakai apa adanya.
+     *
+     * Dipakai bersama oleh PDF rekap, /hasil, /champions publik, scoreboard,
+     * dan sertifikat. Null bila tidak ada gelar yang mencakup peringkat itu.
+     */
+    public function titleForRank(int $rank): ?string
+    {
+        foreach ($this->rankTitles as $rt) {
+            if ($rt->coversRank($rank)) {
+                return $rt->rank_start !== $rt->rank_end
+                    ? $rt->title . ' ' . ($rank - $rt->rank_start + 1)
+                    : $rt->title;
+            }
+        }
+
+        return null;
+    }
+
     public function tiebreakSubCategories()
     {
         return $this->belongsToMany(AssessmentSubCategory::class, 'champion_tiebreak', 'champion_category_id', 'assessment_sub_category_id');

@@ -54,6 +54,8 @@
         table.rank td { padding: 6px 8px; border: 1px solid #ddd; font-size: 9px; vertical-align: middle; }
         table.rank .rank-col { text-align: center; width: 45px; font-weight: bold; }
         table.rank .name-col { font-weight: bold; color: #1a1a2e; }
+        table.rank .title-col { text-align: center; }
+        table.rank .title-badge { display: inline-block; background: #e8f5e9; color: #1b5e20; padding: 2px 8px; border-radius: 10px; font-size: 7px; font-weight: bold; }
         table.rank .score-col { text-align: right; font-weight: bold; font-size: 12px; }
 
         /* MEDAL ROWS */
@@ -73,6 +75,7 @@
         .podium-3 { background: #e67e22; min-height: 55px; }
         .podium-rank { font-size: 20px; font-weight: bold; }
         .podium-name { font-size: 8px; font-weight: bold; margin-top: 4px; }
+        .podium-title { font-size: 7px; font-weight: normal; opacity: 0.9; margin-top: 2px; }
         .podium-score { font-size: 10px; font-weight: bold; }
 
         /* FOOTER */
@@ -173,6 +176,9 @@
                                         @endif
                                         {{ $rankingData[1]['participant']->display_name }}
                                     </div>
+                                    @if($rankingData[1]['title'] ?? null)
+                                        <div class="podium-title">{{ $rankingData[1]['title'] }}</div>
+                                    @endif
                                     <div class="podium-score">{{ $rankingData[1]['total'] }}</div>
                                 </div>
                             </td>
@@ -186,6 +192,9 @@
                                         @endif
                                         {{ $rankingData[0]['participant']->display_name }}
                                     </div>
+                                    @if($rankingData[0]['title'] ?? null)
+                                        <div class="podium-title">{{ $rankingData[0]['title'] }}</div>
+                                    @endif
                                     <div class="podium-score">{{ $rankingData[0]['total'] }}</div>
                                 </div>
                             </td>
@@ -199,6 +208,9 @@
                                         @endif
                                         {{ $rankingData[2]['participant']->display_name }}
                                     </div>
+                                    @if($rankingData[2]['title'] ?? null)
+                                        <div class="podium-title">{{ $rankingData[2]['title'] }}</div>
+                                    @endif
                                     <div class="podium-score">{{ $rankingData[2]['total'] }}</div>
                                 </div>
                             </td>
@@ -215,6 +227,7 @@
                         <th style="text-align:center; width: 60px;">No. Undian</th>
                         <th>Peserta</th>
                         <th>Pelatih</th>
+                        <th style="text-align:center; width: 80px;">Gelar</th>
                         <th style="text-align:right;">Total Nilai</th>
                     </tr>
                 </thead>
@@ -241,6 +254,13 @@
                             <td style="text-align:center;">{{ $ps['participant']->urutan_tampil ?: '-' }}</td>
                             <td class="name-col">{{ $ps['participant']->display_name }}</td>
                             <td>{{ $ps['participant']->nama_pelatih }}</td>
+                            <td class="title-col">
+                                @if($ps['title'] ?? null)
+                                    <span class="title-badge">{{ $ps['title'] }}</span>
+                                @else
+                                    Juara {{ $ps['rank'] }}
+                                @endif
+                            </td>
                             <td class="score-col">{{ $ps['total'] }}</td>
                         </tr>
                     @endforeach
