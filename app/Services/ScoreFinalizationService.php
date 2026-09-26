@@ -38,20 +38,7 @@ class ScoreFinalizationService
         $regCategoryId = $registration?->competition_category_id;
         $groupId = $registration?->competition_group_id;
 
-        // Daftar kriteria yang harus terisi untuk juri ini — sama dengan yang
-        // dirender di UI: rubrik tingkat ini (+ grup peserta, + babak yang
-        // sedang dinilai) digabung dengan rubrik global (NULL).
-        $baseQuery = fn () => AssessmentCategory::with(['subCategories.criterias'])
-            ->where('eventner_id', $eventnerId)
-            ->forEntry($regCategoryId, $groupId, $roundId);
-
-        $assessmentCategories = (clone $baseQuery())
-            ->whereHas('judges', fn ($q) => $q->where('judges.id', $judgeId))
-            ->get();
-
-        if ($assessmentCategories->isEmpty()) {
-            $assessmentCategories = $baseQuery()->get();
-        }
+        $assessmentCategories = $this->rubricsForEntry($eventnerId, $regCategoryId, $groupId, $roundId, $judgeId);
 
         // Peta skor: nilai tersimpan di database, ditimpa nilai di layar yang
         // belum tersimpan (dashboard panitia).
@@ -90,6 +77,85 @@ class ScoreFinalizationService
             ->update(['is_finalized' => true]);
 
         return ['ok' => true, 'missing' => false, 'updated' => $updated];
+    }
+
+    /**
+     * Rubrik yang berlaku untuk satu juri pada satu peserta.
+     *
+     * Dipakai bersama finalize() dan unfinalize() supaya keduanya tak pernah
+     * melihat daftar kriteria yang berbeda. Kalau kunci memakai satu daftar
+     * dan buka-kunci memakai daftar lain, sisa baris yang tetap terkunci akan
+     * membuat tombol Buka Kunci tampak tidak bekerja tanpa pesan kesalahan.
+     *
+     * Aturan "rubrik kosong → semua rubrik tingkat" tetap dipertahankan: juri
+     * yang belum ditugaskan ke rubrik mana pun dinilai memakai seluruh rubrik
+     * tingkat, sama seperti yang dirender di UI.
+     */
+    private function rubricsForEntry(int $eventnerId, ?int $regCategoryId, ?int $groupId, ?int $roundId, int $judgeId): \Illuminate\Support\Collection
+    {
+        $baseQuery = fn () => AssessmentCategory::with(['subCategories.criterias'])
+            ->where('eventner_id', $eventnerId)
+            ->forEntry($regCategoryId, $groupId, $roundId);
+
+        $assessmentCategories = (clone $baseQuery())
+            ->whereHas('judges', fn ($q) => $q->where('judges.id', $judgeId))
+            ->get();
+
+        return $assessmentCategories->isEmpty() ? $baseQuery()->get() : $assessmentCategories;
+    }
+
+    /**
+     * Buka kunci nilai satu juri untuk satu registrasi.
+     *
+     * Wajib memakai resolusi kriteria yang SAMA dengan finalize(): rubrik
+     * tanpa babak ikut dikunci finalize() lewat forEntry() (scopeForLevel()
+     * menyertakan baris competition_round_id NULL), jadi membukanya dengan
+     * daftar kriteria yang lebih sempit — misalnya hanya kriteria yang
+     * menempel persis ke babak terpilih — meninggalkan baris terkunci.
+     * Akibatnya hasFinalizedScores() tetap true dan tombol Buka Kunci tampak
+     * tidak bekerja, tanpa satu pun pesan kesalahan.
+     *
+     * @param  int|null  $roundId  Babak yang dibuka. Null = tingkat tanpa babak.
+     * @return int jumlah baris yang dibuka (0 = tidak ada yang terkunci)
+     */
+    public function unfinalize(int $eventnerId, int $registrationId, int $judgeId, ?int $roundId = null): int
+    {
+        $registration = Registration::where('eventner_id', $eventnerId)->find($registrationId);
+
+        if (! $registration) {
+            return 0;
+        }
+
+        $assessmentCategories = $this->rubricsForEntry(
+            $eventnerId,
+            $registration->competition_category_id,
+            $registration->competition_group_id,
+            $roundId,
+            $judgeId,
+        );
+
+        $criteriaIds = [];
+
+        foreach ($assessmentCategories as $cat) {
+            foreach ($cat->subCategories as $sub) {
+                foreach ($sub->criterias as $crit) {
+                    $criteriaIds[] = $crit->id;
+                }
+            }
+        }
+
+        // Tanpa daftar kriteria, jangan jatuh ke UPDATE tanpa penyaring: itu
+        // membuka SEMUA babak sekaligus, kebalikan dari yang diminta di sini.
+        if (! count($criteriaIds)) {
+            return 0;
+        }
+
+        return AssessmentScore::where('registration_id', $registrationId)
+            ->where('eventner_id', $eventnerId)
+            ->where('judge_id', $judgeId)
+            ->where('is_finalized', true)
+            ->whereIn('assessment_criteria_id', $criteriaIds)
+            ->update(['is_finalized' => false]);
     }
 
     /**

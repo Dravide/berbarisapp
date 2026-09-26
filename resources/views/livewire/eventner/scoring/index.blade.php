@@ -477,12 +477,23 @@
                         @endif
 
                         @if($isFinalized)
-                            <div class="alert alert-danger border-0 bg-danger-subtle text-danger d-flex align-items-center gap-2 mb-4">
-                                <i class="ti ti-lock fs-5"></i>
-                                <div>
-                                    <strong class="d-block">Nilai Terkunci</strong>
-                                    <span class="small">Penilaian untuk juri ini telah difinalisasi.</span>
+                            <div class="alert alert-danger border-0 bg-danger-subtle text-danger mb-4">
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="ti ti-lock fs-5"></i>
+                                    <div>
+                                        <strong class="d-block">Nilai Terkunci</strong>
+                                        <span class="small">Penilaian untuk juri ini telah difinalisasi.</span>
+                                    </div>
                                 </div>
+                                {{-- Tanpa wire:confirm: layout admin menimpa window.confirm dan
+                                     menyalurkannya lewat document.activeElement, sedangkan modal
+                                     Bootstrap membiarkan fokus di body — di dalam modal, wire:confirm
+                                     membatalkan aksinya diam-diam. Konfirmasinya lewat modal alasan. --}}
+                                <button type="button"
+                                        wire:click="openUnlockModal"
+                                        class="btn btn-sm btn-outline-danger mt-2">
+                                    <i class="ti ti-lock-open me-1"></i> Buka Kunci
+                                </button>
                             </div>
                         @endif
 
@@ -806,4 +817,69 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal Buka Kunci — satu peserta × satu juri. --}}
+    @if($showUnlockModal)
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,.5);">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-semibold">
+                            <i class="ti ti-lock-open me-1"></i> Buka Kunci Nilai
+                        </h5>
+                        <button type="button" class="btn-close" wire:click="closeUnlockModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <dl class="row mb-3 small">
+                            <dt class="col-5 text-muted fw-normal">Peserta</dt>
+                            <dd class="col-7 fw-semibold mb-1">{{ $selectedRegistration?->display_name }}</dd>
+                            <dt class="col-5 text-muted fw-normal">Juri</dt>
+                            <dd class="col-7 fw-semibold mb-1">
+                                {{ collect($judges)->firstWhere('id', $selectedJudgeId)?->name ?? '—' }}
+                            </dd>
+                            @if($selectedRoundId)
+                                <dt class="col-5 text-muted fw-normal">Babak</dt>
+                                <dd class="col-7 fw-semibold mb-1">
+                                    {{ \App\Models\CompetitionRound::where('eventner_id', $eventner->id)->find($selectedRoundId)?->name }}
+                                </dd>
+                            @endif
+                        </dl>
+
+                        <div class="alert alert-warning border-0 bg-warning-subtle text-warning small mb-3">
+                            <i class="ti ti-alert-triangle me-1"></i>
+                            Kunci hanya dilepas untuk juri ini, pada peserta ini saja. Nilai bisa
+                            diubah lagi sampai difinalisasi ulang.
+                        </div>
+
+                        <label for="unlockReason" class="form-label fw-semibold">
+                            Alasan <span class="text-danger">*</span>
+                        </label>
+                        <textarea id="unlockReason"
+                                  wire:model="unlockReason"
+                                  rows="3"
+                                  maxlength="500"
+                                  class="form-control @error('unlockReason') is-invalid @enderror"
+                                  placeholder="Misalnya: salah juri saat finalisasi, atau nilai tertukar dengan regu lain."></textarea>
+                        @error('unlockReason')
+                            <span class="text-danger fs-2">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" wire:click="closeUnlockModal">Batal</button>
+                        <button type="button"
+                                wire:click="unlockScores"
+                                class="btn btn-danger"
+                                wire:loading.attr="disabled">
+                            <span wire:loading.remove wire:target="unlockScores">
+                                <i class="ti ti-lock-open me-1"></i> Buka Kunci
+                            </span>
+                            <span wire:loading wire:target="unlockScores">
+                                <span class="spinner-border spinner-border-sm me-1"></span> Membuka...
+                            </span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

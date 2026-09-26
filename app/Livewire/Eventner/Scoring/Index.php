@@ -30,6 +30,10 @@ class Index extends Component
     public $saveStatus = ''; // '', 'saved', 'error'
     public $isFinalized = false;
 
+    /** Modal Buka Kunci — alasan wajib diisi sebelum kunci dilepas. */
+    public $showUnlockModal = false;
+    public $unlockReason = '';
+
     // Sandbox: latihan input nilai tanpa menyimpan apa pun ke database
     public $simulateMode = false;
 
@@ -712,6 +716,114 @@ class Index extends Component
         $this->scores = [];
         $this->saveStatus = '';
         session()->flash('success', 'Nilai berhasil direset.');
+    }
+
+    // ── Buka Kunci Nilai ──────────────────────────────────────────────
+
+    /**
+     * Buka modal Buka Kunci untuk juri yang sedang dipilih.
+     *
+     * Hanya jalan bila nilai juri ini memang terkunci — kalau tidak, modalnya
+     * cuma melaporkan "tidak ada yang terkunci" setelah alasan diisi, dan itu
+     * membuang waktu panitia.
+     */
+    public function openUnlockModal()
+    {
+        if ($this->simulateMode) {
+            return;
+        }
+
+        if (!$this->selectedJudgeId || !$this->selectedRegistrationId) {
+            return;
+        }
+
+        if (!$this->hasFinalizedScores()) {
+            $this->dispatch('toast', type: 'error', message: 'Nilai juri ini tidak sedang terkunci.');
+            return;
+        }
+
+        $this->unlockReason = '';
+        $this->resetErrorBag('unlockReason');
+        $this->showUnlockModal = true;
+    }
+
+    public function closeUnlockModal()
+    {
+        $this->showUnlockModal = false;
+        $this->unlockReason = '';
+        $this->resetErrorBag('unlockReason');
+    }
+
+    /**
+     * Lepas kunci nilai satu juri pada peserta yang sedang dibuka.
+     *
+     * Satu aksi = satu peserta × satu juri. Tidak ada jalur massal: salah
+     * tekan "Finalisasi Semua" tetap harus diperbaiki satu per satu, supaya
+     * membuka kunci tak pernah jadi satu ketukan yang melepas puluhan nilai.
+     *
+     * Pembukaan didelegasikan ke ScoreFinalizationService, bukan dihitung di
+     * sini dengan roundCriteriaIds(): daftar kriteria service itu memuat rubrik
+     * tanpa babak, sedangkan roundCriteriaIds() tidak — dan rubrik tanpa babak
+     * ikut terkunci. Lihat catatan di unfinalize().
+     */
+    public function unlockScores()
+    {
+        if ($this->simulateMode) {
+            return;
+        }
+
+        if (!$this->selectedJudgeId || !$this->selectedRegistrationId) {
+            $this->closeUnlockModal();
+            return;
+        }
+
+        $this->validate([
+            'unlockReason' => 'required|string|min:5|max:500',
+        ], [
+            'unlockReason.required' => 'Alasan wajib diisi — inilah yang tercatat sebagai jejak audit.',
+            'unlockReason.min' => 'Alasan terlalu pendek. Tulis minimal 5 karakter.',
+            'unlockReason.max' => 'Alasan terlalu panjang. Maksimal 500 karakter.',
+        ]);
+
+        $judge = Judge::where('eventner_id', $this->eventner->id)->find($this->selectedJudgeId);
+        $namaJuri = $judge?->name ?? 'Juri #' . $this->selectedJudgeId;
+
+        $updated = app(ScoreFinalizationService::class)->unfinalize(
+            $this->eventner->id,
+            $this->selectedRegistrationId,
+            $this->selectedJudgeId,
+            $this->selectedRoundId ? (int) $this->selectedRoundId : null,
+        );
+
+        if ($updated === 0) {
+            $this->dispatch('toast', type: 'error', message: 'Tidak ada nilai terkunci untuk juri ini pada babak ini.');
+            $this->closeUnlockModal();
+            return;
+        }
+
+        // Jejak audit. Subject wajib Registration: halaman Activity Log
+        // menyaring subject_type ke tujuh model, dan AssessmentScore bukan
+        // salah satunya — dicatat pada skor, barisnya tak akan pernah terlihat.
+        activity('penilaian')
+            ->performedOn($this->selectedRegistration)
+            ->withProperties([
+                'registration_id' => $this->selectedRegistrationId,
+                'judge_id' => $this->selectedJudgeId,
+                'juri' => $namaJuri,
+                'round_id' => $this->selectedRoundId ? (int) $this->selectedRoundId : null,
+                'babak' => $this->selectedRoundId
+                    ? CompetitionRound::where('eventner_id', $this->eventner->id)->find($this->selectedRoundId)?->name
+                    : null,
+                'jumlah_kriteria' => $updated,
+                'alasan' => $this->unlockReason,
+            ])
+            ->log('Buka kunci nilai: ' . $this->selectedRegistration->display_name . ' — juri ' . $namaJuri);
+
+        $this->isFinalized = false;
+        $this->saveStatus = '';
+
+        $this->dispatch('toast', type: 'success', message: "Kunci nilai dibuka: {$updated} baris untuk juri {$namaJuri}.");
+        $this->closeUnlockModal();
     }
 
     public function loadDeductions()

@@ -193,13 +193,12 @@ class Index extends Component
             return $query->whereIn('id', $finalis)->count();
         }
 
-        // Saringan grup dihitung TANPA babak, mengikuti bentuk daftar sebelum
-        // juri memilih babak apa pun. Kalau di sini babak ikut disaring — dan
-        // kelas ini tidak punya babak terpilih saat kartu dirender — hasilnya
-        // rubrik yang menempel ke babak jadi tak terlihat, sehingga juri yang
-        // sebenarnya terkurung ke satu grup justru dihitung selebar tingkat.
-        if (! $this->hasLevelWideRubric($competitionCategoryId, null)) {
-            $query->whereIn('competition_group_id', $this->allowedGroupIds($competitionCategoryId, null));
+        // Saringan grup & babak dihitung dengan babak yang sama seperti daftar
+        // peserta, kalau tidak angka di kartu membandingkan dua daftar berbeda.
+        $roundId = $this->selectedRoundId ? (int) $this->selectedRoundId : null;
+
+        if (! $this->hasLevelWideRubric($competitionCategoryId, $roundId)) {
+            $query->whereIn('competition_group_id', $this->allowedGroupIds($competitionCategoryId, $roundId));
         }
 
         return $query->count();
@@ -221,6 +220,10 @@ class Index extends Component
         $this->view = 'categories';
         $this->selectedCategoryId = null;
         $this->roundIdsCache = null;
+        // Babak ikut dikosongkan, bukan cuma tingkatnya. Kalau tidak, kartu
+        // tingkat berikutnya mewarisi babak peserta terakhir yang dinilai dan
+        // menyaring peserta dengan babak milik tingkat lain.
+        $this->selectedRoundId = null;
         $this->resetScoringState();
     }
 
@@ -362,8 +365,14 @@ class Index extends Component
      *
      * Babak wajib ikut disaring: rubrik Grup B pada babak lain tidak boleh
      * membuat juri terlihat berhak atas Grup B pada babak yang sedang dibuka.
+     *
+     * Babak diminta lewat parameter, bukan dibaca dari selectedRoundId: kartu
+     * tingkat dirender tanpa babak terpilih, sedangkan halaman daftar/nilai
+     * memakai babak yang sedang dibuka. Dua pemanggil itu butuh jawaban yang
+     * berbeda dari data yang sama, dan selectedRoundId cuma benar untuk yang
+     * kedua.
      */
-    private function allowedGroupIds(?int $competitionCategoryId): array
+    private function allowedGroupIds(?int $competitionCategoryId, ?int $roundId): array
     {
         if (! $competitionCategoryId) {
             return [];
@@ -373,7 +382,7 @@ class Index extends Component
             ->whereNotNull('competition_group_id')
             // forLevel, bukan forEntry: forEntry(null grup) justru mengunci ke
             // rubrik TANPA grup — kebalikan dari yang dicari di sini.
-            ->forLevel($competitionCategoryId, $this->selectedRoundId ? (int) $this->selectedRoundId : null)
+            ->forLevel($competitionCategoryId, $roundId)
             ->whereHas('judges', fn ($q) => $q->where('judges.id', $this->judgeId))
             ->pluck('competition_group_id')
             ->unique()
@@ -387,15 +396,18 @@ class Index extends Component
      * Babak ikut disaring, dan itu yang menutup kebocoran lintas-babak: rubrik
      * Final yang tanpa grup dulu membuat juri dianggap selebar tingkat juga saat
      * menilai penyisihan, sehingga peserta grup lain muncul di daftarnya.
+     *
+     * Seperti allowedGroupIds(), babak diminta lewat parameter — lihat catatan
+     * di sana.
      */
-    private function hasLevelWideRubric(?int $competitionCategoryId): bool
+    private function hasLevelWideRubric(?int $competitionCategoryId, ?int $roundId): bool
     {
         if (! $competitionCategoryId) {
             return false;
         }
 
         return AssessmentCategory::where('eventner_id', $this->eventnerId)
-            ->forEntry($competitionCategoryId, null, $this->selectedRoundId ? (int) $this->selectedRoundId : null)
+            ->forEntry($competitionCategoryId, null, $roundId)
             ->whereHas('judges', fn ($q) => $q->where('judges.id', $this->judgeId))
             ->exists();
     }
@@ -423,8 +435,8 @@ class Index extends Component
         }
 
         // Tanpa rubrik selebar tingkat, juri terkurung ke grupnya sendiri.
-        if (! $this->hasLevelWideRubric($this->selectedCategoryId)) {
-            $query->whereIn('competition_group_id', $this->allowedGroupIds($this->selectedCategoryId));
+        if (! $this->hasLevelWideRubric($this->selectedCategoryId, $this->selectedRoundId ? (int) $this->selectedRoundId : null)) {
+            $query->whereIn('competition_group_id', $this->allowedGroupIds($this->selectedCategoryId, $this->selectedRoundId ? (int) $this->selectedRoundId : null));
         }
 
         return $query;
