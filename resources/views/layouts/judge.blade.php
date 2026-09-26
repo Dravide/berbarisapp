@@ -142,6 +142,100 @@
 
     @livewireScripts
     @stack('scripts')
+
+    {{-- SweetAlert2 dari CDN. Layout ini sudah memasang
+         <meta name="referrer" content="no-referrer">, jadi permintaan ke CDN
+         tidak mengirim URL halaman — yang berisi token juri — di header
+         Referer. Tanpa itu, tiap kali Swal dimuat, token ikut ke jsdelivr. --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Notifikasi singkat pojok kanan atas. Bentuknya sama dengan beToast di
+        // layout admin supaya perilaku alert seragam di seluruh aplikasi.
+        window.beToast = function(message, icon) {
+            if (!window.Swal) { return; }
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: icon || 'success',
+                title: message,
+                showConfirmButton: false,
+                timer: 3500,
+                timerProgressBar: true,
+            });
+        };
+
+        // wire:confirm memanggil confirm() bawaan browser secara SINKRON — ia
+        // butuh jawaban sebelum handler-nya lanjut, dan itu tak bisa ditunda.
+        // Karena itu window.confirm TIDAK ditimpa: menimpanya berarti selalu
+        // menjawab "tidak" pada Livewire, dan aksinya batal tanpa jejak.
+        //
+        // Yang diganti adalah callback per elemen. Livewire menyimpan
+        // `el.__livewire_confirm(action, instead)`; membungkusnya membuat aksi
+        // asli ikut menunggu jawaban SweetAlert. Tidak menyentuh blade, jadi
+        // semua wire:confirm di halaman ini ikut berubah sekaligus.
+        window.swalConfirm = function(el) {
+            if (!window.Swal || !el || !el.__livewire_confirm || el.__livewire_confirm.__swal) {
+                return;
+            }
+
+            // Pesan aslinya cuma hidup di closure directive Livewire, jadi
+            // dibaca dari atributnya langsung — atributnya tetap ada di DOM
+            // selama elemennya belum diganti render ulang.
+            const pesan = el.getAttribute('wire:confirm') || 'Lanjutkan?';
+
+            const bungkus = function(action, instead) {
+                Swal.fire({
+                    title: pesan,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    reverseButtons: true,
+                    focusCancel: true,
+                }).then(function(result) {
+                    if (result.isConfirmed) { action(); } else { instead(); }
+                });
+            };
+
+            // Penanda supaya elemen yang sama tidak dibungkus dua kali.
+            bungkus.__swal = true;
+
+            el.__livewire_confirm = bungkus;
+        };
+
+        window.swalConfirmSemua = function() {
+            document.querySelectorAll('[wire\\:confirm]').forEach(window.swalConfirm);
+        };
+
+        // Elemen hasil render ulang Livewire dipasangi directive baru, jadi
+        // pembungkusan harus diulang tiap kali DOM berubah — bukan sekali saja.
+        function pasangPengawasKonfirmasi() {
+            window.swalConfirmSemua();
+
+            const pengawas = new MutationObserver(function() {
+                window.swalConfirmSemua();
+            });
+
+            pengawas.observe(document.body, { childList: true, subtree: true });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', pasangPengawasKonfirmasi);
+        } else {
+            pasangPengawasKonfirmasi();
+        }
+
+        document.addEventListener('livewire:init', function () {
+            Livewire.on('toast', function (event) {
+                const d = (event && event.detail) || {};
+                const message = typeof d === 'string' ? d : (d.message || 'Berhasil.');
+                const type = (typeof d === 'object' && d.type) || 'success';
+                window.beToast(message, type);
+            });
+        });
+    </script>
 </body>
 
 </html>

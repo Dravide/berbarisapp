@@ -74,6 +74,17 @@ if (!function_exists('judge_entry_url')) {
             ?: parse_url((string) config('app.url'), PHP_URL_SCHEME)
             ?: 'http';
 
+        // Token juri ada DI DALAM URL ini, dan URL ini yang dicetak jadi QR di
+        // kartu akses. Lewat http, token itu terkirim polos dan bisa dibaca
+        // siapa pun di jaringan yang sama — cukup satu kali pemindaian di
+        // jaringan publik. Salah tulis ENTRY_HOST sebagai "http://..." sudah
+        // cukup untuk membuat seluruh kartu yang dicetak memuat link tak
+        // terenkripsi, dan itu tidak terlihat dari dashboard. Karena itu di
+        // luar lokal/testing, https dipaksa.
+        if ($scheme === 'http' && ! app()->environment(['local', 'testing'])) {
+            $scheme = 'https';
+        }
+
         return $scheme . '://' . judge_entry_host() . '/juri/' . rawurlencode($token);
     }
 }

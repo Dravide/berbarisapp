@@ -4,9 +4,13 @@ namespace App\Livewire\Public\JudgeScoring;
 
 use App\Models\AssessmentCategory;
 use App\Models\AssessmentScore;
+use App\Models\CompetitionRound;
+use App\Models\CompetitionRoundRegistration;
+use App\Models\Eventner;
 use App\Models\Judge;
 use App\Models\Registration;
 use App\Services\ScoreFinalizationService;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
@@ -19,6 +23,12 @@ use Livewire\Component;
  * event.checkin.scan / magic.link) — tidak ada PIN maupun session login.
  * Identitas juri diikat server-side dari token; klien tidak pernah
  * mengirim judge_id.
+ *
+ * Token tidak punya masa berlaku sendiri; aksesnya ditutup setelah tanggal
+ * event lewat (lihat Eventner::judgeAccessExpiresAt()). Yang ditutup itu
+ * kebocoran jangka panjang — QR lomba lama — bukan penyebaran token selama
+ * lomba berlangsung: sampai acara usai, siapa pun yang memegang token masih
+ * bisa membuka halaman ini.
  */
 #[Layout('layouts.judge')]
 #[Title('Penilaian Juri')]
@@ -40,9 +50,22 @@ class Index extends Component
 
     public string $view = 'categories'; // categories | participants | scoring
     public $selectedCategoryId = null;
+
+    /**
+     * Babak yang sedang dinilai (id CompetitionRound). Null = tingkat ini
+     * memang satu babak, atau juri belum memilih.
+     */
+    public $selectedRoundId = null;
+
     public array $scores = [];
     public bool $isFinalized = false;
     public string $saveStatus = ''; // '' | 'saved' | 'error'
+
+    /**
+     * Babak penuh pada tingkat terpilih, sebelum ada peserta dipilih.
+     * Diisi sekali saat memilih tingkat supaya tak dihitung ulang tiap render.
+     */
+    private ?\Illuminate\Support\Collection $roundIdsCache = null;
 
     /** Mode penilaian: 'satu-satu' (satu kriteria per layar, maju otomatis) | 'semua'. */
     public string $criteriaMode = 'satu-satu';
@@ -53,6 +76,27 @@ class Index extends Component
     public function mount(string $token)
     {
         $judge = Judge::where('access_token', $token)->firstOrFail();
+
+        // Batas masa berlaku link tablet juri: setelah lomba usai, token lama
+        // tidak boleh lagi hidup — tanpa ini ia berlaku selamanya kecuali
+        // panitia ingat menekan "Ganti Token".
+        //
+        // 404, bukan 403: halaman ini juga menjawab 404 untuk token ngawur, dan
+        // pesan berbeda akan memberi tahu penebak bahwa tokennya benar — yang
+        // justru informasi paling berguna bagi mereka. Alasan sebenarnya
+        // dicatat di log supaya panitia bisa menelusuri "kenapa juri tak bisa
+        // masuk" (kasus nyata: event diundur, tanggal tidak ikut diperbarui).
+        $eventner = Eventner::find($judge->eventner_id);
+
+        if ($eventner && ($batas = $eventner->judgeAccessExpiresAt()) && now()->gt($batas)) {
+            Log::warning('Akses tablet juri ditolak: melewati batas tanggal event', [
+                'judge_id' => $judge->id,
+                'eventner_id' => $eventner->id,
+                'batas' => $batas->toDateTimeString(),
+            ]);
+
+            abort(404);
+        }
 
         $this->judgeId = $judge->id;
         $this->eventnerId = $judge->eventner_id;
@@ -89,12 +133,7 @@ class Index extends Component
     /** Kategori lomba yang punya rubrik global (competition_category_id NULL). */
     private function globalRubricCategoryIds(): array
     {
-        $hasGlobal = AssessmentCategory::where('eventner_id', $this->eventnerId)
-            ->whereNull('competition_category_id')
-            ->whereHas('judges', fn ($q) => $q->where('judges.id', $this->judgeId))
-            ->exists();
-
-        if (!$hasGlobal) {
+        if (! $this->hasGlobalRubric()) {
             return [];
         }
 
@@ -104,11 +143,76 @@ class Index extends Component
             ->all();
     }
 
+    /**
+     * Jumlah peserta yang BENAR-BENAR akan dilihat juri ini di tingkat itu.
+     *
+     * withCount('registrations') menghitung seluruh pendaftar tingkat — tak
+     * peduli grup maupun babak. Akibatnya kartu menjanjikan angka yang berbeda
+     * dari isi daftarnya: juri final melihat "5 peserta" lalu menemukan 2, dan
+     * juri Grup B melihat 5 padahal pesertanya 3. Angka yang salah lebih buruk
+     * daripada tidak ada angka: juri mengira ada peserta yang hilang.
+     *
+     * Karena itu hitungannya memakai aturan yang sama dengan daftarnya
+     * (participantsQuery), bukan salinan kedua yang harus dijaga tetap sejalan.
+     *
+     * Dihitung sekali untuk seluruh kartu yang tampil, bukan per kartu per
+     * render. Hasilnya diteruskan ke view lewat render(), jadi tidak ada method
+     * publik baru yang terekspos sebagai aksi Livewire.
+     *
+     * @return array<int,int> id tingkat => jumlah peserta
+     */
+    private function jumlahPesertaPerTingkat(): array
+    {
+        return $this->categories
+            ->mapWithKeys(fn ($cat) => [$cat->id => $this->hitungPeserta($cat->id)])
+            ->all();
+    }
+
+    private function hitungPeserta(int $competitionCategoryId): int
+    {
+        $query = Registration::where('eventner_id', $this->eventnerId)
+            ->where('competition_category_id', $competitionCategoryId);
+
+        // Rubrik global = juri menilai seluruh tingkat, tanpa saringan grup.
+        if ($this->hasGlobalRubric()) {
+            return $query->count();
+        }
+
+        // Rubrik yang menempel ke babak final saja berarti pesertanya finalis.
+        // Tanpa ini, juri final melihat jumlah seluruh pendaftar.
+        $roundIds = $this->roundIdsFor($competitionCategoryId, null, semuaGrup: true);
+        $semuaFinal = $roundIds->isNotEmpty() && $roundIds->every(
+            fn ($id) => CompetitionRound::where('eventner_id', $this->eventnerId)->find($id)?->isFinal()
+        );
+
+        if ($semuaFinal) {
+            $finalis = CompetitionRoundRegistration::where('eventner_id', $this->eventnerId)
+                ->whereIn('competition_round_id', $roundIds)
+                ->pluck('registration_id');
+
+            return $query->whereIn('id', $finalis)->count();
+        }
+
+        // Saringan grup dihitung TANPA babak, mengikuti bentuk daftar sebelum
+        // juri memilih babak apa pun. Kalau di sini babak ikut disaring — dan
+        // kelas ini tidak punya babak terpilih saat kartu dirender — hasilnya
+        // rubrik yang menempel ke babak jadi tak terlihat, sehingga juri yang
+        // sebenarnya terkurung ke satu grup justru dihitung selebar tingkat.
+        if (! $this->hasLevelWideRubric($competitionCategoryId, null)) {
+            $query->whereIn('competition_group_id', $this->allowedGroupIds($competitionCategoryId, null));
+        }
+
+        return $query->count();
+    }
+
     public function selectCategory($id)
     {
         abort_unless($this->categories->pluck('id')->contains((int) $id), 403);
 
         $this->selectedCategoryId = $id;
+        $this->selectedRegistrationId = null;
+        $this->roundIdsCache = null;
+        $this->resolveRoundForParticipant();
         $this->view = 'participants';
     }
 
@@ -116,14 +220,233 @@ class Index extends Component
     {
         $this->view = 'categories';
         $this->selectedCategoryId = null;
+        $this->roundIdsCache = null;
         $this->resetScoringState();
+    }
+
+    /**
+     * Babak yang boleh dinilai juri ini untuk peserta terpilih.
+     *
+     * Babak datang dari rubrik juri sendiri, bukan dari peserta: juri yang
+     * memegang rubrik "Penyisihan" memang hanya menilai penyisihan. Satu babak
+     * saja = dipilih otomatis tanpa bertanya; lebih dari satu = juri memilih.
+     *
+     * Saat BELUM ada peserta terpilih, grup belum diketahui, jadi babak dihitung
+     * dari rubrik yang tidak menempel ke grup mana pun. Kalau itu menghasilkan
+     * daftar kosong — justru kasus normal untuk juri grup — babak diambil dari
+     * seluruh rubrik juri di tingkat ini. Tanpa cadangan itu, juri Grup A tak
+     * melihat pemilih babak sama sekali sebelum memilih peserta, padahal
+     * rubriknya menempel ke babak.
+     *
+     * Dihitung ulang hanya saat pindah peserta, bukan tiap render: properti ini
+     * dipanggil `participantsQuery()` yang juga dipanggil render(), dan query
+     * tambahan di jalur itu berjalan puluhan kali per render.
+     */
+    public function getAvailableRoundsProperty()
+    {
+        if (! $this->selectedCategoryId) {
+            return collect();
+        }
+
+        if ($this->selectedRegistrationId) {
+            $compCategoryId = $this->registration->competition_category_id ?? null;
+            $groupId = $this->registration->competition_group_id;
+            $roundIds = $this->roundIdsFor($compCategoryId, $groupId);
+        } else {
+            $this->roundIdsCache ??= $this->roundIdsFor($this->selectedCategoryId, null);
+
+            $roundIds = $this->roundIdsCache;
+
+            if ($roundIds->isEmpty()) {
+                $roundIds = $this->roundIdsFor($this->selectedCategoryId, null, semuaGrup: true);
+            }
+        }
+
+        if ($roundIds->isEmpty()) {
+            return collect();
+        }
+
+        return CompetitionRound::where('eventner_id', $this->eventnerId)
+            ->whereIn('id', $roundIds)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Id babak dari rubrik milik juri ini.
+     *
+     * `$semuaGrup` melepas saringan grup — dipakai hanya untuk pemilih babak
+     * sebelum peserta dipilih. Saringan babaknya sendiri (forLevel) tidak
+     * pernah dilepas: babak dari tingkat lain tetap tidak boleh muncul.
+     */
+    private function roundIdsFor(?int $compCategoryId, ?int $groupId, bool $semuaGrup = false): \Illuminate\Support\Collection
+    {
+        if (! $compCategoryId) {
+            return collect();
+        }
+
+        return AssessmentCategory::where('eventner_id', $this->eventnerId)
+            ->whereNotNull('competition_round_id')
+            ->forLevel($compCategoryId, null)
+            ->when(! $semuaGrup, function ($q) use ($groupId) {
+                $q->where(function ($sq) use ($groupId) {
+                    if (! $groupId) {
+                        $sq->whereNull('competition_group_id');
+
+                        return;
+                    }
+
+                    $sq->where('competition_group_id', $groupId)->orWhereNull('competition_group_id');
+                });
+            })
+            ->whereHas('judges', fn ($q) => $q->where('judges.id', $this->judgeId))
+            ->pluck('competition_round_id')
+            ->unique()
+            ->values();
+    }
+
+    /** Babak terpilih, atau null kalau tingkat ini memang tanpa babak. */
+    public function getActiveRoundProperty(): ?CompetitionRound
+    {
+        if (! $this->selectedRoundId) {
+            return null;
+        }
+
+        return \App\Models\CompetitionRound::where('eventner_id', $this->eventnerId)
+            ->find($this->selectedRoundId);
+    }
+
+    /** Juri memilih babak sendiri (hanya muncul bila rubriknya lebih dari satu babak). */
+    public function switchRound($roundId)
+    {
+        $roundId = $roundId !== '' && $roundId !== null ? (int) $roundId : null;
+
+        if ($roundId !== null && ! $this->availableRounds->pluck('id')->contains($roundId)) {
+            abort(403);
+        }
+
+        $this->selectedRoundId = $roundId;
+        $this->loadCriteria();
+        $this->jumpToFirstUnfilled();
+    }
+
+    /**
+     * Babak untuk peserta terpilih: satu babak → otomatis, banyak → pilihan
+     * juri dipertahankan, tanpa rubrik berbasis babak → kosong (perilaku lama).
+     */
+    private function resolveRoundForParticipant(): void
+    {
+        $rounds = $this->availableRounds;
+
+        if ($rounds->isEmpty()) {
+            $this->selectedRoundId = null;
+            return;
+        }
+
+        if ($rounds->count() === 1) {
+            $this->selectedRoundId = $rounds->first()->id;
+            return;
+        }
+
+        if (! $rounds->pluck('id')->contains((int) $this->selectedRoundId)) {
+            $this->selectedRoundId = $rounds->first()->id;
+        }
+    }
+
+    /**
+     * ID grup yang punya rubrik milik juri ini pada tingkat terpilih.
+     *
+     * Inilah grasi "juri berbeda per grup": juri Grup A tak pernah melihat
+     * peserta Grup B di daftar, sekalipun satu tingkat.
+     *
+     * Babak wajib ikut disaring: rubrik Grup B pada babak lain tidak boleh
+     * membuat juri terlihat berhak atas Grup B pada babak yang sedang dibuka.
+     */
+    private function allowedGroupIds(?int $competitionCategoryId): array
+    {
+        if (! $competitionCategoryId) {
+            return [];
+        }
+
+        return AssessmentCategory::where('eventner_id', $this->eventnerId)
+            ->whereNotNull('competition_group_id')
+            // forLevel, bukan forEntry: forEntry(null grup) justru mengunci ke
+            // rubrik TANPA grup — kebalikan dari yang dicari di sini.
+            ->forLevel($competitionCategoryId, $this->selectedRoundId ? (int) $this->selectedRoundId : null)
+            ->whereHas('judges', fn ($q) => $q->where('judges.id', $this->judgeId))
+            ->pluck('competition_group_id')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Rubrik tanpa grup di tingkat ini = juri menilai seluruh peserta tingkat.
+     *
+     * Babak ikut disaring, dan itu yang menutup kebocoran lintas-babak: rubrik
+     * Final yang tanpa grup dulu membuat juri dianggap selebar tingkat juga saat
+     * menilai penyisihan, sehingga peserta grup lain muncul di daftarnya.
+     */
+    private function hasLevelWideRubric(?int $competitionCategoryId): bool
+    {
+        if (! $competitionCategoryId) {
+            return false;
+        }
+
+        return AssessmentCategory::where('eventner_id', $this->eventnerId)
+            ->forEntry($competitionCategoryId, null, $this->selectedRoundId ? (int) $this->selectedRoundId : null)
+            ->whereHas('judges', fn ($q) => $q->where('judges.id', $this->judgeId))
+            ->exists();
+    }
+
+    /** Peserta tingkat terpilih yang memang boleh dinilai juri ini. */
+    private function participantsQuery()
+    {
+        $query = Registration::where('eventner_id', $this->eventnerId)
+            ->where('competition_category_id', $this->selectedCategoryId);
+
+        // Babak final hanya menilai peserta yang tercatat lolos: menilai yang
+        // tak lolos menghasilkan nilai yatim yang tak muncul di peringkat mana
+        // pun.
+        $round = $this->activeRound;
+        if ($round && $round->isFinal()) {
+            $query->whereIn('id', CompetitionRoundRegistration::where('eventner_id', $this->eventnerId)
+                ->where('competition_round_id', $round->id)
+                ->pluck('registration_id'));
+        }
+
+        // Rubrik global berlaku untuk semua tingkat — juri seperti ini menilai
+        // seluruh peserta, tak peduli grupnya.
+        if ($this->hasGlobalRubric()) {
+            return $query;
+        }
+
+        // Tanpa rubrik selebar tingkat, juri terkurung ke grupnya sendiri.
+        if (! $this->hasLevelWideRubric($this->selectedCategoryId)) {
+            $query->whereIn('competition_group_id', $this->allowedGroupIds($this->selectedCategoryId));
+        }
+
+        return $query;
+    }
+
+    /** Apakah juri ini punya rubrik global (competition_category_id NULL). */
+    private function hasGlobalRubric(): bool
+    {
+        return AssessmentCategory::where('eventner_id', $this->eventnerId)
+            ->whereNull('competition_category_id')
+            ->whereHas('judges', fn ($q) => $q->where('judges.id', $this->judgeId))
+            ->exists();
     }
 
     public function selectParticipant($id)
     {
-        $registration = Registration::where('eventner_id', $this->eventnerId)
-            ->where('competition_category_id', $this->selectedCategoryId)
-            ->findOrFail($id);
+        // Peserta terpilih harus dikosongkan dulu: daftar babak & grup yang
+        // boleh dibuka dihitung dari tingkat + peserta yang sedang aktif.
+        $this->selectedRegistrationId = null;
+        $this->resolveRoundForParticipant();
+
+        $registration = $this->participantsQuery()->findOrFail($id);
 
         $this->selectedRegistrationId = $registration->id;
         $this->view = 'scoring';
@@ -136,13 +459,14 @@ class Index extends Component
     {
         $registration = $this->registration;
         $compCategoryId = $registration->competition_category_id;
+        $groupId = $registration->competition_group_id;
+        $roundId = $this->selectedRoundId ? (int) $this->selectedRoundId : null;
 
+        // forEntry() memuat klausa tingkat + grup + babak sekaligus, jadi cabang
+        // fallback di bawah tidak mungkin membocorkan rubrik grup atau babak lain.
         $base = fn () => AssessmentCategory::with(['subCategories.criterias'])
             ->where('eventner_id', $this->eventnerId)
-            ->where(function ($q) use ($compCategoryId) {
-                $q->where('competition_category_id', $compCategoryId)
-                  ->orWhereNull('competition_category_id');
-            });
+            ->forEntry($compCategoryId, $groupId, $roundId);
 
         $categories = $base()
             ->whereHas('judges', fn ($q) => $q->where('judges.id', $this->judgeId))
@@ -166,6 +490,9 @@ class Index extends Component
         $existing = AssessmentScore::where('registration_id', $registration->id)
             ->where('eventner_id', $this->eventnerId)
             ->where('judge_id', $this->judgeId)
+            // Babak lain punya barisnya sendiri — memuat semuanya membuat
+            // penanda "terkunci" dan daftar nilai bercampur antar babak.
+            ->whereIn('assessment_criteria_id', $this->allowedCriteriaIds)
             ->get();
 
         foreach ($existing as $score) {
@@ -256,14 +583,15 @@ class Index extends Component
 
     public function getAssessmentCategoriesProperty()
     {
-        $compCategoryId = $this->registration->competition_category_id;
+        $registration = $this->registration;
 
         $base = fn () => AssessmentCategory::with(['subCategories.criterias'])
             ->where('eventner_id', $this->eventnerId)
-            ->where(function ($q) use ($compCategoryId) {
-                $q->where('competition_category_id', $compCategoryId)
-                  ->orWhereNull('competition_category_id');
-            });
+            ->forEntry(
+                $registration->competition_category_id,
+                $registration->competition_group_id,
+                $this->selectedRoundId ? (int) $this->selectedRoundId : null,
+            );
 
         $categories = $base()
             ->whereHas('judges', fn ($q) => $q->where('judges.id', $this->judgeId))
@@ -319,17 +647,26 @@ class Index extends Component
             $this->eventnerId,
             $this->selectedRegistrationId,
             $this->judgeId,
+            [],
+            $this->selectedRoundId ? (int) $this->selectedRoundId : null,
         );
 
         if ($result['missing']) {
             $this->saveStatus = 'error';
+            $this->dispatch('toast', message: 'Masih ada kriteria yang kosong.', type: 'error');
+
             return;
         }
 
         $this->isFinalized = true;
         $this->saveStatus = 'finalized';
+        $this->dispatch('toast', message: 'Nilai peserta terkunci.', type: 'success');
 
-        app(ScoreFinalizationService::class)->notifyIfComplete($this->eventnerId, $this->registration);
+        app(ScoreFinalizationService::class)->notifyIfComplete(
+            $this->eventnerId,
+            $this->registration,
+            $this->selectedRoundId ? (int) $this->selectedRoundId : null,
+        );
     }
 
     /** Kembali ke daftar peserta setelah finalisasi. */
@@ -354,8 +691,7 @@ class Index extends Component
         $participants = collect();
 
         if ($this->selectedCategoryId) {
-            $participants = Registration::where('eventner_id', $this->eventnerId)
-                ->where('competition_category_id', $this->selectedCategoryId)
+            $participants = $this->participantsQuery()
                 ->with('competitionCategory')
                 ->get()
                 // Urutan panggung (hasil undian) dulu; yang belum diundian di bawah.
@@ -385,7 +721,10 @@ class Index extends Component
             'eventner' => $this->eventner,
             'judge' => $this->judge,
             'categories' => $this->categories,
+            'jumlahPeserta' => $this->jumlahPesertaPerTingkat(),
             'participants' => $participants,
+            'rounds' => $this->availableRounds,
+            'selectedRoundId' => $this->selectedRoundId,
         ])->layoutData([
             'eventner' => $this->eventner,
             'judge' => $this->judge,

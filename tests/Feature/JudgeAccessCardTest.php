@@ -124,6 +124,38 @@ class JudgeAccessCardTest extends TestCase
         $this->assertStringContainsString('entry.berbaris.test/juri/' . $this->judge->access_token, $html);
     }
 
+    /**
+     * Token juri tidak boleh tercetak pada link http di luar lokal.
+     *
+     * Salah tulis ENTRY_HOST sebagai "http://..." membuat seluruh kartu yang
+     * dicetak memuat link tak terenkripsi, dan itu tak terlihat dari dashboard —
+     * tokennya baru terbaca siapa pun yang menyadap jaringan tempat kartu itu
+     * dipindai. Karena itu skemanya dipaksa https di luar local/testing.
+     */
+    public function test_url_kartu_dipaksa_https_di_luar_lokal()
+    {
+        config(['app.entry_host' => 'http://entry.berbaris.test']);
+
+        $this->app['env'] = 'production';
+
+        try {
+            $url = judge_entry_url($this->judge->access_token);
+
+            $this->assertStringStartsWith('https://', $url);
+            $this->assertStringNotContainsString('http://', $url);
+        } finally {
+            $this->app['env'] = 'testing';
+        }
+    }
+
+    /** Di lokal http tetap boleh — tidak ada sertifikat untuk 127.0.0.1. */
+    public function test_url_kartu_di_lokal_boleh_http()
+    {
+        config(['app.entry_host' => 'http://entry.berbaris.test']);
+
+        $this->assertStringStartsWith('http://', judge_entry_url($this->judge->access_token));
+    }
+
     /** Juri milik event lain tidak boleh dibaca lewat {judge}. */
     public function test_juri_event_lain_ditolak()
     {

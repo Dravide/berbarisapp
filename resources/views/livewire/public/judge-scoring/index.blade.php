@@ -28,7 +28,7 @@
                             <p class="font-display text-lg font-bold text-on-surface m-0">{{ $cat->name }}</p>
                             <p class="text-xs text-on-surface-variant mt-0.5 mb-2">{{ $cat->parent?->name ?? '—' }}</p>
                             <span class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary border border-primary/20">
-                                <i class="ti ti-users"></i> {{ $cat->registrations_count }} peserta
+                                <i class="ti ti-users"></i> {{ $jumlahPeserta[$cat->id] ?? 0 }} peserta
                             </span>
                         </button>
                     @endforeach
@@ -47,6 +47,40 @@
                     <i class="ti ti-arrow-left"></i> Ganti tingkat
                 </button>
             </div>
+
+            @if(count($rounds) > 1)
+                {{-- Tingkat ini dinilai lebih dari satu babak. Babak yang dipilih
+                     menentukan rubrik mana yang dimuat, jadi juri bisa berpindah
+                     antara penyisihan dan final tanpa keluar dari halaman. --}}
+                <div class="rounded-2xl border border-outline-variant/30 bg-white p-3 mb-3">
+                    <p class="text-[11px] font-bold uppercase tracking-wider text-on-surface-variant m-0 mb-2">Babak</p>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($rounds as $round)
+                            <button type="button" wire:click="switchRound({{ $round->id }})"
+                                    class="rounded-xl border px-3 py-2 text-xs font-bold transition
+                                        {{ $selectedRoundId == $round->id
+                                            ? ($round->isFinal() ? 'border-amber-500 bg-amber-500 text-white' : 'border-primary bg-primary text-white')
+                                            : ($round->isFinal() ? 'border-amber-400/60 text-amber-700' : 'border-outline-variant/40 text-on-surface-variant') }}">
+                                <i class="ti ti-flag"></i> {{ $round->name }}
+                                @if($round->isFinal())
+                                    {{-- Final dibedakan warnanya dari penyisihan: nilainya
+                                         penentu juara, sedangkan penyisihan cuma penentu lolos. --}}
+                                    <span class="ml-1 rounded px-1.5 py-0.5 text-[10px] {{ $selectedRoundId == $round->id ? 'bg-white text-amber-700' : 'bg-amber-400 text-amber-900' }}">Final</span>
+                                @endif
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            @elseif(count($rounds) === 1)
+                @php $satu = $rounds->first(); @endphp
+                <div class="rounded-2xl border border-outline-variant/30 bg-white p-3 mb-3 flex items-center gap-2">
+                    <i class="ti ti-flag {{ $satu->isFinal() ? 'text-amber-600' : 'text-primary' }}"></i>
+                    <span class="text-xs font-bold text-on-surface">{{ $satu->name }}</span>
+                    @if($satu->isFinal())
+                        <span class="ml-1 rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-bold text-amber-900">Final</span>
+                    @endif
+                </div>
+            @endif
 
             @if($participants->isEmpty())
                 <div class="rounded-2xl border border-outline-variant/30 bg-white p-8 text-center">
@@ -264,6 +298,9 @@
                             Terisi <span class="font-bold text-on-surface">{{ $filledCriteria }}/{{ $totalCriteria }}</span>
                         </p>
                         <p class="text-[11px] font-semibold m-0">
+                            {{-- Hanya dirender saat ada kabar. Sebelumnya elemen
+                                 kosong tetap memakan tinggi, jadi baris ini
+                                 terlihat goyang saat status berganti. --}}
                             @if($saveStatus === 'saved')
                                 <span class="text-emerald-600"><i class="ti ti-check"></i> Tersimpan</span>
                             @elseif($saveStatus === 'finalized')

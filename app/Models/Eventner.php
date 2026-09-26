@@ -481,6 +481,44 @@ class Eventner extends Model
         return $start !== null && now()->startOfDay()->gte($start->startOfDay());
     }
 
+    /**
+     * Batas berlakunya link/QR tablet juri — akhir hari terakhir event.
+     *
+     * Link juri tidak punya masa berlaku sendiri, jadi tanpa batas ini token
+     * lomba yang sudah selesai tetap hidup bertahun-tahun. Yang ditutup adalah
+     * kebocoran jangka panjang (QR lomba lama), bukan penyebaran token selama
+     * lomba berlangsung.
+     *
+     * tanggal_akhir dipakai bila masuk akal, yaitu tidak lebih tua dari tanggal.
+     * Kalau kosong — dan di DB ini hampir semua event belum mengisinya — batasnya
+     * tanggal + 7 hari; memperlakukannya sebagai "tanpa batas" membuat fitur ini
+     * tidak menutup apa pun untuk sebagian besar event.
+     *
+     * tanggal_akhir yang LEBIH TUA dari tanggal berarti salah isi. Mengikutinya
+     * apa adanya mengunci juri di hari-H, dan panitia tak punya cara tahu
+     * sebabnya dari layar juri — jadi diperlakukan sama seperti kosong.
+     *
+     * Akhir hari, bukan awal: lomba sering rampung lewat tengah malam, dan
+     * mengunci tepat saat tanggal berganti akan memutus juri di tengah
+     * penilaian terakhir.
+     *
+     * Null = event belum punya tanggal sama sekali. Kolomnya NOT NULL hari ini,
+     * jadi cabang ini hanya jaring pengaman bagi baris yang belum tersimpan.
+     */
+    public function judgeAccessExpiresAt(): ?\Carbon\CarbonInterface
+    {
+        if (! $this->tanggal) {
+            return null;
+        }
+
+        $tanggal = \Carbon\Carbon::parse($this->tanggal);
+        $akhir = $this->tanggal_akhir ? \Carbon\Carbon::parse($this->tanggal_akhir) : null;
+
+        return $akhir && $akhir->gte($tanggal)
+            ? $akhir->endOfDay()
+            : $tanggal->endOfDay()->addDays(6);
+    }
+
     public function approvedBy()
     {
         return $this->belongsTo(User::class, 'approved_by');
