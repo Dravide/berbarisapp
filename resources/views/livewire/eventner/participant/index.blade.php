@@ -80,6 +80,12 @@
                 <h5 class="card-title fw-semibold mb-0">Kelola Sekolah Pendaftar</h5>
                 <div class="d-flex align-items-center gap-2">
                     <livewire:eventner.participant.import :activeTab="$activeTab" />
+                    @if($this->groups->isNotEmpty())
+                        <button wire:click="openGroupModal" class="btn btn-outline-primary d-flex align-items-center gap-2"
+                            title="Bagi peserta tingkat ini ke dalam grup penilaian">
+                            <i class="ti ti-users-group"></i> Bagi Grup
+                        </button>
+                    @endif
                     <button wire:click="openModal('{{ $activeTab }}')" class="btn btn-primary d-flex align-items-center gap-2">
                         <i class="ti ti-plus"></i> Tambah Pendaftar
                     </button>
@@ -724,5 +730,79 @@
             </div>
         </div>
     </div>
+    @endif
+
+    {{-- ── Modal Bagi Grup ───────────────────────────────────────────────── --}}
+    @if($showGroupModal)
+        <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,.5); z-index:1050;">
+            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title fw-semibold"><i class="ti ti-users-group me-1"></i>Bagi Grup</h5>
+                        <button type="button" class="btn-close" wire:click="closeGroupModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted fs-2">
+                            Bagi peserta tingkat ini ke dalam grup penilaian. Memindahkan peserta mengosongkan
+                            nomor undiannya (undian disusun per grup); nilai juri yang sudah ada tidak dihapus.
+                        </p>
+
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            <button type="button" class="btn btn-sm btn-outline-primary" wire:click="autoSplitGroups">
+                                <i class="ti ti-arrows-split"></i> Bagi Rata Otomatis
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" wire:click="clearGroups">
+                                <i class="ti ti-refresh"></i> Kosongkan Semua
+                            </button>
+                        </div>
+
+                        @if($groupMoveWarnCount > 0)
+                            <div class="alert alert-warning fs-2 py-2">
+                                <i class="ti ti-alert-triangle me-1"></i>
+                                {{ $groupMoveWarnCount }} peserta yang dipindah sudah punya nilai juri — nomor undiannya akan dihapus, nilainya tetap tersimpan.
+                            </div>
+                        @endif
+
+                        <div class="table-responsive">
+                            <table class="table table-sm align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Peserta</th>
+                                        <th style="width: 220px;">Grup</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach(\App\Models\Registration::where('eventner_id', auth()->user()->eventner->id)
+                                        ->where('competition_category_id', $activeTab)
+                                        ->orderBy('nama_sekolah')->get() as $peserta)
+                                        <tr>
+                                            <td>{{ $peserta->display_name }}</td>
+                                            <td>
+                                                <select class="form-select form-select-sm"
+                                                    wire:change="setGroup({{ $peserta->id }}, $event.target.value)">
+                                                    <option value="">― tanpa grup ―</option>
+                                                    @foreach($this->groups as $group)
+                                                        <option value="{{ $group->id }}"
+                                                            @selected((string) ($groupAssignments[$peserta->id] ?? '') === (string) $group->id)>
+                                                            {{ $group->name }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" wire:click="closeGroupModal">Batal</button>
+                        <button type="button" class="btn btn-primary" wire:click="saveGroups">
+                            <i class="ti ti-device-floppy"></i> Simpan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     @endif
 </div>

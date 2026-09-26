@@ -17,6 +17,7 @@ class Registration extends Model
     protected $fillable = [
         'eventner_id',
         'competition_category_id',
+        'competition_group_id',
         'label_pasukan',
         'nama_sekolah',
         'npsn',
@@ -104,6 +105,18 @@ class Registration extends Model
     public function competitionCategory()
     {
         return $this->belongsTo(CompetitionCategory::class);
+    }
+
+    /** Grup penilaian peserta ini (pool internal yang dibagi panitia). */
+    public function competitionGroup()
+    {
+        return $this->belongsTo(CompetitionGroup::class, 'competition_group_id');
+    }
+
+    /** Baris kelolosan peserta ini ke sebuah babak. */
+    public function roundRegistrations()
+    {
+        return $this->hasMany(CompetitionRoundRegistration::class);
     }
 
     public function participants()

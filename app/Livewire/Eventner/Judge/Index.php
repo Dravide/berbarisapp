@@ -50,7 +50,12 @@ class Index extends Component
     {
         // competitionCategory.parent ikut dimuat: modal rincian tugas
         // mengelompokkan kategori per tingkat lomba (full_name butuh induk).
-        return Judge::with('assessmentCategories.competitionCategory.parent')
+        // Grup & babak ikut dimuat supaya label tugas juri tidak memicu N+1.
+        return Judge::with([
+            'assessmentCategories.competitionCategory.parent',
+            'assessmentCategories.competitionGroup',
+            'assessmentCategories.competitionRound',
+        ])
             ->where('eventner_id', $this->eventnerId)
             ->latest()
             ->get();
@@ -59,7 +64,11 @@ class Index extends Component
     #[Computed]
     public function availableCategories()
     {
-        return AssessmentCategory::with('competitionCategory.parent')
+        return AssessmentCategory::with([
+            'competitionCategory.parent',
+            'competitionGroup',
+            'competitionRound',
+        ])
             ->where('eventner_id', $this->eventnerId)
             ->get();
     }
@@ -98,6 +107,10 @@ class Index extends Component
      * competition_category (child), label = full_name ("LOBB — U13") sehingga
      * U13 dan U16 tampil terpisah meski induknya sama. Kategori yang menunjuk
      * langsung ke induk (parent, tanpa child) tetap jadi grup sendiri.
+     *
+     * Babak & grup menempel di label, bukan di kunci: satu tingkat yang dibelah
+     * jadi Grup A/B dan punya babak Final menghasilkan baris tugas tersendiri
+     * ("LOBB — U13 · Final · Grup A"), tapi tetap satu tingkat di mata panitia.
      *
      * Dipakai bersama oleh modal rincian tugas juri dan form tambah/edit.
      */

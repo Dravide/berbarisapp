@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Livewire\Public\Registration\Create as RegistrationCreate;
 use App\Models\CompetitionCategory;
+use App\Models\CompetitionGroup;
 use App\Models\Eventner;
 use App\Models\Registration;
 use App\Models\User;
@@ -38,6 +39,9 @@ class RegistrationCategorySelectableTest extends TestCase
             'slug' => 'selectable-uji',
             'status' => 'approved',
             'subdomain' => null,
+            // Tanpa deadline, computeRegistrationStatus() menjawab 'closed'
+            // dan blade merender cabang "Pendaftaran Ditutup" — bukan form.
+            'tanggal_pendaftaran' => now()->addDays(7)->format('Y-m-d'),
         ]);
 
         $this->induk = CompetitionCategory::factory()->create([
@@ -148,5 +152,77 @@ class RegistrationCategorySelectableTest extends TestCase
         $komponen = $this->komponen()->call('toggleCategory', $kategoriLain->id);
 
         $this->assertSame([], $komponen->get('selectedCategories'));
+    }
+
+    /**
+     * Grup bersifat pool INTERNAL: peserta mendaftar ke mata lomba seperti
+     * biasa, dan panitia yang membelah mereka setelah pendaftaran. Nama grup
+     * tidak boleh muncul di form pendaftaran, dan tidak ada kolom grup yang
+     * bisa disetel dari DOM.
+     */
+    public function test_grup_tidak_muncul_di_formulir_pendaftaran()
+    {
+        CompetitionGroup::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->anak->id,
+            'name' => 'Grup A',
+            'sort_order' => 1,
+        ]);
+        CompetitionGroup::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->anak->id,
+            'name' => 'Grup B',
+            'sort_order' => 2,
+        ]);
+
+        $this->komponen()
+            ->assertDontSee('Grup A')
+            ->assertDontSee('Grup B')
+            ->assertSee('Regu Inti');
+    }
+
+    /** Pendaftaran tidak pernah menetapkan grup, sekalipun tingkatnya bergrup. */
+    public function test_pendaftaran_tidak_mengisi_grup()
+    {
+        CompetitionGroup::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->anak->id,
+            'name' => 'Grup A',
+        ]);
+
+        $komponen = $this->komponen()
+            ->call('toggleCategory', $this->anak->id)
+            ->set('npsn', '12345678')
+            ->set('nama_sekolah', 'SMP Negeri Uji')
+            ->set('nama_pelatih', 'Pelatih Uji')
+            ->set('no_hp', '08123456789')
+            ->set('school_email', 'uji@example.test');
+
+        // Tak ada jalur dari DOM untuk menetapkan grup: komponennya sendiri
+        // tidak punya properti itu, jadi tak ada wire:model yang bisa dipalsukan.
+        $this->assertStringNotContainsString('competition_group_id', $komponen->html());
+
+        $komponen->call('submit');
+
+        $reg = Registration::where('competition_category_id', $this->anak->id)->first();
+        $this->assertNotNull($reg);
+        $this->assertNull($reg->competition_group_id, 'Pendaftaran publik menetapkan grup.');
+    }
+
+    /**
+     * Tingkat yang punya grup tetap muncul di dropdown pendaftaran — grupnya
+     * yang tidak muncul, bukan tingkatnya.
+     */
+    public function test_tingkat_bergrup_tetap_bisa_dipilih()
+    {
+        CompetitionGroup::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->anak->id,
+            'name' => 'Grup A',
+        ]);
+
+        $komponen = $this->komponen()->call('toggleCategory', $this->anak->id);
+
+        $this->assertSame([$this->anak->id], $komponen->get('selectedCategories'));
     }
 }

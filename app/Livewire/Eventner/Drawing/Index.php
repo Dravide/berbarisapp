@@ -8,8 +8,10 @@ use Livewire\WithPagination;
 use App\Models\Registration;
 use App\Models\AssessmentScore;
 use App\Models\CompetitionCategory;
+use App\Models\CompetitionGroup;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Computed;
 
 #[Layout('layouts.admin')]
 class Index extends Component
@@ -23,6 +25,42 @@ class Index extends Component
     public $activeTab = '';
     public $categories = [];
     public $drawing_code = '';
+
+    /**
+     * Grup yang sedang diundi. '' = seluruh tingkat (perilaku lama).
+     * Nomor undian hanya unik di dalam satu grup — kalau tidak, Grup A #1 dan
+     * Grup B #1 bertabrakan dan cek bentroknya tidak menangkap.
+     */
+    public $activeGroupId = '';
+
+    /**
+     * Grup milik tingkat yang sedang dibuka.
+     */
+    #[Computed]
+    public function groups()
+    {
+        if ($this->activeTab === '') {
+            return collect();
+        }
+
+        return CompetitionGroup::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $this->activeTab)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Terapkan saringan tingkat + grup ke query registrasi.
+     */
+    private function scopedRegistrations()
+    {
+        return Registration::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $this->activeTab)
+            ->when($this->activeGroupId !== '', function ($q) {
+                $q->where('competition_group_id', $this->activeGroupId);
+            });
+    }
 
     // Manual input state
     public $manualRegistrationId = null;
@@ -58,8 +96,50 @@ class Index extends Component
     public function switchTab($categoryId)
     {
         $this->activeTab = $categoryId;
+        $this->activeGroupId = '';
         $this->manualRegistrationId = null;
         $this->manualUrutan = null;
+        $this->dispatch('reinit-select2');
+    }
+
+    /**
+     * Ganti tingkat lewat wire:model langsung (tanpa switchTab) — grup lama
+     * milik tingkat lama, jadi wajib dilepas.
+     */
+    public function updatedActiveTab()
+    {
+        if ($this->activeGroupId !== '') {
+            $this->activeGroupId = '';
+        }
+
+        $this->manualRegistrationId = null;
+        $this->manualUrutan = null;
+    }
+
+    /**
+     * Grup dari DOM wajib milik tingkat yang sedang dibuka.
+     */
+    public function switchGroup($groupId)
+    {
+        $this->activeGroupId = '';
+
+        if ($groupId !== '' && $groupId !== null) {
+            $ada = CompetitionGroup::where('eventner_id', $this->eventner->id)
+                ->where('competition_category_id', $this->activeTab)
+                ->find($groupId);
+
+            if (! $ada) {
+                $this->addError('activeGroupId', 'Grup tidak ditemukan pada tingkat lomba ini.');
+
+                return;
+            }
+
+            $this->activeGroupId = (string) $ada->id;
+        }
+
+        $this->manualRegistrationId = null;
+        $this->manualUrutan = null;
+        $this->resetErrorBag('activeGroupId');
         $this->dispatch('reinit-select2');
     }
 
@@ -70,13 +150,10 @@ class Index extends Component
             'manualUrutan' => 'required|integer|min:1',
         ]);
 
-        $registration = Registration::where('eventner_id', $this->eventner->id)
-            ->where('competition_category_id', $this->activeTab)
-            ->findOrFail($this->manualRegistrationId);
+        $registration = $this->scopedRegistrations()->findOrFail($this->manualRegistrationId);
 
         // Check if number already taken
-        $existingNumber = Registration::where('eventner_id', $this->eventner->id)
-            ->where('competition_category_id', $this->activeTab)
+        $existingNumber = $this->scopedRegistrations()
             ->where('urutan_tampil', $this->manualUrutan)
             ->where('id', '!=', $registration->id)
             ->first();
@@ -98,9 +175,7 @@ class Index extends Component
 
     public function removeDrawing($id)
     {
-        $registration = Registration::where('eventner_id', $this->eventner->id)
-            ->where('competition_category_id', $this->activeTab)
-            ->findOrFail($id);
+        $registration = $this->scopedRegistrations()->findOrFail($id);
 
         $registration->update(['urutan_tampil' => null]);
         session()->flash('success', "Urutan tampil {$registration->display_name} telah dihapus.");
@@ -111,6 +186,8 @@ class Index extends Component
         // Guard yang sama dengan Tukar Pasukan: urutan tampil menempel ke
         // registrasi, dan mengganti nomor setelah nilai masuk membuat undian
         // tidak lagi cocok dengan penilaian yang sudah berjalan.
+        // Sengaja di level TINGKAT, bukan grup: nilai satu grup sudah cukup
+        // membuat undian tingkat ini tidak lagi cocok di grup mana pun.
         $sudahDinilai = AssessmentScore::where('eventner_id', $this->eventner->id)
             ->whereHas('registration', fn ($q) => $q->where('competition_category_id', $this->activeTab))
             ->exists();
@@ -129,14 +206,12 @@ class Index extends Component
 
     public function render()
     {
-        $drawnResults = Registration::where('eventner_id', $this->eventner->id)
-            ->where('competition_category_id', $this->activeTab)
+        $drawnResults = $this->scopedRegistrations()
             ->whereNotNull('urutan_tampil')
             ->orderBy('urutan_tampil')
             ->get();
 
-        $undrawnParticipants = Registration::where('eventner_id', $this->eventner->id)
-            ->where('competition_category_id', $this->activeTab)
+        $undrawnParticipants = $this->scopedRegistrations()
             ->whereNull('urutan_tampil')
             ->orderBy('nama_sekolah')
             ->get();

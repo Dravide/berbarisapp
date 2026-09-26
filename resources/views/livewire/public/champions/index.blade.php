@@ -14,15 +14,29 @@
 
         {{-- Category Select --}}
         <div class="mb-4">
-            <div class="input-group mx-auto" style="max-width: 400px;">
-                <span class="input-group-text bg-primary text-white"><i class="ti ti-category"></i></span>
-                <select class="form-select" wire:model.live="selectedCategoryId" wire:change="switchCategory(selectedCategoryId)">
-                    @foreach($categories as $cat)
-                        @php $label = !empty($cat['parent']) ? $cat['parent']['name'] . ' — ' . $cat['name'] : $cat['name']; @endphp
-                        <option value="{{ $cat['id'] }}">{{ $label }}</option>
-                    @endforeach
-                </select>
+            <div class="d-flex gap-2 justify-content-center flex-wrap">
+                <div class="input-group" style="max-width: 400px;">
+                    <span class="input-group-text bg-primary text-white"><i class="ti ti-category"></i></span>
+                    <select class="form-select" wire:model.live="selectedCategoryId" wire:change="switchCategory(selectedCategoryId)">
+                        @foreach($categories as $cat)
+                            @php $label = !empty($cat['parent']) ? $cat['parent']['name'] . ' — ' . $cat['name'] : $cat['name']; @endphp
+                            <option value="{{ $cat['id'] }}">{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @if($groups->isNotEmpty())
+                    <div class="input-group" style="max-width: 240px;">
+                        <span class="input-group-text bg-warning-subtle text-warning"><i class="ti ti-users-group"></i></span>
+                        <select class="form-select" wire:change="switchGroup($event.target.value)">
+                            <option value="">Peringkat Gabungan</option>
+                            @foreach($groups as $group)
+                                <option value="{{ $group->id }}" @selected((string) $selectedGroupId === (string) $group->id)>{{ $group->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
             </div>
+            @error('selectedGroupId') <div class="alert alert-danger py-2 fs-2 mt-3 mb-0">{{ $message }}</div> @enderror
         </div>
 
         {{-- Champion Rankings --}}

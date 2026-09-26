@@ -151,6 +151,12 @@
                                         <div class="d-flex align-items-center gap-2 {{ !$loop->last ? 'mb-2' : '' }}">
                                             <i class="ti ti-check text-success"></i>
                                             <span class="fw-medium">{{ $cat->name }}</span>
+                                            @if($cat->competitionRound)
+                                                <span class="badge bg-primary-subtle text-primary">{{ $cat->competitionRound->name }}</span>
+                                            @endif
+                                            @if($cat->competitionGroup)
+                                                <span class="badge bg-warning-subtle text-warning">{{ $cat->competitionGroup->name }}</span>
+                                            @endif
                                         </div>
                                     @endforeach
                                 </div>
@@ -329,6 +335,12 @@
                                                     <input class="form-check-input" type="checkbox" wire:model="selectedCategories" value="{{ $cat->id }}" id="cat_{{ $cat->id }}">
                                                     <label class="form-check-label fw-medium" for="cat_{{ $cat->id }}">
                                                         {{ $cat->name }}
+                                                        @if($cat->competitionRound)
+                                                            <span class="badge bg-primary-subtle text-primary ms-1">{{ $cat->competitionRound->name }}</span>
+                                                        @endif
+                                                        @if($cat->competitionGroup)
+                                                            <span class="badge bg-warning-subtle text-warning ms-1">{{ $cat->competitionGroup->name }}</span>
+                                                        @endif
                                                     </label>
                                                 </div>
                                             @endforeach

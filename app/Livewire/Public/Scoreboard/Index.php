@@ -8,6 +8,7 @@ use App\Models\Registration;
 use App\Models\AssessmentScore;
 use App\Models\ChampionCategory;
 use App\Models\CompetitionCategory;
+use App\Models\CompetitionGroup;
 use App\Models\ScoreDeduction;
 use Livewire\Attributes\Layout;
 
@@ -20,6 +21,11 @@ class Index extends Component
     public $categories = [];
     public $previousRanks = []; // Track previous ranks for animation
     public $activeInputSchool = null; // Track school currently being scored
+
+    /**
+     * Grup yang sedang dilihat. '' = seluruh tingkat (perilaku lama).
+     */
+    public $selectedGroupId = '';
 
     public $selectedChampionCategoryId = null;
     public $championCategory = null;
@@ -51,7 +57,7 @@ class Index extends Component
 
         if ($championCategoryId) {
             $this->selectedChampionCategoryId = $championCategoryId;
-            $this->championCategory = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles'])
+            $this->championCategory = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles', 'criterias'])
                 ->where('eventner_id', $this->eventner->id)
                 ->findOrFail($championCategoryId);
         }
@@ -86,6 +92,10 @@ class Index extends Component
 
     public function switchCategory($categoryId)
     {
+        if ((string) $this->selectedCategoryId !== (string) $categoryId) {
+            $this->selectedGroupId = '';
+        }
+
         $this->selectedCategoryId = $categoryId;
         $this->previousRanks = [];
         // Kembali ke mode kategori lomba: matikan mode champion
@@ -94,10 +104,51 @@ class Index extends Component
         $this->selectedOption = 'cat:' . $categoryId;
     }
 
+    /**
+     * Grup milik tingkat terpilih.
+     */
+    public function getGroupsProperty()
+    {
+        if (! $this->selectedCategoryId) {
+            return collect();
+        }
+
+        return CompetitionGroup::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $this->selectedCategoryId)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Ganti grup. Grup dari DOM wajib milik tingkat terpilih.
+     */
+    public function switchGroup($groupId)
+    {
+        $this->selectedGroupId = '';
+
+        if ($groupId !== '' && $groupId !== null) {
+            $ada = CompetitionGroup::where('eventner_id', $this->eventner->id)
+                ->where('competition_category_id', $this->selectedCategoryId)
+                ->find($groupId);
+
+            if (! $ada) {
+                $this->addError('selectedGroupId', 'Grup tidak ditemukan pada tingkat lomba ini.');
+
+                return;
+            }
+
+            $this->selectedGroupId = (string) $ada->id;
+        }
+
+        $this->resetErrorBag('selectedGroupId');
+        $this->previousRanks = [];
+    }
+
     public function switchChampionCategory($championCategoryId)
     {
         $this->selectedChampionCategoryId = $championCategoryId;
-        $this->championCategory = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles'])
+        $this->championCategory = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles', 'criterias'])
             ->where('eventner_id', $this->eventner->id)
             ->findOrFail($championCategoryId);
         $this->previousRanks = [];
@@ -112,6 +163,7 @@ class Index extends Component
 
         $participants = Registration::where('eventner_id', $this->eventner->id)
             ->when($this->selectedCategoryId, fn ($q) => $q->where('competition_category_id', $this->selectedCategoryId))
+            ->when($this->selectedGroupId !== '', fn ($q) => $q->where('competition_group_id', $this->selectedGroupId))
             ->with('participants')
             ->orderBy('nama_sekolah')
             ->get();
@@ -137,12 +189,7 @@ class Index extends Component
         // Build criteria filter if champion category is selected
         $criteriaMap = null;
         if ($this->selectedChampionCategoryId && $this->championCategory) {
-            $criteriaMap = [];
-            foreach ($this->championCategory->assessmentSubCategories as $sub) {
-                foreach ($sub->criterias as $crit) {
-                    $criteriaMap[$crit->id] = $crit->weight ?? 1;
-                }
-            }
+            $criteriaMap = $this->championCategory->scoringCriteriaWeights();
         }
 
         $rankings = [];
@@ -239,6 +286,8 @@ class Index extends Component
     {
         return view('livewire.public.scoreboard.index', [
             'rankings' => $this->getRankingsProperty(),
+            'groups' => $this->groups,
+            'selectedGroupId' => $this->selectedGroupId,
         ])->layoutData([
             'eventner' => $this->eventner,
             'categories' => $this->categories,

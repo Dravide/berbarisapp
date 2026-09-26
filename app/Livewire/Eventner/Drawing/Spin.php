@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Locked;
 use App\Models\Registration;
+use App\Models\CompetitionGroup;
 
 use App\Models\Eventner;
 
@@ -38,6 +39,14 @@ class Spin extends Component
     public $isSpinning = false;
     public $inputCode = '';
     public $allDrawn = false;
+
+    /**
+     * Grup yang sedang diundi. '' = seluruh tingkat (perilaku lama).
+     */
+    public $activeGroupId = '';
+
+    /** Daftar grup tingkat terpilih (untuk pemilih di view). */
+    public $groups = [];
 
     public function mount($slug = null)
     {
@@ -72,7 +81,40 @@ class Spin extends Component
             $this->activeTab = $this->categories[0]['id'];
         }
 
+        $this->groups = $this->groupsOfActiveTab();
+
         $this->loadNextSchool();
+    }
+
+    /**
+     * Grup milik tingkat yang sedang diundi.
+     */
+    private function groupsOfActiveTab(): array
+    {
+        if ($this->activeTab === '') {
+            return [];
+        }
+
+        return CompetitionGroup::where('eventner_id', $this->eventnerId)
+            ->where('competition_category_id', $this->activeTab)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($g) => ['id' => (string) $g->id, 'name' => $g->name])
+            ->all();
+    }
+
+    /**
+     * Registrasi pada tingkat + grup yang sedang dibuka. Nomor undian hanya
+     * unik di dalam satu grup, jadi semua hitungan nomor wajib lewat sini.
+     */
+    private function scopedRegistrations()
+    {
+        return Registration::where('eventner_id', $this->eventnerId)
+            ->where('competition_category_id', $this->activeTab)
+            ->when($this->activeGroupId !== '', function ($q) {
+                $q->where('competition_group_id', $this->activeGroupId);
+            });
     }
 
     /**
@@ -100,6 +142,36 @@ class Spin extends Component
     public function switchTab($categoryId)
     {
         $this->activeTab = $categoryId;
+        $this->activeGroupId = '';
+        $this->groups = $this->groupsOfActiveTab();
+        $this->spinResult = null;
+        $this->isSpinning = false;
+        $this->loadNextSchool();
+    }
+
+    /**
+     * Ganti grup. Grup dari DOM wajib milik tingkat yang sedang diundi —
+     * kalau tidak, panitia bisa menarik peserta event lain ke undian ini.
+     */
+    public function switchGroup($groupId)
+    {
+        $this->activeGroupId = '';
+
+        if ($groupId !== '' && $groupId !== null) {
+            $ada = CompetitionGroup::where('eventner_id', $this->eventnerId)
+                ->where('competition_category_id', $this->activeTab)
+                ->find($groupId);
+
+            if (! $ada) {
+                $this->addError('activeGroupId', 'Grup tidak ditemukan pada tingkat lomba ini.');
+
+                return;
+            }
+
+            $this->activeGroupId = (string) $ada->id;
+        }
+
+        $this->resetErrorBag('activeGroupId');
         $this->spinResult = null;
         $this->isSpinning = false;
         $this->loadNextSchool();
@@ -107,8 +179,7 @@ class Spin extends Component
 
     public function loadNextSchool()
     {
-        $this->currentSchool = Registration::where('eventner_id', $this->eventnerId)
-            ->where('competition_category_id', $this->activeTab)
+        $this->currentSchool = $this->scopedRegistrations()
             ->whereNull('urutan_tampil')
             ->inRandomOrder()
             ->first();
@@ -122,9 +193,9 @@ class Spin extends Component
         if (!$this->isAuthenticated) return;
         if (!$this->currentSchool || $this->isSpinning) return;
 
-        // Hitung nomor urut yang belum terpakai
-        $usedNumbers = Registration::where('eventner_id', $this->eventnerId)
-            ->where('competition_category_id', $this->activeTab)
+        // Hitung nomor urut yang belum terpakai — per grup, karena nomor
+        // undian hanya unik di dalam grupnya sendiri.
+        $usedNumbers = $this->scopedRegistrations()
             ->whereNotNull('urutan_tampil')
             ->pluck('urutan_tampil')
             ->toArray();
@@ -136,14 +207,12 @@ class Spin extends Component
         // Batas nomor = jumlah peserta yang benar-benar ada. Dulu memakai
         // kuota kategori, jadi kuota 5 dengan 8 pendaftar menyisakan 3
         // peserta yang tidak akan pernah dapat nomor undian.
-        $jumlahPeserta = Registration::where('eventner_id', $this->eventnerId)
-            ->where('competition_category_id', $this->activeTab)
-            ->count();
+        $jumlahPeserta = $this->scopedRegistrations()->count();
 
         $totalInCategory = max($jumlahPeserta, count($usedNumbers));
 
         $availableNumbers = array_diff(range(1, max(1, $totalInCategory)), $usedNumbers);
-        
+
         if (empty($availableNumbers)) return;
 
         // Pilih secara acak dari yang tersedia
@@ -160,7 +229,7 @@ class Spin extends Component
         ]);
 
         session()->flash('success', $this->currentSchool->nama_sekolah . ' mendapat urutan tampil #' . $this->spinResult);
-        
+
         $this->loadNextSchool();
     }
 
@@ -168,6 +237,8 @@ class Spin extends Component
     {
         if (!$this->isAuthenticated) return;
 
+        // Level tingkat, sama dengan halaman Drawing: satu grup sudah bernilai
+        // berarti undian tingkat ini tidak lagi cocok di grup mana pun.
         Registration::where('eventner_id', $this->eventnerId)
             ->where('competition_category_id', $this->activeTab)
             ->update(['urutan_tampil' => null]);
@@ -193,17 +264,16 @@ class Spin extends Component
     {
         $eventner = Eventner::findOrFail($this->eventnerId);
 
-        $drawnSchools = Registration::where('eventner_id', $eventner->id)
-                ->where('competition_category_id', $this->activeTab)
+        $drawnSchools = $this->scopedRegistrations()
                 ->whereNotNull('urutan_tampil')
                 ->orderBy('urutan_tampil')
                 ->get();
 
         $category = \App\Models\CompetitionCategory::where('eventner_id', $eventner->id)
             ->find($this->activeTab);
-        $totalSchools = $category->kuota ?? Registration::where('eventner_id', $eventner->id)
-                ->where('competition_category_id', $this->activeTab)
-                ->count();
+        $totalSchools = $this->activeGroupId !== ''
+            ? $this->scopedRegistrations()->count()
+            : ($category->kuota ?? $this->scopedRegistrations()->count());
 
         return view('livewire.eventner.drawing.spin', [
             'drawnSchools' => $drawnSchools,

@@ -34,8 +34,8 @@
             </div>
 
             {{-- Kategori Select --}}
-            <div class="mb-4" style="max-width: 380px;">
-                <div class="input-group">
+            <div class="mb-4 d-flex gap-2 flex-wrap">
+                <div class="input-group" style="max-width: 380px;">
                     <span class="input-group-text bg-primary text-white"><i class="ti ti-category"></i></span>
                     <select class="form-select" wire:model.live="selectedCategoryId">
                         @foreach($categories as $cat)
@@ -43,9 +43,29 @@
                         @endforeach
                     </select>
                 </div>
+                @if($groups->isNotEmpty())
+                    <div class="input-group" style="max-width: 220px;">
+                        <span class="input-group-text bg-warning-subtle text-warning"><i class="ti ti-users-group"></i></span>
+                        <select class="form-select" wire:model.live="selectedGroupId">
+                            <option value="">Seluruh Tingkat</option>
+                            @foreach($groups as $group)
+                                <option value="{{ $group->id }}">{{ $group->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                @endif
             </div>
+            @error('selectedGroupId') <div class="alert alert-danger py-2 fs-2">{{ $message }}</div> @enderror
 
             @if($selectedCategory)
+                @php
+                    // Tingkat berbabak: $sections sudah satu bagian per babak,
+                    // masing-masing memuat bagian per grup. Tingkat tanpa babak:
+                    // $sections langsung daftar bagian grup. Dibungkus di sini
+                    // supaya tampilan di bawah cuma punya satu bentuk.
+                    $topSections = $hasRounds ? $sections : [['label' => null, 'groups' => $sections]];
+                @endphp
+
                 {{-- Table Content --}}
                 @if($scoringData->isEmpty())
                     <div class="text-center py-5">
@@ -54,88 +74,117 @@
                         <p class="text-muted">Belum ada peserta atau penilaian pada kategori ini.</p>
                     </div>
                 @else
-                    <div class="table-responsive">
-                        <table class="table align-middle text-nowrap mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Rank</h6></th>
-                                    <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Kontingen</h6></th>
-                                    <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Pelatih</h6></th>
-                                    @foreach($assessmentCategories as $ac)
-                                        <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">{{ $ac->name }}</h6></th>
-                                    @endforeach
-                                    <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">Total</h6></th>
-                                    <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0 text-danger">Pengurangan</h6></th>
-                                    <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0 text-dark">Nilai Akhir</h6></th>
-                                    <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">PDF</h6></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($scoringData as $index => $data)
-                                    <tr>
-                                        <td class="text-center">
-                                            @if($data['rank'] === 1)
-                                                <span class="badge bg-warning text-dark fw-semibold">🥇 1</span>
-                                            @elseif($data['rank'] === 2)
-                                                <span class="badge bg-secondary text-white fw-semibold">🥈 2</span>
-                                            @elseif($data['rank'] === 3)
-                                                <span class="badge bg-success text-white fw-semibold">🥉 3</span>
-                                            @else
-                                                <span class="text-muted fw-semibold">{{ $data['rank'] }}</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center gap-2">
-                                                @if($data['participant']->logo_sekolah)
-                                                    <img src="{{ asset('storage/' . $data['participant']->logo_sekolah) }}" class="rounded-circle border" width="36" height="36" style="object-fit:cover;" alt="">
-                                                @else
-                                                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width:36px;height:36px;">
-                                                        <i class="ti ti-school fs-5"></i>
-                                                    </div>
-                                                @endif
-                                                <h6 class="fw-semibold mb-0">{{ $data['participant']->display_name }}</h6>
-                                            </div>
-                                        </td>
-                                        <td><span class="text-muted">{{ $data['participant']->nama_pelatih }}</span></td>
-                                        @foreach($assessmentCategories as $ac)
-                                            @php
-                                                $catScore = $data['categoryTotals'][$ac->id] ?? 0;
-                                                $catDed = $data['categoryDeductions'][$ac->id] ?? 0;
-                                                $catFinal = $catScore + $catDed;
-                                            @endphp
-                                            <td class="text-center">
-                                                <span class="fw-semibold {{ $catFinal > 0 ? '' : 'text-muted' }}">{{ $catFinal }}</span>
-                                                @if($catDed < 0)
-                                                    <div class="text-danger fs-3" title="Pengurangan kategori ini">({{ $catDed }})</div>
-                                                @endif
-                                            </td>
-                                        @endforeach
-                                        <td class="text-center">
-                                            <span class="badge bg-primary fw-semibold fs-3 px-3">{{ $data['grandTotal'] }}</span>
-                                        </td>
-                                        <td class="text-center">
-                                            @if($data['totalDeduction'] < 0)
-                                                <span class="badge bg-danger-subtle text-danger fw-semibold fs-3 px-3">{{ $data['totalDeduction'] }}</span>
-                                            @else
-                                                <span class="text-muted">0</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge {{ $data['finalScore'] >= $data['grandTotal'] ? 'bg-primary' : 'bg-dark' }} fw-semibold fs-3 px-3">{{ $data['finalScore'] }}</span>
-                                        </td>
-                                        <td class="text-center">
-                                            <a href="{{ route('eventner.scoring.pdf-participant', ['registration_id' => $data['participant']->id]) }}"
-                                               class="btn btn-sm btn-outline-danger p-1" target="_blank" title="Download PDF">
-                                                <i class="ti ti-file-type-pdf fs-4"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                    @foreach($topSections as $top)
+                        @if($top['label'] ?? null)
+                            <h6 class="fw-semibold text-dark mt-4 mb-3 d-flex align-items-center gap-2">
+                                <span class="badge bg-{{ $top['badge'] ?? 'primary' }}">{{ $top['label'] }}</span>
+                                <span class="text-muted fw-normal fs-3">{{ count($top['groups']) }} bagian</span>
+                            </h6>
+                        @endif
 
-                    {{-- Summary Stats --}}
+                        @if(empty($top['groups']))
+                            {{-- Babak yang belum punya peserta bernilai — mis. final
+                                 yang belum diisi finalis. Judul tetap tampil supaya
+                                 panitia tahu babaknya ada, tapi tabel kosong
+                                 tanpa keterangan terbaca seperti halaman rusak. --}}
+                            <p class="text-muted mb-0">
+                                <i class="ti ti-info-circle me-1"></i>Belum ada peserta yang lolos ke babak ini.
+                            </p>
+                        @endif
+
+                        @foreach($top['groups'] as $section)
+                            @if($section['show_label'] ?? false)
+                                <h6 class="fw-semibold text-muted mt-3 mb-2">
+                                    <i class="ti ti-users-group me-1"></i>{{ $section['label'] }}
+                                </h6>
+                            @endif
+
+                            <div class="table-responsive">
+                                <table class="table align-middle text-nowrap mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Rank</h6></th>
+                                            <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Kontingen</h6></th>
+                                            <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Pelatih</h6></th>
+                                            @foreach($section['assessmentCategories'] as $ac)
+                                                <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">{{ $ac->name }}</h6></th>
+                                            @endforeach
+                                            <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">Total</h6></th>
+                                            <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0 text-danger">Pengurangan</h6></th>
+                                            <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0 text-dark">Nilai Akhir</h6></th>
+                                            <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">PDF</h6></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($section['data'] as $data)
+                                            <tr>
+                                                <td class="text-center">
+                                                    @if($data['rank'] === 1)
+                                                        <span class="badge bg-warning text-dark fw-semibold">🥇 1</span>
+                                                    @elseif($data['rank'] === 2)
+                                                        <span class="badge bg-secondary text-white fw-semibold">🥈 2</span>
+                                                    @elseif($data['rank'] === 3)
+                                                        <span class="badge bg-success text-white fw-semibold">🥉 3</span>
+                                                    @else
+                                                        <span class="text-muted fw-semibold">{{ $data['rank'] }}</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    <div class="d-flex align-items-center gap-2">
+                                                        @if($data['participant']->logo_sekolah)
+                                                            <img src="{{ asset('storage/' . $data['participant']->logo_sekolah) }}" class="rounded-circle border" width="36" height="36" style="object-fit:cover;" alt="">
+                                                        @else
+                                                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width:36px;height:36px;">
+                                                                <i class="ti ti-school fs-5"></i>
+                                                            </div>
+                                                        @endif
+                                                        <h6 class="fw-semibold mb-0">{{ $data['participant']->display_name }}</h6>
+                                                    </div>
+                                                </td>
+                                                <td><span class="text-muted">{{ $data['participant']->nama_pelatih }}</span></td>
+                                                @foreach($section['assessmentCategories'] as $ac)
+                                                    @php
+                                                        $catScore = $data['categoryTotals'][$ac->id] ?? 0;
+                                                        $catDed = $data['categoryDeductions'][$ac->id] ?? 0;
+                                                        $catFinal = $catScore + $catDed;
+                                                    @endphp
+                                                    <td class="text-center">
+                                                        <span class="fw-semibold {{ $catFinal > 0 ? '' : 'text-muted' }}">{{ $catFinal }}</span>
+                                                        @if($catDed < 0)
+                                                            <div class="text-danger fs-3" title="Pengurangan kategori ini">({{ $catDed }})</div>
+                                                        @endif
+                                                    </td>
+                                                @endforeach
+                                                <td class="text-center">
+                                                    <span class="badge bg-primary fw-semibold fs-3 px-3">{{ $data['grandTotal'] }}</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    @if($data['totalDeduction'] < 0)
+                                                        <span class="badge bg-danger-subtle text-danger fw-semibold fs-3 px-3">{{ $data['totalDeduction'] }}</span>
+                                                    @else
+                                                        <span class="text-muted">0</span>
+                                                    @endif
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge {{ $data['finalScore'] >= $data['grandTotal'] ? 'bg-primary' : 'bg-dark' }} fw-semibold fs-3 px-3">{{ $data['finalScore'] }}</span>
+                                                </td>
+                                                <td class="text-center">
+                                                    <a href="{{ route('eventner.scoring.pdf-participant', array_filter(['registration_id' => $data['participant']->id, 'round_id' => $section['round_id'] ?? null])) }}"
+                                                       class="btn btn-sm btn-outline-danger p-1" target="_blank" title="Download PDF">
+                                                        <i class="ti ti-file-type-pdf fs-4"></i>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endforeach
+                    @endforeach
+
+                    {{-- Summary Stats — seluruh tabel di atas.
+                         Sengaja tidak dipecah per bagian: angka per bagian sudah
+                         terbaca dari kolom Nilai Akhir tiap tabel. --}}
                     <div class="row g-3 mt-4">
                         <div class="col-md-3">
                             <div class="card mb-0 bg-success-subtle border-0">
@@ -165,7 +214,9 @@
                             <div class="card mb-0 bg-info-subtle border-0">
                                 <div class="card-body p-3 text-center">
                                     <p class="text-muted small mb-1 fw-semibold">Total Peserta</p>
-                                    <h3 class="fw-semibold text-info mb-0">{{ $scoringData->count() }}</h3>
+                                    {{-- Dihitung unik: sekolah yang lolos tampil di tabel
+                                         penyisihan DAN final, tapi tetap satu peserta. --}}
+                                    <h3 class="fw-semibold text-info mb-0">{{ $scoringData->pluck('participant.id')->unique()->count() }}</h3>
                                 </div>
                             </div>
                         </div>

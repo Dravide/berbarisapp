@@ -8,6 +8,8 @@ use App\Models\AssessmentScore;
 use App\Models\AssessmentSubCategory;
 use App\Models\ChampionCategory;
 use App\Models\CompetitionCategory;
+use App\Models\CompetitionGroup;
+use App\Models\CompetitionRound;
 use App\Models\DeductionCategory;
 use App\Models\DeductionCriteria;
 use App\Models\ScoreDeduction;
@@ -35,6 +37,95 @@ class Builder extends Component
 
     public $activeTab = ''; // '' = global/semua tingkat, child_id = specific
 
+    /**
+     * Tingkat yang sedang dibuka — dipakai untuk mengisi pilihan grup & babak
+     * pada kategori penilaian. '' = global, jadi tidak ada grup/babak khusus.
+     */
+    #[Computed]
+    public function activeCompetitionCategoryId(): ?int
+    {
+        return $this->activeTab !== '' ? (int) $this->activeTab : null;
+    }
+
+    /**
+     * Grup milik tingkat yang sedang dibuka.
+     */
+    #[Computed]
+    public function groups()
+    {
+        if (! $this->activeCompetitionCategoryId) {
+            return collect();
+        }
+
+        return CompetitionGroup::where('eventner_id', $this->eventnerId)
+            ->where('competition_category_id', $this->activeCompetitionCategoryId)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Babak milik tingkat yang sedang dibuka.
+     */
+    #[Computed]
+    public function rounds()
+    {
+        if (! $this->activeCompetitionCategoryId) {
+            return collect();
+        }
+
+        return CompetitionRound::where('eventner_id', $this->eventnerId)
+            ->where('competition_category_id', $this->activeCompetitionCategoryId)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Simpan grup/babak sebuah kategori penilaian. Dipanggil dari tombol
+     * simpan di kartu kategori (bukan langsung saat ganti select) supaya
+     * perubahan tidak ikut terkirim saat panitia menelusuri dropdown.
+     */
+    public function saveRubricScope($categoryId)
+    {
+        $category = AssessmentCategory::where('eventner_id', $this->eventnerId)->findOrFail($categoryId);
+
+        $groupId = ($this->rubricGroupId[$categoryId] ?? null) ?: null;
+        $roundId = ($this->rubricRoundId[$categoryId] ?? null) ?: null;
+        $groupId = $groupId !== null ? (int) $groupId : null;
+        $roundId = $roundId !== null ? (int) $roundId : null;
+
+        // Grup/babak dari DOM wajib milik eventner ini DAN milik tingkat
+        // kategori penilaiannya — kalau tidak, juri di acara lain bisa
+        // tertarik masuk lewat parameter ini.
+        $categoryLevel = $category->competition_category_id;
+
+        if ($groupId !== null && ! CompetitionGroup::where('eventner_id', $this->eventnerId)
+            ->where('competition_category_id', $categoryLevel)
+            ->whereKey($groupId)
+            ->exists()) {
+            session()->flash('error', 'Grup yang dipilih bukan milik tingkat lomba ini.');
+
+            return;
+        }
+
+        if ($roundId !== null && ! CompetitionRound::where('eventner_id', $this->eventnerId)
+            ->where('competition_category_id', $categoryLevel)
+            ->whereKey($roundId)
+            ->exists()) {
+            session()->flash('error', 'Babak yang dipilih bukan milik tingkat lomba ini.');
+
+            return;
+        }
+
+        $category->update([
+            'competition_group_id' => $groupId,
+            'competition_round_id' => $roundId,
+        ]);
+
+        unset($this->categories);
+    }
+
     public $errorMessage = '';
 
     // Salin Ke (baru) — dari kategori sumber ke tingkat target
@@ -44,11 +135,24 @@ class Builder extends Component
 
     public $copyToTargetCompetitionCategoryId = null;
 
+    // Duplikat — nama diminta lebih dulu; grup/babak tidak diwarisi
+    public $duplicatingCategoryId = null;
+
+    public $duplicateCategoryName = '';
+
     // State for inputs
     public $newCategoryName = '';
 
     // Arrays to hold independent input states per item to avoid interfering with each other
     public $newSubCategoryNames = [];
+
+    /**
+     * Penanda babak & grup per kategori penilaian, indeks = id kategori.
+     * Kosong = rubrik berlaku untuk semua babak / semua grup tingkat itu.
+     */
+    public $rubricGroupId = [];
+
+    public $rubricRoundId = [];
 
     public function mount()
     {
@@ -74,6 +178,30 @@ class Builder extends Component
         if ($first) {
             $this->activeTab = (string) $first->id;
         }
+
+        $this->refreshRubricScopeInputs();
+    }
+
+    /**
+     * Isi ulang penanda babak/grup dari data tersimpan. Dipanggil setelah tab
+     * tingkat berganti dan setelah kategori penilaian berubah, supaya tiap
+     * dropdown menampilkan pilihan yang benar-benar tersimpan (bukan sisa
+     * input tingkat sebelumnya).
+     */
+    public function refreshRubricScopeInputs()
+    {
+        $this->rubricGroupId = $this->categories
+            ->mapWithKeys(fn ($c) => [$c->id => $c->competition_group_id ? (string) $c->competition_group_id : ''])
+            ->all();
+
+        $this->rubricRoundId = $this->categories
+            ->mapWithKeys(fn ($c) => [$c->id => $c->competition_round_id ? (string) $c->competition_round_id : ''])
+            ->all();
+    }
+
+    public function updatedActiveTab()
+    {
+        $this->refreshRubricScopeInputs();
     }
 
     /**
@@ -122,7 +250,13 @@ class Builder extends Component
     #[Computed]
     public function categories()
     {
-        $query = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias', 'competitionCategory'])
+        $query = AssessmentCategory::with([
+            'subCategories.criterias',
+            'deductionCategories.criterias',
+            'competitionCategory',
+            'competitionGroup',
+            'competitionRound',
+        ])
             ->where('eventner_id', $this->eventnerId)
             ->orderBy('sort_order');
 
@@ -231,19 +365,46 @@ class Builder extends Component
         $category->delete();
     }
 
-    public function duplicateCategory($id)
+    /**
+     * Duplikat rubrik.
+     *
+     * Alur yang dimaksud: panitia menyalin format penilaian yang sudah ada
+     * untuk dipakai babak lain (mis. Penyisihan → Final dengan isi kriteria
+     * yang sama). Nama diminta lebih dulu supaya hasil salinannya tidak perlu
+     * di-rename manual, dan grup/babak sengaja DIKOSONGKAN — menyalinnya
+     * menghasilkan rubrik yang salah tandanya diam-diam (salinan rubrik Grup A
+     * lahir bertanda Grup A juga, padahal maksudnya dipakai di babak Final).
+     */
+    public function startDuplicateCategory($id)
     {
+        $cat = AssessmentCategory::where('eventner_id', $this->eventnerId)->findOrFail($id);
+
+        $this->duplicatingCategoryId = $id;
+        $this->duplicateCategoryName = $cat->name . ' (Salinan)';
+    }
+
+    public function cancelDuplicateCategory()
+    {
+        $this->reset('duplicatingCategoryId', 'duplicateCategoryName');
+    }
+
+    public function confirmDuplicateCategory()
+    {
+        $this->validate(['duplicateCategoryName' => 'required|string|max:255']);
+
         $original = AssessmentCategory::with(['subCategories.criterias', 'judges', 'deductionCategories.criterias'])
             ->where('eventner_id', $this->eventnerId)
-            ->findOrFail($id);
+            ->findOrFail($this->duplicatingCategoryId);
 
         $maxOrder = AssessmentCategory::where('eventner_id', $this->eventnerId)->max('sort_order') ?? 0;
 
-        // Clone the category
+        // Clone the category — grup/babak dikosongkan, lihat docblock di atas.
         $newCategory = AssessmentCategory::create([
             'eventner_id' => $this->eventnerId,
             'competition_category_id' => $original->competition_category_id,
-            'name' => $original->name.' (Salinan)',
+            'competition_group_id' => null,
+            'competition_round_id' => null,
+            'name' => strip_tags($this->duplicateCategoryName),
             'sort_order' => $maxOrder + 1,
         ]);
 
@@ -290,7 +451,9 @@ class Builder extends Component
             }
         }
 
-        session()->flash('success', 'Kategori berhasil diduplikat.');
+        session()->flash('success', 'Kategori berhasil diduplikat. Atur Babak/Grup-nya bila perlu — salinan sengaja tidak mewarisi keduanya.');
+        $this->reset('duplicatingCategoryId', 'duplicateCategoryName');
+        $this->refreshRubricScopeInputs();
     }
 
     public function openCopyToModal($sourceCategoryId)
@@ -317,6 +480,7 @@ class Builder extends Component
 
         if (! $this->copyToSourceCategoryId || ! $targetCompetitionCategoryId) {
             session()->flash('error', 'Pilih tingkat tujuan terlebih dahulu.');
+            $this->dispatch('copy:done', success: false, message: 'Pilih tingkat tujuan terlebih dahulu.');
 
             return;
         }
@@ -326,10 +490,13 @@ class Builder extends Component
         $source = AssessmentCategory::where('eventner_id', $this->eventnerId)
             ->find($this->copyToSourceCategoryId);
 
-        $this->dispatch('copy:confirm', [
-            'source_name' => $source?->name ?? '',
-            'target_name' => $target?->full_name ?? '',
-        ]);
+        // Param bernama, bukan posisional: Livewire menaruh param di event.detail
+        // apa adanya, jadi bentuk array hanya menambah satu lapis yang harus
+        // ditebak pembacanya.
+        $this->dispatch('copy:confirm',
+            source_name: $source?->name ?? '',
+            target_name: $target?->full_name ?? '',
+        );
     }
 
     public function executeCopyTo($sourceId = null)
@@ -339,6 +506,7 @@ class Builder extends Component
 
         if (! $sourceId || ! $targetCompetitionCategoryId) {
             session()->flash('error', 'Pilih tingkat tujuan terlebih dahulu.');
+            $this->dispatch('copy:done', success: false, message: 'Pilih tingkat tujuan terlebih dahulu.');
 
             return;
         }
@@ -354,7 +522,7 @@ class Builder extends Component
                 ->selectable()
                 ->findOrFail($targetCompetitionCategoryId);
         } catch (\Throwable $e) {
-            $this->dispatch('copy:done', ['success' => false, 'message' => 'Kategori atau tingkat tujuan tidak ditemukan.']);
+            $this->dispatch('copy:done', success: false, message: 'Kategori atau tingkat tujuan tidak ditemukan.');
 
             return;
         }
@@ -367,8 +535,10 @@ class Builder extends Component
             'name' => $original->name,
             'sort_order' => $maxOrder + 1,
         ]);
-
         // Copy by rubrik: hanya sub-kategori + kriteria (bobot, skor). Tanpa juri & kelompok pengurangan.
+        // Babak & grup sengaja TIDAK ikut disalin: keduanya milik tingkat asal,
+        // jadi menyalinnya ke tingkat tujuan cuma menghasilkan penunjuk yatim
+        // (rubriknya tak akan pernah muncul di juri tingkat tujuan).
         foreach ($original->subCategories as $subIndex => $sub) {
             $newSub = AssessmentSubCategory::create([
                 'assessment_category_id' => $newCategory->id,
@@ -389,7 +559,7 @@ class Builder extends Component
 
         $targetName = CompetitionCategory::find($targetCompetitionCategoryId)?->full_name ?? 'Tingkat tujuan';
         $this->closeCopyToModal();
-        $this->dispatch('copy:done', ['success' => true, 'message' => "Rubrik '{$original->name}' berhasil disalin ke {$targetName}."]);
+        $this->dispatch('copy:done', success: true, message: "Rubrik '{$original->name}' berhasil disalin ke {$targetName}.");
     }
 
     public function addSubCategory($categoryId)
@@ -457,6 +627,30 @@ class Builder extends Component
 
         if ($this->criteriaHasScores($id)) {
             session()->flash('error', 'Tidak bisa menghapus kriteria: sudah ada nilai yang masuk.');
+
+            return;
+        }
+
+        // Kriteria bisa dicentang langsung di kategori juara (pivot
+        // champion_criteria / champion_tiebreak_criteria), juga ikut lewat
+        // pivot sub-kategori. Keduanya cascade, jadi menghapus kriteria
+        // diam-diam mengubah peringkat juara yang sudah dihitung. Sama seperti
+        // deleteCategory()/deleteSubCategory(): sebutkan kategori juaranya dulu.
+        $championNames = ChampionCategory::where('eventner_id', $this->eventnerId)
+            ->where(function ($q) use ($id) {
+                $q->whereHas('criterias', fn ($c) => $c->where('assessment_criterias.id', $id))
+                    ->orWhereHas('tiebreakCriterias', fn ($c) => $c->where('assessment_criterias.id', $id))
+                    ->orWhereHas('assessmentSubCategories.criterias', fn ($c) => $c->where('assessment_criterias.id', $id));
+            })
+            ->pluck('name');
+
+        if ($championNames->isNotEmpty()) {
+            session()->flash(
+                'error',
+                'Tidak bisa menghapus kriteria: kriteria ini dipakai kategori juara '
+                . $championNames->implode(', ')
+                . '. Lepaskan kriteria itu dari kategori juara dulu.'
+            );
 
             return;
         }
@@ -1151,6 +1345,7 @@ class Builder extends Component
     public function selectTab($id)
     {
         $this->activeTab = $this->normalizeActiveTab($id);
+        $this->refreshRubricScopeInputs();
     }
 
     /**

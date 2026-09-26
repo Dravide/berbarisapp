@@ -109,6 +109,13 @@
                                             <button class="btn btn-sm btn-success" wire:click="saveEditCategory" title="Simpan"><i class="ti ti-check"></i></button>
                                             <button class="btn btn-sm btn-outline-secondary" wire:click="cancelEditCategory" title="Batal"><i class="ti ti-x"></i></button>
                                         </div>
+                                    @elseif($duplicatingCategoryId == $category->id)
+                                        <div class="d-flex align-items-center gap-2 flex-grow-1 px-3 py-2">
+                                            <input type="text" class="form-control form-control-sm" wire:model="duplicateCategoryName" wire:keydown.enter="confirmDuplicateCategory" wire:keydown.escape="cancelDuplicateCategory" placeholder="Nama kategori salinan...">
+                                            <button class="btn btn-sm btn-info text-white" wire:click="confirmDuplicateCategory" title="Duplikat"><i class="ti ti-copy"></i></button>
+                                            <button class="btn btn-sm btn-outline-secondary" wire:click="cancelDuplicateCategory" title="Batal"><i class="ti ti-x"></i></button>
+                                        </div>
+                                        @error('duplicateCategoryName') <span class="text-danger fs-2 px-3">{{ $message }}</span> @enderror
                                     @else
                                         <button class="accordion-button collapsed fw-semibold fs-5 text-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCat-{{ $category->id }}" aria-expanded="false" aria-controls="collapseCat-{{ $category->id }}">
                                             {{ $category->name }}
@@ -117,11 +124,17 @@
                                             @else
                                                 <span class="badge bg-secondary-subtle text-secondary ms-2 fs-1">Semua Kategori</span>
                                             @endif
+                                            @if($category->competitionRound)
+                                                <span class="badge bg-primary-subtle text-primary ms-2 fs-1">{{ $category->competitionRound->name }}</span>
+                                            @endif
+                                            @if($category->competitionGroup)
+                                                <span class="badge bg-warning-subtle text-warning ms-2 fs-1">{{ $category->competitionGroup->name }}</span>
+                                            @endif
                                         </button>
                                         <button class="btn btn-sm btn-outline-primary border-0" wire:click="startEditCategory({{ $category->id }})" title="Edit nama kategori">
                                             <i class="ti ti-pencil"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-outline-info border-0" wire:click="duplicateCategory({{ $category->id }})" title="Duplikat Kategori">
+                                        <button class="btn btn-sm btn-outline-info border-0" wire:click="startDuplicateCategory({{ $category->id }})" title="Duplikat Kategori">
                                             <i class="ti ti-copy"></i>
                                         </button>
                                         <button class="btn btn-sm btn-outline-success border-0"
@@ -138,6 +151,46 @@
 
                                 <div id="collapseCat-{{ $category->id }}" class="accordion-collapse collapse" aria-labelledby="headingCat-{{ $category->id }}" wire:ignore.self>
                                     <div class="accordion-body bg-white pt-4" wire:sort="reorderSubCategories" wire:sort:group="subcategories" wire:sort:group-id="{{ $category->id }}">
+
+                                        @if($this->groups->isNotEmpty() || $this->rounds->isNotEmpty())
+                                            {{-- Penanda babak & grup: membatasi rubrik ini ke satu babak
+                                                 dan/atau satu grup. Kosong = berlaku untuk semuanya. --}}
+                                            <div class="border bg-light p-3 mb-4">
+                                                <div class="row g-2 align-items-end">
+                                                    @if($this->rounds->isNotEmpty())
+                                                        <div class="col-md-4">
+                                                            <label class="form-label fw-semibold fs-2 mb-1">Babak</label>
+                                                            <select class="form-select form-select-sm" wire:model="rubricRoundId.{{ $category->id }}">
+                                                                <option value="">— semua babak —</option>
+                                                                @foreach($this->rounds as $round)
+                                                                    <option value="{{ $round->id }}">{{ $round->name }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    @endif
+                                                    @if($this->groups->isNotEmpty())
+                                                        <div class="col-md-4">
+                                                            <label class="form-label fw-semibold fs-2 mb-1">Grup</label>
+                                                            <select class="form-select form-select-sm" wire:model="rubricGroupId.{{ $category->id }}">
+                                                                <option value="">— semua grup —</option>
+                                                                @foreach($this->groups as $group)
+                                                                    <option value="{{ $group->id }}">{{ $group->name }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                    @endif
+                                                    <div class="col-md-4">
+                                                        <button class="btn btn-sm btn-primary" wire:click="saveRubricScope({{ $category->id }})">
+                                                            <i class="ti ti-device-floppy me-1"></i> Simpan Babak/Grup
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <p class="fs-2 text-muted mb-0 mt-2">
+                                                    Juri sebuah grup ditentukan dari rubriknya: rubrik bergrup hanya bisa dinilai juri yang ditugaskan ke kategori ini.
+                                                    Format yang sama untuk babak lain dibuat lewat tombol <i class="ti ti-copy"></i> <strong>Duplikat</strong> di kategori ini, lalu atur Babak/Grup-nya di sini.
+                                                </p>
+                                            </div>
+                                        @endif
 
                                         {{-- Form Tambah Sub Kategori --}}
                                         <div class="d-flex mb-4 gap-2 align-items-center p-3 bg-light border">
@@ -833,8 +886,19 @@
 <script>
 // Konfirmasi salin rubrik via SweetAlert
 document.addEventListener('livewire:init', () => {
+    // dispatch('copy:done', ['success' => true]) mengirim param POSISIONAL, dan
+    // Livewire menaruh param itu apa adanya di event.detail — jadi detail-nya
+    // berupa array [ {...} ], bukan objeknya langsung. Membaca d.success pada
+    // array selalu undefined, dan cabangnya jatuh ke "Gagal" padahal salinan
+    // berhasil. Param bernama (seperti import:done) baru berbentuk objek.
+    const payload = (event) => {
+        const detail = event.detail;
+        if (Array.isArray(detail)) return detail[0] || {};
+        return detail || {};
+    };
+
     window.addEventListener('copy:confirm', (event) => {
-        const d = event.detail || {};
+        const d = payload(event);
         Swal.fire({
             title: 'Salin Rubrik?',
             html: 'Rubrik <strong>' + (d.source_name || '') + '</strong> akan disalin ke <strong>' + (d.target_name || '') + '</strong>.<br><small>Sub-kategori & kriteria (bobot, skor) ikut disalin.</small>',
@@ -854,7 +918,7 @@ document.addEventListener('livewire:init', () => {
     });
 
     window.addEventListener('copy:done', (event) => {
-        const d = event.detail || {};
+        const d = payload(event);
         if (d.success) {
             Swal.fire({ icon: 'success', title: 'Berhasil!', text: d.message, confirmButtonColor: '#198754', timer: 2500, timerProgressBar: true });
         } else {

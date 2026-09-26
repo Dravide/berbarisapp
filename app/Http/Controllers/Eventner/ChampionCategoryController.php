@@ -51,7 +51,40 @@ class ChampionCategoryController extends Controller
         $competitionCategoryId = $request->query('competition_category_id');
         $championCategoryId = $request->query('champion_category_id');
 
-        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'assessmentSubCategories.category', 'rankTitles'])
+        // Grup opsional: rekap juara satu grup. Kosong = peringkat gabungan
+        // tingkat (perilaku lama).
+        $competitionGroupId = $request->query('competition_group_id');
+
+        // Grup dari query wajib milik tingkat terpilih — kalau tidak, rekap
+        // bisa mencampur peserta tingkat lain.
+        $competitionGroup = null;
+        if ($competitionGroupId && $competitionCategoryId) {
+            $competitionGroup = \App\Models\CompetitionGroup::where('eventner_id', $eventner->id)
+                ->where('competition_category_id', $competitionCategoryId)
+                ->findOrFail($competitionGroupId);
+        }
+
+        // Babak opsional: rekap juara satu babak. Kosong = peringkat gabungan
+        // tingkat (perilaku lama). Sama seperti grup, babak dari query wajib
+        // milik tingkat terpilih.
+        $competitionRoundId = $request->query('competition_round_id');
+        $competitionRound = null;
+        if ($competitionRoundId && $competitionCategoryId) {
+            $competitionRound = \App\Models\CompetitionRound::where('eventner_id', $eventner->id)
+                ->where('competition_category_id', $competitionCategoryId)
+                ->findOrFail($competitionRoundId);
+        }
+
+        // Babak final hanya menilai finalis. Tanpa batasan ini sekolah yang tak
+        // pernah dinilai final muncul bernilai 0 di rekap juara final — terbaca
+        // sebagai juara bernilai nol. Sama seperti laman admin.
+        $finalistIds = $competitionRound && $competitionRound->isFinal()
+            ? \App\Models\CompetitionRoundRegistration::where('eventner_id', $eventner->id)
+                ->where('competition_round_id', $competitionRound->id)
+                ->pluck('registration_id')
+            : null;
+
+        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'assessmentSubCategories.category', 'rankTitles', 'criterias'])
             ->where('eventner_id', $eventner->id)
             ->when($championCategoryId, fn($q) => $q->where('id', $championCategoryId))
             ->get();
@@ -59,9 +92,11 @@ class ChampionCategoryController extends Controller
         // Kategori juara yang rubriknya milik tingkat lain tidak relevan —
         // nilainya tidak akan pernah terisi untuk peserta tingkat terpilih.
         // Sama seperti filter laman admin (ChampionCategory/Index::render).
+        // Saat grup dipilih, kategori juara yang rubriknya khusus grup lain
+        // juga tidak ikut; babak berlaku sama.
         if ($competitionCategoryId) {
             $championCategories = $championCategories
-                ->filter(fn($c) => $c->isVisibleFor($competitionCategoryId))
+                ->filter(fn($c) => $c->isVisibleFor($competitionCategoryId, $competitionGroup?->id, $competitionRound?->id))
                 ->values();
         }
 
@@ -90,6 +125,8 @@ class ChampionCategoryController extends Controller
             ->groupBy('registration_id');
 
         $registrations = Registration::where('eventner_id', $eventner->id)
+            ->when($competitionGroup, fn ($q) => $q->where('competition_group_id', $competitionGroup->id))
+            ->when($finalistIds, fn ($q) => $q->whereIn('id', $finalistIds))
             ->orderBy('nama_sekolah')
             ->get();
         $registrationsByLevel = $registrations->groupBy(fn($r) => (string) $r->competition_category_id);
@@ -130,7 +167,8 @@ class ChampionCategoryController extends Controller
                 $allScores,
                 $allDeductions,
                 $allCriteriaWeightMap,
-                $deductionLevelMap
+                $deductionLevelMap,
+                $competitionRound?->id
             );
         }
 
@@ -141,6 +179,8 @@ class ChampionCategoryController extends Controller
         return [
             'eventner' => $eventner,
             'competitionCategory' => $competitionCategory,
+            'competitionGroup' => $competitionGroup,
+            'competitionRound' => $competitionRound,
             'championCategories' => $championCategories,
             'sections' => $sections,
             'rankings' => $rankings,
@@ -225,14 +265,13 @@ class ChampionCategoryController extends Controller
         Collection $allScores,
         Collection $allDeductions,
         array $allCriteriaWeightMap,
-        array $deductionLevelMap = []
+        array $deductionLevelMap = [],
+        ?int $roundId = null
     ): array {
-        $criteriaMap = [];
-        foreach ($champion->assessmentSubCategories as $sub) {
-            foreach ($sub->criterias as $crit) {
-                $criteriaMap[$crit->id] = $crit->weight ?? 1;
-            }
-        }
+        // Babak ikut menyaring kriteria: kategori juara yang mencakup rubrik
+        // Penyisihan DAN Final akan menjumlahkan keduanya kalau tidak — padahal
+        // juara final ditentukan nilai final saja.
+        $criteriaMap = $champion->scoringCriteriaWeights($roundId);
 
         // Kriteria untuk subkategori pertama (prioritas tie-break)
         $firstSub = $champion->assessmentSubCategories->first();

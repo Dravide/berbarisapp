@@ -4,6 +4,7 @@ namespace App\Livewire\Public;
 
 use App\Models\AssessmentScore;
 use App\Models\ChampionCategory;
+use App\Models\CompetitionGroup;
 use App\Models\Eventner;
 use App\Models\Registration;
 use Livewire\Component;
@@ -16,6 +17,11 @@ class EventResult extends Component
     public $categories = [];
     public $selectedCategoryId;
     public $allRankings = [];
+
+    /**
+     * Grup yang sedang dilihat. '' = peringkat gabungan tingkat (perilaku lama).
+     */
+    public $selectedGroupId = '';
 
     public function mount($slug = null)
     {
@@ -39,9 +45,54 @@ class EventResult extends Component
         $this->calculateRankings();
     }
 
+    /**
+     * Grup milik tingkat terpilih.
+     */
+    public function getGroupsProperty()
+    {
+        if (! $this->selectedCategoryId) {
+            return collect();
+        }
+
+        return CompetitionGroup::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $this->selectedCategoryId)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+    }
+
     public function switchCategory($categoryId)
     {
+        if ((string) $this->selectedCategoryId !== (string) $categoryId) {
+            $this->selectedGroupId = '';
+        }
+
         $this->selectedCategoryId = $categoryId;
+        $this->calculateRankings();
+    }
+
+    /**
+     * Ganti grup. Grup dari DOM wajib milik tingkat terpilih.
+     */
+    public function switchGroup($groupId)
+    {
+        $this->selectedGroupId = '';
+
+        if ($groupId !== '' && $groupId !== null) {
+            $ada = CompetitionGroup::where('eventner_id', $this->eventner->id)
+                ->where('competition_category_id', $this->selectedCategoryId)
+                ->find($groupId);
+
+            if (! $ada) {
+                $this->addError('selectedGroupId', 'Grup tidak ditemukan pada tingkat lomba ini.');
+
+                return;
+            }
+
+            $this->selectedGroupId = (string) $ada->id;
+        }
+
+        $this->resetErrorBag('selectedGroupId');
         $this->calculateRankings();
     }
 
@@ -50,7 +101,7 @@ class EventResult extends Component
         $this->allRankings = [];
 
         // Only fetch champion categories that are marked as public
-        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias'])
+        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias', 'criterias', 'tiebreakCriterias'])
             ->where('eventner_id', $this->eventner->id)
             ->where('is_public', true)
             ->get();
@@ -59,8 +110,18 @@ class EventResult extends Component
             return;
         }
 
+        // Saat grup dipilih, kategori juara yang rubriknya khusus grup lain
+        // tidak ikut — supaya "Juara Grup A" dan "Juara Grup B" tidak saling
+        // bercampur di satu tabel.
+        if ($this->selectedGroupId !== '') {
+            $championCategories = $championCategories
+                ->filter(fn ($c) => $c->isVisibleFor($this->selectedCategoryId, $this->selectedGroupId))
+                ->values();
+        }
+
         $participants = Registration::where('eventner_id', $this->eventner->id)
             ->where('competition_category_id', $this->selectedCategoryId)
+            ->when($this->selectedGroupId !== '', fn ($q) => $q->where('competition_group_id', $this->selectedGroupId))
             ->orderBy('nama_sekolah')
             ->get();
 
@@ -86,20 +147,10 @@ class EventResult extends Component
         )->pluck('weight', 'id')->toArray();
 
         foreach ($championCategories as $champion) {
-            $criteriaMap = [];
-            foreach ($champion->assessmentSubCategories as $sub) {
-                foreach ($sub->criterias as $crit) {
-                    $criteriaMap[$crit->id] = $crit->weight ?? 1;
-                }
-            }
+            $criteriaMap = $champion->scoringCriteriaWeights();
 
             // Build tiebreak criteria map
-            $tiebreakCriteriaMap = [];
-            foreach ($champion->tiebreakSubCategories as $sub) {
-                foreach ($sub->criterias as $crit) {
-                    $tiebreakCriteriaMap[$crit->id] = $crit->weight ?? 1;
-                }
-            }
+            $tiebreakCriteriaMap = $champion->tiebreakCriteriaWeights();
 
             $participantScores = [];
             foreach ($participants as $participant) {
@@ -188,6 +239,8 @@ class EventResult extends Component
     {
         return view('livewire.public.event-result', [
             'eventner' => $this->eventner,
+            'groups' => $this->groups,
+            'selectedGroupId' => $this->selectedGroupId,
         ])->title('Hasil Perlombaan - ' . $this->eventner->nama_event)
             ->layoutData(['eventner' => $this->eventner]);
     }

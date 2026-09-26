@@ -37,6 +37,9 @@
         .info td { padding: 4px 8px; border: 1px solid #ddd; font-size: 9px; }
         .info .lbl { background: #f5f6fa; font-weight: bold; color: #555; width: 130px; }
         .info .val { color: #1a1a2e; font-weight: bold; }
+        /* Sama dengan kuning "final" di layar admin (bg-warning), supaya
+           lembar cetak dan layar tidak memakai dua bahasa warna berbeda. */
+        .info .val.babak-final { background: #ffc107; color: #664d03; }
 
         /* KATEGORI */
         .cat-head { width: 100%; border-collapse: collapse; margin-bottom: 0; }
@@ -123,6 +126,29 @@
             <td>{{ $registration->nama_pelatih }}</td>
             <td class="lbl">Kategori Lomba</td>
             <td>{{ $registration->competitionCategory->full_name ?? '-' }}</td>
+        </tr>
+        {{-- Grup dan babak ditulis apa adanya walau kosong: lembar ini hanya
+             memuat rubrik satu babak, jadi tanpa penanda ini operator tidak
+             bisa membedakan lembar penyisihan dari lembar final saat
+             mencetak keduanya untuk sekolah yang sama. --}}
+        <tr>
+            <td class="lbl">Grup</td>
+            <td class="val">{{ $registration->competitionGroup->name ?? '—' }}</td>
+            <td class="lbl">Babak</td>
+            {{-- Lembar final ditandai kuning: satu sekolah bisa punya lembar
+                 penyisihan DAN final, dan tanpa warna berbeda keduanya
+                 tertukar saat dicetak bertumpuk. --}}
+            <td class="{{ ($roundIsFinal ?? false) ? 'val babak-final' : 'val' }}">{{ $roundName ?? '—' }}</td>
+        </tr>
+        <tr>
+            {{-- Nomor undian dicetak di lembar yang dipegang pelatih, bukan
+                 cuma di daftar panitia: saat undian berjalan, nomor inilah
+                 yang dipanggil, dan pelatih harus bisa mencocokkan lembarnya
+                 sendiri tanpa menanyakan urutan tampil ke panitia. --}}
+            <td class="lbl">No. Undian</td>
+            <td class="val">{{ $registration->urutan_tampil ?? '—' }}</td>
+            <td class="lbl">Jumlah Juri</td>
+            <td>{{ $judges->isNotEmpty() ? $judges->count() : '—' }}</td>
         </tr>
         <tr>
             <td class="lbl">Tanggal Cetak</td>
@@ -372,16 +398,20 @@
         $qrImage = qr_data_uri($qrData);
     @endphp
 
-    {{-- Pernyataan Persetujuan --}}
+    {{-- Pernyataan panitia. Halaman ini murni arsip panitia — persetujuan
+         pelatih ada di Lembar Verifikasi Nilai halaman berikutnya, tempat ia
+         benar-benar menandatangani. Dulu halaman ini juga berbunyi "kami
+         menyetujui hasil penilaian" dan punya kolom Pelatih, padahal pelatih
+         tak menandatanganinya; yang dobel cuma tandatangannya. --}}
     <div style="margin-top:20px; border:1px solid #ccc; border-radius:4px; padding:12px 16px; background:#fafafa;">
-        <div style="font-weight:bold; font-size:9px; text-transform:uppercase; color:#1a1a2e; margin-bottom:6px; letter-spacing:0.5px;">Pernyataan Persetujuan</div>
+        <div style="font-weight:bold; font-size:9px; text-transform:uppercase; color:#1a1a2e; margin-bottom:6px; letter-spacing:0.5px;">Pernyataan Panitia</div>
         <div style="font-size:8px; color:#444; line-height:1.7;">
-            Dengan menandatangani lembar penilaian ini, kami menyatakan bahwa:
+            Panitia penyelenggara menyatakan bahwa:
             <ol style="margin:4px 0 0 0; padding-left:16px;">
                 <li>Seluruh nilai yang tercantum di atas telah diperiksa dan diverifikasi kebenarannya.</li>
                 <li>Penilaian dilakukan secara objektif, adil, dan sesuai dengan rubrik penilaian yang telah ditetapkan.</li>
                 <li>Hasil penilaian ini bersifat final dan dapat dipertanggungjawabkan.</li>
-                <li>Kami menyetujui hasil penilaian sebagai nilai resmi peserta dalam {{ $eventner->nama_event }}.</li>
+                <li>Persetujuan pelatih atas hasil ini tercatat pada Lembar Verifikasi Nilai di halaman berikutnya.</li>
             </ol>
         </div>
     </div>
@@ -389,16 +419,10 @@
     <div class="ttd">
         <table style="width:100%;">
             <tr>
-                <td style="text-align:center; width:50%; vertical-align:top; padding-top:10px;">
+                <td style="text-align:center; width:100%; vertical-align:top; padding-top:10px;">
                     <div class="role" style="margin-bottom:8px;">Ketua Panitia</div>
                     <img src="{{ $qrImage }}" style="width:90px; height:90px; margin:0 auto; display:block;" alt="QR">
                     <div style="margin-top:6px; font-weight:bold; font-size:10px;">{{ $eventner->diselenggarakan_oleh }}</div>
-                </td>
-                <td style="text-align:center; width:50%; vertical-align:top; padding-top:10px;">
-                    <div class="role" style="margin-bottom:8px;">Pelatih</div>
-                    <br><br><br>
-                    <span class="line"></span><br>
-                    <small>{{ $registration->nama_pelatih }}</small>
                 </td>
             </tr>
         </table>
@@ -407,6 +431,11 @@
     <div class="foot">
         {{ $eventner->nama_event }} &mdash; Dicetak {{ now()->translatedFormat('d M Y H:i') }} &mdash; Generated by {{ app_name() }}
     </div>
+
+    {{-- Halaman kedua: arsip panitia, ditandatangani pelatih sebagai bukti
+         nilai sudah dicek. Dipisah ke berkasnya sendiri supaya blok tanda
+         tangan halaman pertama tetap utuh bagi yang cuma butuh lembar nilai. --}}
+    @include('eventner.scoring.pdf_participant_verifikasi')
 
 </body>
 </html>

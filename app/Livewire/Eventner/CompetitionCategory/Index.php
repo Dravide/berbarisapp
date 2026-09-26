@@ -3,9 +3,14 @@
 namespace App\Livewire\Eventner\CompetitionCategory;
 
 use Livewire\Component;
+use App\Models\AssessmentCategory;
 use App\Models\CompetitionCategory;
+use App\Models\CompetitionGroup;
+use App\Models\CompetitionRound;
+use App\Models\CompetitionRoundRegistration;
 use App\Models\EventnerVenue;
 use App\Models\Judge;
+use App\Services\ChampionCalculator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -27,6 +32,26 @@ class Index extends Component
     public $editingId = null;
 
     public $expandedParents = [];
+
+    // ── Grup & Babak ───────────────────────────────────────────────────
+    /** Tingkat lomba yang modal grup/babaknya sedang dibuka. */
+    public $groupPanelCategoryId = null;
+    public $roundPanelCategoryId = null;
+
+    public $groupName = '';
+    public $groupSortOrder = '';
+    public $editingGroupId = null;
+
+    public $roundName = '';
+    public $roundType = CompetitionRound::TYPE_PRELIMINARY;
+    public $roundSortOrder = '';
+    public $editingRoundId = null;
+
+    /** Babak final yang sedang dibuka panel "Loloskan Top-N". */
+    public $qualifyRoundId = null;
+    public $qualifyTopN = 3;
+    /** [registration_id => bool] centang dari pratinjau. */
+    public $qualifySelection = [];
 
     protected $eventnerId;
 
@@ -110,6 +135,471 @@ class Index extends Component
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
+    }
+
+    /**
+     * Semua grup & babak event ini, dikelompokkan per tingkat lomba, dengan
+     * jumlah peserta. Satu query per tabel — bukan per kartu tingkat.
+     */
+    #[Computed]
+    public function groupsByCategory()
+    {
+        return CompetitionGroup::where('eventner_id', $this->eventnerId)
+            ->withCount('registrations')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('competition_category_id');
+    }
+
+    #[Computed]
+    public function roundsByCategory()
+    {
+        return CompetitionRound::where('eventner_id', $this->eventnerId)
+            ->withCount('roundRegistrations')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('competition_category_id');
+    }
+
+    /** Tingkat lomba yang modalnya sedang terbuka (di-scope tenant). */
+    #[Computed]
+    public function panelCategory()
+    {
+        $id = $this->groupPanelCategoryId ?: $this->roundPanelCategoryId;
+
+        return $id
+            ? CompetitionCategory::where('eventner_id', $this->eventnerId)->find($id)
+            : null;
+    }
+
+    /**
+     * Nama juri per grup — diturunkan dari rubrik grup (juri terikat rubrik,
+     * bukan tingkat lomba). Untuk kartu "Juri:" di modal Kelola Grup.
+     *
+     * @return \Illuminate\Support\Collection<int, \Illuminate\Support\Collection>
+     */
+    #[Computed]
+    public function groupJudgeNames()
+    {
+        return AssessmentCategory::where('eventner_id', $this->eventnerId)
+            ->whereNotNull('competition_group_id')
+            ->with('judges')
+            ->get()
+            ->groupBy('competition_group_id')
+            ->map(fn ($cats) => $cats->flatMap(fn ($cat) => $cat->judges->pluck('name'))->unique()->values());
+    }
+
+    /** Nama rubrik per babak, untuk kolom "Rubrik" di modal Kelola Babak. */
+    #[Computed]
+    public function roundRubricNames()
+    {
+        return AssessmentCategory::where('eventner_id', $this->eventnerId)
+            ->whereNotNull('competition_round_id')
+            ->get()
+            ->groupBy('competition_round_id')
+            ->map(fn ($cats) => $cats->pluck('name'));
+    }
+
+    private function findOwnCategory($id): CompetitionCategory
+    {
+        return CompetitionCategory::where('eventner_id', $this->eventnerId)->findOrFail($id);
+    }
+
+    private function findOwnGroup($id): CompetitionGroup
+    {
+        return CompetitionGroup::where('eventner_id', $this->eventnerId)->findOrFail($id);
+    }
+
+    private function findOwnRound($id): CompetitionRound
+    {
+        return CompetitionRound::where('eventner_id', $this->eventnerId)->findOrFail($id);
+    }
+
+    // ── Atur Babak & Grup ──────────────────────────────────────────────
+
+    public function saveGroup()
+    {
+        $category = $this->findOwnCategory($this->groupPanelCategoryId);
+
+        $this->validate([
+            'groupName' => [
+                'required', 'string', 'max:255',
+                // Nama grup unik per tingkat (juga dijaga unique index DB).
+                Rule::unique('competition_groups', 'name')
+                    ->where('competition_category_id', $category->id)
+                    ->where('eventner_id', $this->eventnerId)
+                    ->ignore($this->editingGroupId),
+            ],
+            'groupSortOrder' => 'nullable|integer|min:0',
+        ], [], ['groupName' => 'Nama Grup']);
+
+        $data = [
+            'name' => strip_tags($this->groupName),
+            'sort_order' => $this->groupSortOrder !== '' ? (int) $this->groupSortOrder : 0,
+        ];
+
+        if ($this->editingGroupId) {
+            $this->findOwnGroup($this->editingGroupId)->update($data);
+            session()->flash('success', 'Grup berhasil diperbarui.');
+        } else {
+            CompetitionGroup::create(array_merge($data, [
+                'eventner_id' => $this->eventnerId,
+                'competition_category_id' => $category->id,
+            ]));
+            session()->flash('success', 'Grup baru berhasil ditambahkan.');
+        }
+
+        $this->resetGroupForm();
+        $this->dispatch('$refresh');
+    }
+
+    public function editGroup($id)
+    {
+        $group = $this->findOwnGroup($id);
+        $this->groupPanelCategoryId = $group->competition_category_id;
+        $this->editingGroupId = $group->id;
+        $this->groupName = $group->name;
+        $this->groupSortOrder = $group->sort_order;
+    }
+
+    public function deleteGroup($id)
+    {
+        $group = $this->findOwnGroup($id);
+
+        // FK-nya nullOnDelete: peserta dan rubrik tidak ikut terhapus, hanya
+        // lepas dari grup. Tetap dicegah kalau rubriknya sudah dipakai menilai,
+        // karena nilai yang tersimpan mengacu kriteria rubrik grup itu.
+        $punyaNilai = AssessmentCategory::where('competition_group_id', $group->id)->exists();
+        if ($punyaNilai) {
+            session()->flash('error', 'Tidak bisa menghapus: rubrik grup ini masih terpasang di Format Nilai. Lepas dulu grupnya di sana.');
+            return;
+        }
+
+        $group->delete();
+        session()->flash('success', 'Grup dihapus. Pesertanya tetap ada, hanya kembali ke peringkat umum.');
+    }
+
+    public function resetGroupForm()
+    {
+        $this->reset(['groupName', 'groupSortOrder', 'editingGroupId']);
+    }
+
+    // ── Kelola Babak ───────────────────────────────────────────────────
+
+    public function openRoundPanel($categoryId)
+    {
+        $this->findOwnCategory($categoryId);
+
+        $this->roundPanelCategoryId = $categoryId;
+        // Grup dibuka bersama babak: keduanya diatur pada satu layar, dan
+        // panel grup butuh tingkat yang sama supaya "panelCategory" menunjuk
+        // kategori yang benar saat keduanya terbuka.
+        $this->groupPanelCategoryId = $categoryId;
+        $this->qualifyRoundId = null;
+        $this->resetRoundForm();
+    }
+
+    public function closeRoundPanel()
+    {
+        $this->roundPanelCategoryId = null;
+        $this->groupPanelCategoryId = null;
+        $this->qualifyRoundId = null;
+        $this->resetRoundForm();
+    }
+
+    public function saveRound()
+    {
+        $category = $this->findOwnCategory($this->roundPanelCategoryId);
+
+        $this->validate([
+            'roundName' => [
+                'required', 'string', 'max:255',
+                Rule::unique('competition_rounds', 'name')
+                    ->where('competition_category_id', $category->id)
+                    ->where('eventner_id', $this->eventnerId)
+                    ->ignore($this->editingRoundId),
+            ],
+            'roundType' => ['required', Rule::in([CompetitionRound::TYPE_PRELIMINARY, CompetitionRound::TYPE_FINAL])],
+            'roundSortOrder' => 'nullable|integer|min:0',
+        ], [], ['roundName' => 'Nama Babak', 'roundType' => 'Jenis Babak']);
+
+        $data = [
+            'name' => strip_tags($this->roundName),
+            'type' => $this->roundType,
+            'sort_order' => $this->roundSortOrder !== '' ? (int) $this->roundSortOrder : 0,
+        ];
+
+        if ($this->editingRoundId) {
+            $this->findOwnRound($this->editingRoundId)->update($data);
+            session()->flash('success', 'Babak berhasil diperbarui.');
+        } else {
+            CompetitionRound::create(array_merge($data, [
+                'eventner_id' => $this->eventnerId,
+                'competition_category_id' => $category->id,
+            ]));
+            session()->flash('success', 'Babak baru berhasil ditambahkan.');
+        }
+
+        $this->resetRoundForm();
+        $this->dispatch('$refresh');
+    }
+
+    public function editRound($id)
+    {
+        $round = $this->findOwnRound($id);
+        $this->roundPanelCategoryId = $round->competition_category_id;
+        $this->editingRoundId = $round->id;
+        $this->roundName = $round->name;
+        $this->roundType = $round->type;
+        $this->roundSortOrder = $round->sort_order;
+    }
+
+    public function deleteRound($id)
+    {
+        $round = $this->findOwnRound($id);
+
+        $punyaNilai = AssessmentCategory::where('competition_round_id', $round->id)->exists();
+        if ($punyaNilai) {
+            session()->flash('error', 'Tidak bisa menghapus: rubrik babak ini masih terpasang di Format Nilai. Lepas dulu babaknya di sana.');
+            return;
+        }
+
+        $round->delete();
+        session()->flash('success', 'Babak dihapus. Nilai yang sudah tersimpan tidak ikut terhapus.');
+    }
+
+    public function resetRoundForm()
+    {
+        $this->reset(['roundName', 'roundType', 'roundSortOrder', 'editingRoundId', 'qualifySelection']);
+        $this->roundType = CompetitionRound::TYPE_PRELIMINARY;
+    }
+
+    // ── Loloskan Top-N ke babak final ──────────────────────────────────
+
+    /**
+     * Pratinjau N terbaik tiap grup dari nilai babak penyisihan.
+     *
+     * Angka totalnya datang dari ChampionCalculator::rankOrdered() — sort yang
+     * sama dengan penentu juara, supaya "peringkat 1 grup" di sini identik
+     * dengan yang diumumkan.
+     */
+    #[Computed]
+    public function qualifyPreview()
+    {
+        if (!$this->qualifyRoundId) {
+            return ['round' => null, 'groups' => [], 'sudahFinalis' => []];
+        }
+
+        $round = CompetitionRound::where('eventner_id', $this->eventnerId)->find($this->qualifyRoundId);
+        if (!$round) {
+            return ['round' => null, 'groups' => [], 'sudahFinalis' => []];
+        }
+
+        $eventner = Auth::user()->eventner;
+        $calculator = app(ChampionCalculator::class);
+
+        // Bobot rubrik babak penyisihan tingkat ini (kriteria babak penyisihan
+        // + kriteria tanpa babak), dipakai apa adanya sebagai peta bobot.
+        $weights = $this->roundCriteriaWeights($eventner->id, $round->competition_category_id, CompetitionRound::TYPE_PRELIMINARY);
+
+        $groups = [];
+        $groupModels = CompetitionGroup::where('eventner_id', $this->eventnerId)
+            ->where('competition_category_id', $round->competition_category_id)
+            ->orderBy('sort_order')->orderBy('id')
+            ->get();
+
+        foreach ($groupModels as $group) {
+            $rows = $calculator->rankOrdered(
+                $eventner,
+                $weights['scoring'],
+                $weights['tiebreak'],
+                $round->competition_category_id,
+                $group->id,
+            );
+
+            $groups[] = ['group' => $group, 'rows' => $rows];
+        }
+
+        // Peserta yang belum bergrup: satu pool umum, supaya panitia juga bisa
+        // meloloskan dari sana (mis. tingkat tanpa grup sama sekali).
+        $rows = $calculator->rankOrdered(
+            $eventner,
+            $weights['scoring'],
+            $weights['tiebreak'],
+            $round->competition_category_id,
+            null,
+        );
+        $rows = array_values(array_filter($rows, fn ($r) => !$r['registration']->competition_group_id));
+        if ($rows) {
+            $groups[] = ['group' => null, 'rows' => $rows];
+        }
+
+        $sudahFinalis = CompetitionRoundRegistration::where('competition_round_id', $round->id)
+            ->pluck('registration_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        return ['round' => $round, 'groups' => $groups, 'sudahFinalis' => $sudahFinalis];
+    }
+
+    /**
+     * Peta bobot kriteria untuk satu babak, plus kriteria tanpa babak
+     * (perilaku lama).
+     *
+     * Pemecah seri sengaja tidak diisi: kategori juara punya daftar tiebreak
+     * sendiri, sedangkan tombol Loloskan Top-N hanya butuh urutan yang masuk
+     * akal sebagai USULAN — panitia masih mencentang ulang sebelum menyimpan.
+     * Urutan akhir saat seri jatuh ke urutan undian lewat kunci terakhir.
+     *
+     * @return array{scoring: array, tiebreak: array}
+     */
+    private function roundCriteriaWeights(int $eventnerId, int $categoryId, string $roundType): array
+    {
+        $criteria = \App\Models\AssessmentCriteria::whereHas(
+            'subCategory.category',
+            function ($q) use ($eventnerId, $categoryId, $roundType) {
+                $q->where('eventner_id', $eventnerId)
+                    // forLevel, bukan forEntry: peta bobot ini dipakai untuk
+                    // memeringkat SEMUA grup sekaligus, jadi rubrik tiap grup
+                    // harus ikut. forEntry akan membuang rubrik grup lain dan
+                    // peringkat antar grup jadi tak sebanding.
+                    ->forLevel($categoryId)
+                    ->where(function ($sq) use ($roundType) {
+                        $sq->whereHas('competitionRound', fn ($r) => $r->where('type', $roundType))
+                            ->orWhereNull('competition_round_id');
+                    });
+            }
+        )->get(['id', 'weight']);
+
+        $map = $criteria->pluck('weight', 'id')->map(fn ($w) => $w ?? 1)->all();
+
+        return ['scoring' => $map, 'tiebreak' => []];
+    }
+
+    public function openQualifyPanel($roundId)
+    {
+        $round = $this->findOwnRound($roundId);
+        $this->roundPanelCategoryId = $round->competition_category_id;
+        $this->qualifyRoundId = $round->id;
+
+        $this->recomputeQualifySelection();
+    }
+
+    public function closeQualifyPanel()
+    {
+        $this->qualifyRoundId = null;
+        $this->qualifySelection = [];
+    }
+
+    public function recomputeQualifySelection()
+    {
+        $preview = $this->qualifyPreview;
+        $topN = max(1, (int) $this->qualifyTopN);
+        $selection = [];
+
+        foreach ($preview['groups'] as $bucket) {
+            foreach ($bucket['rows'] as $row) {
+                $selection[(string) $row['registration']->id] = $row['rank'] <= $topN;
+            }
+        }
+
+        $this->qualifySelection = $selection;
+    }
+
+    public function updatedQualifyTopN()
+    {
+        $this->recomputeQualifySelection();
+    }
+
+    public function toggleQualifySelection($registrationId)
+    {
+        $key = (string) $registrationId;
+        $this->qualifySelection[$key] = !($this->qualifySelection[$key] ?? false);
+    }
+
+    public function toggleQualifyGroup($groupId = null)
+    {
+        $preview = $this->qualifyPreview;
+        $key = $groupId === null || $groupId === '' ? null : (int) $groupId;
+
+        foreach ($preview['groups'] as $bucket) {
+            if (($bucket['group']?->id) !== $key) {
+                continue;
+            }
+
+            $ids = array_map(fn ($r) => (string) $r['registration']->id, $bucket['rows']);
+            $semuaTercentang = collect($ids)->every(fn ($id) => $this->qualifySelection[$id] ?? false);
+
+            foreach ($ids as $id) {
+                $this->qualifySelection[$id] = !$semuaTercentang;
+            }
+        }
+    }
+
+    /**
+     * Tulis daftar finalis. Idempoten lewat UNIQUE (round, registration):
+     * menekan dua kali tidak menggandakan, hanya memperbarui seed/total.
+     */
+    public function saveQualify()
+    {
+        $round = $this->findOwnRound($this->qualifyRoundId);
+        $preview = $this->qualifyPreview;
+
+        // Peta peringkat & total per registrasi dari pratinjau (angka penentu).
+        $rowsByRegistration = [];
+        foreach ($preview['groups'] as $bucket) {
+            foreach ($bucket['rows'] as $row) {
+                $rowsByRegistration[(int) $row['registration']->id] = $row;
+            }
+        }
+
+        $dipilih = collect($this->qualifySelection)->filter(fn ($v) => (bool) $v)->keys()->map(fn ($id) => (int) $id);
+
+        // Buang yang tidak sah: id dari DOM wajib peserta eventner ini dan
+        // benar-benar ada di pratinjau babak ini.
+        $dipilih = $dipilih->filter(fn ($id) => isset($rowsByRegistration[$id]));
+
+        $ditambah = 0;
+        $diperbarui = 0;
+
+        foreach ($dipilih as $registrationId) {
+            $row = $rowsByRegistration[$registrationId];
+            $registration = $row['registration'];
+
+            $existing = CompetitionRoundRegistration::where('competition_round_id', $round->id)
+                ->where('registration_id', $registrationId)
+                ->first();
+
+            if ($existing) {
+                $existing->update([
+                    'competition_group_id' => $registration->competition_group_id,
+                    'seed' => $row['rank'],
+                    'preliminary_total' => $row['total'],
+                ]);
+                $diperbarui++;
+            } else {
+                CompetitionRoundRegistration::create([
+                    'eventner_id' => $this->eventnerId,
+                    'competition_round_id' => $round->id,
+                    'registration_id' => $registrationId,
+                    'competition_group_id' => $registration->competition_group_id,
+                    'seed' => $row['rank'],
+                    'preliminary_total' => $row['total'],
+                ]);
+                $ditambah++;
+            }
+        }
+
+        // Yang tidak dicentang dikeluarkan dari babak ini.
+        $dihapus = CompetitionRoundRegistration::where('competition_round_id', $round->id)
+            ->when($dipilih->isNotEmpty(), fn ($q) => $q->whereNotIn('registration_id', $dipilih->all()))
+            ->delete();
+
+        session()->flash('success', "Daftar finalis diperbarui: {$ditambah} peserta diloloskan, {$diperbarui} diperbarui, {$dihapus} dikeluarkan.");
+        $this->qualifyRoundId = null;
+        $this->qualifySelection = [];
     }
 
     public function toggleExpand($id)

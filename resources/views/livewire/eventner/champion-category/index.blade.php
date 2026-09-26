@@ -33,9 +33,29 @@
                             @endforeach
                         </select>
                     </div>
+                    @if($scopes->isNotEmpty())
+                        <div class="input-group" style="max-width: 260px;">
+                            <span class="input-group-text {{ $selectedRound?->isFinal() ? 'bg-warning-subtle text-warning' : 'bg-info-subtle text-info' }}">
+                                <i class="ti {{ $selectedScope['icon'] ?? 'ti-trophy' }}"></i>
+                            </span>
+                            {{-- Isinya lingkup juara — "Grup A", "Grup B", "Final" —
+                                 bukan daftar babak: yang dicari di halaman ini
+                                 "juara siapa", bukan "babak mana". --}}
+                            <select class="form-select" wire:model.live="selectedScopeId" title="Lingkup juara">
+                                <option value="">Seluruh Ruang Penilaian</option>
+                                @foreach($scopes as $scope)
+                                    <option value="{{ $scope['key'] }}">{{ $scope['label'] }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
                 </div>
                 <div class="d-flex gap-2">
-                    <a href="{{ route('eventner.champion-categories.pdf', ['competition_category_id' => $selectedCompetitionCategoryId]) }}"
+                    <a href="{{ route('eventner.champion-categories.pdf', array_filter([
+                            'competition_category_id' => $selectedCompetitionCategoryId,
+                            'competition_round_id' => $selectedRound?->id,
+                            'competition_group_id' => $selectedGroup?->id,
+                       ])) }}"
                        class="btn btn-sm btn-danger px-3 fw-semibold" target="_blank"
                        title="Rekap seluruh kategori juara event, dikelompokkan per tingkat lomba">
                         <i class="ti ti-file-type-pdf me-1"></i> Unduh Semua PDF
@@ -45,6 +65,7 @@
                     </button>
                 </div>
             </div>
+            @error('selectedScopeId') <div class="alert alert-danger py-2 fs-2 mt-3 mb-0">{{ $message }}</div> @enderror
         </div>
     </div>
 
@@ -101,53 +122,96 @@
                             {{-- Rubrik Penilaian --}}
                             <div class="mb-4">
                                 <label class="form-label fw-semibold">Rubrik Penilaian <span class="text-danger">*</span></label>
-                                <p class="text-muted small mb-2">Centang rubrik yang masuk perhitungan juara.</p>
+                                <p class="text-muted small mb-2">Centang rubrik yang masuk perhitungan juara. Buka sub-kategori untuk memilih kriteria satu per satu.</p>
                                 @error('selectedSubCategories') <div class="text-danger small mb-2">{{ $message }}</div> @enderror
 
-                                <div class="border rounded p-3" style="max-height: 260px; overflow-y: auto;">
+                                <div class="border rounded p-3" style="max-height: 340px; overflow-y: auto;">
                                     @foreach($rubrikByLevel as $levelGroup)
                                         <div class="mb-3">
-                                            <div class="fw-bold text-primary small mb-1" style="text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <div class="fw-semibold text-primary small mb-1" style="text-transform: uppercase; letter-spacing: 0.5px;">
                                                 <i class="ti ti-layers-subtract me-1"></i>{{ $levelGroup['level_name'] }}
                                             </div>
-                                            @foreach($levelGroup['categories'] as $cat)
-                                                @php
-                                                    $catSubs = $cat->subCategories->pluck('id')->map(fn($id) => (string) $id)->toArray();
-                                                    $selectedCount = count(array_intersect($catSubs, $selectedSubCategories));
-                                                    $allChecked = count($catSubs) > 0 && $selectedCount === count($catSubs);
-                                                    $someChecked = $selectedCount > 0;
-                                                @endphp
-                                                <div class="mb-2">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox"
-                                                            wire:click="toggleCategory({{ $cat->id }})"
-                                                            {{ $allChecked ? 'checked' : '' }}
-                                                            data-indeterminate="{{ $someChecked && !$allChecked ? '1' : '0' }}"
-                                                            id="ac_{{ $cat->id }}"
-                                                            @if(empty($catSubs)) disabled @endif>
-                                                        <label class="form-check-label fw-bold text-dark" for="ac_{{ $cat->id }}">
-                                                            {{ $cat->name }}
-                                                        </label>
-                                                        <span class="text-muted small ms-1">
-                                                            ({{ $cat->subCategories->sum(fn($s) => $s->criterias->count()) }} kriteria)
-                                                        </span>
+                                            @foreach($levelGroup['sections'] as $section)
+                                                {{-- Judul bagian memisahkan himpunan penilaian yang
+                                                     berbeda: rubrik Grup A tidak sederajat dengan rubrik
+                                                     babak Final, jadi keduanya tidak boleh duduk di satu
+                                                     daftar rata. Tingkat tanpa grup/babak tidak punya
+                                                     judul bagian dan tampil seperti sebelumnya. --}}
+                                                @if($section['section_name'] !== '')
+                                                    <div class="d-flex align-items-center gap-1 mt-2 mb-1">
+                                                        <i class="ti ti-corner-down-right text-muted"></i>
+                                                        <span class="badge {{ $section['is_final'] ? 'bg-warning text-dark' : 'bg-light-secondary text-secondary' }}">{{ $section['section_name'] }}</span>
                                                     </div>
-                                                    @if(count($catSubs) > 0)
-                                                        <div class="ms-4 mt-1">
-                                                            @foreach($cat->subCategories as $sub)
-                                                                <div class="form-check mb-1">
-                                                                    <input class="form-check-input" type="checkbox"
-                                                                        wire:model.live="selectedSubCategories"
-                                                                        value="{{ $sub->id }}"
-                                                                        id="asc_{{ $sub->id }}"
-                                                                        @if(in_array((string) $sub->id, $selectedSubCategories)) checked @endif>
-                                                                    <label class="form-check-label text-muted small" for="asc_{{ $sub->id }}">
-                                                                        {{ $sub->name }} <span class="text-muted">({{ $sub->criterias->count() }})</span>
-                                                                    </label>
+                                                @endif
+                                                <div class="{{ $section['section_name'] !== '' ? 'ms-3 ps-2 border-start' : '' }}">
+                                                    @foreach($section['categories'] as $cat)
+                                                        @php $state = $checkStates['rubrik'][$cat->id] ?? null; @endphp
+                                                        @if($state)
+                                                        <div class="mb-2">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox"
+                                                                    wire:click="toggleCategory({{ $cat->id }})"
+                                                                    {{ $state['checked'] ? 'checked' : '' }}
+                                                                    data-indeterminate="{{ $state['indeterminate'] ? '1' : '0' }}"
+                                                                    id="ac_{{ $cat->id }}"
+                                                                    @if(empty($state['sub_ids'])) disabled @endif>
+                                                                <label class="form-check-label fw-semibold text-dark" for="ac_{{ $cat->id }}">
+                                                                    {{ $cat->name }}
+                                                                </label>
+                                                                <span class="text-muted small ms-1">
+                                                                    ({{ count($state['criteria_ids']) }} kriteria)
+                                                                </span>
+                                                            </div>
+                                                            @if(count($state['sub_ids']) > 0)
+                                                                <div class="ms-4 mt-1">
+                                                                    @foreach($cat->subCategories as $sub)
+                                                                        @php
+                                                                            $subState = $state['subs'][$sub->id] ?? null;
+                                                                            $isOpen = in_array((string) $sub->id, $expandedSubIds, true);
+                                                                        @endphp
+                                                                        @if($subState)
+                                                                        <div class="form-check mb-1 d-flex align-items-center gap-1">
+                                                                            @if(count($subState['criteria_ids']) > 0)
+                                                                                <button type="button" class="btn btn-sm btn-link p-0 text-muted lh-1"
+                                                                                    wire:click="toggleSubExpand({{ $sub->id }})"
+                                                                                    title="{{ $isOpen ? 'Tutup kriteria' : 'Buka kriteria' }}">
+                                                                                    <i class="ti ti-chevron-{{ $isOpen ? 'down' : 'right' }}"></i>
+                                                                                </button>
+                                                                            @endif
+                                                                            <input class="form-check-input mt-0" type="checkbox"
+                                                                                wire:click="toggleCriteriaSub({{ $sub->id }})"
+                                                                                data-indeterminate="{{ $subState['indeterminate'] ? '1' : '0' }}"
+                                                                                id="asc_{{ $sub->id }}"
+                                                                                {{ $subState['checked'] ? 'checked' : '' }}>
+                                                                            <label class="form-check-label text-muted small" for="asc_{{ $sub->id }}">
+                                                                                {{ $sub->name }} <span class="text-muted">({{ count($subState['criteria_ids']) }})</span>
+                                                                            </label>
+                                                                        </div>
+                                                                        @if($isOpen && count($subState['criteria_ids']) > 0)
+                                                                            <div class="ms-4">
+                                                                                @foreach($sub->criterias as $crit)
+                                                                                    <div class="form-check mb-1 d-flex align-items-center gap-1">
+                                                                                        <input class="form-check-input mt-0" type="checkbox"
+                                                                                            wire:click="toggleCriteria({{ $crit->id }})"
+                                                                                            id="crt_{{ $crit->id }}"
+                                                                                            @if(in_array((string) $crit->id, $selectedCriteria, true)) checked @endif>
+                                                                                        <label class="form-check-label text-muted small" for="crt_{{ $crit->id }}">
+                                                                                            {{ $crit->name }}
+                                                                                            @if($crit->weight !== null)
+                                                                                                <span class="text-muted">bobot {{ rtrim(rtrim(number_format((float) $crit->weight, 2, ',', '.'), '0'), ',') }}</span>
+                                                                                            @endif
+                                                                                        </label>
+                                                                                    </div>
+                                                                                @endforeach
+                                                                            </div>
+                                                                        @endif
+                                                                        @endif
+                                                                    @endforeach
                                                                 </div>
-                                                            @endforeach
+                                                            @endif
                                                         </div>
-                                                    @endif
+                                                        @endif
+                                                    @endforeach
                                                 </div>
                                             @endforeach
                                         </div>
@@ -170,44 +234,82 @@
                                 <div class="border rounded p-3" style="max-height: 260px; overflow-y: auto;">
                                     @foreach($rubrikByLevel as $levelGroup)
                                         <div class="mb-3">
-                                            <div class="fw-bold text-primary small mb-1" style="text-transform: uppercase; letter-spacing: 0.5px;">
+                                            <div class="fw-semibold text-primary small mb-1" style="text-transform: uppercase; letter-spacing: 0.5px;">
                                                 <i class="ti ti-layers-subtract me-1"></i>{{ $levelGroup['level_name'] }}
                                             </div>
-                                            @foreach($levelGroup['categories'] as $cat)
-                                                @php
-                                                    $catSubs = $cat->subCategories->pluck('id')->map(fn($id) => (string) $id)->toArray();
-                                                    $tbSelectedCount = count(array_intersect($catSubs, $selectedTiebreakSubCategories));
-                                                    $tbAllChecked = count($catSubs) > 0 && $tbSelectedCount === count($catSubs);
-                                                    $tbSomeChecked = $tbSelectedCount > 0;
-                                                @endphp
-                                                <div class="mb-2">
-                                                    <div class="form-check">
-                                                        <input class="form-check-input" type="checkbox"
-                                                            wire:click="toggleTiebreakCategory({{ $cat->id }})"
-                                                            {{ $tbAllChecked ? 'checked' : '' }}
-                                                            data-indeterminate="{{ $tbSomeChecked && !$tbAllChecked ? '1' : '0' }}"
-                                                            id="tb_ac_{{ $cat->id }}"
-                                                            @if(empty($catSubs)) disabled @endif>
-                                                        <label class="form-check-label fw-bold text-dark" for="tb_ac_{{ $cat->id }}">
-                                                            {{ $cat->name }}
-                                                        </label>
+                                            @foreach($levelGroup['sections'] as $section)
+                                                {{-- Sama seperti blok Rubrik: bagian grup/babak
+                                                     dipisah supaya himpunan penilaian tidak
+                                                     tercampur jadi satu daftar rata. --}}
+                                                @if($section['section_name'] !== '')
+                                                    <div class="d-flex align-items-center gap-1 mt-2 mb-1">
+                                                        <i class="ti ti-corner-down-right text-muted"></i>
+                                                        <span class="badge {{ $section['is_final'] ? 'bg-warning text-dark' : 'bg-light-secondary text-secondary' }}">{{ $section['section_name'] }}</span>
                                                     </div>
-                                                    @if(count($catSubs) > 0)
-                                                        <div class="ms-4 mt-1">
-                                                            @foreach($cat->subCategories as $sub)
-                                                                <div class="form-check mb-1">
-                                                                    <input class="form-check-input" type="checkbox"
-                                                                        wire:model.live="selectedTiebreakSubCategories"
-                                                                        value="{{ $sub->id }}"
-                                                                        id="tb_asc_{{ $sub->id }}"
-                                                                        @if(in_array((string) $sub->id, $selectedTiebreakSubCategories)) checked @endif>
-                                                                    <label class="form-check-label text-muted small" for="tb_asc_{{ $sub->id }}">
-                                                                        {{ $sub->name }} <span class="text-muted">({{ $sub->criterias->count() }})</span>
-                                                                    </label>
+                                                @endif
+                                                <div class="{{ $section['section_name'] !== '' ? 'ms-3 ps-2 border-start' : '' }}">
+                                                    @foreach($section['categories'] as $cat)
+                                                        @php $state = $checkStates['tiebreak'][$cat->id] ?? null; @endphp
+                                                        @if($state)
+                                                        <div class="mb-2">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input" type="checkbox"
+                                                                    wire:click="toggleTiebreakCategory({{ $cat->id }})"
+                                                                    {{ $state['checked'] ? 'checked' : '' }}
+                                                                    data-indeterminate="{{ $state['indeterminate'] ? '1' : '0' }}"
+                                                                    id="tb_ac_{{ $cat->id }}"
+                                                                    @if(empty($state['sub_ids'])) disabled @endif>
+                                                                <label class="form-check-label fw-semibold text-dark" for="tb_ac_{{ $cat->id }}">
+                                                                    {{ $cat->name }}
+                                                                </label>
+                                                            </div>
+                                                            @if(count($state['sub_ids']) > 0)
+                                                                <div class="ms-4 mt-1">
+                                                                    @foreach($cat->subCategories as $sub)
+                                                                        @php
+                                                                            $subState = $state['subs'][$sub->id] ?? null;
+                                                                            $isOpen = in_array((string) $sub->id, $expandedTiebreakSubIds, true);
+                                                                        @endphp
+                                                                        @if($subState)
+                                                                        <div class="form-check mb-1 d-flex align-items-center gap-1">
+                                                                            @if(count($subState['criteria_ids']) > 0)
+                                                                                <button type="button" class="btn btn-sm btn-link p-0 text-muted lh-1"
+                                                                                    wire:click="toggleTiebreakSubExpand({{ $sub->id }})"
+                                                                                    title="{{ $isOpen ? 'Tutup kriteria' : 'Buka kriteria' }}">
+                                                                                    <i class="ti ti-chevron-{{ $isOpen ? 'down' : 'right' }}"></i>
+                                                                                </button>
+                                                                            @endif
+                                                                            <input class="form-check-input mt-0" type="checkbox"
+                                                                                wire:click="toggleTiebreakSub({{ $sub->id }})"
+                                                                                data-indeterminate="{{ $subState['indeterminate'] ? '1' : '0' }}"
+                                                                                id="tb_asc_{{ $sub->id }}"
+                                                                                {{ $subState['checked'] ? 'checked' : '' }}>
+                                                                            <label class="form-check-label text-muted small" for="tb_asc_{{ $sub->id }}">
+                                                                                {{ $sub->name }} <span class="text-muted">({{ count($subState['criteria_ids']) }})</span>
+                                                                            </label>
+                                                                        </div>
+                                                                        @if($isOpen && count($subState['criteria_ids']) > 0)
+                                                                            <div class="ms-4">
+                                                                                @foreach($sub->criterias as $crit)
+                                                                                    <div class="form-check mb-1 d-flex align-items-center gap-1">
+                                                                                        <input class="form-check-input mt-0" type="checkbox"
+                                                                                            wire:click="toggleTiebreakCriteria({{ $crit->id }})"
+                                                                                            id="tb_crt_{{ $crit->id }}"
+                                                                                            @if(in_array((string) $crit->id, $selectedTiebreakCriteria, true)) checked @endif>
+                                                                                        <label class="form-check-label text-muted small" for="tb_crt_{{ $crit->id }}">
+                                                                                            {{ $crit->name }}
+                                                                                        </label>
+                                                                                    </div>
+                                                                                @endforeach
+                                                                            </div>
+                                                                        @endif
+                                                                        @endif
+                                                                    @endforeach
                                                                 </div>
-                                                            @endforeach
+                                                            @endif
                                                         </div>
-                                                    @endif
+                                                        @endif
+                                                    @endforeach
                                                 </div>
                                             @endforeach
                                         </div>
@@ -285,15 +387,27 @@
                     <i class="ti ti-trophy text-warning"></i>
                     <h5 class="mb-0 text-white fw-semibold">{{ $champion->name }}</h5>
                     <span class="badge bg-white text-dark rounded-pill ms-2">Top {{ $champion->quantity }}</span>
+                    {{-- Lingkup juara yang sedang dipilih: kartu yang sama
+                         menampilkan daftar juara berbeda per lingkup, jadi
+                         tanpanya angka di kartu tak bisa dipastikan milik
+                         lingkup mana. --}}
+                    @if($selectedGroup)
+                        <span class="badge bg-primary rounded-pill ms-1">{{ $selectedGroup->name }}</span>
+                    @endif
+                    @if($selectedRound)
+                        <span class="badge {{ $selectedRound->isFinal() ? 'bg-warning text-dark' : 'bg-info' }} rounded-pill ms-1">{{ $selectedRound->name }}</span>
+                    @endif
                     @if($champion->is_public)
                         <span class="badge bg-success rounded-pill ms-1" title="Tampil di laman publik"><i class="ti ti-world"></i></span>
                     @endif
                 </div>
                 <div class="d-flex gap-1">
-                    <a href="{{ route('eventner.champion-categories.pdf', [
+                    <a href="{{ route('eventner.champion-categories.pdf', array_filter([
                         'competition_category_id' => $selectedCompetitionCategoryId,
                         'champion_category_id' => $champion->id,
-                    ]) }}" target="_blank" class="btn btn-sm btn-danger text-white" title="Unduh PDF Kategori Juara ini">
+                        'competition_round_id' => $selectedRound?->id,
+                        'competition_group_id' => $selectedGroup?->id,
+                    ])) }}" target="_blank" class="btn btn-sm btn-danger text-white" title="Unduh PDF Kategori Juara ini">
                         <i class="ti ti-file-type-pdf me-1"></i> PDF
                     </a>
                     @if(!empty($eventner->scoring_code))

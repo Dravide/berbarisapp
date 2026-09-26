@@ -53,6 +53,18 @@ class CompetitionCategory extends Model
         return $this->hasMany(AssessmentCategory::class, 'competition_category_id');
     }
 
+    /** Pool penilaian di dalam tingkat ini ("Grup A" / "Grup B"). */
+    public function groups()
+    {
+        return $this->hasMany(CompetitionGroup::class, 'competition_category_id')->orderBy('sort_order');
+    }
+
+    /** Babak penilaian di dalam tingkat ini (penyisihan, final, ...). */
+    public function rounds()
+    {
+        return $this->hasMany(CompetitionRound::class, 'competition_category_id')->orderBy('sort_order');
+    }
+
     public function remainingSlots(): int
     {
         if (!$this->kuota) {

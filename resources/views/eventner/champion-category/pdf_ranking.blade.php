@@ -34,6 +34,7 @@
         .subjudul { text-align: center; font-size: 9px; color: #888; margin-bottom: 14px; }
 
         /* LEVEL HEADING */
+        .babak-final { display: inline-block; background: #ffc107; color: #664d03; padding: 1px 7px; border-radius: 8px; font-weight: bold; }
         .level-head { background: #1a1a2e; color: #fff; padding: 7px 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1.5px; border-radius: 4px; margin-bottom: 10px; page-break-after: avoid; }
         .level-block { margin-bottom: 20px; }
         .kosong { font-size: 8px; color: #999; font-style: italic; padding: 8px 12px; border: 1px dashed #ddd; border-radius: 4px; }
@@ -111,7 +112,7 @@
     <div class="judul">Rekap Hasil Juara</div>
     <div class="subjudul">
         @if($competitionCategory)
-            Kategori Lomba: {{ $competitionCategory->full_name }} &bull;
+            Kategori Lomba: {{ $competitionCategory->full_name }}@if($competitionGroup) &mdash; {{ $competitionGroup->name }}@endif@if($competitionRound) &mdash; @if($competitionRound->isFinal())<span class="babak-final">Babak {{ $competitionRound->name }}</span>@else Babak {{ $competitionRound->name }}@endif@endif &bull;
         @else
             Semua Kategori Lomba &bull;
         @endif

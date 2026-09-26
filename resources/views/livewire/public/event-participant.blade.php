@@ -30,8 +30,7 @@
         $totalKontingen = $_cats->sum(fn($c) => $c->registrations->count());
         $totalAnggota = $_cats->sum(fn($c) => $c->registrations->sum(fn($r) => $r->participants->count()));
         $totalVerified = $_cats->sum(fn($c) => $c->registrations->where('status_berkas', 'Terverifikasi')->count());
-    @endphp
-    <div class="container-landing -mt-8 relative z-20">
+    @endphp    <div class="container-landing -mt-8 relative z-20">
         <div class="surface-card p-6">
             <div class="grid gap-6 grid-cols-2 md:grid-cols-4">
                 <div class="text-center">
@@ -62,11 +61,44 @@
         </div>
     </div>
 
+    {{-- ========== PILIH LINGKUP ========== --}}
+    @if($scopes->isNotEmpty())
+        <div class="container-landing py-6">
+            <div class="surface-card px-6 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                    <span class="text-xs font-bold text-deep-slate uppercase tracking-wider block">Tampilkan</span>
+                    <span class="text-[11px] text-on-surface-variant font-medium">Pilih grup atau babak final untuk menyaring daftar peserta.</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary border border-outline-variant/30 shrink-0">
+                        <i class="ti ti-filter"></i>
+                    </span>
+                    {{-- Isinya lingkup peserta — grup dan babak final — bukan
+                         daftar tingkat: yang dicari di halaman ini "peserta
+                         siapa", dan finalis tidak bisa diwakili grup mana pun
+                         karena diambil dari semua grup. --}}
+                    <div class="relative">
+                        <select class="appearance-none bg-white border border-outline-variant/40 rounded-xl px-4 py-2.5 pr-10 text-sm font-bold text-deep-slate shadow-sm cursor-pointer focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 transition min-w-[220px]"
+                                wire:change="selectScope($event.target.value)">
+                            <option value="">Seluruh Peserta</option>
+                            @foreach($scopes as $scope)
+                                <option value="{{ $scope['key'] }}" @selected($selectedScopeId === $scope['key'])>{{ $scope['label'] }}</option>
+                            @endforeach
+                        </select>
+                        <i class="ti ti-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"></i>
+                    </div>
+                </div>
+            </div>
+            @error('selectedScopeId') <p class="text-red-600 text-sm font-semibold mt-2 mb-0">{{ $message }}</p> @enderror
+        </div>
+    @endif
+
     {{-- ========== LIST PESERTA PER KATEGORI ========== --}}
     <div class="container-landing py-8">
         <div class="grid gap-8 lg:grid-cols-12">
             <div class="lg:col-span-8 flex flex-col gap-6">
-                @foreach($_cats as $cat)
+                @foreach($cards as $card)
+                    @php $cat = $card['category']; @endphp
                     <div class="surface-card overflow-hidden">
                         {{-- Category Header --}}
                         <div class="flex items-center justify-between bg-surface-container px-6 py-4 border-b border-outline-variant/40">
@@ -74,12 +106,25 @@
                                 <i class="ti ti-medal text-primary text-lg"></i>
                                 {{ $cat->parent?->name ? $cat->parent->name . ' — ' . $cat->name : $cat->name }}
                             </h3>
-                            <span class="chip py-0.5 px-2.5 text-xs font-bold leading-normal bg-primary/10">{{ $cat->registrations->count() }} kontingen</span>
+                            <span class="chip py-0.5 px-2.5 text-xs font-bold leading-normal bg-primary/10">{{ $card['jumlah'] }} kontingen</span>
                         </div>
 
                         {{-- Category Body - Registrations --}}
-                        <div class="divide-y divide-outline-variant/30">
-                            @forelse($cat->registrations as $reg)
+                        <div class="divide-y divide-outline-variant/30">@foreach($card['sections'] as $section)
+
+                            {{-- Judul bagian memisahkan himpunan peserta yang
+                                 berbeda: Grup A bukan Grup B, dan finalis bukan
+                                 pendaftar biasa. Tingkat tanpa grup cukup satu
+                                 bagian tanpa judul, jadi tampil seperti dulu. --}}
+                            @if($card['bersection'] && $section['label'])
+                                <div class="flex items-center gap-2 px-6 py-2.5 bg-surface-container-lowest {{ $section['is_final'] ? 'border-l-4 border-amber-500' : '' }}">
+                                    <i class="ti {{ $section['is_final'] ? 'ti-flag-check text-amber-600' : 'ti-users-group text-primary' }}"></i>
+                                    <span class="text-[11px] font-bold uppercase tracking-wider {{ $section['is_final'] ? 'text-amber-600' : 'text-primary' }}">{{ $section['label'] }}</span>
+                                    <span class="text-[11px] font-medium text-on-surface-variant">— {{ $section['registrations']->count() }} kontingen</span>
+                                </div>
+                            @endif
+
+                            @forelse($section['registrations'] as $reg)
                                 <div class="flex items-center gap-4 px-6 py-4 hover:bg-surface-container-lowest transition duration-150">
                                     @if($reg->logo_sekolah)
                                         <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" alt="" class="h-11 w-11 rounded-xl object-cover border border-outline-variant/30 shadow-sm shrink-0">
@@ -94,6 +139,16 @@
                                             @if($reg->urutan_tampil)
                                                 <span class="inline-flex items-center rounded-md bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-600 border border-amber-500/20">
                                                     #{{ str_pad($reg->urutan_tampil, 2, '0', STR_PAD_LEFT) }}
+                                                </span>
+                                            @endif
+                                            {{-- Grup ditempel di baris peserta, bukan cuma
+                                                 jadi judul bagian: saat daftar dibuka tanpa
+                                                 penyaringan, judul grup ada di atas jauh dan
+                                                 pelatih yang menggulir cepat kehilangan
+                                                 konteks baris ini milik grup mana. --}}
+                                            @if(!$card['bersection'] && $reg->competitionGroup)
+                                                <span class="inline-flex items-center rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary border border-primary/20">
+                                                    {{ $reg->competitionGroup->name }}
                                                 </span>
                                             @endif
                                         </h4>
@@ -126,10 +181,10 @@
                                 </div>
                             @empty
                                 <div class="px-6 py-8 text-center text-sm font-medium text-on-surface-variant bg-surface-container-lowest">
-                                    Belum ada kontingen di kategori ini.
+                                    Belum ada kontingen di bagian ini.
                                 </div>
                             @endforelse
-                        </div>
+                        @endforeach</div>
                     </div>
                 @endforeach
             </div>

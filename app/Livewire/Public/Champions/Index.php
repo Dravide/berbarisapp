@@ -5,6 +5,7 @@ namespace App\Livewire\Public\Champions;
 use App\Models\AssessmentScore;
 use App\Models\ChampionCategory;
 use App\Models\CompetitionCategory;
+use App\Models\CompetitionGroup;
 use App\Models\Eventner;
 use App\Models\Registration;
 use Livewire\Component;
@@ -17,6 +18,13 @@ class Index extends Component
     public $categories = [];
     public $selectedCategoryId;
     public $allRankings = [];
+
+    /**
+     * Grup yang sedang dilihat. '' = peringkat gabungan seluruh tingkat
+     * (perilaku lama). Saat grup dipilih, juara dihitung hanya dari peserta
+     * grup itu dan hanya dari kategori juara yang rubriknya relevan.
+     */
+    public $selectedGroupId = '';
 
     public function mount($scoringCode)
     {
@@ -35,15 +43,61 @@ class Index extends Component
         $this->calculateRankings();
     }
 
+    /**
+     * Grup milik tingkat terpilih.
+     */
+    public function getGroupsProperty()
+    {
+        if (! $this->selectedCategoryId) {
+            return collect();
+        }
+
+        return CompetitionGroup::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $this->selectedCategoryId)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+    }
+
     public function updatedSelectedCategoryId($value)
     {
+        $this->selectedGroupId = '';
         $this->selectedCategoryId = $value;
         $this->calculateRankings();
     }
 
     public function switchCategory($categoryId)
     {
+        if ((string) $this->selectedCategoryId !== (string) $categoryId) {
+            $this->selectedGroupId = '';
+        }
+
         $this->selectedCategoryId = $categoryId;
+        $this->calculateRankings();
+    }
+
+    /**
+     * Ganti grup. Grup dari DOM wajib milik tingkat terpilih.
+     */
+    public function switchGroup($groupId)
+    {
+        $this->selectedGroupId = '';
+
+        if ($groupId !== '' && $groupId !== null) {
+            $ada = CompetitionGroup::where('eventner_id', $this->eventner->id)
+                ->where('competition_category_id', $this->selectedCategoryId)
+                ->find($groupId);
+
+            if (! $ada) {
+                $this->addError('selectedGroupId', 'Grup tidak ditemukan pada tingkat lomba ini.');
+
+                return;
+            }
+
+            $this->selectedGroupId = (string) $ada->id;
+        }
+
+        $this->resetErrorBag('selectedGroupId');
         $this->calculateRankings();
     }
 
@@ -51,7 +105,7 @@ class Index extends Component
     {
         $this->allRankings = [];
 
-        $cacheKey = "champions:{$this->eventner->id}:cat:{$this->selectedCategoryId}";
+        $cacheKey = "champions:{$this->eventner->id}:cat:{$this->selectedCategoryId}:group:{$this->selectedGroupId}";
 
         $cached = cache()->get($cacheKey);
         if ($cached !== null) {
@@ -59,12 +113,23 @@ class Index extends Component
             return;
         }
 
-        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias'])
+        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias', 'criterias', 'tiebreakCriterias'])
             ->where('eventner_id', $this->eventner->id)
             ->get();
 
+        // Saat grup dipilih, kategori juara yang rubriknya khusus grup lain
+        // tidak ikut — inilah yang membuat "Juara Grup A" dan "Juara Grup B"
+        // jadi dua daftar terpisah. Tanpa grup terpilih, semua tampil seperti
+        // sebelumnya.
+        if ($this->selectedGroupId !== '') {
+            $championCategories = $championCategories
+                ->filter(fn ($c) => $c->isVisibleFor($this->selectedCategoryId, $this->selectedGroupId))
+                ->values();
+        }
+
         $participants = Registration::where('eventner_id', $this->eventner->id)
             ->where('competition_category_id', $this->selectedCategoryId)
+            ->when($this->selectedGroupId !== '', fn ($q) => $q->where('competition_group_id', $this->selectedGroupId))
             ->orderBy('nama_sekolah')
             ->get();
 
@@ -91,20 +156,10 @@ class Index extends Component
         )->pluck('weight', 'id')->toArray();
 
         foreach ($championCategories as $champion) {
-            $criteriaMap = [];
-            foreach ($champion->assessmentSubCategories as $sub) {
-                foreach ($sub->criterias as $crit) {
-                    $criteriaMap[$crit->id] = $crit->weight ?? 1;
-                }
-            }
+            $criteriaMap = $champion->scoringCriteriaWeights();
 
             // Build tiebreak criteria map
-            $tiebreakCriteriaMap = [];
-            foreach ($champion->tiebreakSubCategories as $sub) {
-                foreach ($sub->criterias as $crit) {
-                    $tiebreakCriteriaMap[$crit->id] = $crit->weight ?? 1;
-                }
-            }
+            $tiebreakCriteriaMap = $champion->tiebreakCriteriaWeights();
 
             $participantScores = [];
             foreach ($participants as $participant) {
@@ -197,10 +252,14 @@ class Index extends Component
     {
         return view('livewire.public.champions.index', [
             'eventner' => $this->eventner,
+            'groups' => $this->groups,
+            'selectedGroupId' => $this->selectedGroupId,
         ])->layoutData([
             'eventner' => $this->eventner,
             'categories' => $this->categories,
             'selectedCategoryId' => $this->selectedCategoryId,
+            'groups' => $this->groups,
+            'selectedGroupId' => $this->selectedGroupId,
         ])->title('Pengumuman Juara - ' . $this->eventner->nama_event);
     }
 }

@@ -76,15 +76,148 @@
             </div>
         </div>
 
-    @elseif($view == 'participants')
-        {{-- ========== STEP 2: SELECT PARTICIPANT ========== --}}
+    @elseif($view == 'groups')
+        {{-- ========== STEP 1b: PILIH GRUP / BABAK ==========
+             Muncul hanya untuk tingkat yang punya grup atau babak final.
+             Tingkat polos melewati layar ini sepenuhnya. --}}
         <div class="card w-100">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <div class="d-flex align-items-center gap-2">
                     <button wire:click="backToCategories" class="btn btn-sm btn-light">
                         <i class="ti ti-arrow-left"></i>
                     </button>
+                    <h5 class="mb-0 text-white fw-semibold">{{ $selectedCategory->full_name }}</h5>
+                </div>
+                <span class="badge bg-white text-primary fw-semibold">
+                    {{ $groups->count() + ($rounds->contains(fn ($r) => $r->isFinal()) ? 1 : 0) + ($ungroupedCount > 0 ? 1 : 0) }} Pilihan
+                </span>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted mb-4">
+                    Tingkat ini dibelah jadi beberapa pool penilaian.
+                    Pilih satu untuk melihat daftar sekolahnya.
+                </p>
+
+                <div class="row g-3">
+                    @foreach($groups as $grup)
+                        <div class="col-md-6 col-lg-4">
+                            <div wire:click="selectGroupScope('{{ $grup->id }}')"
+                                 class="card mb-0 border border-2 hover-shadow h-100"
+                                 style="cursor:pointer;">
+                                <div class="card-body p-4 text-center">
+                                    <div class="bg-primary-subtle text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:56px;height:56px;">
+                                        <i class="ti ti-users-group fs-7"></i>
+                                    </div>
+                                    <h5 class="fw-semibold text-dark mb-1">{{ $grup->name }}</h5>
+                                    <p class="text-muted mb-3 fs-2">{{ $groupCounts[$grup->id] ?? 0 }} Peserta</p>
+                                    @if($rounds->contains(fn ($r) => ! $r->isFinal()))
+                                        <span class="badge bg-secondary-subtle text-secondary mb-2">Babak Penyisihan</span>
+                                    @endif
+                                    <div>
+                                        <span class="btn btn-sm btn-primary">
+                                            <i class="ti ti-edit me-1"></i> Input Nilai
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+
+                    @if($ungroupedCount > 0)
+                        <div class="col-md-6 col-lg-4">
+                            <div wire:click="selectGroupScope('ungrouped')"
+                                 class="card mb-0 border border-2 hover-shadow h-100"
+                                 style="cursor:pointer;">
+                                <div class="card-body p-4 text-center">
+                                    <div class="bg-warning-subtle text-warning rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:56px;height:56px;">
+                                        <i class="ti ti-user-question fs-7"></i>
+                                    </div>
+                                    <h5 class="fw-semibold text-dark mb-1">Belum Bergrup</h5>
+                                    <p class="text-muted mb-3 fs-2">{{ $ungroupedCount }} Peserta</p>
+                                    <div>
+                                        <span class="btn btn-sm btn-warning">
+                                            <i class="ti ti-edit me-1"></i> Input Nilai
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if($rounds->contains(fn ($r) => $r->isFinal()))
+                        <div class="col-md-6 col-lg-4">
+                            <div wire:click="selectGroupScope('final')"
+                                 class="card mb-0 border border-2 hover-shadow h-100"
+                                 style="cursor:pointer;">
+                                <div class="card-body p-4 text-center">
+                                    <div class="bg-success-subtle text-success rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:56px;height:56px;">
+                                        <i class="ti ti-flag fs-7"></i>
+                                    </div>
+                                    <h5 class="fw-semibold text-dark mb-1">Babak Final</h5>
+                                    <p class="text-muted mb-3 fs-2">{{ $finalistCount }} Finalis</p>
+                                    <div>
+                                        <span class="btn btn-sm btn-success">
+                                            <i class="ti ti-edit me-1"></i> Input Nilai
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    @if($groups->isNotEmpty())
+                        <div class="col-md-6 col-lg-4">
+                            <div wire:click="selectGroupScope('all')"
+                                 class="card mb-0 border border-2 hover-shadow h-100"
+                                 style="cursor:pointer;">
+                                <div class="card-body p-4 text-center">
+                                    <div class="bg-secondary-subtle text-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:56px;height:56px;">
+                                        <i class="ti ti-list fs-7"></i>
+                                    </div>
+                                    <h5 class="fw-semibold text-dark mb-1">Semua Grup</h5>
+                                    <p class="text-muted mb-3 fs-2">{{ $totalCount }} Peserta</p>
+                                    <div>
+                                        <span class="btn btn-sm btn-outline-secondary">
+                                            <i class="ti ti-list me-1"></i> Lihat Semua
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+    @elseif($view == 'participants')
+        {{-- ========== STEP 2: SELECT PARTICIPANT ========== --}}
+        <div class="card w-100">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <button wire:click="backFromParticipants" class="btn btn-sm btn-light">
+                        <i class="ti ti-arrow-left"></i>
+                    </button>
                     <h5 class="mb-0 text-white fw-semibold">{{ $selectedCategory->full_name }} — Pilih Peserta</h5>
+                    @php
+                        $grupAktif = $selectedGroupId ? ($groups ?? collect())->firstWhere('id', $selectedGroupId) : null;
+                        $babakAktif = $selectedRoundId ? ($rounds ?? collect())->firstWhere('id', $selectedRoundId) : null;
+                    @endphp
+                    @if($grupAktif)
+                        <span class="badge bg-white text-primary fw-semibold"><i class="ti ti-users-group me-1"></i>{{ $grupAktif->name }}</span>
+                    @elseif($ungroupedOnly)
+                        <span class="badge bg-warning text-dark fw-semibold"><i class="ti ti-user-question me-1"></i>Belum Bergrup</span>
+                    @elseif($babakAktif && $babakAktif->isFinal())
+                        <span class="badge bg-success fw-semibold"><i class="ti ti-flag me-1"></i>{{ $babakAktif->name }}</span>
+                    @elseif($groups->isNotEmpty())
+                        <span class="badge bg-white text-primary fw-semibold"><i class="ti ti-list me-1"></i>Semua Grup</span>
+                    @endif
+                    {{-- Babak yang berlaku untuk semua sekolah ditulis apa adanya:
+                         satu tingkat punya babak yang sama untuk seluruh peserta,
+                         jadi ini bukan pilihan, hanya penanda rubrik mana yang
+                         sedang dimuat form input. --}}
+                    @if($babakAktif && ! $babakAktif->isFinal())
+                        <span class="badge bg-light text-dark fw-semibold">{{ $babakAktif->name }}</span>
+                    @endif
                 </div>
                 <div class="d-flex gap-2">
                     <a href="{{ route('eventner.scoring.csv', ['category_id' => $selectedCategoryId]) }}" class="btn btn-sm btn-light" target="_blank">
@@ -184,7 +317,14 @@
                                     <p class="text-white text-opacity-75 mb-0 fs-2">Pelatih: {{ $selectedRegistration->nama_pelatih }} &bull; {{ $selectedRegistration->competitionCategory->name ?? '-' }}</p>
                                 </div>
                             </div>
-                            <a href="{{ route('eventner.scoring.pdf-participant', ['registration_id' => $selectedRegistration->id]) }}"
+                            {{-- Babak yang sedang dibuka ikut dikirim: halaman ini
+                                 sudah tahu babaknya, dan tanpa itu lembar yang
+                                 tercetak ditentukan tebakan controller — bukan
+                                 apa yang sedang dilihat operator. --}}
+                            <a href="{{ route('eventner.scoring.pdf-participant', array_filter([
+                                    'registration_id' => $selectedRegistration->id,
+                                    'round_id' => $selectedRoundId,
+                               ])) }}"
                                class="btn btn-sm btn-light" target="_blank">
                                 <i class="ti ti-file-type-pdf text-danger me-1"></i> PDF
                             </a>

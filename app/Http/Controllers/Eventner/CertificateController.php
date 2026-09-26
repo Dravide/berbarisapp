@@ -32,6 +32,10 @@ class CertificateController extends Controller
         $competitionCategoryId = $request->query('competition_category_id');
         $schoolKey = $request->query('school');
 
+        // Grup opsional: sertifikat juara per grup. Kosong = peringkat gabungan
+        // tingkat (perilaku lama).
+        $competitionGroupId = $request->query('competition_group_id');
+
         // Mode sertifikat: participant = 1 siswa 1 sertifikat, school = semua
         // nama pasukan dalam 1 sertifikat.
         $mode = $request->query('mode') === 'school' ? 'school' : 'participant';
@@ -47,7 +51,7 @@ class CertificateController extends Controller
 
         // Load champion category
         $championCategory = ChampionCategory::where('eventner_id', $eventner->id)
-            ->with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias'])
+            ->with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias', 'criterias', 'tiebreakCriterias'])
             ->findOrFail($championCategoryId);
 
         // Scoping ke eventner sendiri. Dulu findOrFail() mentah, jadi rubrik
@@ -57,20 +61,18 @@ class CertificateController extends Controller
         $competitionCategory = CompetitionCategory::where('eventner_id', $eventner->id)
             ->findOrFail($competitionCategoryId);
 
-        // Build criteria weight maps
-        $criteriaMap = [];
-        foreach ($championCategory->assessmentSubCategories as $sub) {
-            foreach ($sub->criterias as $crit) {
-                $criteriaMap[$crit->id] = $crit->weight ?? 1;
-            }
+        // Grup dari query wajib milik tingkat ini.
+        $competitionGroup = null;
+        if ($competitionGroupId) {
+            $competitionGroup = \App\Models\CompetitionGroup::where('eventner_id', $eventner->id)
+                ->where('competition_category_id', $competitionCategoryId)
+                ->findOrFail($competitionGroupId);
         }
 
-        $tiebreakCriteriaMap = [];
-        foreach ($championCategory->tiebreakSubCategories as $sub) {
-            foreach ($sub->criterias as $crit) {
-                $tiebreakCriteriaMap[$crit->id] = $crit->weight ?? 1;
-            }
-        }
+        // Build criteria weight maps
+        $criteriaMap = $championCategory->scoringCriteriaWeights();
+
+        $tiebreakCriteriaMap = $championCategory->tiebreakCriteriaWeights();
 
         // All criteria weight map for other_total
         $allCriteriaWeightMap = AssessmentCriteria::whereIn(
@@ -84,6 +86,7 @@ class CertificateController extends Controller
         // Get participants for this competition category
         $participants = Registration::where('eventner_id', $eventner->id)
             ->where('competition_category_id', $competitionCategoryId)
+            ->when($competitionGroup, fn ($q) => $q->where('competition_group_id', $competitionGroup->id))
             ->with(['participants', 'fieldValues'])
             ->orderBy('nama_sekolah')
             ->get();
@@ -400,12 +403,12 @@ class CertificateController extends Controller
         $schoolKey = $registration->npsn ?: mb_strtolower(trim((string) $registration->nama_sekolah));
         $competitionCategory = CompetitionCategory::find($registration->competition_category_id);
 
-        // Kategori juara relevan dengan tingkat lomba registration ini,
+        // Kategori juara relevan dengan tingkat + grup lomba registration ini,
         // lalu ambil peringkat sekolah ini dari kompetisi penuh.
         $championCategories = ChampionCategory::where('eventner_id', $eventner->id)
-            ->with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias'])
+            ->with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias', 'criterias', 'tiebreakCriterias'])
             ->get()
-            ->filter(fn ($cc) => $cc->isVisibleFor($registration->competition_category_id))
+            ->filter(fn ($cc) => $cc->isVisibleFor($registration->competition_category_id, $registration->competition_group_id))
             ->values();
 
         $calculator = app(\App\Services\ChampionCalculator::class);
@@ -413,9 +416,9 @@ class CertificateController extends Controller
         $pages = [];
         $championsHit = collect();
         foreach ($championCategories as $championCategory) {
-            // Peringkat per mata lomba (konsisten dengan downloadPdf dan
+            // Peringkat per mata lomba + grup (konsisten dengan downloadPdf dan
             // halaman /hasil) — bukan pool gabungan lintas mata lomba.
-            [, , $winners] = $calculator->winners($championCategory, $registration->competition_category_id);
+            [, , $winners] = $calculator->winners($championCategory, $registration->competition_category_id, $registration->competition_group_id);
 
             $mine = array_values(array_filter($winners, function ($winner) use ($schoolKey) {
                 $reg = $winner['registration'];

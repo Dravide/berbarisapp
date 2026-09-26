@@ -397,7 +397,7 @@ class Editor extends Component
         }
 
         $championCategory = ChampionCategory::where('eventner_id', $this->eventner->id)
-            ->with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias'])
+            ->with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias', 'criterias', 'tiebreakCriterias'])
             ->find($this->previewChampionCategoryId);
         // Scoping ke eventner sendiri, sama seperti cabang di atas — properti
         // preview ini datang dari klien, jadi tanpa scope kategori event lain

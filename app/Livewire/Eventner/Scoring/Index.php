@@ -5,6 +5,9 @@ namespace App\Livewire\Eventner\Scoring;
 use App\Models\AssessmentCategory;
 use App\Models\AssessmentScore;
 use App\Models\CompetitionCategory;
+use App\Models\CompetitionGroup;
+use App\Models\CompetitionRound;
+use App\Models\CompetitionRoundRegistration;
 use App\Models\DeductionCategory;
 use App\Models\Judge;
 use App\Models\Registration;
@@ -33,6 +36,30 @@ class Index extends Component
     // Judge support
     public $selectedJudgeId;
     public $judges = [];
+
+    /**
+     * Babak yang sedang dinilai (id CompetitionRound) — null = tanpa babak.
+     *
+     * TIDAK dipilih langsung dari DOM. Nilainya mengikuti chip di daftar
+     * peserta: chip grup membuka babak penyisihan, chip "Final" membuka babak
+     * final. Kartu pemilih babak di form input sudah dihapus justru karena
+     * tugasnya kini dipegang chip itu — satu tingkat punya babak yang sama
+     * untuk semua sekolah, jadi menanyakan babak lagi per peserta hanya
+     * mengulang pertanyaan yang sama.
+     */
+    public $selectedRoundId;
+
+    /** Grup yang sedang disaring di daftar peserta (id CompetitionGroup) — null = semua. */
+    public $selectedGroupId;
+
+    /**
+     * Hanya peserta yang belum dibagi grup.
+     *
+     * Peserta yang belum masuk grup mana pun tidak muncul di kartu grup mana
+     * pun, jadi tanpa jalur ini mereka lenyap dari jangkauan panitia begitu
+     * tingkatnya mulai dibagi.
+     */
+    public $ungroupedOnly = false;
 
     // Deduction support
     public $deductions = []; // [deduction_criteria_id => amount]
@@ -64,6 +91,7 @@ class Index extends Component
 
         if ($this->selectedCategoryId) {
             $this->view = 'participants';
+            $this->applyDefaultScope();
         }
     }
 
@@ -90,7 +118,72 @@ class Index extends Component
         }
 
         $this->selectedCategoryId = $category->id;
+        $this->selectedGroupId = null;
+        $this->selectedRoundId = null;
+        $this->ungroupedOnly = false;
+
+        // Tingkat berfase grup (atau berbabak final) mampir dulu ke layar
+        // pemilih grup — "SMPN 1 masuk grup mana" adalah pertanyaan pertama
+        // panitia, dan daftar gabungan seluruh sekolah tidak menjawabnya.
+        // Tingkat tanpa keduanya langsung ke daftar sekolah seperti biasa.
+        if ($this->perluPilihScope()) {
+            $this->view = 'groups';
+            return;
+        }
+
         $this->view = 'participants';
+        $this->applyDefaultScope();
+    }
+
+    /** Tingkat ini perlu layar pemilih grup/babak sebelum daftar sekolah? */
+    private function perluPilihScope(): bool
+    {
+        return $this->groups()->isNotEmpty() || $this->finalRoundId() !== null;
+    }
+
+    /** Pilih grup/babak dari layar perantara, lalu masuk ke daftar sekolahnya. */
+    public function selectGroupScope($scope)
+    {
+        $this->selectScope($scope);
+        $this->view = 'participants';
+    }
+
+    /**
+     * Kembali dari daftar peserta: ke layar pemilih grup bila tingkat ini
+     * punya grup, kalau tidak langsung ke daftar kategori.
+     */
+    public function backFromParticipants()
+    {
+        $this->selectedRegistrationId = null;
+        $this->selectedRegistration = null;
+        $this->selectedJudgeId = null;
+        $this->judges = [];
+        $this->scores = [];
+        $this->isFinalized = false;
+
+        if ($this->perluPilihScope()) {
+            $this->view = 'groups';
+            $this->selectedGroupId = null;
+            $this->selectedRoundId = null;
+            $this->ungroupedOnly = false;
+            return;
+        }
+
+        $this->backToCategories();
+    }
+
+    /**
+     * Scope awal saat tingkat baru dibuka: tanpa grup, dan babak penyisihan.
+     *
+     * Tanpa ini form input memuat rubrik penyisihan DAN final sekaligus pada
+     * tingkat berbabak — persis kebingungan yang mau dihapus oleh pemilih grup.
+     * Tingkat tanpa babak tetap tanpa babak (selectedRoundId null).
+     */
+    private function applyDefaultScope(): void
+    {
+        $this->selectedGroupId = null;
+        $this->ungroupedOnly = false;
+        $this->selectedRoundId = $this->preliminaryRoundId() ?? $this->rounds()->first()?->id;
     }
 
     public function toggleSimulateMode()
@@ -110,6 +203,9 @@ class Index extends Component
         $this->view = 'categories';
         $this->selectedCategoryId = null;
         $this->search = '';
+        $this->selectedGroupId = null;
+        $this->selectedRoundId = null;
+        $this->ungroupedOnly = false;
         $this->selectedRegistrationId = null;
         $this->selectedRegistration = null;
         $this->selectedJudgeId = null;
@@ -144,21 +240,206 @@ class Index extends Component
         $this->saveStatus = '';
     }
 
+    /**
+     * Babak milik tingkat peserta yang sedang dibuka.
+     *
+     * Kosong = tingkat ini memang satu-babak; pemilih babak disembunyikan dan
+     * perilakunya persis seperti sebelum fitur babak ada.
+     */
+    private function rounds()
+    {
+        if (! $this->selectedCategoryId) {
+            return collect();
+        }
+
+        return CompetitionRound::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $this->selectedCategoryId)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+    }
+
+    /** Grup milik tingkat terpilih, untuk chip di daftar peserta. */
+    private function groups()
+    {
+        if (! $this->selectedCategoryId) {
+            return collect();
+        }
+
+        return CompetitionGroup::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $this->selectedCategoryId)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+    }
+
+    /** Babak datang dari DOM pada jalur lain — pastikan milik eventner ini sebelum dipakai. */
+    public function updatedSelectedRoundId()
+    {
+        $this->guardSelectedRound();
+    }
+
+    /**
+     * Pemilih satu baris di daftar peserta: "Semua", satu grup, atau "Final".
+     *
+     * Grup dan Final saling eksklusif, bukan dua dimensi terpisah. Babak
+     * penyisihan berlaku untuk semua sekolah sekaligus, jadi memilih Grup A
+     * tidak menambah pertanyaan babak apa pun — ia sekaligus menetapkan bahwa
+     * yang dinilai adalah babak penyisihan tingkat ini (bila ada).
+     */
+    public function selectScope($scope)
+    {
+        $scope = (string) $scope;
+        $this->ungroupedOnly = false;
+
+        if ($scope === 'final') {
+            $this->selectedGroupId = null;
+            $this->selectedRoundId = $this->finalRoundId();
+        } elseif ($scope === 'ungrouped') {
+            // Peserta yang belum dibagi grup tidak muncul di kartu grup mana
+            // pun. Tanpa jalur ini, begitu tingkatnya mulai dibagi, sebagian
+            // peserta lenyap dari jangkauan panitia padahal justru merekalah
+            // yang belum dibagi.
+            $this->ungroupedOnly = true;
+            $this->selectedGroupId = null;
+            $this->selectedRoundId = $this->preliminaryRoundId();
+        } else {
+            $this->selectedGroupId = $scope === 'all' ? null : $this->ownGroupId($scope);
+            $this->selectedRoundId = $this->preliminaryRoundId();
+        }
+
+        $this->guardSelectedRound();
+        $this->syncSelectionToScope();
+    }
+
+    /** Grup milik tingkat terpilih; null bila bukan miliknya. */
+    private function ownGroupId($id): ?int
+    {
+        if (! $id || ! $this->selectedCategoryId) {
+            return null;
+        }
+
+        $grup = CompetitionGroup::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $this->selectedCategoryId)
+            ->find($id);
+
+        return $grup ? (int) $grup->id : null;
+    }
+
+    /** Babak penyisihan tingkat terpilih, atau null bila tingkatnya tanpa babak. */
+    private function preliminaryRoundId(): ?int
+    {
+        return $this->rounds()->firstWhere('type', CompetitionRound::TYPE_PRELIMINARY)?->id;
+    }
+
+    /** Babak final tingkat terpilih, atau null bila tidak ada babak final. */
+    private function finalRoundId(): ?int
+    {
+        return $this->rounds()->firstWhere('type', CompetitionRound::TYPE_FINAL)?->id;
+    }
+
+    /**
+     * Setelah scope berganti, peserta yang sedang dibuka dan nilai di layar
+     * bisa jadi milik grup/babak lain. Membiarkannya membuat operasi simpan
+     * mendarat di peserta di luar daftar yang sedang dilihat.
+     */
+    private function syncSelectionToScope()
+    {
+        if ($this->selectedRegistrationId) {
+            $masihMasuk = $this->inScope($this->selectedRegistrationId);
+
+            if (! $masihMasuk) {
+                $this->backToParticipants();
+                return;
+            }
+
+            $this->loadJudges();
+            $this->loadExistingScores();
+        }
+
+        $this->saveStatus = '';
+    }
+
+    /** Peserta ini termasuk daftar yang sedang disaring? */
+    private function inScope($registrationId): bool
+    {
+        $reg = Registration::where('eventner_id', $this->eventner->id)->find($registrationId);
+
+        if (! $reg || (int) $reg->competition_category_id !== (int) $this->selectedCategoryId) {
+            return false;
+        }
+
+        // Peserta yang tidak masuk daftar lolos tidak bisa dibuka di babak final.
+        if ($this->isFinalScope() && ! $this->finalistIds()->contains((int) $reg->id)) {
+            return false;
+        }
+
+        if ($this->selectedGroupId && (int) $reg->competition_group_id !== (int) $this->selectedGroupId) {
+            return false;
+        }
+
+        if ($this->ungroupedOnly && $reg->competition_group_id !== null) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function isFinalScope(): bool
+    {
+        $final = $this->finalRoundId();
+
+        return $final && (int) $this->selectedRoundId === $final;
+    }
+
+    /** Id registrasi yang tercatat lolos ke babak final tingkat terpilih. */
+    private function finalistIds(): \Illuminate\Support\Collection
+    {
+        $final = $this->finalRoundId();
+
+        if (! $final) {
+            return collect();
+        }
+
+        return CompetitionRoundRegistration::where('eventner_id', $this->eventner->id)
+            ->where('competition_round_id', $final)
+            ->pluck('registration_id')
+            ->map(fn ($id) => (int) $id);
+    }
+
+    /** Babak terpilih wajib milik eventner ini. */
+    private function guardSelectedRound(): void
+    {
+        if ($this->selectedRoundId && !CompetitionRound::where('eventner_id', $this->eventner->id)->find($this->selectedRoundId)) {
+            $this->selectedRoundId = null;
+        }
+    }
+
     public function loadJudges()
     {
         // Hanya juri yang ditugaskan (Tugaskan Kategori) ke format penilaian
-        // kategori kompetisi ini, via assessment_category_judge.
+        // pada tingkat + grup + BABAK yang sedang dibuka. Ketiganya wajib:
+        //  - grup: juri yang cuma memegang rubrik Grup B tidak boleh muncul di
+        //    panel peserta Grup A — inilah "juri berbeda per grup";
+        //  - babak: juri final tidak boleh muncul saat menilai penyisihan grup,
+        //    dan sebaliknya — rubriknya memang baris terpisah, jadi tanpa
+        //    saringan babak kedua regu juri tercampur di satu panel.
         $category = $this->selectedRegistration->competitionCategory;
         if ($category) {
+            $groupId = $this->selectedRegistration->competition_group_id;
+            $roundId = $this->selectedRoundId ? (int) $this->selectedRoundId : null;
+
             $this->judges = Judge::where('eventner_id', $this->eventner->id)
-                ->whereHas('assessmentCategories', function ($q) use ($category) {
+                ->whereHas('assessmentCategories', function ($q) use ($category, $groupId, $roundId) {
                     $q->where('assessment_categories.eventner_id', $this->eventner->id)
-                        ->where(function ($sq) use ($category) {
-                            $sq->where('assessment_categories.competition_category_id', $category->id)
-                               ->orWhereNull('assessment_categories.competition_category_id');
-                        });
+                        ->forEntry($category->id, $groupId, $roundId);
                 })
                 ->get();
+
+            // Tidak ada cabang cadangan "panel kosong → semua juri": rubrik
+            // tanpa babak sudah ikut lewat forLevel() (klausa orWhereNull), jadi
+            // panel kosong berarti memang tak ada yang berhak menilai babak ini.
+            // Cabang cadangan justru menghidupkan lagi juri final di penyisihan.
         } else {
             $this->judges = [];
         }
@@ -191,6 +472,7 @@ class Index extends Component
         $existingScores = AssessmentScore::where('registration_id', $this->selectedRegistrationId)
             ->where('eventner_id', $this->eventner->id)
             ->where('judge_id', $this->selectedJudgeId)
+            ->when($this->roundCriteriaIds() !== null, fn ($q) => $q->whereIn('assessment_criteria_id', $this->roundCriteriaIds()))
             ->get();
 
         foreach ($existingScores as $score) {
@@ -216,11 +498,40 @@ class Index extends Component
             return false;
         }
 
+        // Dibatasi ke kriteria babak terpilih: kalau tidak, nilai penyisihan
+        // yang sudah dikunci membekukan input babak final juga (dan sebaliknya,
+        // finalisasi babak final membuat operator tidak bisa memperbaiki
+        // penyisihan).
+        $criteriaIds = $this->roundCriteriaIds();
+
         return AssessmentScore::where('registration_id', $this->selectedRegistrationId)
             ->where('eventner_id', $this->eventner->id)
             ->where('judge_id', $this->selectedJudgeId)
             ->where('is_finalized', true)
+            ->when($criteriaIds !== null, fn ($q) => $q->whereIn('assessment_criteria_id', $criteriaIds))
             ->exists();
+    }
+
+    /**
+     * Id kriteria milik babak terpilih, atau null bila tanpa babak.
+     *
+     * Sengaja membaca rubrik babak itu apa adanya (tanpa grup), karena
+     * pertanyaannya "nilai babak ini sudah dikunci atau belum" — bukan
+     * "kriteria mana yang boleh dinilai juri ini".
+     */
+    private function roundCriteriaIds(): ?array
+    {
+        if (!$this->selectedRoundId) {
+            return null;
+        }
+
+        return AssessmentCategory::where('eventner_id', $this->eventner->id)
+            ->where('competition_round_id', $this->selectedRoundId)
+            ->with('subCategories.criterias')
+            ->get()
+            ->flatMap(fn ($cat) => $cat->subCategories->flatMap(fn ($sub) => $sub->criterias->pluck('id')))
+            ->map(fn ($id) => (int) $id)
+            ->all();
     }
 
     public function saveScores()
@@ -280,6 +591,7 @@ class Index extends Component
             $this->selectedRegistrationId,
             $this->selectedJudgeId,
             array_filter($this->scores, fn ($v) => $v !== '' && $v !== null),
+            $this->selectedRoundId ? (int) $this->selectedRoundId : null,
         );
 
         if ($result['missing']) {
@@ -294,7 +606,11 @@ class Index extends Component
         // Jika semua judge untuk registration ini sudah final → nilai selesai semua, kirim notif.
         if ($this->selectedRegistration) {
             app(ScoreFinalizationService::class)
-                ->notifyIfComplete($this->eventner->id, $this->selectedRegistration);
+                ->notifyIfComplete(
+                    $this->eventner->id,
+                    $this->selectedRegistration,
+                    $this->selectedRoundId ? (int) $this->selectedRoundId : null,
+                );
         }
 
         session()->flash('success', 'Penilaian berhasil difinalisasi dan dikunci.');
@@ -327,6 +643,9 @@ class Index extends Component
 
         $registrationIds = Registration::where('eventner_id', $this->eventner->id)
             ->where('competition_category_id', $this->selectedCategoryId)
+            // Mengunci "semua" saat chip grup aktif akan mengunci grup lain
+            // diam-diam — peserta yang tidak terlihat di layar.
+            ->when($this->selectedGroupId, fn ($q) => $q->where('competition_group_id', $this->selectedGroupId))
             ->pluck('id');
 
         if ($registrationIds->isEmpty()) {
@@ -335,10 +654,13 @@ class Index extends Component
         }
 
         $updated = 0;
+        $criteriaIds = $this->roundCriteriaIds();
+
         foreach ($registrationIds as $regId) {
             $affected = AssessmentScore::where('registration_id', $regId)
                 ->where('eventner_id', $this->eventner->id)
                 ->where('is_finalized', false)
+                ->when($criteriaIds !== null, fn ($q) => $q->whereIn('assessment_criteria_id', $criteriaIds))
                 ->update(['is_finalized' => true]);
             $updated += $affected;
 
@@ -346,7 +668,11 @@ class Index extends Component
                 $registration = Registration::where('eventner_id', $this->eventner->id)->find($regId);
                 if ($registration) {
                     app(ScoreFinalizationService::class)
-                        ->notifyIfComplete($this->eventner->id, $registration);
+                        ->notifyIfComplete(
+                            $this->eventner->id,
+                            $registration,
+                            $this->selectedRoundId ? (int) $this->selectedRoundId : null,
+                        );
                 }
             }
         }
@@ -380,6 +706,7 @@ class Index extends Component
         AssessmentScore::where('registration_id', $this->selectedRegistrationId)
             ->where('eventner_id', $this->eventner->id)
             ->where('judge_id', $this->selectedJudgeId)
+            ->when($this->roundCriteriaIds() !== null, fn ($q) => $q->whereIn('assessment_criteria_id', $this->roundCriteriaIds()))
             ->delete();
 
         $this->scores = [];
@@ -505,6 +832,12 @@ class Index extends Component
                     'totalDeductions' => 0,
                     'totalDeductionsKategori' => 0,
                     'totalDeductionsGlobal' => 0,
+                    'rounds' => collect(),
+                    'groups' => collect(),
+                    'groupCounts' => collect(),
+                    'ungroupedCount' => 0,
+                    'totalCount' => 0,
+                    'finalistCount' => 0,
                 ])->title('Input Nilai - ' . $this->eventner->nama_event);
             }
 
@@ -519,6 +852,21 @@ class Index extends Component
                 ->orderByRaw('COALESCE(urutan_tampil, 999999)')
                 ->orderBy('nama_sekolah');
 
+            // Chip grup: daftar menyempit ke peserta grup itu. "Semua" tidak
+            // menyaring, jadi tingkat polos berperilaku persis seperti dulu.
+            if ($this->selectedGroupId) {
+                $query->where('competition_group_id', $this->selectedGroupId);
+            }
+
+            if ($this->ungroupedOnly) {
+                $query->whereNull('competition_group_id');
+            }
+
+            // Chip Final: yang dinilai hanya peserta yang tercatat lolos.
+            if ($this->isFinalScope()) {
+                $query->whereIn('id', $this->finalistIds());
+            }
+
             if ($this->search) {
                 $query->where(function ($q) {
                     $q->where('nama_sekolah', 'like', '%' . $this->search . '%')
@@ -530,14 +878,18 @@ class Index extends Component
         }
 
         if ($this->view === 'scoring' && $this->selectedRegistration) {
-            $compCategoryId = $this->selectedRegistration->competition_category_id ?? null;
-
+            // Rubrik yang boleh dinilai juri terpilih = tingkat peserta ini,
+            // grupnya, dan babak yang sedang dibuka. Babak wajib ikut: rubrik
+            // penyisihan dan final sengaja dibuat terpisah (kuncinya per
+            // kriteria), jadi tanpa penyaring ini form menampilkan keduanya
+            // sekaligus dan operator tak tahu mana yang sedang dinilai.
             $baseQuery = AssessmentCategory::with(['subCategories.criterias'])
                 ->where('eventner_id', $this->eventner->id)
-                ->where(function ($q) use ($compCategoryId) {
-                    $q->where('competition_category_id', $compCategoryId)
-                      ->orWhereNull('competition_category_id');
-                });
+                ->forEntry(
+                    $this->selectedRegistration->competition_category_id ?? null,
+                    $this->selectedRegistration->competition_group_id,
+                    $this->selectedRoundId ? (int) $this->selectedRoundId : null,
+                );
 
             if ($this->selectedJudgeId) {
                 $assessmentCategories = (clone $baseQuery)
@@ -583,6 +935,10 @@ class Index extends Component
                 $allJudgeScores = AssessmentScore::where('registration_id', $this->selectedRegistrationId)
                     ->where('eventner_id', $this->eventner->id)
                     ->whereIn('judge_id', collect($this->judges)->pluck('id'))
+                    // Total per juri mengikuti babak terpilih. Tanpa ini angka
+                    // "sudah dinilai" menjumlah penyisihan + final sekaligus dan
+                    // tak cocok dengan kolom nilai yang sedang tampil.
+                    ->when($this->roundCriteriaIds() !== null, fn ($q) => $q->whereIn('assessment_criteria_id', $this->roundCriteriaIds()))
                     ->get()
                     ->groupBy('judge_id');
 
@@ -626,9 +982,33 @@ class Index extends Component
 
         $totalDeductions = $totalDeductionsKategori + $totalDeductionsGlobal;
 
+        // Jumlah peserta per grup untuk kartu pemilih grup. Satu query
+        // dikelompokkan, bukan hitungan per kartu.
+        $groupCounts = collect();
+        $ungroupedCount = 0;
+        if ($this->selectedCategoryId) {
+            $groupCounts = Registration::where('eventner_id', $this->eventner->id)
+                ->where('competition_category_id', $this->selectedCategoryId)
+                ->whereNotNull('competition_group_id')
+                ->groupBy('competition_group_id')
+                ->selectRaw('competition_group_id, COUNT(*) as total')
+                ->pluck('total', 'competition_group_id');
+
+            $ungroupedCount = Registration::where('eventner_id', $this->eventner->id)
+                ->where('competition_category_id', $this->selectedCategoryId)
+                ->whereNull('competition_group_id')
+                ->count();
+        }
+
         return view('livewire.eventner.scoring.index', [
             'participants' => $participants,
             'selectedCategory' => $selectedCategory,
+            'rounds' => $this->rounds(),
+            'groups' => $this->groups(),
+            'groupCounts' => $groupCounts,
+            'ungroupedCount' => $ungroupedCount,
+            'totalCount' => (int) $groupCounts->sum() + $ungroupedCount,
+            'finalistCount' => $this->finalistIds()->count(),
             'categories' => $this->eventner->competitionCategories()->whereNotNull('parent_id')->with('parent')->get()->loadCount('registrations'),
             'assessmentCategories' => $assessmentCategories,
             'judgeTotals' => $judgeTotals,

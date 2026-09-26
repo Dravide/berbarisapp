@@ -41,6 +41,13 @@ class Index extends Component
     public $showSwapModal = false;
     public $swapSource = null; // Registration sumber (yang datanya salah)
 
+    // Bagi Grup modal
+    public $showGroupModal = false;
+    /** [registration_id => competition_group_id|null] — draf, baru ditulis saat Simpan. */
+    public $groupAssignments = [];
+    /** Berapa peserta yang dipindah DAN sudah punya nilai (peringatan undian). */
+    public $groupMoveWarnCount = 0;
+
     public function mount()
     {
         $eventner = auth()->user()->eventner;
@@ -213,8 +220,11 @@ class Index extends Component
             $reg->update([
                 ...$data,
                 'competition_category_id' => $this->competition_category_id,
-                // Ganti kategori = undian diulang dari nol untuk peserta ini.
-                ...($pindahKategori ? ['urutan_tampil' => null] : []),
+                // Ganti kategori = undian diulang dari nol untuk peserta ini,
+                // dan grup lama ikut dilepas karena grup milik kategori lama
+                // (kalau dibiarkan, peserta Grup A tingkat lama bisa tampil di
+                // grup tingkat barunya).
+                ...($pindahKategori ? ['urutan_tampil' => null, 'competition_group_id' => null] : []),
             ]);
             session()->flash('success', 'Data pendaftar berhasil diperbarui.');
         } else {
@@ -408,6 +418,184 @@ class Index extends Component
 
         session()->flash('success', 'Status pendaftaran ' . $this->selectedRegistration->display_name . ' berhasil diubah menjadi ' . $status . '.');
         $this->closeVerifyModal();
+    }
+
+    // ── Bagi Grup ──────────────────────────────────────────────────────
+
+    /** Grup milik kategori yang sedang dibuka di tab. */
+    public function getGroupsProperty()
+    {
+        if (!$this->activeTab) {
+            return collect();
+        }
+
+        return \App\Models\CompetitionGroup::where('eventner_id', auth()->user()->eventner->id)
+            ->where('competition_category_id', $this->activeTab)
+            ->orderBy('sort_order')->orderBy('id')
+            ->get();
+    }
+
+    public function openGroupModal()
+    {
+        $groups = $this->groups;
+
+        if ($groups->isEmpty()) {
+            session()->flash('error', 'Tingkat ini belum punya grup. Buat grupnya dulu di halaman Kategori Lomba.');
+            return;
+        }
+
+        $eventner = auth()->user()->eventner;
+
+        $this->groupAssignments = Registration::where('eventner_id', $eventner->id)
+            ->where('competition_category_id', $this->activeTab)
+            ->pluck('competition_group_id', 'id')
+            ->map(fn ($gid) => $gid === null ? '' : (string) $gid)
+            ->all();
+
+        $this->groupMoveWarnCount = 0;
+        $this->showGroupModal = true;
+    }
+
+    public function closeGroupModal()
+    {
+        $this->showGroupModal = false;
+        $this->groupAssignments = [];
+        $this->groupMoveWarnCount = 0;
+    }
+
+    /** Pindahkan satu peserta ke grup lain (atau keluar dari semua grup). */
+    public function setGroup($registrationId, $groupId)
+    {
+        $eventner = auth()->user()->eventner;
+
+        $reg = Registration::where('eventner_id', $eventner->id)
+            ->where('competition_category_id', $this->activeTab)
+            ->findOrFail($registrationId);
+
+        $groupId = $groupId === '' || $groupId === null ? null : (int) $groupId;
+
+        // Grup tujuan wajib milik tingkat ini — id datang dari DOM.
+        if ($groupId !== null && !$this->groups->contains('id', $groupId)) {
+            abort(403);
+        }
+
+        $this->groupAssignments[$reg->id] = $groupId === null ? '' : (string) $groupId;
+        $this->groupMoveWarnCount = $this->hitungPerpindahanBernilai();
+    }
+
+    /** Bagi rata otomatis berdasarkan urutan nama sekolah (round-robin). */
+    public function autoSplitGroups()
+    {
+        $ids = Registration::where('eventner_id', auth()->user()->eventner->id)
+            ->where('competition_category_id', $this->activeTab)
+            ->orderBy('nama_sekolah')
+            ->pluck('id')
+            ->all();
+
+        $groupIds = $this->groups->pluck('id')->all();
+
+        if (empty($groupIds)) {
+            return;
+        }
+
+        foreach ($ids as $i => $id) {
+            $this->groupAssignments[$id] = (string) $groupIds[$i % count($groupIds)];
+        }
+
+        $this->groupMoveWarnCount = $this->hitungPerpindahanBernilai();
+    }
+
+    public function clearGroups()
+    {
+        foreach (array_keys($this->groupAssignments) as $id) {
+            $this->groupAssignments[$id] = '';
+        }
+
+        $this->groupMoveWarnCount = $this->hitungPerpindahanBernilai();
+    }
+
+    /**
+     * Berapa peserta yang akan berpindah grup PADAHAL sudah punya nilai juri.
+     *
+     * Ganti grup tidak diblokir (berbeda dengan pindah kategori): nilainya
+     * tetap sah, hanya nomor undiannya yang dihapus karena urutan tampil
+     * disusun per grup. Angkanya ditampilkan sebagai peringatan, bukan error.
+     */
+    private function hitungPerpindahanBernilai(): int
+    {
+        $berubah = [];
+
+        foreach ($this->groupAssignments as $regId => $gid) {
+            $berubah[$regId] = $gid === '' || $gid === null ? null : (int) $gid;
+        }
+
+        if (empty($berubah)) {
+            return 0;
+        }
+
+        $lama = Registration::whereIn('id', array_keys($berubah))
+            ->pluck('competition_group_id', 'id');
+
+        $pindah = [];
+        foreach ($berubah as $regId => $baru) {
+            $sebelum = $lama[$regId] ?? null;
+            $sebelum = $sebelum === null ? null : (int) $sebelum;
+
+            if ($sebelum !== $baru) {
+                $pindah[] = (int) $regId;
+            }
+        }
+
+        if (empty($pindah)) {
+            return 0;
+        }
+
+        return AssessmentScore::whereIn('registration_id', $pindah)->distinct()->count('registration_id');
+    }
+
+    public function saveGroups()
+    {
+        $eventner = auth()->user()->eventner;
+        $groupIds = $this->groups->pluck('id')->all();
+
+        $dipindah = 0;
+
+        foreach ($this->groupAssignments as $regId => $gid) {
+            $reg = Registration::where('eventner_id', $eventner->id)
+                ->where('competition_category_id', $this->activeTab)
+                ->find($regId);
+
+            if (!$reg) {
+                continue;
+            }
+
+            $baru = $gid === '' || $gid === null ? null : (int) $gid;
+
+            // Id grup dari DOM wajib milik tingkat ini.
+            if ($baru !== null && !in_array($baru, array_map('intval', $groupIds), true)) {
+                continue;
+            }
+
+            $sebelum = $reg->competition_group_id === null ? null : (int) $reg->competition_group_id;
+
+            if ($sebelum === $baru) {
+                continue;
+            }
+
+            $reg->update([
+                'competition_group_id' => $baru,
+                // Nomor undian disusun per grup, jadi pindah grup = undian
+                // peserta ini diulang. Nilai juri tidak disentuh.
+                'urutan_tampil' => null,
+            ]);
+            $dipindah++;
+        }
+
+        session()->flash('success', $dipindah > 0
+            ? "Pembagian grup disimpan: {$dipindah} peserta dipindah, nomor undiannya direset."
+            : 'Tidak ada perubahan pembagian grup.');
+
+        $this->closeGroupModal();
     }
 
     public function render()

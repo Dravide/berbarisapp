@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\AssessmentCategory;
 use App\Models\AssessmentScore;
 use App\Models\CompetitionCategory;
+use App\Models\CompetitionRound;
+use App\Models\CompetitionRoundRegistration;
 use App\Models\DeductionCategory;
 use App\Models\Judge;
 use App\Models\Registration;
@@ -274,6 +276,104 @@ class ScoringController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
+    /**
+     * Babak yang dipakai lembar peserta ini.
+     *
+     * Nilai penyisihan dan final tinggal di baris kriteria yang berbeda, jadi
+     * satu lembar hanya bisa mewakili satu babak — menampilkan keduanya
+     * mencampur nilai yang memang tidak pernah dijumlahkan.
+     *
+     * Tanpa babak yang diminta, peserta yang sudah terdaftar sebagai finalis
+     * dicetak dengan lembar FINAL-nya; sisanya memakai babak penyisihan.
+     * Sekolah finalis tetap berdiri pada tingkat lomba yang sama dengan
+     * peserta penyisihan, jadi tanpa pemeriksaan finalis, membuka lembar dari
+     * daftar peserta menampilkan rubrik penyisihan padahal nilainya sudah final.
+     *
+     * Babak penyisihan tetap jadi bawaan bagi yang bukan finalis: halaman rekap
+     * dan daftar peserta bekerja pada penyisihan, dan rubrik final yang tidak
+     * bergrup akan tercetak sebagai kolom penilai juri final di lembar peserta
+     * grup kalau babak tidak ikut disaring.
+     *
+     * Tingkat tanpa baris babak tetap tanpa babak (null) — perilaku lama.
+     */
+    public function roundFor(Registration $registration, ?int $requestedRoundId = null): ?int
+    {
+        $rounds = CompetitionRound::where('eventner_id', $registration->eventner_id)
+            ->where('competition_category_id', $registration->competition_category_id);
+
+        if ($requestedRoundId) {
+            // Babak milik eventner DAN tingkat yang sama — mencegah lembar
+            // peserta satu tingkat dicetak dengan rubrik tingkat lain.
+            return $rounds->whereKey($requestedRoundId)->value('id');
+        }
+
+        $final = (clone $rounds)->where('type', CompetitionRound::TYPE_FINAL)->value('id');
+
+        if ($final && CompetitionRoundRegistration::where('eventner_id', $registration->eventner_id)
+            ->where('competition_round_id', $final)
+            ->where('registration_id', $registration->id)
+            ->exists()) {
+            return $final;
+        }
+
+        $preliminary = (clone $rounds)->where('type', CompetitionRound::TYPE_PRELIMINARY)->value('id');
+
+        return $preliminary ?: $rounds->orderBy('sort_order')->value('id');
+    }
+
+    /**
+     * Rubrik yang berlaku untuk lembar penilaian peserta ini.
+     *
+     * Satu tempat yang memutuskan "rubrik mana yang tercetak di lembar peserta"
+     * — dipisah dari downloadParticipantPdf() supaya keputusannya bisa diuji
+     * tanpa merender PDF (dompdf tidak menyisakan viewData).
+     *
+     * Grup wajib ikut disaring: tanpa itu lembar peserta Grup A memuat juga
+     * rubrik Grup B, lalu kolom Grup B yang tak pernah dinilai untuk peserta
+     * ini ikut tampil dan mengotori subtotalnya.
+     *
+     * Babak juga wajib, dan justru itu yang paling mudah bocor: rubrik babak
+     * final sengaja TIDAK bergrup (babaknya berlaku untuk semua finalis), jadi
+     * tanpa saringan babak ia lolos lewat klausa "grup NULL" dan juri final
+     * muncul sebagai kolom penilai di lembar peserta penyisihan.
+     */
+    public function assessmentCategoriesFor(Registration $registration, ?int $roundId = null): \Illuminate\Support\Collection
+    {
+        return AssessmentCategory::with(['subCategories.criterias'])
+            ->where('eventner_id', $registration->eventner_id)
+            ->forEntry(
+                $registration->competition_category_id,
+                $registration->competition_group_id,
+                $roundId ?? $this->roundFor($registration),
+            )
+            ->get();
+    }
+
+    /**
+     * Juri yang berhak menilai peserta ini.
+     *
+     * Grup wajib ikut: juri yang cuma memegang rubrik Grup B tidak boleh muncul
+     * sebagai kolom penilai di lembar peserta Grup A. Ini keluhan yang
+     * dilaporkan — kolom juri muncul untuk peserta yang bukan tanggung
+     * jawabnya.
+     *
+     * Babak ikut karena alasan yang sama: juri final memegang rubrik final yang
+     * tidak bergrup, jadi tanpa saringan babak ia lolos ke lembar penyisihan.
+     */
+    public function judgesFor(Registration $registration, ?int $roundId = null): \Illuminate\Support\Collection
+    {
+        $compCategoryId = $registration->competition_category_id;
+        $groupId = $registration->competition_group_id;
+        $roundId = $roundId ?? $this->roundFor($registration);
+
+        return Judge::where('eventner_id', $registration->eventner_id)
+            ->whereHas('assessmentCategories', function ($q) use ($registration, $compCategoryId, $groupId, $roundId) {
+                $q->where('assessment_categories.eventner_id', $registration->eventner_id)
+                    ->forEntry($compCategoryId, $groupId, $roundId);
+            })
+            ->get();
+    }
+
     public function downloadParticipantPdf(Request $request)
     {
         $eventner = Auth::user()->eventner;
@@ -286,21 +386,16 @@ class ScoringController extends Controller
             abort(400, 'Registration ID diperlukan.');
         }
 
-        $registration = Registration::with('competitionCategory')
+        $registration = Registration::with('competitionCategory', 'competitionGroup')
             ->where('eventner_id', $eventner->id)
             ->findOrFail($registrationId);
 
-        // Kategori penilaian hanya yang terikat kategori lomba pendaftaran ini
-        // (atau yang umum/tidak terikat) — sama seperti halaman Input Nilai.
-        $compCategoryId = $registration->competition_category_id;
+        // Babak boleh diminta eksplisit (?round_id=) supaya lembar final bisa
+        // dicetak; tanpa itu jatuh ke penyisihan.
+        $requestedRoundId = $request->query('round_id') ? (int) $request->query('round_id') : null;
+        $roundId = $this->roundFor($registration, $requestedRoundId);
 
-        $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
-            ->where('eventner_id', $eventner->id)
-            ->where(function ($q) use ($compCategoryId) {
-                $q->where('competition_category_id', $compCategoryId)
-                  ->orWhereNull('competition_category_id');
-            })
-            ->get();
+        $assessmentCategories = $this->assessmentCategoriesFor($registration, $roundId);
 
         $allScores = AssessmentScore::where('eventner_id', $eventner->id)
             ->where('registration_id', $registrationId)
@@ -330,16 +425,8 @@ class ScoringController extends Controller
         }
 
         // Juri hanya yang ditugaskan (Tugaskan Kategori) ke format penilaian
-        // kategori lomba pendaftaran ini — sama seperti halaman Input Nilai.
-        $judges = Judge::where('eventner_id', $eventner->id)
-            ->whereHas('assessmentCategories', function ($q) use ($eventner, $compCategoryId) {
-                $q->where('assessment_categories.eventner_id', $eventner->id)
-                    ->where(function ($sq) use ($compCategoryId) {
-                        $sq->where('assessment_categories.competition_category_id', $compCategoryId)
-                           ->orWhereNull('assessment_categories.competition_category_id');
-                    });
-            })
-            ->get();
+        // yang berlaku untuk peserta ini — tingkat + grupnya + babaknya.
+        $judges = $this->judgesFor($registration, $roundId);
         $judgeIds = $judges->pluck('id');
 
         // Build per-judge scores: [judge_id => [criteria_id => score]]
@@ -411,9 +498,17 @@ class ScoringController extends Controller
             $totalDeduction += $amt;
         }
 
+        $round = $roundId
+            ? CompetitionRound::where('eventner_id', $eventner->id)->find($roundId)
+            : null;
+
         $data = [
             'eventner' => $eventner,
             'registration' => $registration,
+            'roundName' => $round?->name,
+            // Babak final diwarnai berbeda di lembar ini supaya lembar penyisihan
+            // dan final sekolah yang sama tidak tertukar saat keduanya dicetak.
+            'roundIsFinal' => (bool) $round?->isFinal(),
             'assessmentCategories' => $assessmentCategories,
             'criteriaTotals' => $criteriaTotals,
             'categoryTotals' => $categoryTotals,

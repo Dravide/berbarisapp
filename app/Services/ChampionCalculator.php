@@ -26,26 +26,94 @@ class ChampionCalculator
      * lomba (konsisten dengan halaman /hasil, /champions, dan unduhan
      * sertifikat eventner, yang selalu menghitung per kategori lomba).
      *
+     * Kirim $competitionGroupId untuk memeringkat satu grup saja (juara Grup A
+     * terpisah dari juara Grup B). Peserta yang belum bergrup tidak ikut saat
+     * filter grup aktif — peringkat gabungan tetap tersedia dengan membiarkan
+     * parameter ini null.
+     *
      * @return array{0: Eventner, 1: ChampionCategory, 2: array} [eventner, category, winners]
      */
-    public function winners(ChampionCategory $championCategory, $competitionCategoryId = null): array
+    public function winners(ChampionCategory $championCategory, $competitionCategoryId = null, $competitionGroupId = null): array
     {
-        $eventner = $championCategory->eventner;
+        [$eventner, $championCategory, $rankings] = $this->rankings(
+            $championCategory,
+            $competitionCategoryId,
+            $competitionGroupId
+        );
 
-        // Criteria weight maps (dari subcategory yang ter-assign)
-        $criteriaMap = [];
-        foreach ($championCategory->assessmentSubCategories as $sub) {
-            foreach ($sub->criterias as $crit) {
-                $criteriaMap[$crit->id] = $crit->weight ?? 1;
-            }
+        return [$eventner, $championCategory, array_slice($rankings, 0, $championCategory->quantity)];
+    }
+
+    /**
+     * Daftar peringkat LENGKAP (belum dipotong kuota juara), urut terbaik dulu,
+     * sudah bernomor peringkat seri-aware.
+     *
+     * Dipakai tombol "Loloskan Top-N" untuk babak final: butuh N terbaik tiap
+     * grup dari angka yang sama dengan penentu juara, jadi pemanggil tidak
+     * boleh menyalin ulang logika sort ini.
+     *
+     * @return array{0: Eventner, 1: ChampionCategory, 2: array}
+     */
+    public function rankings(ChampionCategory $championCategory, $competitionCategoryId = null, $competitionGroupId = null, $competitionRoundId = null): array
+    {
+        // Pemanggil sering hanya memuat rubrik sub-kategori; pastikan relasi
+        // yang dipakai resolver bobot juga tersedia (hindari N+1). category
+        // ikut dimuat karena resolver menyaring kriteria lewat babak & grup
+        // rubrik induknya.
+        $championCategory->loadMissing([
+            'assessmentSubCategories.criterias',
+            'assessmentSubCategories.category',
+            'tiebreakSubCategories.criterias',
+            'tiebreakSubCategories.category',
+            'criterias.subCategory.category',
+            'tiebreakCriterias.subCategory.category',
+        ]);
+
+        $rankings = $this->rankOrdered(
+            $championCategory->eventner,
+            $championCategory->scoringCriteriaWeights($competitionRoundId, $competitionGroupId),
+            $championCategory->tiebreakCriteriaWeights($competitionRoundId, $competitionGroupId),
+            $competitionCategoryId,
+            $competitionGroupId,
+        );
+
+        $winners = [];
+        foreach ($rankings as $row) {
+            $title = $championCategory->titleForRank($row['rank']);
+
+            $winners[] = [
+                'registration' => $row['registration'],
+                'rank' => $row['rank'],
+                'title' => $title ?: 'Juara ' . $row['rank'],
+                'total' => $row['total'],
+            ];
         }
 
-        $tiebreakCriteriaMap = [];
-        foreach ($championCategory->tiebreakSubCategories as $sub) {
-            foreach ($sub->criterias as $crit) {
-                $tiebreakCriteriaMap[$crit->id] = $crit->weight ?? 1;
-            }
-        }
+        return [$championCategory->eventner, $championCategory, $winners];
+    }
+
+    /**
+     * Inti perhitungan: peserta terurut + nomor peringkat seri-aware, tanpa
+     * kuota juara dan tanpa gelar.
+     *
+     * Dipisah dari rankings() supaya jalur "Loloskan Top-N" (yang berjalan
+     * tanpa ChampionCategory, hanya dari rubrik babak penyisihan) memakai
+     * logika sort yang sama persis — bukan salinannya.
+     *
+     * @param  array  $scoringWeightMap   [criteria_id => weight] penentu total
+     * @param  array  $tiebreakWeightMap  [criteria_id => weight] pemecah seri
+     * @return array<int, array{registration: Registration, rank: int, total: int}>
+     */
+    public function rankOrdered(
+        Eventner $eventner,
+        array $scoringWeightMap,
+        array $tiebreakWeightMap = [],
+        $competitionCategoryId = null,
+        $competitionGroupId = null,
+        $onlyRegistrationIds = null,
+    ): array {
+        $criteriaMap = $scoringWeightMap;
+        $tiebreakCriteriaMap = $tiebreakWeightMap;
 
         // All criteria weight map (untuk other_total)
         $allCriteriaWeightMap = AssessmentCriteria::whereIn(
@@ -56,9 +124,11 @@ class ChampionCalculator
             )->pluck('id')
         )->pluck('weight', 'id')->toArray();
 
-        // Semua registration event ini, scope per mata lomba bila diminta
+        // Semua registration event ini, scope per mata lomba & grup bila diminta
         $participants = Registration::where('eventner_id', $eventner->id)
             ->when($competitionCategoryId, fn ($q) => $q->where('competition_category_id', $competitionCategoryId))
+            ->when($competitionGroupId, fn ($q) => $q->where('competition_group_id', $competitionGroupId))
+            ->when($onlyRegistrationIds, fn ($q) => $q->whereIn('id', $onlyRegistrationIds))
             ->with('participants')
             ->orderBy('nama_sekolah')
             ->get();
@@ -134,7 +204,9 @@ class ChampionCalculator
             fn ($ps) => $ps['total'] > 0
         ));
 
-        $participantScores = array_slice($participantScores, 0, $championCategory->quantity);
+        // Sengaja TIDAK dipotong quantity di sini — pemotongan itu milik
+        // winners(). Tombol "Loloskan Top-N" memakai daftar penuh ini supaya
+        // bisa mengambil N terbaik per grup dari angka yang sama.
 
         // Peringkat seri: dua peserta seri kalau SEMUA kunci pengurutnya sama
         // (total, tiebreak, nilai kriteria lain, besar pengurangan) — sama
@@ -142,7 +214,7 @@ class ChampionCalculator
         // Dulu nomor urut array, jadi dua peserta bernilai identik tetap
         // ditulis Juara 1 dan Juara 2. urutan_tampil tidak ikut: itu cuma
         // penentu terakhir supaya urutannya stabil, bukan penentu juara.
-        $winners = [];
+        $rows = [];
         $rank = 0;
         $previousKey = null;
         foreach ($participantScores as $index => $ps) {
@@ -152,15 +224,14 @@ class ChampionCalculator
             }
             $previousKey = $key;
 
-            $title = $championCategory->titleForRank($rank);
-            $winners[] = [
+            $rows[] = [
                 'registration' => $ps['participant'],
                 'rank' => $rank,
-                'title' => $title ?: 'Juara ' . $rank,
                 'total' => $ps['total'],
-            ];        }
+            ];
+        }
 
-        return [$eventner, $championCategory, $winners];
+        return $rows;
     }
 
     /**

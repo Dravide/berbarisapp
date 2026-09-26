@@ -46,8 +46,8 @@
     </div>
 
     {{-- Kategori Select --}}
-    <div class="mb-4" style="max-width: 380px;">
-        <div class="input-group">
+    <div class="mb-4 d-flex gap-2 flex-wrap" style="max-width: 700px;">
+        <div class="input-group" style="max-width: 380px;">
             <span class="input-group-text bg-primary text-white"><i class="ti ti-category"></i></span>
             <select class="form-select" wire:model.live="activeTab">
                 @foreach($categories as $cat)
@@ -56,7 +56,19 @@
                 @endforeach
             </select>
         </div>
+        @if($this->groups->isNotEmpty())
+            <div class="input-group" style="max-width: 240px;">
+                <span class="input-group-text bg-warning-subtle text-warning"><i class="ti ti-users-group"></i></span>
+                <select class="form-select" wire:change="switchGroup($event.target.value)">
+                    <option value="">Seluruh Tingkat</option>
+                    @foreach($this->groups as $group)
+                        <option value="{{ $group->id }}" @selected((string) $activeGroupId === (string) $group->id)>{{ $group->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
     </div>
+    @error('activeGroupId') <div class="alert alert-danger py-2 fs-2">{{ $message }}</div> @enderror
 
     <div class="row">
         {{-- Results Table --}}
@@ -68,7 +80,7 @@
                     </h5>
                     <div class="d-flex gap-2">
                         @if($drawnResults->count() > 0)
-                            <a href="{{ route('eventner.drawing.print', ['competition_category_id' => $activeTab]) }}" target="_blank" class="btn btn-sm btn-success">
+                            <a href="{{ route('eventner.drawing.print', array_filter(['competition_category_id' => $activeTab, 'competition_group_id' => $activeGroupId ?: null])) }}" target="_blank" class="btn btn-sm btn-success">
                                 <i class="ti ti-download me-1"></i> Unduh / Cetak
                             </a>
                         @endif
