@@ -257,6 +257,39 @@ class Index extends Component
                 ? $this->finalistsOf($round, $participants)
                 : $participants;
 
+            // Rubrik babak ini tidak mengenal grup (final biasanya begitu: satu
+            // set rubrik untuk semua finalis). Memecahnya per grup hanya
+            // mengulang kolom yang sama persis dan memecah peringkat jadi
+            // potongan yang tak dibandingkan siapa pun — padahal juara final
+            // ditentukan lintas finalis, bukan lintas grup. Satu tabel saja.
+            //
+            // Babak tanpa peserta dibiarkan tanpa bagian: pesannya sudah ada di
+            // tampilan ("Belum ada peserta yang lolos"), dan itu lebih jujur
+            // daripada satu tabel kosong berjudul sendiri.
+            if ($roundRubrics->whereNotNull('competition_group_id')->isEmpty()) {
+                $sections[] = [
+                    'label' => $round->name,
+                    'badge' => $round->isFinal() ? 'warning text-dark' : 'primary',
+                    'groups' => $roundParticipants->isEmpty() ? [] : [[
+                        'label' => 'Seluruh Finalis',
+                        'group' => null,
+                        'show_label' => true,
+                        'round_id' => $round->id,
+                        'assessmentCategories' => $roundRubrics,
+                        'data' => $this->rankRows(
+                            $roundParticipants,
+                            $allScores,
+                            $allDeductions,
+                            $globalCriteriaIds,
+                            $this->deductionTargetMap($roundRubrics),
+                            $roundRubrics,
+                        ),
+                    ]],
+                ];
+
+                continue;
+            }
+
             $sections[] = [
                 'label' => $round->name,
                 // Final dibedakan warnanya dari penyisihan supaya mata tidak

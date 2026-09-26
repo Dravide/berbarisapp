@@ -281,8 +281,7 @@ class ScoreRecapGroupsTest extends TestCase
     }
 
     /** Tingkat tanpa babak tetap satu daftar tabel per grup — perilaku lama. */
-    public function test_tingkat_tanpa_babak_tidak_dipecah_per_babak()
-    {
+    public function test_tingkat_tanpa_babak_tidak_dipecah_per_babak()    {
         AssessmentCategory::create([
             'eventner_id' => $this->eventner->id,
             'competition_category_id' => $this->level->id,
@@ -306,5 +305,64 @@ class ScoreRecapGroupsTest extends TestCase
         // yang memang tak punya grup.
         $this->assertStringNotContainsString('Belum Bergrup', $html);
         $this->assertStringContainsString('SMPN 1', $html);
+    }
+
+    /**
+     * Finalis dari grup berbeda tampil di SATU tabel, bukan satu tabel per grup.
+     *
+     * Rubrik final biasanya tidak mengenal grup — satu set untuk semua finalis.
+     * Memecahnya per grup hanya mengulang kolom yang sama dan memecah
+     * peringkat, padahal juara final ditentukan lintas finalis.
+     */
+    public function test_finalis_grup_berbeda_digabung_satu_tabel()
+    {
+        $this->rubrik('PBB Penyisihan A', $this->groupA, $this->penyisihan);
+        $this->rubrik('PBB Penyisihan B', $this->groupB, $this->penyisihan);
+        $kriteriaFinal = $this->rubrik('PBB Final', null, $this->final);
+
+        $dariA = $this->peserta('SMPN Grup A', $this->groupA);
+        $dariB = $this->peserta('SMPN Grup B', $this->groupB);
+
+        foreach ([$dariA, $dariB] as $reg) {
+            CompetitionRoundRegistration::create([
+                'eventner_id' => $this->eventner->id,
+                'competition_round_id' => $this->final->id,
+                'registration_id' => $reg->id,
+                'competition_group_id' => $reg->competition_group_id,
+            ]);
+        }
+
+        $this->nilai($dariA, $kriteriaFinal, 80);
+        $this->nilai($dariB, $kriteriaFinal, 95);
+
+        $html = Livewire::test(\App\Livewire\Eventner\ScoreRecap\Index::class, [
+            'selectedCategoryId' => $this->level->id,
+        ])->html();
+
+        // Kolom rubrik final muncul sekali, bukan sekali per grup.
+        $this->assertSame(1, substr_count($html, 'PBB Final<'), 'Rubrik final terulang per grup.');
+
+        // Satu medali emas saja di bagian final — peringkatnya lintas finalis.
+        // Dua emas total: satu di tabel penyisihan Grup A dan Grup B.
+        $blokFinal = substr($html, strpos($html, 'Final Stage'));
+        $this->assertSame(1, substr_count($blokFinal, '🥇'), 'Peringkat final masih dipecah per grup.');
+        $this->assertSame(2, substr_count($blokFinal, 'SMPN Grup A') + substr_count($blokFinal, 'SMPN Grup B'));
+    }
+
+    /** Tanpa finalis, bagian final tidak memunculkan tabel hampa. */
+    public function test_final_tanpa_finalis_tidak_membuat_tabel_hampa()
+    {
+        $this->rubrik('PBB Penyisihan', $this->groupA, $this->penyisihan);
+        $this->rubrik('PBB Final', null, $this->final);
+
+        $this->peserta('SMPN 1', $this->groupA);
+
+        $html = Livewire::test(\App\Livewire\Eventner\ScoreRecap\Index::class, [
+            'selectedCategoryId' => $this->level->id,
+        ])->html();
+
+        $this->assertStringContainsString('Final Stage', $html);
+        $this->assertStringContainsString('Belum ada peserta yang lolos ke babak ini', $html);
+        $this->assertStringNotContainsString('Seluruh Finalis', $html);
     }
 }
