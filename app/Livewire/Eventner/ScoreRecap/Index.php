@@ -236,11 +236,21 @@ class Index extends Component
         // Rubrik per babak diambil sekali, lalu dipakai ulang untuk semua grup
         // babak itu. forLevel, bukan forEntry: rubrik fase grup justru BERGrup,
         // dan forEntry(grup null) membuang justru rubrik-rubrik itu.
-        $rubrics = AssessmentCategory::with(['subCategories.criterias'])
+        $semuaRubrik = AssessmentCategory::with(['subCategories.criterias'])
             ->where('eventner_id', $this->eventner->id)
             ->forLevel($this->selectedCategoryId)
-            ->get()
-            ->groupBy('competition_round_id');
+            ->get();
+
+        // Rubrik tanpa babak berlaku di SETIAP babak — aturan scopeForLevel()
+        // yang sama dipakai finalize() saat mengunci nilai dan panel juri saat
+        // menilai. Dulu ia tergrup di bawah key kosong lalu tak pernah dibaca:
+        // kalau TIDAK SATU PUN rubrik menempel ke babak, seluruh babak dilewati
+        // dan rekapnya jadi "Belum Ada Data" padahal peserta dan nilainya
+        // lengkap. Yang paling sering terjadi: rubrik dibuat sebelum babaknya
+        // ada. Karena itu digabungkan ke tiap babak, bukan dibuang.
+        $rubrikTanpaBabak = $semuaRubrik->whereNull('competition_round_id')->values();
+
+        $rubrics = $semuaRubrik->whereNotNull('competition_round_id')->groupBy('competition_round_id');
 
         $groups = CompetitionGroup::where('eventner_id', $this->eventner->id)
             ->where('competition_category_id', $this->selectedCategoryId)
@@ -251,7 +261,9 @@ class Index extends Component
         $sections = [];
 
         foreach ($rounds as $round) {
-            $roundRubrics = $rubrics->get($round->id, collect());
+            // Rubrik babak ini + rubrik tanpa babak (berlaku di semua babak).
+            $roundRubrics = $rubrics->get($round->id, collect())
+                ->concat($rubrikTanpaBabak);
 
             if ($roundRubrics->isEmpty()) {
                 continue;

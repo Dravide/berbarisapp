@@ -342,4 +342,38 @@ class ScoreRecapUngroupedTest extends TestCase
         $this->assertStringContainsString('SMPN Grup A', $html, 'Peserta grup tanpa rubrik hilang dari rekap.');
         $this->assertStringNotContainsString('Belum Ada Data', $html);
     }
+
+    /**
+     * Tingkat berbabak yang rubriknya TIDAK menempel ke babak mana pun.
+     *
+     * sectionsPerRound() mengambil rubrik per competition_round_id, lalu
+     * melewati (continue) setiap babak yang daftarnya kosong. Rubrik tanpa
+     * babak tergrup di bawah key kosong dan tak pernah terbaca, jadi kalau
+     * TIDAK SATU PUN rubrik menempel ke babak, semua babak dilewati dan
+     * seluruh rekap kosong — padahal pesertanya ada, nilainya ada, dan
+     * babaknya cuma dekorasi.
+     *
+     * Bentuk ini yang paling cocok dengan laporan: grup sudah dibagi, babak
+     * sudah dibuat, tapi rubriknya dibuat sebelum babak ada.
+     */
+    public function test_tingkat_berbabak_tanpa_rubrik_berbabak_tetap_tampil()
+    {
+        CompetitionRound::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Penyisihan',
+            'type' => CompetitionRound::TYPE_PRELIMINARY,
+            'sort_order' => 1,
+        ]);
+
+        // Rubriknya sengaja tanpa competition_round_id.
+        $kriteria = $this->rubrik('PBB Umum', null);
+        $reg = $this->peserta('SMPN Satu', $this->groupA);
+        $this->nilai($reg, $kriteria, 85);
+
+        $html = $this->html($this->level->id);
+
+        $this->assertStringContainsString('SMPN Satu', $html, 'Rekap kosong padahal rubrik tanpa babak ada.');
+        $this->assertStringNotContainsString('Belum Ada Data', $html);
+    }
 }
