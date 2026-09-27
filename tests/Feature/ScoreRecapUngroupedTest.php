@@ -376,4 +376,60 @@ class ScoreRecapUngroupedTest extends TestCase
         $this->assertStringContainsString('SMPN Satu', $html, 'Rekap kosong padahal rubrik tanpa babak ada.');
         $this->assertStringNotContainsString('Belum Ada Data', $html);
     }
+
+    /**
+     * Tingkat berbabak + bergrup yang rubriknya belum dibuat sama sekali.
+     *
+     * Bentuk inilah yang dilaporkan dari lapangan (kategori 28): dua grup,
+     * dua babak, 20 peserta terbagi rata, tapi rubriknya kosong. Dulu babaknya
+     * langsung dibuang sehingga seluruh rekap jadi "Belum Ada Data" — padahal
+     * tingkat TANPA babak dengan keadaan yang sama tetap menampilkan
+     * pesertanya. Kosongnya rubrik itu kekurangan konfigurasi, bukan alasan
+     * menyembunyikan peserta.
+     */
+    public function test_tingkat_berbabak_tanpa_rubrik_sama_sekali_tetap_tampil()
+    {
+        CompetitionRound::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Grup',
+            'type' => CompetitionRound::TYPE_PRELIMINARY,
+            'sort_order' => 1,
+        ]);
+        CompetitionRound::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Final',
+            'type' => CompetitionRound::TYPE_FINAL,
+            'sort_order' => 2,
+        ]);
+
+        $this->peserta('SMPN Grup A', $this->groupA);
+        $this->peserta('SMPN Belum Dibagi', null);
+
+        $html = $this->html($this->level->id);
+
+        $this->assertStringContainsString('SMPN Grup A', $html, 'Peserta hilang saat rubriknya belum dibuat.');
+        $this->assertStringContainsString('SMPN Belum Dibagi', $html);
+        $this->assertStringNotContainsString('Belum Ada Data', $html);
+
+        // Ketiadaan rubriknya harus terbaca sebagai kekurangan konfigurasi.
+        $this->assertStringContainsString('belum punya format penilaian', $html);
+    }
+
+    /** Tingkat berbabak tanpa peserta tetap kosong — tidak ada yang ditampilkan. */
+    public function test_tingkat_berbabak_tanpa_peserta_tanpa_rubrik_tetap_kosong()
+    {
+        CompetitionRound::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Grup',
+            'type' => CompetitionRound::TYPE_PRELIMINARY,
+            'sort_order' => 1,
+        ]);
+
+        $html = $this->html($this->level->id);
+
+        $this->assertStringContainsString('Belum Ada Data', $html);
+    }
 }

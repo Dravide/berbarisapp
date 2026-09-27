@@ -265,7 +265,15 @@ class Index extends Component
             $roundRubrics = $rubrics->get($round->id, collect())
                 ->concat($rubrikTanpaBabak);
 
-            if ($roundRubrics->isEmpty()) {
+            // Rubriknya belum dibuat untuk tingkat ini. Dulu babaknya langsung
+            // dibuang (continue), sehingga seluruh rekap jadi "Belum Ada Data"
+            // padahal pesertanya ada dan pembagian grupnya sudah rapi — persis
+            // yang dilaporkan di lapangan. Tingkat tanpa babak sudah lama
+            // menampilkan pesertanya walau rubriknya kosong (lihat
+            // sectionsPerGroup), jadi di sini pun begitu: kolom nilainya kosong,
+            // tapi datanya tetap terbaca. Kalau pesertanya memang kosong, tak
+            // ada yang perlu ditampilkan dan babaknya dilewati seperti semula.
+            if ($roundRubrics->isEmpty() && $participants->isEmpty()) {
                 continue;
             }
 
@@ -275,6 +283,8 @@ class Index extends Component
             $roundParticipants = $round->isFinal()
                 ? $this->finalistsOf($round, $participants)
                 : $participants;
+
+            $tanpaRubrik = $roundRubrics->isEmpty();
 
             // Rubrik babak ini tidak mengenal grup (final biasanya begitu: satu
             // set rubrik untuk semua finalis). Memecahnya per grup hanya
@@ -289,10 +299,11 @@ class Index extends Component
                 $sections[] = [
                     'label' => $round->name,
                     'badge' => $round->isFinal() ? 'warning text-dark' : 'primary',
+                    'tanpa_rubrik' => $tanpaRubrik,
                     'groups' => $roundParticipants->isEmpty() ? [] : [[
-                        'label' => 'Seluruh Finalis',
+                        'label' => $round->isFinal() ? 'Seluruh Finalis' : 'Seluruh Peserta',
                         'group' => null,
-                        'show_label' => true,
+                        'show_label' => $round->isFinal(),
                         'round_id' => $round->id,
                         'assessmentCategories' => $roundRubrics,
                         'data' => $this->rankRows(

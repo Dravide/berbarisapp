@@ -82,6 +82,14 @@
                             </h6>
                         @endif
 
+                        @if($top['tanpa_rubrik'] ?? false)
+                            <div class="alert alert-warning border-0 bg-warning-subtle text-warning py-2 fs-2">
+                                <i class="ti ti-alert-triangle me-1"></i>
+                                {{ $top['label'] }} belum punya format penilaian, jadi kolom
+                                nilainya kosong. Buat rubriknya di Format Penilaian.
+                            </div>
+                        @endif
+
                         @if(empty($top['groups']))
                             {{-- Babak yang belum punya peserta bernilai — mis. final
                                  yang belum diisi finalis. Judul tetap tampil supaya
