@@ -232,47 +232,69 @@ class ScoringParticipantVerificationSheetTest extends TestCase
         $this->assertStringContainsString('PBB Putra', $html);
     }
 
-    // ---------- tanda tangan pelatih hanya sekali ----------
+    // ---------- tanda tangan pelatih ----------
 
     /**
-     * Pelatih menandatangani satu kali saja, di lembar verifikasi.
+     * Pelatih menandatangani di lembar nilainya sendiri, bukan cuma di arsip.
      *
-     * Halaman pertama dulu memuat kolom "Pelatih" kedua, padahal halaman itu
-     * murni arsip panitia dan tak seorang pun menandatanganinya di sana. Dua
-     * kolom tanda tangan dengan nama yang sama membuat pelatih mengira harus
-     * menandatangani keduanya, dan yang kedua selalu kosong.
+     * Halaman pertama dulu hanya memuat kolom Ketua Panitia, dan tanda tangan
+     * pelatih baru ada di Lembar Verifikasi halaman kedua. Lembar penilaian
+     * itulah yang dipegang pelatih saat mencocokkan nilai, jadi tanda
+     * tangannya harus ada di lembar yang benar-benar ia baca — bukan di
+     * halaman yang baru dibuka panitia belakangan.
      */
-    /** Nama pelatih hanya dicetak sekali, di kolom tanda tangannya. */
-    public function test_nama_pelatih_hanya_muncul_di_lembar_verifikasi()
+    public function test_halaman_pertama_memuat_tanda_tangan_pelatih()
+    {
+        $html = $this->lembarPenuh();
+        $halamanSatu = explode('page-break-before', $html)[0];
+
+        // Kolom tanda tangannya, bukan sekadar label "Pelatih" di tabel info.
+        $this->assertMatchesRegularExpression('/class="role"[^>]*>Pelatih</', $halamanSatu);
+        $this->assertStringContainsString('<span class="line"></span>', $halamanSatu);
+
+        // Kolom Ketua Panitia tetap ada, berikut QR-nya.
+        $this->assertStringContainsString('Ketua Panitia', $halamanSatu);
+        $this->assertStringContainsString('data:image/png;base64,', $halamanSatu);
+    }
+
+    /** Nama pelatih tercetak di kop dan kolom tanda tangan kedua halaman. */
+    public function test_nama_pelatih_tercetak_di_kop_dan_kolom_tanda_tangan()
     {
         $html = $this->lembarPenuh();
 
         $verifikasi = explode('page-break-before', $html);
         $this->assertCount(2, $verifikasi, 'Lembar verifikasi tidak lagi jadi halaman kedua.');
 
-        // Identitas pelatih tetap tercetak di kop halaman pertama — yang
-        // dibuang cuma kolom tanda tangannya.
+        // Identitas pelatih di kop kedua halaman.
         $this->assertStringContainsString('Budi Santoso', $verifikasi[0]);
         $this->assertStringContainsString('Budi Santoso', $verifikasi[1]);
 
-        // Kop halaman 1, kop lembar verifikasi, dan kolom tanda tangannya.
+        // Empat kali: baris identitas + kolom tanda tangan, di kedua halaman.
         $this->assertSame(
-            3,
+            4,
             substr_count($html, 'Budi Santoso'),
-            'Nama pelatih tercetak tiga kali: dua kop dan satu kolom tanda tangan.'
+            'Nama pelatih terhitung empat kali: dua baris identitas dan dua kolom tanda tangan.'
         );
-        // Dua kolom tanda tangan di lembar verifikasi (Pelatih dan Panitia
-        // Penerima); halaman pertama tak lagi menyumbang satu pun.
-        $this->assertSame(2, substr_count($html, '<span class="line"></span>'), 'Jumlah kolom tanda tangan berubah.');
+
+        // Tiga kolom tanda tangan: pelatih di halaman pertama, lalu pelatih dan
+        // panitia penerima di lembar verifikasi.
+        $this->assertSame(3, substr_count($html, '<span class="line"></span>'), 'Jumlah kolom tanda tangan berubah.');
     }
 
-    /** Halaman pertama tinggal satu tanda tangan: Ketua Panitia. */
-    public function test_halaman_pertama_hanya_ketua_panitia()
+    /** Pelatih dan Ketua Panitia berdampingan di halaman pertama. */
+    public function test_halaman_pertama_kolom_pelatih_dan_ketua_panitia()
     {
         $html = $this->lembarPenuh();
         $halamanSatu = explode('page-break-before', $html)[0];
 
         $this->assertStringContainsString('Ketua Panitia', $halamanSatu);
         $this->assertStringNotContainsString('Pernyataan Persetujuan', $halamanSatu);
+
+        // Urutannya pelatih lalu panitia, sama seperti lembar verifikasi:
+        // pelatih di kolom kiri pada kedua halaman.
+        $this->assertLessThan(
+            strpos($halamanSatu, 'Ketua Panitia'),
+            strpos($halamanSatu, '>Pelatih</div>'),
+        );
     }
 }

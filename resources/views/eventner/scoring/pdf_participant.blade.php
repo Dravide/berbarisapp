@@ -398,11 +398,10 @@
         $qrImage = qr_data_uri($qrData);
     @endphp
 
-    {{-- Pernyataan panitia. Halaman ini murni arsip panitia — persetujuan
-         pelatih ada di Lembar Verifikasi Nilai halaman berikutnya, tempat ia
-         benar-benar menandatangani. Dulu halaman ini juga berbunyi "kami
-         menyetujui hasil penilaian" dan punya kolom Pelatih, padahal pelatih
-         tak menandatanganinya; yang dobel cuma tandatangannya. --}}
+    {{-- Pernyataan panitia, lalu kolom tanda tangan pelatih di sebelah QR
+         ketua panitia. Lembar inilah yang dipegang pelatih saat mencocokkan
+         nilainya, jadi tanda tangannya ikut di sini; Lembar Verifikasi di
+         halaman berikutnya tetap yang memuat pernyataan persetujuannya. --}}
     <div style="margin-top:20px; border:1px solid #ccc; border-radius:4px; padding:12px 16px; background:#fafafa;">
         <div style="font-weight:bold; font-size:9px; text-transform:uppercase; color:#1a1a2e; margin-bottom:6px; letter-spacing:0.5px;">Pernyataan Panitia</div>
         <div style="font-size:8px; color:#444; line-height:1.7;">
@@ -419,8 +418,20 @@
     <div class="ttd">
         <table style="width:100%;">
             <tr>
-                <td style="text-align:center; width:100%; vertical-align:top; padding-top:10px;">
-                    <div class="role" style="margin-bottom:8px;">Ketua Panitia</div>
+                {{-- Susunan kolom mengikuti Lembar Verifikasi di halaman
+                     berikutnya: pelatih kiri, panitia kanan. Pelatih sering
+                     memegang lembar ini sendirian, jadi tanda tangannya harus
+                     ada di lembar yang benar-benar ia baca. --}}
+                <td style="text-align:center; width:50%; vertical-align:top; padding-top:10px;">
+                    <div style="font-size:9px; color:#666;">{{ $eventner->venue ?: '' }}, {{ now()->translatedFormat('d F Y') }}</div>
+                    <div class="role" style="margin-bottom:8px; margin-top:6px;">Pelatih</div>
+                    <br><br><br>
+                    <span class="line"></span><br>
+                    <small>{{ $registration->nama_pelatih }}</small>
+                </td>
+                <td style="text-align:center; width:50%; vertical-align:top; padding-top:10px;">
+                    <div style="font-size:9px; color:#666;">&nbsp;</div>
+                    <div class="role" style="margin-bottom:8px; margin-top:6px;">Ketua Panitia</div>
                     <img src="{{ $qrImage }}" style="width:90px; height:90px; margin:0 auto; display:block;" alt="QR">
                     <div style="margin-top:6px; font-weight:bold; font-size:10px;">{{ $eventner->diselenggarakan_oleh }}</div>
                 </td>
