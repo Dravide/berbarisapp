@@ -56,6 +56,13 @@ class Index extends Component
                 $this->selectedCategoryId = $first->id;
             }
         }
+
+        // selectedGroupId datang dari $queryString, dan hook updatedSelectedGroupId()
+        // TIDAK jalan saat hidrasi awal — jadi tanpa pemeriksaan ini URL yang
+        // menyebut grup milik tingkat lain (tautan lama, atau grup yang sejak
+        // itu dihapus) menyaring seluruh peserta tanpa satu pun pesan, dan
+        // rekapnya cuma "Belum Ada Data" padahal datanya ada.
+        $this->updatedSelectedGroupId();
     }
 
     public function selectCategory($id)
@@ -362,11 +369,34 @@ class Index extends Component
                 continue;
             }
 
+            $masuk = false;
             foreach ($buckets as $i => $bucket) {
                 if ($bucket['group'] && (int) $bucket['group']->id === (int) $gid) {
                     $buckets[$i]['peserta']->push($participant);
+                    $masuk = true;
                     break;
                 }
+            }
+
+            // Grup yang ditunjuk peserta ini tidak ketemu di daftar grup tingkat
+            // — grupnya milik tingkat lain, sudah dihapus, atau dibuat sebelum
+            // tingkatnya berganti. Dulu peserta ini DIBUANG tanpa jejak: baris
+            // nilainya ada, tapi namanya tak pernah muncul di rekap, dan kalau
+            // itu menimpa seluruh peserta hasilnya cuma "Belum Ada Data".
+            //
+            // Dikumpulkan sebagai satu bagian sendiri supaya datanya tetap
+            // terbaca sambil ketidakcocokannya kelihatan, bukan disembunyikan.
+            if (! $masuk) {
+                $key = '__grup_asing__';
+                if (! isset($buckets[$key])) {
+                    $buckets[$key] = [
+                        'label' => 'Grup Tidak Dikenali',
+                        'group' => null,
+                        'peserta' => collect(),
+                        'asing' => true,
+                    ];
+                }
+                $buckets[$key]['peserta']->push($participant);
             }
         }
 
@@ -378,17 +408,17 @@ class Index extends Component
 
             $assessmentCategories = $this->rubricsForGroup($allRubrics, $bucket['group']);
 
-            // Tingkat yang belum punya rubrik sama sekali tetap didaftarkan:
-            // daftar pesertanya masih berguna (dan begitulah perilaku lama),
-            // sedangkan tabel tanpa kolom di tingkat BERGrup cuma tabel hampa
-            // yang menyesatkan.
-            if ($assessmentCategories->isEmpty() && $allRubrics->isNotEmpty()) {
-                continue;
-            }
-
             $sections[] = [
                 'label' => $bucket['label'],
                 'group' => $bucket['group'],
+                // Grup ini belum punya rubrik padahal tingkatnya punya. Dulu
+                // bagiannya langsung digugurkan supaya tak ada tabel hampa —
+                // tapi efeknya pesertanya ikut lenyap dari rekap tanpa jejak,
+                // dan kalau itu kena seluruh grup hasilnya cuma "Belum Ada
+                // Data". Sekarang bagiannya tetap tampil dengan catatan, jadi
+                // ketiadaan rubriknya terbaca sebagai kekurangan konfigurasi,
+                // bukan sebagai data yang hilang.
+                'tanpa_rubrik' => $assessmentCategories->isEmpty() && $allRubrics->isNotEmpty(),
                 // Nama grup hanya perlu jadi judul kalau tingkat ini memang
                 // dibagi grup. Tingkat tanpa grup tetap satu tabel tanpa
                 // judul "Belum Bergrup" — itu perilaku lama, dan labelnya

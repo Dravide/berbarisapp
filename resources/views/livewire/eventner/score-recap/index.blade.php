@@ -99,6 +99,23 @@
                                 </h6>
                             @endif
 
+                            @if($section['asing'] ?? false)
+                                <div class="alert alert-warning border-0 bg-warning-subtle text-warning py-2 fs-2">
+                                    <i class="ti ti-alert-triangle me-1"></i>
+                                    Peserta di bawah ini menunjuk grup yang bukan milik tingkat lomba ini
+                                    — grupnya mungkin sudah dihapus atau dibuat untuk tingkat lain.
+                                    Perbaiki pembagian grupnya di halaman Peserta.
+                                </div>
+                            @endif
+
+                            @if($section['tanpa_rubrik'] ?? false)
+                                <div class="alert alert-warning border-0 bg-warning-subtle text-warning py-2 fs-2">
+                                    <i class="ti ti-alert-triangle me-1"></i>
+                                    {{ $section['label'] }} belum punya format penilaian, jadi kolom
+                                    nilainya kosong. Buat rubriknya di Format Penilaian.
+                                </div>
+                            @endif
+
                             <div class="table-responsive">
                                 <table class="table align-middle text-nowrap mb-0">
                                     <thead class="table-light">
