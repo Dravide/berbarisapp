@@ -308,13 +308,14 @@ class ScoreRecapGroupsTest extends TestCase
     }
 
     /**
-     * Finalis dari grup berbeda tampil di SATU tabel, bukan satu tabel per grup.
+     * Finalis dari grup berbeda tampil di tabel per grup, bukan satu tabel.
      *
-     * Rubrik final biasanya tidak mengenal grup — satu set untuk semua finalis.
-     * Memecahnya per grup hanya mengulang kolom yang sama dan memecah
-     * peringkat, padahal juara final ditentukan lintas finalis.
+     * Rubrik final tidak mengenal grup (satu set untuk semua finalis), jadi
+     * kolomnya memang sama di kedua tabel — tapi barisnya tetap dipisah grup,
+     * karena itulah bentuk yang diminta panitia, dan grup tetap konteks yang
+     * dipakai lembar PDF maupun halaman Peserta.
      */
-    public function test_finalis_grup_berbeda_digabung_satu_tabel()
+    public function test_finalis_grup_berbeda_dipisah_per_grup()
     {
         $this->rubrik('PBB Penyisihan A', $this->groupA, $this->penyisihan);
         $this->rubrik('PBB Penyisihan B', $this->groupB, $this->penyisihan);
@@ -339,14 +340,20 @@ class ScoreRecapGroupsTest extends TestCase
             'selectedCategoryId' => $this->level->id,
         ])->html();
 
-        // Kolom rubrik final muncul sekali, bukan sekali per grup.
-        $this->assertSame(1, substr_count($html, 'PBB Final<'), 'Rubrik final terulang per grup.');
-
-        // Satu medali emas saja di bagian final — peringkatnya lintas finalis.
-        // Dua emas total: satu di tabel penyisihan Grup A dan Grup B.
         $blokFinal = substr($html, strpos($html, 'Final Stage'));
-        $this->assertSame(1, substr_count($blokFinal, '🥇'), 'Peringkat final masih dipecah per grup.');
-        $this->assertSame(2, substr_count($blokFinal, 'SMPN Grup A') + substr_count($blokFinal, 'SMPN Grup B'));
+
+        // Dua tabel finalis: satu per grup, masing-masing dengan judul grupnya.
+        $this->assertSame(1, substr_count($blokFinal, 'ti-users-group me-1"></i>Grup A'));
+        $this->assertSame(1, substr_count($blokFinal, 'ti-users-group me-1"></i>Grup B'));
+        $this->assertSame(1, substr_count($blokFinal, 'SMPN Grup A'));
+        $this->assertSame(1, substr_count($blokFinal, 'SMPN Grup B'));
+
+        // Peringkat dihitung di dalam tabel grup masing-masing, jadi tiap grup
+        // punya juaranya sendiri.
+        $this->assertSame(2, substr_count($blokFinal, '🥇'));
+
+        // Label tabel gabungan tak dipakai lagi.
+        $this->assertStringNotContainsString('Seluruh Finalis', $html);
     }
 
     /** Tanpa finalis, bagian final tidak memunculkan tabel hampa. */

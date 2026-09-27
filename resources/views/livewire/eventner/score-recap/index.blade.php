@@ -96,7 +96,10 @@
                                  panitia tahu babaknya ada, tapi tabel kosong
                                  tanpa keterangan terbaca seperti halaman rusak. --}}
                             <p class="text-muted mb-0">
-                                <i class="ti ti-info-circle me-1"></i>Belum ada peserta yang lolos ke babak ini.
+                                <i class="ti ti-info-circle me-1"></i>
+                                {{ ($top['final'] ?? false)
+                                    ? 'Belum ada peserta yang lolos ke babak ini.'
+                                    : 'Belum ada peserta di babak ini.' }}
                             </p>
                         @endif
 

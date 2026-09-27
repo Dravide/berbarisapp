@@ -286,46 +286,23 @@ class Index extends Component
 
             $tanpaRubrik = $roundRubrics->isEmpty();
 
-            // Rubrik babak ini tidak mengenal grup (final biasanya begitu: satu
-            // set rubrik untuk semua finalis). Memecahnya per grup hanya
-            // mengulang kolom yang sama persis dan memecah peringkat jadi
-            // potongan yang tak dibandingkan siapa pun — padahal juara final
-            // ditentukan lintas finalis, bukan lintas grup. Satu tabel saja.
+            // Selalu dipecah per grup, termasuk babak final. Tingkat ini memang
+            // dibagi grup dan kolom nilainya bisa berbeda per grup, jadi satu
+            // tabel gabungan hanya menyatukan baris yang tidak dibandingkan
+            // siapa pun. Grup yang tak punya rubriknya sendiri tetap tampil
+            // dengan catatan — lihat sectionsPerGroup().
             //
             // Babak tanpa peserta dibiarkan tanpa bagian: pesannya sudah ada di
             // tampilan ("Belum ada peserta yang lolos"), dan itu lebih jujur
             // daripada satu tabel kosong berjudul sendiri.
-            if ($roundRubrics->whereNotNull('competition_group_id')->isEmpty()) {
-                $sections[] = [
-                    'label' => $round->name,
-                    'badge' => $round->isFinal() ? 'warning text-dark' : 'primary',
-                    'tanpa_rubrik' => $tanpaRubrik,
-                    'groups' => $roundParticipants->isEmpty() ? [] : [[
-                        'label' => $round->isFinal() ? 'Seluruh Finalis' : 'Seluruh Peserta',
-                        'group' => null,
-                        'show_label' => $round->isFinal(),
-                        'round_id' => $round->id,
-                        'assessmentCategories' => $roundRubrics,
-                        'data' => $this->rankRows(
-                            $roundParticipants,
-                            $allScores,
-                            $allDeductions,
-                            $globalCriteriaIds,
-                            $this->deductionTargetMap($roundRubrics),
-                            $roundRubrics,
-                        ),
-                    ]],
-                ];
-
-                continue;
-            }
-
             $sections[] = [
                 'label' => $round->name,
                 // Final dibedakan warnanya dari penyisihan supaya mata tidak
                 // perlu membaca namanya untuk tahu babak mana yang dirapatkan:
                 // juara final ditentukan babak ini, bukan angka gabungan.
                 'badge' => $round->isFinal() ? 'warning text-dark' : 'primary',
+                'final' => $round->isFinal(),
+                'tanpa_rubrik' => $tanpaRubrik && $roundParticipants->isNotEmpty(),
                 'groups' => $this->sectionsPerGroup(
                     $roundParticipants,
                     $allScores,
