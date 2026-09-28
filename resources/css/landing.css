@@ -69,6 +69,10 @@
         @apply font-display text-deep-slate;
         letter-spacing: -0.01em;
     }
+    /* Panel yang dikelola Alpine (x-show/x-collapse) disembunyikan sampai
+       Alpine menyala, supaya lipatan yang defaultnya tertutup tidak
+       berkedip terbuka dulu. */
+    [x-cloak] { display: none !important; }
 }
 
 /* =========================================================================

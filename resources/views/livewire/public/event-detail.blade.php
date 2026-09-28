@@ -262,19 +262,34 @@
                                 @endif
                             </span>
                         </div>
-                        <div class="flex flex-col gap-4">
+                        <div class="flex flex-col gap-2.5">
                             @foreach($parents as $parent)
-                                <div>
+                                {{-- Lipatan hanya berguna kalau isinya memang panjang:
+                                     satu jenis lomba dengan satu tingkat langsung terbuka. --}}
+                                <div x-data="{ open: {{ $parent->children->count() > 2 ? 'false' : 'true' }} }">
                                     @if($parent->children->isNotEmpty())
-                                        {{-- Jenis lomba: judul grup, kartu untuk tiap tingkat --}}
-                                        <div class="text-sm font-extrabold text-deep-slate mb-2.5 inline-flex items-center gap-2">
-                                            <i class="ti ti-category text-primary"></i>
-                                            {{ $parent->name }}
-                                        </div>
-                                        <div class="flex flex-col gap-3">
-                                            @foreach($parent->children->sortBy('sort_order') as $child)
-                                                @include('livewire.public.partials._competition-category-card', ['category' => $child])
-                                            @endforeach
+                                        {{-- Jenis lomba: judul bisa dilipat, isinya kartu tiap tingkat --}}
+                                        <button type="button"
+                                                class="w-full flex items-center justify-between gap-2 text-sm font-extrabold text-deep-slate bg-surface-container-low/60 border border-outline-variant/30 rounded-xl px-3 py-2 cursor-pointer hover:border-primary/30 transition"
+                                                @click="open = !open"
+                                                :class="open && 'rounded-b-none border-b-transparent'">
+                                            <span class="inline-flex items-center gap-2 min-w-0">
+                                                <i class="ti ti-category text-primary"></i>
+                                                <span class="truncate">{{ $parent->name }}</span>
+                                                <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider shrink-0">
+                                                    {{ $parent->children->count() }} tingkat
+                                                </span>
+                                            </span>
+                                            <i class="ti ti-chevron-down text-on-surface-variant transition-transform duration-200 shrink-0"
+                                               :class="open && 'rotate-180'"></i>
+                                        </button>
+                                        <div x-show="open" x-collapse x-cloak class="border border-t-0 border-outline-variant/30 rounded-b-xl p-2.5">
+                                            {{-- Satu kolom di layar sempit, dua kolom begitu ada ruang. --}}
+                                            <div class="grid gap-2.5 sm:grid-cols-2">
+                                                @foreach($parent->children->sortBy('sort_order') as $child)
+                                                    @include('livewire.public.partials._competition-category-card', ['category' => $child])
+                                                @endforeach
+                                            </div>
                                         </div>
                                     @else
                                         {{-- Data lama: induk tanpa tingkat, tetap tampil apa adanya --}}

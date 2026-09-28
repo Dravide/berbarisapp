@@ -77,8 +77,8 @@ class EventDetailCategoryInfoTest extends TestCase
             ->assertSee('Rp 150.000', false)
             ->assertSee('GOR Rukibra', false)
             ->assertSee('Jl. Melati No. 3', false)
-            ->assertSee('18 Oktober 2026', false)
-            ->assertSee('Maks. 2 pasukan', false);
+            ->assertSee('18 Okt 2026', false)
+            ->assertSee('Maks. 2 pasukan/sekolah', false);
     }
 
     public function test_kartu_menampilkan_sisa_kuota_dan_jumlah_pendaftar()
@@ -87,7 +87,7 @@ class EventDetailCategoryInfoTest extends TestCase
 
         $this->get("/event/{$eventner->slug}")
             ->assertStatus(200)
-            ->assertSee('Sisa 8 Slot', false)
+            ->assertSee('Sisa 8', false)
             ->assertSee('2 / 10 Pasukan', false);
     }
 
@@ -97,7 +97,7 @@ class EventDetailCategoryInfoTest extends TestCase
 
         $this->get("/event/{$eventner->slug}")
             ->assertStatus(200)
-            ->assertSee('Kuota Penuh', false)
+            ->assertSee('Penuh', false)
             ->assertSee('3 / 3 Pasukan', false);
     }
 
