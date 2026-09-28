@@ -104,13 +104,26 @@
     </div>
 
     {{-- ========== QUICK INFO CARD ========== --}}
+    {{-- Satu tempat untuk seluruh jadwal & lokasi: hari H, technical meeting,
+         batas pendaftaran, tempat, tingkat, dan kuota. Dulu empat medan ini
+         terbagi ke dua kartu berbeda — kartu ini dan "Informasi Jadwal" di
+         sidebar — sehingga pengunjung harus menggabungkan sendiri. Di mobile
+         sidebar menumpuk paling bawah, jadi batas pendaftaran beserta hitung
+         mundurnya justru muncul terakhir, padahal itu yang paling menentukan
+         keputusan mendaftar. --}}
+    {{-- Tingkat yang bisa dipilih: anak, plus induk lama tanpa anak. Induk
+         beranak tidak punya kuota sendiri, jadi menjumlahkannya cuma
+         menggandakan. Dipakai kartu ini dan bagian "Kategori Lomba". --}}
     @php
-        $totalKuota = $eventner->competitionCategories->sum('kuota');
-        $totalReg = $eventner->competitionCategories->sum(fn($c) => $c->registrations->count());
+        $parents = $eventner->competitionCategories->whereNull('parent_id')->sortBy('sort_order');
+        $children = $eventner->competitionCategories->whereNotNull('parent_id');
+        $daftarTingkat = $children->merge($parents->where(fn ($p) => $p->children->isEmpty()));
+        $totalKuota = $daftarTingkat->sum('kuota');
+        $totalReg = $daftarTingkat->sum(fn ($c) => $c->registrations->count());
     @endphp
     <div class="container-landing pt-6">
         <div class="surface-card p-6">
-            <div class="grid gap-6 sm:grid-cols-2 md:grid-cols-4">
+            <div class="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
                 @if($eventner->tanggal)
                     <div class="flex items-center gap-4">
                         <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -141,6 +154,34 @@
                     </div>
                 @endif
 
+                @if($eventner->technical_meeting)
+                    <div class="flex items-center gap-4">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                            <i class="ti ti-presentation text-2xl"></i>
+                        </div>
+                        <div>
+                            <span class="overline !text-[10px] block">Technical Meeting</span>
+                            <span class="text-sm font-bold text-deep-slate">
+                                {{ \Carbon\Carbon::parse($eventner->technical_meeting)->translatedFormat('d F Y, H:i') }} WIB
+                            </span>
+                        </div>
+                    </div>
+                @endif
+
+                @if($eventner->tanggal_pendaftaran)
+                    <div class="flex items-center gap-4">
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-[#5a7d00]/10 text-[#5a7d00]">
+                            <i class="ti ti-calendar-plus text-2xl"></i>
+                        </div>
+                        <div>
+                            <span class="overline !text-[10px] block">Batas Pendaftaran</span>
+                            <span class="text-sm font-bold text-deep-slate">
+                                {{ \Carbon\Carbon::parse($eventner->tanggal_pendaftaran)->translatedFormat('d F Y') }}
+                            </span>
+                        </div>
+                    </div>
+                @endif
+
                 @if($eventner->tingkat_perlombaan)
                     <div class="flex items-center gap-4">
                         <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
@@ -165,6 +206,48 @@
                     </div>
                 @endif
             </div>
+
+            {{-- Hitung mundur pendaftaran, menempel pada tanggal batasnya. --}}
+            @if($eventner->tanggal_pendaftaran)
+                <div class="mt-5 rounded-xl bg-red-500/5 border border-red-500/20 p-4" x-data="countdown('{{ \Carbon\Carbon::parse($eventner->tanggal_pendaftaran)->endOfDay()->toIso8601String() }}')">
+                    <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider block text-center mb-2">Pendaftaran Ditutup Dalam</span>
+                    <div class="grid grid-cols-4 gap-2 max-w-[280px] mx-auto">
+                        <div class="bg-red-500/10 rounded-lg p-1.5 text-center">
+                            <span class="text-base font-extrabold text-red-500 block leading-tight" x-text="days"></span>
+                            <span class="text-[8px] text-red-400 font-bold uppercase">Hari</span>
+                        </div>
+                        <div class="bg-red-500/10 rounded-lg p-1.5 text-center">
+                            <span class="text-base font-extrabold text-red-500 block leading-tight" x-text="hours"></span>
+                            <span class="text-[8px] text-red-400 font-bold uppercase">Jam</span>
+                        </div>
+                        <div class="bg-red-500/10 rounded-lg p-1.5 text-center">
+                            <span class="text-base font-extrabold text-red-500 block leading-tight" x-text="minutes"></span>
+                            <span class="text-[8px] text-red-400 font-bold uppercase">Mnt</span>
+                        </div>
+                        <div class="bg-red-500/10 rounded-lg p-1.5 text-center">
+                            <span class="text-base font-extrabold text-red-500 block leading-tight" x-text="seconds"></span>
+                            <span class="text-[8px] text-red-400 font-bold uppercase">Det</span>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Peta: hanya muncul kalau penyelenggara mengisi koordinat di
+                 pengaturan event. Medan lokasi teks tidak bisa dipetakan
+                 otomatis karena tidak ada geocoding di sisi server. --}}
+            @if($eventner->latitude && $eventner->longitude)
+                <div class="mt-5 rounded-xl overflow-hidden border border-outline-variant/50">
+                    <iframe
+                        width="100%"
+                        height="200"
+                        style="border:0"
+                        loading="lazy"
+                        allowfullscreen
+                        title="Peta lokasi {{ $eventner->nama_event }}"
+                        src="https://maps.google.com/maps?q={{ $eventner->latitude }},{{ $eventner->longitude }}&hl=id&z=15&output=embed">
+                    </iframe>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -241,14 +324,6 @@
             <div class="md:col-span-2 flex flex-col gap-8">
                 {{-- Kategori Lomba — kuota, biaya, tempat, tanggal, juri --}}
                 @if($eventner->competitionCategories->count() > 0)
-                    @php
-                        $parents = $eventner->competitionCategories->whereNull('parent_id')->sortBy('sort_order');
-                        $children = $eventner->competitionCategories->whereNotNull('parent_id');
-                        // Yang dihitung hanya tingkat yang bisa dipilih: anak,
-                        // plus induk lama tanpa anak. Induk beranak tidak punya
-                        // kuota sendiri, jadi menjumlahkannya cuma menggandakan.
-                        $daftarTingkat = $children->merge($parents->where(fn ($p) => $p->children->isEmpty()));
-                    @endphp
                     <div class="surface-card p-6">
                         <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
                             <h3 class="font-display text-lg font-bold text-deep-slate inline-flex items-center gap-2">
@@ -426,10 +501,19 @@
             </div>
 
             {{-- Sidebar Column --}}
-            <div class="flex flex-col gap-8">
+            {{-- sticky: kolom utama jauh lebih tinggi (6 kartu vs 2), jadi tanpa
+                 ini separuh kanan layar kosong begitu pengunjung mulai scroll.
+                 `self-start` wajib — tanpa itu item grid melar setinggi baris
+                 dan sticky tidak punya ruang untuk bergerak. top-24 = header
+                 64px + jeda 32px.
+                 max-h + overflow-y: kalau penyelenggara mengisi poster, TM,
+                 rundown, peta, dan kontak sekaligus, sidebar bisa lebih tinggi
+                 dari layar — tanpa batas ini bagian bawahnya terpotong dan tak
+                 bisa dijangkau selama menempel. --}}
+            <div class="flex flex-col gap-5 self-start lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
                 {{-- Poster Acara Card — small, sidebar, klik buka ViewerJS --}}
                 @if($eventner->poster)
-                    <div class="surface-card p-4">
+                    <div class="surface-card p-5">
                         <h3 class="font-display text-sm font-bold text-deep-slate inline-flex items-center gap-2 mb-3">
                             <i class="ti ti-file-text text-primary"></i>
                             Poster Acara
@@ -446,82 +530,11 @@
                     </div>
                 @endif
 
-                {{-- Informasi Jadwal & TM --}}
-                @if($eventner->lokasi || $eventner->technical_meeting)
-                    <div class="surface-card p-6">
-                        <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
-                            <i class="ti ti-info-square text-primary"></i>
-                            Informasi Jadwal
-                        </h3>
-                        <div class="flex flex-col gap-4 text-sm">
-                            @if($eventner->technical_meeting)
-                                <div class="flex gap-3">
-                                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
-                                        <i class="ti ti-presentation text-lg"></i>
-                                    </div>
-                                    <div>
-                                        <span class="text-xs text-on-surface-variant font-medium block">Technical Meeting</span>
-                                        <span class="font-bold text-deep-slate leading-normal">{{ \Carbon\Carbon::parse($eventner->technical_meeting)->translatedFormat('d F Y, H:i') }} WIB</span>
-                                    </div>
-                                </div>
-                            @endif
-
-                            @if($eventner->tanggal_pendaftaran)
-                                <div class="flex gap-3">
-                                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-[#5a7d00]/10 text-[#5a7d00] shrink-0">
-                                        <i class="ti ti-calendar-plus text-lg"></i>
-                                    </div>
-                                    <div>
-                                        <span class="text-xs text-on-surface-variant font-medium block">Batas Pendaftaran</span>
-                                        <span class="font-bold text-deep-slate leading-normal">{{ \Carbon\Carbon::parse($eventner->tanggal_pendaftaran)->translatedFormat('d F Y') }}</span>
-                                    </div>
-                                </div>
-                                {{-- Countdown pendaftaran --}}
-                                <div class="mt-3 rounded-lg bg-red-500/5 border border-red-500/20 p-3" x-data="countdown('{{ \Carbon\Carbon::parse($eventner->tanggal_pendaftaran)->endOfDay()->toIso8601String() }}')">
-                                    <span class="text-[10px] text-red-500 font-bold uppercase tracking-wider block text-center mb-2">Pendaftaran Ditutup Dalam</span>
-                                    <div class="grid grid-cols-4 gap-1.5">
-                                        <div class="bg-red-500/10 rounded-lg p-1 text-center">
-                                            <span class="text-sm font-extrabold text-red-500 block leading-tight" x-text="days"></span>
-                                            <span class="text-[8px] text-red-400 font-bold uppercase">Hari</span>
-                                        </div>
-                                        <div class="bg-red-500/10 rounded-lg p-1 text-center">
-                                            <span class="text-sm font-extrabold text-red-500 block leading-tight" x-text="hours"></span>
-                                            <span class="text-[8px] text-red-400 font-bold uppercase">Jam</span>
-                                        </div>
-                                        <div class="bg-red-500/10 rounded-lg p-1 text-center">
-                                            <span class="text-sm font-extrabold text-red-500 block leading-tight" x-text="minutes"></span>
-                                            <span class="text-[8px] text-red-400 font-bold uppercase">Mnt</span>
-                                        </div>
-                                        <div class="bg-red-500/10 rounded-lg p-1 text-center">
-                                            <span class="text-sm font-extrabold text-red-500 block leading-tight" x-text="seconds"></span>
-                                            <span class="text-[8px] text-red-400 font-bold uppercase">Det</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-
-                        {{-- Google Maps Embed --}}
-                        @if($eventner->latitude && $eventner->longitude)
-                            <div class="mt-6 rounded-xl overflow-hidden border border-outline-variant/50">
-                                <iframe
-                                    width="100%"
-                                    height="180"
-                                    style="border:0"
-                                    loading="lazy"
-                                    allowfullscreen
-                                    src="https://maps.google.com/maps?q={{ $eventner->latitude }},{{ $eventner->longitude }}&hl=id&z=15&output=embed">
-                                </iframe>
-                            </div>
-                        @endif
-                    </div>
-                @endif
-
                 {{-- Rundown Acara --}}
                 @php $rundowns = \App\Models\EventRundown::with('sourceCategory.parent')->where('eventner_id', $eventner->id)->orderBy('sort_order')->take(3)->get(); @endphp
                 @if($rundowns->isNotEmpty())
-                    <div class="surface-card p-6">
-                        <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
+                    <div class="surface-card p-5">
+                        <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-3">
                             <i class="ti ti-list-details text-primary"></i>
                             Rundown Acara
                         </h3>
@@ -549,7 +562,7 @@
                             @endforeach
                         </div>
                         <a href="{{ event_url($eventner, 'rundown') }}"
-                            class="mt-4 w-full py-2.5 px-4 rounded-xl bg-primary/10 hover:bg-primary/15 border border-primary/20 text-primary text-xs font-bold leading-normal inline-flex items-center justify-center gap-1.5 text-decoration-none transition">
+                            class="mt-3 w-full py-2 px-3 rounded-lg bg-primary/10 hover:bg-primary/15 border border-primary/20 text-primary text-xs font-bold leading-normal inline-flex items-center justify-center gap-1.5 text-decoration-none transition">
                             <i class="ti ti-list-details"></i> Lihat Rundown Lengkap
                             <i class="ti ti-chevron-right"></i>
                         </a>
@@ -558,16 +571,16 @@
 
                 {{-- Hubungi Penyelenggara --}}
                 @if($eventner->link_whatsapp)
-                    <div class="surface-card p-6">
-                        <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
+                    <div class="surface-card p-5">
+                        <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-3">
                             <i class="ti ti-message-2 text-primary"></i>
                             Hubungi Penyelenggara
                         </h3>
                         @php $waNumber = preg_replace('/[^0-9]/', '', $eventner->link_whatsapp); @endphp
                         <a href="https://wa.me/{{ $waNumber }}?text={{ urlencode('Halo, saya ingin bertanya tentang event ' . $eventner->nama_event) }}"
-                            target="_blank" class="flex items-center gap-3 p-4 rounded-xl bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 text-decoration-none group transition">
-                            <div class="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm transition group-hover:scale-105">
-                                <i class="ti ti-brand-whatsapp text-2xl"></i>
+                            target="_blank" class="flex items-center gap-3 p-3 rounded-xl bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/20 text-decoration-none group transition">
+                            <div class="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm transition group-hover:scale-105 shrink-0">
+                                <i class="ti ti-brand-whatsapp text-lg"></i>
                             </div>
                             <div>
                                 <span class="font-bold text-deep-slate text-sm block group-hover:text-primary transition">Chat WhatsApp</span>
@@ -594,8 +607,8 @@
                 @endif
 
                 {{-- Bagikan Event --}}
-                <div class="surface-card p-6">
-                    <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
+                <div class="surface-card p-5">
+                    <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-3">
                         <i class="ti ti-share text-primary"></i>
                         Bagikan Event
                     </h3>
