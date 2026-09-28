@@ -28,6 +28,8 @@ class EventDetail extends Component
             $this->eventner = $resolved;
         } else {
             $this->eventner = Eventner::with([
+                'competitionCategories.venue',
+                'competitionCategories.judges',
                 'competitionCategories.registrations' => function ($query) {
                     $query->withSum(['voteTransactions as total_votes' => function ($q) {
                         $q->where('status', 'PAID');
@@ -44,6 +46,7 @@ class EventDetail extends Component
                     $query->where('is_active', true)->orderBy('sort_order')->latest();
                 },
                 'competitionCategories.children.judges',
+                'competitionCategories.children.venue',
                 'competitionCategories.children.registrations',
             ])->approved()->where('slug', $slug)->firstOrFail();
         }

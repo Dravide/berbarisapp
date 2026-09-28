@@ -239,46 +239,46 @@
         <div class="grid gap-8 md:grid-cols-3">
             {{-- Main Column --}}
             <div class="md:col-span-2 flex flex-col gap-8">
-                {{-- Kuota Kategori --}}
+                {{-- Kategori Lomba — kuota, biaya, tempat, tanggal, juri --}}
                 @if($eventner->competitionCategories->count() > 0)
                     @php
                         $parents = $eventner->competitionCategories->whereNull('parent_id')->sortBy('sort_order');
                         $children = $eventner->competitionCategories->whereNotNull('parent_id');
+                        // Yang dihitung hanya tingkat yang bisa dipilih: anak,
+                        // plus induk lama tanpa anak. Induk beranak tidak punya
+                        // kuota sendiri, jadi menjumlahkannya cuma menggandakan.
+                        $daftarTingkat = $children->merge($parents->where(fn ($p) => $p->children->isEmpty()));
                     @endphp
                     <div class="surface-card p-6">
-                        <h3 class="font-display text-lg font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
-                            <i class="ti ti-chart-bar text-primary"></i>
-                            Kuota Pendaftaran Kategori
-                        </h3>
+                        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+                            <h3 class="font-display text-lg font-bold text-deep-slate inline-flex items-center gap-2">
+                                <i class="ti ti-trophy text-primary"></i>
+                                Kategori Lomba
+                            </h3>
+                            <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">
+                                {{ $daftarTingkat->count() }} kategori
+                                @if($daftarTingkat->sum('kuota'))
+                                    &middot; total kuota {{ $daftarTingkat->sum('kuota') }}
+                                @endif
+                            </span>
+                        </div>
                         <div class="flex flex-col gap-4">
                             @foreach($parents as $parent)
-                                <div class="border border-outline-variant/30 rounded-xl p-3">
-                                    <div class="text-sm font-extrabold text-deep-slate mb-3">{{ $parent->name }}</div>
-                                    @if($parent->children->isEmpty())
-                                        {{-- Old flat data — parent tanpa child --}}
-                                        @php $pct = $parent->kuota ? min(100, round($parent->registrations->count() / $parent->kuota * 100)) : 0; @endphp
-                                        <div class="flex justify-between items-center mb-1.5 text-xs font-semibold">
-                                            <span class="text-on-surface-variant">{{ $parent->name }}</span>
-                                            <span class="text-on-surface-variant">{{ $parent->registrations->count() }} / {{ $parent->kuota ?? '∞' }}</span>
+                                <div>
+                                    @if($parent->children->isNotEmpty())
+                                        {{-- Jenis lomba: judul grup, kartu untuk tiap tingkat --}}
+                                        <div class="text-sm font-extrabold text-deep-slate mb-2.5 inline-flex items-center gap-2">
+                                            <i class="ti ti-category text-primary"></i>
+                                            {{ $parent->name }}
                                         </div>
-                                        <div class="h-2 bg-surface-container rounded-full overflow-hidden">
-                                            <div class="h-full rounded-full transition-all duration-500 {{ $pct >= 100 ? 'bg-red-500' : ($pct >= 80 ? 'bg-amber-500' : 'bg-primary') }}" style="width: {{ $pct }}%"></div>
+                                        <div class="flex flex-col gap-3">
+                                            @foreach($parent->children->sortBy('sort_order') as $child)
+                                                @include('livewire.public.partials._competition-category-card', ['category' => $child])
+                                            @endforeach
                                         </div>
                                     @else
-                                        @foreach($parent->children->sortBy('sort_order') as $child)
-                                            @php $pct = $child->kuota ? min(100, round($child->registrations->count() / $child->kuota * 100)) : 0; @endphp
-                                            <div class="mb-2 last:mb-0">
-                                                <div class="flex justify-between items-center mb-1 text-xs font-semibold">
-                                                    <span class="text-on-surface-variant">{{ $child->name }}</span>
-                                                    <span class="text-on-surface-variant">{{ $child->registrations->count() }} / {{ $child->kuota ?? '∞' }}</span>
-                                                </div>
-                                                @if($child->kuota)
-                                                <div class="h-1.5 bg-surface-container rounded-full overflow-hidden">
-                                                    <div class="h-full rounded-full transition-all duration-500 {{ $pct >= 100 ? 'bg-red-500' : ($pct >= 80 ? 'bg-amber-500' : 'bg-primary') }}" style="width: {{ $pct }}%"></div>
-                                                </div>
-                                                @endif
-                                            </div>
-                                        @endforeach
+                                        {{-- Data lama: induk tanpa tingkat, tetap tampil apa adanya --}}
+                                        @include('livewire.public.partials._competition-category-card', ['category' => $parent])
                                     @endif
                                 </div>
                             @endforeach
@@ -286,18 +286,7 @@
                             {{-- Orphan children (data lama tanpa parent) --}}
                             @php $orphans = $children->whereNotIn('parent_id', $parents->pluck('id')); @endphp
                             @foreach($orphans as $orphan)
-                                @php $pct = $orphan->kuota ? min(100, round($orphan->registrations->count() / $orphan->kuota * 100)) : 0; @endphp
-                                <div>
-                                    <div class="flex justify-between items-center mb-1.5 text-sm font-semibold">
-                                        <span class="text-deep-slate">{{ $orphan->name }}</span>
-                                        <span class="text-on-surface-variant">{{ $orphan->registrations->count() }} / {{ $orphan->kuota ?? '∞' }}</span>
-                                    </div>
-                                    @if($orphan->kuota)
-                                    <div class="h-2.5 bg-surface-container rounded-full overflow-hidden">
-                                        <div class="h-full rounded-full transition-all duration-500 {{ $pct >= 100 ? 'bg-red-500' : ($pct >= 80 ? 'bg-amber-500' : 'bg-primary') }}" style="width: {{ $pct }}%"></div>
-                                    </div>
-                                    @endif
-                                </div>
+                                @include('livewire.public.partials._competition-category-card', ['category' => $orphan])
                             @endforeach
                         </div>
                     </div>
