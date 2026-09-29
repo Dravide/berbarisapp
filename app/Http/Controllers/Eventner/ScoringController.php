@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AssessmentCategory;
 use App\Models\AssessmentScore;
 use App\Models\CompetitionCategory;
+use App\Models\CompetitionGroup;
 use App\Models\CompetitionRound;
 use App\Models\CompetitionRoundRegistration;
 use App\Models\DeductionCategory;
@@ -353,26 +354,19 @@ class ScoringController extends Controller
     /**
      * Juri yang berhak menilai peserta ini.
      *
-     * Seri wajib ikut: juri yang cuma memegang rubrik Seri B tidak boleh muncul
-     * sebagai kolom penilai di lembar peserta Seri A. Ini keluhan yang
-     * dilaporkan — kolom juri muncul untuk peserta yang bukan tanggung
-     * jawabnya.
-     *
-     * Babak ikut karena alasan yang sama: juri final memegang rubrik final yang
-     * tidak berseri, jadi tanpa saringan babak ia lolos ke lembar penyisihan.
+     * Satu sumber dengan tablet juri: CompetitionGroup::judgesForRegistration().
+     * Regu juri dulu diturunkan dari rubrik yang menempel ke seri peserta;
+     * sekarang penugasan menempel di GRUP, dan rubriknya (seri peserta) cuma
+     * menentukan lembar mana yang terbuka. Kalau PDF menghitung regunya
+     * sendiri, kolom penilai di lembar cetak bisa memuat juri yang tak pernah
+     * muncul di layar penilaian.
      */
     public function judgesFor(Registration $registration, ?int $roundId = null): \Illuminate\Support\Collection
     {
-        $compCategoryId = $registration->competition_category_id;
-        $seriesId = $registration->competition_series_id;
-        $roundId = $roundId ?? $this->roundFor($registration);
-
-        return Judge::where('eventner_id', $registration->eventner_id)
-            ->whereHas('assessmentCategories', function ($q) use ($registration, $compCategoryId, $seriesId, $roundId) {
-                $q->where('assessment_categories.eventner_id', $registration->eventner_id)
-                    ->forEntry($compCategoryId, $seriesId, $roundId);
-            })
-            ->get();
+        return CompetitionGroup::judgesForRegistration(
+            $registration,
+            $roundId ?? $this->roundFor($registration),
+        );
     }
 
     public function downloadParticipantPdf(Request $request)
@@ -425,8 +419,8 @@ class ScoringController extends Controller
             $grandTotal += $catTotal;
         }
 
-        // Juri hanya yang ditugaskan (Tugaskan Kategori) ke format penilaian
-        // yang berlaku untuk peserta ini — tingkat + grupnya + babaknya.
+        // Juri hanya yang ditugaskan ke grup peserta ini (atau baris
+        // final/ungrouped/level-nya) — regu yang sama dengan tablet juri.
         $judges = $this->judgesFor($registration, $roundId);
         $judgeIds = $judges->pluck('id');
 

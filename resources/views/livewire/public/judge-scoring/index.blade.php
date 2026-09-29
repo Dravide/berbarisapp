@@ -87,6 +87,12 @@
                     <p class="text-sm text-on-surface-variant m-0">Belum ada peserta terdaftar di tingkat ini.</p>
                 </div>
             @else
+                @php
+                    // Penanda seri hanya berguna kalau ada seri. Event yang tidak
+                    // memakai seri tak perlu melihat chip "Tanpa Seri" di setiap
+                    // barisnya — itu cuma menambah baca tanpa membedakan apa pun.
+                    $adaSeri = $participants->contains(fn ($p) => $p->competitionSeries !== null);
+                @endphp
                 <div class="rounded-2xl border border-outline-variant/30 bg-white overflow-hidden shadow-sm divide-y divide-outline-variant/20">
                     @foreach($participants as $p)
                         @php
@@ -102,7 +108,24 @@
                                 {{ $p->urutan_tampil ?? '–' }}
                             </span>
                             <span class="min-w-0 flex-1">
-                                <span class="block font-semibold text-on-surface truncate">{{ $p->nama_sekolah }}</span>
+                                <span class="flex items-center gap-2 min-w-0">
+                                    <span class="font-semibold text-on-surface truncate">{{ $p->nama_sekolah }}</span>
+                                    {{-- Seri penentu lembar nilainya. Dua seri boleh memakai
+                                         nama kategori rubrik yang sama persis ("PBB"), jadi
+                                         tanpa penanda ini juri tak punya cara tahu lembar mana
+                                         yang sedang dibukanya. --}}
+                                    @if($adaSeri)
+                                        @if($p->competitionSeries)
+                                            <span class="shrink-0 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                                                <i class="ti ti-flag-2"></i> {{ $p->competitionSeries->name }}
+                                            </span>
+                                        @else
+                                            <span class="shrink-0 rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                                                Tanpa Seri
+                                            </span>
+                                        @endif
+                                    @endif
+                                </span>
                                 @if($p->nama_pelatih)
                                     <span class="block text-xs text-on-surface-variant truncate">Pelatih: {{ $p->nama_pelatih }}</span>
                                 @endif
@@ -133,6 +156,11 @@
                     <p class="text-sm font-bold text-on-surface truncate m-0 mt-0.5">
                         @if($registration->urutan_tampil) No. {{ $registration->urutan_tampil }} · @endif
                         {{ $registration->nama_sekolah }}
+                        @if($registration->competitionSeries)
+                            <span class="ml-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary align-middle">
+                                <i class="ti ti-flag-2"></i> {{ $registration->competitionSeries->name }}
+                            </span>
+                        @endif
                     </p>
                 </div>
 

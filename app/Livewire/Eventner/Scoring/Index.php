@@ -8,12 +8,14 @@ use App\Models\CompetitionCategory;
 use App\Models\CompetitionGroup;
 use App\Models\CompetitionRound;
 use App\Models\CompetitionRoundRegistration;
+use App\Models\CompetitionSeries;
 use App\Models\DeductionCategory;
 use App\Models\Judge;
 use App\Models\Registration;
 use App\Models\ScoreDeduction;
 use App\Services\ScoreFinalizationService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 
@@ -278,6 +280,164 @@ class Index extends Component
     }
 
     /**
+     * Berapa peserta tiap seri di dalam tiap grup.
+     *
+     * Grup dan seri dua sumbu bebas: satu grup boleh dihuni lebih dari satu
+     * seri, dan satu seri boleh tersebar di beberapa grup. Tanpa pecahan ini
+     * kartu grup hanya berbunyi "3 Peserta" dan panitia tak punya cara tahu
+     * lembar nilai mana yang menunggu di dalamnya.
+     *
+     * Satu query dikelompokkan (grup × seri), bukan hitungan per kartu — pola
+     * yang sama dengan $groupCounts.
+     *
+     * Seri yang tidak dihuni grup itu tidak dibuatkan barisnya: chip "Series B
+     * 0" di Grup A hanya menambah baca tanpa memberi tahu apa pun.
+     *
+     * @return array<int, array<int, array{nama: string, jumlah: int, tanpa_seri: bool}>>
+     */
+    private function seriesCountsPerGroup(): array
+    {
+        if (! $this->selectedCategoryId) {
+            return [];
+        }
+
+        $baris = Registration::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $this->selectedCategoryId)
+            ->whereNotNull('competition_group_id')
+            ->groupBy('competition_group_id', 'competition_series_id')
+            ->selectRaw('competition_group_id, competition_series_id, COUNT(*) as total')
+            ->get();
+
+        // Nama seri diambil sekali dari daftar seri tingkat ini, jadi satu seri
+        // yang tersebar di tiga grup tidak menghasilkan tiga baris query.
+        $seri = $this->seriesForLevel();
+        $namaSeri = $seri->pluck('name', 'id');
+        $urutan = array_flip($seri->pluck('id')->all());
+
+        $hasil = [];
+        foreach ($baris as $b) {
+            $grupId = (int) $b->competition_group_id;
+            $seriId = $b->competition_series_id;
+
+            $hasil[$grupId][] = [
+                'nama' => $seriId ? (string) ($namaSeri[$seriId] ?? 'Seri') : 'Tanpa Seri',
+                'jumlah' => (int) $b->total,
+                'tanpa_seri' => ! $seriId,
+                // Kunci urut internal, dibuang sebelum diserahkan ke view.
+                '_urut' => $seriId ? ($urutan[$seriId] ?? PHP_INT_MAX) : PHP_INT_MAX,
+            ];
+        }
+
+        // Urut seri mengikuti keinginan panitia; "Tanpa Seri" selalu paling
+        // akhir supaya chipnya tidak menyela di antara seri bernama.
+        return array_map(function (array $chips) {
+            usort($chips, fn ($a, $b) => $a['_urut'] <=> $b['_urut']);
+
+            return array_map(function (array $c) {
+                unset($c['_urut']);
+
+                return $c;
+            }, $chips);
+        }, $hasil);
+    }
+
+    /**
+     * Nama juri tiap baris penugasan tingkat terpilih.
+     *
+     * Dipakai lencana di kartu grup pemilih: "Grup A · Dery, Ujang". Satu query
+     * untuk seluruh baris, bukan satu per kartu. Baris grup diambil langsung
+     * dari competition_groups supaya grup tanpa juri tetap muncul dengan daftar
+     * kosong — justru itu yang perlu ditandai.
+     *
+     * @return array<string, array<int, string>> kunci 'group:{id}' | scope => nama juri
+     */
+    private function judgesPerGroupRow(): array
+    {
+        if (! $this->selectedCategoryId) {
+            return [];
+        }
+
+        $baris = DB::table('competition_group_judge as cgj')
+            ->join('judges as j', 'j.id', '=', 'cgj.judge_id')
+            ->where('cgj.competition_category_id', $this->selectedCategoryId)
+            ->orderBy('j.name')
+            ->get(['cgj.scope', 'cgj.competition_group_id', 'j.name']);
+
+        $hasil = [];
+        foreach ($baris as $b) {
+            $kunci = $b->scope === CompetitionGroup::SCOPE_GROUP
+                ? 'group:' . $b->competition_group_id
+                : $b->scope;
+
+            $hasil[$kunci][] = $b->name;
+        }
+
+        return $hasil;
+    }
+
+    /**
+     * Baris penugasan tiap juri pada lembar yang sedang dibuka.
+     *
+     * Menjawab kebingungan yang nyata: deretan nama juri telanjang tak
+     * menjelaskan apa-apa. "Dery · Grup A" langsung memberi tahu kenapa Dery
+     * muncul di lembar ini dan juri lain tidak.
+     *
+     * Isinya bukan rubrik yang dipegang juri — di bawah model grup, juri grup
+     * mana pun menilai SELURUH rubrik seri peserta. Yang membedakan juri satu
+     * dari yang lain hanyalah baris penugasannya.
+     *
+     * @return array<int, string> judgeId => label
+     */
+    private function judgeAssignmentLabels(): array
+    {
+        if (! $this->selectedRegistration || count($this->judges) === 0) {
+            return [];
+        }
+
+        $levelId = $this->selectedRegistration->competition_category_id;
+        if (! $levelId) {
+            return [];
+        }
+
+        // Satu baris penugasan berlaku untuk seluruh juri di lembar ini — itu
+        // memang arti judgesForRegistration(): mereka semua dari baris yang sama.
+        $t = CompetitionGroup::penugasanUntukPeserta(
+            $this->selectedRegistration,
+            $this->selectedRoundId ? (int) $this->selectedRoundId : null,
+        );
+
+        if ($t['scope'] === null) {
+            return [];
+        }
+
+        $label = $t['scope'] === CompetitionGroup::SCOPE_GROUP
+            ? (string) ($this->groups()->firstWhere('id', $t['group_id'])?->name ?? 'Grup')
+            : (CompetitionGroup::SCOPE_LABELS[$t['scope']] ?? '');
+
+        if ($label === '') {
+            return [];
+        }
+
+        return $this->judges
+            ->mapWithKeys(fn ($juri) => [$juri->id => $label])
+            ->all();
+    }
+
+    /** Seri milik tingkat terpilih, urut sesuai keinginan panitia. */
+    private function seriesForLevel()
+    {
+        if (! $this->selectedCategoryId) {
+            return collect();
+        }
+
+        return CompetitionSeries::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $this->selectedCategoryId)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
      * Babak datang dari DOM pada jalur lain — pastikan milik eventner ini sebelum dipakai.
      */
     public function updatedSelectedRoundId()
@@ -423,31 +583,21 @@ class Index extends Component
 
     public function loadJudges()
     {
-        // Hanya juri yang ditugaskan (Tugaskan Kategori) ke format penilaian
-        // pada tingkat + seri + BABAK yang sedang dibuka. Ketiganya wajib:
-        //  - seri: juri yang cuma memegang rubrik Seri B tidak boleh muncul di
-        //    panel peserta Seri A — inilah "juri berbeda per seri";
-        //  - babak: juri final tidak boleh muncul saat menilai penyisihan seri,
-        //    dan sebaliknya — rubriknya memang baris terpisah, jadi tanpa
-        //    saringan babak kedua regu juri tercampur di satu panel.
-        $category = $this->selectedRegistration->competitionCategory;
-        if ($category) {
-            $seriesId = $this->selectedRegistration->competition_series_id;
-            $roundId = $this->selectedRoundId ? (int) $this->selectedRoundId : null;
-
-            $this->judges = Judge::where('eventner_id', $this->eventner->id)
-                ->whereHas('assessmentCategories', function ($q) use ($category, $seriesId, $roundId) {
-                    $q->where('assessment_categories.eventner_id', $this->eventner->id)
-                        ->forEntry($category->id, $seriesId, $roundId);
-                })
-                ->get();
-
-            // Tidak ada cabang cadangan "panel kosong → semua juri": rubrik
-            // tanpa babak sudah ikut lewat forLevel() (klausa orWhereNull), jadi
-            // panel kosong berarti memang tak ada yang berhak menilai babak ini.
-            // Cabang cadangan justru menghidupkan lagi juri final di penyisihan.
+        // Juri peserta ini datang dari baris penugasannya, bukan dari rubrik
+        // yang dipegangnya: grup pesertanya, dan pada babak final baris `final`
+        // tingkat itu. Aturan lengkapnya di CompetitionGroup::penugasanUntukPeserta()
+        // — satu tempat, supaya panel ini dan tablet juri tak bisa berbeda.
+        //
+        // Panel kosong memang berarti tak ada yang ditugaskan ke baris itu.
+        // Panitia diberi tanda di modal Kelola Grup, bukan diselamatkan diam-
+        // diam oleh cabang "kosong → semua juri".
+        if ($this->selectedRegistration) {
+            $this->judges = CompetitionGroup::judgesForRegistration(
+                $this->selectedRegistration,
+                $this->selectedRoundId ? (int) $this->selectedRoundId : null,
+            );
         } else {
-            $this->judges = [];
+            $this->judges = collect();
         }
     }
 
@@ -949,6 +1099,9 @@ class Index extends Component
                     'rounds' => collect(),
                     'groups' => collect(),
                     'groupCounts' => collect(),
+                    'groupSeriesCounts' => [],
+                    'groupJudgeNames' => [],
+                    'judgeGroupLabels' => [],
                     'ungroupedCount' => 0,
                     'totalCount' => 0,
                     'finalistCount' => 0,
@@ -993,30 +1146,24 @@ class Index extends Component
         }
 
         if ($this->view === 'scoring' && $this->selectedRegistration) {
-            // Rubrik yang boleh dinilai juri terpilih = tingkat peserta ini,
-            // serinya, dan babak yang sedang dibuka. Babak wajib ikut: rubrik
-            // penyisihan dan final sengaja dibuat terpisah (kuncinya per
-            // kriteria), jadi tanpa penyaring ini form menampilkan keduanya
-            // sekaligus dan operator tak tahu mana yang sedang dinilai.
-            $baseQuery = AssessmentCategory::with(['subCategories.criterias'])
+            // Rubrik yang boleh dinilai = tingkat peserta ini, SERINYA, dan
+            // babak yang sedang dibuka. Babak wajib ikut: rubrik penyisihan dan
+            // final sengaja dibuat terpisah (kuncinya per kriteria), jadi tanpa
+            // penyaring ini form menampilkan keduanya sekaligus.
+            //
+            // Juri TIDAK ikut menyaring di sini. Di bawah model grup, juri grup
+            // mana pun menilai seluruh rubrik seri peserta — menyaring per juri
+            // hanya memberi lembar kosong bagi juri yang kebetulan tak memegang
+            // rubriknya, padahal justru dialah yang ditugaskan menilainya.
+            // Seri peserta sudah menentukan lembar mana yang benar.
+            $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
                 ->where('eventner_id', $this->eventner->id)
                 ->forEntry(
                     $this->selectedRegistration->competition_category_id ?? null,
                     $this->selectedRegistration->competition_series_id,
                     $this->selectedRoundId ? (int) $this->selectedRoundId : null,
-                );
-
-            if ($this->selectedJudgeId) {
-                $assessmentCategories = (clone $baseQuery)
-                    ->whereHas('judges', function ($q) {
-                        $q->where('judges.id', $this->selectedJudgeId);
-                    })
-                    ->get();
-            }
-
-            if (!isset($assessmentCategories) || $assessmentCategories->isEmpty()) {
-                $assessmentCategories = $baseQuery->get();
-            }
+                )
+                ->get();
         }
 
         // Bobot kriteria per id. Nilai harus dikalikan bobot saat dijumlah —
@@ -1098,7 +1245,8 @@ class Index extends Component
         $totalDeductions = $totalDeductionsKategori + $totalDeductionsGlobal;
 
         // Jumlah peserta per grup untuk kartu pemilih grup. Satu query
-        // dikelompokkan, bukan hitungan per kartu.
+        // dikelompokkan, bukan hitungan per kartu. Pecahan per serinya menyusul
+        // lewat seriesCountsPerGroup() — kartu grup perlu keduanya.
         $groupCounts = collect();
         $ungroupedCount = 0;
         if ($this->selectedCategoryId) {
@@ -1115,12 +1263,19 @@ class Index extends Component
                 ->count();
         }
 
+        // Label grup di tombol juri hanya berguna saat satu lembar peserta
+        // sedang terbuka — di layar pemilih ia cuma jadi teks tanpa konteks.
+        $judgeGroupLabels = $this->view === 'scoring' ? $this->judgeAssignmentLabels() : [];
+
         return view('livewire.eventner.scoring.index', [
             'participants' => $participants,
             'selectedCategory' => $selectedCategory,
             'rounds' => $this->rounds(),
             'groups' => $this->groups(),
             'groupCounts' => $groupCounts,
+            'groupSeriesCounts' => $this->seriesCountsPerGroup(),
+            'groupJudgeNames' => $this->judgesPerGroupRow(),
+            'judgeGroupLabels' => $judgeGroupLabels,
             'ungroupedCount' => $ungroupedCount,
             'totalCount' => (int) $groupCounts->sum() + $ungroupedCount,
             'finalistCount' => $this->finalistIds()->count(),

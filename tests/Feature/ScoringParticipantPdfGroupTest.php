@@ -22,16 +22,22 @@ use Tests\TestCase;
  * Lembar penilaian per peserta (PDF) pada tingkat berseri.
  *
  * Dua kebocoran yang dijaga di sini, keduanya berasal dari daftar yang tidak
- * disaring per seri:
+ * disaring:
  *
  *  1. Rubrik seri lain ikut tercetak di lembar peserta ini, lalu subtotalnya
  *     mengotori nilai akhir dengan kriteria yang tak pernah dinilai.
- *  2. Juri yang cuma memegang rubrik seri lain muncul sebagai kolom penilai,
+ *  2. Juri yang tidak ditugaskan ke peserta ini muncul sebagai kolom penilai,
  *     padahal ia tidak pernah menilai peserta ini.
  *
- * Grup tetap dipakai di beberapa tes di bawah sebagai bentuk data nyata LOBB —
- * satu seri per grup — tapi yang disaring sekarang adalah serinya, bukan
- * grupnya. Grup dan seri dua sumbu bebas: satu grup boleh memuat dua seri.
+ * Dua sumbu yang berbeda, dan itu memang disengaja:
+ *
+ *   Rubrik -> mengikuti SERI peserta (ditetapkan saat daftar ulang).
+ *   Juri   -> mengikuti GRUP peserta (dicentang panitia di modal Kelola Grup).
+ *
+ * Jadi "juri seri lain" di sini berarti juri yang tidak dipekerjakan di grup
+ * peserta ini — bukan juri yang kebetulan memegang rubrik seri lain. Rubrik
+ * memang bebas dari juri: juri Grup A menilai lembar Seri A maupun Seri B,
+ * tergantung peserta yang dibukanya.
  *
  * PDF-nya sendiri tidak dirender di sini — yang diuji adalah daftar apa yang
  * diserahkan ke view, karena di situlah letak bug-nya.
@@ -127,8 +133,14 @@ class ScoringParticipantPdfGroupTest extends TestCase
             'sort_order' => 2,
         ]);
 
-        $this->rubrik('Rubrik Seri A', $this->seriA, $this->juriA, $this->penyisihan);
-        $this->rubrik('Rubrik Seri B', $this->seriB, $this->juriB, $this->penyisihan);
+        $this->rubrik('Rubrik Seri A', $this->seriA, $this->penyisihan);
+        $this->rubrik('Rubrik Seri B', $this->seriB, $this->penyisihan);
+
+        // Penugasan juri menempel di GRUP. Grup A dipegang Juri Seri A, Grup B
+        // dipegang Juri Seri B — bentuk data nyata LOBB, dan yang membuat
+        // "juri seri lain" di tes bawah berarti "juri grup lain".
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_GROUP, $this->groupA->id, [$this->juriA->id]);
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_GROUP, $this->groupB->id, [$this->juriB->id]);
 
         $this->regA = Registration::factory()->for($this->eventner, 'eventner')->create([
             'competition_category_id' => $this->level->id,
@@ -138,7 +150,7 @@ class ScoringParticipantPdfGroupTest extends TestCase
         ]);
     }
 
-    private function rubrik(string $name, ?CompetitionSeries $series, Judge $judge, ?CompetitionRound $round = null): AssessmentCategory
+    private function rubrik(string $name, ?CompetitionSeries $series, ?CompetitionRound $round = null): AssessmentCategory
     {
         $category = AssessmentCategory::create([
             'eventner_id' => $this->eventner->id,
@@ -153,8 +165,6 @@ class ScoringParticipantPdfGroupTest extends TestCase
             'assessment_category_id' => $category->id,
             'name' => 'Sub ' . $name,
         ]);
-
-        $judge->assessmentCategories()->attach($category->id);
 
         AssessmentCriteria::create([
             'assessment_sub_category_id' => $sub->id,
@@ -234,19 +244,24 @@ class ScoringParticipantPdfGroupTest extends TestCase
     }
 
     /**
-     * Peserta yang belum dibagi seri hanya melihat rubrik dan juri TANPA seri.
+     * Peserta yang belum dibagi seri hanya melihat rubrik TANPA seri, dan
+     * jurinya baris `ungrouped` — ia memang tak punya grup.
      *
      * Rubrik berseri sengaja tidak ikut: kalau ikut, pemisahan seri tak berarti
-     * — peserta yang tak masuk seri mana pun tetap melihat kolom penilai Seri A
-     * dan Seri B. Konsekuensinya tingkat yang rubriknya sudah ditandai per seri
+     * — peserta yang tak masuk seri mana pun tetap melihat rubrik Seri A dan
+     * Seri B. Konsekuensinya tingkat yang rubriknya sudah ditandai per seri
      * tetapi pesertanya belum dibagi tampil kosong, dan itu memang yang
      * diinginkan: bagi serinya lebih dulu.
      */
     public function test_peserta_tanpa_seri_hanya_melihat_rubrik_tanpa_seri()
     {
         $juriUmum = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Umum']);
-        $rubrikUmum = $this->rubrik('Rubrik Umum', $this->seriA, $juriUmum);
+        $rubrikUmum = $this->rubrik('Rubrik Umum', $this->seriA);
         $rubrikUmum->update(['competition_series_id' => null]);
+
+        // Juri baris "Belum Bergrup" — peserta tanpa grup memang dinilai dari
+        // sana, bukan dari baris grup mana pun.
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_UNGROUPED, null, [$juriUmum->id]);
 
         $polos = Registration::factory()->for($this->eventner, 'eventner')->create([
             'competition_category_id' => $this->level->id,
@@ -284,7 +299,8 @@ class ScoringParticipantPdfGroupTest extends TestCase
     public function test_juri_babak_final_tidak_muncul_di_lembar_penyisihan()
     {
         $juriFinal = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Final']);
-        $this->rubrik('Rubrik Final', null, $juriFinal, $this->final);
+        $this->rubrik('Rubrik Final', null, $this->final);
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_FINAL, null, [$juriFinal->id]);
 
         $this->assertSame(['Juri Seri A'], $this->juriPdf($this->regA->id));
         $this->assertSame(['Rubrik Seri A'], $this->rubrikPdf($this->regA->id));
@@ -305,7 +321,8 @@ class ScoringParticipantPdfGroupTest extends TestCase
     public function test_finalis_diunduh_tanpa_round_id_mendapat_lembar_final()
     {
         $juriFinal = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Final']);
-        $this->rubrik('Rubrik Final', null, $juriFinal, $this->final);
+        $this->rubrik('Rubrik Final', null, $this->final);
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_FINAL, null, [$juriFinal->id]);
 
         CompetitionRoundRegistration::create([
             'eventner_id' => $this->eventner->id,
@@ -326,7 +343,8 @@ class ScoringParticipantPdfGroupTest extends TestCase
     public function test_peserta_bukan_finalis_tetap_dapat_lembar_penyisihan()
     {
         $juriFinal = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Final']);
-        $this->rubrik('Rubrik Final', null, $juriFinal, $this->final);
+        $this->rubrik('Rubrik Final', null, $this->final);
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_FINAL, null, [$juriFinal->id]);
 
         $this->assertSame(['Rubrik Seri A'], $this->rubrikPdf($this->regA->id));
     }
@@ -344,7 +362,8 @@ class ScoringParticipantPdfGroupTest extends TestCase
     public function test_lembar_babak_final_memuat_rubrik_dan_juri_final()
     {
         $juriFinal = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Final']);
-        $this->rubrik('Rubrik Final', null, $juriFinal, $this->final);
+        $this->rubrik('Rubrik Final', null, $this->final);
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_FINAL, null, [$juriFinal->id]);
 
         $this->assertSame(['Rubrik Final'], $this->rubrikPdf($this->regA->id, $this->final->id));
         $this->assertSame(['Juri Final'], $this->juriPdf($this->regA->id, $this->final->id));
@@ -401,7 +420,11 @@ class ScoringParticipantPdfGroupTest extends TestCase
         $this->assertSame(['Juri Polos'], $this->juriPdf($reg->id));
     }
 
-    /** Rubrik tingkat (tanpa seri) tetap berlaku di tingkat berseri. */
+    /**
+     * Rubrik tingkat (tanpa seri) tetap berlaku di tingkat berseri, dan jurinya
+     * datang dari baris `level` — tingkat ini memang tidak punya grup sama
+     * sekali, jalur yang dipakai tiga belas event lama.
+     */
     private function rubrikUntukTingkat(string $name, CompetitionCategory $level, Judge $judge): AssessmentCategory
     {
         $category = AssessmentCategory::create([
@@ -417,7 +440,7 @@ class ScoringParticipantPdfGroupTest extends TestCase
             'name' => 'Sub ' . $name,
         ]);
 
-        $judge->assessmentCategories()->attach($category->id);
+        CompetitionGroup::syncJudges($level->id, CompetitionGroup::SCOPE_LEVEL, null, [$judge->id]);
 
         AssessmentCriteria::create([
             'assessment_sub_category_id' => $sub->id,

@@ -4,9 +4,10 @@ namespace App\Livewire\Eventner\Judge;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use App\Models\CompetitionGroup;
 use App\Models\Judge;
-use App\Models\AssessmentCategory;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Computed;
@@ -20,7 +21,6 @@ class Index extends Component
     public $phone_number = '';
     public $photo;
     public $currentPhotoPath = null;
-    public $selectedCategories = [];
 
     public $isEditMode = false;
     public $editingId = null;
@@ -31,7 +31,7 @@ class Index extends Component
     /** Juri yang modal akses tablet-nya sedang terbuka. */
     public $selectedTabletJudgeId = null;
 
-    /** Juri yang modal rincian tugas/kategori penilaiannya sedang terbuka. */
+    /** Juri yang modal rincian penugasan grupbnya sedang terbuka. */
     public $selectedCategoriesJudgeId = null;
 
     protected $eventnerId;
@@ -49,8 +49,7 @@ class Index extends Component
     public function judges()
     {
         // competitionCategory.parent ikut dimuat: modal rincian tugas
-        // mengelompokkan kategori per tingkat lomba (full_name butuh induk).
-        // Seri & babak ikut dimuat supaya label tugas juri tidak memicu N+1.
+        // mengelompokkan tingkat lomba (full_name butuh induk).
         return Judge::with([
             'assessmentCategories.competitionCategory.parent',
             'assessmentCategories.competitionSeries',
@@ -61,21 +60,53 @@ class Index extends Component
             ->get();
     }
 
+    /**
+     * Baris penugasan yang dipegang tiap juri, dari competition_group_judge.
+     *
+     * Sumbernya sama dengan yang dibaca tablet juri, jadi modal rincian tak
+     * bisa lagi menampilkan tugas yang berbeda dari yang benar-benar dinilai.
+     * Satu baris = satu label: nama grup, atau "Final"/"Belum Bergrup"/
+     * "Seluruh Tingkat" untuk tiga baris tanpa grup.
+     *
+     * @return \Illuminate\Support\Collection<int, \Illuminate\Support\Collection>
+     */
     #[Computed]
-    public function availableCategories()
+    public function assignmentsByJudge()
     {
-        return AssessmentCategory::with([
-            'competitionCategory.parent',
-            'competitionSeries',
-            'competitionRound',
-        ])
-            ->where('eventner_id', $this->eventnerId)
-            ->get();
+        return DB::table('competition_group_judge as cgj')
+            ->join('judges as j', 'j.id', '=', 'cgj.judge_id')
+            ->leftJoin('competition_groups as cg', 'cg.id', '=', 'cgj.competition_group_id')
+            ->leftJoin('competition_categories as cc', 'cc.id', '=', 'cgj.competition_category_id')
+            ->leftJoin('competition_categories as induk', 'induk.id', '=', 'cc.parent_id')
+            ->where('j.eventner_id', $this->eventnerId)
+            ->orderBy('cgj.competition_category_id')
+            ->orderBy('cgj.scope')
+            ->orderBy('cgj.competition_group_id')
+            ->get([
+                'cgj.judge_id',
+                'cgj.scope',
+                'cgj.competition_category_id',
+                'cg.name as group_name',
+                'cc.name as level_name',
+                'induk.name as parent_name',
+            ])
+            ->groupBy('judge_id')
+            ->map(fn ($baris) => $baris
+                ->groupBy('competition_category_id')
+                ->map(fn ($perTingkat) => [
+                    'name' => trim(
+                        ($perTingkat->first()->parent_name ? $perTingkat->first()->parent_name . ' — ' : '')
+                        . $perTingkat->first()->level_name
+                    ),
+                    'items' => $perTingkat->map(fn ($b) => $b->scope === CompetitionGroup::SCOPE_GROUP
+                        ? $b->group_name
+                        : CompetitionGroup::SCOPE_LABELS[$b->scope])->values(),
+                ])
+                ->values());
     }
 
     /**
-     * Tingkat lomba yang ditugaskan ke juri terpilih (via kategori penilaiannya),
-     * untuk filter PDF per juri.
+     * Tingkat lomba yang ditugaskan ke juri terpilih, untuk filter PDF per juri.
      */
     #[Computed]
     public function judgePdfLevels()
@@ -84,15 +115,21 @@ class Index extends Component
             return collect();
         }
 
-        $judge = $this->judges->firstWhere('id', $this->selectedJudgeId);
-        if (!$judge) {
+        $idTingkat = DB::table('competition_group_judge as cgj')
+            ->where('cgj.judge_id', $this->selectedJudgeId)
+            ->pluck('cgj.competition_category_id')
+            ->filter()
+            ->unique()
+            ->all();
+
+        if ($idTingkat === []) {
             return collect();
         }
 
-        return $judge->assessmentCategories
-            ->map(fn($cat) => $cat->competitionCategory)
-            ->filter()
-            ->map(fn($cc) => [
+        return \App\Models\CompetitionCategory::with('parent')
+            ->whereIn('id', $idTingkat)
+            ->get()
+            ->map(fn ($cc) => [
                 'id' => $cc->id,
                 'full_name' => $cc->full_name,
             ])
@@ -101,48 +138,7 @@ class Index extends Component
             ->values();
     }
 
-    /**
-     * Kategori dikelompokkan per tingkat/kelas kompetisi (competition_category),
-     * contoh parent "LOBB" dengan child "U13", "U16". Kunci grup = id
-     * competition_category (child), label = full_name ("LOBB — U13") sehingga
-     * U13 dan U16 tampil terpisah meski induknya sama. Kategori yang menunjuk
-     * langsung ke induk (parent, tanpa child) tetap jadi grup sendiri.
-     *
-     * Babak & grup menempel di label, bukan di kunci: satu tingkat yang dibelah
-     * jadi Grup A/B dan punya babak Final menghasilkan baris tugas tersendiri
-     * ("LOBB — U13 · Final · Grup A"), tapi tetap satu tingkat di mata panitia.
-     *
-     * Dipakai bersama oleh modal rincian tugas juri dan form tambah/edit.
-     */
-    private function groupByCompetitionLevel($categories)
-    {
-        $grouped = [];
-        foreach ($categories as $cat) {
-            $cc = $cat->competitionCategory;
-            if (!$cc) {
-                $grouped['Lainnya'] = [
-                    'name' => 'Lainnya',
-                    'items' => ($grouped['Lainnya']['items'] ?? []) + [$cat->id => $cat],
-                ];
-                continue;
-            }
-            // grup per competition_category itu sendiri (child jika ada, atau induk)
-            $grouped[$cc->id] = [
-                'name' => $cc->full_name,
-                'items' => ($grouped[$cc->id]['items'] ?? []) + [$cat->id => $cat],
-            ];
-        }
-
-        return collect($grouped)->sortBy('name');
-    }
-
-    #[Computed]
-    public function availableCategoriesGrouped()
-    {
-        return $this->groupByCompetitionLevel($this->availableCategories);
-    }
-
-    /** Juri yang modal rincian tugasnya terbuka. */
+    /** Juri yang modal rincian penugasannya terbuka. */
     #[Computed]
     public function categoriesJudge()
     {
@@ -153,20 +149,15 @@ class Index extends Component
         return $this->judges->firstWhere('id', $this->selectedCategoriesJudgeId);
     }
 
-    /**
-     * Tugas juri terpilih, dikelompokkan per tingkat lomba supaya urutan
-     * kategorinya terbaca: tingkat dulu, baru kategori penilaiannya.
-     */
+    /** Penugasan juri terpilih, dikelompokkan per tingkat lomba. */
     #[Computed]
     public function categoriesJudgeGrouped()
     {
-        $judge = $this->categoriesJudge;
-
-        if (!$judge) {
+        if (!$this->selectedCategoriesJudgeId) {
             return collect();
         }
 
-        return $this->groupByCompetitionLevel($judge->assessmentCategories);
+        return $this->assignmentsByJudge->get($this->selectedCategoriesJudgeId, collect());
     }
 
     public function openCategoriesModal($id)
@@ -184,8 +175,6 @@ class Index extends Component
         $rules = [
             'name' => 'required|string|max:255',
             'phone_number' => 'nullable|string|max:255',
-            'selectedCategories' => 'array',
-            'selectedCategories.*' => 'exists:assessment_categories,id',
         ];
 
         if ($this->photo) {
@@ -210,17 +199,15 @@ class Index extends Component
                 'phone_number' => strip_tags($this->phone_number),
                 'photo' => $photoPath,
             ]);
-            $judge->assessmentCategories()->sync($this->selectedCategories);
             session()->flash('success', 'Data juri berhasil diperbarui.');
         } else {
-            $judge = Judge::create([
+            Judge::create([
                 'eventner_id' => $this->eventnerId,
                 'name' => strip_tags($this->name),
                 'phone_number' => strip_tags($this->phone_number),
                 'photo' => $photoPath,
             ]);
-            $judge->assessmentCategories()->attach($this->selectedCategories);
-            session()->flash('success', 'Juri baru berhasil ditambahkan.');
+            session()->flash('success', 'Juri baru berhasil ditambahkan. Tugaskan grupbnya di halaman Tingkat Lomba.');
         }
 
         $this->resetForm();
@@ -231,7 +218,7 @@ class Index extends Component
      */
     public function openCreate()
     {
-        $this->reset(['name', 'phone_number', 'photo', 'currentPhotoPath', 'selectedCategories', 'isEditMode', 'editingId']);
+        $this->reset(['name', 'phone_number', 'photo', 'currentPhotoPath', 'isEditMode', 'editingId']);
         $this->dispatch('open-judge-modal');
     }
 
@@ -249,7 +236,6 @@ class Index extends Component
         $this->name = $judge->name;
         $this->phone_number = $judge->phone_number ?? '';
         $this->currentPhotoPath = $judge->photo;
-        $this->selectedCategories = $judge->assessmentCategories->pluck('id')->toArray();
 
         // Kalau edit dipicu dari modal rincian tugas, tutup dulu modal itu.
         $this->selectedCategoriesJudgeId = null;
@@ -336,7 +322,7 @@ class Index extends Component
 
     public function resetForm()
     {
-        $this->reset(['name', 'phone_number', 'photo', 'currentPhotoPath', 'selectedCategories', 'isEditMode', 'editingId']);
+        $this->reset(['name', 'phone_number', 'photo', 'currentPhotoPath', 'isEditMode', 'editingId']);
         $this->dispatch('close-judge-modal');
     }
 

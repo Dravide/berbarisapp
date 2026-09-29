@@ -19,17 +19,22 @@ use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
- * Batas pandang juri saat satu tingkat dipecah jadi beberapa seri.
+ * Batas pandang juri: juri dikurung GRUP, bukan seri.
  *
- * Rubrik adalah satu-satunya pengikat juri ke pekerjaannya, jadi "juri berbeda
- * per seri" berarti "rubrik berbeda per seri". Yang paling mudah bocor adalah
- * cabang fallback "rubrik kosong → semua rubrik tingkat": tanpa klausa seri di
- * dalam $base, juri Seri B yang belum punya rubrik akan diberi rubrik Seri A.
+ * Dua sumbu yang sengaja dipisah, dan seluruh berkas ini menjaga pemisahan itu:
  *
- * Grup sengaja TIDAK jadi sumbu saringan lagi. Grup dan seri dua sumbu bebas:
- * grup menyusun tabel peringkat dan nomor undian, seri menentukan lembar nilai.
- * Karena itu tes di bawah memakai dua seri yang tersebar di dua grup — juri
- * Seri B memang harus melihat peserta Seri B di grup mana pun ia berada.
+ *   Grup   -> siapa menilai siapa. Panitia mencentang juri per baris penugasan
+ *             di modal Kelola Grup, dan juri Grup A menilai SELURUH peserta
+ *             Grup A, apa pun serinya.
+ *   Seri   -> lembar nilai mana yang terbuka. Rubriknya menyusul dari seri
+ *             masing-masing peserta, ditetapkan panitia saat daftar ulang.
+ *
+ * Karena itu juri boleh memegang lebih dari satu seri sekaligus: satu grup
+ * biasanya memang memuat peserta dari beberapa seri. Yang tidak boleh terjadi
+ * adalah sebaliknya — juri Grup A menilai peserta Grup B.
+ *
+ * Model lama mengikat juri ke rubrik (assessment_category_judge). Pivot itu
+ * sekarang tinggal jejak audit: rubrik tak lagi menentukan siapa yang menilai.
  */
 class GroupJudgeScopeTest extends TestCase
 {
@@ -99,10 +104,15 @@ class GroupJudgeScopeTest extends TestCase
         $this->judgeA = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri A']);
         $this->judgeB = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri B']);
 
+        // Bentuk data yang diminta panitia: Juri A khusus Grup A, Juri B khusus
+        // Grup B. Rubriknya tidak ikut menentukan apa pun di sini.
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_GROUP, $this->groupA->id, [$this->judgeA->id]);
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_GROUP, $this->groupB->id, [$this->judgeB->id]);
+
         config(['app.entry_host' => 'entry.berbaris.test']);
     }
 
-    /** Rubrik + satu kriteria; juri yang ditugaskan diattach dari luar. */
+    /** Rubrik + satu kriteria, menempel pada seri (lembar nilai manusianya). */
     private function makeRubric(string $name, ?CompetitionSeries $series = null, ?int $levelId = null): AssessmentCriteria
     {
         $category = AssessmentCategory::create([
@@ -125,10 +135,7 @@ class GroupJudgeScopeTest extends TestCase
         ]);
     }
 
-    /**
-     * Peserta dengan seri & grup terpisah — justru bentuk yang bikin grup tidak
-     * bisa dipakai sebagai pengganti seri.
-     */
+    /** Peserta dengan seri & grup terpisah — justru bentuk yang ditangani di sini. */
     private function makeParticipant(string $school, ?CompetitionSeries $series, ?CompetitionGroup $group = null): Registration
     {
         return Registration::factory()->for($this->eventner, 'eventner')->create([
@@ -139,184 +146,218 @@ class GroupJudgeScopeTest extends TestCase
         ]);
     }
 
-    public function test_juri_seri_a_hanya_melihat_kriteria_seri_a()
+    private function tablet(Judge $judge)
+    {
+        return Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $judge->access_token])
+            ->call('selectCategory', $this->level->id);
+    }
+
+    /** ID peserta yang benar-benar tampil di daftar juri ini. */
+    private function idsDiDaftar($component): \Illuminate\Support\Collection
+    {
+        return collect($component->instance()->render()->getData()['participants'])->pluck('id');
+    }
+
+    // ---------- inti keputusan: grup jadi sumbu penugasan ----------
+
+    /**
+     * Juri Grup A melihat SELURUH peserta Grup A, apa pun serinya.
+     *
+     * Inilah keluhan aslinya: "juri A dan B khusus grup A, juri C dan D grup B,
+     * dengan kondisi juri tersebut dapat menilai seri A dan B, tergantung
+     * sekolah dapat seri berapa ketika daftar ulang". Seri tidak mengurung
+     * siapa pun lagi.
+     */
+    public function test_juri_grup_a_melihat_seluruh_peserta_grup_a_apa_pun_serinya()
+    {
+        $seriAdiGrupA = $this->makeParticipant('SMPN 1', $this->seriA, $this->groupA);
+        $seriBdiGrupA = $this->makeParticipant('SMPN 2', $this->seriB, $this->groupA);
+
+        $ids = $this->idsDiDaftar($this->tablet($this->judgeA));
+
+        $this->assertTrue($ids->contains($seriAdiGrupA->id), 'Peserta Seri A di Grup A hilang dari juri Grup A.');
+        $this->assertTrue($ids->contains($seriBdiGrupA->id), 'Peserta Seri B di Grup A hilang dari juri Grup A.');
+    }
+
+    /**
+     * Lembar nilainya mengikuti SERI peserta, bukan grup jurinya.
+     *
+     * Satu juri Grup A membuka dua peserta berseri berbeda dan mendapat dua
+     * rubric set yang berbeda pula — kalau rubriknya ikut grup, juri itu cuma
+     * bisa menilai satu seri dan peserta seri lain tampil kosong.
+     */
+    public function test_juri_grup_a_menilai_rubrik_seri_peserta_bukan_rubrik_grupnya()
     {
         $kriteriaA = $this->makeRubric('PBB Seri A', $this->seriA);
         $kriteriaB = $this->makeRubric('PBB Seri B', $this->seriB);
 
-        $this->judgeA->assessmentCategories()->attach(
-            AssessmentCategory::where('name', 'PBB Seri A')->first()->id
-        );
-        $this->judgeB->assessmentCategories()->attach(
-            AssessmentCategory::where('name', 'PBB Seri B')->first()->id
-        );
+        $pesertaSeriA = $this->makeParticipant('SMPN 1', $this->seriA, $this->groupA);
+        $pesertaSeriB = $this->makeParticipant('SMPN 2', $this->seriB, $this->groupA);
 
-        $pesertaA = $this->makeParticipant('SMPN 1', $this->seriA, $this->groupA);
+        $component = $this->tablet($this->judgeA);
 
-        Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judgeA->access_token])
-            ->call('selectCategory', $this->level->id)
-            ->call('selectParticipant', $pesertaA->id)
-            ->assertSet('allowedCriteriaIds', [(int) $kriteriaA->id])
-            ->assertNotSet('allowedCriteriaIds', [(int) $kriteriaB->id]);
+        $component->call('selectParticipant', $pesertaSeriA->id)
+            ->assertSet('allowedCriteriaIds', [(int) $kriteriaA->id]);
+
+        $component->call('selectParticipant', $pesertaSeriB->id)
+            ->assertSet('allowedCriteriaIds', [(int) $kriteriaB->id]);
     }
 
-    /**
-     * Kasus paling berbahaya: peserta Seri B, tak ada rubrik Seri B sama sekali,
-     * dan hanya rubrik Seri A yang ada. Juri pemegang rubrik Seri A TIDAK boleh
-     * dapat jalan masuk ke peserta Seri B — baik lewat daftar maupun lewat ID
-     * langsung, dan rubrik Seri A tak boleh muncul untuk peserta Seri B.
-     */
-    public function test_peserta_seri_b_tanpa_rubrik_seri_b_tidak_mewarisi_rubrik_seri_a()
+    /** Juri Grup B tidak melihat peserta Grup A — dan tak bisa membukanya lewat ID. */
+    public function test_juri_grup_b_tidak_melihat_peserta_grup_a()
     {
-        $kriteriaA = $this->makeRubric('PBB Seri A', $this->seriA);
-        $this->makeRubric('Umum Tingkat', null);
-
-        // Juri B ditugaskan ke rubrik Seri A — justru supaya cabang
-        // whereHas('judges') tidak menyelamatkan; yang diuji adalah $base-nya.
-        $this->judgeB->assessmentCategories()->attach(
-            AssessmentCategory::where('name', 'PBB Seri A')->first()->id
-        );
-
-        $pesertaB = $this->makeParticipant('SMPN 2', $this->seriB, $this->groupB);
-
-        $component = Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judgeB->access_token])
-            ->call('selectCategory', $this->level->id);
-
-        $ids = collect($component->instance()->render()->getData()['participants'])->pluck('id');
-        $this->assertFalse($ids->contains($pesertaB->id), 'Peserta Seri B muncul di daftar juri Seri A.');
-
-        // Lewat ID langsung pun ditolak, jadi $allowedCriteriaIds tidak pernah
-        // sempat memuat rubrik Seri A untuk peserta Seri B.
-        try {
-            $component->call('selectParticipant', $pesertaB->id);
-            $this->fail('Juri Seri A berhasil memilih peserta Seri B.');
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            $this->assertTrue(true);
-        }
-
-        $this->assertNotContains(
-            (int) $kriteriaA->id,
-            $component->get('allowedCriteriaIds'),
-            'Rubrik Seri A bocor ke peserta Seri B.'
-        );
-    }
-
-    /**
-     * Rubrik tanpa seri tidak boleh jadi celah: juri yang HANYA punya rubrik
-     * Seri A tetap tak melihat peserta Seri B, sekalipun peserta Seri B punya
-     * rubrik tanpa seri yang bisa dinilai.
-     */
-    public function test_rubrik_tanpa_seri_tidak_membuka_peserta_seri_lain_ke_juri_seri_a()
-    {
-        $this->makeRubric('Umum Tingkat', null);
-        $this->makeRubric('PBB Seri A', $this->seriA);
-
-        // Juri A hanya dipekerjakan pada rubrik Seri A.
-        $this->judgeA->assessmentCategories()->attach(
-            AssessmentCategory::where('name', 'PBB Seri A')->first()->id
-        );
-
-        $pesertaB = $this->makeParticipant('SMPN 2', $this->seriB, $this->groupB);
-
-        $component = Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judgeA->access_token])
-            ->call('selectCategory', $this->level->id);
-
-        $ids = collect($component->instance()->render()->getData()['participants'])->pluck('id');
-        $this->assertFalse($ids->contains($pesertaB->id));
-
-        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
-        $component->call('selectParticipant', $pesertaB->id);
-    }
-
-    public function test_rubrik_tanpa_seri_membuat_juri_menilai_seluruh_peserta_tingkat()
-    {
-        $kriteriaUmum = $this->makeRubric('Umum Tingkat', null);
-
-        $this->judgeA->assessmentCategories()->attach(
-            AssessmentCategory::where('name', 'Umum Tingkat')->first()->id
-        );
-
         $pesertaA = $this->makeParticipant('SMPN 1', $this->seriA, $this->groupA);
         $pesertaB = $this->makeParticipant('SMPN 2', $this->seriB, $this->groupB);
 
-        $component = Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judgeA->access_token])
-            ->call('selectCategory', $this->level->id);
+        $component = $this->tablet($this->judgeB);
+        $ids = $this->idsDiDaftar($component);
 
-        $ids = collect($component->instance()->render()->getData()['participants'])->pluck('id');
-
-        $this->assertTrue($ids->contains($pesertaA->id));
         $this->assertTrue($ids->contains($pesertaB->id));
+        $this->assertFalse($ids->contains($pesertaA->id), 'Peserta Grup A muncul di daftar juri Grup B.');
 
-        $component->call('selectParticipant', $pesertaB->id)
-            ->assertSet('allowedCriteriaIds', [(int) $kriteriaUmum->id]);
-    }
-
-    public function test_juri_seri_a_tidak_melihat_peserta_seri_b_di_daftar()
-    {
-        $this->makeRubric('PBB Seri A', $this->seriA);
-        $this->judgeA->assessmentCategories()->attach(
-            AssessmentCategory::where('name', 'PBB Seri A')->first()->id
-        );
-
-        $pesertaA = $this->makeParticipant('SMPN 1', $this->seriA, $this->groupA);
-        $pesertaB = $this->makeParticipant('SMPN 2', $this->seriB, $this->groupB);
-
-        $component = Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judgeA->access_token])
-            ->call('selectCategory', $this->level->id);
-
-        $ids = collect($component->instance()->render()->getData()['participants'])->pluck('id');
-
-        $this->assertTrue($ids->contains($pesertaA->id));
-        $this->assertFalse($ids->contains($pesertaB->id), 'Peserta Seri B muncul di daftar juri Seri A.');
-
-        // Bahkan lewat ID langsung pun ditolak.
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
-        $component->call('selectParticipant', $pesertaB->id);
+        $component->call('selectParticipant', $pesertaA->id);
     }
-
-    public function test_juri_tetap_dibatasi_meski_punya_rubrik_seri_lain_di_tingkat_yang_sama()
-    {
-        $this->makeRubric('PBB Seri B', $this->seriB);
-        $this->judgeA->assessmentCategories()->attach(
-            AssessmentCategory::where('name', 'PBB Seri B')->first()->id
-        );
-
-        $pesertaB = $this->makeParticipant('SMPN 2', $this->seriB, $this->groupB);
-
-        Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judgeA->access_token])
-            ->call('selectCategory', $this->level->id)
-            ->call('selectParticipant', $pesertaB->id)
-            ->assertOk();
-    }
-
-    // ---------- inti permintaan aslinya: seri bebas dari grup ----------
 
     /**
-     * Satu seri boleh tersebar di beberapa grup, dan jurinya melihat semuanya.
+     * Peserta yang belum bergrup punya barisnya sendiri.
      *
-     * Inilah alasan grup tidak bisa lagi jadi sumbu lembar nilai: kalau juri
-     * dikurung ke grupnya, juri Seri B di Grup A tak melihat peserta Seri B di
-     * Grup B — padahal keduanya dinilai dengan lembar nilai yang sama.
+     * Tanpa baris `ungrouped`, peserta yang telat dibagi grup akan hilang dari
+     * semua daftar juri grup — tak ada satu pun juri yang bisa menilainya.
      */
-    public function test_juri_seri_b_melihat_peserta_seri_b_dari_dua_grup()
+    public function test_peserta_belum_bergrup_dinilai_juri_baris_ungrouped()
     {
-        $this->makeRubric('PBB Seri B', $this->seriB);
-        $this->judgeB->assessmentCategories()->attach(
-            AssessmentCategory::where('name', 'PBB Seri B')->first()->id
-        );
+        $juriCadangan = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Cadangan']);
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_UNGROUPED, null, [$juriCadangan->id]);
 
-        $seriBdiGrupA = $this->makeParticipant('SMPN 1', $this->seriB, $this->groupA);
-        $seriBdiGrupB = $this->makeParticipant('SMPN 2', $this->seriB, $this->groupB);
-        $seriAdiGrupA = $this->makeParticipant('SMPN 3', $this->seriA, $this->groupA);
+        $this->makeRubric('PBB Umum', $this->seriA);
 
-        $component = Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judgeB->access_token])
-            ->call('selectCategory', $this->level->id);
+        $belumBergrup = $this->makeParticipant('SMPN 9', $this->seriA, null);
+        $this->makeParticipant('SMPN 1', $this->seriA, $this->groupA);
 
-        $ids = collect($component->instance()->render()->getData()['participants'])->pluck('id');
+        $ids = $this->idsDiDaftar($this->tablet($juriCadangan));
 
-        $this->assertTrue($ids->contains($seriBdiGrupA->id), 'Seri B di Grup A hilang dari daftar juri Seri B.');
-        $this->assertTrue($ids->contains($seriBdiGrupB->id), 'Seri B di Grup B hilang dari daftar juri Seri B.');
-        $this->assertFalse($ids->contains($seriAdiGrupA->id), 'Peserta Seri A muncul di daftar juri Seri B.');
+        $this->assertSame([$belumBergrup->id], $ids->values()->all());
+    }
+
+    /** Sebaliknya: juri grup tidak ikut melihat peserta tanpa grup. */
+    public function test_peserta_tanpa_grup_tidak_muncul_di_juri_grup()
+    {
+        $bergrup = $this->makeParticipant('SMPN 1', $this->seriA, $this->groupA);
+        $this->makeParticipant('SMPN 9', $this->seriA, null);
+
+        $ids = $this->idsDiDaftar($this->tablet($this->judgeA));
+
+        $this->assertSame([$bergrup->id], $ids->values()->all());
+    }
+
+    /**
+     * Juri final hidup di baris `final`, terpisah dari grup.
+     *
+     * Begitu ada penugasan final di tingkat itu, SELURUH finalis berpindah ke
+     * baris final — termasuk bagi juri grup, yang memang lalu tak melihat siapa
+     * pun saat babak final dibuka.
+     */
+    public function test_juri_final_hanya_melihat_finalis_dan_juri_grup_tidak()
+    {
+        $babakFinal = CompetitionRound::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Final',
+            'type' => CompetitionRound::TYPE_FINAL,
+            'sort_order' => 2,
+        ]);
+
+        $juriFinal = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Final']);
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_FINAL, null, [$juriFinal->id]);
+
+        $lolos = $this->makeParticipant('SMPN 1', $this->seriA, $this->groupA);
+        $this->makeParticipant('SMPN 2', $this->seriB, $this->groupA);
+
+        CompetitionRoundRegistration::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_round_id' => $babakFinal->id,
+            'registration_id' => $lolos->id,
+            'competition_group_id' => $this->groupA->id,
+        ]);
+
+        $component = $this->tablet($juriFinal);
+
+        $this->assertSame([$lolos->id], $this->idsDiDaftar($component)->values()->all());
+
+        // Juri Grup A tak ditugaskan ke baris final, jadi daftarnya kosong.
+        $componentGrup = $this->tablet($this->judgeA);
+
+        $this->assertSame([], $this->idsDiDaftar($componentGrup)->values()->all());
+    }
+
+    /**
+     * Juri tanpa penugasan apa pun tak punya tingkat untuk dibuka.
+     *
+     * Kartunya kosong sejak layar pertama, dan tingkat mana pun ditolak 403 —
+     * tidak ada jalan masuk yang tersisa, apalagi untuk menyimpan nilai.
+     */
+    public function test_juri_tanpa_penugasan_bahkan_tak_punya_tingkat_untuk_dibuka()
+    {
+        $this->makeRubric('PBB Seri A', $this->seriA);
+        $this->makeParticipant('SMPN 1', $this->seriA, $this->groupA);
+
+        $juriLepas = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Lepas']);
+
+        Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $juriLepas->access_token])
+            ->assertViewHas('categories', fn ($c) => $c->isEmpty())
+            ->call('selectCategory', $this->level->id)
+            ->assertStatus(403);
+    }
+
+    /** Nilai di luar rubrik peserta tetap ditolak, walau jurinya ditugaskan. */
+    public function test_set_score_di_luar_rubrik_peserta_ditolak()
+    {
+        $this->makeRubric('PBB Seri A', $this->seriA);
+        $asing = $this->makeRubric('PBB Seri B', $this->seriB);
+
+        $peserta = $this->makeParticipant('SMPN 1', $this->seriA, $this->groupA);
+
+        $this->tablet($this->judgeA)
+            ->call('selectParticipant', $peserta->id)
+            ->call('setScore', $asing->id, 10)
+            ->assertStatus(403);
+    }
+
+    /**
+     * Tingkat tanpa grup (tiga belas event lama) memakai baris `level`.
+     *
+     * Layar centang rubrik sudah dihapus, jadi tanpa jalur ini panel juri event
+     * lama kosong seluruhnya dan pesertanya tak bisa dinilai siapa pun.
+     */
+    public function test_tingkat_tanpa_grup_memakai_baris_level()
+    {
+        $induk = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => null,
+        ]);
+        $polos = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => $induk->id,
+        ]);
+
+        $kriteria = $this->makeRubric('PBB Umum', null, $polos->id);
+        CompetitionGroup::syncJudges($polos->id, CompetitionGroup::SCOPE_LEVEL, null, [$this->judgeA->id]);
+
+        $peserta = Registration::factory()->for($this->eventner, 'eventner')->create([
+            'competition_category_id' => $polos->id,
+            'competition_group_id' => null,
+            'competition_series_id' => null,
+            'nama_sekolah' => 'SMPN 3',
+        ]);
+
+        $component = Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judgeA->access_token])
+            ->call('selectCategory', $polos->id);
+
+        $this->assertSame([$peserta->id], $this->idsDiDaftar($component)->values()->all());
+
+        $component->call('selectParticipant', $peserta->id)
+            ->assertSet('allowedCriteriaIds', [(int) $kriteria->id]);
     }
 
     // ---------- angka di kartu tingkat harus sama dengan isi daftarnya ----------
@@ -324,18 +365,13 @@ class GroupJudgeScopeTest extends TestCase
     /**
      * Kartu tingkat menjanjikan jumlah yang berbeda dari daftar.
      *
-     * Sebelumnya kartu memakai `withCount('registrations')` — seluruh pendaftar
-     * tingkat, tak peduli seri maupun babak. Juri Seri A membaca "2 peserta",
-     * membuka daftarnya, dan menemukan 1; angka yang salah lebih buruk daripada
-     * tidak ada angka karena juri mengira ada peserta yang hilang.
+     * withCount('registrations') menghitung seluruh pendaftar tingkat — tak
+     * peduli grup. Juri Grup A membaca "3 peserta", membuka daftarnya, dan
+     * menemukan 1; angka yang salah lebih buruk daripada tidak ada angka karena
+     * juri mengira ada peserta yang hilang.
      */
-    public function test_angka_kartu_tingkat_sama_dengan_isi_daftar_untuk_juri_seri()
+    public function test_angka_kartu_tingkat_sama_dengan_isi_daftar_untuk_juri_grup()
     {
-        $this->makeRubric('PBB Seri A', $this->seriA);
-        $this->judgeA->assessmentCategories()->attach(
-            AssessmentCategory::where('name', 'PBB Seri A')->first()->id
-        );
-
         $this->makeParticipant('SMPN 1', $this->seriA, $this->groupA);
         $this->makeParticipant('SMPN 2', $this->seriB, $this->groupB);
         $this->makeParticipant('SMPN 3', $this->seriB, $this->groupB);
@@ -345,7 +381,7 @@ class GroupJudgeScopeTest extends TestCase
         $this->assertSame(
             1,
             $component->viewData('jumlahPeserta')[$this->level->id],
-            'Juri Seri A dijanjikan 3 peserta padahal daftarnya 1.'
+            'Juri Grup A dijanjikan 3 peserta padahal daftarnya 1.'
         );
 
         $component->call('selectCategory', $this->level->id);
@@ -356,9 +392,8 @@ class GroupJudgeScopeTest extends TestCase
     /**
      * Juri yang menilai babak final hanya melihat finalis, di kartu maupun daftar.
      *
-     * Tingkat ini punya babak penyisihan dan final; juri memegang rubrik final
-     * saja. Memakai jumlah pendaftar tingkat membuat kartunya menulis "3
-     * peserta" sementara hanya 2 yang benar-benar tampil.
+     * Memakai jumlah pendaftar tingkat membuat kartunya menulis "3 peserta"
+     * sementara hanya 2 yang benar-benar tampil.
      */
     public function test_angka_kartu_tingkat_untuk_juri_final_hanya_finalis()
     {
@@ -370,12 +405,8 @@ class GroupJudgeScopeTest extends TestCase
             'sort_order' => 2,
         ]);
 
-        $this->makeRubric('PBB Final', null);
-        AssessmentCategory::where('name', 'PBB Final')->update(['competition_round_id' => $babakFinal->id]);
-
-        $this->judgeA->assessmentCategories()->attach(
-            AssessmentCategory::where('name', 'PBB Final')->first()->id
-        );
+        $juriFinal = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Final']);
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_FINAL, null, [$juriFinal->id]);
 
         $lolos = $this->makeParticipant('SMPN 1', $this->seriA, $this->groupA);
         $this->makeParticipant('SMPN 2', $this->seriB, $this->groupB); // tak lolos
@@ -390,7 +421,7 @@ class GroupJudgeScopeTest extends TestCase
             ]);
         }
 
-        $component = Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judgeA->access_token]);
+        $component = Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $juriFinal->access_token]);
 
         $this->assertSame(
             2,
@@ -403,13 +434,7 @@ class GroupJudgeScopeTest extends TestCase
         $this->assertCount(2, $component->viewData('participants'));
     }
 
-    /**
-     * Pemilih babak muncul sebelum peserta dipilih, walau rubriknya berseri.
-     *
-     * `forEntry(null seri)` berarti "rubrik TANPA seri saja", jadi juri yang
-     * seluruh rubriknya berseri mendapat daftar babak kosong dan pemilihnya
-     * hilang dari layar — juri tak bisa berpindah babak sama sekali.
-     */
+    /** Pemilih babak muncul begitu tingkatnya punya babak, apa pun rubriknya. */
     public function test_pemilih_babak_muncul_walau_rubrik_juri_berseri()
     {
         $babak = CompetitionRound::create([
@@ -421,19 +446,10 @@ class GroupJudgeScopeTest extends TestCase
         ]);
 
         $this->makeRubric('PBB Seri A', $this->seriA);
-        AssessmentCategory::where('name', 'PBB Seri A')->update(['competition_round_id' => $babak->id]);
-
-        $this->judgeA->assessmentCategories()->attach(
-            AssessmentCategory::where('name', 'PBB Seri A')->first()->id
-        );
 
         $this->assertSame(
             [$babak->id],
-            Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judgeA->access_token])
-                ->call('selectCategory', $this->level->id)
-                ->viewData('rounds')
-                ->pluck('id')
-                ->all()
+            $this->tablet($this->judgeA)->viewData('rounds')->pluck('id')->all()
         );
     }
 }

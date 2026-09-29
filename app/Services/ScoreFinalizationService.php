@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\AssessmentCategory;
 use App\Models\AssessmentScore;
-use App\Models\Judge;
+use App\Models\CompetitionGroup;
 use App\Models\Registration;
 use Illuminate\Support\Facades\Log;
 
@@ -169,16 +169,12 @@ class ScoreFinalizationService
             return;
         }
 
-        $seriesId = $registration->competition_series_id;
-
-        // Juri wajib dihitung per babak & seri peserta: kalau tidak, nota
-        // "nilai selesai" terkirim padahal juri babak final belum menilai.
-        $judgeIds = Judge::where('eventner_id', $eventnerId)
-            ->whereHas('assessmentCategories', function ($q) use ($eventnerId, $category, $seriesId, $roundId) {
-                $q->where('assessment_categories.eventner_id', $eventnerId)
-                    ->forEntry($category->id, $seriesId, $roundId);
-            })
-            ->pluck('judges.id');
+        // Juri wajib dihitung dari PENUGASAN, bukan dari rubrik: penugasan
+        // menempel di grup peserta (atau baris final/ungrouped/level-nya), dan
+        // rubrik cuma menentukan lembar mana yang terbuka. Menghitungnya dari
+        // rubrik membuat nota "nilai selesai" tak pernah terkirim, karena tak
+        // ada lagi rubrik bergrup yang menunjuk juri.
+        $judgeIds = CompetitionGroup::judgesForRegistration($registration, $roundId)->pluck('id');
 
         if ($judgeIds->isEmpty()) {
             return;
@@ -187,12 +183,12 @@ class ScoreFinalizationService
         $finalizedJudgeIds = AssessmentScore::where('registration_id', $registration->id)
             ->where('eventner_id', $eventnerId)
             ->where('is_finalized', true)
-            ->when($roundId, function ($q) use ($eventnerId, $category, $seriesId, $roundId) {
+            ->when($roundId, function ($q) use ($eventnerId, $category, $registration, $roundId) {
                 // Kriteria babak ini — memakai scope yang sama dengan finalize()
                 // supaya rubrik tanpa babak (berlaku semua babak) ikut terhitung,
                 // tidak cuma rubrik yang eksplisit menempel ke babak ini.
                 $criteriaIds = AssessmentCategory::where('eventner_id', $eventnerId)
-                    ->forEntry($category->id, $seriesId, $roundId)
+                    ->forEntry($category->id, $registration->competition_series_id, $roundId)
                     ->with('subCategories.criterias')
                     ->get()
                     ->flatMap(fn ($cat) => $cat->subCategories->flatMap(fn ($sub) => $sub->criterias->pluck('id')))

@@ -214,6 +214,47 @@ class JudgeTabletScoringTest extends TestCase
             ->assertViewHas('participants', fn ($list) => $list->pluck('id')->all() === [$first->id, $second->id, $this->registration->id]);
     }
 
+    /**
+     * Seri penentu lembar nilai harus terbaca di tablet juri.
+     *
+     * Dua seri boleh memakai nama kategori rubrik yang sama persis ("PBB"), dan
+     * yang berbeda hanya kriterianya. Tanpa penanda di daftar maupun di layar
+     * penilaian, juri tidak punya cara tahu lembar mana yang sedang dibukanya.
+     */
+    public function test_seri_peserta_terbaca_di_daftar_dan_layar_penilaian()
+    {
+        $this->makeRubric();
+        $this->judge->refresh();
+
+        $seri = \App\Models\CompetitionSeries::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->category->id,
+            'name' => 'Seri Bravo',
+            'sort_order' => 2,
+        ]);
+        $this->registration->update(['competition_series_id' => $seri->id]);
+
+        $polos = Registration::factory()->for($this->eventner, 'eventner')->create([
+            'competition_category_id' => $this->category->id,
+            'nama_sekolah' => 'SD Negeri 2',
+            'urutan_tampil' => 2,
+        ]);
+
+        $komponen = Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judge->access_token])
+            ->call('selectCategory', $this->category->id);
+
+        $komponen->assertSee('Seri Bravo');
+
+        // Peserta yang belum dapat seri ditandai apa adanya, bukan dibiarkan
+        // kosong sehingga terbaca seperti seri yang gagal dimuat.
+        $komponen->assertSee('Tanpa Seri');
+
+        $komponen->call('selectParticipant', $this->registration->id)
+            ->assertSee('Seri Bravo');
+
+        $this->assertNull($polos->competition_series_id);
+    }
+
     public function test_ketuk_nilai_langsung_tersimpan_ke_database()
     {
         $criteria = $this->makeRubric()[0];
@@ -300,15 +341,25 @@ class JudgeTabletScoringTest extends TestCase
     public function test_kriteria_di_luar_rubrik_juri_ditolak()    {
         $this->makeRubric();
 
-        // Rubrik milik juri lain
-        $otherJudge = Judge::create([
+        // Rubrik milik TINGKAT LAIN.
+        //
+        // Dulu rubrik asing cukup dibuat tanpa competition_category_id, karena
+        // penyaringnya "rubrik yang dipegang juri ini". Sesudah penugasan pindah
+        // ke grup, rubriknya ditentukan SERI peserta dan rubrik tanpa tingkat
+        // berlaku GLOBAL — juri mana pun menilainya. Jadi batas yang benar-benar
+        // mengurung kriteria asing sekarang adalah tingkatnya sendiri.
+        $otherParent = CompetitionCategory::factory()->create([
             'eventner_id' => $this->eventner->id,
-            'name' => 'Juri Lain',
+            'parent_id' => null,
+        ]);
+        $otherLevel = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => $otherParent->id,
         ]);
         $otherCat = AssessmentCategory::create([
             'eventner_id' => $this->eventner->id,
-            'name' => 'Rubrik Juri Lain',
-            'competition_category_id' => null,
+            'name' => 'Rubrik Tingkat Lain',
+            'competition_category_id' => $otherLevel->id,
         ]);
         $otherSub = AssessmentSubCategory::create([
             'assessment_category_id' => $otherCat->id,
@@ -319,7 +370,6 @@ class JudgeTabletScoringTest extends TestCase
             'name' => 'Kriteria Asing',
             'score_options' => [['score' => 99]],
         ]);
-        $otherJudge->assessmentCategories()->attach($otherCat->id);
 
         Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judge->access_token])
             ->call('selectCategory', $this->category->id)

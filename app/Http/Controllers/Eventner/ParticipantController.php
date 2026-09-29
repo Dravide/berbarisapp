@@ -319,9 +319,15 @@ class ParticipantController extends Controller
             abort(403, 'Anda bukan Eventner yang sah.');
         }
 
+        // Nomor undian dulu, nama sekolah sebagai pemecah: rekap Data Sekolah
+        // dan Kartu Akses dibaca meja demi meja mengikuti urutan tampil pasukan,
+        // bukan urutan abjad. Pasukan yang belum diundi tidak punya nomor —
+        // mereka jatuh ke bawah, tetap urut nama sekolah. Urutan mengikuti
+        // konvensi yang sama dengan panel Input Nilai.
         $registrations = Registration::with(['participants', 'fieldValues'])
             ->where('eventner_id', $eventner->id)
             ->where('status_berkas', '!=', 'dibatalkan')
+            ->orderByRaw('COALESCE(urutan_tampil, 999999)')
             ->orderBy('nama_sekolah')
             ->orderBy('id')
             ->get();

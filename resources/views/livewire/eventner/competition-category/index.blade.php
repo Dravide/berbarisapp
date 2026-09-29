@@ -267,26 +267,9 @@
                             </div>
 
                             <div class="alert alert-info bg-primary-subtle text-primary border-0 fs-2 py-2 mb-3">
-                                Tentukan Juri siapa saja yang akan menilai penampilan peserta khusus untuk Tingkat ini.
-                            </div>
-
-                            <h6 class="fw-semibold mb-3">Pilih Juri Penilai:</h6>
-                            <div class="mb-4">
-                                @if($this->availableJudges->isEmpty())
-                                    <p class="text-muted fs-2"><i>Belum ada Juri. Silakan tambah juri di menu Daftar Juri.</i></p>
-                                @else
-                                    <div class="bg-light p-3 rounded border" style="max-height: 250px; overflow-y: auto;">
-                                        @foreach($this->availableJudges as $judge)
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" wire:model="selectedJudges" value="{{ $judge->id }}" id="j_{{ $judge->id }}">
-                                                <label class="form-check-label fw-medium d-block" for="j_{{ $judge->id }}">
-                                                    {{ $judge->name }}
-                                                </label>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @endif
-                                @error('selectedJudges') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                                Juri ditugaskan per <strong>grup peserta</strong>, bukan di layar ini:
+                                buka tombol <strong>Atur</strong> pada tingkatnya, lalu centang jurinya di modal
+                                Atur Babak, Grup &amp; Seri. Lembar nilai mengikuti seri masing-masing peserta.
                             </div>
                         @endif
 
@@ -358,7 +341,7 @@
                             </div>
                         @endif
 
-                        @if($panelGroups->isEmpty())
+                        @if($panelGroups->isEmpty() && $this->assignmentRows === [])
                             <p class="text-muted fs-2"><i>Belum ada grup. Tingkat ini dihitung sebagai satu peringkat.</i></p>
                         @else
                             <div class="table-responsive">
@@ -367,31 +350,56 @@
                                         <tr>
                                             <th>Grup</th>
                                             <th>Peserta</th>
-                                            <th>Juri</th>
+                                            <th>Juri yang menilai</th>
                                             <th class="text-end">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach($panelGroups as $group)
-                                            @php $groupJudgeNames = $this->groupJudgeNames->get($group->id, collect()); @endphp
+                                        @foreach($this->assignmentRows as $row)
+                                            @php
+                                                $juriBaris = $this->groupJudgeIds->get($row['key'], collect())->all();
+                                                $adalahGrup = $row['scope'] === \App\Models\CompetitionGroup::SCOPE_GROUP;
+                                            @endphp
                                             <tr>
-                                                <td class="fw-semibold">{{ $group->name }}</td>
-                                                <td>{{ $group->registrations_count }}</td>
+                                                <td class="fw-semibold">
+                                                    {{ $row['label'] }}
+                                                    @unless($adalahGrup)
+                                                        <span class="badge bg-light text-muted border ms-1">{{ $row['scope'] }}</span>
+                                                    @endunless
+                                                </td>
+                                                <td>{{ $row['count'] }}</td>
                                                 <td>
-                                                    @forelse($groupJudgeNames as $nama)
-                                                        <span class="badge bg-secondary-subtle text-secondary border">{{ $nama }}</span>
-                                                    @empty
-                                                        <span class="text-muted fs-2">Belum ada — atur lewat Format Nilai</span>
-                                                    @endforelse
+                                                    @if($this->availableJudges->isEmpty())
+                                                        <span class="text-muted fs-2">Belum ada juri di event ini</span>
+                                                    @else
+                                                        <div class="d-flex flex-wrap gap-2">
+                                                            @foreach($this->availableJudges as $juri)
+                                                                <div class="form-check form-check-inline me-0">
+                                                                    <input class="form-check-input" type="checkbox"
+                                                                        id="juri-{{ $row['key'] }}-{{ $juri->id }}"
+                                                                        @checked(in_array($juri->id, $juriBaris, true))
+                                                                        wire:change="toggleGroupJudge('{{ $row['scope'] }}', {{ $adalahGrup ? $row['group_id'] : 'null' }}, {{ $juri->id }}, $event.target.checked)">
+                                                                    <label class="form-check-label fs-2" for="juri-{{ $row['key'] }}-{{ $juri->id }}">{{ $juri->name }}</label>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                        @if($juriBaris === [])
+                                                            <span class="badge bg-warning-subtle text-warning mt-1">
+                                                                <i class="ti ti-alert-triangle me-1"></i>Belum ada juri
+                                                            </span>
+                                                        @endif
+                                                    @endif
                                                 </td>
                                                 <td class="text-end">
-                                                    <button class="btn btn-sm btn-outline-primary p-1 me-1" wire:click="editGroup({{ $group->id }})" title="Edit grup">
-                                                        <i class="ti ti-edit fs-4"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-outline-danger p-1" wire:click="deleteGroup({{ $group->id }})"
-                                                        wire:confirm="Hapus grup {{ $group->name }}? Pesertanya tidak ikut terhapus, hanya kembali ke peringkat umum." title="Hapus grup">
-                                                        <i class="ti ti-trash fs-4"></i>
-                                                    </button>
+                                                    @if($adalahGrup)
+                                                        <button class="btn btn-sm btn-outline-primary p-1 me-1" wire:click="editGroup({{ $row['group_id'] }})" title="Edit grup">
+                                                            <i class="ti ti-edit fs-4"></i>
+                                                        </button>
+                                                        <button class="btn btn-sm btn-outline-danger p-1" wire:click="deleteGroup({{ $row['group_id'] }})"
+                                                            wire:confirm="Hapus grup {{ $row['label'] }}? Pesertanya tidak ikut terhapus, hanya kembali ke peringkat umum. Penugasan jurinya ikut dilepas." title="Hapus grup">
+                                                            <i class="ti ti-trash fs-4"></i>
+                                                        </button>
+                                                    @endif
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -402,9 +410,10 @@
 
                         <div class="alert alert-info bg-primary-subtle text-primary border-0 fs-2 py-2">
                             <i class="ti ti-info-circle"></i>
-                            Juri terikat pada <strong>seri</strong>, bukan grup: buka <strong>Format Nilai</strong>,
-                            lalu pilih seri pada kategori penilaian. Pembagian peserta ada di halaman
-                            <strong>Daftar Peserta</strong>.
+                            Centang juri yang menilai tiap baris di atas. <strong>Lembar nilainya tidak dipilih di
+                            sini</strong>: setiap peserta memakai lembar sesuai <strong>serinya</strong>, yang
+                            ditetapkan panitia saat <strong>Daftar Ulang</strong>. Satu juri grup karena itu bisa
+                            menilai lebih dari satu seri.
                         </div>
 
                         <hr class="my-4">
@@ -413,9 +422,9 @@
                         <h6 class="fw-semibold mb-2"><i class="ti ti-list-numbers me-1"></i>Seri</h6>
                         <p class="text-muted fs-2">
                             Seri adalah urutan perlombaan (mis. Seri A &amp; Seri B pada LOBB) dan
-                            <strong>penentu lembar nilai</strong>: rubrik serta jurinya mengikuti seri, bukan grup.
-                            Dua pasukan di grup yang sama boleh memakai seri berbeda. Seri ditetapkan panitia
-                            saat daftar ulang.
+                            <strong>penentu lembar nilai</strong>: rubriknya mengikuti seri. Juri <strong>tidak</strong>
+                            lagi diikat ke seri — penugasannya ada di bagian <strong>Grup</strong> di atas. Dua pasukan
+                            di grup yang sama boleh memakai seri berbeda. Seri ditetapkan panitia saat daftar ulang.
                         </p>
 
                         <div class="row g-2 align-items-end mb-3">
@@ -452,7 +461,7 @@
                                         <tr>
                                             <th>Seri</th>
                                             <th>Peserta</th>
-                                            <th>Rubrik &amp; Juri</th>
+                                            <th>Rubrik</th>
                                             <th class="text-end">Aksi</th>
                                         </tr>
                                     </thead>
@@ -468,9 +477,6 @@
                                                     @empty
                                                         <span class="text-muted fs-2">Belum ada — atur lewat Format Nilai</span>
                                                     @endforelse
-                                                    @foreach($seriesInfo['judges'] ?? collect() as $nama)
-                                                        <span class="badge bg-secondary-subtle text-secondary border">{{ $nama }}</span>
-                                                    @endforeach
                                                 </td>
                                                 <td class="text-end">
                                                     <button class="btn btn-sm btn-outline-primary p-1 me-1" wire:click="editSeries({{ $series->id }})" title="Edit seri">

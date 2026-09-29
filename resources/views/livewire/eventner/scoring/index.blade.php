@@ -109,7 +109,37 @@
                                         <i class="ti ti-users-group fs-7"></i>
                                     </div>
                                     <h5 class="fw-semibold text-dark mb-1">{{ $grup->name }}</h5>
-                                    <p class="text-muted mb-3 fs-2">{{ $groupCounts[$grup->id] ?? 0 }} Peserta</p>
+                                    <p class="text-muted mb-2 fs-2">{{ $groupCounts[$grup->id] ?? 0 }} Peserta</p>
+                                    {{-- Grup dan seri dua sumbu bebas, jadi satu grup boleh
+                                         dihuni lebih dari satu seri. Tanpa pecahan ini operator
+                                         tak tahu lembar nilai mana yang menunggu di dalamnya. --}}
+                                    @php $seriGrup = $groupSeriesCounts[$grup->id] ?? []; @endphp
+                                    @if($seriGrup !== [])
+                                        <div class="d-flex flex-wrap justify-content-center gap-1 mb-3">
+                                            @foreach($seriGrup as $s)
+                                                <span class="badge {{ $s['tanpa_seri'] ? 'bg-warning-subtle text-warning' : 'bg-secondary-subtle text-secondary' }}">
+                                                    @if(! $s['tanpa_seri'])<i class="ti ti-flag-2 me-1"></i>@endif{{ $s['nama'] }} {{ $s['jumlah'] }}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                    @endif
+                                    {{-- Juri yang bertugas di grup ini. Grup tanpa juri
+                                         ditandai, bukan dibiarkan tampak sama dengan yang
+                                         sudah bertugas — pesertanya akan lolos tanpa penilai. --}}
+                                    @php $juriGrup = $groupJudgeNames['group:' . $grup->id] ?? []; @endphp
+                                    @if($juriGrup !== [])
+                                        <div class="mb-3">
+                                            <span class="badge bg-primary-subtle text-primary">
+                                                <i class="ti ti-user-check me-1"></i>{{ implode(', ', $juriGrup) }}
+                                            </span>
+                                        </div>
+                                    @else
+                                        <div class="mb-3">
+                                            <span class="badge bg-warning-subtle text-warning">
+                                                <i class="ti ti-alert-triangle me-1"></i>Belum ada juri
+                                            </span>
+                                        </div>
+                                    @endif
                                     @if($rounds->contains(fn ($r) => ! $r->isFinal()))
                                         <span class="badge bg-secondary-subtle text-secondary mb-2">Babak Penyisihan</span>
                                     @endif
@@ -357,10 +387,19 @@
                         <div class="card-body p-3">
                             <div class="d-flex gap-2 flex-wrap">
                                 @foreach($judges as $judge)
+                                    {{-- Label baris penugasan: juri grup mana pun menilai
+                                         seluruh rubrik seri peserta, jadi yang membedakan juri
+                                         satu dari yang lain hanyalah dari mana ia ditugaskan. --}}
+                                    @php $grupJuri = $judgeGroupLabels[$judge->id] ?? ''; @endphp
                                     <button type="button"
                                         wire:click="$set('selectedJudgeId', {{ $judge->id }})"
-                                        class="btn {{ $selectedJudgeId == $judge->id ? 'btn-primary' : 'btn-outline-primary' }} px-3 py-2 fw-semibold">
-                                        <i class="ti ti-user me-1"></i> {{ $judge->name }}
+                                        class="btn {{ $selectedJudgeId == $judge->id ? 'btn-primary' : 'btn-outline-primary' }} px-3 py-2 text-start">
+                                        <span class="fw-semibold d-block"><i class="ti ti-user me-1"></i>{{ $judge->name }}</span>
+                                        @if($grupJuri !== '')
+                                            <span class="d-block small {{ $selectedJudgeId == $judge->id ? 'text-white text-opacity-75' : 'text-muted' }}">
+                                                <i class="ti ti-users-group me-1"></i>{{ $grupJuri }}
+                                            </span>
+                                        @endif
                                     </button>
                                 @endforeach
                             </div>

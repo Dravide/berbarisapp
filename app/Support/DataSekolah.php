@@ -119,7 +119,10 @@ class DataSekolah
      * Kelompokkan baris per pasukan menjadi satu baris per sekolah.
      *
      * Urutan hasil mengikuti urutan kemunculan pertama di koleksi masukan, jadi
-     * pemanggil yang mengurutkan `nama_sekolah` akan mendapat rekap yang urut.
+     * pemanggil yang mengurutkan barisnya akan mendapat rekap yang urut. Rekap
+     * Data Sekolah dan Kartu Akses mengurutkan lewat nomor undian, sehingga
+     * sekolah yang punya beberapa pasukan duduk di posisi pasukan dengan undian
+     * terkecil.
      * Baris `dibatalkan` disaring di sini walau pemanggil biasanya sudah
      * menyaringnya — itu baris yang digantikan, dan menghitungnya membuat jumlah
      * pasukan dan status sebuah sekolah salah.

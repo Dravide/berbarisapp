@@ -115,6 +115,11 @@ class GroupScoringIsolationTest extends TestCase
 
         $this->juri = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Umum']);
 
+        // Penugasan juri menempel di GRUP (bukan di rubriknya). Grup A adalah
+        // grup peserta utama, jadi juri umum tercentang di sana — sama seperti
+        // hasil backfill pada data yang sudah berjalan.
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_GROUP, $this->groupA->id, [$this->juri->id]);
+
         $this->kriteriaPenyisihan = $this->makeRubric('PBB Penyisihan', $this->penyisihan, null, $this->juri);
         $this->kriteriaFinal = $this->makeRubric('PBB Final', $this->final, null, $this->juri);
 
@@ -186,6 +191,24 @@ class GroupScoringIsolationTest extends TestCase
             'Chip grup tidak membuka babak penyisihan.');
 
         return $panel;
+    }
+
+    /**
+     * Layar INPUT NILAI dengan chip Grup A aktif.
+     *
+     * Berbeda dari panelPenyisihan(): di sana view berakhir di 'participants'
+     * karena chip dipilih setelah peserta dibuka. Di alur nyata urutannya
+     * terbalik — pilih grup, baru buka peserta — jadi pemilih juri memang
+     * dirender. Tanpa helper ini label juri ikut kosong bersama view-nya, dan
+     * tesnya lulus karena tak memeriksa apa pun.
+     */
+    private function panelScoringGrupA()
+    {
+        return Livewire::test(\App\Livewire\Eventner\Scoring\Index::class)
+            ->call('selectCategory', $this->level->id)
+            ->call('selectScope', (string) $this->groupA->id)
+            ->call('selectParticipant', $this->reg->id)
+            ->set('selectedJudgeId', $this->juri->id);
     }
 
     /**
@@ -422,34 +445,179 @@ class GroupScoringIsolationTest extends TestCase
     }
 
     /**
-     * Panel panitia menampilkan juri per tingkat+seri: juri Seri B tidak muncul
-     * saat membuka peserta Seri A.
+     * Panel panitia menampilkan juri sesuai PENUGASAN GRUP, bukan serinya.
+     *
+     * Ini inti keputusan "grup menggantikan seri": juri Seri B yang ditugaskan
+     * ke Grup A tetap muncul saat panitia membuka peserta Grup A — yang
+     * menentukan cuma centang di modal Kelola Grup. Lembar nilainya menyusul
+     * dari seri masing-masing peserta.
      */
-    public function test_daftar_juri_panel_mengikuti_seri_peserta()
+    public function test_daftar_juri_panel_mengikuti_grup_peserta()
     {
         $juriB = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Seri B']);
         $this->makeRubric('PBB Seri B', $this->penyisihan, $this->seriB, $juriB);
 
+        // Juri Umum tercentang di Grup A; juri Seri B memang belum ditugaskan
+        // ke grup mana pun, jadi ia belum muncul.
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_GROUP, $this->groupA->id, [$this->juri->id]);
         $this->panel()->assertSee('Juri Umum')->assertDontSee('Juri Seri B');
+
+        // Begitu ia dicentang untuk Grup A, ia muncul di lembar Grup A —
+        // walau rubrik yang dipegangnya berseri B.
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_GROUP, $this->groupA->id, [$this->juri->id, $juriB->id]);
+        $this->panel()->assertSee('Juri Seri B');
+    }
+
+    /** Juri yang hanya tercentang di Grup B tidak muncul di lembar Grup A. */
+    public function test_juri_grup_lain_tidak_muncul_di_panel_grup_ini()
+    {
+        $juriB = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Grup B']);
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_GROUP, $this->groupB->id, [$juriB->id]);
+
+        $this->panel()->assertDontSee('Juri Grup B');
     }
 
     /**
-     * Panel ikut disaring per babak: juri yang cuma memegang rubrik Final tidak
-     * muncul saat panitia menilai penyisihan grup — dan sebaliknya ia muncul
-     * begitu panel dibuka pada scope Final.
+     * Kartu grup menyebut seri apa saja yang dihuni grup itu.
      *
-     * Rubrik penyisihan dan rubrik final memang baris terpisah, jadi tanpa
-     * saringan babak kedua regu juri tercampur dalam satu panel.
+     * Grup dan seri dua sumbu bebas: satu grup boleh dihuni lebih dari satu
+     * seri. Tanpa pecahan ini kartu grup cuma berbunyi "2 Peserta" dan panitia
+     * tak punya cara tahu lembar nilai mana yang menunggu di dalamnya.
+     */
+    public function test_kartu_grup_menampilkan_ringkasan_seri()
+    {
+        Registration::factory()->for($this->eventner, 'eventner')->create([
+            'competition_category_id' => $this->level->id,
+            'competition_group_id' => $this->groupA->id,
+            'competition_series_id' => $this->seriB->id,
+            'nama_sekolah' => 'SMPN 2',
+        ]);
+
+        $panel = Livewire::test(\App\Livewire\Eventner\Scoring\Index::class)
+            ->call('selectCategory', $this->level->id)
+            ->assertViewHas('groupSeriesCounts', function (array $counts) {
+                $grupA = collect($counts[$this->groupA->id] ?? []);
+
+                return $grupA->firstWhere('nama', 'Seri A')['jumlah'] === 1
+                    && $grupA->firstWhere('nama', 'Seri B')['jumlah'] === 1;
+            });
+
+        // Terbaca di layar, bukan cuma ada di view data.
+        $panel->assertSee('Seri A 1')->assertSee('Seri B 1');
+    }
+
+    /** Peserta yang belum dapat seri dihitung terpisah, bukan hilang dari kartu. */
+    public function test_kartu_grup_menandai_peserta_tanpa_seri()
+    {
+        Registration::factory()->for($this->eventner, 'eventner')->create([
+            'competition_category_id' => $this->level->id,
+            'competition_group_id' => $this->groupA->id,
+            'competition_series_id' => null,
+            'nama_sekolah' => 'SMPN 2',
+        ]);
+
+        Livewire::test(\App\Livewire\Eventner\Scoring\Index::class)
+            ->call('selectCategory', $this->level->id)
+            ->assertViewHas('groupSeriesCounts', function (array $counts) {
+                $grupA = collect($counts[$this->groupA->id] ?? []);
+
+                $tanpaSeri = $grupA->firstWhere('tanpa_seri', true);
+
+                return $tanpaSeri !== null
+                    && $tanpaSeri['nama'] === 'Tanpa Seri'
+                    && $tanpaSeri['jumlah'] === 1
+                    // Selalu paling akhir supaya chipnya tidak menyela di
+                    // antara seri bernama.
+                    && $grupA->last()['tanpa_seri'] === true;
+            });
+    }
+
+    /**
+     * Kartu grup membawa regu jurinya, dan grup tanpa juri ditandai.
+     *
+     * Inilah jawaban pertanyaan "juri Grup A siapa saja" tanpa harus membuka
+     * modal: panitia melihat pembagiannya langsung di kartu, dan grup yang
+     * belum dicentang siapa pun tampak mencolok — peserta di dalamnya memang
+     * tak bisa dinilai siapa pun kalau dibiarkan begitu.
+     */
+    public function test_kartu_grup_menampilkan_juri_yang_bertugas()
+    {
+        $juriB = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri B']);
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_GROUP, $this->groupB->id, [$juriB->id]);
+
+        $grupC = CompetitionGroup::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Grup C',
+        ]);
+
+        $panel = Livewire::test(\App\Livewire\Eventner\Scoring\Index::class)
+            ->call('selectCategory', $this->level->id)
+            ->assertViewHas('groupJudgeNames', function (array $nama) use ($grupC) {
+                return $nama['group:' . $this->groupA->id] === ['Juri Umum']
+                    && $nama['group:' . $this->groupB->id] === ['Juri B']
+                    && ! isset($nama['group:' . $grupC->id]);
+            });
+
+        // Terbaca di kartunya, bukan cuma ada di view data.
+        $panel->assertSee('Juri Umum')->assertSee('Juri B')->assertSee('Belum ada juri');
+    }
+
+    /**
+     * Label juri menyebut BARIS PENUGASANNYA, bukan rubrik yang dipegang.
+     *
+     * Deretan nama juri telanjang terbaca seperti kebocoran saringan.
+     * "Juri Umum · Grup A" langsung menjelaskan kenapa ia ada di lembar ini.
+     */
+    public function test_tombol_juri_menampilkan_grup_yang_dipegang()
+    {
+        $juriA = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Seri A']);
+        $this->makeRubric('PBB Seri A', $this->penyisihan, $this->seriA, $juriA);
+
+        $this->panelScoringGrupA()
+            ->set('selectedJudgeId', null)
+            ->call('loadJudges')
+            ->assertViewHas('judgeGroupLabels', function (array $label) {
+                // Peserta ada di Grup A, jadi seluruh jurinya berlabel Grup A —
+                // bukan nama seri rubrik yang mereka pegang.
+                return $label !== [] && collect($label)->every(fn ($v) => $v === 'Grup A');
+            });
+    }
+
+    /**
+     * Label juri ikut baris penugasan yang sedang berlaku: saat panel membuka
+     * babak Final dengan penugasan `final` tersendiri, labelnya "Final".
+     */
+    public function test_label_juri_mengikuti_baris_penugasan_babak()
+    {
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_FINAL, null, [$this->juri->id]);
+
+        $this->panelFinal()
+            ->set('selectedJudgeId', null)
+            ->call('loadJudges')
+            ->assertViewHas('judgeGroupLabels', fn (array $label) => collect($label)->every(fn ($v) => $v === 'Final'));
+    }
+
+    /**
+     * Panel ikut disaring per babak lewat baris `final` tersendiri.
+     *
+     * Juri yang cuma tercentang di baris Final tidak muncul saat panitia
+     * menilai penyisihan — dan sebaliknya ia muncul begitu panel dibuka pada
+     * scope Final, karena peserta finalis pindah ke baris `final` itu.
+     *
+     * Begitu ada satu juri di baris final, SELURUH peserta finalis pindah ke
+     * sana — termasuk bagi juri grup yang tak ditugaskan ke final.
      */
     public function test_daftar_juri_panel_mengikuti_babak()
     {
         $juriFinal = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Final']);
         $this->makeRubric('PBB Final Saja', $this->final, null, $juriFinal);
 
-        // Juri umum tetap ikut di penyisihan: rubriknya tanpa babak.
+        CompetitionGroup::syncJudges($this->level->id, CompetitionGroup::SCOPE_FINAL, null, [$juriFinal->id]);
+
         $this->panelPenyisihan()->assertSee('Juri Umum')->assertDontSee('Juri Final');
 
-        $this->panelFinal()->assertSee('Juri Final');
+        $this->panelFinal()->assertSee('Juri Final')->assertDontSee('Juri Umum');
     }
 
     private function pesertaGrupB(): Registration

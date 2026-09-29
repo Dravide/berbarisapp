@@ -7,6 +7,7 @@ use App\Models\AssessmentCategory;
 use App\Models\AssessmentCriteria;
 use App\Models\AssessmentSubCategory;
 use App\Models\CompetitionCategory;
+use App\Models\CompetitionGroup;
 use App\Models\DeductionCategory;
 use App\Models\Judge;
 use App\Models\Registration;
@@ -188,40 +189,38 @@ class FormatNilaiController extends Controller
     }
 
     /**
-     * Unduh format penilaian PDF khusus satu juri: hanya kategori penilaian
-     * yang ditugaskan ke juri tersebut yang diikutsertakan. Bila
-     * $competitionCategoryId diberikan, hanya kategori pada tingkat/child itu.
+     * Unduh format penilaian PDF khusus satu juri.
+     *
+     * Rubriknya bukan lagi "kategori yang ditugaskan ke juri itu" — penugasan
+     * menempel di GRUP, dan tiap peserta memakai lembar sesuai serinya. Jadi
+     * daftar lembar yang dicetak diturunkan dari seri yang benar-benar ada di
+     * grup-grup yang dipegang juri ini: juri yang menilai Grup A cukup
+     * mendapat lembar Seri A kalau Grup A hanya berisi peserta Seri A, dan
+     * mendapat lembar Seri A + Seri B kalau grupnya campuran.
      */
     public function downloadPdfByJudge($judgeId, $competitionCategoryId = null)
     {
         $eventner = $this->gatedEventner();
 
-        $judge = Judge::where('eventner_id', $eventner->id)
-            ->with('assessmentCategories')
-            ->findOrFail($judgeId);
+        $judge = Judge::where('eventner_id', $eventner->id)->findOrFail($judgeId);
 
-        $categories = $judge->assessmentCategories
-            ->loadMissing(['subCategories.criterias', 'deductionCategories.criterias', 'competitionSeries']);
+        $levelId = $competitionCategoryId;
 
-        if ($competitionCategoryId) {
+        if ($levelId) {
             // Validasi tingkat milik eventner ini.
-            CompetitionCategory::where('eventner_id', $eventner->id)
-                ->findOrFail($competitionCategoryId);
-
-            // Rubrik global (NULL) ikut, seperti di panel Input Nilai.
-            $categories = $categories->filter(fn ($cat) => $cat->competition_category_id == $competitionCategoryId
-                || $cat->competition_category_id === null
-            );
+            CompetitionCategory::where('eventner_id', $eventner->id)->findOrFail($levelId);
+        } else {
+            $levelId = $this->tingkatTunggalUntukJuri($eventner, $judge->id);
         }
 
-        $categories = $categories->sortBy('sort_order')->values();
+        $categories = $this->rubricCategoriesForJudge($eventner, $judge->id, $levelId);
 
         $data = [
             'eventner' => $eventner,
             'categories' => $categories,
-            'globalDeductionCategories' => $this->globalDeductionCategories($eventner, $competitionCategoryId),
-            'childName' => $competitionCategoryId
-                ? CompetitionCategory::where('eventner_id', $eventner->id)->find($competitionCategoryId)->full_name
+            'globalDeductionCategories' => $this->globalDeductionCategories($eventner, $levelId),
+            'childName' => $levelId
+                ? CompetitionCategory::where('eventner_id', $eventner->id)->find($levelId)?->full_name
                 : null,
             'judgeName' => $judge->name,
         ];
@@ -230,6 +229,71 @@ class FormatNilaiController extends Controller
             ->setPaper('a4', 'portrait');
 
         return $pdf->download('Format_Penilaian_'.str_replace(['/', '\\'], '_', $judge->name).'.pdf');
+    }
+
+    /**
+     * Tingkat tunggal milik juri ini, kalau memang cuma satu.
+     *
+     * Dipakai saat pemanggil tak menyebut tingkat: juri LOBB memegang dua
+     * tingkat (mis. U13 dan U16), dan mencetak keduanya jadi satu berkas akan
+     * mencampur dua lembar nilai. Lebih baik null — pemanggil yang tahu
+     * tingkatnya wajib menyebutkannya.
+     */
+    private function tingkatTunggalUntukJuri($eventner, int $judgeId): ?int
+    {
+        $idTingkat = DB::table('competition_group_judge')
+            ->where('judge_id', $judgeId)
+            ->pluck('competition_category_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        return $idTingkat->count() === 1 ? (int) $idTingkat->first() : null;
+    }
+
+    /**
+     * Lembar nilai yang harus dicetak untuk satu juri di satu tingkat.
+     *
+     * Seri yang ikut adalah seri yang benar-benar dihuni grup-grup juri ini —
+     * bukan seluruh seri tingkat. Juri baris `final`/`ungrouped`/`level` tak
+     * punya grup, jadi ia memakai seluruh seri tingkat itu; memang begitulah
+     * cakupannya.
+     */
+    private function rubricCategoriesForJudge($eventner, int $judgeId, ?int $levelId): \Illuminate\Support\Collection
+    {
+        $grupIds = DB::table('competition_group_judge')
+            ->where('judge_id', $judgeId)
+            ->when($levelId, fn ($q) => $q->where('competition_category_id', $levelId))
+            ->where('scope', CompetitionGroup::SCOPE_GROUP)
+            ->pluck('competition_group_id')
+            ->filter()
+            ->all();
+
+        $seriIds = $grupIds === []
+            ? null
+            : Registration::whereIn('competition_group_id', $grupIds)
+                ->pluck('competition_series_id')
+                ->unique()
+                ->all();
+
+        $q = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias', 'competitionSeries'])
+            ->where('eventner_id', $eventner->id);
+
+        if ($levelId) {
+            $q->where(function ($sq) use ($levelId) {
+                $sq->where('competition_category_id', $levelId)
+                    ->orWhereNull('competition_category_id');
+            });
+        }
+
+        if (is_array($seriIds)) {
+            // Tiap seri peserta grup itu, plus rubrik tanpa seri.
+            $q->where(function ($sq) use ($seriIds) {
+                $sq->whereIn('competition_series_id', $seriIds)->orWhereNull('competition_series_id');
+            });
+        }
+
+        return $q->orderBy('sort_order')->get();
     }
 
     /**
@@ -272,8 +336,12 @@ class FormatNilaiController extends Controller
         }
 
         if ($judgeId) {
+            // Divalidasi milik eventner ini, tapi TIDAK menyempitkan rubrik.
+            // Juri terikat ke grup, dan satu grup boleh memuat peserta dari
+            // beberapa seri — menyaring rubrik ke satu seri di sini akan
+            // membuang lembar yang justru harus dicetak. Seri baru bisa
+            // ditentukan saat pesertanya disebut (mode "peserta").
             Judge::where('eventner_id', $eventner->id)->findOrFail($judgeId);
-            $q->whereHas('judges', fn ($j) => $j->where('judges.id', $judgeId));
         }
 
         return $q->orderBy('sort_order')->get();

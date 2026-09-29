@@ -71,12 +71,13 @@ class ParticipantDataSekolahTest extends TestCase
         }
     }
 
-    /** Koleksi registrasi siap-kelompokkan: eager-load yang sama dengan controller. */
+    /** Koleksi registrasi siap-kelompokkan: eager-load & urutan yang sama dengan controller. */
     private function kumpulkan(): \Illuminate\Support\Collection
     {
         return Registration::with(['participants', 'fieldValues'])
             ->where('eventner_id', $this->eventner->id)
             ->where('status_berkas', '!=', 'dibatalkan')
+            ->orderByRaw('COALESCE(urutan_tampil, 999999)')
             ->orderBy('nama_sekolah')
             ->orderBy('id')
             ->get();
@@ -663,6 +664,51 @@ class ParticipantDataSekolahTest extends TestCase
         $ini = DataSekolah::kelompokkan($this->kumpulkan());
 
         $this->assertCount(2, $ini);
+    }
+
+    /**
+     * Baris rekap mengikuti nomor undian, bukan abjad nama sekolah.
+     *
+     * Halaman ini dicetak dan dibaca meja demi meja mengikuti urutan tampil
+     * pasukan, jadi urutan abjad memaksa panitia mencari nama di daftar.
+     */
+    public function test_baris_rekap_urut_nomor_undian()
+    {
+        $this->makeRegistration('Zeta', ['npsn' => '11111111', 'urutan_tampil' => 1]);
+        $this->makeRegistration('Alfa', ['npsn' => '22222222', 'urutan_tampil' => 2]);
+        $this->makeRegistration('Beta', ['npsn' => '33333333', 'urutan_tampil' => 3]);
+
+        $nama = DataSekolah::kelompokkan($this->kumpulkan())->pluck('nama_sekolah')->all();
+
+        $this->assertSame(['Zeta', 'Alfa', 'Beta'], $nama);
+    }
+
+    /** Pasukan yang belum diundi jatuh ke bawah, tetap urut nama sekolah. */
+    public function test_peserta_belum_diundi_diletakkan_di_bawah()
+    {
+        $this->makeRegistration('Zeta', ['npsn' => '11111111', 'urutan_tampil' => 1]);
+        $this->makeRegistration('Alfa', ['npsn' => '22222222', 'urutan_tampil' => null]);
+        $this->makeRegistration('Beta', ['npsn' => '33333333', 'urutan_tampil' => null]);
+
+        $nama = DataSekolah::kelompokkan($this->kumpulkan())->pluck('nama_sekolah')->all();
+
+        $this->assertSame(['Zeta', 'Alfa', 'Beta'], $nama);
+    }
+
+    /**
+     * Sekolah berpasukan banyak duduk di posisi undian TERKECIL di antara
+     * pasukannya — pengelompokan tidak mengembalikan urutannya ke abjad.
+     */
+    public function test_sekolah_berpasukan_banyak_mengikuti_undian_terkecil()
+    {
+        $this->makeRegistration('Zeta', ['npsn' => '11111111', 'urutan_tampil' => 5, 'label_pasukan' => 'A']);
+        $this->makeRegistration('Zeta', ['npsn' => '11111111', 'urutan_tampil' => 1, 'label_pasukan' => 'B']);
+        $this->makeRegistration('Alfa', ['npsn' => '22222222', 'urutan_tampil' => 3]);
+
+        $hasil = DataSekolah::kelompokkan($this->kumpulkan());
+
+        $this->assertSame(['Zeta', 'Alfa'], $hasil->pluck('nama_sekolah')->all());
+        $this->assertSame(2, $hasil[0]['jumlah_pasukan']);
     }
 
     /** ?registrasi= membatasi kartu ke satu sekolah saja. */

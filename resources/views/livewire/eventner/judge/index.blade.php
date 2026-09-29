@@ -49,7 +49,7 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th class="ps-0 border-0 fw-semibold text-dark">Foto & Data Juri</th>
-                                        <th class="border-0 fw-semibold text-dark">Bagian / Kategori Penilaian</th>
+                                        <th class="border-0 fw-semibold text-dark">Tugas Penilaian</th>
                                         <th class="border-0 fw-semibold text-dark text-end">Aksi</th>
                                     </tr>
                                 </thead>
@@ -76,15 +76,16 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                {{-- Rincian kategori tidak lagi dijejal di kolom —
-                                                     dibuka lewat modal, dipisah per tingkat lomba. --}}
-                                                @if($judge->assessmentCategories->isEmpty())
+                                                {{-- Penugasan grup, bukan kategori rubrik: tugas juri
+                                                     sekarang ditentukan di modal Kelola Grup. --}}
+                                                @php $tugas = $this->assignmentsByJudge->get($judge->id, collect()); @endphp
+                                                @if($tugas->isEmpty())
                                                     <span class="badge bg-warning-subtle text-warning">Belum ada tugas</span>
                                                 @else
                                                     <button type="button" class="btn btn-sm btn-outline-success fw-semibold"
                                                             wire:click="openCategoriesModal({{ $judge->id }})">
-                                                        <i class="ti ti-list-check me-1"></i>
-                                                        {{ $judge->assessmentCategories->count() }} Kategori Penilaian
+                                                        <i class="ti ti-users-group me-1"></i>
+                                                        {{ $tugas->sum(fn ($t) => $t['items']->count()) }} Penugasan
                                                     </button>
                                                 @endif
                                             </td>
@@ -119,7 +120,7 @@
 
     </div>
 
-    <!-- Modal Bagian / Kategori Penilaian Juri — dikelompokkan per tingkat lomba -->
+    <!-- Modal Tugas Penilaian Juri — dikelompokkan per tingkat lomba -->
     @if($selectedCategoriesJudgeId)
     @php $catJudge = $this->categoriesJudge; @endphp
     <div class="modal fade show d-block" tabindex="-1" style="display:block; background-color: rgba(0,0,0,.5); z-index: 1050;">
@@ -127,7 +128,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-success text-white">
                     <h5 class="modal-title text-white fw-semibold">
-                        <i class="ti ti-list-check me-1"></i> Kategori Penilaian Juri
+                        <i class="ti ti-users-group me-1"></i> Tugas Penilaian Juri
                     </h5>
                     <button type="button" class="btn-close btn-close-white" wire:click="closeCategoriesModal"></button>
                 </div>
@@ -138,7 +139,7 @@
 
                     @if($this->categoriesJudgeGrouped->isEmpty())
                         <p class="text-muted mb-0">
-                            <i>Juri ini belum ditugaskan ke kategori penilaian mana pun.</i>
+                            <i>Juri ini belum ditugaskan ke grup mana pun. Atur di halaman Tingkat Lomba, modal Kelola Grup.</i>
                         </p>
                     @else
                         @foreach($this->categoriesJudgeGrouped as $group)
@@ -147,16 +148,10 @@
                                     <i class="ti ti-school me-1"></i> {{ $group['name'] }}
                                 </div>
                                 <div class="bg-light p-3 rounded border">
-                                    @foreach($group['items'] as $cat)
+                                    @foreach($group['items'] as $label)
                                         <div class="d-flex align-items-center gap-2 {{ !$loop->last ? 'mb-2' : '' }}">
                                             <i class="ti ti-check text-success"></i>
-                                            <span class="fw-medium">{{ $cat->name }}</span>
-                                            @if($cat->competitionRound)
-                                                <span class="badge bg-primary-subtle text-primary">{{ $cat->competitionRound->name }}</span>
-                                            @endif
-                                            @if($cat->competitionSeries)
-                                                <span class="badge bg-warning-subtle text-warning">{{ $cat->competitionSeries->name }}</span>
-                                            @endif
+                                            <span class="fw-medium">{{ $label }}</span>
                                         </div>
                                     @endforeach
                                 </div>
@@ -316,39 +311,6 @@
                             <label class="form-label">No. Telepon <small class="text-muted">(Opsional)</small></label>
                             <input type="text" class="form-control" wire:model="phone_number" placeholder="Misal: 08123456789">
                             @error('phone_number') <span class="text-danger fs-2">{{ $message }}</span> @enderror
-                        </div>
-
-                        <hr>
-                        <h6 class="fw-semibold mb-3">Tugaskan Kategori (Checklist):</h6>
-                        <div class="mb-3">
-                            @if($this->availableCategories->isEmpty())
-                                <p class="text-muted fs-2"><i>Belum ada format nilai. Silakan buat format penilaian terlebih dahulu.</i></p>
-                            @else
-                                @foreach($this->availableCategoriesGrouped as $group)
-                                    <div class="mb-3">
-                                        <div class="fw-semibold text-primary mb-2">
-                                            <i class="ti ti-school me-1"></i> {{ $group['name'] }}
-                                        </div>
-                                        <div class="bg-light p-3 rounded border">
-                                            @foreach($group['items'] as $cat)
-                                                <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="checkbox" wire:model="selectedCategories" value="{{ $cat->id }}" id="cat_{{ $cat->id }}">
-                                                    <label class="form-check-label fw-medium" for="cat_{{ $cat->id }}">
-                                                        {{ $cat->name }}
-                                                        @if($cat->competitionRound)
-                                                            <span class="badge bg-primary-subtle text-primary ms-1">{{ $cat->competitionRound->name }}</span>
-                                                        @endif
-                                                        @if($cat->competitionSeries)
-                                                            <span class="badge bg-warning-subtle text-warning ms-1">{{ $cat->competitionSeries->name }}</span>
-                                                        @endif
-                                                    </label>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endforeach
-                            @endif
-                            @error('selectedCategories') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                         </div>
 
                         <div class="d-flex gap-2">

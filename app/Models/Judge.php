@@ -40,6 +40,20 @@ class Judge extends Model
         return $this->belongsToMany(CompetitionCategory::class);
     }
 
+    /**
+     * Grup yang dinilai juri ini.
+     *
+     * Relasi sungguhan, berbeda dari CompetitionGroup::judges() jaman dulu
+     * yang mengembalikan Builder dan tak bisa diakses sebagai properti.
+     * Scope-nya disaring ke 'group' saja: baris final/ungrouped/level tak
+     * punya competition_group_id, jadi tanpa saringan ini pivotnya kosong.
+     */
+    public function competitionGroups()
+    {
+        return $this->belongsToMany(CompetitionGroup::class, 'competition_group_judge')
+            ->wherePivot('scope', 'group');
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

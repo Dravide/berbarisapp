@@ -13,6 +13,7 @@ use App\Models\Judge;
 use App\Models\Registration;
 use App\Traits\FeatureGatedComponent;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 #[Layout('layouts.admin')]
 class Download extends Component
@@ -65,13 +66,19 @@ class Download extends Component
             ->get();
     }
 
-    /** Semua juri eventner (yang punya kategori penugasan). */
+    /**
+     * Semua juri eventner yang punya penugasan.
+     *
+     * Disebut penugasan, bukan kategori rubrik: juri diikat ke grup (atau baris
+     * final/ungrouped/level), dan rubriknya menyusul dari seri peserta. Menyaring
+     * lewat `assessmentCategories` akan mengosongkan daftar ini seluruhnya
+     * begitu layar centang rubrik dihapus.
+     */
     #[Computed]
     public function judges()
     {
-        return Judge::with('assessmentCategories')
-            ->where('eventner_id', $this->eventnerId)
-            ->whereHas('assessmentCategories')
+        return Judge::where('eventner_id', $this->eventnerId)
+            ->whereIn('id', DB::table('competition_group_judge')->pluck('judge_id'))
             ->orderBy('name')
             ->get();
     }

@@ -64,14 +64,15 @@ class EventnerHelp
 
             'eventner.judges.index' => [
                 'title' => 'Daftar Juri',
-                'intro' => 'Mengelola profil juri dan menugaskannya ke tingkat lomba.',
+                'intro' => 'Mengelola profil juri dan menugaskannya ke grup peserta.',
                 'steps' => [
                     'Klik Tambah Juri, isi nama lengkap, foto profil, dan nomor telepon (opsional).',
-                    'Centang tingkat lomba pada bagian Tugaskan Kategori.',
+                    'Buka Kategori Lomba, tekan tombol Atur pada tingkatnya, lalu centang juri per grup di modal Kelola Grup.',
                     'Unduh Format Penilaian Juri (PDF) per juri dari kolom aksi.',
                 ],
                 'tips' => [
-                    'Juri tanpa tugas kategori tidak akan muncul di pilihan Input Nilai.',
+                    'Juri yang belum dicentang di grup mana pun tidak akan melihat peserta apa pun di tabletnya.',
+                    'Lembar nilai mengikuti seri masing-masing peserta, jadi satu juri grup boleh menilai beberapa seri sekaligus.',
                 ],
             ],
 

@@ -11,8 +11,10 @@ use App\Models\CompetitionRoundRegistration;
 use App\Models\CompetitionSeries;
 use App\Models\EventnerVenue;
 use App\Models\Judge;
+use App\Models\Registration;
 use App\Services\ChampionCalculator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Computed;
@@ -27,7 +29,6 @@ class Index extends Component
     public $max_registrations_per_school = 1;
     public $registration_fee = '';
     public $venueId = null;
-    public $selectedJudges = [];
 
     public $isEditMode = false;
     public $editingId = null;
@@ -192,20 +193,185 @@ class Index extends Component
     }
 
     /**
-     * Nama juri per grup — diturunkan dari rubrik grup (juri terikat rubrik,
-     * bukan tingkat lomba). Untuk kartu "Juri:" di modal Kelola Grup.
+     * ID juri per baris penugasan, untuk centang di modal Kelola Grup.
      *
-     * @return \Illuminate\Support\Collection<int, \Illuminate\Support\Collection>
+     * Kuncinya `group:{id}` untuk grup, dan nama scope-nya sendiri
+     * (`ungrouped`/`final`/`level`) untuk tiga baris tanpa grup. Dibaca dari
+     * competition_group_judge — sumber yang sama dengan yang dipakai tablet
+     * juri, jadi modal ini tak bisa lagi menjanjikan regu yang berbeda dari
+     * yang ditemukan juri di daftarnya.
+     *
+     * Yang disimpan idnya, bukan namanya: dua juri boleh bernama sama, dan
+     * mencocokkan centang lewat nama akan menyalakan centang yang salah.
+     *
+     * @return \Illuminate\Support\Collection<string, \Illuminate\Support\Collection<int,int>>
      */
     #[Computed]
-    public function groupJudgeNames()
+    public function groupJudgeIds()
     {
-        return AssessmentCategory::where('eventner_id', $this->eventnerId)
-            ->whereNotNull('competition_group_id')
-            ->with('judges')
-            ->get()
-            ->groupBy('competition_group_id')
-            ->map(fn ($cats) => $cats->flatMap(fn ($cat) => $cat->judges->pluck('name'))->unique()->values());
+        return DB::table('competition_group_judge as cgj')
+            ->join('judges as j', 'j.id', '=', 'cgj.judge_id')
+            ->where('j.eventner_id', $this->eventnerId)
+            ->orderBy('j.name')
+            ->get(['cgj.competition_group_id', 'cgj.scope', 'cgj.judge_id'])
+            ->groupBy(fn ($b) => $b->scope === CompetitionGroup::SCOPE_GROUP
+                ? 'group:' . $b->competition_group_id
+                : $b->scope)
+            ->map(fn ($baris) => $baris->pluck('judge_id')->map(fn ($id) => (int) $id)->unique()->values());
+    }
+
+    /**
+     * Baris penugasan yang relevan untuk satu tingkat, berurutan seperti di
+     * layar: tiap grup, lalu Belum Bergrup, Final, dan Seluruh Tingkat.
+     *
+     * Tiga baris tanpa grup dirender hanya saat ada gunanya — tingkat tanpa
+     * grup tak perlu baris "Seluruh Tingkat" kalau tak punya peserta pun.
+     * Tingkat polos (tanpa grup, babak, maupun seri) tetap tak menampilkan
+     * pemilih apa pun.
+     *
+     * @return array<int, array{scope: string, group_id: ?int, label: string, key: string, count: int}>
+     */
+    #[Computed]
+    public function assignmentRows()
+    {
+        $category = $this->panelCategory;
+
+        if (! $category) {
+            return [];
+        }
+
+        // Grup & babak menempel pada tingkat yang tombol "Atur"nya ditekan —
+        // kategori 34 "Tingkat Kelas 9" yang beranak di bawah "LOBB" punya
+        // grupnya SENDIRI, bukan grup induknya. Barisnya harus dibaca dari
+        // kategori yang sedang dibuka, sama seperti kartu tingkat di daftar
+        // (yang juga membaca groupsByCategory->get($child->id)).
+        $indukId = $category->id;
+
+        // Peserta dihitung sampai ke anak-anaknya: satu tingkat bisa dibelah
+        // jadi sub-kategori, dan semuanya masuk pool grup yang sama.
+        $levelIds = collect([$indukId])
+            ->merge($category->children->pluck('id'))
+            ->all();
+
+        $panelGroups = $this->groupsByCategory->get($indukId, collect());
+
+        $baris = [];
+
+        foreach ($panelGroups as $group) {
+            $baris[] = [
+                'scope' => CompetitionGroup::SCOPE_GROUP,
+                'group_id' => $group->id,
+                'label' => $group->name,
+                'key' => 'group:' . $group->id,
+                'count' => $group->registrations_count,
+            ];
+        }
+
+        if ($panelGroups->isEmpty()) {
+            // Tingkat tanpa grup sama sekali (tiga belas event lama): satu baris
+            // seluruh tingkat, supaya panel jurinya tidak kosong begitu layar
+            // centang rubrik dihapus. Baris ini satu-satunya isi daftar, jadi
+            // peserta yang belum bergrup tetap harus terhitung di sini.
+            //
+            // Tingkat yang pesertanya memang belum ada tak mendapat baris ini:
+            // centangnya tak akan mengubah siapa pun, dan tabel berisi satu
+            // baris kosong lebih membingungkan daripada pesan "Belum ada grup".
+            $peserta = $this->pesertaTingkat($levelIds);
+
+            if ($peserta > 0) {
+                $baris[] = [
+                    'scope' => CompetitionGroup::SCOPE_LEVEL,
+                    'group_id' => null,
+                    'label' => CompetitionGroup::SCOPE_LABELS[CompetitionGroup::SCOPE_LEVEL],
+                    'key' => CompetitionGroup::SCOPE_LEVEL,
+                    'count' => $peserta,
+                ];
+            }
+
+            return $baris;
+        }
+
+        $tanpaGrup = $this->pesertaTingkat($levelIds)
+            - Registration::whereIn('competition_category_id', $levelIds)
+                ->whereNotNull('competition_group_id')
+                ->count();
+
+        if ($tanpaGrup > 0) {
+            $baris[] = [
+                'scope' => CompetitionGroup::SCOPE_UNGROUPED,
+                'group_id' => null,
+                'label' => CompetitionGroup::SCOPE_LABELS[CompetitionGroup::SCOPE_UNGROUPED],
+                'key' => CompetitionGroup::SCOPE_UNGROUPED,
+                'count' => $tanpaGrup,
+            ];
+        }
+
+        foreach ($this->roundsByCategory->get($indukId, collect()) as $round) {
+            if (! $round->isFinal()) {
+                continue;
+            }
+
+            $baris[] = [
+                'scope' => CompetitionGroup::SCOPE_FINAL,
+                'group_id' => null,
+                'label' => CompetitionGroup::SCOPE_LABELS[CompetitionGroup::SCOPE_FINAL],
+                'key' => CompetitionGroup::SCOPE_FINAL,
+                'count' => CompetitionRoundRegistration::where('competition_round_id', $round->id)->count(),
+            ];
+
+            break; // Satu tingkat hanya punya satu babak final.
+        }
+
+        return $baris;
+    }
+
+    /**
+     * Hitung seluruh peserta tingkat (dan anak-anaknya), apa pun kondisinya.
+     *
+     * Dipakai baris `level` — tingkat tanpa grup sama sekali. Pesertanya justru
+     * yang membuat baris itu perlu ada: tanpa itu panel juri tingkat lama
+     * kosong begitu layar centang rubrik dihapus.
+     */
+    private function pesertaTingkat(array $levelIds): int
+    {
+        return Registration::whereIn('competition_category_id', $levelIds)->count();
+    }
+
+    /**
+     * Nyalakan/matikan satu centang juri pada satu baris penugasan.
+     *
+     * Ditulis per perubahan, bukan menunggu tombol Simpan: satu baris = satu
+     * syncJudges(), jadi tabelnya tak pernah menyimpan keadaan setengah jadi
+     * yang membuat panel juri berbeda dari centangannya.
+     */
+    public function toggleGroupJudge(string $scope, ?int $groupId, int $judgeId, bool $checked): void
+    {
+        $category = $this->panelCategory;
+
+        if (! $category) {
+            return;
+        }
+
+        if ($groupId !== null) {
+            $this->findOwnGroup($groupId);
+        }
+
+        // Ditarik ulang dari tenant sendiri: id yang datang dari klien tidak
+        // boleh dipercaya begitu saja.
+        $sah = Judge::where('eventner_id', $this->eventnerId)->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        if (! in_array($judgeId, $sah, true)) {
+            return;
+        }
+
+        $sekarang = CompetitionGroup::judgeIdsUntuk($category->id, $scope, $groupId);
+        $baru = $checked
+            ? array_values(array_unique([...$sekarang, $judgeId]))
+            : array_values(array_diff($sekarang, [$judgeId]));
+
+        CompetitionGroup::syncJudges($category->id, $scope, $groupId, $baru);
+
+        unset($this->groupJudgeIds, $this->assignmentRows);
     }
 
     /** Nama rubrik per babak, untuk kolom "Rubrik" di modal Kelola Babak. */
@@ -220,24 +386,20 @@ class Index extends Component
     }
 
     /**
-     * Nama rubrik & juri per seri, untuk kolom kartu di modal Kelola Seri.
+     * Nama rubrik per seri, untuk kolom kartu di modal Kelola Seri.
      *
-     * Diturunkan dari rubrik yang menempel ke seri — sama seperti
-     * groupJudgeNames() untuk grup, dan itu memang pengikat juri yang
-     * sebenarnya.
+     * Hanya rubriknya. Juri tak lagi diturunkan dari seri: penugasan juri ada
+     * di modal Kelola Grup, dan seri tinggal menentukan lembar nilai mana yang
+     * terbuka untuk peserta itu.
      */
     #[Computed]
     public function seriesRubrics()
     {
         return AssessmentCategory::where('eventner_id', $this->eventnerId)
             ->whereNotNull('competition_series_id')
-            ->with('judges')
             ->get()
             ->groupBy('competition_series_id')
-            ->map(fn ($cats) => [
-                'rubrics' => $cats->pluck('name'),
-                'judges' => $cats->flatMap(fn ($cat) => $cat->judges->pluck('name'))->unique()->values(),
-            ]);
+            ->map(fn ($cats) => ['rubrics' => $cats->pluck('name')]);
     }
 
     private function findOwnCategory($id): CompetitionCategory
@@ -311,17 +473,11 @@ class Index extends Component
     {
         $group = $this->findOwnGroup($id);
 
-        // FK-nya nullOnDelete: peserta dan rubrik tidak ikut terhapus, hanya
-        // lepas dari grup. Tetap dicegah kalau rubriknya sudah dipakai menilai,
-        // karena nilai yang tersimpan mengacu kriteria rubrik grup itu.
-        $punyaNilai = AssessmentCategory::where('competition_group_id', $group->id)->exists();
-        if ($punyaNilai) {
-            session()->flash('error', 'Tidak bisa menghapus: rubrik grup ini masih terpasang di Format Nilai. Lepas dulu grupnya di sana.');
-            return;
-        }
-
+        // Tanpa penjagaan rubrik lagi: penugasan juri menempel di pivot grup
+        // (cascadeOnDelete), jadi menghapus grup melepas penugasannya sendiri —
+        // bukan meninggalkan nilai yatim yang mengacu kriteria rubriknya.
         $group->delete();
-        session()->flash('success', 'Grup dihapus. Pesertanya tetap ada, hanya kembali ke peringkat umum.');
+        session()->flash('success', 'Grup dihapus. Pesertanya tetap ada, hanya kembali ke peringkat umum. Penugasan jurinya ikut dilepas.');
     }
 
     public function resetGroupForm()
@@ -737,16 +893,11 @@ class Index extends Component
 
         $rules = [
             'name' => 'required|string|max:255',
-            // parentId & selectedJudges datang dari klien: tanpa scope,
-            // kategori bisa dipasang di bawah Jenis Lomba tenant lain, dan
-            // juri tenant lain bisa ditempelkan ke kategori kita.
+            // parentId datang dari klien: tanpa scope, kategori bisa dipasang di
+            // bawah Jenis Lomba tenant lain.
             'parentId' => [
                 'nullable',
                 Rule::exists('competition_categories', 'id')->where('eventner_id', $this->eventnerId),
-            ],
-            'selectedJudges' => 'array',
-            'selectedJudges.*' => [
-                Rule::exists('judges', 'id')->where('eventner_id', $this->eventnerId),
             ],
         ];
 
@@ -787,26 +938,16 @@ class Index extends Component
             $cat = CompetitionCategory::where('eventner_id', $this->eventnerId)->findOrFail($this->editingId);
             $cat->update($data);
 
-            if (!$isParent) {
-                $cat->judges()->sync($this->selectedJudges);
-            } else {
-                $cat->judges()->detach();
-            }
-
             session()->flash('success', 'Kategori Lomba berhasil diperbarui.');
         } else {
             $maxOrder = CompetitionCategory::where('eventner_id', $this->eventnerId)
                 ->where('parent_id', $this->parentId)
                 ->max('sort_order') ?? -1;
 
-            $cat = CompetitionCategory::create(array_merge($data, [
+            CompetitionCategory::create(array_merge($data, [
                 'eventner_id' => $this->eventnerId,
                 'sort_order' => $maxOrder + 1,
             ]));
-
-            if (!$isParent) {
-                $cat->judges()->attach($this->selectedJudges);
-            }
 
             session()->flash('success', ($isParent ? 'Jenis Lomba' : 'Tingkat Lomba') . ' baru berhasil ditambahkan.');
         }
@@ -827,7 +968,6 @@ class Index extends Component
         $this->tanggal_pelaksanaan = $cat->tanggal_pelaksanaan ?? '';
         $this->registration_fee = $cat->registration_fee ?? '';
         $this->venueId = $cat->venue_id;
-        $this->selectedJudges = $cat->judges->pluck('id')->toArray();
     }
 
     public function delete($id)
@@ -855,7 +995,7 @@ class Index extends Component
 
     public function resetForm()
     {
-        $this->reset(['name', 'parentId', 'kuota', 'max_registrations_per_school', 'tanggal_pelaksanaan', 'registration_fee', 'venueId', 'selectedJudges', 'isEditMode', 'editingId']);
+        $this->reset(['name', 'parentId', 'kuota', 'max_registrations_per_school', 'tanggal_pelaksanaan', 'registration_fee', 'venueId', 'isEditMode', 'editingId']);
         $this->max_registrations_per_school = 1;
     }
 

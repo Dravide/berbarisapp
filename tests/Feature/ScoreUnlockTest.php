@@ -71,6 +71,14 @@ class ScoreUnlockTest extends TestCase
     /**
      * Rubrik + satu kriteria, terpasang ke juri. Mengembalikan kriterianya.
      *
+     * Pemasangan juri kini menempel di GRUP, bukan di rubriknya — pivot
+     * assessment_category_judge tinggal jejak audit. Panel menentukan juri mana
+     * yang boleh dibuka dari baris penugasan itu, jadi tanpa syncJudges() di
+     * bawah, daftar jurinya kosong dan tombol Buka Kunci tak pernah muncul.
+     *
+     * Peserta di berkas ini tak punya grup, jadi barisnya `ungrouped`; $grup
+     * dipakai kalau kelak ada peserta bergrup.
+     *
      * @param  CompetitionRound|null  $babak  null = rubrik berlaku semua babak.
      */
     private function rubrik(string $name, ?CompetitionRound $babak = null, ?CompetitionGroup $grup = null): AssessmentCriteria
@@ -84,6 +92,13 @@ class ScoreUnlockTest extends TestCase
             'sort_order' => 1,
         ]);
         $this->juri->assessmentCategories()->attach($cat->id);
+
+        CompetitionGroup::syncJudges(
+            $this->lomba->id,
+            $grup ? CompetitionGroup::SCOPE_GROUP : CompetitionGroup::SCOPE_UNGROUPED,
+            $grup?->id,
+            [$this->juri->id],
+        );
 
         $sub = AssessmentSubCategory::create([
             'assessment_category_id' => $cat->id,
@@ -165,7 +180,15 @@ class ScoreUnlockTest extends TestCase
             'eventner_id' => $this->eventner->id,
             'name' => 'Juri Dua',
         ]);
+        // Juri lain hanya boleh muncul sebagai pilihan kalau ia memang ditugaskan
+        // ke baris penugasan peserta ini — kalau grup ini, tak ada pemilihnya.
+        $grupLain = CompetitionGroup::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->lomba->id,
+            'name' => 'Grup Lain',
+        ]);
         $juriLain->assessmentCategories()->attach($kriteria->subCategory->assessment_category_id);
+        CompetitionGroup::syncJudges($this->lomba->id, CompetitionGroup::SCOPE_GROUP, $grupLain->id, [$juriLain->id]);
 
         $this->kunci([$kriteria->id]);
         $this->kunci([$kriteria->id], $juriLain->id);
