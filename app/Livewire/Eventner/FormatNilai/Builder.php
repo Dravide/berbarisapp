@@ -8,8 +8,8 @@ use App\Models\AssessmentScore;
 use App\Models\AssessmentSubCategory;
 use App\Models\ChampionCategory;
 use App\Models\CompetitionCategory;
-use App\Models\CompetitionGroup;
 use App\Models\CompetitionRound;
+use App\Models\CompetitionSeries;
 use App\Models\DeductionCategory;
 use App\Models\DeductionCriteria;
 use App\Models\ScoreDeduction;
@@ -48,16 +48,21 @@ class Builder extends Component
     }
 
     /**
-     * Grup milik tingkat yang sedang dibuka.
+     * Seri milik tingkat yang sedang dibuka.
+     *
+     * Seri — bukan grup — yang menentukan lembar nilai sebuah pasukan. Grup
+     * tetap ada di halaman lain sebagai tabel peringkat & nomor undian, dan
+     * sengaja tidak lagi muncul di sini: dua pasukan di grup yang sama boleh
+     * dinilai dengan format yang berbeda.
      */
     #[Computed]
-    public function groups()
+    public function series()
     {
         if (! $this->activeCompetitionCategoryId) {
             return collect();
         }
 
-        return CompetitionGroup::where('eventner_id', $this->eventnerId)
+        return CompetitionSeries::where('eventner_id', $this->eventnerId)
             ->where('competition_category_id', $this->activeCompetitionCategoryId)
             ->orderBy('sort_order')
             ->orderBy('name')
@@ -82,29 +87,34 @@ class Builder extends Component
     }
 
     /**
-     * Simpan grup/babak sebuah kategori penilaian. Dipanggil dari tombol
+     * Simpan seri/babak sebuah kategori penilaian. Dipanggil dari tombol
      * simpan di kartu kategori (bukan langsung saat ganti select) supaya
      * perubahan tidak ikut terkirim saat panitia menelusuri dropdown.
+     *
+     * Kolom `competition_group_id` sengaja TIDAK ikut ditulis. Tandanya sudah
+     * dipindah ke seri, dan menulisnya kembali dari dropdown yang tidak lagi
+     * memuat grup akan mengosongkannya diam-diam — padahal ia masih berguna
+     * sebagai catatan dari mana seri itu berasal.
      */
     public function saveRubricScope($categoryId)
     {
         $category = AssessmentCategory::where('eventner_id', $this->eventnerId)->findOrFail($categoryId);
 
-        $groupId = ($this->rubricGroupId[$categoryId] ?? null) ?: null;
+        $seriesId = ($this->rubricSeriesId[$categoryId] ?? null) ?: null;
         $roundId = ($this->rubricRoundId[$categoryId] ?? null) ?: null;
-        $groupId = $groupId !== null ? (int) $groupId : null;
+        $seriesId = $seriesId !== null ? (int) $seriesId : null;
         $roundId = $roundId !== null ? (int) $roundId : null;
 
-        // Grup/babak dari DOM wajib milik eventner ini DAN milik tingkat
+        // Seri/babak dari DOM wajib milik eventner ini DAN milik tingkat
         // kategori penilaiannya — kalau tidak, juri di acara lain bisa
         // tertarik masuk lewat parameter ini.
         $categoryLevel = $category->competition_category_id;
 
-        if ($groupId !== null && ! CompetitionGroup::where('eventner_id', $this->eventnerId)
+        if ($seriesId !== null && ! CompetitionSeries::where('eventner_id', $this->eventnerId)
             ->where('competition_category_id', $categoryLevel)
-            ->whereKey($groupId)
+            ->whereKey($seriesId)
             ->exists()) {
-            session()->flash('error', 'Grup yang dipilih bukan milik tingkat lomba ini.');
+            session()->flash('error', 'Seri yang dipilih bukan milik tingkat lomba ini.');
 
             return;
         }
@@ -118,12 +128,35 @@ class Builder extends Component
             return;
         }
 
+        // Nilai yang sudah masuk terikat pada kriteria rubrik ini, bukan pada
+        // serinya. Memindahkan rubrik ke seri lain setelah ada nilai membuat
+        // angka lama tiba-tiba dibaca oleh pasukan yang tak pernah dinilai
+        // dengan rubrik itu — dan sebaliknya, pasukan yang memang dinilai
+        // kehilangan angkanya dari lembar. Kunci setelah nilai pertama masuk.
+        $pindahSeri = (int) $category->competition_series_id !== (int) $seriesId;
+
+        if ($pindahSeri && $this->anyCriteriaHasScores($this->criteriaIdsOf($category))) {
+            session()->flash('error', 'Tidak bisa memindahkan rubrik ke seri lain: sudah ada nilai yang masuk.');
+
+            return;
+        }
+
         $category->update([
-            'competition_group_id' => $groupId,
+            'competition_series_id' => $seriesId,
             'competition_round_id' => $roundId,
         ]);
 
         unset($this->categories);
+    }
+
+    /**
+     * Id seluruh kriteria (dan pengurangan) milik sebuah kategori penilaian.
+     */
+    private function criteriaIdsOf(AssessmentCategory $category): \Illuminate\Support\Collection
+    {
+        return $category->subCategories()->with('criterias')->get()
+            ->flatMap->criterias
+            ->pluck('id');
     }
 
     public $errorMessage = '';
@@ -147,10 +180,10 @@ class Builder extends Component
     public $newSubCategoryNames = [];
 
     /**
-     * Penanda babak & grup per kategori penilaian, indeks = id kategori.
-     * Kosong = rubrik berlaku untuk semua babak / semua grup tingkat itu.
+     * Penanda seri & babak per kategori penilaian, indeks = id kategori.
+     * Kosong = rubrik berlaku untuk semua seri / semua babak tingkat itu.
      */
-    public $rubricGroupId = [];
+    public $rubricSeriesId = [];
 
     public $rubricRoundId = [];
 
@@ -183,15 +216,15 @@ class Builder extends Component
     }
 
     /**
-     * Isi ulang penanda babak/grup dari data tersimpan. Dipanggil setelah tab
+     * Isi ulang penanda seri/babak dari data tersimpan. Dipanggil setelah tab
      * tingkat berganti dan setelah kategori penilaian berubah, supaya tiap
      * dropdown menampilkan pilihan yang benar-benar tersimpan (bukan sisa
      * input tingkat sebelumnya).
      */
     public function refreshRubricScopeInputs()
     {
-        $this->rubricGroupId = $this->categories
-            ->mapWithKeys(fn ($c) => [$c->id => $c->competition_group_id ? (string) $c->competition_group_id : ''])
+        $this->rubricSeriesId = $this->categories
+            ->mapWithKeys(fn ($c) => [$c->id => $c->competition_series_id ? (string) $c->competition_series_id : ''])
             ->all();
 
         $this->rubricRoundId = $this->categories
@@ -254,7 +287,7 @@ class Builder extends Component
             'subCategories.criterias',
             'deductionCategories.criterias',
             'competitionCategory',
-            'competitionGroup',
+            'competitionSeries',
             'competitionRound',
         ])
             ->where('eventner_id', $this->eventnerId)
@@ -371,9 +404,9 @@ class Builder extends Component
      * Alur yang dimaksud: panitia menyalin format penilaian yang sudah ada
      * untuk dipakai babak lain (mis. Penyisihan → Final dengan isi kriteria
      * yang sama). Nama diminta lebih dulu supaya hasil salinannya tidak perlu
-     * di-rename manual, dan grup/babak sengaja DIKOSONGKAN — menyalinnya
-     * menghasilkan rubrik yang salah tandanya diam-diam (salinan rubrik Grup A
-     * lahir bertanda Grup A juga, padahal maksudnya dipakai di babak Final).
+     * di-rename manual, dan seri/babak sengaja DIKOSONGKAN — menyalinnya
+     * menghasilkan rubrik yang salah tandanya diam-diam (salinan rubrik Seri A
+     * lahir bertanda Seri A juga, padahal maksudnya dipakai di babak Final).
      */
     public function startDuplicateCategory($id)
     {
@@ -398,11 +431,12 @@ class Builder extends Component
 
         $maxOrder = AssessmentCategory::where('eventner_id', $this->eventnerId)->max('sort_order') ?? 0;
 
-        // Clone the category — grup/babak dikosongkan, lihat docblock di atas.
+        // Clone the category — seri/babak dikosongkan, lihat docblock di atas.
         $newCategory = AssessmentCategory::create([
             'eventner_id' => $this->eventnerId,
             'competition_category_id' => $original->competition_category_id,
             'competition_group_id' => null,
+            'competition_series_id' => null,
             'competition_round_id' => null,
             'name' => strip_tags($this->duplicateCategoryName),
             'sort_order' => $maxOrder + 1,

@@ -8,6 +8,7 @@ use App\Models\CompetitionCategory;
 use App\Models\CompetitionGroup;
 use App\Models\CompetitionRound;
 use App\Models\CompetitionRoundRegistration;
+use App\Models\CompetitionSeries;
 use App\Models\EventnerVenue;
 use App\Models\Judge;
 use App\Services\ChampionCalculator;
@@ -33,14 +34,19 @@ class Index extends Component
 
     public $expandedParents = [];
 
-    // ── Grup & Babak ───────────────────────────────────────────────────
-    /** Tingkat lomba yang modal grup/babaknya sedang dibuka. */
+    // ── Grup, Babak & Seri ─────────────────────────────────────────────
+    /** Tingkat lomba yang modal grup/babak/serinya sedang dibuka. */
     public $groupPanelCategoryId = null;
     public $roundPanelCategoryId = null;
+    public $seriesPanelCategoryId = null;
 
     public $groupName = '';
     public $groupSortOrder = '';
     public $editingGroupId = null;
+
+    public $seriesName = '';
+    public $seriesSortOrder = '';
+    public $editingSeriesId = null;
 
     public $roundName = '';
     public $roundType = CompetitionRound::TYPE_PRELIMINARY;
@@ -163,11 +169,22 @@ class Index extends Component
             ->groupBy('competition_category_id');
     }
 
+    #[Computed]
+    public function seriesByCategory()
+    {
+        return CompetitionSeries::where('eventner_id', $this->eventnerId)
+            ->withCount('registrations')
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get()
+            ->groupBy('competition_category_id');
+    }
+
     /** Tingkat lomba yang modalnya sedang terbuka (di-scope tenant). */
     #[Computed]
     public function panelCategory()
     {
-        $id = $this->groupPanelCategoryId ?: $this->roundPanelCategoryId;
+        $id = $this->groupPanelCategoryId ?: $this->seriesPanelCategoryId ?: $this->roundPanelCategoryId;
 
         return $id
             ? CompetitionCategory::where('eventner_id', $this->eventnerId)->find($id)
@@ -202,6 +219,27 @@ class Index extends Component
             ->map(fn ($cats) => $cats->pluck('name'));
     }
 
+    /**
+     * Nama rubrik & juri per seri, untuk kolom kartu di modal Kelola Seri.
+     *
+     * Diturunkan dari rubrik yang menempel ke seri — sama seperti
+     * groupJudgeNames() untuk grup, dan itu memang pengikat juri yang
+     * sebenarnya.
+     */
+    #[Computed]
+    public function seriesRubrics()
+    {
+        return AssessmentCategory::where('eventner_id', $this->eventnerId)
+            ->whereNotNull('competition_series_id')
+            ->with('judges')
+            ->get()
+            ->groupBy('competition_series_id')
+            ->map(fn ($cats) => [
+                'rubrics' => $cats->pluck('name'),
+                'judges' => $cats->flatMap(fn ($cat) => $cat->judges->pluck('name'))->unique()->values(),
+            ]);
+    }
+
     private function findOwnCategory($id): CompetitionCategory
     {
         return CompetitionCategory::where('eventner_id', $this->eventnerId)->findOrFail($id);
@@ -215,6 +253,11 @@ class Index extends Component
     private function findOwnRound($id): CompetitionRound
     {
         return CompetitionRound::where('eventner_id', $this->eventnerId)->findOrFail($id);
+    }
+
+    private function findOwnSeries($id): CompetitionSeries
+    {
+        return CompetitionSeries::where('eventner_id', $this->eventnerId)->findOrFail($id);
     }
 
     // ── Atur Babak & Grup ──────────────────────────────────────────────
@@ -286,6 +329,80 @@ class Index extends Component
         $this->reset(['groupName', 'groupSortOrder', 'editingGroupId']);
     }
 
+    // ── Kelola Seri ────────────────────────────────────────────────────
+
+    /**
+     * Seri menempel pada TINGKAT, sama seperti grup dan babak. Bedanya, seri
+     * yang menentukan lembar nilai & cakupan juri, sedangkan grup menentukan
+     * tabel peringkat dan nomor undian.
+     */
+    public function saveSeries()
+    {
+        $category = $this->findOwnCategory($this->seriesPanelCategoryId);
+
+        $this->validate([
+            'seriesName' => [
+                'required', 'string', 'max:255',
+                // Nama seri unik per tingkat (juga dijaga unique index DB).
+                Rule::unique('competition_series', 'name')
+                    ->where('competition_category_id', $category->id)
+                    ->where('eventner_id', $this->eventnerId)
+                    ->ignore($this->editingSeriesId),
+            ],
+            'seriesSortOrder' => 'nullable|integer|min:0',
+        ], [], ['seriesName' => 'Nama Seri']);
+
+        $data = [
+            'name' => strip_tags($this->seriesName),
+            'sort_order' => $this->seriesSortOrder !== '' ? (int) $this->seriesSortOrder : 0,
+        ];
+
+        if ($this->editingSeriesId) {
+            $this->findOwnSeries($this->editingSeriesId)->update($data);
+            session()->flash('success', 'Seri berhasil diperbarui.');
+        } else {
+            CompetitionSeries::create(array_merge($data, [
+                'eventner_id' => $this->eventnerId,
+                'competition_category_id' => $category->id,
+            ]));
+            session()->flash('success', 'Seri baru berhasil ditambahkan.');
+        }
+
+        $this->resetSeriesForm();
+        $this->dispatch('$refresh');
+    }
+
+    public function editSeries($id)
+    {
+        $series = $this->findOwnSeries($id);
+        $this->seriesPanelCategoryId = $series->competition_category_id;
+        $this->editingSeriesId = $series->id;
+        $this->seriesName = $series->name;
+        $this->seriesSortOrder = $series->sort_order;
+    }
+
+    public function deleteSeries($id)
+    {
+        $series = $this->findOwnSeries($id);
+
+        // FK-nya nullOnDelete: peserta dan rubrik tidak ikut terhapus, hanya
+        // lepas dari serinya. Tetap dicegah kalau rubriknya masih terpasang,
+        // karena dari situlah juri tahu apa yang boleh dinilai.
+        $terpasang = AssessmentCategory::where('competition_series_id', $series->id)->exists();
+        if ($terpasang) {
+            session()->flash('error', 'Tidak bisa menghapus: rubrik seri ini masih terpasang di Format Nilai. Lepas dulu serinya di sana.');
+            return;
+        }
+
+        $series->delete();
+        session()->flash('success', 'Seri dihapus. Pesertanya tetap ada, hanya kehilangan lembar nilainya sampai seri baru dipilih.');
+    }
+
+    public function resetSeriesForm()
+    {
+        $this->reset(['seriesName', 'seriesSortOrder', 'editingSeriesId']);
+    }
+
     // ── Kelola Babak ───────────────────────────────────────────────────
 
     public function openRoundPanel($categoryId)
@@ -293,10 +410,11 @@ class Index extends Component
         $this->findOwnCategory($categoryId);
 
         $this->roundPanelCategoryId = $categoryId;
-        // Grup dibuka bersama babak: keduanya diatur pada satu layar, dan
-        // panel grup butuh tingkat yang sama supaya "panelCategory" menunjuk
-        // kategori yang benar saat keduanya terbuka.
+        // Grup dan seri dibuka bersama babak: ketiganya diatur pada satu layar,
+        // dan panel grup/seri butuh tingkat yang sama supaya "panelCategory"
+        // menunjuk kategori yang benar saat semuanya terbuka.
         $this->groupPanelCategoryId = $categoryId;
+        $this->seriesPanelCategoryId = $categoryId;
         $this->qualifyRoundId = null;
         $this->resetRoundForm();
     }
@@ -305,6 +423,7 @@ class Index extends Component
     {
         $this->roundPanelCategoryId = null;
         $this->groupPanelCategoryId = null;
+        $this->seriesPanelCategoryId = null;
         $this->qualifyRoundId = null;
         $this->resetRoundForm();
     }
@@ -448,10 +567,11 @@ class Index extends Component
      * Peta bobot kriteria untuk satu babak, plus kriteria tanpa babak
      * (perilaku lama).
      *
-     * Pemecah seri sengaja tidak diisi: kategori juara punya daftar tiebreak
-     * sendiri, sedangkan tombol Loloskan Top-N hanya butuh urutan yang masuk
-     * akal sebagai USULAN — panitia masih mencentang ulang sebelum menyimpan.
-     * Urutan akhir saat seri jatuh ke urutan undian lewat kunci terakhir.
+     * Pemecah nilai sama sengaja tidak diisi: kategori juara punya daftar
+     * tiebreak sendiri, sedangkan tombol Loloskan Top-N hanya butuh urutan yang
+     * masuk akal sebagai USULAN — panitia masih mencentang ulang sebelum
+     * menyimpan. Urutan akhir saat nilainya sama jatuh ke urutan undian lewat
+     * kunci terakhir.
      *
      * @return array{scoring: array, tiebreak: array}
      */

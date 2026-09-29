@@ -155,7 +155,10 @@ class Index extends Component
                 ->orderBy('name')
                 ->get();
 
-            $participants = Registration::where('eventner_id', $this->eventner->id)
+            // Seri ikut dimuat: lencana seri per baris membedakan dua kolom
+            // rubrik bernama sama yang tergabung di satu tabel grup.
+            $participants = Registration::with('competitionSeries')
+                ->where('eventner_id', $this->eventner->id)
                 ->where('competition_category_id', $this->selectedCategoryId)
                 ->when($this->selectedGroupId !== '', fn ($q) => $q->where('competition_group_id', $this->selectedGroupId))
                 ->orderBy('nama_sekolah')
@@ -234,9 +237,9 @@ class Index extends Component
     private function sectionsPerRound($rounds, $participants, $allScores, $allDeductions, array $globalCriteriaIds): array
     {
         // Rubrik per babak diambil sekali, lalu dipakai ulang untuk semua grup
-        // babak itu. forLevel, bukan forEntry: rubrik fase grup justru BERGrup,
-        // dan forEntry(grup null) membuang justru rubrik-rubrik itu.
-        $semuaRubrik = AssessmentCategory::with(['subCategories.criterias'])
+        // babak itu. forLevel, bukan forEntry: rubrik fase grup justru BERSeri,
+        // dan forEntry(seri null) membuang justru rubrik-rubrik itu.
+        $semuaRubrik = AssessmentCategory::with(['subCategories.criterias', 'competitionSeries'])
             ->where('eventner_id', $this->eventner->id)
             ->forLevel($this->selectedCategoryId)
             ->get();
@@ -287,10 +290,12 @@ class Index extends Component
             $tanpaRubrik = $roundRubrics->isEmpty();
 
             // Selalu dipecah per grup, termasuk babak final. Tingkat ini memang
-            // dibagi grup dan kolom nilainya bisa berbeda per grup, jadi satu
-            // tabel gabungan hanya menyatukan baris yang tidak dibandingkan
-            // siapa pun. Grup yang tak punya rubriknya sendiri tetap tampil
-            // dengan catatan — lihat sectionsPerGroup().
+            // dibagi grup dan kolom nilainya bisa berbeda DI DALAM satu grup
+            // (tiap seri punya lembar nilainya sendiri), jadi satu tabel
+            // gabungan hanya menyatukan baris yang tidak dibandingkan siapa
+            // pun. Kolomnya sendiri memuat semua seri yang dihuni grup itu —
+            // lihat rubricsForBucket(). Grup yang tak punya rubriknya sendiri
+            // tetap tampil dengan catatan — lihat sectionsPerGroup().
             //
             // Babak tanpa peserta dibiarkan tanpa bagian: pesannya sudah ada di
             // tampilan ("Belum ada peserta yang lolos"), dan itu lebih jujur
@@ -334,13 +339,14 @@ class Index extends Component
      * $rubrics boleh dikirim pemanggil (mode per babak) supaya kolomnya memakai
      * rubrik babak itu; tanpa itu diambil rubrik tingkat apa adanya.
      *
-     * Rubrik bergrup disaring PER bagian: tanpa itu tabel Grup A menampilkan
-     * kolom Grup B yang tak pernah dinilai untuk peserta di tabel ini — nama
-     * kolomnya bahkan sama ("PBB"), jadi terbaca sebagai tiga kolom PBB.
+     * Rubrik berseri disaring PER bagian lewat peserta yang menghuninya: tanpa
+     * itu tabel Grup A menampilkan kolom seri yang tak dihuni siapa pun di
+     * sana — nama kolomnya bahkan sama ("PBB"), jadi terbaca sebagai kolom
+     * ganda. Seri yang MEMANG dihuni peserta di bagian itu justru wajib ikut.
      */
     private function sectionsPerGroup($participants, $allScores, $allDeductions, array $globalCriteriaIds, $groups, $rubrics = null, ?int $roundId = null): array
     {
-        $allRubrics = $rubrics ?? AssessmentCategory::with(['subCategories.criterias'])
+        $allRubrics = $rubrics ?? AssessmentCategory::with(['subCategories.criterias', 'competitionSeries'])
             ->where('eventner_id', $this->eventner->id)
             ->forLevel($this->selectedCategoryId)
             ->get();
@@ -406,7 +412,7 @@ class Index extends Component
                 continue;
             }
 
-            $assessmentCategories = $this->rubricsForGroup($allRubrics, $bucket['group']);
+            $assessmentCategories = $this->rubricsForBucket($allRubrics, $bucket['peserta']);
 
             $sections[] = [
                 'label' => $bucket['label'],
@@ -444,21 +450,38 @@ class Index extends Component
     }
 
     /**
-     * Rubrik yang berlaku di satu bagian: rubrik tanpa grup + rubrik grup itu.
+     * Rubrik yang berlaku di satu bagian: rubrik tanpa seri + rubrik setiap
+     * seri yang BENAR-BENAR dihuni peserta di bagian itu.
      *
-     * $group null (peserta belum bergrup) hanya mendapat rubrik tanpa grup —
-     * sama dengan aturan forEntry(), supaya kolom di rekap tidak berbeda dari
-     * yang boleh dinilai juri.
+     * Keputusan yang sudah disepakati: tabel juara & rekap tetap dipecah per
+     * grup, tapi kolomnya gabungan semua seri yang ada di grup itu. Satu grup
+     * boleh memuat dua seri berbeda, dan peserta Seri B memang dinilai dengan
+     * lembar nilai Seri B — menyembunyikan kolomnya membuat nilainya tak
+     * terjumlah di tabel tempat ia sebenarnya berlomba.
+     *
+     * Serinya diambil dari peserta, bukan dari daftar seri tingkat: seri yang
+     * tak dihuni siapa pun hanya akan menambah kolom kosong.
+     *
+     * Bagian tanpa peserta berseri (mis. peserta belum dibagi seri) hanya
+     * mendapat rubrik tanpa seri — sama dengan aturan forEntry(), supaya kolom
+     * di rekap tidak berbeda dari yang boleh dinilai juri.
      */
-    private function rubricsForGroup($allRubrics, $group)
+    private function rubricsForBucket($allRubrics, $participants)
     {
+        $seriesIds = $participants
+            ->pluck('competition_series_id')
+            ->filter()
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->all();
+
         return $allRubrics
-            ->filter(function ($rubric) use ($group) {
-                if ($rubric->competition_group_id === null) {
+            ->filter(function ($rubric) use ($seriesIds) {
+                if ($rubric->competition_series_id === null) {
                     return true;
                 }
 
-                return $group && (int) $rubric->competition_group_id === (int) $group->id;
+                return in_array((int) $rubric->competition_series_id, $seriesIds, true);
             })
             ->values();
     }
@@ -556,7 +579,7 @@ class Index extends Component
         // Sort by final score descending
         usort($data, fn($a, $b) => $b['finalScore'] <=> $a['finalScore']);
 
-        // Peringkat seri: nilai akhir sama berarti peringkat sama, dan
+        // Peringkat nilai sama: nilai akhir sama berarti peringkat sama, dan
         // peringkat berikutnya melompat — sama seperti papan skor publik.
         // Dulu nomor urut array, jadi dua peserta bernilai identik tetap
         // ditulis peringkat 1 dan 2.

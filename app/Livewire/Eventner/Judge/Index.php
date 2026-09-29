@@ -50,10 +50,10 @@ class Index extends Component
     {
         // competitionCategory.parent ikut dimuat: modal rincian tugas
         // mengelompokkan kategori per tingkat lomba (full_name butuh induk).
-        // Grup & babak ikut dimuat supaya label tugas juri tidak memicu N+1.
+        // Seri & babak ikut dimuat supaya label tugas juri tidak memicu N+1.
         return Judge::with([
             'assessmentCategories.competitionCategory.parent',
-            'assessmentCategories.competitionGroup',
+            'assessmentCategories.competitionSeries',
             'assessmentCategories.competitionRound',
         ])
             ->where('eventner_id', $this->eventnerId)
@@ -66,7 +66,7 @@ class Index extends Component
     {
         return AssessmentCategory::with([
             'competitionCategory.parent',
-            'competitionGroup',
+            'competitionSeries',
             'competitionRound',
         ])
             ->where('eventner_id', $this->eventnerId)

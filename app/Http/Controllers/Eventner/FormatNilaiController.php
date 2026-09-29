@@ -159,7 +159,7 @@ class FormatNilaiController extends Controller
         $child = CompetitionCategory::where('eventner_id', $eventner->id)
             ->findOrFail($competitionCategoryId);
 
-        $categories = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias'])
+        $categories = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias', 'competitionSeries'])
             ->where('eventner_id', $eventner->id)
             // Rubrik global (competition_category_id NULL) berlaku untuk
             // semua tingkat, jadi harus ikut — sama seperti panel Input Nilai
@@ -201,7 +201,7 @@ class FormatNilaiController extends Controller
             ->findOrFail($judgeId);
 
         $categories = $judge->assessmentCategories
-            ->loadMissing(['subCategories.criterias', 'deductionCategories.criterias']);
+            ->loadMissing(['subCategories.criterias', 'deductionCategories.criterias', 'competitionSeries']);
 
         if ($competitionCategoryId) {
             // Validasi tingkat milik eventner ini.
@@ -233,6 +233,53 @@ class FormatNilaiController extends Controller
     }
 
     /**
+     * Rubrik yang boleh tercetak untuk satu kombinasi filter.
+     *
+     * Dipisah dari unduhPdf() supaya keputusannya bisa diuji tanpa merender
+     * PDF — dompdf menutup viewData, persis alasan yang sama dengan
+     * ScoringController::assessmentCategoriesFor().
+     *
+     * Seri wajib ikut bila peserta disebut: tanpa itu lembar pasukan Seri B
+     * memuat juga rubrik Seri A, dan karena kategorinya senama ("PBB") di atas
+     * kertas bedanya tak terlihat. Aturannya sama dengan scopeForEntry():
+     * rubrik seri peserta + rubrik tanpa seri; peserta tanpa seri hanya rubrik
+     * tanpa seri.
+     */
+    public function rubricCategoriesFor($eventner, $levelId = null, $judgeId = null, ?Registration $registration = null)
+    {
+        $q = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias', 'competitionSeries'])
+            ->where('eventner_id', $eventner->id);
+
+        if ($registration) {
+            $seriesId = $registration->competition_series_id;
+            $q->where(function ($sq) use ($seriesId) {
+                if ($seriesId) {
+                    $sq->where('competition_series_id', $seriesId)->orWhereNull('competition_series_id');
+                } else {
+                    $sq->whereNull('competition_series_id');
+                }
+            });
+        }
+
+        if ($levelId) {
+            CompetitionCategory::where('eventner_id', $eventner->id)->findOrFail($levelId);
+            // Rubrik global (NULL) berlaku di semua tingkat — ikutkan, sama
+            // seperti panel Input Nilai dan ScoreFinalizationService.
+            $q->where(function ($sq) use ($levelId) {
+                $sq->where('competition_category_id', $levelId)
+                   ->orWhereNull('competition_category_id');
+            });
+        }
+
+        if ($judgeId) {
+            Judge::where('eventner_id', $eventner->id)->findOrFail($judgeId);
+            $q->whereHas('judges', fn ($j) => $j->where('judges.id', $judgeId));
+        }
+
+        return $q->orderBy('sort_order')->get();
+    }
+
+    /**
      * Unduh lembar format penilaian dengan 3 mode:
      *  - kosong  : rubrik tanpa nama peserta
      *  - peserta : rubrik + header No.Urut & Nama untuk satu peserta
@@ -252,26 +299,16 @@ class FormatNilaiController extends Controller
         $levelId = $request->query('level_id');
         $regId = $request->query('registration_id');
 
-        // ---- Kategori (rubrik) sesuai filter ----
-        $q = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias'])
-            ->where('eventner_id', $eventner->id);
-
-        if ($levelId) {
-            CompetitionCategory::where('eventner_id', $eventner->id)->findOrFail($levelId);
-            // Rubrik global (NULL) berlaku di semua tingkat — ikutkan, sama
-            // seperti panel Input Nilai dan ScoreFinalizationService.
-            $q->where(function ($sq) use ($levelId) {
-                $sq->where('competition_category_id', $levelId)
-                   ->orWhereNull('competition_category_id');
-            });
+        // Peserta satu mode 'peserta' diambil lebih dulu: serinya ikut
+        // menyempitkan rubrik (lihat rubricCategoriesFor).
+        $registration = null;
+        if ($mode === 'peserta' && $regId) {
+            $registration = Registration::with(['competitionCategory', 'competitionSeries'])
+                ->where('eventner_id', $eventner->id)
+                ->findOrFail($regId);
         }
 
-        if ($judgeId) {
-            Judge::where('eventner_id', $eventner->id)->findOrFail($judgeId);
-            $q->whereHas('judges', fn ($j) => $j->where('judges.id', $judgeId));
-        }
-
-        $categories = $q->orderBy('sort_order')->get();
+        $categories = $this->rubricCategoriesFor($eventner, $levelId, $judgeId, $registration);
 
         if ($categories->isEmpty()) {
             abort(422, 'Tidak ada format penilaian yang cocok dengan filter.');
@@ -287,16 +324,18 @@ class FormatNilaiController extends Controller
             'childName' => $levelId ? CompetitionCategory::where('eventner_id', $eventner->id)->find($levelId)->full_name : null,
             'registration' => null,
             'registrations' => [],
+            'seriesName' => null,
         ];
 
         if ($mode === 'peserta') {
-            $registration = Registration::with('competitionCategory')
-                ->where('eventner_id', $eventner->id)
-                ->findOrFail($regId);
+            if (! $registration) {
+                abort(422, 'Peserta tidak ditemukan.');
+            }
             if ($levelId && $registration->competition_category_id != $levelId) {
                 abort(422, 'Peserta tidak berada pada tingkat terpilih.');
             }
             $data['registration'] = $registration;
+            $data['seriesName'] = $registration->competitionSeries?->name;
         } elseif ($mode === 'daftar') {
             $qReg = Registration::with('competitionCategory')
                 ->where('eventner_id', $eventner->id);

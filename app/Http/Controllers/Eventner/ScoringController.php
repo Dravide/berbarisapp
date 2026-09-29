@@ -181,7 +181,7 @@ class ScoringController extends Controller
         // Sort by final score descending (ranking)
         usort($scoringData, fn($a, $b) => $b['finalScore'] <=> $a['finalScore']);
 
-        // Peringkat seri: nilai akhir sama berarti peringkat sama, dan
+        // Peringkat nilai sama: nilai akhir sama berarti peringkat sama, dan
         // peringkat berikutnya melompat — sama seperti halaman Rekap Nilai
         // dan papan skor publik. Dulu kolom Rank cuma nomor urut baris.
         $rank = 1;
@@ -332,9 +332,10 @@ class ScoringController extends Controller
      * rubrik Grup B, lalu kolom Grup B yang tak pernah dinilai untuk peserta
      * ini ikut tampil dan mengotori subtotalnya.
      *
+    /**
      * Babak juga wajib, dan justru itu yang paling mudah bocor: rubrik babak
-     * final sengaja TIDAK bergrup (babaknya berlaku untuk semua finalis), jadi
-     * tanpa saringan babak ia lolos lewat klausa "grup NULL" dan juri final
+     * final sengaja TIDAK berseri (babaknya berlaku untuk semua finalis), jadi
+     * tanpa saringan babak ia lolos lewat klausa "seri NULL" dan juri final
      * muncul sebagai kolom penilai di lembar peserta penyisihan.
      */
     public function assessmentCategoriesFor(Registration $registration, ?int $roundId = null): \Illuminate\Support\Collection
@@ -343,7 +344,7 @@ class ScoringController extends Controller
             ->where('eventner_id', $registration->eventner_id)
             ->forEntry(
                 $registration->competition_category_id,
-                $registration->competition_group_id,
+                $registration->competition_series_id,
                 $roundId ?? $this->roundFor($registration),
             )
             ->get();
@@ -352,24 +353,24 @@ class ScoringController extends Controller
     /**
      * Juri yang berhak menilai peserta ini.
      *
-     * Grup wajib ikut: juri yang cuma memegang rubrik Grup B tidak boleh muncul
-     * sebagai kolom penilai di lembar peserta Grup A. Ini keluhan yang
+     * Seri wajib ikut: juri yang cuma memegang rubrik Seri B tidak boleh muncul
+     * sebagai kolom penilai di lembar peserta Seri A. Ini keluhan yang
      * dilaporkan — kolom juri muncul untuk peserta yang bukan tanggung
      * jawabnya.
      *
      * Babak ikut karena alasan yang sama: juri final memegang rubrik final yang
-     * tidak bergrup, jadi tanpa saringan babak ia lolos ke lembar penyisihan.
+     * tidak berseri, jadi tanpa saringan babak ia lolos ke lembar penyisihan.
      */
     public function judgesFor(Registration $registration, ?int $roundId = null): \Illuminate\Support\Collection
     {
         $compCategoryId = $registration->competition_category_id;
-        $groupId = $registration->competition_group_id;
+        $seriesId = $registration->competition_series_id;
         $roundId = $roundId ?? $this->roundFor($registration);
 
         return Judge::where('eventner_id', $registration->eventner_id)
-            ->whereHas('assessmentCategories', function ($q) use ($registration, $compCategoryId, $groupId, $roundId) {
+            ->whereHas('assessmentCategories', function ($q) use ($registration, $compCategoryId, $seriesId, $roundId) {
                 $q->where('assessment_categories.eventner_id', $registration->eventner_id)
-                    ->forEntry($compCategoryId, $groupId, $roundId);
+                    ->forEntry($compCategoryId, $seriesId, $roundId);
             })
             ->get();
     }

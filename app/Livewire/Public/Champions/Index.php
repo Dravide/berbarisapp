@@ -140,7 +140,7 @@ class Index extends Component
 
         // Ambil data deduction. Pengurangan ber-scope 'global' hanya berlaku di
         // tingkat lombanya sendiri — sanksi tingkat lain tidak boleh ikut
-        // terpotong pada pemecah seri.
+        // terpotong pada pemecah nilai sama.
         $allDeductions = \App\Models\ScoreDeduction::where('eventner_id', $this->eventner->id)
             ->get()
             ->groupBy('registration_id');

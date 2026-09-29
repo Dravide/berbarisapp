@@ -207,6 +207,15 @@
             </a>
           </li>
           <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.daftar-ulang.*') ? 'active' : '' }}"
+              href="{{ route('eventner.daftar-ulang.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-clipboard-check"></i>
+              </span>
+              <span class="hide-menu">Daftar Ulang</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('eventner.judges.*') ? 'active' : '' }}"
               href="{{ route('eventner.judges.index') }}" aria-expanded="false">
               <span>

@@ -304,10 +304,13 @@
         </div>
     </div>
 
-    {{-- ── Modal Atur Babak & Grup ────────────────────────────────────────── --}}
+    {{-- ── Modal Atur Babak, Grup & Seri ─────────────────────────────────── --}}
     @php
         $panelGroups = $this->panelCategory
             ? $this->groupsByCategory->get($this->panelCategory->id, collect())
+            : collect();
+        $panelSeries = $this->panelCategory
+            ? $this->seriesByCategory->get($this->panelCategory->id, collect())
             : collect();
     @endphp
     @if($roundPanelCategoryId && $this->panelCategory && !$qualifyRoundId)
@@ -316,7 +319,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title fw-semibold">
-                            Atur Babak &amp; Grup — {{ $this->panelCategory->name }}
+                            Atur Babak, Grup &amp; Seri — {{ $this->panelCategory->name }}
                         </h5>
                         <button type="button" class="btn-close" wire:click="closeRoundPanel"></button>
                     </div>
@@ -325,7 +328,7 @@
                         {{-- ── Bagian 1: Grup ────────────────────────────────────── --}}
                         <h6 class="fw-semibold mb-2"><i class="ti ti-users-group me-1"></i>Grup</h6>
                         <p class="text-muted fs-2">
-                            Buat grup untuk membelah peserta jadi beberapa pool penilaian. Peserta yang belum
+                            Buat grup untuk membelah peserta jadi beberapa pool peringkat. Peserta yang belum
                             bergrup tetap dihitung pada peringkat umum. Grup <strong>tidak</strong> muncul di
                             formulir pendaftaran publik.
                         </p>
@@ -399,13 +402,101 @@
 
                         <div class="alert alert-info bg-primary-subtle text-primary border-0 fs-2 py-2">
                             <i class="ti ti-info-circle"></i>
-                            Juri sebuah grup diatur dari rubriknya: buka <strong>Format Nilai</strong>, lalu pilih
-                            grup pada kategori penilaian. Pembagian peserta ada di halaman <strong>Daftar Peserta</strong>.
+                            Juri terikat pada <strong>seri</strong>, bukan grup: buka <strong>Format Nilai</strong>,
+                            lalu pilih seri pada kategori penilaian. Pembagian peserta ada di halaman
+                            <strong>Daftar Peserta</strong>.
                         </div>
 
                         <hr class="my-4">
 
-                        {{-- ── Bagian 2: Babak ───────────────────────────────────── --}}
+                        {{-- ── Bagian 2: Seri ────────────────────────────────────── --}}
+                        <h6 class="fw-semibold mb-2"><i class="ti ti-list-numbers me-1"></i>Seri</h6>
+                        <p class="text-muted fs-2">
+                            Seri adalah urutan perlombaan (mis. Seri A &amp; Seri B pada LOBB) dan
+                            <strong>penentu lembar nilai</strong>: rubrik serta jurinya mengikuti seri, bukan grup.
+                            Dua pasukan di grup yang sama boleh memakai seri berbeda. Seri ditetapkan panitia
+                            saat daftar ulang.
+                        </p>
+
+                        <div class="row g-2 align-items-end mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Nama Seri</label>
+                                <input type="text" class="form-control" wire:model="seriesName" placeholder="Seri A">
+                                @error('seriesName') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Urutan</label>
+                                <input type="number" class="form-control" wire:model="seriesSortOrder" min="0" placeholder="0">
+                                @error('seriesSortOrder') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" class="btn btn-primary w-100" wire:click="saveSeries">
+                                    <i class="ti ti-{{ $editingSeriesId ? 'device-floppy' : 'plus' }}"></i>
+                                    {{ $editingSeriesId ? 'Simpan' : 'Tambah Seri' }}
+                                </button>
+                            </div>
+                        </div>
+
+                        @if($editingSeriesId)
+                            <div class="mb-3">
+                                <button type="button" class="btn btn-sm btn-light" wire:click="resetSeriesForm">Batal edit</button>
+                            </div>
+                        @endif
+
+                        @if($panelSeries->isEmpty())
+                            <p class="text-muted fs-2"><i>Belum ada seri. Seluruh peserta tingkat ini memakai lembar nilai yang sama.</i></p>
+                        @else
+                            <div class="table-responsive">
+                                <table class="table table-sm align-middle">
+                                    <thead>
+                                        <tr>
+                                            <th>Seri</th>
+                                            <th>Peserta</th>
+                                            <th>Rubrik &amp; Juri</th>
+                                            <th class="text-end">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($panelSeries as $series)
+                                            @php $seriesInfo = $this->seriesRubrics->get($series->id); @endphp
+                                            <tr>
+                                                <td class="fw-semibold">{{ $series->name }}</td>
+                                                <td>{{ $series->registrations_count }}</td>
+                                                <td>
+                                                    @forelse($seriesInfo['rubrics'] ?? collect() as $nama)
+                                                        <span class="badge bg-light-primary text-primary">{{ $nama }}</span>
+                                                    @empty
+                                                        <span class="text-muted fs-2">Belum ada — atur lewat Format Nilai</span>
+                                                    @endforelse
+                                                    @foreach($seriesInfo['judges'] ?? collect() as $nama)
+                                                        <span class="badge bg-secondary-subtle text-secondary border">{{ $nama }}</span>
+                                                    @endforeach
+                                                </td>
+                                                <td class="text-end">
+                                                    <button class="btn btn-sm btn-outline-primary p-1 me-1" wire:click="editSeries({{ $series->id }})" title="Edit seri">
+                                                        <i class="ti ti-edit fs-4"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-danger p-1" wire:click="deleteSeries({{ $series->id }})"
+                                                        wire:confirm="Hapus seri {{ $series->name }}? Pesertanya tidak ikut terhapus, hanya kembali memakai lembar nilai tanpa seri." title="Hapus seri">
+                                                        <i class="ti ti-trash fs-4"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @endif
+
+                        <div class="alert alert-info bg-primary-subtle text-primary border-0 fs-2 py-2">
+                            <i class="ti ti-info-circle"></i>
+                            Rubrik ditandai serinya di <strong>Format Nilai</strong>. Rubrik tanpa tanda seri
+                            berlaku untuk semua seri.
+                        </div>
+
+                        <hr class="my-4">
+
+                        {{-- ── Bagian 3: Babak ───────────────────────────────────── --}}
                         <h6 class="fw-semibold mb-2"><i class="ti ti-flag me-1"></i>Babak</h6>
                         <p class="text-muted fs-2">
                             Babak memisahkan rubrik penilaian. Babak bertipe <strong>Final</strong> hanya menilai

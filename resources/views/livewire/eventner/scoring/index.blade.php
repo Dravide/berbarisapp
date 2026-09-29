@@ -271,6 +271,9 @@
                                         <div class="overflow-hidden">
                                             <h6 class="fw-semibold mb-0 text-truncate">{{ $reg->display_name }}</h6>
                                             <p class="text-muted mb-0 fs-2 text-truncate">Pelatih: {{ $reg->nama_pelatih }}</p>
+                                            @if($reg->competitionSeries)
+                                                <span class="badge bg-secondary-subtle text-secondary mt-1">{{ $reg->competitionSeries->name }}</span>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -313,7 +316,20 @@
                                     </div>
                                 @endif
                                 <div>
-                                    <h5 class="text-white fw-semibold mb-0">{{ $selectedRegistration->display_name }}</h5>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <h5 class="text-white fw-semibold mb-0">{{ $selectedRegistration->display_name }}</h5>
+                                        {{-- Seri ditulis di sini: dua seri boleh memakai
+                                             nama kategori rubrik yang sama persis, jadi tanpa
+                                             penanda ini operator tak punya cara tahu lembar
+                                             mana yang sedang terbuka. --}}
+                                        @if($selectedRegistration->competitionSeries)
+                                            <span class="badge bg-white text-primary fw-semibold">
+                                                <i class="ti ti-flag-2 me-1"></i>{{ $selectedRegistration->competitionSeries->name }}
+                                            </span>
+                                        @else
+                                            <span class="badge bg-warning text-dark fw-semibold">Tanpa Seri</span>
+                                        @endif
+                                    </div>
                                     <p class="text-white text-opacity-75 mb-0 fs-2">Pelatih: {{ $selectedRegistration->nama_pelatih }} &bull; {{ $selectedRegistration->competitionCategory->name ?? '-' }}</p>
                                 </div>
                             </div>

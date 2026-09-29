@@ -46,7 +46,7 @@ class ChampionCalculator
 
     /**
      * Daftar peringkat LENGKAP (belum dipotong kuota juara), urut terbaik dulu,
-     * sudah bernomor peringkat seri-aware.
+     * sudah bernomor peringkat yang menyamakan nilai sama.
      *
      * Dipakai tombol "Loloskan Top-N" untuk babak final: butuh N terbaik tiap
      * grup dari angka yang sama dengan penentu juara, jadi pemanggil tidak
@@ -93,15 +93,15 @@ class ChampionCalculator
     }
 
     /**
-     * Inti perhitungan: peserta terurut + nomor peringkat seri-aware, tanpa
-     * kuota juara dan tanpa gelar.
+     * Inti perhitungan: peserta terurut + nomor peringkat yang menyamakan
+     * nilai sama, tanpa kuota juara dan tanpa gelar.
      *
      * Dipisah dari rankings() supaya jalur "Loloskan Top-N" (yang berjalan
      * tanpa ChampionCategory, hanya dari rubrik babak penyisihan) memakai
      * logika sort yang sama persis — bukan salinannya.
      *
      * @param  array  $scoringWeightMap   [criteria_id => weight] penentu total
-     * @param  array  $tiebreakWeightMap  [criteria_id => weight] pemecah seri
+     * @param  array  $tiebreakWeightMap  [criteria_id => weight] pemecah nilai sama
      * @return array<int, array{registration: Registration, rank: int, total: int}>
      */
     public function rankOrdered(
@@ -144,7 +144,7 @@ class ChampionCalculator
 
         // Pengurangan ber-scope 'global' hanya berlaku di tingkat lombanya
         // sendiri. Tanpa saringan ini, sanksi siswa tingkat A ikut memotong
-        // nilai peserta tingkat B pada pemecah seri.
+        // nilai peserta tingkat B pada pemecah nilai sama.
         $deductionLevelMap = DeductionCategory::levelMapOfCriteria($eventner->id);
 
         $participantScores = [];
@@ -208,7 +208,8 @@ class ChampionCalculator
         // winners(). Tombol "Loloskan Top-N" memakai daftar penuh ini supaya
         // bisa mengambil N terbaik per grup dari angka yang sama.
 
-        // Peringkat seri: dua peserta seri kalau SEMUA kunci pengurutnya sama
+        // Peringkat nilai sama: dua peserta berperingkat sama kalau SEMUA kunci
+        // pengurutnya sama
         // (total, tiebreak, nilai kriteria lain, besar pengurangan) — sama
         // seperti papan skor publik dan Rekap Nilai, yang memakai nilai akhir.
         // Dulu nomor urut array, jadi dua peserta bernilai identik tetap

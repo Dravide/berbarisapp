@@ -16,6 +16,7 @@ class AssessmentCategory extends Model
         'competition_category_id',
         'competition_group_id',
         'competition_round_id',
+        'competition_series_id',
         'name',
         'sort_order',
     ];
@@ -40,61 +41,73 @@ class AssessmentCategory extends Model
         return $this->belongsTo(CompetitionRound::class, 'competition_round_id');
     }
 
+    public function competitionSeries()
+    {
+        return $this->belongsTo(CompetitionSeries::class, 'competition_series_id');
+    }
+
     /**
-     * Rubrik yang berlaku untuk sebuah tingkat, disaring per grup dan babak.
+     * Rubrik yang berlaku untuk sebuah tingkat, disaring per seri dan babak.
      *
      * Satu-satunya definisi "rubrik mana yang boleh dinilai" — dipakai halaman
      * juri, panitia input nilai, dan finalisasi. Sengaja mengembalikan builder
-     * yang sudah memuat klausa tingkat/grup/babak, supaya pemanggil boleh
+     * yang sudah memuat klausa tingkat/seri/babak, supaya pemanggil boleh
      * menumpuk whereHas('judges') ATAU memakai daftar ini apa adanya untuk
-     * cabang fallback. Kalau klausa grup hanya ditempel di cabang whereHas,
+     * cabang fallback. Kalau klausa seri hanya ditempel di cabang whereHas,
      * cabang fallback "rubrik kosong → semua rubrik tingkat" akan membocorkan
-     * rubrik Grup A ke juri Grup B.
+     * rubrik Seri A ke juri Seri B.
      *
-     * Aturan grup: rubrik tanpa grup berlaku di mana saja; rubrik bergrup hanya
-     * berlaku untuk peserta bergrup itu. Peserta yang belum dibagi grup karena
-     * itu hanya melihat rubrik tanpa grup — bukan rubrik semua grup. Sebelumnya
-     * `group_id NULL` diperlakukan sebagai "berlaku semua grup", dan
-     * konsekuensinya peserta yang belum bergrup melihat kolom penilai Grup A
-     * dan Grup B sekaligus padahal ia tak masuk grup mana pun.
+     * Aturan seri: rubrik tanpa seri berlaku di mana saja; rubrik berseri hanya
+     * berlaku untuk peserta berseri itu. Peserta yang belum dapat seri karena
+     * itu hanya melihat rubrik tanpa seri — bukan rubrik semua seri. Sebelumnya
+     * `series_id NULL` diperlakukan sebagai "berlaku semua seri", dan
+     * konsekuensinya peserta yang belum berseri melihat kolom penilai Seri A
+     * dan Seri B sekaligus padahal ia tak masuk seri mana pun.
      *
      * Konsekuensi yang perlu diketahui operator: tingkat yang rubriknya SUDAH
-     * ditandai per grup tetapi pesertanya belum dibagi akan menampilkan lembar
-     * kosong. Bagi grupnya lebih dulu, atau biarkan rubriknya tanpa grup.
+     * ditandai per seri tetapi pesertanya belum dibagi akan menampilkan lembar
+     * kosong. Bagi serinya lebih dulu (di meja daftar ulang), atau biarkan
+     * rubriknya tanpa seri.
+     *
+     * Seri sengaja menggantikan grup di sini — bukan menambah. Grup dan seri
+     * dua sumbu bebas: grup menyusun tabel peringkat dan nomor undian
+     * (ChampionCalculator, urutan_tampil), seri menentukan lembar nilai & juri.
+     * Dua pasukan satu grup boleh berbeda seri, jadi menyaring memakai grup
+     * akan mustahil memberi keduanya lembar nilai berbeda.
      *
      * NULL pada babak berbeda artinya: tanpa saringan babak. Tingkat tanpa
      * baris babak memang tidak punya babak untuk disaring, jadi rubriknya harus
      * tetap terpakai.
      *
-     * @see scopeForLevel() untuk perhitungan lintas-grup
+     * @see scopeForLevel() untuk perhitungan lintas-serí
      */
-    public function scopeForEntry($query, ?int $competitionCategoryId, ?int $groupId = null, ?int $roundId = null)
+    public function scopeForEntry($query, ?int $competitionCategoryId, ?int $seriesId = null, ?int $roundId = null)
     {
         return $query
             ->forLevel($competitionCategoryId, $roundId)
-            ->where(function ($q) use ($groupId) {
-                // Tanpa grup: hanya rubrik tanpa grup. Rubrik bergrup sengaja
-                // TIDAK ikut — pemisahan grup jadi tak berarti kalau peserta
-                // yang belum dibagi tetap melihat semua rubrik grup.
-                if (! $groupId) {
-                    $q->whereNull('competition_group_id');
+            ->where(function ($q) use ($seriesId) {
+                // Tanpa seri: hanya rubrik tanpa seri. Rubrik berseri sengaja
+                // TIDAK ikut — pemisahan seri jadi tak berarti kalau peserta
+                // yang belum dibagi tetap melihat semua rubrik seri.
+                if (! $seriesId) {
+                    $q->whereNull('competition_series_id');
 
                     return;
                 }
 
-                $q->where('competition_group_id', $groupId)->orWhereNull('competition_group_id');
+                $q->where('competition_series_id', $seriesId)->orWhereNull('competition_series_id');
             });
     }
 
     /**
-     * Klausa tingkat + babak, TANPA dimensi grup.
+     * Klausa tingkat + babak, TANPA dimensi seri.
      *
-     * Dipakai perhitungan yang memang menyatukan seluruh grup dalam satu
+     * Dipakai perhitungan yang memang menyatukan seluruh seri dalam satu
      * tingkat — misalnya bobot rubrik untuk pratinjau "Loloskan Top-N", yang
-     * memeringkat semua grup sekaligus lalu membaginya per grup. Alasannya
-     * sengaja tidak disaring: menyaringnya ke satu grup akan membuang rubrik
-     * grup lain dari peta bobot, padahal peringkat itu justru dipakai untuk
-     * membandingkan antar grup.
+     * memeringkat semua seri sekaligus lalu membaginya per grup. Alasannya
+     * sengaja tidak disaring: menyaringnya ke satu seri akan membuang rubrik
+     * seri lain dari peta bobot, padahal peringkat itu justru dipakai untuk
+     * membandingkan antar seri.
      *
      * Untuk penilaian per peserta selalu pakai forEntry(), bukan ini.
      */

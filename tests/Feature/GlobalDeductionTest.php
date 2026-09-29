@@ -29,7 +29,7 @@ use Tests\TestCase;
  * pada satu kategori penilaian saja. Kelompok ber-scope 'global' tidak
  * menempel ke kategori penilaian mana pun, tetapi terikat pada satu tingkat
  * lomba (competition_category_id): potongannya mengurangi NILAI AKHIR di luar
- * kolom kategori, ikut pemecah seri juara, dan TIDAK boleh menyentuh peserta
+ * kolom kategori, ikut pemecah nilai sama juara, dan TIDAK boleh menyentuh peserta
  * tingkat lain.
  */
 class GlobalDeductionTest extends TestCase
@@ -351,10 +351,10 @@ class GlobalDeductionTest extends TestCase
     }
 
     /**
-     * Pengurangan tingkat ikut pemecah seri juara: dua peserta bernilai sama,
-     * yang kena sanksi berperingkat lebih bawah.
+     * Pengurangan tingkat ikut pemecah nilai sama juara: dua peserta bernilai
+     * sama, yang kena sanksi berperingkat lebih bawah.
      */
-    public function test_global_ikut_pemecah_seri_juara()
+    public function test_global_ikut_pemecah_nilai_sama_juara()
     {
         $bersih = Registration::factory()->for($this->eventner, 'eventner')->create([
             'competition_category_id' => $this->lomba->id,
@@ -390,15 +390,15 @@ class GlobalDeductionTest extends TestCase
         $this->assertSame(
             'SMP Bersih',
             $winners[0]['registration']->nama_sekolah,
-            'Peserta tanpa sanksi tingkat harus menang saat nilainya seri.'
+            'Peserta tanpa sanksi tingkat harus menang saat nilainya sama.'
         );
     }
 
     /**
-     * Pemecah seri juara juga tidak boleh menghitung sanksi tingkat lain —
+     * Pemecah nilai sama juara juga tidak boleh menghitung sanksi tingkat lain —
      * bila bocor, peserta tingkat lain yang bersih bisa tergeser.
      */
-    public function test_pemecah_seri_juara_tidak_terpengaruh_sanksi_tingkat_lain()
+    public function test_pemecah_nilai_sama_juara_tidak_terpengaruh_sanksi_tingkat_lain()
     {
         $lombaLain = CompetitionCategory::factory()->child(
             CompetitionCategory::find($this->lomba->parent_id)

@@ -23,7 +23,7 @@ use Tests\TestCase;
  *
  * Semua halaman menentukan juara dari angka yang sama. Test di sini menjaga
  * agar tiap halaman memakai bobot kriteria, menormalkan tanda pengurangan,
- * membuang peserta bernilai nol, dan menyepakati aturan peringkat seri.
+ * membuang peserta bernilai nol, dan menyepakati aturan peringkat nilai sama.
  */
 class ScoreConsistencyTest extends TestCase
 {
@@ -180,10 +180,10 @@ class ScoreConsistencyTest extends TestCase
     }
 
     /**
-     * #16 — aturan peringkat seri sama di semua halaman: nilai sama berarti
+     * #16 — aturan peringkat nilai sama di semua halaman: nilai sama berarti
      * peringkat sama, dan peringkat berikutnya melompat.
      */
-    public function test_rekap_panitia_memberi_peringkat_sama_untuk_nilai_seri()
+    public function test_rekap_panitia_memberi_peringkat_sama_untuk_nilai_sama()
     {
         $seriA = Registration::factory()->for($this->eventner, 'eventner')->create([
             'competition_category_id' => $this->lomba->id,
@@ -209,7 +209,7 @@ class ScoreConsistencyTest extends TestCase
             ->assertViewHas('scoringData', function ($scoringData) {
                 $peringkat = $scoringData->pluck('rank', 'participant.nama_sekolah');
 
-                // Dua teratas seri di peringkat 1, yang ketiga melompat ke 3.
+                // Dua teratas nilai sama di peringkat 1, yang ketiga melompat ke 3.
                 return $peringkat['SMP Seri A'] === 1
                     && $peringkat['SMP Seri B'] === 1
                     && $peringkat['SMP Bawah'] === 3;
@@ -253,7 +253,7 @@ class ScoreConsistencyTest extends TestCase
     /**
      * #11 — tanda pengurangan tidak dipercaya.
      *
-     * Pengurangan dipakai sebagai pemecah seri, dan di situ tanda yang
+     * Pengurangan dipakai sebagai pemecah nilai sama, dan di situ tanda yang
      * tersimpan menentukan urutan: nilai mentah "-5" lebih kecil dari "0"
      * sehingga peserta yang dikurangi justru naik. Yang benar, besar
      * pengurangan yang dibandingkan — bukan tandanya.

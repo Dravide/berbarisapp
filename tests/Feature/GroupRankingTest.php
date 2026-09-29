@@ -21,8 +21,13 @@ use Tests\TestCase;
  * Peringkat per grup dan per babak.
  *
  * Dua daftar juara yang berbeda dari satu tingkat yang sama:
- *  - juara grup  = rubric Grup A saja, peserta Grup A saja;
+ *  - juara grup  = peserta Grup A saja (rubriknya sendiri ditentukan serinya);
  *  - juara final = rubrik babak final saja, peserta yang lolos saja.
+ *
+ * Cakupan grup tetap bekerja — tapi sebagai saringan PESERTA, bukan rubrik.
+ * Sejak lembar nilai ditentukan SERI dan satu grup boleh memuat beberapa seri,
+ * menyaring rubrik per grup justru membuang kriteria yang dipakai peserta grup
+ * itu sendiri.
  *
  * Logika sort-nya sendiri TIDAK disentuh fitur ini (audit #48 sudah
  * membaikannya) — yang diuji di sini adalah cakupan pesertanya.
@@ -40,6 +45,8 @@ class GroupRankingTest extends TestCase
     private CompetitionGroup $groupB;
 
     private CompetitionRound $final;
+
+    private CompetitionRound $penyisihan;
 
     /** @var array{0: AssessmentSubCategory, 1: AssessmentCriteria} rubrik penyisihan tingkat */
     private array $rubrikPenyisihan;
@@ -76,6 +83,14 @@ class GroupRankingTest extends TestCase
             'competition_category_id' => $this->level->id,
             'name' => 'Grup B',
             'sort_order' => 2,
+        ]);
+
+        $this->penyisihan = CompetitionRound::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Penyisihan',
+            'type' => CompetitionRound::TYPE_PRELIMINARY,
+            'sort_order' => 1,
         ]);
 
         $this->final = CompetitionRound::create([
@@ -218,7 +233,7 @@ class GroupRankingTest extends TestCase
         $this->assertSame($a1->id, $rankings[0]['registration']->id);
     }
 
-    public function test_urutan_tampil_tetap_jadi_pemecah_seri_terakhir()
+    public function test_urutan_tampil_tetap_jadi_pemecah_nilai_sama_terakhir()
     {
         [, $kriteria] = $this->rubrikPenyisihan;
         $champion = $this->makeChampion('Juara Grup A', $this->rubrikPenyisihan[0]);
@@ -233,7 +248,7 @@ class GroupRankingTest extends TestCase
         [, , $rankings] = $this->calc->rankings($champion, $this->level->id, $this->groupA->id);
 
         $this->assertSame($pertama->id, $rankings[0]['registration']->id);
-        // Nilai identik → peringkat seri, bukan 1 dan 2.
+        // Nilai identik → peringkat nilai sama, bukan 1 dan 2.
         $this->assertSame(1, $rankings[0]['rank']);
         $this->assertSame(1, $rankings[1]['rank']);
     }
@@ -298,7 +313,16 @@ class GroupRankingTest extends TestCase
         $this->assertNotContains($b1->id, $finalIds);
     }
 
-    public function test_kategori_juara_rubrik_grup_lain_tidak_tampil_di_grup_ini()
+    /**
+     * Penanda grup pada rubrik tidak lagi menyembunyikan kategori juara.
+     *
+     * Dulu "Juara Grup A" hanya tampil di Grup A karena rubriknya bertanda Grup
+     * A. Sejak lembar nilai ditentukan SERI, tanda grup di rubrik tidak lagi
+     * membatasi siapa yang boleh dinilai — peserta Grup B yang berseri A memang
+     * dinilai rubrik itu. Menyembunyikan kategorinya membuat juara sah hilang
+     * dari layar. Cakupan grup tetap bekerja, tapi sebagai saringan PESERTA.
+     */
+    public function test_penanda_grup_pada_rubrik_tidak_lagi_menyembunyikan_kategori_juara()
     {
         [$subA] = $this->makeRubrik('PBB Grup A', null);
         // Ubah rubrik itu jadi milik Grup A.
@@ -316,9 +340,33 @@ class GroupRankingTest extends TestCase
         $championA->load('assessmentSubCategories.category');
 
         $this->assertTrue($championA->isVisibleFor($this->level->id, $this->groupA->id));
-        $this->assertFalse(
+        $this->assertTrue(
             $championA->isVisibleFor($this->level->id, $this->groupB->id),
-            'Kategori juara rubrik Grup A tampil juga di Grup B.'
+            'Tanda grup di rubrik tidak lagi membatasi — lihat docblock tes.'
+        );
+    }
+
+    /** Babak tetap menyaring: itulah yang memisahkan juara penyisihan dari final. */
+    public function test_penanda_babak_tetap_menyembunyikan_kategori_juara()
+    {
+        [$subFinal] = $this->makeRubrik('PBB Final', null);
+        AssessmentSubCategory::where('name', 'Sub PBB Final')
+            ->first()
+            ->category
+            ->update(['competition_round_id' => $this->final->id]);
+
+        $championFinal = ChampionCategory::create([
+            'eventner_id' => $this->eventner->id,
+            'name' => 'Juara Final',
+            'quantity' => 3,
+        ]);
+        $championFinal->assessmentSubCategories()->sync([$subFinal->id]);
+        $championFinal->load('assessmentSubCategories.category');
+
+        $this->assertTrue($championFinal->isVisibleFor($this->level->id, null, $this->final->id));
+        $this->assertFalse(
+            $championFinal->isVisibleFor($this->level->id, null, $this->penyisihan->id),
+            'Rubrik babak Final tampil di lingkup penyisihan.'
         );
     }
 

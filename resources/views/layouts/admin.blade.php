@@ -154,12 +154,25 @@
 
     // wire:confirm memanggil global confirm() secara sinkron; override
     // menunggu SweetAlert dulu, lalu panggil handler asli saat dikonfirmasi.
+    //
+    // Elemen pemicunya DITANGKAP saat klik (fase capture, sebelum Livewire),
+    // bukan dibaca dari document.activeElement: panel di dalam modal sering
+    // ter-render ulang sebelum tombol "Ya" ditekan, dan saat itu activeElement
+    // sudah pindah ke <body> — konfirmasinya lolos tapi aksinya batal
+    // diam-diam. Elemen yang sudah lepas dari DOM tetap sah dipakai: closure
+    // execute()-nya menempel di elemen, bukan di pohon DOM.
+    window.__beConfirmEl = null;
+    document.addEventListener('click', function(e) {
+      const el = e.target && e.target.closest && e.target.closest('[wire\\:confirm]');
+      if (el) { window.__beConfirmEl = el; }
+    }, true);
+
     window.nativeConfirm = window.confirm;
     window.confirm = function(message) {
       // Fallback saat Swal tak ter-load (CDN gagal): konfirmasi native.
       if (!window.Swal) { return window.nativeConfirm(message); }
 
-      const el = document.activeElement;
+      const el = window.__beConfirmEl;
       const handler = el && el.__livewire_confirm;
 
       Swal.fire({

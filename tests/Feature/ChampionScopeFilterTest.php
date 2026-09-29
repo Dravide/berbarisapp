@@ -107,13 +107,14 @@ class ChampionScopeFilterTest extends TestCase
     }
 
     /** @return array{0: AssessmentSubCategory, 1: AssessmentCriteria} */
-    private function makeRubrik(string $name, ?int $groupId, ?int $roundId): array
+    private function makeRubrik(string $name, ?int $groupId, ?int $roundId, ?int $seriesId = null): array
     {
         $cat = AssessmentCategory::create([
             'eventner_id' => $this->eventner->id,
             'competition_category_id' => $this->level->id,
             'competition_group_id' => $groupId,
             'competition_round_id' => $roundId,
+            'competition_series_id' => $seriesId,
             'name' => $name,
             'sort_order' => 1,
         ]);
@@ -306,12 +307,21 @@ class ChampionScopeFilterTest extends TestCase
             ->all();
     }
 
-    public function test_lingkup_grup_hanya_menampilkan_rubrik_grup_itu()
+    /**
+     * Lingkup grup TIDAK menyaring rubrik lagi — hanya babaknya.
+     *
+     * Dulu lingkup "Grup A" menyembunyikan rubrik Grup B, karena rubrik memang
+     * ditandai per grup. Sejak lembar nilai ditentukan SERI dan satu grup boleh
+     * memuat beberapa seri, menyembunyikannya justru menyembunyikan rubrik yang
+     * benar-benar dipakai peserta Grup A yang berseri B — dan peta bobotnya
+     * ikut kehilangan kriteria itu, sehingga total antar-serinya tak sebanding.
+     */
+    public function test_lingkup_grup_tidak_lagi_menyaring_rubrik()
     {
         $this->assertSame(
-            ['PBB Grup A'],
+            ['PBB Grup A', 'PBB Grup B'],
             $this->rubrikTampil('grup-'.$this->groupA->id),
-            'Rubrik Grup B dan babak Final tidak boleh ikut saat lingkup Grup A.'
+            'Rubrik sesama babak penyisihan harus tetap tampil di lingkup grup mana pun.'
         );
     }
 
@@ -331,27 +341,106 @@ class ChampionScopeFilterTest extends TestCase
         );
     }
 
-    public function test_lingkup_grup_b_tidak_menampilkan_rubrik_grup_a()
+    /** Lingkup grup B pun memuat rubrik grup A — lihat tes di atas. */
+    public function test_lingkup_grup_b_juga_memuat_rubrik_grup_a()
     {
         $this->assertSame(
-            ['PBB Grup B'],
+            ['PBB Grup A', 'PBB Grup B'],
             $this->rubrikTampil('grup-'.$this->groupB->id)
+        );
+    }
+
+    /**
+     * Peta bobot satu grup memuat rubrik SEMUA seri yang ada di grup itu.
+     *
+     * Inilah akibat langsung dari "seri bebas dari grup": satu grup boleh
+     * memuat dua seri, dan tiap seri punya lembarnya sendiri. Kalau peta bobot
+     * masih disaring per grup (atau per seri), kriteria pasukan seri lain
+     * hilang dari peta — dan totalnya di tabel grup itu tak lagi sebanding
+     * dengan pasukan yang serinya kebetulan sama dengan lingkup.
+     */
+    public function test_peta_bobot_lingkup_grup_memuat_semua_seri_di_grup_itu()
+    {
+        $seriA = \App\Models\CompetitionSeries::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Seri A',
+            'sort_order' => 1,
+        ]);
+        $seriB = \App\Models\CompetitionSeries::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Seri B',
+            'sort_order' => 2,
+        ]);
+
+        // Dua rubrik di grup yang SAMA, beda seri.
+        [, $kriteriaA] = $this->makeRubrik('PBB', $this->groupA->id, $this->penyisihan->id, $seriA->id);
+        [, $kriteriaB] = $this->makeRubrik('PBB', $this->groupA->id, $this->penyisihan->id, $seriB->id);
+
+        $champion = ChampionCategory::create([
+            'eventner_id' => $this->eventner->id,
+            'name' => 'Juara Grup A',
+            'quantity' => 3,
+        ]);
+        $champion->criterias()->sync([$kriteriaA->id, $kriteriaB->id]);
+        $champion->load(['assessmentSubCategories.criterias', 'criterias']);
+
+        $bobot = $champion->scoringCriteriaWeights($this->penyisihan->id, $this->groupA->id);
+
+        $this->assertArrayHasKey($kriteriaA->id, $bobot, 'Kriteria seri A hilang dari peta bobot.');
+        $this->assertArrayHasKey(
+            $kriteriaB->id,
+            $bobot,
+            'Kriteria seri B hilang: peta bobot masih tersaring per grup/seri.'
+        );
+
+        // Babak TETAP menyaring — hanya grup/seri yang tidak lagi.
+        $this->assertEmpty(
+            $champion->scoringCriteriaWeights($this->final->id, $this->groupA->id),
+            'Rubrik babak penyisihan bocor ke peta bobot babak final.'
         );
     }
 
     public function test_lingkup_menyempit_tidak_mengembalikan_seluruh_rubrik_saat_kosong()
     {
-        // Lingkup grup yang belum punya rubrik sendiri: daftar harus kosong,
+        // Lingkup babak yang belum punya rubrik sendiri: daftar harus kosong,
         // bukan jatuh ke "tampilkan semua" — fallback itu akan memasukkan
-        // kembali rubrik grup lain yang baru saja disembunyikan.
-        $kosong = CompetitionGroup::create([
+        // kembali rubrik babak lain yang baru saja disembunyikan.
+        $level = CompetitionCategory::factory()->create([
             'eventner_id' => $this->eventner->id,
-            'competition_category_id' => $this->level->id,
-            'name' => 'Grup C',
-            'sort_order' => 3,
+            'parent_id' => $this->level->parent_id,
+            'name' => 'Regu Kosong',
         ]);
+        $babakKosong = CompetitionRound::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $level->id,
+            'name' => 'Penyisihan',
+            'type' => CompetitionRound::TYPE_PRELIMINARY,
+            'sort_order' => 1,
+        ]);
+        // Rubrik milik tingkat lain — inilah yang tidak boleh bocor kembali
+        // lewat fallback "tampilkan semua".
+        $this->assertSame(
+            [],
+            $this->rubrikTampilUntuk($level->id, 'babak-'.$babakKosong->id)
+        );
+    }
 
-        $this->assertSame([], $this->rubrikTampil('grup-'.$kosong->id));
+    /** Nama rubrik yang tampil di checklist untuk satu tingkat + lingkup. */
+    private function rubrikTampilUntuk(int $levelId, ?string $scopeKey): array
+    {
+        $component = $this->panel()->set('selectedCompetitionCategoryId', (string) $levelId);
+
+        if ($scopeKey !== null) {
+            $component->set('selectedScopeId', $scopeKey);
+        }
+
+        return collect($component->viewData('rubrikByLevel'))
+            ->flatMap(fn ($levelGroup) => $levelGroup['sections'])
+            ->flatMap(fn ($section) => $section['categories'])
+            ->pluck('name')
+            ->all();
     }
 
     public function test_tingkat_tanpa_grup_hanya_menampilkan_babak_non_final()

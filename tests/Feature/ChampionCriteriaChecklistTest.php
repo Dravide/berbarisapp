@@ -171,25 +171,25 @@ class ChampionCriteriaChecklistTest extends TestCase
         $this->assertTrue($this->checkedIn($html, 'crt_'.$ketepatan->id));
     }
 
-    public function test_rubrik_nama_sama_dipisah_judul_grup_dan_babak()
+    public function test_rubrik_nama_sama_dipisah_judul_seri_dan_babak()
     {
         [$user, $eventner, $sub, , ] = $this->makeRubrik();
         $level = CompetitionCategory::find($sub->category->competition_category_id);
 
-        // Tiga rubrik bernama sama pada satu tingkat — sah sejak grup & babak
+        // Tiga rubrik bernama sama pada satu tingkat — sah sejak seri & babak
         // ada. Sebelum dipisah, ketiganya duduk di satu daftar rata, dan itu
-        // berbahaya: rubrik Grup A tampak sederajat dengan rubrik babak Final,
+        // berbahaya: rubrik Seri A tampak sederajat dengan rubrik babak Final,
         // padahal himpunan pesertanya berbeda.
-        $grupA = \App\Models\CompetitionGroup::create([
+        $seriA = \App\Models\CompetitionSeries::create([
             'eventner_id' => $eventner->id,
             'competition_category_id' => $level->id,
-            'name' => 'Grup A',
+            'name' => 'Seri A',
             'sort_order' => 1,
         ]);
-        $grupB = \App\Models\CompetitionGroup::create([
+        $seriB = \App\Models\CompetitionSeries::create([
             'eventner_id' => $eventner->id,
             'competition_category_id' => $level->id,
-            'name' => 'Grup B',
+            'name' => 'Seri B',
             'sort_order' => 2,
         ]);
         $final = \App\Models\CompetitionRound::create([
@@ -201,11 +201,11 @@ class ChampionCriteriaChecklistTest extends TestCase
         ]);
 
         $ids = [];
-        foreach ([['Grup A', $grupA->id, null], ['Grup B', $grupB->id, null], ['Final', null, $final->id]] as [$label, $groupId, $roundId]) {
+        foreach ([['Seri A', $seriA->id, null], ['Seri B', $seriB->id, null], ['Final', null, $final->id]] as [$label, $seriesId, $roundId]) {
             $ids[$label] = AssessmentCategory::create([
                 'eventner_id' => $eventner->id,
                 'competition_category_id' => $level->id,
-                'competition_group_id' => $groupId,
+                'competition_series_id' => $seriesId,
                 'competition_round_id' => $roundId,
                 'name' => 'PBB',
                 'sort_order' => 1,
@@ -220,11 +220,11 @@ class ChampionCriteriaChecklistTest extends TestCase
         $groups = $component->viewData('rubrikByLevel')
             ->firstWhere('id', (string) $level->id)['sections'];
 
-        // Grup dan babak jadi judul bagian tersendiri, bukan satu daftar rata.
-        // Rubrik polos dari fixture (tanpa grup & babak) menyusul di akhir tanpa
+        // Seri dan babak jadi judul bagian tersendiri, bukan satu daftar rata.
+        // Rubrik polos dari fixture (tanpa seri & babak) menyusul di akhir tanpa
         // judul — rubrik spesifik dulu, rubrik umum terakhir.
         $this->assertSame(
-            ['Grup A', 'Grup B', 'Babak Final Stage', ''],
+            ['Seri A', 'Seri B', 'Babak Final Stage', ''],
             $groups->pluck('section_name')->all()
         );
 
@@ -233,14 +233,14 @@ class ChampionCriteriaChecklistTest extends TestCase
         $this->assertSame([$ids['Final']], $final['categories']->pluck('id')->all());
 
         // Tiap bagian disaring ke rubriknya sendiri — inti kekhawatirannya:
-        // rubrik Grup A tidak boleh muncul di bagian babak Final.
+        // rubrik Seri A tidak boleh muncul di bagian babak Final.
         $this->assertSame(
-            [$ids['Grup A']],
-            $groups->firstWhere('section_name', 'Grup A')['categories']->pluck('id')->all()
+            [$ids['Seri A']],
+            $groups->firstWhere('section_name', 'Seri A')['categories']->pluck('id')->all()
         );
     }
 
-    public function test_tingkat_tanpa_grup_babak_tidak_punya_judul_bagian()
+    public function test_tingkat_tanpa_seri_babak_tidak_punya_judul_bagian()
     {
         [$user, $eventner] = $this->makeRubrik();
 

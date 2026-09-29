@@ -135,7 +135,9 @@
                                             <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Kontingen</h6></th>
                                             <th class="border-bottom-0"><h6 class="fw-semibold mb-0">Pelatih</h6></th>
                                             @foreach($section['assessmentCategories'] as $ac)
-                                                <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">{{ $ac->name }}</h6></th>
+                                                {{-- Dua seri boleh memakai nama kategori yang sama persis,
+                                                     jadi nama kolomnya perlu pembeda. --}}
+                                                <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">{{ $ac->name }}@if($ac->competitionSeries)<span class="badge bg-info-subtle text-info fw-semibold fs-2 ms-1">{{ $ac->competitionSeries->name }}</span>@endif</h6></th>
                                             @endforeach
                                             <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">Total</h6></th>
                                             <th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0 text-danger">Pengurangan</h6></th>
@@ -167,6 +169,12 @@
                                                             </div>
                                                         @endif
                                                         <h6 class="fw-semibold mb-0">{{ $data['participant']->display_name }}</h6>
+                                                        {{-- Seri penentu lembar nilainya. Satu tabel grup boleh
+                                                             memuat beberapa seri, jadi dua kolom rubrik bisa
+                                                             bernama sama ("PBB"); lencana ini yang membedakan. --}}
+                                                        @if($data['participant']->competitionSeries)
+                                                            <span class="badge bg-info-subtle text-info fw-semibold">{{ $data['participant']->competitionSeries->name }}</span>
+                                                        @endif
                                                     </div>
                                                 </td>
                                                 <td><span class="text-muted">{{ $data['participant']->nama_pelatih }}</span></td>

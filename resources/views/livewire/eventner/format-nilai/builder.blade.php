@@ -127,8 +127,8 @@
                                             @if($category->competitionRound)
                                                 <span class="badge bg-primary-subtle text-primary ms-2 fs-1">{{ $category->competitionRound->name }}</span>
                                             @endif
-                                            @if($category->competitionGroup)
-                                                <span class="badge bg-warning-subtle text-warning ms-2 fs-1">{{ $category->competitionGroup->name }}</span>
+                                            @if($category->competitionSeries)
+                                                <span class="badge bg-warning-subtle text-warning ms-2 fs-1">{{ $category->competitionSeries->name }}</span>
                                             @endif
                                         </button>
                                         <button class="btn btn-sm btn-outline-primary border-0" wire:click="startEditCategory({{ $category->id }})" title="Edit nama kategori">
@@ -152,9 +152,9 @@
                                 <div id="collapseCat-{{ $category->id }}" class="accordion-collapse collapse" aria-labelledby="headingCat-{{ $category->id }}" wire:ignore.self>
                                     <div class="accordion-body bg-white pt-4" wire:sort="reorderSubCategories" wire:sort:group="subcategories" wire:sort:group-id="{{ $category->id }}">
 
-                                        @if($this->groups->isNotEmpty() || $this->rounds->isNotEmpty())
-                                            {{-- Penanda babak & grup: membatasi rubrik ini ke satu babak
-                                                 dan/atau satu grup. Kosong = berlaku untuk semuanya. --}}
+                                        @if($this->series->isNotEmpty() || $this->rounds->isNotEmpty())
+                                            {{-- Penanda babak & seri: membatasi rubrik ini ke satu babak
+                                                 dan/atau satu seri. Kosong = berlaku untuk semuanya. --}}
                                             <div class="border bg-light p-3 mb-4">
                                                 <div class="row g-2 align-items-end">
                                                     @if($this->rounds->isNotEmpty())
@@ -168,26 +168,26 @@
                                                             </select>
                                                         </div>
                                                     @endif
-                                                    @if($this->groups->isNotEmpty())
+                                                    @if($this->series->isNotEmpty())
                                                         <div class="col-md-4">
-                                                            <label class="form-label fw-semibold fs-2 mb-1">Grup</label>
-                                                            <select class="form-select form-select-sm" wire:model="rubricGroupId.{{ $category->id }}">
-                                                                <option value="">— semua grup —</option>
-                                                                @foreach($this->groups as $group)
-                                                                    <option value="{{ $group->id }}">{{ $group->name }}</option>
+                                                            <label class="form-label fw-semibold fs-2 mb-1">Seri</label>
+                                                            <select class="form-select form-select-sm" wire:model="rubricSeriesId.{{ $category->id }}">
+                                                                <option value="">— semua seri —</option>
+                                                                @foreach($this->series as $seri)
+                                                                    <option value="{{ $seri->id }}">{{ $seri->name }}</option>
                                                                 @endforeach
                                                             </select>
                                                         </div>
                                                     @endif
                                                     <div class="col-md-4">
                                                         <button class="btn btn-sm btn-primary" wire:click="saveRubricScope({{ $category->id }})">
-                                                            <i class="ti ti-device-floppy me-1"></i> Simpan Babak/Grup
+                                                            <i class="ti ti-device-floppy me-1"></i> Simpan Babak/Seri
                                                         </button>
                                                     </div>
                                                 </div>
                                                 <p class="fs-2 text-muted mb-0 mt-2">
-                                                    Juri sebuah grup ditentukan dari rubriknya: rubrik bergrup hanya bisa dinilai juri yang ditugaskan ke kategori ini.
-                                                    Format yang sama untuk babak lain dibuat lewat tombol <i class="ti ti-copy"></i> <strong>Duplikat</strong> di kategori ini, lalu atur Babak/Grup-nya di sini.
+                                                    Seri menentukan lembar nilai: rubrik berseri hanya dipakai pasukan yang serinya sama, sedangkan rubrik tanpa seri berlaku untuk semua seri.
+                                                    Format yang sama untuk babak lain dibuat lewat tombol <i class="ti ti-copy"></i> <strong>Duplikat</strong> di kategori ini, lalu atur Babak/Seri-nya di sini.
                                                 </p>
                                             </div>
                                         @endif
@@ -441,7 +441,7 @@
                                 Tidak menempel ke kategori penilaian mana pun, tetapi terikat pada
                                 <strong>tingkat lomba yang sedang dipilih</strong> di tab atas. Memotong
                                 <strong>NILAI AKHIR</strong> langsung, di luar kolom PBB/Formasi/dll, dan ikut
-                                diperhitungkan sebagai pemecah seri.
+                                diperhitungkan sebagai pemecah nilai sama.
                             </p>
 
                             @if(session()->has('error'))

@@ -9,6 +9,7 @@ use App\Models\AssessmentSubCategory;
 use App\Models\CompetitionCategory;
 use App\Models\CompetitionGroup;
 use App\Models\CompetitionRound;
+use App\Models\CompetitionSeries;
 use App\Models\Eventner;
 use App\Models\Judge;
 use App\Models\Registration;
@@ -67,13 +68,14 @@ class ScoreRecapUngroupedTest extends TestCase
         $this->juri = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Umum']);
     }
 
-    private function rubrik(string $name, ?CompetitionGroup $group, ?CompetitionRound $round = null): AssessmentCriteria
+    private function rubrik(string $name, ?CompetitionGroup $group, ?CompetitionRound $round = null, ?CompetitionSeries $series = null): AssessmentCriteria
     {
         $category = AssessmentCategory::create([
             'eventner_id' => $this->eventner->id,
             'competition_category_id' => $this->level->id,
             'competition_group_id' => $group?->id,
             'competition_round_id' => $round?->id,
+            'competition_series_id' => $series?->id,
             'name' => $name,
             'sort_order' => 1,
         ]);
@@ -195,14 +197,24 @@ class ScoreRecapUngroupedTest extends TestCase
     }
 
     /**
-     * Tingkat SUDAH bergrup dan rubriknya BERGrup, tapi pesertanya belum dibagi.
+     * Tingkat sudah bergrup dan rubriknya menempel ke seri, tapi pesertanya
+     * belum dapat seri.
      *
      * Bentuk inilah yang paling cocok dengan keluhan lapangan: grupnya ada,
      * nilainya ada, tapi tidak satu pun peserta punya competition_group_id.
+     * Sejak lembar nilai ditentukan SERI, keadaan yang setara adalah peserta
+     * yang belum dapat seri — dan peserta itu tetap wajib tampil.
      */
-    public function test_peserta_belum_dibagi_saat_rubriknya_bergrup()
+    public function test_peserta_belum_dapat_seri_saat_rubriknya_berseri()
     {
-        $kriteriaA = $this->rubrik('PBB Grup A', $this->groupA);
+        $seriA = CompetitionSeries::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Seri A',
+            'sort_order' => 1,
+        ]);
+
+        $this->rubrik('PBB Seri A', $this->groupA, null, $seriA);
         $kriteriaUmum = $this->rubrik('PBB Umum', null);
 
         $belum = $this->peserta('SMPN Belum Dibagi', null);
@@ -210,24 +222,44 @@ class ScoreRecapUngroupedTest extends TestCase
 
         $html = $this->html($this->level->id);
 
-        $this->assertStringContainsString('SMPN Belum Dibagi', $html, 'Peserta tanpa grup hilang dari rekap.');
+        $this->assertStringContainsString('SMPN Belum Dibagi', $html, 'Peserta tanpa seri hilang dari rekap.');
         $this->assertStringNotContainsString('Belum Ada Data', $html);
     }
 
-    /** Rubrik tingkat ikut muncul di bagian "Belum Bergrup". */
-    public function test_rubrik_tanpa_grup_ikut_di_bagian_belum_bergrup()
+    /**
+     * Peserta tanpa seri hanya melihat rubrik tanpa seri.
+     *
+     * Yang menyaring kolom sekarang adalah SERI, bukan penanda grup pada rubrik
+     * — dua pasukan satu grup boleh berbeda seri, jadi penanda grup tak lagi
+     * bisa dipakai menyembunyikan kolom. Rubrik berseri tetap wajib absen di
+     * sini: peserta ini tak menghuni seri mana pun.
+     */
+    public function test_peserta_tanpa_seri_hanya_melihat_rubrik_tanpa_seri()
     {
+        $seriA = CompetitionSeries::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Seri A',
+            'sort_order' => 1,
+        ]);
+
+        // Dua rubrik polos: satu bertanda grup, satu tidak. Keduanya tanpa seri,
+        // jadi keduanya berlaku di mana saja — termasuk di bagian ini.
         $this->rubrik('PBB Grup A', $this->groupA);
         $this->rubrik('PBB Umum', null);
+        $this->rubrik('PBB Seri A', $this->groupA, null, $seriA);
 
         $this->peserta('SMPN Belum Dibagi', null);
 
         $html = $this->html($this->level->id);
 
-        // Kolom rubrik tanpa grup tampil di tabel "Belum Bergrup", rubrik Grup A
-        // tidak — peserta ini bukan anggota grup mana pun.
         $this->assertSame(1, substr_count($html, 'PBB Umum'));
-        $this->assertSame(0, substr_count($html, 'PBB Grup A'));
+        $this->assertSame(1, substr_count($html, 'PBB Grup A'));
+        $this->assertSame(
+            0,
+            substr_count($html, 'PBB Seri A'),
+            'Rubrik berseri tampil di bagian peserta tanpa seri.'
+        );
     }
 
     /**

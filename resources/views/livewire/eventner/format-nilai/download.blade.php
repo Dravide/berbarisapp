@@ -68,7 +68,7 @@
                             <option value="">— Pilih Peserta —</option>
                             @foreach($this->registrations as $reg)
                                 <option value="{{ $reg->id }}">
-                                    {{ $reg->urutan_tampil ? '#'.$reg->urutan_tampil.' — ' : '' }}{{ $reg->display_name }} ({{ $reg->competitionCategory->full_name ?? '-' }})
+                                    {{ $reg->urutan_tampil ? '#'.$reg->urutan_tampil.' — ' : '' }}{{ $reg->display_name }} ({{ $reg->competitionCategory->full_name ?? '-' }}{{ $reg->competitionSeries ? ' · '.$reg->competitionSeries->name : ' · tanpa seri' }})
                                 </option>
                             @endforeach
                         </select>

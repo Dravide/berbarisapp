@@ -154,8 +154,8 @@
                                             @if($cat->competitionRound)
                                                 <span class="badge bg-primary-subtle text-primary">{{ $cat->competitionRound->name }}</span>
                                             @endif
-                                            @if($cat->competitionGroup)
-                                                <span class="badge bg-warning-subtle text-warning">{{ $cat->competitionGroup->name }}</span>
+                                            @if($cat->competitionSeries)
+                                                <span class="badge bg-warning-subtle text-warning">{{ $cat->competitionSeries->name }}</span>
                                             @endif
                                         </div>
                                     @endforeach
@@ -338,8 +338,8 @@
                                                         @if($cat->competitionRound)
                                                             <span class="badge bg-primary-subtle text-primary ms-1">{{ $cat->competitionRound->name }}</span>
                                                         @endif
-                                                        @if($cat->competitionGroup)
-                                                            <span class="badge bg-warning-subtle text-warning ms-1">{{ $cat->competitionGroup->name }}</span>
+                                                        @if($cat->competitionSeries)
+                                                            <span class="badge bg-warning-subtle text-warning ms-1">{{ $cat->competitionSeries->name }}</span>
                                                         @endif
                                                     </label>
                                                 </div>

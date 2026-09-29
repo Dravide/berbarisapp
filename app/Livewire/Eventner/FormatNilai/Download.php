@@ -76,12 +76,27 @@ class Download extends Component
             ->get();
     }
 
-    /** Kategori penilaian berdasarkan filter juri + tingkat. */
+    /** Kategori penilaian berdasarkan filter juri + tingkat (+ seri peserta). */
     #[Computed]
     public function categories()
     {
         $q = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias'])
             ->where('eventner_id', $this->eventnerId);
+
+        // Mode "peserta": seri peserta itu ikut menyempitkan rubrik — sama
+        // dengan yang dilakukan controller saat merender PDF. Peserta Seri B
+        // tidak boleh melihat rubrik Seri A ikut tercetak di lembarnya.
+        $seriesId = $this->selectedSeriesId();
+
+        if ($this->mode === 'peserta' && $seriesId !== false) {
+            $q->where(function ($sq) use ($seriesId) {
+                if ($seriesId) {
+                    $sq->where('competition_series_id', $seriesId)->orWhereNull('competition_series_id');
+                } else {
+                    $sq->whereNull('competition_series_id');
+                }
+            });
+        }
 
         if ($this->selectedLevelId) {
             // Rubrik global (competition_category_id NULL) berlaku untuk semua
@@ -101,11 +116,30 @@ class Download extends Component
         return $q->orderBy('sort_order')->get();
     }
 
+    /**
+     * Seri peserta terpilih untuk mode "peserta".
+     *
+     * `false` = mode ini tidak menyaring seri (rubrik semua seri wajar tampil);
+     * `null` = peserta belum punya seri (hanya rubrik tanpa seri yang berlaku);
+     * angka = id seri peserta itu.
+     */
+    private function selectedSeriesId(): int|false|null
+    {
+        if ($this->mode !== 'peserta' || ! $this->selectedRegistrationId) {
+            return false;
+        }
+
+        $reg = Registration::where('eventner_id', $this->eventnerId)
+            ->find($this->selectedRegistrationId);
+
+        return $reg?->competition_series_id;
+    }
+
     /** Peserta per tingkat terpilih, urut nomor undian. */
     #[Computed]
     public function registrations()
     {
-        $q = Registration::with('competitionCategory')
+        $q = Registration::with(['competitionCategory', 'competitionSeries'])
             ->where('eventner_id', $this->eventnerId);
 
         if ($this->selectedLevelId) {

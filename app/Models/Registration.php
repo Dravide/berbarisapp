@@ -18,6 +18,7 @@ class Registration extends Model
         'eventner_id',
         'competition_category_id',
         'competition_group_id',
+        'competition_series_id',
         'label_pasukan',
         'nama_sekolah',
         'npsn',
@@ -36,6 +37,7 @@ class Registration extends Model
         'bukti_pendaftaran',
         'is_finalized',
         'urutan_tampil',
+        'daftar_ulang_at',
         'total_fee',
         'payment_status',
         'payment_proof',
@@ -49,6 +51,7 @@ class Registration extends Model
         return [
             'total_fee' => 'decimal:2',
             'payment_verified_at' => 'datetime',
+            'daftar_ulang_at' => 'datetime',
         ];
     }
 
@@ -111,6 +114,18 @@ class Registration extends Model
     public function competitionGroup()
     {
         return $this->belongsTo(CompetitionGroup::class, 'competition_group_id');
+    }
+
+    /**
+     * Seri urutan perlombaan peserta ini — penentu lembar nilainya.
+     *
+     * Terpisah dari competitionGroup(): grup menyusun tabel peringkat dan
+     * nomor undian, seri menentukan rubrik & juri mana yang dipakai. Dua
+     * pasukan satu grup boleh berbeda seri.
+     */
+    public function competitionSeries()
+    {
+        return $this->belongsTo(CompetitionSeries::class, 'competition_series_id');
     }
 
     /** Baris kelolosan peserta ini ke sebuah babak. */

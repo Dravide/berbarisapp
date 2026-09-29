@@ -173,14 +173,14 @@ class Index extends Component
         $query = Registration::where('eventner_id', $this->eventnerId)
             ->where('competition_category_id', $competitionCategoryId);
 
-        // Rubrik global = juri menilai seluruh tingkat, tanpa saringan grup.
+        // Rubrik global = juri menilai seluruh tingkat, tanpa saringan seri.
         if ($this->hasGlobalRubric()) {
             return $query->count();
         }
 
         // Rubrik yang menempel ke babak final saja berarti pesertanya finalis.
         // Tanpa ini, juri final melihat jumlah seluruh pendaftar.
-        $roundIds = $this->roundIdsFor($competitionCategoryId, null, semuaGrup: true);
+        $roundIds = $this->roundIdsFor($competitionCategoryId, null, semuaSeri: true);
         $semuaFinal = $roundIds->isNotEmpty() && $roundIds->every(
             fn ($id) => CompetitionRound::where('eventner_id', $this->eventnerId)->find($id)?->isFinal()
         );
@@ -193,12 +193,12 @@ class Index extends Component
             return $query->whereIn('id', $finalis)->count();
         }
 
-        // Saringan grup & babak dihitung dengan babak yang sama seperti daftar
+        // Saringan seri & babak dihitung dengan babak yang sama seperti daftar
         // peserta, kalau tidak angka di kartu membandingkan dua daftar berbeda.
         $roundId = $this->selectedRoundId ? (int) $this->selectedRoundId : null;
 
         if (! $this->hasLevelWideRubric($competitionCategoryId, $roundId)) {
-            $query->whereIn('competition_group_id', $this->allowedGroupIds($competitionCategoryId, $roundId));
+            $query->whereIn('competition_series_id', $this->allowedSeriesIds($competitionCategoryId, $roundId));
         }
 
         return $query->count();
@@ -253,15 +253,15 @@ class Index extends Component
 
         if ($this->selectedRegistrationId) {
             $compCategoryId = $this->registration->competition_category_id ?? null;
-            $groupId = $this->registration->competition_group_id;
-            $roundIds = $this->roundIdsFor($compCategoryId, $groupId);
+            $seriesId = $this->registration->competition_series_id;
+            $roundIds = $this->roundIdsFor($compCategoryId, $seriesId);
         } else {
             $this->roundIdsCache ??= $this->roundIdsFor($this->selectedCategoryId, null);
 
             $roundIds = $this->roundIdsCache;
 
             if ($roundIds->isEmpty()) {
-                $roundIds = $this->roundIdsFor($this->selectedCategoryId, null, semuaGrup: true);
+                $roundIds = $this->roundIdsFor($this->selectedCategoryId, null, semuaSeri: true);
             }
         }
 
@@ -279,11 +279,11 @@ class Index extends Component
     /**
      * Id babak dari rubrik milik juri ini.
      *
-     * `$semuaGrup` melepas saringan grup — dipakai hanya untuk pemilih babak
+     * `$semuaSeri` melepas saringan seri — dipakai hanya untuk pemilih babak
      * sebelum peserta dipilih. Saringan babaknya sendiri (forLevel) tidak
      * pernah dilepas: babak dari tingkat lain tetap tidak boleh muncul.
      */
-    private function roundIdsFor(?int $compCategoryId, ?int $groupId, bool $semuaGrup = false): \Illuminate\Support\Collection
+    private function roundIdsFor(?int $compCategoryId, ?int $seriesId, bool $semuaSeri = false): \Illuminate\Support\Collection
     {
         if (! $compCategoryId) {
             return collect();
@@ -292,15 +292,15 @@ class Index extends Component
         return AssessmentCategory::where('eventner_id', $this->eventnerId)
             ->whereNotNull('competition_round_id')
             ->forLevel($compCategoryId, null)
-            ->when(! $semuaGrup, function ($q) use ($groupId) {
-                $q->where(function ($sq) use ($groupId) {
-                    if (! $groupId) {
-                        $sq->whereNull('competition_group_id');
+            ->when(! $semuaSeri, function ($q) use ($seriesId) {
+                $q->where(function ($sq) use ($seriesId) {
+                    if (! $seriesId) {
+                        $sq->whereNull('competition_series_id');
 
                         return;
                     }
 
-                    $sq->where('competition_group_id', $groupId)->orWhereNull('competition_group_id');
+                    $sq->where('competition_series_id', $seriesId)->orWhereNull('competition_series_id');
                 });
             })
             ->whereHas('judges', fn ($q) => $q->where('judges.id', $this->judgeId))
@@ -358,13 +358,13 @@ class Index extends Component
     }
 
     /**
-     * ID grup yang punya rubrik milik juri ini pada tingkat terpilih.
+     * ID seri yang punya rubrik milik juri ini pada tingkat terpilih.
      *
-     * Inilah grasi "juri berbeda per grup": juri Grup A tak pernah melihat
-     * peserta Grup B di daftar, sekalipun satu tingkat.
+     * Inilah grasi "juri berbeda per seri": juri Seri A tak pernah melihat
+     * peserta Seri B di daftar, sekalipun satu tingkat.
      *
-     * Babak wajib ikut disaring: rubrik Grup B pada babak lain tidak boleh
-     * membuat juri terlihat berhak atas Grup B pada babak yang sedang dibuka.
+     * Babak wajib ikut disaring: rubrik Seri B pada babak lain tidak boleh
+     * membuat juri terlihat berhak atas Seri B pada babak yang sedang dibuka.
      *
      * Babak diminta lewat parameter, bukan dibaca dari selectedRoundId: kartu
      * tingkat dirender tanpa babak terpilih, sedangkan halaman daftar/nilai
@@ -372,32 +372,32 @@ class Index extends Component
      * berbeda dari data yang sama, dan selectedRoundId cuma benar untuk yang
      * kedua.
      */
-    private function allowedGroupIds(?int $competitionCategoryId, ?int $roundId): array
+    private function allowedSeriesIds(?int $competitionCategoryId, ?int $roundId): array
     {
         if (! $competitionCategoryId) {
             return [];
         }
 
         return AssessmentCategory::where('eventner_id', $this->eventnerId)
-            ->whereNotNull('competition_group_id')
-            // forLevel, bukan forEntry: forEntry(null grup) justru mengunci ke
-            // rubrik TANPA grup — kebalikan dari yang dicari di sini.
+            ->whereNotNull('competition_series_id')
+            // forLevel, bukan forEntry: forEntry(null seri) justru mengunci ke
+            // rubrik TANPA seri — kebalikan dari yang dicari di sini.
             ->forLevel($competitionCategoryId, $roundId)
             ->whereHas('judges', fn ($q) => $q->where('judges.id', $this->judgeId))
-            ->pluck('competition_group_id')
+            ->pluck('competition_series_id')
             ->unique()
             ->values()
             ->all();
     }
 
     /**
-     * Rubrik tanpa grup di tingkat ini = juri menilai seluruh peserta tingkat.
+     * Rubrik tanpa seri di tingkat ini = juri menilai seluruh peserta tingkat.
      *
      * Babak ikut disaring, dan itu yang menutup kebocoran lintas-babak: rubrik
-     * Final yang tanpa grup dulu membuat juri dianggap selebar tingkat juga saat
-     * menilai penyisihan, sehingga peserta grup lain muncul di daftarnya.
+     * Final yang tanpa seri dulu membuat juri dianggap selebar tingkat juga saat
+     * menilai penyisihan, sehingga peserta seri lain muncul di daftarnya.
      *
-     * Seperti allowedGroupIds(), babak diminta lewat parameter — lihat catatan
+     * Seperti allowedSeriesIds(), babak diminta lewat parameter — lihat catatan
      * di sana.
      */
     private function hasLevelWideRubric(?int $competitionCategoryId, ?int $roundId): bool
@@ -429,14 +429,14 @@ class Index extends Component
         }
 
         // Rubrik global berlaku untuk semua tingkat — juri seperti ini menilai
-        // seluruh peserta, tak peduli grupnya.
+        // seluruh peserta, tak peduli serinya.
         if ($this->hasGlobalRubric()) {
             return $query;
         }
 
-        // Tanpa rubrik selebar tingkat, juri terkurung ke grupnya sendiri.
+        // Tanpa rubrik selebar tingkat, juri terkurung ke serinya sendiri.
         if (! $this->hasLevelWideRubric($this->selectedCategoryId, $this->selectedRoundId ? (int) $this->selectedRoundId : null)) {
-            $query->whereIn('competition_group_id', $this->allowedGroupIds($this->selectedCategoryId, $this->selectedRoundId ? (int) $this->selectedRoundId : null));
+            $query->whereIn('competition_series_id', $this->allowedSeriesIds($this->selectedCategoryId, $this->selectedRoundId ? (int) $this->selectedRoundId : null));
         }
 
         return $query;
@@ -471,14 +471,14 @@ class Index extends Component
     {
         $registration = $this->registration;
         $compCategoryId = $registration->competition_category_id;
-        $groupId = $registration->competition_group_id;
+        $seriesId = $registration->competition_series_id;
         $roundId = $this->selectedRoundId ? (int) $this->selectedRoundId : null;
 
-        // forEntry() memuat klausa tingkat + grup + babak sekaligus, jadi cabang
-        // fallback di bawah tidak mungkin membocorkan rubrik grup atau babak lain.
+        // forEntry() memuat klausa tingkat + seri + babak sekaligus, jadi cabang
+        // fallback di bawah tidak mungkin membocorkan rubrik seri atau babak lain.
         $base = fn () => AssessmentCategory::with(['subCategories.criterias'])
             ->where('eventner_id', $this->eventnerId)
-            ->forEntry($compCategoryId, $groupId, $roundId);
+            ->forEntry($compCategoryId, $seriesId, $roundId);
 
         $categories = $base()
             ->whereHas('judges', fn ($q) => $q->where('judges.id', $this->judgeId))
@@ -601,7 +601,7 @@ class Index extends Component
             ->where('eventner_id', $this->eventnerId)
             ->forEntry(
                 $registration->competition_category_id,
-                $registration->competition_group_id,
+                $registration->competition_series_id,
                 $this->selectedRoundId ? (int) $this->selectedRoundId : null,
             );
 

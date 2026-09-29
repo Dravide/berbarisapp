@@ -3,6 +3,12 @@
         <table class="cat-head">
             <tr>
                 <td class="cat-name">{{ $category->name }}</td>
+                {{-- Seri ditulis di kepala kategori: dua seri boleh memakai nama
+                     kategori yang sama persis ("PBB"), dan di atas kertas itu
+                     satu-satunya penanda lembar mana yang sedang dipegang. --}}
+                @if($category->relationLoaded('competitionSeries') && $category->competitionSeries)
+                    <td class="cat-series" width="30%">{{ $category->competitionSeries->name }}</td>
+                @endif
             </tr>
         </table>
 

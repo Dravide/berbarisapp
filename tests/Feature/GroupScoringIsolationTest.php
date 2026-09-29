@@ -9,6 +9,7 @@ use App\Models\AssessmentSubCategory;
 use App\Models\CompetitionCategory;
 use App\Models\CompetitionGroup;
 use App\Models\CompetitionRound;
+use App\Models\CompetitionSeries;
 use App\Models\CompetitionRoundRegistration;
 use App\Models\Eventner;
 use App\Models\Judge;
@@ -38,6 +39,10 @@ class GroupScoringIsolationTest extends TestCase
     private CompetitionGroup $groupA;
 
     private CompetitionGroup $groupB;
+
+    private CompetitionSeries $seriA;
+
+    private CompetitionSeries $seriB;
 
     private CompetitionRound $penyisihan;
 
@@ -82,6 +87,17 @@ class GroupScoringIsolationTest extends TestCase
             'name' => 'Grup B',
         ]);
 
+        $this->seriA = CompetitionSeries::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Seri A',
+        ]);
+        $this->seriB = CompetitionSeries::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Seri B',
+        ]);
+
         $this->penyisihan = CompetitionRound::create([
             'eventner_id' => $this->eventner->id,
             'competition_category_id' => $this->level->id,
@@ -105,18 +121,19 @@ class GroupScoringIsolationTest extends TestCase
         $this->reg = Registration::factory()->for($this->eventner, 'eventner')->create([
             'competition_category_id' => $this->level->id,
             'competition_group_id' => $this->groupA->id,
+            'competition_series_id' => $this->seriA->id,
             'nama_sekolah' => 'SMPN 1',
         ]);
 
         $this->actingAs($this->eventner->user);
     }
 
-    private function makeRubric(string $name, ?CompetitionRound $round, ?CompetitionGroup $group, ?Judge $judge = null): AssessmentCriteria
+    private function makeRubric(string $name, ?CompetitionRound $round, ?CompetitionSeries $series, ?Judge $judge = null): AssessmentCriteria
     {
         $category = AssessmentCategory::create([
             'eventner_id' => $this->eventner->id,
             'competition_category_id' => $this->level->id,
-            'competition_group_id' => $group?->id,
+            'competition_series_id' => $series?->id,
             'competition_round_id' => $round?->id,
             'name' => $name,
             'sort_order' => 1,
@@ -405,15 +422,15 @@ class GroupScoringIsolationTest extends TestCase
     }
 
     /**
-     * Panel panitia menampilkan juri per tingkat+grup: juri Grup B tidak muncul
-     * saat membuka peserta Grup A.
+     * Panel panitia menampilkan juri per tingkat+seri: juri Seri B tidak muncul
+     * saat membuka peserta Seri A.
      */
-    public function test_daftar_juri_panel_mengikuti_grup_peserta()
+    public function test_daftar_juri_panel_mengikuti_seri_peserta()
     {
-        $juriB = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Grup B']);
-        $this->makeRubric('PBB Grup B', $this->penyisihan, $this->groupB, $juriB);
+        $juriB = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Seri B']);
+        $this->makeRubric('PBB Seri B', $this->penyisihan, $this->seriB, $juriB);
 
-        $this->panel()->assertSee('Juri Umum')->assertDontSee('Juri Grup B');
+        $this->panel()->assertSee('Juri Umum')->assertDontSee('Juri Seri B');
     }
 
     /**

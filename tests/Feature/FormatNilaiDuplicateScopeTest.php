@@ -9,6 +9,7 @@ use App\Models\AssessmentSubCategory;
 use App\Models\CompetitionCategory;
 use App\Models\CompetitionGroup;
 use App\Models\CompetitionRound;
+use App\Models\CompetitionSeries;
 use App\Models\DeductionCategory;
 use App\Models\DeductionCriteria;
 use App\Models\Eventner;
@@ -29,8 +30,8 @@ use Tests\TestCase;
  *
  * Yang dijaga di sini adalah dua jebakan jalur duplikat:
  *  - nama salinan tidak lagi "(Salinan)" yang harus di-rename manual;
- *  - grup/babak TIDAK diwarisi, karena salinan rubrik Grup A yang lahir
- *    bertanda Grup A diam-diam akan terkunci ke grup yang salah.
+ *  - seri/babak TIDAK diwarisi, karena salinan rubrik Seri A yang lahir
+ *    bertanda Seri A diam-diam akan terkunci ke seri yang salah.
  */
 class FormatNilaiDuplicateScopeTest extends TestCase
 {
@@ -41,6 +42,8 @@ class FormatNilaiDuplicateScopeTest extends TestCase
     private CompetitionCategory $level;
 
     private CompetitionGroup $groupA;
+
+    private CompetitionSeries $seriA;
 
     private CompetitionRound $penyisihan;
 
@@ -73,6 +76,13 @@ class FormatNilaiDuplicateScopeTest extends TestCase
             'sort_order' => 1,
         ]);
 
+        $this->seriA = CompetitionSeries::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Seri A',
+            'sort_order' => 1,
+        ]);
+
         $this->penyisihan = CompetitionRound::create([
             'eventner_id' => $this->eventner->id,
             'competition_category_id' => $this->level->id,
@@ -81,11 +91,12 @@ class FormatNilaiDuplicateScopeTest extends TestCase
             'sort_order' => 1,
         ]);
 
-        // Rubrik sumber: menempel di Grup A DAN babak Penyisihan.
+        // Rubrik sumber: menempel di Seri A DAN babak Penyisihan.
         $this->sumber = AssessmentCategory::create([
             'eventner_id' => $this->eventner->id,
             'competition_category_id' => $this->level->id,
             'competition_group_id' => $this->groupA->id,
+            'competition_series_id' => $this->seriA->id,
             'competition_round_id' => $this->penyisihan->id,
             'name' => 'PBB Penyisihan',
             'sort_order' => 1,
@@ -146,7 +157,7 @@ class FormatNilaiDuplicateScopeTest extends TestCase
         ]);
     }
 
-    public function test_salinan_tidak_mewarisi_grup_dan_babak()
+    public function test_salinan_tidak_mewarisi_seri_dan_babak()
     {
         $this->builder()
             ->call('startDuplicateCategory', $this->sumber->id)
@@ -157,7 +168,7 @@ class FormatNilaiDuplicateScopeTest extends TestCase
             ->where('name', 'PBB Final')
             ->firstOrFail();
 
-        $this->assertNull($salinan->competition_group_id, 'Salinan mewarisi grup sumber.');
+        $this->assertNull($salinan->competition_series_id, 'Salinan mewarisi seri sumber.');
         $this->assertNull($salinan->competition_round_id, 'Salinan mewarisi babak sumber.');
         // Tingkatnya tetap ikut — salinan tanpa tingkat tak akan muncul di mana pun.
         $this->assertSame($this->level->id, (int) $salinan->competition_category_id);

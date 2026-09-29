@@ -36,9 +36,9 @@ class ScoreFinalizationService
     {
         $registration = Registration::where('eventner_id', $eventnerId)->find($registrationId);
         $regCategoryId = $registration?->competition_category_id;
-        $groupId = $registration?->competition_group_id;
+        $seriesId = $registration?->competition_series_id;
 
-        $assessmentCategories = $this->rubricsForEntry($eventnerId, $regCategoryId, $groupId, $roundId, $judgeId);
+        $assessmentCategories = $this->rubricsForEntry($eventnerId, $regCategoryId, $seriesId, $roundId, $judgeId);
 
         // Peta skor: nilai tersimpan di database, ditimpa nilai di layar yang
         // belum tersimpan (dashboard panitia).
@@ -91,11 +91,11 @@ class ScoreFinalizationService
      * yang belum ditugaskan ke rubrik mana pun dinilai memakai seluruh rubrik
      * tingkat, sama seperti yang dirender di UI.
      */
-    private function rubricsForEntry(int $eventnerId, ?int $regCategoryId, ?int $groupId, ?int $roundId, int $judgeId): \Illuminate\Support\Collection
+    private function rubricsForEntry(int $eventnerId, ?int $regCategoryId, ?int $seriesId, ?int $roundId, int $judgeId): \Illuminate\Support\Collection
     {
         $baseQuery = fn () => AssessmentCategory::with(['subCategories.criterias'])
             ->where('eventner_id', $eventnerId)
-            ->forEntry($regCategoryId, $groupId, $roundId);
+            ->forEntry($regCategoryId, $seriesId, $roundId);
 
         $assessmentCategories = (clone $baseQuery())
             ->whereHas('judges', fn ($q) => $q->where('judges.id', $judgeId))
@@ -129,7 +129,7 @@ class ScoreFinalizationService
         $assessmentCategories = $this->rubricsForEntry(
             $eventnerId,
             $registration->competition_category_id,
-            $registration->competition_group_id,
+            $registration->competition_series_id,
             $roundId,
             $judgeId,
         );
@@ -169,14 +169,14 @@ class ScoreFinalizationService
             return;
         }
 
-        $groupId = $registration->competition_group_id;
+        $seriesId = $registration->competition_series_id;
 
-        // Juri wajib dihitung per babak & grup peserta: kalau tidak, nota
+        // Juri wajib dihitung per babak & seri peserta: kalau tidak, nota
         // "nilai selesai" terkirim padahal juri babak final belum menilai.
         $judgeIds = Judge::where('eventner_id', $eventnerId)
-            ->whereHas('assessmentCategories', function ($q) use ($eventnerId, $category, $groupId, $roundId) {
+            ->whereHas('assessmentCategories', function ($q) use ($eventnerId, $category, $seriesId, $roundId) {
                 $q->where('assessment_categories.eventner_id', $eventnerId)
-                    ->forEntry($category->id, $groupId, $roundId);
+                    ->forEntry($category->id, $seriesId, $roundId);
             })
             ->pluck('judges.id');
 
@@ -187,12 +187,12 @@ class ScoreFinalizationService
         $finalizedJudgeIds = AssessmentScore::where('registration_id', $registration->id)
             ->where('eventner_id', $eventnerId)
             ->where('is_finalized', true)
-            ->when($roundId, function ($q) use ($eventnerId, $category, $groupId, $roundId) {
+            ->when($roundId, function ($q) use ($eventnerId, $category, $seriesId, $roundId) {
                 // Kriteria babak ini — memakai scope yang sama dengan finalize()
                 // supaya rubrik tanpa babak (berlaku semua babak) ikut terhitung,
                 // tidak cuma rubrik yang eksplisit menempel ke babak ini.
                 $criteriaIds = AssessmentCategory::where('eventner_id', $eventnerId)
-                    ->forEntry($category->id, $groupId, $roundId)
+                    ->forEntry($category->id, $seriesId, $roundId)
                     ->with('subCategories.criterias')
                     ->get()
                     ->flatMap(fn ($cat) => $cat->subCategories->flatMap(fn ($sub) => $sub->criterias->pluck('id')))

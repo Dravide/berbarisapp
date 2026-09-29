@@ -222,7 +222,7 @@ class Index extends Component
         $this->selectedRegistrationId = $id;
         // Scoping ke eventner sendiri — cegah IDOR ke registrasi tenant lain.
         $this->selectedRegistration = Registration::where('eventner_id', $this->eventner->id)
-            ->with('competitionCategory')
+            ->with('competitionCategory', 'competitionSeries')
             ->findOrFail($id);
         $this->view = 'scoring';
 
@@ -277,7 +277,9 @@ class Index extends Component
             ->get();
     }
 
-    /** Babak datang dari DOM pada jalur lain — pastikan milik eventner ini sebelum dipakai. */
+    /**
+     * Babak datang dari DOM pada jalur lain — pastikan milik eventner ini sebelum dipakai.
+     */
     public function updatedSelectedRoundId()
     {
         $this->guardSelectedRound();
@@ -422,21 +424,21 @@ class Index extends Component
     public function loadJudges()
     {
         // Hanya juri yang ditugaskan (Tugaskan Kategori) ke format penilaian
-        // pada tingkat + grup + BABAK yang sedang dibuka. Ketiganya wajib:
-        //  - grup: juri yang cuma memegang rubrik Grup B tidak boleh muncul di
-        //    panel peserta Grup A — inilah "juri berbeda per grup";
-        //  - babak: juri final tidak boleh muncul saat menilai penyisihan grup,
+        // pada tingkat + seri + BABAK yang sedang dibuka. Ketiganya wajib:
+        //  - seri: juri yang cuma memegang rubrik Seri B tidak boleh muncul di
+        //    panel peserta Seri A — inilah "juri berbeda per seri";
+        //  - babak: juri final tidak boleh muncul saat menilai penyisihan seri,
         //    dan sebaliknya — rubriknya memang baris terpisah, jadi tanpa
         //    saringan babak kedua regu juri tercampur di satu panel.
         $category = $this->selectedRegistration->competitionCategory;
         if ($category) {
-            $groupId = $this->selectedRegistration->competition_group_id;
+            $seriesId = $this->selectedRegistration->competition_series_id;
             $roundId = $this->selectedRoundId ? (int) $this->selectedRoundId : null;
 
             $this->judges = Judge::where('eventner_id', $this->eventner->id)
-                ->whereHas('assessmentCategories', function ($q) use ($category, $groupId, $roundId) {
+                ->whereHas('assessmentCategories', function ($q) use ($category, $seriesId, $roundId) {
                     $q->where('assessment_categories.eventner_id', $this->eventner->id)
-                        ->forEntry($category->id, $groupId, $roundId);
+                        ->forEntry($category->id, $seriesId, $roundId);
                 })
                 ->get();
 
@@ -884,7 +886,7 @@ class Index extends Component
         }
 
         // Pengurangan ikut terkunci bersama nilainya: ia dipakai sebagai
-        // pemecah seri saat menentukan juara, jadi mengubahnya setelah
+        // pemecah nilai sama saat menentukan juara, jadi mengubahnya setelah
         // finalisasi sama saja mengubah hasil lomba.
         if ($this->hasFinalizedScores()) {
             $this->deductionSaveStatus = 'error';
@@ -961,6 +963,7 @@ class Index extends Component
             // maupun layar menampilkan urutan yang identik.
             $query = Registration::where('eventner_id', $this->eventner->id)
                 ->where('competition_category_id', $this->selectedCategoryId)
+                ->with('competitionSeries')
                 ->orderByRaw('COALESCE(urutan_tampil, 999999)')
                 ->orderBy('nama_sekolah');
 
@@ -991,7 +994,7 @@ class Index extends Component
 
         if ($this->view === 'scoring' && $this->selectedRegistration) {
             // Rubrik yang boleh dinilai juri terpilih = tingkat peserta ini,
-            // grupnya, dan babak yang sedang dibuka. Babak wajib ikut: rubrik
+            // serinya, dan babak yang sedang dibuka. Babak wajib ikut: rubrik
             // penyisihan dan final sengaja dibuat terpisah (kuncinya per
             // kriteria), jadi tanpa penyaring ini form menampilkan keduanya
             // sekaligus dan operator tak tahu mana yang sedang dinilai.
@@ -999,7 +1002,7 @@ class Index extends Component
                 ->where('eventner_id', $this->eventner->id)
                 ->forEntry(
                     $this->selectedRegistration->competition_category_id ?? null,
-                    $this->selectedRegistration->competition_group_id,
+                    $this->selectedRegistration->competition_series_id,
                     $this->selectedRoundId ? (int) $this->selectedRoundId : null,
                 );
 

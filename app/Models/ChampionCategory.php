@@ -88,18 +88,26 @@ class ChampionCategory extends Model
      * seluruh kriteria dari sub-kategori yang dicentang, supaya arti kategori
      * juara lama tidak berubah setelah rilis.
      *
-     * $roundId / $groupId menyaring kriteria ke rubrik babak & grup itu.
-     * Tanpa penyaringan, kategori juara yang mencakup rubrik Penyisihan DAN
-     * Final menjumlahkan keduanya — padahal nilai final adalah penentu juara
-     * dan nilai penyisihan hanya penentu siapa yang lolos. Rubrik tanpa
-     * babak/grup (perilaku lama) selalu ikut, sehingga penyaringan tidak
-     * mengubah kategori juara yang rubriknya belum ditandai.
+     * $roundId menyaring kriteria ke rubrik babak itu. Tanpa penyaringan,
+     * kategori juara yang mencakup rubrik Penyisihan DAN Final menjumlahkan
+     * keduanya — padahal nilai final adalah penentu juara dan nilai penyisihan
+     * hanya penentu siapa yang lolos. Rubrik tanpa babak (perilaku lama) selalu
+     * ikut, sehingga penyaringan tidak mengubah kategori juara yang rubriknya
+     * belum ditandai.
+     *
+     * $groupId sengaja TIDAK lagi dipakai menyaring. Dulu ia menyaring rubrik
+     * bergrup supaya tabel tiap grup hanya menjumlahkan kriterianya sendiri;
+     * sejak lembar nilai ditentukan SERI — dan satu grup boleh memuat beberapa
+     * seri — saringan itu justru membuang rubrik seri lain, dan total pasukan
+     * Seri B jadi tidak sebanding di tabel Grup A. Cakupan grup tetap bekerja,
+     * tapi sebagai saringan PESERTA di ChampionCalculator::rankOrdered().
+     * Parameternya dibiarkan ada demi kompatibilitas pemanggil.
      *
      * @return array<int, mixed>
      */
     public function scoringCriteriaWeights($roundId = null, $groupId = null): array
     {
-        return $this->resolveCriteriaWeights($this->criterias, $this->assessmentSubCategories, $roundId, $groupId);
+        return $this->resolveCriteriaWeights($this->criterias, $this->assessmentSubCategories, $roundId);
     }
 
     /**
@@ -109,35 +117,30 @@ class ChampionCategory extends Model
      */
     public function tiebreakCriteriaWeights($roundId = null, $groupId = null): array
     {
-        return $this->resolveCriteriaWeights($this->tiebreakCriterias, $this->tiebreakSubCategories, $roundId, $groupId);
+        return $this->resolveCriteriaWeights($this->tiebreakCriterias, $this->tiebreakSubCategories, $roundId);
     }
 
     /**
      * @param  \Illuminate\Support\Collection  $explicit  kriteria yang dicentang langsung
      * @param  \Illuminate\Support\Collection  $fallbackSubs  sub-kategori yang dicentang
      */
-    private function resolveCriteriaWeights($explicit, $fallbackSubs, $roundId = null, $groupId = null): array
+    private function resolveCriteriaWeights($explicit, $fallbackSubs, $roundId = null): array
     {
-        // Rubrik induk tiap sub-kategori membawa babak & grupnya. Dimuat di
-        // sini supaya penyaringan tidak menambah query per kriteria.
+        // Rubrik induk tiap sub-kategori membawa babaknya. Dimuat di sini
+        // supaya penyaringan tidak menambah query per kriteria.
         // concat, bukan +: Collection Eloquent tidak mendukung operator union.
         $rubrics = $fallbackSubs->map(fn ($sub) => $sub->category)
             ->concat($explicit->map(fn ($crit) => $crit->subCategory?->category))
             ->filter()
             ->keyBy('id');
 
-        $allowed = function ($rubric) use ($roundId, $groupId) {
+        $allowed = function ($rubric) use ($roundId) {
             if (! $rubric) {
                 return true;
             }
 
             if ($roundId && $rubric->competition_round_id !== null
                 && (string) $rubric->competition_round_id !== (string) $roundId) {
-                return false;
-            }
-
-            if ($groupId && $rubric->competition_group_id !== null
-                && (string) $rubric->competition_group_id !== (string) $groupId) {
                 return false;
             }
 
@@ -170,14 +173,13 @@ class ChampionCategory extends Model
      * belum punya rubrik, punya rubrik global (competition_category_id null),
      * atau punya rubrik milik tingkat tsb.
      *
-     * Kirim $competitionGroupId untuk menghitung juara satu grup: rubrik milik
-     * grup lain lalu tidak dianggap, supaya "Juara Grup A" dan "Juara Grup B"
-     * jadi dua daftar terpisah. Rubrik tanpa grup (perilaku lama) selalu
-     * dianggap dan tetap membuat kategori juara tampil di grup mana pun.
-     *
      * Kirim $competitionRoundId untuk hal yang sama pada babak: kategori juara
      * yang rubriknya khusus babak Final tidak ikut tampil saat halaman dibuka
      * pada babak Penyisihan. Rubrik tanpa babak selalu dianggap.
+     *
+     * $competitionGroupId sengaja tidak lagi dipakai menyaring rubrik — alasan
+     * lengkapnya di scoringCriteriaWeights(). Ia masih diterima demi pemanggil
+     * lama; cakupan grup tetap bekerja sebagai saringan peserta.
      */
     public function isVisibleFor($competitionCategoryId, $competitionGroupId = null, $competitionRoundId = null): bool
     {
@@ -186,7 +188,7 @@ class ChampionCategory extends Model
             return true;
         }
 
-        return $subs->contains(function ($sub) use ($competitionCategoryId, $competitionGroupId, $competitionRoundId) {
+        return $subs->contains(function ($sub) use ($competitionCategoryId, $competitionRoundId) {
             $cat = $sub->category;
             if (!$cat) {
                 return true;
@@ -196,12 +198,6 @@ class ChampionCategory extends Model
                 || (string) $cat->competition_category_id === (string) $competitionCategoryId;
 
             if (!$levelMatch) {
-                return false;
-            }
-
-            if ($competitionGroupId
-                && $cat->competition_group_id !== null
-                && (string) $cat->competition_group_id !== (string) $competitionGroupId) {
                 return false;
             }
 

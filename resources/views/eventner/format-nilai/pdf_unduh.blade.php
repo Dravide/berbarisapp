@@ -43,6 +43,7 @@
         .cat-head { width: 100%; border-collapse: collapse; margin-bottom: 0; }
         .cat-head td { padding: 6px 10px; color: #fff; font-weight: bold; font-size: 10px; text-transform: uppercase; }
         .cat-head .cat-name { background: #2c3e50; }
+        .cat-head .cat-series { background: #56687a; text-align: right; font-size: 9px; }
 
         .sub-head { background: #ecf0f1; padding: 4px 10px; font-size: 8px; font-weight: bold; color: #2c3e50; text-transform: uppercase; letter-spacing: 0.5px; border-left: 1px solid #ddd; border-right: 1px solid #ddd; }
 

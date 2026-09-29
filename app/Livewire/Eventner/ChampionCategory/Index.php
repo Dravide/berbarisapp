@@ -691,7 +691,7 @@ class Index extends Component
         $assessmentCategories = AssessmentCategory::with([
                 'subCategories.criterias',
                 'competitionCategory.parent',
-                'competitionGroup',
+                'competitionSeries',
                 'competitionRound',
             ])
             ->where('eventner_id', $this->eventner->id)
@@ -754,28 +754,24 @@ class Index extends Component
                 return false;
             }
 
-            // Lingkup juara ikut menyempitkan daftar rubrik. Saat lingkup "Grup A"
-            // dipilih, rubrik Grup B dan rubrik babak Final disembunyikan: kategori
-            // juara grup yang mencakup rubrik babak lain bukan sekadar tampak
-            // berlebihan — nilainya benar-benar ikut terjumlah di peringkat.
-            // Menampilkannya mengundang panitia mencentang rubrik yang salah.
-            // Rubrik tanpa grup/babak (berlaku umum) selalu ikut.
+            // Lingkup juara ikut menyempitkan daftar rubrik lewat BABAK: saat
+            // lingkup "Grup A" dipilih, rubrik babak Final disembunyikan, karena
+            // memang tidak ikut terjumlah di peringkatnya. Menampilkannya
+            // mengundang panitia mencentang rubrik yang salah. Rubrik tanpa
+            // babak (berlaku umum) selalu ikut.
+            //
+            // Grup sengaja TIDAK menyaring lagi di sini, sama seperti peta
+            // bobotnya: sejak lembar nilai ditentukan SERI dan satu grup boleh
+            // memuat beberapa seri, rubrik seri lain justru harus tetap terlihat
+            // — peserta Grup A yang berseri B memang dinilai dengan rubrik itu.
             $scope = $this->selectedScopeId
                 ? $scopes->firstWhere('key', (string) $this->selectedScopeId)
                 : null;
 
-            if ($scope) {
-                if ($scope['group_id'] !== ''
-                    && $cat->competition_group_id !== null
-                    && (string) $cat->competition_group_id !== $scope['group_id']) {
-                    return false;
-                }
-
-                if ($scope['round_id'] !== ''
-                    && $cat->competition_round_id !== null
-                    && (string) $cat->competition_round_id !== $scope['round_id']) {
-                    return false;
-                }
+            if ($scope && $scope['round_id'] !== ''
+                && $cat->competition_round_id !== null
+                && (string) $cat->competition_round_id !== $scope['round_id']) {
+                return false;
             }
 
             return true;
@@ -799,11 +795,11 @@ class Index extends Component
         // peserta (dan babak) yang berbeda. Panitia bisa mencentang rubrik
         // final untuk kategori juara penyisihan tanpa sadar.
         //
-        // Karena itu pengelompokan mengikuti grup dan babak, bukan nama: tiap
-        // bagian berjudul "Grup A — Babak Fase Grup", sehingga isi satu
-        // himpunan penilaian terlihat sebagai satu kesatuan. Rubrik tanpa grup
+        // Karena itu pengelompokan mengikuti seri dan babak, bukan nama: tiap
+        // bagian berjudul "Seri A — Babak Fase Grup", sehingga isi satu
+        // himpunan penilaian terlihat sebagai satu kesatuan. Rubrik tanpa seri
         // maupun babak (berlaku semua peserta) masuk bagian tersendiri tanpa
-        // sub-judul, sama seperti tampilan sebelum grup/babak ada.
+        // sub-judul, sama seperti tampilan sebelum seri/babak ada.
         $rubrikByLevel = collect();
         foreach ($filteredAssessmentCategories->groupBy('competition_category_id') as $ccId => $cats) {
             $level = null;
@@ -813,21 +809,21 @@ class Index extends Component
                     ->find($ccId);
             }
 
-            // Kunci bagian: grup dan babak sekaligus. Prefiks angka menitipkan
-            // urutan supaya sortBy kunci teks ikut urutan grup/babak, bukan
+            // Kunci bagian: seri dan babak sekaligus. Prefiks angka menitipkan
+            // urutan supaya sortBy kunci teks ikut urutan seri/babak, bukan
             // abjad nama bagian.
             $grouped = collect();
-            foreach ($cats->groupBy(fn ($cat) => $cat->competition_group_id ?? 0) as $groupId => $byGroup) {
-                foreach ($byGroup->groupBy(fn ($cat) => $cat->competition_round_id ?? 0) as $roundId => $byRound) {
-                    $group = $groupId ? $byGroup->first()->competitionGroup : null;
+            foreach ($cats->groupBy(fn ($cat) => $cat->competition_series_id ?? 0) as $seriesId => $bySeries) {
+                foreach ($bySeries->groupBy(fn ($cat) => $cat->competition_round_id ?? 0) as $roundId => $byRound) {
+                    $seri = $seriesId ? $bySeries->first()->competitionSeries : null;
                     $round = $roundId ? $byRound->first()->competitionRound : null;
 
                     // Hanya bagian yang benar-benar menyempit yang diberi
-                    // judul: tingkat tanpa grup/babak tampil seperti dulu,
+                    // judul: tingkat tanpa seri/babak tampil seperti dulu,
                     // satu daftar tanpa sub-judul.
                     $parts = [];
-                    if ($group) {
-                        $parts[] = $group->name;
+                    if ($seri) {
+                        $parts[] = $seri->name;
                     }
                     if ($round) {
                         $parts[] = 'Babak '.$round->name;
@@ -836,9 +832,9 @@ class Index extends Component
                     $grouped->push([
                         'key' => sprintf(
                             '%05d-%05d-%s',
-                            $group?->sort_order ?? 99999,
+                            $seri?->sort_order ?? 99999,
                             $round?->sort_order ?? 99999,
-                            ($group?->name ?? '').'|'.($round?->name ?? '')
+                            ($seri?->name ?? '').'|'.($round?->name ?? '')
                         ),
                         'section_name' => implode(' — ', $parts),
                         'is_final' => (bool) $round?->isFinal(),

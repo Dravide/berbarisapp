@@ -19,6 +19,8 @@ Route::get('judges/{judge}/format-pdf/{competitionCategoryId?}', [App\Http\Contr
 Route::get('venues', App\Livewire\Eventner\Venue\Index::class)->name('eventner.venues.index');
 Route::get('competition-categories', App\Livewire\Eventner\CompetitionCategory\Index::class)->name('eventner.competition-categories.index');
 Route::get('participants', App\Livewire\Eventner\Participant\Index::class)->name('eventner.participants.index');
+// Meja daftar ulang — hadir, grup, seri, nomor undian dalam satu layar.
+Route::get('daftar-ulang', App\Livewire\Eventner\DaftarUlang\Index::class)->name('eventner.daftar-ulang.index');
 // Didaftarkan SEBELUM rute {registration} — kalau tidak, "daftar-ulang" akan
 // ditangkap sebagai id registrasi dan berakhir 404.
 Route::get('participants/daftar-ulang', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadDaftarUlang'])->name('eventner.participants.daftar-ulang');

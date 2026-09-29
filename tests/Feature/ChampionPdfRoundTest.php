@@ -194,7 +194,7 @@ class ChampionPdfRoundTest extends TestCase
     /** Tanpa babak: perilaku lama — seluruh kriteria dijumlahkan. */
     public function test_tanpa_babak_nilai_kedua_babak_dijumlahkan()
     {
-        // Dua peserta seri, jadi urutannya tidak tetap — yang diuji jumlahnya.
+        // Dua peserta bernilai sama, jadi urutannya tidak tetap — yang diuji jumlahnya.
         $this->assertEquals(['SMPN 1' => 30, 'SMPN 2' => 30], $this->totals());
     }
 

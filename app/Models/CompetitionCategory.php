@@ -65,6 +65,17 @@ class CompetitionCategory extends Model
         return $this->hasMany(CompetitionRound::class, 'competition_category_id')->orderBy('sort_order');
     }
 
+    /**
+     * Seri urutan perlombaan di dalam tingkat ini ("Seri A" / "Seri B").
+     *
+     * Lepas dari groups(): seri yang menentukan lembar nilai, grup yang
+     * menentukan tabel peringkat. Lihat CompetitionSeries.
+     */
+    public function series()
+    {
+        return $this->hasMany(CompetitionSeries::class, 'competition_category_id')->orderBy('sort_order');
+    }
+
     public function remainingSlots(): int
     {
         if (!$this->kuota) {

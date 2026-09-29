@@ -10,6 +10,7 @@ use App\Models\CompetitionCategory;
 use App\Models\CompetitionGroup;
 use App\Models\CompetitionRound;
 use App\Models\CompetitionRoundRegistration;
+use App\Models\CompetitionSeries;
 use App\Models\Eventner;
 use App\Models\Judge;
 use App\Models\Registration;
@@ -23,9 +24,11 @@ use Tests\TestCase;
  *
  * Dua keluhan yang dijaga di sini:
  *
- *  1. "nilai PBB ada 3, semua ada 3" — tabel Grup A memuat kolom rubrik Grup B
- *     yang tak pernah dinilai untuk pesertanya. Nama kolomnya sama, jadi
- *     terbaca sebagai tiga kolom PBB.
+ *  1. "nilai PBB ada 3, semua ada 3" — tabel Grup A memuat kolom seri yang
+ *     tak dihuni satu pun pesertanya. Nama kolomnya sama, jadi terbaca sebagai
+ *     tiga kolom PBB. Sejak lembar nilai ditentukan SERI, saringannya seri yang
+ *     benar-benar dihuni peserta di bagian itu — bukan lagi penanda grup pada
+ *     rubrik, karena dua pasukan satu grup boleh berbeda seri.
  *  2. "masih umum semua" — satu tabel untuk seluruh tingkat, padahal nilai
  *     penyisihan dan nilai final tinggal di baris kriteria berbeda dan tidak
  *     pernah dijumlahkan.
@@ -98,13 +101,14 @@ class ScoreRecapGroupsTest extends TestCase
     }
 
     /** Rubrik + kriteria; nilai kriteria pertama dikembalikan untuk diisi. */
-    private function rubrik(string $name, ?CompetitionGroup $group, ?CompetitionRound $round): AssessmentCriteria
+    private function rubrik(string $name, ?CompetitionGroup $group, ?CompetitionRound $round, ?CompetitionSeries $series = null): AssessmentCriteria
     {
         $category = AssessmentCategory::create([
             'eventner_id' => $this->eventner->id,
             'competition_category_id' => $this->level->id,
             'competition_group_id' => $group?->id,
             'competition_round_id' => $round?->id,
+            'competition_series_id' => $series?->id,
             'name' => $name,
             'sort_order' => 1,
         ]);
@@ -123,11 +127,12 @@ class ScoreRecapGroupsTest extends TestCase
         ]);
     }
 
-    private function peserta(string $nama, ?CompetitionGroup $group): Registration
+    private function peserta(string $nama, ?CompetitionGroup $group, ?CompetitionSeries $series = null): Registration
     {
         return Registration::factory()->for($this->eventner, 'eventner')->create([
             'competition_category_id' => $this->level->id,
             'competition_group_id' => $group?->id,
+            'competition_series_id' => $series?->id,
             'nama_sekolah' => $nama,
         ]);
     }
@@ -143,42 +148,114 @@ class ScoreRecapGroupsTest extends TestCase
         ]);
     }
 
-    /** Nama kolom rubrik yang muncul, dalam urutan tampil. */
+    /**
+     * Nama kolom rubrik yang muncul, dalam urutan tampil.
+     *
+     * Sejak kepala kolom boleh memuat lencana seri (dua seri bisa memakai nama
+     * kategori yang sama persis), isi <h6> diambil apa adanya lalu lencana
+     * dibuang — yang diuji nama rubriknya, bukan lencananya.
+     */
     private function kolomRekap(string $html): array
     {
-        preg_match_all('/<th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">([^<]+)<\/h6><\/th>/', $html, $m);
+        preg_match_all('/<th class="border-bottom-0 text-center"><h6 class="fw-semibold mb-0">(.*?)<\/h6><\/th>/s', $html, $m);
+
+        $nama = array_map(function ($isi) {
+            $tanpaLencana = preg_replace('/<span class="badge[^"]*">.*?<\/span>/s', '', $isi);
+
+            return trim(html_entity_decode(strip_tags($tanpaLencana)));
+        }, $m[1]);
 
         // Buang kolom angka yang bukan rubrik.
-        return array_values(array_filter($m[1], fn ($t) => ! in_array(trim($t), ['Total', 'Pengurangan', 'Nilai Akhir', 'PDF'], true)));
+        return array_values(array_filter($nama, fn ($t) => ! in_array($t, ['Total', 'Pengurangan', 'Nilai Akhir', 'PDF'], true)));
     }
 
     /**
-     * INI keluhan "nilai PBB ada 3": rubrik bergrup tidak boleh jadi kolom di
-     * tabel grup lain, dan rubrik tanpa grup tetap muncul di kedua tabel.
+     * INI keluhan "nilai PBB ada 3": kolom rubrik seri yang tak dihuni peserta
+     * di sebuah grup tidak boleh ikut jadi kolom di tabel grup itu — nama
+     * kolomnya sama, jadi terbaca sebagai rubrik ganda. Rubrik tanpa seri
+     * berlaku di mana saja, jadi ia tetap muncul di kedua tabel.
      */
-    public function test_tabel_grup_hanya_memuat_kolom_rubrik_grupnya()
+    public function test_tabel_grup_hanya_memuat_kolom_seri_yang_dihuninya()
     {
-        $this->rubrik('PBB Grup A', $this->groupA, $this->penyisihan);
-        $this->rubrik('PBB Grup B', $this->groupB, $this->penyisihan);
+        $seriA = CompetitionSeries::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Seri A',
+            'sort_order' => 1,
+        ]);
+        $seriB = CompetitionSeries::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Seri B',
+            'sort_order' => 2,
+        ]);
+
+        // Penanda grup sengaja tetap dipasang: sejak lembar nilai ditentukan
+        // seri, penanda itu TIDAK lagi menyaring kolom — lihat tes ini.
+        $this->rubrik('PBB Seri A', $this->groupA, $this->penyisihan, $seriA);
+        $this->rubrik('PBB Seri B', $this->groupB, $this->penyisihan, $seriB);
         $this->rubrik('PBB Umum', null, $this->penyisihan);
 
-        $this->peserta('SMPN 1', $this->groupA);
-        $this->peserta('SMPN 2', $this->groupB);
+        $this->peserta('SMPN 1', $this->groupA, $seriA);
+        $this->peserta('SMPN 2', $this->groupB, $seriB);
 
         $html = Livewire::test(\App\Livewire\Eventner\ScoreRecap\Index::class, [
             'selectedCategoryId' => $this->level->id,
         ])->html();
 
-        // Dua tabel (satu per grup), masing-masing 2 kolom: rubrik grup itu +
-        // rubrik tanpa grup. Bukan 3 kolom di satu tabel.
+        // Dua tabel (satu per grup), masing-masing 2 kolom: rubrik seri yang
+        // dihuni grup itu + rubrik tanpa seri. Bukan 3 kolom di satu tabel.
         $kolom = $this->kolomRekap($html);
 
-        $this->assertSame(['PBB Grup A', 'PBB Umum', 'PBB Grup B', 'PBB Umum'], $kolom);
+        $this->assertSame(['PBB Seri A', 'PBB Umum', 'PBB Seri B', 'PBB Umum'], $kolom);
 
         // Judul per grup memang tampil, dan tetap muncul sekali tiap grup —
         // tidak tergandakan oleh kolom rubrik.
         $this->assertSame(1, substr_count($html, 'ti-users-group me-1"></i>Grup A'));
         $this->assertSame(1, substr_count($html, 'ti-users-group me-1"></i>Grup B'));
+    }
+
+    /**
+     * Inti fiturnya: satu grup boleh memuat beberapa seri, dan tabel grup itu
+     * memuat kolom SEMUA seri yang dihuni pesertanya.
+     *
+     * Kalau kolomnya disaring mati ke satu seri saja, pasukan Seri B tampil
+     * tanpa nilai di tabel grupnya sendiri. Lencana seri per baris yang
+     * membedakan asal tiap kolom — tanpa itu, dua rubrik bernama sama ("PBB")
+     * terbaca sebagai kolom ganda.
+     */
+    public function test_tabel_grup_memuat_kolom_semua_seri_yang_dihuninya()
+    {
+        $seriA = CompetitionSeries::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Seri A',
+            'sort_order' => 1,
+        ]);
+        $seriB = CompetitionSeries::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Seri B',
+            'sort_order' => 2,
+        ]);
+
+        $this->rubrik('PBB', $this->groupA, $this->penyisihan, $seriA);
+        $this->rubrik('PBB', $this->groupA, $this->penyisihan, $seriB);
+
+        $this->peserta('SMPN Seri A', $this->groupA, $seriA);
+        $this->peserta('SMPN Seri B', $this->groupA, $seriB);
+
+        $html = Livewire::test(\App\Livewire\Eventner\ScoreRecap\Index::class, [
+            'selectedCategoryId' => $this->level->id,
+        ])->html();
+
+        // Dua kolom bernama sama, dua-duanya milik grup yang sama.
+        $this->assertSame(['PBB', 'PBB'], $this->kolomRekap($html));
+        $this->assertSame(1, substr_count($html, 'ti-users-group me-1"></i>Grup A'));
+
+        // Lencana seri per baris — inilah yang membuat "PBB" dua kali terbaca.
+        $this->assertSame(1, substr_count($html, 'fw-semibold">Seri A</span>'));
+        $this->assertSame(1, substr_count($html, 'fw-semibold">Seri B</span>'));
     }
 
     /**
