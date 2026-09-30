@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
 
@@ -49,13 +50,15 @@ class AssessmentCategory extends Model
     /**
      * Rubrik yang berlaku untuk sebuah tingkat, disaring per seri dan babak.
      *
-     * Satu-satunya definisi "rubrik mana yang boleh dinilai" — dipakai halaman
-     * juri, panitia input nilai, dan finalisasi. Sengaja mengembalikan builder
-     * yang sudah memuat klausa tingkat/seri/babak, supaya pemanggil boleh
-     * menumpuk whereHas('judges') ATAU memakai daftar ini apa adanya untuk
-     * cabang fallback. Kalau klausa seri hanya ditempel di cabang whereHas,
-     * cabang fallback "rubrik kosong → semua rubrik tingkat" akan membocorkan
-     * rubrik Seri A ke juri Seri B.
+     * Definisi "lembar nilai mana yang terbuka untuk peserta ini" — dipakai
+     * halaman juri, panitia input nilai, dan finalisasi.
+     *
+     * Ini BUKAN definisi "rubrik mana yang boleh diisi juri ini". Pertanyaan
+     * itu dijawab scopeBolehDinilaiOleh(), dan keduanya digabung oleh
+     * rubrikUntukPeserta(). Sengaja dipisah: seri/babak menempel pada
+     * PESERTA, sedangkan centang juri menempel pada RUBRIK — dua sumbu bebas,
+     * dan menggabungkannya di sini membuat peserta Seri A ikut terlihat oleh
+     * juri yang cuma memegang satu rubrik seri tetangga.
      *
      * Aturan seri: rubrik tanpa seri berlaku di mana saja; rubrik berseri hanya
      * berlaku untuk peserta berseri itu. Peserta yang belum dapat seri karena
@@ -133,6 +136,129 @@ class AssessmentCategory extends Model
     public function judges()
     {
         return $this->belongsToMany(Judge::class);
+    }
+
+    // ── Pembagian rubrik antar juri ────────────────────────────────────
+
+    /**
+     * Batas "rubrik ini diisi siapa".
+     *
+     * Rubrik TANPA baris juri = TIDAK dibatasi: semua juri dari baris penugasan
+     * yang berlaku boleh mengisinya. Itu perilaku sebelum fitur pembagian ada,
+     * dan sengaja dipertahankan supaya acara yang sudah berjalan tak berubah
+     * begitu fitur ini rilis. Baris berarti pembatasan, bukan izin.
+     *
+     * whereDoesntHave/whereHas WAJIB dibungkus satu where(). forEntry() sudah
+     * memakai OR di dalam klausa serinya; OR yang bocor ke luar akan membuat
+     * saringan ini hilang begitu saja dan rubrik seri tetangga ikut kembali.
+     *
+     * Saringan eventner di dalam relasi bukan hiasan: satu baris pivot lintas
+     * tenant membuat rubrik terbaca "sudah ditugaskan" lalu hilang dari SEMUA
+     * juri tenant pemiliknya — kegagalan yang tampak seperti rubrik terhapus.
+     */
+    public function scopeBolehDinilaiOleh($query, int $eventnerId, int $judgeId)
+    {
+        return $query->where(function ($q) use ($eventnerId, $judgeId) {
+            $q->whereDoesntHave('judges', fn ($j) => $j->where('judges.eventner_id', $eventnerId))
+                ->orWhereHas('judges', fn ($j) => $j
+                    ->where('judges.eventner_id', $eventnerId)
+                    ->where('judges.id', $judgeId));
+        });
+    }
+
+    /**
+     * SATU-SATUNYA pintu "rubrik mana yang boleh dinilai juri ini untuk
+     * peserta ini".
+     *
+     * Dipakai tablet juri, panel panitia, dan ScoreFinalizationService. Ketiga
+     * jalur itu WAJIB menghasilkan himpunan kriteria yang sama: finalize()
+     * menolak finalisasi selama ada satu kriteria yang belum terisi, jadi
+     * kalau tablet merender satu kriteria lebih banyak daripada yang dituntut
+     * finalize(), tombol finalisasi tak akan pernah bisa ditekan — tanpa satu
+     * pun pesan yang menjelaskan sebabnya.
+     *
+     * $judgeId null = jangan saring per juri (panel panitia sebelum jurinya
+     * dipilih, dan rekap yang memang menyatukan semua juri).
+     */
+    public static function rubrikUntukPeserta(
+        int $eventnerId,
+        ?int $levelId,
+        ?int $seriesId,
+        ?int $roundId,
+        ?int $judgeId = null
+    ): \Illuminate\Database\Eloquent\Builder {
+        return static::with(['subCategories.criterias'])
+            ->where('eventner_id', $eventnerId)
+            ->forEntry($levelId, $seriesId, $roundId)
+            ->when($judgeId, fn ($q) => $q->bolehDinilaiOleh($eventnerId, $judgeId));
+    }
+
+    /**
+     * Varian tanpa peserta — lembar cetak per juri dan kartu akses.
+     *
+     * Seri sengaja tidak ikut: satu juri grup boleh memegang peserta dari
+     * beberapa seri, jadi menyaring seri di sini akan membuang lembar yang
+     * justru harus tercetak. Seri baru ditentukan saat pesertanya disebut.
+     *
+     * $levelId null berarti SEMUA tingkat, bukan "hanya rubrik global".
+     * Perhatikan bedanya dengan forLevel(): di sana null ikut jadi nilai yang
+     * dibandingkan, sehingga syaratnya menyusut jadi `competition_category_id
+     * IS NULL`. Kartu akses memangil pintu ini tanpa tingkat saat jurinya
+     * memegang lebih dari satu tingkat — dengan forLevel(null) setiap rubrik
+     * bertingkat hilang dan kartunya tercetak "Belum ada tugas".
+     */
+    public static function rubrikUntukTingkat(int $eventnerId, ?int $levelId, ?int $judgeId = null)
+    {
+        $query = static::with(['subCategories.criterias', 'deductionCategories.criterias', 'competitionSeries'])
+            ->where('eventner_id', $eventnerId);
+
+        if ($levelId) {
+            $query->forLevel($levelId);
+        }
+
+        return $query->when($judgeId, fn ($q) => $q->bolehDinilaiOleh($eventnerId, $judgeId));
+    }
+
+    /** Id juri yang dicentang pada rubrik ini. Kosong = belum dibagi. */
+    public function rubricJudgeIds(): array
+    {
+        return DB::table('assessment_category_judge')
+            ->where('assessment_category_id', $this->id)
+            ->pluck('judge_id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    /**
+     * Satu-satunya jalur tulis ke assessment_category_judge.
+     *
+     * Hapus lalu tulis ulang, meniru CompetitionGroup::syncJudges(): pemanggil
+     * tak perlu tahu keadaan sebelumnya, dan centang ulang atas himpunan yang
+     * sama menghasilkan baris yang sama persis. Unique indexnya boleh
+     * diandalkan di sini karena kedua kolomnya NOT NULL.
+     *
+     * @param  array<int>  $judgeIds
+     */
+    public function syncRubricJudges(array $judgeIds): void
+    {
+        $query = DB::table('assessment_category_judge')->where('assessment_category_id', $this->id);
+        $query->delete();
+
+        $now = now();
+        $baris = collect($judgeIds)
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->map(fn ($id) => [
+                'judge_id' => $id,
+                'assessment_category_id' => $this->id,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ])
+            ->all();
+
+        if ($baris !== []) {
+            DB::table('assessment_category_judge')->insert($baris);
+        }
     }
 
     public function deductionCategories()

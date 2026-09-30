@@ -276,15 +276,7 @@ class FormatNilaiController extends Controller
                 ->unique()
                 ->all();
 
-        $q = AssessmentCategory::with(['subCategories.criterias', 'deductionCategories.criterias', 'competitionSeries'])
-            ->where('eventner_id', $eventner->id);
-
-        if ($levelId) {
-            $q->where(function ($sq) use ($levelId) {
-                $sq->where('competition_category_id', $levelId)
-                    ->orWhereNull('competition_category_id');
-            });
-        }
+        $q = AssessmentCategory::rubrikUntukTingkat($eventner->id, $levelId, $judgeId);
 
         if (is_array($seriIds)) {
             // Tiap seri peserta grup itu, plus rubrik tanpa seri.
@@ -336,12 +328,16 @@ class FormatNilaiController extends Controller
         }
 
         if ($judgeId) {
-            // Divalidasi milik eventner ini, tapi TIDAK menyempitkan rubrik.
-            // Juri terikat ke grup, dan satu grup boleh memuat peserta dari
-            // beberapa seri — menyaring rubrik ke satu seri di sini akan
-            // membuang lembar yang justru harus dicetak. Seri baru bisa
-            // ditentukan saat pesertanya disebut (mode "peserta").
+            // Divalidasi milik eventner ini, lalu menyempitkan rubrik ke yang
+            // memang boleh diisi juri itu. Juri tetap TIDAK menyaring seri:
+            // satu grup boleh memuat peserta dari beberapa seri, dan seri baru
+            // bisa ditentukan saat pesertanya disebut (mode "peserta").
+            //
+            // Rubrik yang belum dicentang ke siapa pun tetap ikut — kalau
+            // tidak, lembar cetak juri menjadi kosong untuk acara yang belum
+            // dibagi.
             Judge::where('eventner_id', $eventner->id)->findOrFail($judgeId);
+            $q->bolehDinilaiOleh($eventner->id, (int) $judgeId);
         }
 
         return $q->orderBy('sort_order')->get();

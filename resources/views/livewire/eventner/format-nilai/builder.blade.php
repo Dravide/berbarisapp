@@ -192,6 +192,37 @@
                                             </div>
                                         @endif
 
+                                        {{-- Pembagian rubrik ke juri. Kosong = semua juri
+                                             dari penugasan yang berlaku boleh mengisi —
+                                             perilaku sebelum pembagian ada, jadi acara yang
+                                             sudah berjalan tidak berubah. --}}
+                                        <div class="border bg-light p-3 mb-4">
+                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                <span class="form-label fw-semibold fs-2 mb-0">Diisi Juri</span>
+                                                @if(in_array($category->id, $this->rubrikTanpaJuriReachable, true))
+                                                    <span class="badge bg-warning-subtle text-warning fs-1">
+                                                        <i class="ti ti-alert-triangle me-1"></i>Tidak ada juri yang bertugas di tingkat ini
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            @forelse($this->juriTingkat as $juri)
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input" type="checkbox"
+                                                        id="rubrik-juri-{{ $category->id }}-{{ $juri->id }}"
+                                                        wire:change="toggleRubricJudge({{ $category->id }}, {{ $juri->id }}, $event.target.checked)"
+                                                        @checked(in_array($juri->id, $this->rubricJudgeIds[$category->id] ?? [], true))>
+                                                    <label class="form-check-label fs-2" for="rubrik-juri-{{ $category->id }}-{{ $juri->id }}">{{ $juri->name }}</label>
+                                                </div>
+                                            @empty
+                                                <span class="text-muted fs-2">Belum ada juri di tingkat ini.</span>
+                                            @endforelse
+
+                                            <p class="fs-2 text-muted mb-0 mt-2">
+                                                Dikosongkan = semua juri boleh mengisi rubrik ini. Satu rubrik diisi satu juri, dan total juara menjumlahkan seluruh rubrik.
+                                            </p>
+                                        </div>
+
                                         {{-- Form Tambah Sub Kategori --}}
                                         <div class="d-flex mb-4 gap-2 align-items-center p-3 bg-light border">
                                             <input type="text" class="form-control form-control-sm" wire:model="newSubCategoryNames.{{ $category->id }}" placeholder="Nama Sub-Kategori (Contoh: Gerakan Ditempat)">

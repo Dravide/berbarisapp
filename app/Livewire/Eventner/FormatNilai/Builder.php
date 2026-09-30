@@ -12,6 +12,7 @@ use App\Models\CompetitionRound;
 use App\Models\CompetitionSeries;
 use App\Models\DeductionCategory;
 use App\Models\DeductionCriteria;
+use App\Models\Judge;
 use App\Models\ScoreDeduction;
 use App\Traits\FeatureGatedComponent;
 use Illuminate\Support\Facades\Auth;
@@ -157,6 +158,126 @@ class Builder extends Component
         return $category->subCategories()->with('criterias')->get()
             ->flatMap->criterias
             ->pluck('id');
+    }
+
+    // ── Pembagian rubrik antar juri ────────────────────────────────────
+
+    /**
+     * Juri yang ditawarkan untuk dicentang, per tingkat yang sedang dibuka.
+     *
+     * Diambil dari penugasan grup (competition_group_judge) tingkat itu, bukan
+     * dari seluruh juri tenant: menawarkan juri yang tak bertugas di tingkat
+     * ini hanya menghasilkan centang yang tak bisa dijangkau siapa pun —
+     * rubriknya berhenti terisi tanpa satu pun pesan.
+     *
+     * Tingkat yang belum punya penugasan grup sama sekali (event lama, atau
+     * tingkat yang grupnya belum diatur) jatuh ke seluruh juri tenant, supaya
+     * layar ini tetap bisa dipakai lebih dulu tanpa memaksa panitia membuka
+     * modal Kelola Grup.
+     *
+     * @return \Illuminate\Support\Collection<int, \App\Models\Judge>
+     */
+    #[Computed]
+    public function juriTingkat()
+    {
+        $levelId = $this->activeCompetitionCategoryId;
+
+        $ids = $levelId
+            ? DB::table('competition_group_judge')
+                ->where('competition_category_id', $levelId)
+                ->pluck('judge_id')
+                ->unique()
+            : collect();
+
+        return Judge::where('eventner_id', $this->eventnerId)
+            ->when($ids->isNotEmpty(), fn ($q) => $q->whereIn('id', $ids))
+            ->orderBy('name')
+            ->get();
+    }
+
+    /**
+     * Centang juri per kategori penilaian: [categoryId => [judgeId]].
+     *
+     * Kosong = rubrik belum dibagi, dan itu berarti terbuka untuk semua juri
+     * dari penugasan yang berlaku. Dibaca sebagai satu query untuk seluruh tab,
+     * bukan per baris rubrik.
+     *
+     * @return array<int, array<int>>
+     */
+    #[Computed]
+    public function rubricJudgeIds(): array
+    {
+        $categoryIds = $this->categories->pluck('id')->all();
+
+        if ($categoryIds === []) {
+            return [];
+        }
+
+        return DB::table('assessment_category_judge')
+            ->whereIn('assessment_category_id', $categoryIds)
+            ->get(['assessment_category_id', 'judge_id'])
+            ->groupBy('assessment_category_id')
+            ->map(fn ($baris) => $baris->pluck('judge_id')->map(fn ($id) => (int) $id)->values()->all())
+            // Kunci dijadikan int: blade mencarinya dengan $category->id, dan
+            // kunci string dari driver basis data akan gagal cocok di situ.
+            ->mapWithKeys(fn ($ids, $categoryId) => [(int) $categoryId => $ids])
+            ->all();
+    }
+
+    /**
+     * Rubrik yang centangannya tak bisa dijangkau juri mana pun.
+     *
+     * Diperiksa di aras TINGKAT, bukan per peserta: cukup tahu apakah ada satu
+     * pun juri tercentang yang juga bertugas di tingkat ini. Kalau tidak, tak
+     * ada peserta mana pun yang rubriknya terisi — dan karena total juara
+     * menjumlah apa adanya, angkanya diam-diam kehilangan rubrik itu.
+     *
+     * @return array<int> id kategori penilaian yang bermasalah
+     */
+    #[Computed]
+    public function rubrikTanpaJuriReachable(): array
+    {
+        $juriTingkat = $this->juriTingkat->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        return collect($this->rubricJudgeIds)
+            ->filter(fn ($ids, $categoryId) => array_intersect($ids, $juriTingkat) === [])
+            ->keys()
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
+    /**
+     * Nyalakan/matikan satu centang juri pada satu rubrik.
+     *
+     * Ditulis per perubahan, bukan menunggu tombol Simpan — meniru
+     * CompetitionCategory\Index::toggleGroupJudge(). Satu baris = satu
+     * syncRubricJudges(), jadi tabelnya tak pernah menyimpan keadaan setengah
+     * jadi yang membuat rubrik hilang dari tablet juri.
+     */
+    public function toggleRubricJudge(int $categoryId, int $judgeId, bool $checked): void
+    {
+        $category = AssessmentCategory::where('eventner_id', $this->eventnerId)->find($categoryId);
+
+        if (! $category) {
+            return;
+        }
+
+        // Ditarik ulang dari tenant sendiri: id yang datang dari klien tidak
+        // boleh dipercaya begitu saja.
+        $sah = Judge::where('eventner_id', $this->eventnerId)->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        if (! in_array($judgeId, $sah, true)) {
+            return;
+        }
+
+        $sekarang = $category->rubricJudgeIds();
+        $baru = $checked
+            ? array_values(array_unique([...$sekarang, $judgeId]))
+            : array_values(array_diff($sekarang, [$judgeId]));
+
+        $category->syncRubricJudges($baru);
+
+        unset($this->rubricJudgeIds, $this->rubrikTanpaJuriReachable);
     }
 
     public $errorMessage = '';
@@ -442,10 +563,10 @@ class Builder extends Component
             'sort_order' => $maxOrder + 1,
         ]);
 
-        // Clone pivot juri agar kategori hasil duplikat tetap punya juri yang sama
-        if ($original->judges->isNotEmpty()) {
-            $newCategory->judges()->sync($original->judges->pluck('id'));
-        }
+        // Clone pivot juri agar kategori hasil duplikat tetap punya juri yang sama.
+        // Salinan mewakili rubrik yang sama untuk babak lain, jadi pembagiannya
+        // ikut — kalau tidak, panitia harus mencentang ulang tiap babak.
+        $newCategory->syncRubricJudges($original->rubricJudgeIds());
 
         // Clone sub-categories and their criteria
         foreach ($original->subCategories as $subIndex => $sub) {

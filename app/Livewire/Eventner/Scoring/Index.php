@@ -690,6 +690,35 @@ class Index extends Component
             ->all();
     }
 
+    /**
+     * Id kriteria yang boleh diisi juri terpilih untuk peserta terpilih.
+     *
+     * Memakai pintu yang sama dengan yang merender form dan dengan yang
+     * menuntut kelengkapan saat finalisasi — satu sumber, supaya yang tersimpan
+     * tak pernah menyimpang dari yang tampil.
+     *
+     * @return array<int>
+     */
+    private function allowedCriteriaIds(): array
+    {
+        if (!$this->selectedRegistration || !$this->selectedJudgeId) {
+            return [];
+        }
+
+        return AssessmentCategory::rubrikUntukPeserta(
+            $this->eventner->id,
+            $this->selectedRegistration->competition_category_id ?? null,
+            $this->selectedRegistration->competition_series_id,
+            $this->selectedRoundId ? (int) $this->selectedRoundId : null,
+            (int) $this->selectedJudgeId,
+        )->get()
+            ->flatMap(fn ($cat) => $cat->subCategories->flatMap(
+                fn ($sub) => $sub->criterias->pluck('id')
+            ))
+            ->map(fn ($id) => (int) $id)
+            ->all();
+    }
+
     public function saveScores()
     {
         if ($this->simulateMode) return;
@@ -706,8 +735,21 @@ class Index extends Component
         $registrationId = $this->selectedRegistrationId;
         $judgeId = $this->selectedJudgeId;
 
+        // Sejak rubrik dibagi antar juri, tak setiap kriteria di layar boleh
+        // diisi juri ini. Form sudah menyaring, tapi properti $scores bisa
+        // memuat sisa state lama (juri diganti tanpa memuat ulang form), dan
+        // tanpa saringan di sini nilai itu ikut tersimpan sebagai nilai juri
+        // yang salah.
+        $boleh = $this->allowedCriteriaIds();
+        $ditolak = 0;
+
         foreach ($this->scores as $criteriaId => $scoreValue) {
             if ($scoreValue === '' || $scoreValue === null) {
+                continue;
+            }
+
+            if (!in_array((int) $criteriaId, $boleh, true)) {
+                $ditolak++;
                 continue;
             }
 
@@ -722,6 +764,10 @@ class Index extends Component
                     'score' => $scoreValue,
                 ]
             );
+        }
+
+        if ($ditolak > 0) {
+            session()->flash('scoring_error', $ditolak . ' nilai tidak disimpan: rubrik itu diisi juri lain.');
         }
 
         $this->saveStatus = 'saved';
@@ -787,6 +833,12 @@ class Index extends Component
      * Finalisasi massal: kunci semua nilai yang sudah tersimpan untuk
      * seluruh peserta pada kategori lomba terpilih. Registrasi tanpa
      * nilai apa pun dilewati (tidak ada yang bisa dikunci).
+     *
+     * Sengaja TIDAK memeriksa kelengkapan seperti finalize() — ini kekuatan
+     * panitia untuk menutup babak yang sudah lewat, dan sebagian nilai memang
+     * tak akan pernah diisi. Sejak rubrik dibagi antar juri, konsekuensinya
+     * bertambah: lembar juri yang belum mengisi rubriknya ikut terkunci, dan
+     * membukanya menuntut "Buka Kunci" per juri.
      */
     public function finalizeAllForCategory()
     {
@@ -1146,24 +1198,25 @@ class Index extends Component
         }
 
         if ($this->view === 'scoring' && $this->selectedRegistration) {
-            // Rubrik yang boleh dinilai = tingkat peserta ini, SERINYA, dan
-            // babak yang sedang dibuka. Babak wajib ikut: rubrik penyisihan dan
-            // final sengaja dibuat terpisah (kuncinya per kriteria), jadi tanpa
-            // penyaring ini form menampilkan keduanya sekaligus.
+            // Rubrik yang ditampilkan = tingkat peserta ini, SERINYA, babak
+            // yang sedang dibuka, dan centangan juri yang sedang dipilih.
             //
-            // Juri TIDAK ikut menyaring di sini. Di bawah model grup, juri grup
-            // mana pun menilai seluruh rubrik seri peserta — menyaring per juri
-            // hanya memberi lembar kosong bagi juri yang kebetulan tak memegang
-            // rubriknya, padahal justru dialah yang ditugaskan menilainya.
-            // Seri peserta sudah menentukan lembar mana yang benar.
-            $assessmentCategories = AssessmentCategory::with(['subCategories.criterias'])
-                ->where('eventner_id', $this->eventner->id)
-                ->forEntry(
-                    $this->selectedRegistration->competition_category_id ?? null,
-                    $this->selectedRegistration->competition_series_id,
-                    $this->selectedRoundId ? (int) $this->selectedRoundId : null,
-                )
-                ->get();
+            // Babak wajib ikut: rubrik penyisihan dan final sengaja dibuat
+            // terpisah (kuncinya per kriteria), jadi tanpa penyaring ini form
+            // menampilkan keduanya sekaligus.
+            //
+            // Juri menyaring sejak rubrik bisa dibagi antar juri — tiap juri
+            // memegang rubriknya sendiri, jadi menampilkan rubrik juri lain
+            // hanya menyajikan kolom yang memang tak boleh ia isi. Sebelum
+            // jurinya dipilih ($selectedJudgeId null) penyaringnya mati, jadi
+            // panitia tetap melihat seluruh lembar lebih dulu.
+            $assessmentCategories = AssessmentCategory::rubrikUntukPeserta(
+                $this->eventner->id,
+                $this->selectedRegistration->competition_category_id ?? null,
+                $this->selectedRegistration->competition_series_id,
+                $this->selectedRoundId ? (int) $this->selectedRoundId : null,
+                $this->selectedJudgeId ? (int) $this->selectedJudgeId : null,
+            )->get();
         }
 
         // Bobot kriteria per id. Nilai harus dikalikan bobot saat dijumlah —
@@ -1179,7 +1232,13 @@ class Index extends Component
             }
         }
 
-        // Calculate per-judge totals for the current registration
+        // Total per juri untuk registrasi yang sedang dibuka.
+        //
+        // Sejak rubrik dibagi antar juri, angka ini TIDAK lagi setara antar
+        // juri: tiap juri memegang rubriknya sendiri, jadi "total" di sini
+        // berarti "jumlah rubrik yang ia isi", bukan tandingan penilaian penuh
+        // seperti dulu. Yang tetap setara dengan ChampionCalculator adalah
+        // "Jumlah Semua Juri" — penjumlahan seluruh baris nilai, tanpa pembagi.
         $judgeTotals = collect();
         if ($this->view === 'scoring' && $this->selectedRegistration && count($this->judges) > 0) {
             if ($this->simulateMode) {

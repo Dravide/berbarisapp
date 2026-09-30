@@ -117,7 +117,11 @@ class Download extends Component
         }
 
         if ($this->selectedJudgeId) {
-            $q->whereHas('judges', fn($j) => $j->where('judges.id', $this->selectedJudgeId));
+            // Sejak rubrik dibagi antar juri, centangan berarti PEMBATASAN —
+            // dan rubrik yang belum dicentang tetap ikut lewat scope ini.
+            // Menyaring dengan whereHas('judges') mentah akan membuang semua
+            // rubrik yang belum dibagi, yaitu hampir semuanya.
+            $q->bolehDinilaiOleh($this->eventnerId, (int) $this->selectedJudgeId);
         }
 
         return $q->orderBy('sort_order')->get();

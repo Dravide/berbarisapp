@@ -14,8 +14,21 @@
 
     // Susun dulu data tiap juri — QR dirender sekali per juri, bukan di
     // tengah loop tampilan, supaya kegagalan render mudah ditangani.
-    $cards = $judges->map(function ($judge) {
-        $levels = $judge->assessmentCategories
+    $cards = $judges->map(function ($judge) use ($eventner) {
+        // Tugas & tingkat dihitung dari RUBRIK yang boleh dinilai juri ini,
+        // bukan dari relasi `assessmentCategories` yang memakai pivot
+        // assessment_category_judge.
+        //
+        // Sejak pivot itu berarti PEMBATASAN (rubrik hanya boleh diisi juri
+        // yang tercantum), rubrik yang belum dibagi tak punya baris sama
+        // sekali. Membaca relasi mentah membuat setiap kartu tercetak "Belum
+        // ada tugas — hubungi panitia", dan nama tingkatnya hilang, tepat
+        // sesudah migrasi mengosongkan baris lama.
+        $rubrik = \App\Models\AssessmentCategory::rubrikUntukTingkat($eventner->id, null, $judge->id)
+            ->orderBy('sort_order')
+            ->get();
+
+        $levels = $rubrik
             ->map(fn ($c) => $c->competitionCategory)
             ->filter()
             ->unique('id')
@@ -37,7 +50,7 @@
         // memaksa outputInterface (nama properti yang benar di v6).
         $qrImage = qr_data_uri($url, 12);
 
-        return compact('judge', 'levelNames', 'venueNames', 'url', 'qrImage');
+        return compact('judge', 'rubrik', 'levelNames', 'venueNames', 'url', 'qrImage');
     });
 @endphp
 <!DOCTYPE html>
@@ -173,7 +186,7 @@
         <tr>
             <td class="lbl">Tugas Penilaian</td>
             <td class="val">
-                @forelse($judge->assessmentCategories as $cat)
+                @forelse($rubrik as $cat)
                     {{ $cat->name }}@if(!$loop->last), @endif
                 @empty
                     <span style="color:#c0392b;">Belum ada tugas — hubungi panitia.</span>

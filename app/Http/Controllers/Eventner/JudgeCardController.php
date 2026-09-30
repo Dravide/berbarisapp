@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Eventner;
 
 use App\Http\Controllers\Controller;
+use App\Models\AssessmentCategory;
 use App\Models\Judge;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Auth;
@@ -24,8 +25,11 @@ class JudgeCardController extends Controller
             abort(403, 'Anda bukan Eventner yang sah.');
         }
 
+        // `assessmentCategories` sengaja TIDAK di-eager-load: sejak pivotnya
+        // berarti pembatasan, relasi mentah itu kosong untuk tiap rubrik yang
+        // belum dibagi — dan kartunya lalu tercetak "Belum ada tugas". Blade
+        // menghitung tugas & tingkatnya lewat AssessmentCategory::rubrikUntukTingkat().
         $judges = Judge::where('eventner_id', $eventner->id)
-            ->with('assessmentCategories.competitionCategory.parent')
             ->when($judgeId, fn ($q) => $q->where('id', $judgeId))
             ->orderBy('name')
             ->get();

@@ -400,9 +400,14 @@ class Index extends Component
     /** Apakah juri ini punya rubrik global (competition_category_id NULL). */
     private function hasGlobalRubric(): bool
     {
+        // Ikut disaring bolehDinilaiOleh(): di bawah pembagian rubrik, centang
+        // juri berarti PEMBATASAN. Tanpa saringan ini satu centang pada rubrik
+        // global membuat juri itu melewati saringan grup di participantsQuery()
+        // dan melihat seluruh peserta tingkat — bukan cuma yang grupnya
+        // ditugaskan kepadanya.
         return AssessmentCategory::where('eventner_id', $this->eventnerId)
             ->whereNull('competition_category_id')
-            ->whereHas('judges', fn ($q) => $q->where('judges.id', $this->judgeId))
+            ->bolehDinilaiOleh($this->eventnerId, $this->judgeId)
             ->exists();
     }
 
@@ -429,19 +434,26 @@ class Index extends Component
         $seriesId = $registration->competition_series_id;
         $roundId = $this->selectedRoundId ? (int) $this->selectedRoundId : null;
 
-        // Rubrik ditentukan SERI peserta, bukan juri yang membukanya: juri Grup A
-        // menilai lembar Seri A untuk peserta Seri A dan lembar Seri B untuk
-        // peserta Seri B — keduanya di grup yang sama.
+        // Rubrik ditentukan SERI peserta, lalu disaring CENTANGAN juri: juri
+        // Grup A menilai lembar Seri A untuk peserta Seri A dan lembar Seri B
+        // untuk peserta Seri B — keduanya di grup yang sama.
         //
-        // TIDAK ADA cabang "kalau kosong, ambil semua rubrik seri ini". Cabang
-        // itu dulu membocorkan rubrik seri lain; di bawah model grup ia lebih
-        // buruk lagi — juri Grup A yang kebetulan tak memegang rubrik apa pun
-        // akan menerima seluruh lembar, dan itulah nilai yang tersimpan.
-        // Panel kosong berarti seri peserta ini memang belum punya rubrik.
-        $categories = AssessmentCategory::with(['subCategories.criterias'])
-            ->where('eventner_id', $this->eventnerId)
-            ->forEntry($compCategoryId, $seriesId, $roundId)
-            ->get();
+        // Rubrik yang belum dicentang ke siapa pun terbuka untuk semua juri,
+        // jadi acara yang belum dibagi tak berubah perilakunya.
+        //
+        // TIDAK ADA cabang "kalau kosong, ambil semua rubrik seri ini".
+        // Cabang itu dulu membocorkan rubrik seri lain, dan di bawah pembagian
+        // ia lebih buruk lagi: juri yang seluruh rubriknya dipegang orang lain
+        // akan menerima seluruh lembar, lalu nilainya tersimpan sebagai nilai
+        // miliknya. Panel kosong berarti juri ini memang tak kebagian rubrik —
+        // dan itu justru harus terlihat, bukan ditutupi.
+        $categories = AssessmentCategory::rubrikUntukPeserta(
+            $this->eventnerId,
+            $compCategoryId,
+            $seriesId,
+            $roundId,
+            $this->judgeId,
+        )->get();
 
         $this->allowedCriteriaIds = $categories
             ->flatMap(fn ($cat) => $cat->subCategories->flatMap(
@@ -548,23 +560,26 @@ class Index extends Component
         $this->currentCriteriaIndex = max(0, count($this->flatCriteria) - 1);
     }
 
+    /**
+     * Rubrik yang dirender di layar — daftar yang SAMA dengan allowedCriteriaIds
+     * milik loadCriteria(), karena keduanya memanggil pintu yang sama.
+     *
+     * Jangan menulis query kedua di sini. Dulu ada cabang "kalau kosong, ambil
+     * semua rubrik tingkat" di method ini, sementara loadCriteria() tidak
+     * menyaring apa pun — dua daftar berbeda untuk satu layar, dan yang satu
+     * membocorkan rubrik juri lain.
+     */
     public function getAssessmentCategoriesProperty()
     {
         $registration = $this->registration;
 
-        $base = fn () => AssessmentCategory::with(['subCategories.criterias'])
-            ->where('eventner_id', $this->eventnerId)
-            ->forEntry(
-                $registration->competition_category_id,
-                $registration->competition_series_id,
-                $this->selectedRoundId ? (int) $this->selectedRoundId : null,
-            );
-
-        $categories = $base()
-            ->whereHas('judges', fn ($q) => $q->where('judges.id', $this->judgeId))
-            ->get();
-
-        return $categories->isEmpty() ? $base()->get() : $categories;
+        return AssessmentCategory::rubrikUntukPeserta(
+            $this->eventnerId,
+            $registration->competition_category_id,
+            $registration->competition_series_id,
+            $this->selectedRoundId ? (int) $this->selectedRoundId : null,
+            $this->judgeId,
+        )->get();
     }
 
     /**

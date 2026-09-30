@@ -14,11 +14,11 @@ use Spatie\Activitylog\Traits\LogsActivity;
  * yang sama boleh ikut seri berbeda, dan satu seri boleh tersebar di beberapa
  * grup. Pembagian tugasnya —
  *
- *   CompetitionGroup  -> tabel peringkat + nomor undian
- *   CompetitionSeries -> lembar nilai (rubrik) + cakupan juri
+ *   CompetitionGroup  -> tabel peringkat + nomor undian + siapa yang menilai
+ *   CompetitionSeries -> lembar nilai (rubrik) saja
  *
- * Karena itu judges() di sini bukan sekadar pelengkap seperti di grup: juri
- * memang terikat ke seri lewat rubrik yang menempel ke seri itu.
+ * Seri tidak menentukan juri. Juri ditugaskan ke grup (dan ke rubriknya masing
+ * masing), jadi "juri seri apa" bukan pertanyaan yang punya jawaban.
  */
 class CompetitionSeries extends Model
 {
@@ -47,11 +47,18 @@ class CompetitionSeries extends Model
     }
 
     /**
-     * Juri yang menilai seri ini, diturunkan dari rubrik yang menempel ke seri.
+     * Juri yang menilai seri ini.
      *
-     * Juri terikat ke rubrik (assessment_categories), bukan ke tingkat lomba —
-     * jadi "juri berbeda per seri" tidak butuh pivot baru, persis seperti
-     * "juri berbeda per grup" pada CompetitionGroup::judges().
+     * Bukan relasi Eloquent: `$seri->judges` melempar LogicException karena ini
+     * Builder polos. Dipertahankan sebagai pemanggilan method supaya penelepon
+     * yang butuh terpaksa sadar bentuknya.
+     *
+     * Isinya pun sudah tak bermakna: juri ditugaskan ke grup, bukan ke seri,
+     * lalu dibagi lagi per rubrik. Dihitung dari rubrik berseri ini, hasilnya
+     * justru menyesatkan — rubrik seri yang belum dibagi akan melaporkan
+     * seluruh juri tingkat, sedangkan rubrik yang sudah dibagi hanya
+     * melaporkan sebagiannya. Nol pemanggil sejak penugasan pindah ke grup;
+     * sisakan hanya kalau kelak ada layar ringkasan yang memang butuh.
      */
     public function judges()
     {

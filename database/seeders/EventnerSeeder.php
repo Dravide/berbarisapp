@@ -145,12 +145,13 @@ class EventnerSeeder extends Seeder
             }
         }
 
-        // Hubungkan juri ke kategori penilaian
-        if ($assessmentCategories && $judges) {
-            foreach ($assessmentCategories as $ac) {
-                $ac->judges()->syncWithoutDetaching([$judges[0]->id, $judges[1]->id]);
-            }
-        }
+        // Pivot juri-rubrik sengaja TIDAK diisi.
+        //
+        // Sejak rubrik bisa dibagi antar juri, baris di pivot itu berarti
+        // PEMBATASAN: rubrik hanya boleh diisi juri yang tercantum. Memasang
+        // dua dari tiga juri ke semua rubrik — seperti dulu — membuat juri
+        // ketiga kehilangan seluruh rubriknya diam-diam. Dibiarkan kosong,
+        // tiap rubrik terbuka untuk semua juri, persis perilaku sebelumnya.
 
         // ── Pendaftaran (Registrations + Participants) ──
         $schools = [

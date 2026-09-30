@@ -87,21 +87,26 @@ class ScoreFinalizationService
      * dan buka-kunci memakai daftar lain, sisa baris yang tetap terkunci akan
      * membuat tombol Buka Kunci tampak tidak bekerja tanpa pesan kesalahan.
      *
-     * Aturan "rubrik kosong → semua rubrik tingkat" tetap dipertahankan: juri
-     * yang belum ditugaskan ke rubrik mana pun dinilai memakai seluruh rubrik
-     * tingkat, sama seperti yang dirender di UI.
+     * Daftarnya WAJIB identik dengan yang dirender tablet juri dan panel
+     * panitia — ketiganya memanggil AssessmentCategory::rubrikUntukPeserta().
+     * finalize() menolak selama ada satu kriteria yang belum terisi, jadi satu
+     * kriteria lebih banyak di sini daripada di layar membuat tombol
+     * finalisasi tak akan pernah bisa ditekan.
+     *
+     * Dulu di sini ada cabang "rubrik kosong → semua rubrik tingkat". Cabang
+     * itu dibuang bersama fitur pembagian rubrik: rubrik yang belum dicentang
+     * kini sudah terbuka untuk semua juri di dalam scopeBolehDinilaiOleh(),
+     * jadi "kosong" tak lagi berarti "juri ini tak ditugaskan ke mana pun".
      */
     private function rubricsForEntry(int $eventnerId, ?int $regCategoryId, ?int $seriesId, ?int $roundId, int $judgeId): \Illuminate\Support\Collection
     {
-        $baseQuery = fn () => AssessmentCategory::with(['subCategories.criterias'])
-            ->where('eventner_id', $eventnerId)
-            ->forEntry($regCategoryId, $seriesId, $roundId);
-
-        $assessmentCategories = (clone $baseQuery())
-            ->whereHas('judges', fn ($q) => $q->where('judges.id', $judgeId))
-            ->get();
-
-        return $assessmentCategories->isEmpty() ? $baseQuery()->get() : $assessmentCategories;
+        return AssessmentCategory::rubrikUntukPeserta(
+            $eventnerId,
+            $regCategoryId,
+            $seriesId,
+            $roundId,
+            $judgeId,
+        )->get();
     }
 
     /**
@@ -172,9 +177,22 @@ class ScoreFinalizationService
         // Juri wajib dihitung dari PENUGASAN, bukan dari rubrik: penugasan
         // menempel di grup peserta (atau baris final/ungrouped/level-nya), dan
         // rubrik cuma menentukan lembar mana yang terbuka. Menghitungnya dari
-        // rubrik membuat nota "nilai selesai" tak pernah terkirim, karena tak
-        // ada lagi rubrik bergrup yang menunjuk juri.
-        $judgeIds = CompetitionGroup::judgesForRegistration($registration, $roundId)->pluck('id');
+        // rubrik membuat nota "nilai selesai" tak pernah terkirim.
+        //
+        // Tapi penugasan saja belum cukup sejak rubrik dibagi antar juri: juri
+        // yang SELURUH rubriknya dipegang juri lain tak akan pernah menulis
+        // satu baris nilai, jadi ia tak mungkin muncul di finalizedJudgeIds dan
+        // diff-nya tak pernah kosong — notanya kuncup selamanya. Karena itu
+        // hanya juri yang benar-benar punya sesuatu untuk diisi yang dituntut.
+        $judgeIds = CompetitionGroup::judgesForRegistration($registration, $roundId)
+            ->filter(fn ($juri) => AssessmentCategory::rubrikUntukPeserta(
+                $eventnerId,
+                $registration->competition_category_id,
+                $registration->competition_series_id,
+                $roundId,
+                $juri->id,
+            )->exists())
+            ->pluck('id');
 
         if ($judgeIds->isEmpty()) {
             return;
