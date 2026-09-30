@@ -343,4 +343,128 @@ class JudgeCompetitionGroupAssignmentTest extends TestCase
             CompetitionGroup::judgeIdsUntuk($this->level->id, CompetitionGroup::SCOPE_GROUP, $this->groupA->id)
         );
     }
+
+    /**
+     * Centang satu tingkat TIDAK menyalakan centang tingkat lain.
+     *
+     * Keluhan yang dilaporkan: modal "SD / MI - U12" menampilkan juri sudah
+     * tercentang padahal di tingkat itu belum ada yang dicentang.
+     *
+     * Sebabnya tiga scope tanpa grup (`ungrouped`/`final`/`level`) memakai
+     * KUNCI YANG SAMA di seluruh event, sedangkan `groupJudgeIds` membaca
+     * competition_group_judge tanpa menyaring tingkatnya. Satu baris `level`
+     * di tingkat mana pun menyalakan centang di seluruh tingkat yang punya
+     * baris serupa — dan mengkliknya menulis penugasan ke tingkat yang salah,
+     * sehingga juri melihat peserta yang bukan miliknya.
+     */
+    public function test_centang_satu_tingkat_tidak_menyalakan_centang_tingkat_lain()
+    {
+        $induk = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => null,
+            'name' => 'LOBB',
+        ]);
+        $tingkatLain = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => $induk->id,
+            'name' => 'SD / MI - U12',
+        ]);
+
+        foreach ([$this->level, $tingkatLain] as $tingkat) {
+            Registration::factory()->for($this->eventner, 'eventner')->create([
+                'competition_category_id' => $tingkat->id,
+                'nama_sekolah' => 'SMPN ' . $tingkat->id,
+            ]);
+        }
+
+        // Tingkat pertama: baris "Seluruh Tingkat" dicentang ke Juri A.
+        $this->modal()->call('toggleGroupJudge', CompetitionGroup::SCOPE_LEVEL, null, $this->juriA->id, true);
+
+        $this->assertSame(
+            [$this->juriA->id],
+            CompetitionGroup::judgeIdsUntuk($this->level->id, CompetitionGroup::SCOPE_LEVEL)
+        );
+
+        // Tingkat kedua belum disentuh — centangnya harus kosong.
+        $modalLain = $this->modal($tingkatLain->id);
+
+        $this->assertSame(
+            [],
+            $modalLain->instance()->groupJudgeIds->get(CompetitionGroup::SCOPE_LEVEL, collect())->all(),
+            'Centang tingkat lain bocor ke modal tingkat ini.'
+        );
+
+        $this->assertSame(
+            [],
+            CompetitionGroup::judgeIdsUntuk($tingkatLain->id, CompetitionGroup::SCOPE_LEVEL),
+            'Penugasan tingkat ini tak boleh ada sebelum dicentang.'
+        );
+    }
+
+    /**
+     * Kotak centang yang dirender ikut bersih, bukan hanya data di belakangnya.
+     *
+     * Centang yang bocor cuma bisa dilihat di HTML — dan itu bentuk keluhannya:
+     * "ada juri yang sudah terceklis padahal belum".
+     *
+     * Dibandingkan setelah spasi dibuang: `@checked` berada di baris terpisah
+     * dari atribut `id`, jadi mencocokkan potongan teks mentah akan selalu
+     * gagal cocok — dan tes yang selalu gagal cocok justru lulus tanpa
+     * memeriksa apa pun.
+     */
+    public function test_kotak_centang_tingkat_lain_tidak_terceklis()
+    {
+        $induk = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => null,
+        ]);
+
+        // Dua tingkat POLOS, bukan $this->level yang punya grup: baris
+        // "Seluruh Tingkat" hanya dirender kalau tingkatnya tak punya grup
+        // sama sekali, jadi kotak centang yang mau diperiksa di sini memang
+        // tak ada di modal tingkat bergrup.
+        $tingkatDicentang = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => $induk->id,
+            'name' => 'SD / MI - U12',
+        ]);
+        $tingkatKosong = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => $induk->id,
+            'name' => 'SMP / MTs - U15',
+        ]);
+
+        foreach ([$tingkatDicentang, $tingkatKosong] as $tingkat) {
+            Registration::factory()->for($this->eventner, 'eventner')->create([
+                'competition_category_id' => $tingkat->id,
+                'nama_sekolah' => 'SMPN ' . $tingkat->id,
+            ]);
+        }
+
+        // Satu tingkat dicentang; tingkat polos yang lain tidak disentuh.
+        $this->modal($tingkatDicentang->id)
+            ->call('toggleGroupJudge', CompetitionGroup::SCOPE_LEVEL, null, $this->juriA->id, true);
+
+        $idJuriA = 'id="juri-' . CompetitionGroup::SCOPE_LEVEL . '-' . $this->juriA->id . '"';
+
+        $htmlKosong = preg_replace('/\s+/', '', $this->modal($tingkatKosong->id)->html());
+
+        // Kotak centangnya ada, dan tepat sesudah atribut id langsung menuju
+        // wire:change — tanpa `checked` di antaranya.
+        $this->assertStringContainsString(
+            $idJuriA . 'wire:change',
+            $htmlKosong,
+            'Kotak centang juri tidak dirender sama sekali di tingkat yang belum dicentang.'
+        );
+
+        // Bukti sebaliknya: tingkat yang memang dicentang MEMANG punya
+        // `checked`, jadi pemeriksaan di atas bukan sekadar tak pernah cocok.
+        $htmlDicentang = preg_replace('/\s+/', '', $this->modal($tingkatDicentang->id)->html());
+
+        $this->assertStringContainsString(
+            $idJuriA . 'checked',
+            $htmlDicentang,
+            'Kotak centang tingkat yang dicentang tidak terceklis — tesnya tak mengukur apa pun.'
+        );
+    }
 }

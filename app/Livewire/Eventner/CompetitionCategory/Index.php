@@ -204,6 +204,14 @@ class Index extends Component
      * juri, jadi modal ini tak bisa lagi menjanjikan regu yang berbeda dari
      * yang ditemukan juri di daftarnya.
      *
+     * WAJIB disaring ke TINGKAT yang sedang dibuka. Tiga scope tanpa grup
+     * memakai kunci yang sama di seluruh event, jadi tanpa saringan ini centang
+     * tingkat lain menyalakan centang tingkat ini: modal "SD / MI - U12"
+     * menampilkan juri `final` milik "SMP - U15" seolah sudah dicentang di sana,
+     * dan mengkliknya menulis penugasan yang salah. Kunci `group:{id}` sendiri
+     * aman karena id grup unik lintas tingkat — tapi saringannya tetap berlaku
+     * untuk ketiganya.
+     *
      * Yang disimpan idnya, bukan namanya: dua juri boleh bernama sama, dan
      * mencocokkan centang lewat nama akan menyalakan centang yang salah.
      *
@@ -212,9 +220,16 @@ class Index extends Component
     #[Computed]
     public function groupJudgeIds()
     {
+        $levelId = $this->panelCategory?->id;
+
+        if (! $levelId) {
+            return collect();
+        }
+
         return DB::table('competition_group_judge as cgj')
             ->join('judges as j', 'j.id', '=', 'cgj.judge_id')
             ->where('j.eventner_id', $this->eventnerId)
+            ->where('cgj.competition_category_id', $levelId)
             ->orderBy('j.name')
             ->get(['cgj.competition_group_id', 'cgj.scope', 'cgj.judge_id'])
             ->groupBy(fn ($b) => $b->scope === CompetitionGroup::SCOPE_GROUP
