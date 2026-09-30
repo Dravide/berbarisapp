@@ -124,16 +124,35 @@
     // - beConfirm({title, text, ...}): dialog konfirmasi, return Promise<boolean>
     // - Override window.confirm: wire:confirm Livewire otomatis pakai
     //   SweetAlert (sinkron via handler __livewire_confirm).
-    window.beToast = function(message, icon) {
-      if (!window.Swal) { alert(message); return; }
+    window.beToast = function(message, icon, url, label) {
+      if (!window.Swal) { alert(message + (url ? '\n' + url : '')); return; }
+      // Tanpa tautan: toast singkat seperti biasa. Dengan tautan: dialog yang
+      // bertahan sampai ditutup, karena satu-satunya jalan keluar ada di sana.
+      if (!url) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: icon || 'success',
+          title: message,
+          showConfirmButton: false,
+          timer: 3500,
+          timerProgressBar: true,
+        });
+
+        return;
+      }
+
       Swal.fire({
-        toast: true,
-        position: 'top-end',
-        icon: icon || 'success',
+        icon: icon || 'info',
         title: message,
-        showConfirmButton: false,
-        timer: 3500,
-        timerProgressBar: true,
+        showCancelButton: true,
+        confirmButtonText: label || 'Buka',
+        cancelButtonText: 'Tutup',
+        reverseButtons: true,
+      }).then(function (hasil) {
+        if (hasil.isConfirmed) {
+          window.location.href = url;
+        }
       });
     };
 
@@ -205,7 +224,11 @@
         const d = (event && event.detail) || {};
         const message = typeof d === 'string' ? d : (d.message || 'Berhasil.');
         const type = (typeof d === 'object' && d.type) || 'success';
-        window.beToast(message, type);
+        // Tautan opsional: pesan blokir sering menuntut operator pindah layar
+        // dulu, dan tanpa tautan ia hanya tahu apa yang salah tanpa jalan keluar.
+        const url = (typeof d === 'object' && d.url) || null;
+        const label = (typeof d === 'object' && d.label) || null;
+        window.beToast(message, type, url, label);
       });
     });
 

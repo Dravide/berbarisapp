@@ -215,7 +215,16 @@
                                                     <label class="form-check-label fs-2" for="rubrik-juri-{{ $category->id }}-{{ $juri->id }}">{{ $juri->name }}</label>
                                                 </div>
                                             @empty
-                                                <span class="text-muted fs-2">Belum ada juri di tingkat ini.</span>
+                                                {{-- Daftar juri di sini jatuh ke seluruh juri event
+                                                     saat tingkatnya belum punya penugasan, jadi kosong
+                                                     berarti event ini memang belum punya juri sama
+                                                     sekali — bukan tingkatnya belum diatur. --}}
+                                                <span class="text-muted fs-2">
+                                                    Belum ada juri di event ini.
+                                                    <a href="{{ route('eventner.judges.index') }}" class="ms-1">Tambah juri dulu</a>,
+                                                    lalu tentukan penugasannya di
+                                                    <a href="{{ route('eventner.competition-categories.index') }}">Kategori Lomba</a>.
+                                                </span>
                                             @endforelse
 
                                             <p class="fs-2 text-muted mb-0 mt-2">

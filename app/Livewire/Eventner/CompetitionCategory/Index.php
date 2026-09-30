@@ -11,6 +11,7 @@ use App\Models\CompetitionRoundRegistration;
 use App\Models\CompetitionSeries;
 use App\Models\EventnerVenue;
 use App\Models\Judge;
+use App\Livewire\Concerns\MelaporKePengguna;
 use App\Models\Registration;
 use App\Services\ChampionCalculator;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +23,8 @@ use Livewire\Attributes\Computed;
 #[Layout('layouts.admin')]
 class Index extends Component
 {
+    use MelaporKePengguna;
+
     public $name = '';
     public $parentId = null;
     public $tanggal_pelaksanaan = '';
@@ -447,13 +450,13 @@ class Index extends Component
 
         if ($this->editingGroupId) {
             $this->findOwnGroup($this->editingGroupId)->update($data);
-            session()->flash('success', 'Grup berhasil diperbarui.');
+            $this->toast('Grup berhasil diperbarui.');
         } else {
             CompetitionGroup::create(array_merge($data, [
                 'eventner_id' => $this->eventnerId,
                 'competition_category_id' => $category->id,
             ]));
-            session()->flash('success', 'Grup baru berhasil ditambahkan.');
+            $this->toast('Grup baru berhasil ditambahkan.');
         }
 
         $this->resetGroupForm();
@@ -477,7 +480,7 @@ class Index extends Component
         // (cascadeOnDelete), jadi menghapus grup melepas penugasannya sendiri —
         // bukan meninggalkan nilai yatim yang mengacu kriteria rubriknya.
         $group->delete();
-        session()->flash('success', 'Grup dihapus. Pesertanya tetap ada, hanya kembali ke peringkat umum. Penugasan jurinya ikut dilepas.');
+        $this->toast('Grup dihapus. Pesertanya tetap ada, hanya kembali ke peringkat umum. Penugasan jurinya ikut dilepas.');
     }
 
     public function resetGroupForm()
@@ -515,13 +518,13 @@ class Index extends Component
 
         if ($this->editingSeriesId) {
             $this->findOwnSeries($this->editingSeriesId)->update($data);
-            session()->flash('success', 'Seri berhasil diperbarui.');
+            $this->toast('Seri berhasil diperbarui.');
         } else {
             CompetitionSeries::create(array_merge($data, [
                 'eventner_id' => $this->eventnerId,
                 'competition_category_id' => $category->id,
             ]));
-            session()->flash('success', 'Seri baru berhasil ditambahkan.');
+            $this->toast('Seri baru berhasil ditambahkan.');
         }
 
         $this->resetSeriesForm();
@@ -546,12 +549,16 @@ class Index extends Component
         // karena dari situlah juri tahu apa yang boleh dinilai.
         $terpasang = AssessmentCategory::where('competition_series_id', $series->id)->exists();
         if ($terpasang) {
-            session()->flash('error', 'Tidak bisa menghapus: rubrik seri ini masih terpasang di Format Nilai. Lepas dulu serinya di sana.');
+            $this->gagal(
+                'Tidak bisa menghapus: rubrik seri ini masih terpasang di Format Nilai. Lepas dulu serinya di sana.',
+                route('eventner.format-nilai.builder'),
+                'Buka Format Penilaian'
+            );
             return;
         }
 
         $series->delete();
-        session()->flash('success', 'Seri dihapus. Pesertanya tetap ada, hanya kehilangan lembar nilainya sampai seri baru dipilih.');
+        $this->toast('Seri dihapus. Pesertanya tetap ada, hanya kehilangan lembar nilainya sampai seri baru dipilih.');
     }
 
     public function resetSeriesForm()
@@ -608,13 +615,13 @@ class Index extends Component
 
         if ($this->editingRoundId) {
             $this->findOwnRound($this->editingRoundId)->update($data);
-            session()->flash('success', 'Babak berhasil diperbarui.');
+            $this->toast('Babak berhasil diperbarui.');
         } else {
             CompetitionRound::create(array_merge($data, [
                 'eventner_id' => $this->eventnerId,
                 'competition_category_id' => $category->id,
             ]));
-            session()->flash('success', 'Babak baru berhasil ditambahkan.');
+            $this->toast('Babak baru berhasil ditambahkan.');
         }
 
         $this->resetRoundForm();
@@ -637,12 +644,16 @@ class Index extends Component
 
         $punyaNilai = AssessmentCategory::where('competition_round_id', $round->id)->exists();
         if ($punyaNilai) {
-            session()->flash('error', 'Tidak bisa menghapus: rubrik babak ini masih terpasang di Format Nilai. Lepas dulu babaknya di sana.');
+            $this->gagal(
+                'Tidak bisa menghapus: rubrik babak ini masih terpasang di Format Nilai. Lepas dulu babaknya di sana.',
+                route('eventner.format-nilai.builder'),
+                'Buka Format Penilaian'
+            );
             return;
         }
 
         $round->delete();
-        session()->flash('success', 'Babak dihapus. Nilai yang sudah tersimpan tidak ikut terhapus.');
+        $this->toast('Babak dihapus. Nilai yang sudah tersimpan tidak ikut terhapus.');
     }
 
     public function resetRoundForm()
@@ -873,7 +884,7 @@ class Index extends Component
             ->when($dipilih->isNotEmpty(), fn ($q) => $q->whereNotIn('registration_id', $dipilih->all()))
             ->delete();
 
-        session()->flash('success', "Daftar finalis diperbarui: {$ditambah} peserta diloloskan, {$diperbarui} diperbarui, {$dihapus} dikeluarkan.");
+        $this->toast("Daftar finalis diperbarui: {$ditambah} peserta diloloskan, {$diperbarui} diperbarui, {$dihapus} dikeluarkan.");
         $this->qualifyRoundId = null;
         $this->qualifySelection = [];
     }
@@ -938,7 +949,7 @@ class Index extends Component
             $cat = CompetitionCategory::where('eventner_id', $this->eventnerId)->findOrFail($this->editingId);
             $cat->update($data);
 
-            session()->flash('success', 'Kategori Lomba berhasil diperbarui.');
+            $this->toast('Kategori Lomba berhasil diperbarui.');
         } else {
             $maxOrder = CompetitionCategory::where('eventner_id', $this->eventnerId)
                 ->where('parent_id', $this->parentId)
@@ -949,7 +960,7 @@ class Index extends Component
                 'sort_order' => $maxOrder + 1,
             ]));
 
-            session()->flash('success', ($isParent ? 'Jenis Lomba' : 'Tingkat Lomba') . ' baru berhasil ditambahkan.');
+            $this->toast(($isParent ? 'Jenis Lomba' : 'Tingkat Lomba') . ' baru berhasil ditambahkan.');
         }
 
         $this->resetForm();
@@ -975,7 +986,7 @@ class Index extends Component
         $cat = CompetitionCategory::where('eventner_id', $this->eventnerId)->findOrFail($id);
 
         if ($cat->isParent() && $cat->children()->exists()) {
-            session()->flash('error', 'Tidak bisa menghapus: Jenis Lomba ini masih memiliki ' . $cat->children()->count() . ' Tingkat Lomba. Hapus tingkatnya terlebih dahulu.');
+            $this->gagal('Tidak bisa menghapus: Jenis Lomba ini masih memiliki ' . $cat->children()->count() . ' Tingkat Lomba. Hapus tingkatnya terlebih dahulu.');
             return;
         }
 
@@ -985,12 +996,16 @@ class Index extends Component
         // tidak boleh hilang karena satu klik; peserta harus dipindah atau
         // dihapus dulu.
         if ($cat->registrations()->exists()) {
-            session()->flash('error', 'Tidak bisa menghapus: masih ada ' . $cat->registrations()->count() . ' pendaftar di tingkat ini, beserta nilai dan potongannya. Hapus pendaftarnya dulu di halaman Peserta bila memang sudah tidak dipakai.');
+            $this->gagal(
+                'Tidak bisa menghapus: masih ada ' . $cat->registrations()->count() . ' pendaftar di tingkat ini, beserta nilai dan potongannya. Hapus pendaftarnya dulu di halaman Peserta bila memang sudah tidak dipakai.',
+                route('eventner.participants.index'),
+                'Buka Daftar Peserta'
+            );
             return;
         }
 
         $cat->delete();
-        session()->flash('success', 'Kategori dihapus.');
+        $this->toast('Kategori dihapus.');
     }
 
     public function resetForm()

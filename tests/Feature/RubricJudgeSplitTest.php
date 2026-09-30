@@ -428,6 +428,42 @@ class RubricJudgeSplitTest extends TestCase
             ->assertSet('rubrikTanpaJuriReachable', fn ($daftar) => ! in_array($rubrik->id, $daftar, true));
     }
 
+    /**
+     * Rubrik yang belum dicentang TIDAK ditandai.
+     *
+     * Kosong berarti "semua juri boleh mengisi" — tak ada centang yang perlu
+     * dijangkau. Kalau rubrik kosong ikut ditandai, setiap rubrik di acara yang
+     * belum dibagi jadi merah, dan justru keadaan yang fitur ini jaga supaya
+     * tidak berubah yang dilaporkan sebagai masalah.
+     */
+    public function test_builder_tidak_menandai_rubrik_yang_belum_dibagi()
+    {
+        $rubrik = $this->makeRubrik('PBB');
+
+        Livewire::test(\App\Livewire\Eventner\FormatNilai\Builder::class)
+            ->assertSet('rubrikTanpaJuriReachable', fn ($daftar) => $daftar === []);
+    }
+
+    /**
+     * Tingkat tanpa baris penugasan sama sekali tak menandai apa pun.
+     *
+     * Di situ setiap centang memang tak terjangkau, tapi penyebabnya bukan
+     * centangnya: layar centangnya sendiri sudah jatuh ke "seluruh juri event"
+     * dan panelnya menyatakan belum ada juri di tingkat ini.
+     */
+    public function test_builder_tidak_menandai_saat_tingkat_belum_punya_penugasan()
+    {
+        $rubrik = $this->makeRubrik('PBB');
+        $rubrik->syncRubricJudges([$this->juriA->id]);
+
+        DB::table('competition_group_judge')
+            ->where('competition_category_id', $this->level->id)
+            ->delete();
+
+        Livewire::test(\App\Livewire\Eventner\FormatNilai\Builder::class)
+            ->assertSet('rubrikTanpaJuriReachable', fn ($daftar) => $daftar === []);
+    }
+
     public function test_duplikat_rubrik_menyalin_centangannya()
     {
         $rubrik = $this->makeRubrik('PBB');

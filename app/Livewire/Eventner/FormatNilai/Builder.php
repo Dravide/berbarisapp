@@ -18,6 +18,7 @@ use App\Traits\FeatureGatedComponent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
+use App\Livewire\Concerns\MelaporKePengguna;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\On;
@@ -27,6 +28,8 @@ use Livewire\Component;
 #[Layout('layouts.admin')]
 class Builder extends Component
 {
+    use MelaporKePengguna;
+
     use FeatureGatedComponent;
 
     protected string $requiredFeature = 'format_nilai';
@@ -115,7 +118,7 @@ class Builder extends Component
             ->where('competition_category_id', $categoryLevel)
             ->whereKey($seriesId)
             ->exists()) {
-            session()->flash('error', 'Seri yang dipilih bukan milik tingkat lomba ini.');
+            $this->gagal('Seri yang dipilih bukan milik tingkat lomba ini.');
 
             return;
         }
@@ -124,7 +127,7 @@ class Builder extends Component
             ->where('competition_category_id', $categoryLevel)
             ->whereKey($roundId)
             ->exists()) {
-            session()->flash('error', 'Babak yang dipilih bukan milik tingkat lomba ini.');
+            $this->gagal('Babak yang dipilih bukan milik tingkat lomba ini.');
 
             return;
         }
@@ -137,7 +140,7 @@ class Builder extends Component
         $pindahSeri = (int) $category->competition_series_id !== (int) $seriesId;
 
         if ($pindahSeri && $this->anyCriteriaHasScores($this->criteriaIdsOf($category))) {
-            session()->flash('error', 'Tidak bisa memindahkan rubrik ke seri lain: sudah ada nilai yang masuk.');
+            $this->gagal('Tidak bisa memindahkan rubrik ke seri lain: sudah ada nilai yang masuk.');
 
             return;
         }
@@ -180,6 +183,28 @@ class Builder extends Component
     #[Computed]
     public function juriTingkat()
     {
+        $penugasan = $this->juriPenugasanTingkat;
+
+        // Penugasan kosong = tingkat ini belum diatur. Seluruh juri event
+        // ditawarkan supaya layar ini tetap bisa dipakai lebih dulu, tanpa
+        // memaksa panitia membuka modal Kelola Grup.
+        return $penugasan->isNotEmpty()
+            ? $penugasan
+            : Judge::where('eventner_id', $this->eventnerId)->orderBy('name')->get();
+    }
+
+    /**
+     * Juri yang PUNYA baris penugasan di tingkat yang sedang dibuka.
+     *
+     * Ini pembanding yang benar untuk "tak bisa dijangkau": rubrik yang
+     * dicentang ke juri di luar himpunan ini tak akan pernah terisi, karena
+     * tablet dan finalisasi hanya melihat juri dari baris penugasan.
+     *
+     * @return \Illuminate\Support\Collection<int, \App\Models\Judge>
+     */
+    #[Computed]
+    public function juriPenugasanTingkat()
+    {
         $levelId = $this->activeCompetitionCategoryId;
 
         $ids = $levelId
@@ -189,8 +214,12 @@ class Builder extends Component
                 ->unique()
             : collect();
 
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
         return Judge::where('eventner_id', $this->eventnerId)
-            ->when($ids->isNotEmpty(), fn ($q) => $q->whereIn('id', $ids))
+            ->whereIn('id', $ids)
             ->orderBy('name')
             ->get();
     }
@@ -232,15 +261,34 @@ class Builder extends Component
      * ada peserta mana pun yang rubriknya terisi — dan karena total juara
      * menjumlah apa adanya, angkanya diam-diam kehilangan rubrik itu.
      *
+     * Dua hal yang sengaja TIDAK ditandai:
+     *
+     *  - Rubrik tanpa centang sama sekali. Kosong berarti "semua juri boleh
+     *    mengisi", jadi tak ada yang perlu dijangkau; menandainya akan
+     *    memerahkan setiap rubrik di acara yang belum dibagi — persis keadaan
+     *    yang fitur ini jaga supaya tidak berubah.
+     *  - Tingkat yang belum punya baris penugasan sama sekali. Di situ tiap
+     *    centang memang tak terjangkau, tapi penyebabnya bukan centangnya —
+     *    panel di atasnya sudah menyatakan "Belum ada juri di tingkat ini".
+     *
+     * Pembandingnya `juriPenugasanTingkat`, BUKAN `juriTingkat`: yang kedua
+     * jatuh ke seluruh juri event saat penugasan belum ada, dan di situ setiap
+     * centang akan tampak terjangkau padahal tak ada baris penugasan yang
+     * menjalankannya.
+     *
      * @return array<int> id kategori penilaian yang bermasalah
      */
     #[Computed]
     public function rubrikTanpaJuriReachable(): array
     {
-        $juriTingkat = $this->juriTingkat->pluck('id')->map(fn ($id) => (int) $id)->all();
+        $juriPenugasan = $this->juriPenugasanTingkat->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        if ($juriPenugasan === []) {
+            return [];
+        }
 
         return collect($this->rubricJudgeIds)
-            ->filter(fn ($ids, $categoryId) => array_intersect($ids, $juriTingkat) === [])
+            ->filter(fn ($ids) => $ids !== [] && array_intersect($ids, $juriPenugasan) === [])
             ->keys()
             ->map(fn ($id) => (int) $id)
             ->all();
@@ -475,14 +523,14 @@ class Builder extends Component
         $criteriaIds = $category->subCategories->flatMap->criterias->pluck('id');
 
         if ($this->anyCriteriaHasScores($criteriaIds)) {
-            session()->flash('error', 'Tidak bisa menghapus kategori: sudah ada nilai yang masuk. Hapus/lck format sebelum penilaian dimulai.');
+            $this->gagal('Tidak bisa menghapus kategori: sudah ada nilai yang masuk. Hapus/lck format sebelum penilaian dimulai.', route('eventner.scoring.index'), 'Buka Input Nilai');
 
             return;
         }
 
         $deductionCriteriaIds = $category->deductionCategories->flatMap->criterias->pluck('id');
         if ($this->anyDeductionHasScores($deductionCriteriaIds)) {
-            session()->flash('error', 'Tidak bisa menghapus kategori: sudah ada nilai pengurangan yang masuk.');
+            $this->gagal('Tidak bisa menghapus kategori: sudah ada nilai pengurangan yang masuk.', route('eventner.scoring.index'), 'Buka Input Nilai');
 
             return;
         }
@@ -500,11 +548,12 @@ class Builder extends Component
             ->pluck('name');
 
         if ($championNames->isNotEmpty()) {
-            session()->flash(
-                'error',
+            $this->gagal(
                 'Tidak bisa menghapus kategori: rubriknya dipakai kategori juara '
                 . $championNames->implode(', ')
-                . '. Lepaskan rubrik itu dari kategori juara dulu.'
+                . '. Lepaskan rubrik itu dari kategori juara dulu.',
+                route('eventner.champion-categories.index'),
+                'Buka Kategori Juara'
             );
 
             return;
@@ -606,7 +655,7 @@ class Builder extends Component
             }
         }
 
-        session()->flash('success', 'Kategori berhasil diduplikat. Atur Babak/Grup-nya bila perlu — salinan sengaja tidak mewarisi keduanya.');
+        $this->toast('Kategori berhasil diduplikat. Atur Babak/Grup-nya bila perlu — salinan sengaja tidak mewarisi keduanya.');
         $this->reset('duplicatingCategoryId', 'duplicateCategoryName');
         $this->refreshRubricScopeInputs();
     }
@@ -634,7 +683,7 @@ class Builder extends Component
         $targetCompetitionCategoryId = $this->copyToTargetCompetitionCategoryId;
 
         if (! $this->copyToSourceCategoryId || ! $targetCompetitionCategoryId) {
-            session()->flash('error', 'Pilih tingkat tujuan terlebih dahulu.');
+            $this->gagal('Pilih tingkat tujuan terlebih dahulu.');
             $this->dispatch('copy:done', success: false, message: 'Pilih tingkat tujuan terlebih dahulu.');
 
             return;
@@ -660,7 +709,7 @@ class Builder extends Component
         $targetCompetitionCategoryId = $this->copyToTargetCompetitionCategoryId;
 
         if (! $sourceId || ! $targetCompetitionCategoryId) {
-            session()->flash('error', 'Pilih tingkat tujuan terlebih dahulu.');
+            $this->gagal('Pilih tingkat tujuan terlebih dahulu.');
             $this->dispatch('copy:done', success: false, message: 'Pilih tingkat tujuan terlebih dahulu.');
 
             return;
@@ -747,7 +796,7 @@ class Builder extends Component
         })->with('criterias')->findOrFail($id);
 
         if ($this->anyCriteriaHasScores($sub->criterias->pluck('id'))) {
-            session()->flash('error', 'Tidak bisa menghapus sub-kategori: sudah ada nilai yang masuk.');
+            $this->gagal('Tidak bisa menghapus sub-kategori: sudah ada nilai yang masuk.', route('eventner.scoring.index'), 'Buka Input Nilai');
 
             return;
         }
@@ -760,11 +809,12 @@ class Builder extends Component
             ->pluck('name');
 
         if ($championNames->isNotEmpty()) {
-            session()->flash(
-                'error',
+            $this->gagal(
                 'Tidak bisa menghapus sub-kategori: rubriknya dipakai kategori juara '
                 . $championNames->implode(', ')
-                . '. Lepaskan rubrik itu dari kategori juara dulu.'
+                . '. Lepaskan rubrik itu dari kategori juara dulu.',
+                route('eventner.champion-categories.index'),
+                'Buka Kategori Juara'
             );
 
             return;
@@ -781,7 +831,7 @@ class Builder extends Component
         })->findOrFail($id);
 
         if ($this->criteriaHasScores($id)) {
-            session()->flash('error', 'Tidak bisa menghapus kriteria: sudah ada nilai yang masuk.');
+            $this->gagal('Tidak bisa menghapus kriteria: sudah ada nilai yang masuk.', route('eventner.scoring.index'), 'Buka Input Nilai');
 
             return;
         }
@@ -800,11 +850,12 @@ class Builder extends Component
             ->pluck('name');
 
         if ($championNames->isNotEmpty()) {
-            session()->flash(
-                'error',
+            $this->gagal(
                 'Tidak bisa menghapus kriteria: kriteria ini dipakai kategori juara '
                 . $championNames->implode(', ')
-                . '. Lepaskan kriteria itu dari kategori juara dulu.'
+                . '. Lepaskan kriteria itu dari kategori juara dulu.',
+                route('eventner.champion-categories.index'),
+                'Buka Kategori Juara'
             );
 
             return;
@@ -1125,7 +1176,7 @@ class Builder extends Component
             ->findOrFail($id);
 
         if ($this->anyDeductionHasScores($category->criterias->pluck('id'))) {
-            session()->flash('error', 'Tidak bisa menghapus kategori pengurangan: sudah ada nilai pengurangan yang masuk.');
+            $this->gagal('Tidak bisa menghapus kategori pengurangan: sudah ada nilai pengurangan yang masuk.');
 
             return;
         }
@@ -1154,14 +1205,14 @@ class Builder extends Component
         // Ensure all values are numeric (allow negatives)
         foreach ($options as $opt) {
             if (! is_numeric($opt)) {
-                session()->flash('error', 'Semua opsi pengurangan harus berupa angka.');
+                $this->gagal('Semua opsi pengurangan harus berupa angka.');
 
                 return;
             }
         }
 
         if (count($options) > self::MAX_OPTIONS) {
-            session()->flash('error', 'Maksimal '.self::MAX_OPTIONS.' opsi pengurangan per kriteria.');
+            $this->gagal('Maksimal '.self::MAX_OPTIONS.' opsi pengurangan per kriteria.');
 
             return;
         }
@@ -1186,7 +1237,7 @@ class Builder extends Component
         })->findOrFail($id);
 
         if (ScoreDeduction::where('deduction_criteria_id', $id)->exists()) {
-            session()->flash('error', 'Tidak bisa menghapus kriteria pengurangan: sudah ada nilai pengurangan yang masuk.');
+            $this->gagal('Tidak bisa menghapus kriteria pengurangan: sudah ada nilai pengurangan yang masuk.');
 
             return;
         }
@@ -1266,7 +1317,11 @@ class Builder extends Component
         $ownerId = $this->ownerCompetitionCategoryId();
 
         if (! $ownerId) {
-            session()->flash('error_dedcat_global', 'Buat tingkat lomba terlebih dahulu sebelum menambah pengurangan.');
+            $this->gagal(
+                'Buat tingkat lomba terlebih dahulu sebelum menambah pengurangan.',
+                route('eventner.competition-categories.index'),
+                'Buka Kategori Lomba'
+            );
 
             return;
         }
@@ -1312,7 +1367,7 @@ class Builder extends Component
             ->findOrFail($id);
 
         if ($this->anyDeductionHasScores($category->criterias->pluck('id'))) {
-            session()->flash('error', 'Tidak bisa menghapus kelompok pengurangan: sudah ada nilai pengurangan yang masuk.');
+            $this->gagal('Tidak bisa menghapus kelompok pengurangan: sudah ada nilai pengurangan yang masuk.');
 
             return;
         }
@@ -1352,14 +1407,14 @@ class Builder extends Component
 
         foreach ($options as $opt) {
             if (! is_numeric($opt)) {
-                session()->flash('error', 'Semua opsi pengurangan harus berupa angka.');
+                $this->gagal('Semua opsi pengurangan harus berupa angka.');
 
                 return;
             }
         }
 
         if (count($options) > self::MAX_OPTIONS) {
-            session()->flash('error', 'Maksimal '.self::MAX_OPTIONS.' opsi pengurangan per kriteria.');
+            $this->gagal('Maksimal '.self::MAX_OPTIONS.' opsi pengurangan per kriteria.');
 
             return;
         }

@@ -17,11 +17,14 @@ use App\Services\ScoreFinalizationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
+use App\Livewire\Concerns\MelaporKePengguna;
 use Livewire\Attributes\Layout;
 
 #[Layout('layouts.admin')]
 class Index extends Component
 {
+    use MelaporKePengguna;
+
     public $eventner;
     public $view = 'categories'; // 'categories', 'participants', 'scoring'
     public $selectedCategoryId;
@@ -394,9 +397,27 @@ class Index extends Component
             return [];
         }
 
+        $label = $this->labelPenugasan();
+
+        if ($label === '') {
+            return [];
+        }
+
+        return $this->judges
+            ->mapWithKeys(fn ($juri) => [$juri->id => $label])
+            ->all();
+    }
+
+    /** Nama baris penugasan peserta terpilih, atau '' kalau barisnya tak ada. */
+    private function labelPenugasan(): string
+    {
+        if (! $this->selectedRegistration) {
+            return '';
+        }
+
         $levelId = $this->selectedRegistration->competition_category_id;
         if (! $levelId) {
-            return [];
+            return '';
         }
 
         // Satu baris penugasan berlaku untuk seluruh juri di lembar ini — itu
@@ -407,20 +428,30 @@ class Index extends Component
         );
 
         if ($t['scope'] === null) {
-            return [];
+            return '';
         }
 
         $label = $t['scope'] === CompetitionGroup::SCOPE_GROUP
             ? (string) ($this->groups()->firstWhere('id', $t['group_id'])?->name ?? 'Grup')
             : (CompetitionGroup::SCOPE_LABELS[$t['scope']] ?? '');
 
-        if ($label === '') {
-            return [];
+        return $label;
+    }
+
+    /**
+     * Baris penugasan yang berlaku untuk peserta terpilih, atau null.
+     *
+     * Dipakai blade hanya saat panel jurinya kosong, untuk menyebut baris mana
+     * yang belum berisi juri — "Grup A" atau "Seluruh Tingkat" jauh lebih
+     * menuntun daripada "belum ada juri".
+     */
+    private function namaBarisPenugasan(): ?string
+    {
+        if (! $this->selectedRegistration) {
+            return null;
         }
 
-        return $this->judges
-            ->mapWithKeys(fn ($juri) => [$juri->id => $label])
-            ->all();
+        return $this->labelPenugasan() ?: null;
     }
 
     /** Seri milik tingkat terpilih, urut sesuai keinginan panitia. */
@@ -727,7 +758,7 @@ class Index extends Component
             // Sinkronkan juga penanda di layar supaya tombolnya ikut terkunci.
             $this->isFinalized = $this->hasFinalizedScores();
             $this->saveStatus = 'error';
-            session()->flash('scoring_error', 'Nilai sudah difinalisasi dan dikunci — tidak bisa diubah lagi.');
+            $this->gagal('Nilai sudah difinalisasi dan dikunci — tidak bisa diubah lagi.');
             return;
         }
 
@@ -767,7 +798,7 @@ class Index extends Component
         }
 
         if ($ditolak > 0) {
-            session()->flash('scoring_error', $ditolak . ' nilai tidak disimpan: rubrik itu diisi juri lain.');
+            $this->gagal($ditolak . ' nilai tidak disimpan: rubrik itu diisi juri lain.');
         }
 
         $this->saveStatus = 'saved';
@@ -798,7 +829,7 @@ class Index extends Component
 
         if ($result['missing']) {
             $this->saveStatus = 'error';
-            session()->flash('scoring_error', 'Semua kriteria nilai harus diisi sebelum melakukan finalisasi.');
+            $this->gagal('Semua kriteria nilai harus diisi sebelum melakukan finalisasi.');
             return;
         }
 
@@ -815,7 +846,7 @@ class Index extends Component
                 );
         }
 
-        session()->flash('success', 'Penilaian berhasil difinalisasi dan dikunci.');
+        $this->toast('Penilaian berhasil difinalisasi dan dikunci.');
     }
 
     private function notifyIfAllJudgesFinalized(): void
@@ -907,7 +938,7 @@ class Index extends Component
         // kolom input, bukan membuka kembali penilaian yang sudah final.
         if ($this->hasFinalizedScores()) {
             $this->saveStatus = 'error';
-            session()->flash('scoring_error', 'Nilai sudah difinalisasi dan dikunci — tidak bisa direset. Buka kunci lewat panitia terlebih dahulu.');
+            $this->gagal('Nilai sudah difinalisasi dan dikunci — tidak bisa direset. Buka kunci lewat panitia terlebih dahulu.');
             return;
         }
 
@@ -919,7 +950,7 @@ class Index extends Component
 
         $this->scores = [];
         $this->saveStatus = '';
-        session()->flash('success', 'Nilai berhasil direset.');
+        $this->toast('Nilai berhasil direset.');
     }
 
     // ── Buka Kunci Nilai ──────────────────────────────────────────────
@@ -1092,7 +1123,7 @@ class Index extends Component
         // finalisasi sama saja mengubah hasil lomba.
         if ($this->hasFinalizedScores()) {
             $this->deductionSaveStatus = 'error';
-            session()->flash('scoring_error', 'Nilai sudah difinalisasi dan dikunci — pengurangan tidak bisa diubah lagi.');
+            $this->gagal('Nilai sudah difinalisasi dan dikunci — pengurangan tidak bisa diubah lagi.');
             return;
         }
 
@@ -1326,6 +1357,10 @@ class Index extends Component
         // sedang terbuka — di layar pemilih ia cuma jadi teks tanpa konteks.
         $judgeGroupLabels = $this->view === 'scoring' ? $this->judgeAssignmentLabels() : [];
 
+        // Baris penugasan peserta terpilih, dibaca blade hanya saat panel juri
+        // kosong supaya pesannya bisa menyebut baris mana yang perlu diisi.
+        $barisPenugasan = $this->view === 'scoring' ? $this->namaBarisPenugasan() : null;
+
         return view('livewire.eventner.scoring.index', [
             'participants' => $participants,
             'selectedCategory' => $selectedCategory,
@@ -1335,6 +1370,7 @@ class Index extends Component
             'groupSeriesCounts' => $this->seriesCountsPerGroup(),
             'groupJudgeNames' => $this->judgesPerGroupRow(),
             'judgeGroupLabels' => $judgeGroupLabels,
+            'barisPenugasan' => $barisPenugasan,
             'ungroupedCount' => $ungroupedCount,
             'totalCount' => (int) $groupCounts->sum() + $ungroupedCount,
             'finalistCount' => $this->finalistIds()->count(),

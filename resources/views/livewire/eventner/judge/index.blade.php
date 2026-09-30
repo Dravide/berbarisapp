@@ -80,7 +80,14 @@
                                                      sekarang ditentukan di modal Kelola Grup. --}}
                                                 @php $tugas = $this->assignmentsByJudge->get($judge->id, collect()); @endphp
                                                 @if($tugas->isEmpty())
-                                                    <span class="badge bg-warning-subtle text-warning">Belum ada tugas</span>
+                                                    {{-- Tautan, bukan sekadar badge: juri tanpa tugas tak
+                                                         akan menilai apa pun, dan pesan yang hanya
+                                                         menyatakan masalahnya membuat operator menebak
+                                                         di mana penugasan itu diatur. --}}
+                                                    <a href="{{ route('eventner.competition-categories.index') }}"
+                                                       class="badge bg-warning-subtle text-warning text-decoration-none">
+                                                        <i class="ti ti-arrow-right me-1"></i>Belum ada tugas &mdash; atur di Kategori Lomba
+                                                    </a>
                                                 @else
                                                     <button type="button" class="btn btn-sm btn-outline-success fw-semibold"
                                                             wire:click="openCategoriesModal({{ $judge->id }})">

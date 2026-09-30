@@ -17,6 +17,7 @@ use App\Models\Registration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Concerns\MemeriksaToast;
 use Tests\TestCase;
 
 /**
@@ -34,6 +35,7 @@ use Tests\TestCase;
 class FormatNilaiSeriScopeTest extends TestCase
 {
     use RefreshDatabase;
+    use MemeriksaToast;
 
     private Eventner $eventner;
 
@@ -208,10 +210,11 @@ class FormatNilaiSeriScopeTest extends TestCase
             'sort_order' => 1,
         ]);
 
-        $this->builder()
+        $panel = $this->builder()
             ->set("rubricSeriesId.{$this->rubrik->id}", (string) $seriLain->id)
-            ->call('saveRubricScope', $this->rubrik->id)
-            ->assertSee('Seri yang dipilih bukan milik tingkat lomba ini.');
+            ->call('saveRubricScope', $this->rubrik->id);
+
+        $this->assertAdaToast($panel, 'Seri yang dipilih bukan milik tingkat lomba ini.');
 
         $this->assertSame($this->seriA->id, (int) $this->rubrik->fresh()->competition_series_id);
     }
@@ -249,10 +252,11 @@ class FormatNilaiSeriScopeTest extends TestCase
     {
         $this->beriNilai();
 
-        $this->builder()
+        $panel = $this->builder()
             ->set("rubricSeriesId.{$this->rubrik->id}", (string) $this->seriB->id)
-            ->call('saveRubricScope', $this->rubrik->id)
-            ->assertSee('Tidak bisa memindahkan rubrik ke seri lain: sudah ada nilai yang masuk.');
+            ->call('saveRubricScope', $this->rubrik->id);
+
+        $this->assertAdaToast($panel, 'Tidak bisa memindahkan rubrik ke seri lain');
 
         $this->assertSame($this->seriA->id, (int) $this->rubrik->fresh()->competition_series_id);
     }

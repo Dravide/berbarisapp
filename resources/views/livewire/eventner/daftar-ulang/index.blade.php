@@ -43,10 +43,6 @@
         </div>
     </div>
 
-    @error('grup') <div class="alert alert-danger py-2 fs-2">{{ $message }}</div> @enderror
-    @error('seri') <div class="alert alert-danger py-2 fs-2">{{ $message }}</div> @enderror
-    @error('undian') <div class="alert alert-danger py-2 fs-2">{{ $message }}</div> @enderror
-
     {{-- Seri belum dibuat sama sekali: kolom Seri akan kosong semua, dan itu
          terbaca sebagai kerusakan. Katakan apa yang kurang. --}}
     @if($this->series->isEmpty())

@@ -620,6 +620,28 @@ class GroupScoringIsolationTest extends TestCase
         $this->panelFinal()->assertSee('Juri Final')->assertDontSee('Juri Umum');
     }
 
+    /**
+     * Panel juri yang kosong menjelaskan baris mana yang belum diisi, dan
+     * menawarkan jalan keluar.
+     *
+     * Panel kosong tanpa sebab membuat tombol Simpan tampak rusak: operator
+     * melihat lembar nilai tanpa satu pun juri, tanpa tahu apa yang harus
+     * dibereskan di mana.
+     */
+    public function test_panel_kosong_menyebut_baris_penugasan_yang_belum_diisi()
+    {
+        // Grup B belum punya penugasan sendiri; peserta di sana jatuh ke baris
+        // "Belum Bergrup" yang juga belum diisi siapa pun.
+        $diGrupB = $this->pesertaGrupB();
+
+        Livewire::test(\App\Livewire\Eventner\Scoring\Index::class)
+            ->call('selectCategory', $this->level->id)
+            ->call('selectParticipant', $diGrupB->id)
+            ->assertViewHas('barisPenugasan', 'Grup B')
+            ->assertSee('belum ada')
+            ->assertSee('Buka Kategori Lomba');
+    }
+
     private function pesertaGrupB(): Registration
     {
         return Registration::factory()->for($this->eventner, 'eventner')->create([

@@ -9,12 +9,15 @@ use App\Models\Judge;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Livewire\Concerns\MelaporKePengguna;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Computed;
 
 #[Layout('layouts.admin')]
 class Index extends Component
 {
+    use MelaporKePengguna;
+
     use WithFileUploads;
 
     public $name = '';
@@ -199,7 +202,7 @@ class Index extends Component
                 'phone_number' => strip_tags($this->phone_number),
                 'photo' => $photoPath,
             ]);
-            session()->flash('success', 'Data juri berhasil diperbarui.');
+            $this->toast('Data juri berhasil diperbarui.');
         } else {
             Judge::create([
                 'eventner_id' => $this->eventnerId,
@@ -207,7 +210,10 @@ class Index extends Component
                 'phone_number' => strip_tags($this->phone_number),
                 'photo' => $photoPath,
             ]);
-            session()->flash('success', 'Juri baru berhasil ditambahkan. Tugaskan grupbnya di halaman Tingkat Lomba.');
+            $this->toast('Juri baru berhasil ditambahkan. Langkah berikutnya: tentukan grup yang ia nilai.',
+                'success',
+                route('eventner.competition-categories.index'),
+                'Buka Kategori Lomba');
         }
 
         $this->resetForm();
@@ -307,7 +313,7 @@ class Index extends Component
         $judge->update(['access_token' => \Illuminate\Support\Str::random(16)]);
 
         $this->selectedTabletJudgeId = $judge->id;
-        session()->flash('success', 'Token akses tablet juri diperbarui. Link lama tidak berlaku lagi.');
+        $this->toast('Token akses tablet juri diperbarui. Link lama tidak berlaku lagi.');
     }
 
     public function delete($id)
@@ -317,7 +323,7 @@ class Index extends Component
             Storage::delete('public/' . $judge->photo);
         }
         $judge->delete();
-        session()->flash('success', 'Juri berhasil dihapus.');
+        $this->toast('Juri berhasil dihapus.');
     }
 
     public function resetForm()

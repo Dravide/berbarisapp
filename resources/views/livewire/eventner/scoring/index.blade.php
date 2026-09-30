@@ -413,6 +413,34 @@
                             </div>
                         </div>
                     </div>
+                @else
+                    {{-- Panel kosong tanpa penjelasan membuat tombol Simpan tampak
+                         rusak. Dua sebabnya berbeda dan disebut apa adanya; keduanya
+                         dikunci di satu layar, jadi tautannya sama. --}}
+                    <div class="card w-100 mb-4 border-warning">
+                        <div class="card-body">
+                            <h6 class="fw-semibold mb-2">
+                                <i class="ti ti-alert-triangle text-warning me-1"></i>Belum ada juri untuk peserta ini
+                            </h6>
+                            @if($barisPenugasan === null)
+                                <p class="text-muted fs-2 mb-2">
+                                    Tingkat <strong>{{ $selectedRegistration->competitionCategory->name ?? '-' }}</strong>
+                                    belum punya baris penugasan sama sekali, jadi tak ada satu pun kolom
+                                    untuk mencentang juri. Tetapkan dulu penugasannya untuk grup &mdash;
+                                    atau untuk seluruh tingkat kalau memang tidak dibagi grup.
+                                </p>
+                            @else
+                                <p class="text-muted fs-2 mb-2">
+                                    Baris <strong>{{ $barisPenugasan }}</strong> sudah ada, tapi belum ada
+                                    juri yang dicentang di dalamnya. Peserta ini masuk ke baris itu, jadi
+                                    tanpa centang ia tak bisa dinilai siapa pun.
+                                </p>
+                            @endif
+                            <a href="{{ route('eventner.competition-categories.index') }}" class="btn btn-sm btn-primary">
+                                <i class="ti ti-arrow-right me-1"></i>Buka Kategori Lomba
+                            </a>
+                        </div>
+                    </div>
                 @endif
 
                 @if($assessmentCategories->isEmpty())

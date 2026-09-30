@@ -16,6 +16,7 @@ use App\Models\Registration;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Concerns\MemeriksaToast;
 use Tests\TestCase;
 
 /**
@@ -36,6 +37,7 @@ use Tests\TestCase;
 class DaftarUlangTest extends TestCase
 {
     use RefreshDatabase;
+    use MemeriksaToast;
 
     private User $user;
 
@@ -191,9 +193,10 @@ class DaftarUlangTest extends TestCase
         $peserta = $this->peserta('SMPN 1', $this->groupA, $this->seriA);
         $this->nilai($peserta, $kriteria, 80);
 
-        $this->panel()
-            ->call('setSeries', $peserta->id, $this->seriB->id)
-            ->assertHasErrors('seri');
+        $panel = $this->panel()
+            ->call('setSeries', $peserta->id, $this->seriB->id);
+
+        $this->assertAdaToast($panel, 'tidak bisa dipindah');
 
         $this->assertSame(
             $this->seriA->id,
@@ -223,9 +226,10 @@ class DaftarUlangTest extends TestCase
         $peserta = $this->peserta('SMPN 1', $this->groupA, $this->seriA);
         $this->nilai($peserta, $kriteria, 80);
 
-        $this->panel()
-            ->call('setSeries', $peserta->id, '')
-            ->assertHasErrors('seri');
+        $panel = $this->panel()
+            ->call('setSeries', $peserta->id, '');
+
+        $this->assertAdaToast($panel, 'tidak bisa dipindah');
 
         $this->assertSame($this->seriA->id, $peserta->fresh()->competition_series_id);
     }
@@ -246,9 +250,10 @@ class DaftarUlangTest extends TestCase
 
         $peserta = $this->peserta('SMPN 1', $this->groupA);
 
-        $this->panel()
-            ->call('setSeries', $peserta->id, $seriLain->id)
-            ->assertHasErrors('seri');
+        $panel = $this->panel()
+            ->call('setSeries', $peserta->id, $seriLain->id);
+
+        $this->assertAdaToast($panel, 'Seri tidak ditemukan');
 
         $this->assertNull($peserta->fresh()->competition_series_id);
     }
@@ -322,9 +327,10 @@ class DaftarUlangTest extends TestCase
 
         $peserta = $this->peserta('SMPN 1');
 
-        $this->panel()
-            ->call('setGroup', $peserta->id, $grupLain->id)
-            ->assertHasErrors('grup');
+        $panel = $this->panel()
+            ->call('setGroup', $peserta->id, $grupLain->id);
+
+        $this->assertAdaToast($panel, 'Grup tidak ditemukan');
 
         $this->assertNull($peserta->fresh()->competition_group_id);
     }
@@ -362,9 +368,10 @@ class DaftarUlangTest extends TestCase
         $dua = $this->peserta('SMPN 2', $this->groupA);
         $satu->update(['urutan_tampil' => 2]);
 
-        $this->panel()
-            ->call('setUndian', $dua->id, 2)
-            ->assertHasErrors('undian');
+        $panel = $this->panel()
+            ->call('setUndian', $dua->id, 2);
+
+        $this->assertAdaToast($panel, 'Nomor undian');
 
         $this->assertNull($dua->fresh()->urutan_tampil);
     }
@@ -373,9 +380,10 @@ class DaftarUlangTest extends TestCase
     {
         $peserta = $this->peserta('SMPN 1', $this->groupA);
 
-        $this->panel()
-            ->call('setUndian', $peserta->id, 0)
-            ->assertHasErrors('undian');
+        $panel = $this->panel()
+            ->call('setUndian', $peserta->id, 0);
+
+        $this->assertAdaToast($panel, 'Nomor undian');
 
         $this->assertNull($peserta->fresh()->urutan_tampil);
     }

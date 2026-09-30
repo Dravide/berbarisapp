@@ -8,6 +8,7 @@ use App\Models\CompetitionSeries;
 use App\Models\Registration;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
+use App\Livewire\Concerns\MelaporKePengguna;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -34,6 +35,8 @@ use Livewire\Component;
 #[Layout('layouts.admin')]
 class Index extends Component
 {
+    use MelaporKePengguna;
+
     public $eventner;
 
     /** Tingkat lomba yang sedang dibuka. */
@@ -162,8 +165,7 @@ class Index extends Component
             'daftar_ulang_at' => $peserta->daftar_ulang_at ? null : now(),
         ]);
 
-        session()->flash(
-            'success',
+        $this->toast(
             $peserta->daftar_ulang_at
                 ? "{$peserta->display_name} ditandai sudah daftar ulang."
                 : "Tanda daftar ulang {$peserta->display_name} dibatalkan."
@@ -188,7 +190,7 @@ class Index extends Component
                 ->find($groupId);
 
             if (! $ada) {
-                $this->addError('grup', 'Grup tidak ditemukan pada tingkat lomba ini.');
+                $this->gagal('Grup tidak ditemukan pada tingkat lomba ini.');
 
                 return;
             }
@@ -202,10 +204,9 @@ class Index extends Component
         ]);
 
         if ($berubah) {
-            session()->flash('success', "{$peserta->display_name} dipindah grup; nomor undiannya dikosongkan.");
+            $this->toast("{$peserta->display_name} dipindah grup; nomor undiannya dikosongkan.");
         }
 
-        $this->resetErrorBag('grup');
     }
 
     /**
@@ -229,7 +230,7 @@ class Index extends Component
                 ->find($seriesId);
 
             if (! $ada) {
-                $this->addError('seri', 'Seri tidak ditemukan pada tingkat lomba ini.');
+                $this->gagal('Seri tidak ditemukan pada tingkat lomba ini.');
 
                 return;
             }
@@ -237,17 +238,17 @@ class Index extends Component
 
         // Seri yang sama bukan pemindahan — tak ada yang perlu diblokir.
         if ((string) $peserta->competition_series_id === (string) $seriesId) {
-            $this->resetErrorBag('seri');
-
+    
             return;
         }
 
         $sudahDinilai = AssessmentScore::where('registration_id', $peserta->id)->exists();
 
         if ($sudahDinilai) {
-            $this->addError(
-                'seri',
-                "Seri {$peserta->display_name} tidak bisa dipindah: sudah ada nilai juri masuk. Hapus nilai dulu di halaman Input Nilai."
+            $this->gagal(
+                "Seri {$peserta->display_name} tidak bisa dipindah: sudah ada nilai juri masuk. Hapus nilai dulu di halaman Input Nilai.",
+                route('eventner.scoring.index'),
+                'Buka Input Nilai'
             );
 
             return;
@@ -255,8 +256,7 @@ class Index extends Component
 
         $peserta->update(['competition_series_id' => $seriesId]);
 
-        session()->flash('success', "{$peserta->display_name} mendapat seri baru.");
-        $this->resetErrorBag('seri');
+        $this->toast("{$peserta->display_name} mendapat seri baru.");
     }
 
     /**
@@ -274,7 +274,7 @@ class Index extends Component
         $nomor = ($nomor === '' || $nomor === null) ? null : (int) $nomor;
 
         if ($nomor !== null && $nomor < 1) {
-            $this->addError('undian', 'Nomor undian minimal 1.');
+            $this->gagal('Nomor undian minimal 1.');
 
             return;
         }
@@ -292,7 +292,7 @@ class Index extends Component
                 ->first();
 
             if ($bentrok) {
-                $this->addError('undian', "Nomor undian {$nomor} sudah dipakai {$bentrok->display_name}.");
+                $this->gagal("Nomor undian {$nomor} sudah dipakai {$bentrok->display_name}.");
 
                 return;
             }
@@ -300,14 +300,12 @@ class Index extends Component
 
         $peserta->update(['urutan_tampil' => $nomor]);
 
-        session()->flash(
-            'success',
+        $this->toast(
             $nomor
                 ? "{$peserta->display_name} mendapat nomor undian #{$nomor}."
                 : "Nomor undian {$peserta->display_name} dikosongkan."
         );
 
-        $this->resetErrorBag('undian');
     }
 
     public function render()
