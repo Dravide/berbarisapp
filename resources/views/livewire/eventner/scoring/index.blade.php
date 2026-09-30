@@ -287,9 +287,17 @@
                                     <div class="d-flex align-items-center gap-3">
                                         {{-- Nomor undian = urutan tampil. Daftar diurutkan
                                              dengan angka ini, jadi juri bisa mencocokkan
-                                             layar dengan panggilan di lapangan. --}}
+                                             layar dengan panggilan di lapangan.
+
+                                             bg-dark + text-white, BUKAN bg-dark-subtle +
+                                             text-dark: tema ini menyetel
+                                             --bs-dark-bg-subtle ke #2a3547 — warna gelap
+                                             penuh, bukan tint seperti token -bg-subtle
+                                             lainnya — sementara .text-dark di sini juga
+                                             gelap. Hasilnya angka gelap di atas gelap, dan
+                                             nomor undiannya tak terbaca. --}}
                                         @if($reg->urutan_tampil)
-                                            <span class="badge bg-dark-subtle text-dark flex-shrink-0" style="min-width:2rem;">{{ $reg->urutan_tampil }}</span>
+                                            <span class="badge bg-dark text-white flex-shrink-0" style="min-width:2rem;">{{ $reg->urutan_tampil }}</span>
                                         @endif
                                         @if($reg->logo_sekolah)
                                             <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" class="rounded-circle border" width="44" height="44" style="object-fit:cover;" alt="">
