@@ -169,6 +169,34 @@ class ChampionCategory extends Model
     }
 
     /**
+     * Babak yang mengikat kategori juara ini, atau null bila tak bisa
+     * dipastikan.
+     *
+     * Kategori juara tidak punya kolom babak sendiri — babaknya hanya terbaca
+     * dari rubrik yang dipakai. Bila rubriknya menunjuk SATU babak, itulah
+     * babaknya. Rubrik tanpa babak tidak dihitung, supaya kategori juara lama
+     * (yang dibuat sebelum babak ada) tetap berperilaku seperti dulu, dan
+     * campuran dua babak menghasilkan null: kategori lintas babak tidak boleh
+     * diam-diam dianggap milik salah satunya.
+     *
+     * Dipakai halaman publik untuk tahu bahwa sebuah tingkat hanya menyajikan
+     * hasil babak final — lihat EventResult::finalOnly.
+     */
+    public function boundRoundId(): ?int
+    {
+        $ids = $this->assessmentSubCategories->map(fn ($sub) => $sub->category)
+            ->concat($this->criterias->map(fn ($crit) => $crit->subCategory?->category))
+            ->concat($this->tiebreakCriterias->map(fn ($crit) => $crit->subCategory?->category))
+            ->filter()
+            ->pluck('competition_round_id')
+            ->filter(fn ($id) => $id !== null)
+            ->unique()
+            ->values();
+
+        return $ids->count() === 1 ? (int) $ids->first() : null;
+    }
+
+    /**
      * Kategori juara relevan di tingkat lomba ini? True bila:
      * belum punya rubrik, punya rubrik global (competition_category_id null),
      * atau punya rubrik milik tingkat tsb.

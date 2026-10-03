@@ -5,6 +5,8 @@ namespace App\Livewire\Public;
 use App\Models\AssessmentScore;
 use App\Models\ChampionCategory;
 use App\Models\CompetitionGroup;
+use App\Models\CompetitionRound;
+use App\Models\CompetitionRoundRegistration;
 use App\Models\Eventner;
 use App\Models\Registration;
 use Livewire\Component;
@@ -22,6 +24,16 @@ class EventResult extends Component
      * Grup yang sedang dilihat. '' = peringkat gabungan tingkat (perilaku lama).
      */
     public $selectedGroupId = '';
+
+    /**
+     * Tingkat terpilih sedang menyajikan hasil BABAK FINAL saja.
+     *
+     * Final adalah satu pool se-tingkat: tak ada grup yang bisa disaring, dan
+     * nilai penyisihan tidak lagi ikut dijumlahkan — juara ditentukan nilai
+     * final. Karena itu pemilih grup disembunyikan dan switchGroup() menolak.
+     * Diisi ulang setiap calculateRankings(); lihat di sana kapan diset true.
+     */
+    public $finalOnly = false;
 
     public function mount($slug = null)
     {
@@ -46,11 +58,12 @@ class EventResult extends Component
     }
 
     /**
-     * Grup milik tingkat terpilih.
+     * Grup milik tingkat terpilih. Kosong saat tingkat itu final-only: babak
+     * final tidak dibagi grup, jadi pemilih grup memang tak punya isi.
      */
     public function getGroupsProperty()
     {
-        if (! $this->selectedCategoryId) {
+        if (! $this->selectedCategoryId || $this->finalOnly) {
             return collect();
         }
 
@@ -73,10 +86,21 @@ class EventResult extends Component
 
     /**
      * Ganti grup. Grup dari DOM wajib milik tingkat terpilih.
+     *
+     * Tingkat yang menyajikan hasil final tidak punya grup untuk disaring —
+     * pemilihnya pun tidak dirender — jadi apa pun yang datang (mis. dari DOM
+     * lama yang belum disegarkan) diabaikan dan tabel final dibiarkan utuh.
      */
     public function switchGroup($groupId)
     {
         $this->selectedGroupId = '';
+
+        if ($this->finalOnly) {
+            $this->resetErrorBag('selectedGroupId');
+            $this->calculateRankings();
+
+            return;
+        }
 
         if ($groupId !== '' && $groupId !== null) {
             $ada = CompetitionGroup::where('eventner_id', $this->eventner->id)
@@ -100,28 +124,80 @@ class EventResult extends Component
     {
         $this->allRankings = [];
 
-        // Only fetch champion categories that are marked as public
-        $championCategories = ChampionCategory::with(['assessmentSubCategories.criterias', 'rankTitles', 'tiebreakSubCategories.criterias', 'criterias', 'tiebreakCriterias'])
+        // Only fetch champion categories that are marked as public.
+        // Relasi bersarang ikut dimuat: babak rubrik dan bobotnya dibaca lewat
+        // sub-kategori -> kategori, dan tanpa eager load itu jadi query per
+        // kriteria di halaman publik.
+        $championCategories = ChampionCategory::with([
+            'assessmentSubCategories.category',
+            'assessmentSubCategories.criterias',
+            'rankTitles',
+            'tiebreakSubCategories.criterias',
+            'criterias.subCategory.category',
+            'tiebreakCriterias.subCategory.category',
+        ])
             ->where('eventner_id', $this->eventner->id)
             ->where('is_public', true)
             ->get();
 
         if ($championCategories->isEmpty()) {
+            $this->finalOnly = false;
+
             return;
         }
+
+        // Babak tingkat ini. Kategori juara tidak menyimpan babaknya sendiri —
+        // babaknya hanya terbaca dari rubrik yang dipakai (boundRoundId()).
+        $rounds = CompetitionRound::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', $this->selectedCategoryId)
+            ->get()
+            ->keyBy('id');
+
+        $finalRound = $rounds->first(fn ($round) => $round->isFinal());
+        $championRoundId = null;
+
+        // Tingkat bergrup yang sudah sampai babak final menyajikan hasil FINAL:
+        // juara ditentukan nilai final, bukan jumlah nilai penyisihan. Halaman
+        // ini lalu memuat kategori juara yang terikat babak final saja, dan
+        // pemilih grup tidak lagi ditawarkan — final adalah satu pool
+        // se-tingkat, jadi tak ada grup yang bisa disaring.
+        //
+        // Tingkat tanpa kategori juara berbabak-final tidak berubah sedikit pun:
+        // kategori juara lama (rubriknya belum ditandai babak) tetap memakai
+        // seluruh nilainya seperti dulu.
+        if ($finalRound && $championCategories->contains(
+            fn ($c) => (string) $c->boundRoundId() === (string) $finalRound->id
+        )) {
+            $championRoundId = $finalRound->id;
+
+            $championCategories = $championCategories
+                ->filter(fn ($c) => (string) $c->boundRoundId() === (string) $finalRound->id)
+                ->values();
+        }
+
+        $this->finalOnly = $championRoundId !== null;
+
+        if ($this->finalOnly) {
+            $this->selectedGroupId = '';
+        }
+
+        $groupId = $this->selectedGroupId !== '' ? $this->selectedGroupId : null;
 
         // Saat grup dipilih, kategori juara yang rubriknya khusus grup lain
         // tidak ikut — supaya "Juara Grup A" dan "Juara Grup B" tidak saling
         // bercampur di satu tabel.
-        if ($this->selectedGroupId !== '') {
+        if ($groupId !== null) {
             $championCategories = $championCategories
-                ->filter(fn ($c) => $c->isVisibleFor($this->selectedCategoryId, $this->selectedGroupId))
+                ->filter(fn ($c) => $c->isVisibleFor($this->selectedCategoryId, $groupId, $championRoundId))
                 ->values();
         }
 
         $participants = Registration::where('eventner_id', $this->eventner->id)
             ->where('competition_category_id', $this->selectedCategoryId)
-            ->when($this->selectedGroupId !== '', fn ($q) => $q->where('competition_group_id', $this->selectedGroupId))
+            ->when($groupId !== null, fn ($q) => $q->where('competition_group_id', $groupId))
+            ->when($this->finalOnly, fn ($q) => $q->whereIn('id', CompetitionRoundRegistration::where('eventner_id', $this->eventner->id)
+                ->where('competition_round_id', $finalRound->id)
+                ->pluck('registration_id')))
             ->orderBy('nama_sekolah')
             ->get();
 
@@ -137,6 +213,7 @@ class EventResult extends Component
         // Pengurangan ber-scope 'global' hanya berlaku di tingkat lombanya
         // sendiri — sanksi tingkat lain tidak boleh ikut terpotong.
         $deductionLevelMap = \App\Models\DeductionCategory::levelMapOfCriteria($this->eventner->id);
+        $deductionRoundMap = \App\Models\DeductionCategory::roundMapOfCriteria($this->eventner->id);
 
         $allCriteriaWeightMap = \App\Models\AssessmentCriteria::whereIn(
             'assessment_sub_category_id',
@@ -147,10 +224,10 @@ class EventResult extends Component
         )->pluck('weight', 'id')->toArray();
 
         foreach ($championCategories as $champion) {
-            $criteriaMap = $champion->scoringCriteriaWeights();
+            $criteriaMap = $champion->scoringCriteriaWeights($championRoundId, $groupId);
 
             // Build tiebreak criteria map
-            $tiebreakCriteriaMap = $champion->tiebreakCriteriaWeights();
+            $tiebreakCriteriaMap = $champion->tiebreakCriteriaWeights($championRoundId, $groupId);
 
             $participantScores = [];
             foreach ($participants as $participant) {
@@ -165,7 +242,11 @@ class EventResult extends Component
                     if ($weight !== null) {
                         $scoreVal = (int) $score->score * $weight;
                         $total += $scoreVal;
-                    } else {
+                    } elseif (! $this->finalOnly) {
+                        // Kriteria di luar kategori juara ini hanya jadi kunci
+                        // urutan terakhir. Di tampilan final ia dibuang, bukan
+                        // ditampung: nilai penyisihan tak boleh menyentuh
+                        // urutan juara final sekecil apa pun perannya.
                         $weightOther = $allCriteriaWeightMap[$score->assessment_criteria_id] ?? 1;
                         $otherTotal += (int) $score->score * $weightOther;
                     }
@@ -182,6 +263,11 @@ class EventResult extends Component
                     $deductions,
                     $participant->competition_category_id,
                     $deductionLevelMap
+                );
+                $deductions = \App\Models\DeductionCategory::applicableToRound(
+                    $deductions,
+                    $deductionRoundMap,
+                    $championRoundId
                 );
                 $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 
