@@ -209,6 +209,96 @@ class ScoringIntegrityTest extends TestCase
         $this->assertSame(5.0, $tersimpan->magnitude);
     }
 
+    /** Kriteria kedua, untuk membuktikan penghapusan satu kriteria tidak menyentuh yang lain. */
+    private function kriteriaKedua(): AssessmentCriteria
+    {
+        return AssessmentCriteria::create([
+            'assessment_sub_category_id' => $this->kriteria->assessment_sub_category_id,
+            'name' => 'Kecepatan',
+            'score_options' => [['score' => 10], ['score' => 20]],
+            'weight' => 1,
+            'sort_order' => 2,
+        ]);
+    }
+
+    /**
+     * clearScore mengosongkan SATU kriteria di layar saja — baris di database
+     * baru hilang setelah Simpan Penilaian, jadi salah klik masih bisa
+     * dibatalkan dengan mengklik angka lagi.
+     */
+    public function test_clear_score_mengosongkan_layar_tanpa_menghapus_database()
+    {
+        $this->panel()
+            ->set('selectedJudgeId', $this->juri->id)
+            ->set('scores.' . $this->kriteria->id, 20)
+            ->call('saveScores');
+
+        $this->panel()
+            ->set('selectedJudgeId', $this->juri->id)
+            ->call('clearScore', $this->kriteria->id)
+            ->assertSet('scores.' . $this->kriteria->id, null);
+
+        $this->assertDatabaseHas('assessment_scores', [
+            'registration_id' => $this->reg->id,
+            'judge_id' => $this->juri->id,
+            'assessment_criteria_id' => $this->kriteria->id,
+        ]);
+    }
+
+    /**
+     * Simpan Penilaian yang benar-benar menghapus baris kriteria yang
+     * dikosongkan — dan hanya kriteria itu, bukan seluruh lembar.
+     */
+    public function test_simpan_menghapus_hanya_kriteria_yang_dikosongkan()
+    {
+        $kedua = $this->kriteriaKedua();
+
+        $this->panel()
+            ->set('selectedJudgeId', $this->juri->id)
+            ->set('scores.' . $this->kriteria->id, 20)
+            ->set('scores.' . $kedua->id, 10)
+            ->call('saveScores');
+
+        $this->panel()
+            ->set('selectedJudgeId', $this->juri->id)
+            ->call('clearScore', $kedua->id)
+            ->call('saveScores');
+
+        $this->assertDatabaseMissing('assessment_scores', [
+            'registration_id' => $this->reg->id,
+            'judge_id' => $this->juri->id,
+            'assessment_criteria_id' => $kedua->id,
+        ]);
+
+        $this->assertDatabaseHas('assessment_scores', [
+            'registration_id' => $this->reg->id,
+            'judge_id' => $this->juri->id,
+            'assessment_criteria_id' => $this->kriteria->id,
+        ]);
+    }
+
+    /** Nilai terkunci tidak bisa dikosongkan lewat clearScore. */
+    public function test_clear_score_tidak_jalan_saat_terkunci()
+    {
+        $this->panel()
+            ->set('selectedJudgeId', $this->juri->id)
+            ->set('scores.' . $this->kriteria->id, 20)
+            ->call('saveScores');
+
+        AssessmentScore::where('registration_id', $this->reg->id)
+            ->where('judge_id', $this->juri->id)
+            ->update(['is_finalized' => true]);
+
+        $this->panel()
+            ->set('selectedJudgeId', $this->juri->id)
+            ->call('clearScore', $this->kriteria->id)
+            ->call('saveScores');
+
+        $this->assertSame(20, (int) AssessmentScore::where('registration_id', $this->reg->id)
+            ->where('judge_id', $this->juri->id)
+            ->value('score'));
+    }
+
     /** #22 — setelah finalisasi, pengurangan tidak bisa diubah lagi. */
     public function test_pengurangan_terkunci_setelah_finalisasi()
     {

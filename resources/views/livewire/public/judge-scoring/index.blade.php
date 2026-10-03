@@ -238,6 +238,21 @@
                             'buttonSize' => 'min-w-[76px] min-h-[64px] px-6 text-xl',
                             'optionsWrapClass' => 'justify-center',
                         ])
+
+                        {{-- Hapus nilai kriteria ini. Tak perlu konfirmasi: nilainya
+                             tersimpan per ketukan, dan mengklik angka lagi
+                             mengembalikannya — tak ada kerja yang hilang. --}}
+                        @php $currentFilled = isset($scores[$current['id']]) && $scores[$current['id']] !== '' && $scores[$current['id']] !== null; @endphp
+                        @if($currentFilled && !$isFinalized)
+                            <div class="mt-5 flex justify-center">
+                                <button type="button"
+                                        wire:click="clearScore({{ $current['id'] }})"
+                                        wire:loading.attr="disabled"
+                                        class="inline-flex items-center gap-1.5 rounded-xl border border-rose-300 bg-rose-50 px-4 py-2.5 text-sm font-bold text-rose-600 transition active:scale-95">
+                                    <i class="ti ti-x"></i> Hapus Nilai
+                                </button>
+                            </div>
+                        @endif
                     </div>
 
                     {{-- Sebelumnya / Berikutnya — penanda kriteria mana yang masih
@@ -310,6 +325,17 @@
                                             'buttonSize' => 'min-w-[56px] min-h-[48px] px-4 text-base',
                                             'optionsWrapClass' => 'shrink-0',
                                         ])
+
+                                        @php $critFilled = isset($scores[$criteria->id]) && $scores[$criteria->id] !== '' && $scores[$criteria->id] !== null; @endphp
+                                        @if($critFilled && !$isFinalized)
+                                            <button type="button"
+                                                    wire:click="clearScore({{ $criteria->id }})"
+                                                    wire:loading.attr="disabled"
+                                                    class="shrink-0 h-9 w-9 rounded-xl border border-rose-300 bg-rose-50 text-rose-600 transition active:scale-95"
+                                                    title="Hapus nilai kriteria ini">
+                                                <i class="ti ti-x"></i>
+                                            </button>
+                                        @endif
                                     </div>
                                 @endforeach
                             </div>

@@ -381,7 +381,7 @@ class ScoringController extends Controller
             abort(400, 'Registration ID diperlukan.');
         }
 
-        $registration = Registration::with('competitionCategory', 'competitionGroup')
+        $registration = Registration::with('competitionCategory', 'competitionGroup', 'competitionSeries')
             ->where('eventner_id', $eventner->id)
             ->findOrFail($registrationId);
 

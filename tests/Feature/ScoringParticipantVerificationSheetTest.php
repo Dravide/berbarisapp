@@ -6,6 +6,7 @@ use App\Models\AssessmentCategory;
 use App\Models\AssessmentCriteria;
 use App\Models\AssessmentSubCategory;
 use App\Models\CompetitionCategory;
+use App\Models\CompetitionSeries;
 use App\Models\Eventner;
 use App\Models\Registration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -105,7 +106,7 @@ class ScoringParticipantVerificationSheetTest extends TestCase
     private function data(array $override = []): array
     {
         $cat = $this->rubrik('PBB');
-        $this->reg->load('competitionCategory', 'competitionGroup');
+        $this->reg->load('competitionCategory', 'competitionGroup', 'competitionSeries');
 
         return array_merge([
             'eventner' => $this->eventner,
@@ -230,6 +231,31 @@ class ScoringParticipantVerificationSheetTest extends TestCase
         $this->assertStringContainsString('Fase Grup', $html);
         // Tingkat lomba ditulis lengkap (parent - anak).
         $this->assertStringContainsString('PBB Putra', $html);
+    }
+
+    /**
+     * Seri peserta ikut tercetak di kop lembar penilaian.
+     *
+     * Dua seri di tingkat yang sama boleh memakai nama kategori lomba yang
+     * sama persis, jadi lembar Seri A dan Seri B tak bisa dibedakan setelah
+     * ditumpuk tanpa baris ini.
+     */
+    public function test_seri_peserta_tercetak_di_kop()
+    {
+        $seri = CompetitionSeries::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->level->id,
+            'name' => 'Seri A',
+        ]);
+        $this->reg->update(['competition_series_id' => $seri->id]);
+
+        $this->assertStringContainsString('Seri A', $this->lembar());
+    }
+
+    /** Peserta tanpa seri tetap mendapat barisnya, ditulis apa adanya. */
+    public function test_peserta_tanpa_seri_ditulis_tanpa_seri()
+    {
+        $this->assertStringContainsString('Tanpa Seri', $this->lembar());
     }
 
     // ---------- tanda tangan pelatih ----------

@@ -619,6 +619,35 @@ class Index extends Component
         }
     }
 
+    /**
+     * Hapus nilai satu kriteria.
+     *
+     * Tablet menyimpan tiap ketukan langsung (tanpa tombol Simpan), jadi × di
+     * sini menghapus barisnya saat itu juga — sama seperti ketukan nilai.
+     *
+     * Sengaja TIDAK memanggil nextCriteria(): menghapus bukan mengisi, jadi
+     * melompat ke kriteria berikutnya hanya melempar juri tanpa sebab.
+     */
+    public function clearScore($criteriaId)
+    {
+        if ($this->isFinalized) {
+            return;
+        }
+
+        if (!in_array((int) $criteriaId, $this->allowedCriteriaIds, true)) {
+            abort(403);
+        }
+
+        AssessmentScore::where('registration_id', $this->selectedRegistrationId)
+            ->where('eventner_id', $this->eventnerId)
+            ->where('assessment_criteria_id', $criteriaId)
+            ->where('judge_id', $this->judgeId)
+            ->delete();
+
+        unset($this->scores[$criteriaId]);
+        $this->saveStatus = 'saved';
+    }
+
     public function finalize()
     {
         if ($this->isFinalized) {

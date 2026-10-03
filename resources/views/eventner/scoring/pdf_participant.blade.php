@@ -127,6 +127,13 @@
             <td class="lbl">Kategori Lomba</td>
             <td>{{ $registration->competitionCategory->full_name ?? '-' }}</td>
         </tr>
+        {{-- Seri dicetak sendiri: dua seri di tingkat yang sama boleh memakai
+             nama kategori lomba yang sama persis, jadi tanpa penanda ini
+             lembar Seri A dan Seri B tak bisa dibedakan saat ditumpuk. --}}
+        <tr>
+            <td class="lbl">Seri</td>
+            <td class="val" colspan="3">{{ $registration->competitionSeries->name ?? 'Tanpa Seri' }}</td>
+        </tr>
         {{-- Grup dan babak ditulis apa adanya walau kosong: lembar ini hanya
              memuat rubrik satu babak, jadi tanpa penanda ini operator tidak
              bisa membedakan lembar penyisihan dari lembar final saat

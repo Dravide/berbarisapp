@@ -506,6 +506,7 @@
                                                                 <span class="badge bg-secondary bg-opacity-25 text-dark fw-semibold fs-2 d-inline-block w-100">{{ $g['label'] }}</span>
                                                             </th>
                                                         @endforeach
+                                                        <th class="border-bottom-0" width="40px"></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -520,7 +521,8 @@
                                                                 $critGroups[$key][] = ['score' => $sv, 'label' => $lb, 'key' => $key];
                                                             }
                                                         @endphp
-                                                        <tr class="{{ isset($scores[$criteria->id]) && $scores[$criteria->id] !== '' && $scores[$criteria->id] !== null ? 'table-success' : '' }}">
+                                                        @php $terisi = isset($scores[$criteria->id]) && $scores[$criteria->id] !== '' && $scores[$criteria->id] !== null; @endphp
+                                                        <tr class="{{ $terisi ? 'table-success' : '' }}">
                                                             <td class="fw-semibold">{{ $criteria->name }}</td>
                                                             @foreach($headerGroups as $gKey => $g)
                                                                 <td class="text-center px-1" colspan="{{ $g['count'] }}" style="white-space:nowrap;">
@@ -538,6 +540,20 @@
                                                                     @endif
                                                                 </td>
                                                             @endforeach
+                                                            {{-- Hapus hanya baris kriteria ini. Barisnya belum
+                                                                 menyentuh DB sampai Simpan Penilaian, jadi tak
+                                                                 perlu konfirmasi — salah klik bisa dibatalkan
+                                                                 dengan mengklik angka lagi. --}}
+                                                            <td class="text-center px-1">
+                                                                @if($terisi && !$isFinalized)
+                                                                    <button type="button"
+                                                                            wire:click="clearScore({{ $criteria->id }})"
+                                                                            class="btn btn-sm btn-outline-danger p-1"
+                                                                            title="Kosongkan nilai kriteria ini">
+                                                                        <i class="ti ti-x"></i>
+                                                                    </button>
+                                                                @endif
+                                                            </td>
                                                         </tr>
                                                     @endforeach
                                                 </tbody>

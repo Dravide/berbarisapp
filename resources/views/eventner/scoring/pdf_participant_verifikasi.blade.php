@@ -53,7 +53,14 @@
     </tr>
     <tr>
         <td class="lbl">Kategori Lomba</td>
-        <td>{{ $registration->competitionCategory->full_name ?? '-' }}</td>
+        <td colspan="3">{{ $registration->competitionCategory->full_name ?? '-' }}</td>
+    </tr>
+    {{-- Seri sejajar dengan grup: dua seri boleh memakai nama kategori lomba
+         yang sama persis, jadi lembar arsip Seri A dan Seri B tak bisa
+         dipisahkan setelah dicetak tanpa penanda ini. --}}
+    <tr>
+        <td class="lbl">Seri</td>
+        <td class="val">{{ $registration->competitionSeries->name ?? 'Tanpa Seri' }}</td>
         <td class="lbl">Grup</td>
         <td>{{ $registration->competitionGroup->name ?? '—' }}</td>
     </tr>

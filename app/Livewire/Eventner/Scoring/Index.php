@@ -797,6 +797,30 @@ class Index extends Component
             );
         }
 
+        // Kriteria yang barisnya sudah ada di DB tapi kini kosong di layar
+        // memang sengaja dikosongkan operator (lewat clearScore) — Simpan
+        // Penilaian yang menghapusnya, bukan tombol × itu sendiri. Pagar
+        // $boleh dipakai lagi supaya nilai milik juri lain tak ikut terhapus.
+        $tersimpan = AssessmentScore::where('registration_id', $registrationId)
+            ->where('eventner_id', $eventnerId)
+            ->where('judge_id', $judgeId)
+            ->when($this->roundCriteriaIds() !== null, fn ($q) => $q->whereIn('assessment_criteria_id', $this->roundCriteriaIds()))
+            ->pluck('assessment_criteria_id');
+
+        foreach ($tersimpan as $criteriaId) {
+            $kosong = !array_key_exists($criteriaId, $this->scores)
+                || $this->scores[$criteriaId] === ''
+                || $this->scores[$criteriaId] === null;
+
+            if ($kosong && in_array((int) $criteriaId, $boleh, true)) {
+                AssessmentScore::where('registration_id', $registrationId)
+                    ->where('eventner_id', $eventnerId)
+                    ->where('judge_id', $judgeId)
+                    ->where('assessment_criteria_id', $criteriaId)
+                    ->delete();
+            }
+        }
+
         if ($ditolak > 0) {
             $this->gagal($ditolak . ' nilai tidak disimpan: rubrik itu diisi juri lain.');
         }
@@ -919,6 +943,35 @@ class Index extends Component
         $this->dispatch('toast', type: 'success', message: $updated > 0
             ? "Finalisasi massal berhasil: {$updated} baris nilai dikunci untuk seluruh peserta kategori ini."
             : 'Semua nilai pada kategori ini sudah terfinalisasi sebelumnya.');
+    }
+
+    /**
+     * Kosongkan SATU kriteria di layar.
+     *
+     * Baris nilai baru benar-benar dihapus saat Simpan Penilaian — persis pola
+     * input lain di lembar ini, jadi salah klik masih bisa dibatalkan dengan
+     * mengklik angka lagi sebelum simpan.
+     *
+     * Sebelumnya satu-satunya jalan mengosongkan adalah resetScores(), yang
+     * membuang seluruh lembar juri ini sekaligus: salah klik satu kriteria
+     * berarti mengisi ulang dari nol.
+     */
+    public function clearScore($criteriaId)
+    {
+        if ($this->simulateMode) {
+            // Sandbox: cukup kosongkan state lokal, tidak perlu sentuh DB
+            unset($this->scores[$criteriaId]);
+            $this->saveStatus = '';
+            return;
+        }
+
+        // Nilai terkunci tidak boleh dihapus — sama seperti resetScores().
+        if ($this->isFinalized || $this->hasFinalizedScores()) {
+            return;
+        }
+
+        unset($this->scores[$criteriaId]);
+        $this->saveStatus = '';
     }
 
     public function resetScores()

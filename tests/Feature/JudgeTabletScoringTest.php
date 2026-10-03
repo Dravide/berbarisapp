@@ -273,6 +273,94 @@ class JudgeTabletScoringTest extends TestCase
         ]);
     }
 
+    /**
+     * Tombol hapus per kriteria: tablet menyimpan tiap ketukan, jadi × langsung
+     * menghapus barisnya — dan TIDAK memindahkan juri ke kriteria berikutnya
+     * (menghapus bukan mengisi).
+     */
+    public function test_hapus_nilai_satu_kriteria_langsung_ke_database_tanpa_pindah_kriteria()
+    {
+        $criteria = $this->makeRubric(3);
+
+        Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judge->access_token])
+            ->call('selectCategory', $this->category->id)
+            ->call('selectParticipant', $this->registration->id)
+            ->call('setScore', $criteria[0]->id, 20)
+            ->call('setScore', $criteria[1]->id, 10)
+            ->call('goToCriteria', 0)
+            ->call('clearScore', $criteria[0]->id)
+            ->assertSet('scores.' . $criteria[0]->id, null)
+            ->assertSet('currentCriteriaIndex', 0);
+
+        $this->assertDatabaseMissing('assessment_scores', [
+            'registration_id' => $this->registration->id,
+            'judge_id' => $this->judge->id,
+            'assessment_criteria_id' => $criteria[0]->id,
+        ]);
+
+        // Kriteria lain tak ikut terhapus.
+        $this->assertDatabaseHas('assessment_scores', [
+            'registration_id' => $this->registration->id,
+            'judge_id' => $this->judge->id,
+            'assessment_criteria_id' => $criteria[1]->id,
+        ]);
+    }
+
+    /** Hapus nilai terkunci ditolak — sama seperti ubah nilai. */
+    public function test_hapus_nilai_ditolak_setelah_finalisasi()
+    {
+        $criteria = $this->makeRubric(1);
+
+        $component = Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judge->access_token])
+            ->call('selectCategory', $this->category->id)
+            ->call('selectParticipant', $this->registration->id)
+            ->call('setScore', $criteria[0]->id, 20)
+            ->call('finalize')
+            ->assertSet('isFinalized', true)
+            ->call('clearScore', $criteria[0]->id);
+
+        $this->assertDatabaseHas('assessment_scores', [
+            'registration_id' => $this->registration->id,
+            'judge_id' => $this->judge->id,
+            'assessment_criteria_id' => $criteria[0]->id,
+        ]);
+    }
+
+    /** Hapus nilai di luar rubrik juri ditolak — pagar IDOR yang sama dengan setScore(). */
+    public function test_hapus_nilai_kriteria_asing_ditolak()
+    {
+        $this->makeRubric();
+
+        $otherParent = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => null,
+        ]);
+        $otherLevel = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => $otherParent->id,
+        ]);
+        $otherCat = AssessmentCategory::create([
+            'eventner_id' => $this->eventner->id,
+            'name' => 'Rubrik Tingkat Lain',
+            'competition_category_id' => $otherLevel->id,
+        ]);
+        $otherSub = AssessmentSubCategory::create([
+            'assessment_category_id' => $otherCat->id,
+            'name' => 'Sub Lain',
+        ]);
+        $foreignCriteria = AssessmentCriteria::create([
+            'assessment_sub_category_id' => $otherSub->id,
+            'name' => 'Kriteria Asing',
+            'score_options' => [['score' => 99]],
+        ]);
+
+        Livewire::test(\App\Livewire\Public\JudgeScoring\Index::class, ['token' => $this->judge->access_token])
+            ->call('selectCategory', $this->category->id)
+            ->call('selectParticipant', $this->registration->id)
+            ->call('clearScore', $foreignCriteria->id)
+            ->assertStatus(403);
+    }
+
     /** Mode satu-per-satu: ketuk nilai → otomatis ke kriteria berikutnya. */
     public function test_mode_satu_per_satu_maju_otomatis_setelah_menilai()
     {
