@@ -91,7 +91,12 @@
                     // Penanda seri hanya berguna kalau ada seri. Event yang tidak
                     // memakai seri tak perlu melihat chip "Tanpa Seri" di setiap
                     // barisnya — itu cuma menambah baca tanpa membedakan apa pun.
-                    $adaSeri = $participants->contains(fn ($p) => $p->competitionSeries !== null);
+                    //
+                    // Babak final dikecualikan: di sana seri diabaikan seluruhnya
+                    // (lihat AssessmentCategory::forEntry()), jadi chip seri hanya
+                    // menyiratkan lembar nilai yang berbeda padahal sama.
+                    $finalNow = (bool) $selectedRound?->isFinal();
+                    $adaSeri = ! $finalNow && $participants->contains(fn ($p) => $p->competitionSeries !== null);
                 @endphp
                 <div class="rounded-2xl border border-outline-variant/30 bg-white overflow-hidden shadow-sm divide-y divide-outline-variant/20">
                     @foreach($participants as $p)
@@ -150,6 +155,9 @@
                 $categories = $this->assessmentCategories;
                 $totalCriteria = $categories->flatMap(fn($c) => $c->subCategories->flatMap(fn($s) => $s->criterias))->count();
                 $filledCriteria = collect($scores)->filter(fn($v) => $v !== '' && $v !== null)->count();
+                // Seri tak berlaku di babak final — lihat penjelasan di daftar
+                // peserta di atas.
+                $finalNow = (bool) $selectedRound?->isFinal();
             @endphp
 
             <div class="flex items-center justify-between mb-3 gap-3">
@@ -160,7 +168,7 @@
                     <p class="text-sm font-bold text-on-surface truncate m-0 mt-0.5">
                         @if($registration->nomorUndian($selectedRound)) No. {{ $registration->nomorUndian($selectedRound) }} · @endif
                         {{ $registration->nama_sekolah }}
-                        @if($registration->competitionSeries)
+                        @if(! $finalNow && $registration->competitionSeries)
                             <span class="ml-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary align-middle">
                                 <i class="ti ti-flag-2"></i> {{ $registration->competitionSeries->name }}
                             </span>

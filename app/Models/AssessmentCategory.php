@@ -82,24 +82,53 @@ class AssessmentCategory extends Model
      * baris babak memang tidak punya babak untuk disaring, jadi rubriknya harus
      * tetap terpakai.
      *
-     * @see scopeForLevel() untuk perhitungan lintas-serí
+     * Babak FINAL mengecualikan saringannya: seri di sana diabaikan sama sekali,
+     * jadi seluruh rubrik babak itu terbuka untuk semua finalis — berseri
+     * maupun tidak. Alasannya dua: final memang satu pool se-tingkat (tanpa
+     * pembagian grup maupun seri), dan rubrik final yang dibuat panitia
+     * justru TIDAK bertanda seri (lihat ScoringController::assessmentCategoriesFor).
+     * Sebelum ini finalis wajib berseri persis sama dengan rubrik finalnya agar
+     * lembarnya terbuka — peserta dari seri lain mendapat lembar kosong.
+     *
+     * @see scopeForLevel() untuk perhitungan lintas-seri
      */
     public function scopeForEntry($query, ?int $competitionCategoryId, ?int $seriesId = null, ?int $roundId = null)
     {
         return $query
             ->forLevel($competitionCategoryId, $roundId)
-            ->where(function ($q) use ($seriesId) {
-                // Tanpa seri: hanya rubrik tanpa seri. Rubrik berseri sengaja
-                // TIDAK ikut — pemisahan seri jadi tak berarti kalau peserta
-                // yang belum dibagi tetap melihat semua rubrik seri.
-                if (! $seriesId) {
-                    $q->whereNull('competition_series_id');
+            ->when(! static::roundIdIsFinal($roundId), function ($q) use ($seriesId) {
+                $q->where(function ($sq) use ($seriesId) {
+                    // Tanpa seri: hanya rubrik tanpa seri. Rubrik berseri sengaja
+                    // TIDAK ikut — pemisahan seri jadi tak berarti kalau peserta
+                    // yang belum dibagi tetap melihat semua rubrik seri.
+                    if (! $seriesId) {
+                        $sq->whereNull('competition_series_id');
 
-                    return;
-                }
+                        return;
+                    }
 
-                $q->where('competition_series_id', $seriesId)->orWhereNull('competition_series_id');
+                    $sq->where('competition_series_id', $seriesId)->orWhereNull('competition_series_id');
+                });
             });
+    }
+
+    /**
+     * Apakah id ini merujuk baris babak bertipe final.
+     *
+     * Babak "ini final atau bukan" adalah sifat satu baris CompetitionRound,
+     * bukan sifat tingkat — jadi jawabannya datang dari baris babaknya sendiri.
+     * Dipisah jadi helper supaya berkas ini tak perlu tahu kolom `type`
+     * CompetitionRound, dan supaya pemanggil yang hanya memegang id (bukan
+     * modelnya) tetap bisa bertanya. Id yang tak ada / bukan babak final
+     * mengembalikan false, jadi perilaku lama utuh.
+     */
+    private static function roundIdIsFinal(?int $roundId): bool
+    {
+        return (bool) $roundId
+            && CompetitionRound::query()
+                ->whereKey($roundId)
+                ->where('type', CompetitionRound::TYPE_FINAL)
+                ->exists();
     }
 
     /**

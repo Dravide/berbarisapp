@@ -309,8 +309,18 @@ class Index extends Component
         }
 
         $this->selectedRoundId = $roundId;
-        $this->loadCriteria();
-        $this->jumpToFirstUnfilled();
+
+        // Tombol babak hidup di daftar PESERTA — tepat saat belum ada peserta
+        // terpilih. Memuat kriteria di situ membaca registration yang belum
+        // ada, dan findOrFail(null) melempar 500 hanya karena juri mengetuk
+        // babaknya. Rubriknya dimuat nanti saat pesertanya dipilih, dan babak
+        // yang baru inilah yang dipakai (selectParticipant menyelesaikan babak
+        // dulu, lalu loadCriteria()). Karena itu di sini cukup bila peserta
+        // sudah dipilih — itu jalur "ganti babak tanpa keluar dari lembar".
+        if ($this->selectedRegistrationId) {
+            $this->loadCriteria();
+            $this->jumpToFirstUnfilled();
+        }
     }
 
     /**

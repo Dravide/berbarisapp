@@ -42,6 +42,14 @@
         </div>
     @endif
 
+    @php
+        // Babak final tanpa seri: satu pool se-tingkat, dan rubriknya pun tak
+        // lagi ditentukan seri (lihat AssessmentCategory::forEntry()). Badge
+        // seri — juga "Tanpa Seri" — di sana cuma menyiratkan pembagian yang
+        // tak berlaku, jadi keduanya disembunyikan. Dihitung sekali di sini,
+        // bukan di dalam loop.
+        $babakFinal = (bool) $selectedRound?->isFinal();
+    @endphp
     @if($view == 'categories')
         {{-- ========== STEP 1: SELECT CATEGORY ========== --}}
         <div class="card w-100">
@@ -310,9 +318,9 @@
                                         <div class="overflow-hidden">
                                             <h6 class="fw-semibold mb-0 text-truncate">{{ $reg->display_name }}</h6>
                                             <p class="text-muted mb-0 fs-2 text-truncate">Pelatih: {{ $reg->nama_pelatih }}</p>
-                                            @if($reg->competitionSeries)
-                                                <span class="badge bg-secondary-subtle text-secondary mt-1">{{ $reg->competitionSeries->name }}</span>
-                                            @endif
+                                        @if(! $babakFinal && $reg->competitionSeries)
+                                            <span class="badge bg-secondary-subtle text-secondary mt-1">{{ $reg->competitionSeries->name }}</span>
+                                        @endif
                                         </div>
                                     </div>
                                 </div>
@@ -360,13 +368,20 @@
                                         {{-- Seri ditulis di sini: dua seri boleh memakai
                                              nama kategori rubrik yang sama persis, jadi tanpa
                                              penanda ini operator tak punya cara tahu lembar
-                                             mana yang sedang terbuka. --}}
-                                        @if($selectedRegistration->competitionSeries)
-                                            <span class="badge bg-white text-primary fw-semibold">
-                                                <i class="ti ti-flag-2 me-1"></i>{{ $selectedRegistration->competitionSeries->name }}
-                                            </span>
-                                        @else
-                                            <span class="badge bg-warning text-dark fw-semibold">Tanpa Seri</span>
+                                             mana yang sedang terbuka.
+
+                                             Babak final dikecualikan: di sana seri diabaikan
+                                             seluruhnya (lihat AssessmentCategory::forEntry()),
+                                             jadi menuliskan seri — atau "Tanpa Seri" — cuma
+                                             menyiratkan lembar yang berbeda padahal sama. --}}
+                                        @if(! $babakFinal)
+                                            @if($selectedRegistration->competitionSeries)
+                                                <span class="badge bg-white text-primary fw-semibold">
+                                                    <i class="ti ti-flag-2 me-1"></i>{{ $selectedRegistration->competitionSeries->name }}
+                                                </span>
+                                            @else
+                                                <span class="badge bg-warning text-dark fw-semibold">Tanpa Seri</span>
+                                            @endif
                                         @endif
                                     </div>
                                     <p class="text-white text-opacity-75 mb-0 fs-2">Pelatih: {{ $selectedRegistration->nama_pelatih }} &bull; {{ $selectedRegistration->competitionCategory->name ?? '-' }}</p>
