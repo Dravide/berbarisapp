@@ -174,4 +174,67 @@ class FormatNilaiGateTest extends TestCase
             'competition_category_id' => $tingkat->id,
         ]);
     }
+
+    /**
+     * Lembar resmi Format Penilaian tidak mencetak kolom bobot. Hampir semua
+     * rubrik berbobot 1x, jadi kolomnya hanya menambah lebar tabel — dan
+     * lebar itu yang mendorong lembar tingkat besar melewati satu halaman.
+     *
+     * Lembar juri/peserta (pdf_unduh) tetap memakainya: itu kertas kerja, dan
+     * bobot membedakan kriteria saat nilainya dihitung.
+     */
+    public function test_lembar_resmi_tanpa_kolom_bobot_lembar_kerja_tetap_ada()
+    {
+        $eventner = $this->buatEventner(['plan' => 'paid']);
+        $tingkat = $this->tingkat($eventner);
+
+        $kategori = AssessmentCategory::create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $tingkat->id,
+            'name' => 'PBB',
+            'sort_order' => 1,
+        ]);
+        $sub = \App\Models\AssessmentSubCategory::create([
+            'assessment_category_id' => $kategori->id,
+            'name' => 'Gerakan',
+        ]);
+        \App\Models\AssessmentCriteria::create([
+            'assessment_sub_category_id' => $sub->id,
+            'name' => 'Sikap Sempurna',
+            'score_options' => [['score' => 10]],
+            'weight' => 2,
+            'sort_order' => 1,
+        ]);
+
+        $kategori->load(['subCategories.criterias', 'deductionCategories.criterias', 'competitionSeries']);
+
+        $resmi = view('eventner.format-nilai.pdf_rubrik', [
+            'eventner' => $eventner,
+            'categories' => collect([$kategori]),
+            'globalDeductionCategories' => collect(),
+            'childName' => $tingkat->full_name,
+            'judgeName' => null,
+            'tampilkanBobot' => false,
+        ])->render();
+
+        $this->assertStringNotContainsString('>Bobot<', $resmi);
+        $this->assertStringNotContainsString('>2x<', $resmi);
+        // Kriteria & skornya tetap tercetak — yang hilang cuma kolomnya.
+        $this->assertStringContainsString('Sikap Sempurna', $resmi);
+
+        $kerja = view('eventner.format-nilai.pdf_unduh', [
+            'eventner' => $eventner,
+            'categories' => collect([$kategori]),
+            'globalDeductionCategories' => collect(),
+            'mode' => 'kosong',
+            'judgeName' => null,
+            'childName' => null,
+            'registration' => null,
+            'registrations' => [],
+            'seriesName' => null,
+        ])->render();
+
+        $this->assertStringContainsString('>Bobot<', $kerja);
+        $this->assertStringContainsString('2.00x', $kerja);
+    }
 }

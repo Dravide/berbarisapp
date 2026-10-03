@@ -40,6 +40,15 @@ class FormatNilaiController extends Controller
             ->get();
     }
 
+    /**
+     * Lembar Format Penilaian resmi: kolom bobot tidak ikut dicetak.
+     *
+     * Dipusatkan di sini karena tiga jalur unduh (semua tingkat, satu tingkat,
+     * satu juri) sama-sama lembar resmi — tanpa satu tempat, bobot akan hilang
+     * di satu PDF dan tetap ada di PDF lain.
+     */
+    private const PDF_RESMI = ['tampilkanBobot' => false];
+
     public function downloadPdf()
     {
         $eventner = $this->gatedEventner();
@@ -49,13 +58,13 @@ class FormatNilaiController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $data = [
+        $data = array_merge([
             'eventner' => $eventner,
             'categories' => $categories,
             'globalDeductionCategories' => $this->globalDeductionCategories($eventner),
             'childName' => null,
             'judgeName' => null,
-        ];
+        ], self::PDF_RESMI);
 
         $pdf = Pdf::loadView('eventner.format-nilai.pdf_rubrik', $data)
             ->setPaper('a4', 'portrait');
@@ -174,13 +183,13 @@ class FormatNilaiController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        $data = [
+        $data = array_merge([
             'eventner' => $eventner,
             'categories' => $categories,
             'globalDeductionCategories' => $this->globalDeductionCategories($eventner, $child->id),
             'childName' => $child->full_name,
             'judgeName' => null,
-        ];
+        ], self::PDF_RESMI);
 
         $pdf = Pdf::loadView('eventner.format-nilai.pdf_rubrik', $data)
             ->setPaper('a4', 'portrait');
@@ -215,7 +224,7 @@ class FormatNilaiController extends Controller
 
         $categories = $this->rubricCategoriesForJudge($eventner, $judge->id, $levelId);
 
-        $data = [
+        $data = array_merge([
             'eventner' => $eventner,
             'categories' => $categories,
             'globalDeductionCategories' => $this->globalDeductionCategories($eventner, $levelId),
@@ -223,7 +232,7 @@ class FormatNilaiController extends Controller
                 ? CompetitionCategory::where('eventner_id', $eventner->id)->find($levelId)?->full_name
                 : null,
             'judgeName' => $judge->name,
-        ];
+        ], self::PDF_RESMI);
 
         $pdf = Pdf::loadView('eventner.format-nilai.pdf_rubrik', $data)
             ->setPaper('a4', 'portrait');

@@ -22,56 +22,56 @@
         }
 
         /* KOP */
-        .kop { border-bottom: 3px double #222; padding-bottom: 10px; margin-bottom: 14px; }
+        .kop { border-bottom: 3px double #222; padding-bottom: 6px; margin-bottom: 8px; }
         .kop table { width: 100%; border: none; }
         .kop td { border: none; vertical-align: middle; padding: 0; }
-        .kop-logo { width: 60px; height: 60px; border-radius: 6px; border: 1px solid #ccc; }
-        .kop-title { font-size: 15px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-        .kop-sub { font-size: 10px; color: #666; }
+        .kop-logo { width: 46px; height: 46px; border-radius: 6px; border: 1px solid #ccc; }
+        .kop-title { font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .kop-sub { font-size: 9px; color: #666; }
 
         /* JUDUL */
-        .judul { background: #1a1a2e; color: #fff; text-align: center; padding: 8px; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
-        .subjudul { text-align: center; font-size: 9px; color: #888; margin-bottom: 14px; }
+        .judul { background: #1a1a2e; color: #fff; text-align: center; padding: 5px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 4px; }
+        .subjudul { text-align: center; font-size: 8px; color: #888; margin-bottom: 7px; }
 
         /* INFO */
-        .info { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
-        .info td { padding: 4px 8px; border: 1px solid #ddd; font-size: 9px; }
-        .info .lbl { background: #f5f6fa; font-weight: bold; color: #555; width: 130px; }
+        .info { width: 100%; border-collapse: collapse; margin-bottom: 7px; }
+        .info td { padding: 2px 6px; border: 1px solid #ddd; font-size: 8px; }
+        .info .lbl { background: #f5f6fa; font-weight: bold; color: #555; width: 110px; }
         .info .val { color: #1a1a2e; font-weight: bold; }
 
         /* KATEGORI */
         .cat-head { width: 100%; border-collapse: collapse; margin-bottom: 0; }
-        .cat-head td { padding: 6px 10px; color: #fff; font-weight: bold; font-size: 10px; text-transform: uppercase; }
+        .cat-head td { padding: 3px 8px; color: #fff; font-weight: bold; font-size: 9px; text-transform: uppercase; }
         .cat-head .cat-name { background: #2c3e50; }
 
-        .sub-head { background: #ecf0f1; padding: 4px 10px; font-size: 8px; font-weight: bold; color: #2c3e50; text-transform: uppercase; letter-spacing: 0.5px; border-left: 1px solid #ddd; border-right: 1px solid #ddd; }
+        .sub-head { background: #ecf0f1; padding: 2px 8px; font-size: 7px; font-weight: bold; color: #2c3e50; text-transform: uppercase; letter-spacing: 0.5px; border-left: 1px solid #ddd; border-right: 1px solid #ddd; }
 
         /* TABEL KRITERIA */
-        table.krit { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-        table.krit th { background: #f8f9fa; padding: 4px 8px; font-size: 7px; font-weight: bold; text-transform: uppercase; color: #888; text-align: left; border: 1px solid #ddd; }
-        table.krit td { padding: 4px 8px; border: 1px solid #ddd; font-size: 10px; }
+        table.krit { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
+        table.krit th { background: #f8f9fa; padding: 2px 6px; font-size: 7px; font-weight: bold; text-transform: uppercase; color: #888; text-align: left; border: 1px solid #ddd; }
+        table.krit td { padding: 1px 6px; line-height: 1.15; border: 1px solid #ddd; font-size: 9px; }
         table.krit .cn { font-weight: bold; color: #2c3e50; }
-        table.krit .sv { text-align: center; font-weight: bold; font-size: 11px; }
+        table.krit .sv { text-align: center; font-weight: bold; font-size: 9px; }
 
         /* PENGURANGAN */
-        .deduction-head { background: #fde8e8; padding: 4px 10px; font-size: 8px; font-weight: bold; color: #b00020; text-transform: uppercase; letter-spacing: 0.5px; border-left: 1px solid #f5c6c6; border-right: 1px solid #f5c6c6; }
-.global-note { padding: 4px 10px 6px; font-size: 8px; color: #7f1d1d; font-style: italic; border-left: 1px solid #f5c6c6; border-right: 1px solid #f5c6c6; margin: 0 0 6px; }
-        table.ded { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-        table.ded th { background: #fdf2f2; padding: 4px 8px; font-size: 7px; font-weight: bold; text-transform: uppercase; color: #b00020; text-align: left; border: 1px solid #f5c6c6; }
-        table.ded td { padding: 4px 8px; border: 1px solid #f5c6c6; font-size: 10px; }
+        .deduction-head { background: #fde8e8; padding: 2px 8px; font-size: 7px; font-weight: bold; color: #b00020; text-transform: uppercase; letter-spacing: 0.5px; border-left: 1px solid #f5c6c6; border-right: 1px solid #f5c6c6; }
+.global-note { padding: 2px 8px 4px; font-size: 7px; color: #7f1d1d; font-style: italic; border-left: 1px solid #f5c6c6; border-right: 1px solid #f5c6c6; margin: 0 0 4px; }
+        table.ded { width: 100%; border-collapse: collapse; margin-bottom: 5px; }
+        table.ded th { background: #fdf2f2; padding: 2px 6px; font-size: 7px; font-weight: bold; text-transform: uppercase; color: #b00020; text-align: left; border: 1px solid #f5c6c6; }
+        table.ded td { padding: 1px 6px; border: 1px solid #f5c6c6; font-size: 9px; }
 
         /* FOOTER */
-        .foot { margin-top: 18px; padding-top: 6px; border-top: 1px solid #ddd; text-align: center; font-size: 7px; color: #aaa; }
+        .foot { margin-top: 8px; padding-top: 4px; border-top: 1px solid #ddd; text-align: center; font-size: 7px; color: #aaa; }
 
         /* TTD */
-        .ttd { margin-top: 24px; }
+        .ttd { margin-top: 12px; }
         .ttd table { width: 100%; border: none; }
         .ttd td { border: none; }
         .ttd .role { font-weight: bold; }
         .ttd .line { display: inline-block; width: 130px; border-top: 1px solid #333; }
 
         /* PAGE FLOW */
-        .cat-section { margin-bottom: 14px; }
+        .cat-section { margin-bottom: 8px; }
         table.krit thead, table.ded thead { display: table-header-group; }
         table.krit tr, table.ded tr { page-break-inside: avoid; }
     </style>
@@ -122,7 +122,11 @@
     @if($categories->isEmpty())
         <p style="text-align:center; color:#888;">Belum ada format penilaian yang dibangun.</p>
     @else
-        @include('eventner.format-nilai._rubrik_body', ['categories' => $categories])
+        @include('eventner.format-nilai._rubrik_body', [
+            'categories' => $categories,
+            // Lembar resmi tanpa kolom bobot; pemanggil lain default menampilkannya.
+            'tampilkanBobot' => $tampilkanBobot ?? true,
+        ])
     @endif
 
     {{-- TANDA TANGAN --}}
@@ -137,7 +141,7 @@
             <tr>
                 <td style="text-align:center; width:50%; vertical-align:top; padding-top:10px;">
                     <div class="role" style="margin-bottom:8px;">Ketua Panitia</div>
-                    <img src="{{ $qrImage }}" style="width:80px; height:80px; margin:0 auto; display:block;" alt="QR">
+                    <img src="{{ $qrImage }}" style="width:62px; height:62px; margin:0 auto; display:block;" alt="QR">
                     <div style="margin-top:6px; font-weight:bold; font-size:9px;">{{ $eventner->diselenggarakan_oleh }}</div>
                 </td>
                 <td style="text-align:center; width:50%; vertical-align:top; padding-top:10px;">

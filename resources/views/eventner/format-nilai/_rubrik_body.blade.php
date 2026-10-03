@@ -1,3 +1,12 @@
+@php
+    // Kolom bobot dicetak atas permintaan pemanggil: lembar resmi Format
+    // Penilaian tidak lagi menampilkannya (hampir semua rubrik berbobot 1x,
+    // jadi kolomnya cuma menambah lebar tanpa memberi keterangan), sedangkan
+    // lembar juri/peserta — yang dipakai sebagai kertas kerja — masih
+    // memakainya. Default tampil, supaya pemanggil lama tak berubah.
+    $tampilkanBobot = $tampilkanBobot ?? true;
+@endphp
+
 @foreach($categories as $category)
     <div class="cat-section">
         <table class="cat-head">
@@ -45,14 +54,16 @@
                 <table class="krit">
                     <thead>
                         <tr>
-                            <th width="45%">Kriteria Penilaian</th>
-                            <th width="12%" style="text-align:center;">Bobot</th>
+                            <th width="{{ $tampilkanBobot ? '45%' : '55%' }}">Kriteria Penilaian</th>
+                            @if($tampilkanBobot)
+                                <th width="12%" style="text-align:center;">Bobot</th>
+                            @endif
                             @if($hasLabels)
                                 @foreach($labelCols as $label)
                                     <th colspan="{{ $labelSpan[$label] }}" style="text-align:center;">{{ $label }}</th>
                                 @endforeach
                             @else
-                                <th width="43%" style="text-align:center;">Skor Penilaian</th>
+                                <th width="{{ $tampilkanBobot ? '43%' : '45%' }}" style="text-align:center;">Skor Penilaian</th>
                             @endif
                         </tr>
                     </thead>
@@ -60,7 +71,9 @@
                         @foreach($subcat->criterias as $crit)
                         <tr>
                             <td class="cn">{{ $crit->name }}</td>
-                            <td class="sv">{{ $crit->weight ?? 1 }}x</td>
+                            @if($tampilkanBobot)
+                                <td class="sv">{{ $crit->weight ?? 1 }}x</td>
+                            @endif
                             @if($hasLabels)
                                 @foreach($labelCols as $label)
                                     @php
