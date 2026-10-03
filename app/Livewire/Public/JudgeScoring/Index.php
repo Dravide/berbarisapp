@@ -703,11 +703,18 @@ class Index extends Component
 
         if ($this->selectedCategoryId) {
             $participants = $this->participantsQuery()
-                ->with(['competitionCategory', 'competitionSeries'])
+                ->with(['competitionCategory', 'competitionSeries', 'roundRegistrations'])
                 ->get()
                 // Urutan panggung (hasil undian) dulu; yang belum diundian di bawah.
+                //
+                // Nomor undiannya diambil per babak: babak final punya undian
+                // sendiri, jadi mengurut dari registrations.urutan_tampil akan
+                // menyusun finalis dengan nomor fase grupnya. Relasi
+                // roundRegistrations sudah dimuat di atas, jadi ini tidak
+                // menambah query.
                 ->sortBy([
-                    fn ($a, $b) => ($a->urutan_tampil ?? PHP_INT_MAX) <=> ($b->urutan_tampil ?? PHP_INT_MAX),
+                    fn ($a, $b) => ($a->nomorUndian($this->activeRound) ?? PHP_INT_MAX)
+                        <=> ($b->nomorUndian($this->activeRound) ?? PHP_INT_MAX),
                     fn ($a, $b) => strcmp($a->nama_sekolah ?? '', $b->nama_sekolah ?? ''),
                 ])
                 ->values();
@@ -736,6 +743,7 @@ class Index extends Component
             'participants' => $participants,
             'rounds' => $this->availableRounds,
             'selectedRoundId' => $this->selectedRoundId,
+            'selectedRound' => $this->activeRound,
         ])->layoutData([
             'eventner' => $this->eventner,
             'judge' => $this->judge,

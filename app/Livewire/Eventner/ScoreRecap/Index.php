@@ -176,8 +176,6 @@ class Index extends Component
                 ->get()
                 ->groupBy('registration_id');
 
-            $globalCriteriaIds = $this->globalDeductionCriteriaIds();
-
             // Tingkat bergrup dan/atau berbabak dipecah jadi bagian terpisah:
             // satu tabel per babak, dan di dalamnya satu tabel per grup. Nilai
             // akhir hanya masuk akal di dalam pemecahan itu — peserta Grup A
@@ -191,9 +189,13 @@ class Index extends Component
             $hasRounds = $rounds->isNotEmpty();
             $roundOptions = $rounds;
 
+            // Sanksi tingkat dibaca per babak di dalam tiap bagian: kelompok
+            // tanpa babak berlaku di semua babak, yang berbabak hanya di
+            // babaknya sendiri. Menghitungnya sekali di sini membuat sanksi
+            // fase grup ikut memotong NILAI AKHIR tabel final.
             $sections = $hasRounds
-                ? $this->sectionsPerRound($rounds, $participants, $allScores, $allDeductions, $globalCriteriaIds)
-                : $this->sectionsPerGroup($participants, $allScores, $allDeductions, $globalCriteriaIds, $groups);
+                ? $this->sectionsPerRound($rounds, $participants, $allScores, $allDeductions)
+                : $this->sectionsPerGroup($participants, $allScores, $allDeductions, $this->globalDeductionCriteriaIds(), $groups);
 
             // $scoringData dipertahankan untuk pemakaian lama (cetak/ekspor yang
             // masih membacanya): gabungan semua bagian. Bagian berbabak belum
@@ -214,13 +216,19 @@ class Index extends Component
         ])->title('Rekap Nilai - ' . $this->eventner->nama_event);
     }
 
-    /** Id kriteria pengurangan ber-scope global milik tingkat terpilih. */
-    private function globalDeductionCriteriaIds(): array
+    /**
+     * Id kriteria pengurangan ber-scope global milik tingkat terpilih.
+     *
+     * $roundId menyaring ke satu babak; kelompok tanpa babak tetap ikut karena
+     * berlaku di semua babak. Tanpa $roundId (tingkat tanpa babak) saringannya
+     * mati — tidak ada babak yang bisa dipilih.
+     */
+    private function globalDeductionCriteriaIds(?int $roundId = null): array
     {
-        return \App\Models\DeductionCriteria::whereHas('category', function ($q) {
+        return \App\Models\DeductionCriteria::whereHas('category', function ($q) use ($roundId) {
                 $q->where('eventner_id', $this->eventner->id)
                   ->where('scope', \App\Models\DeductionCategory::SCOPE_GLOBAL)
-                  ->forLevel($this->selectedCategoryId);
+                  ->forLevel($this->selectedCategoryId, $roundId);
             })
             ->pluck('id')
             ->flip()
@@ -234,7 +242,7 @@ class Index extends Component
      * jadi menjumlahkan keduanya menghasilkan angka yang tak pernah dinilai
      * siapa pun. Di dalam babak, peserta dan rubriknya tetap dipecah per grup.
      */
-    private function sectionsPerRound($rounds, $participants, $allScores, $allDeductions, array $globalCriteriaIds): array
+    private function sectionsPerRound($rounds, $participants, $allScores, $allDeductions): array
     {
         // Rubrik per babak diambil sekali, lalu dipakai ulang untuk semua grup
         // babak itu. forLevel, bukan forEntry: rubrik fase grup justru BERSeri,
@@ -312,7 +320,7 @@ class Index extends Component
                     $roundParticipants,
                     $allScores,
                     $allDeductions,
-                    $globalCriteriaIds,
+                    $this->globalDeductionCriteriaIds($round->id),
                     $groups,
                     $roundRubrics,
                     $round->id,

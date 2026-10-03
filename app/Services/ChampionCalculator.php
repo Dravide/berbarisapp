@@ -75,6 +75,8 @@ class ChampionCalculator
             $championCategory->tiebreakCriteriaWeights($competitionRoundId, $competitionGroupId),
             $competitionCategoryId,
             $competitionGroupId,
+            null,
+            $competitionRoundId,
         );
 
         $winners = [];
@@ -111,6 +113,7 @@ class ChampionCalculator
         $competitionCategoryId = null,
         $competitionGroupId = null,
         $onlyRegistrationIds = null,
+        ?int $competitionRoundId = null,
     ): array {
         $criteriaMap = $scoringWeightMap;
         $tiebreakCriteriaMap = $tiebreakWeightMap;
@@ -147,6 +150,11 @@ class ChampionCalculator
         // nilai peserta tingkat B pada pemecah nilai sama.
         $deductionLevelMap = DeductionCategory::levelMapOfCriteria($eventner->id);
 
+        // ...dan hanya di babak yang dibatasi. Sanksi fase grup tidak boleh
+        // memotong peringkat fase final; pemanggil tanpa konteks babak
+        // (peringkat gabungan lintas babak) mengirim null dan saringannya mati.
+        $deductionRoundMap = DeductionCategory::roundMapOfCriteria($eventner->id);
+
         $participantScores = [];
         foreach ($participants as $participant) {
             $scores = $allScores->get($participant->id, collect());
@@ -176,6 +184,7 @@ class ChampionCalculator
                 $participant->competition_category_id,
                 $deductionLevelMap
             );
+            $deductions = DeductionCategory::applicableToRound($deductions, $deductionRoundMap, $competitionRoundId);
             $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 
             $participantScores[] = [

@@ -718,6 +718,8 @@ class Index extends Component
                 $weights['tiebreak'],
                 $round->competition_category_id,
                 $group->id,
+                null,
+                $round->id,
             );
 
             $groups[] = ['group' => $group, 'rows' => $rows];
@@ -731,6 +733,8 @@ class Index extends Component
             $weights['tiebreak'],
             $round->competition_category_id,
             null,
+            null,
+            $round->id,
         );
         $rows = array_values(array_filter($rows, fn ($r) => !$r['registration']->competition_group_id));
         if ($rows) {

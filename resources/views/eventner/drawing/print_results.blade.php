@@ -207,7 +207,7 @@
         <div class="title">Daftar Urutan Tampil Peserta</div>
 
         <div style="margin-bottom: 10px;">
-            <strong>Kategori Lomba:</strong> {{ $category->name }}@if($group) &mdash; <strong>{{ $group->name }}</strong>@endif
+            <strong>Kategori Lomba:</strong> {{ $category->name }}@if($group) &mdash; <strong>{{ $group->name }}</strong>@endif @if($round) &mdash; <strong>Babak: {{ $round->name }}</strong>@endif
         </div>
 
         <!-- TABLE -->

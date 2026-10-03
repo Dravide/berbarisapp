@@ -230,7 +230,7 @@
                     <h5 class="mb-0 text-white fw-semibold">{{ $selectedCategory->full_name }} — Pilih Peserta</h5>
                     @php
                         $grupAktif = $selectedGroupId ? ($groups ?? collect())->firstWhere('id', $selectedGroupId) : null;
-                        $babakAktif = $selectedRoundId ? ($rounds ?? collect())->firstWhere('id', $selectedRoundId) : null;
+                        $babakAktif = $selectedRound ?? null;
                     @endphp
                     @if($grupAktif)
                         <span class="badge bg-white text-primary fw-semibold"><i class="ti ti-users-group me-1"></i>{{ $grupAktif->name }}</span>
@@ -296,8 +296,9 @@
                                              lainnya — sementara .text-dark di sini juga
                                              gelap. Hasilnya angka gelap di atas gelap, dan
                                              nomor undiannya tak terbaca. --}}
-                                        @if($reg->urutan_tampil)
-                                            <span class="badge bg-dark text-white flex-shrink-0" style="min-width:2rem;">{{ $reg->urutan_tampil }}</span>
+                                        @php $nomorUndian = $reg->nomorUndian($selectedRound); @endphp
+                                        @if($nomorUndian)
+                                            <span class="badge bg-dark text-white flex-shrink-0" style="min-width:2rem;">{{ $nomorUndian }}</span>
                                         @endif
                                         @if($reg->logo_sekolah)
                                             <img src="{{ asset('storage/' . $reg->logo_sekolah) }}" class="rounded-circle border" width="44" height="44" style="object-fit:cover;" alt="">

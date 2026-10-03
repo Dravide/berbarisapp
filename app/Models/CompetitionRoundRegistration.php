@@ -16,6 +16,7 @@ class CompetitionRoundRegistration extends Model
         'competition_group_id',
         'seed',
         'preliminary_total',
+        'urutan_tampil',
     ];
 
     protected function casts(): array

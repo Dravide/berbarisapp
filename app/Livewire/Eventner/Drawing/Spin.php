@@ -8,6 +8,8 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Locked;
 use App\Models\Registration;
 use App\Models\CompetitionGroup;
+use App\Models\CompetitionRound;
+use App\Models\CompetitionRoundRegistration;
 
 use App\Models\Eventner;
 
@@ -45,8 +47,18 @@ class Spin extends Component
      */
     public $activeGroupId = '';
 
+    /**
+     * Babak yang sedang diundi. '' = penyisihan / tingkat tanpa babak.
+     * Babak final diundi di pool-nya sendiri (satu tingkat, semua finalis) dan
+     * nomornya TIDAK diambil dari nomor undian grup.
+     */
+    public $activeRoundId = '';
+
     /** Daftar grup tingkat terpilih (untuk pemilih di view). */
     public $groups = [];
+
+    /** Daftar babak tingkat terpilih (untuk pemilih di view). */
+    public $rounds = [];
 
     public function mount($slug = null)
     {
@@ -82,6 +94,7 @@ class Spin extends Component
         }
 
         $this->groups = $this->groupsOfActiveTab();
+        $this->rounds = $this->roundsOfActiveTab();
 
         $this->loadNextSchool();
     }
@@ -105,16 +118,101 @@ class Spin extends Component
     }
 
     /**
-     * Registrasi pada tingkat + grup yang sedang dibuka. Nomor undian hanya
-     * unik di dalam satu grup, jadi semua hitungan nomor wajib lewat sini.
+     * Babak milik tingkat yang sedang diundi.
+     */
+    private function roundsOfActiveTab(): array
+    {
+        if ($this->activeTab === '') {
+            return [];
+        }
+
+        return CompetitionRound::where('eventner_id', $this->eventnerId)
+            ->where('competition_category_id', $this->activeTab)
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($r) => [
+                'id' => (string) $r->id,
+                'name' => $r->name,
+                'isFinal' => $r->isFinal(),
+            ])
+            ->all();
+    }
+
+    /** Babak yang sedang diundi, atau null bila tingkat ini tanpa babak. */
+    private function activeRound(): ?CompetitionRound
+    {
+        if ($this->activeRoundId === '') {
+            return null;
+        }
+
+        return CompetitionRound::where('eventner_id', $this->eventnerId)
+            ->where('competition_category_id', $this->activeTab)
+            ->find($this->activeRoundId);
+    }
+
+    /** Apakah yang sedang diundi adalah babak final. */
+    private function isFinalRound(): bool
+    {
+        return (bool) $this->activeRound()?->isFinal();
+    }
+
+    /**
+     * Registrasi pada tingkat + grup + babak yang sedang dibuka. Nomor undian
+     * penyisihan hanya unik di dalam satu grup; nomor undian final unik
+     * se-tingkat, jadi di babak final saringan grup dimatikan dan pool-nya
+     * diambil dari baris kelolosan babak itu.
      */
     private function scopedRegistrations()
     {
         return Registration::where('eventner_id', $this->eventnerId)
             ->where('competition_category_id', $this->activeTab)
-            ->when($this->activeGroupId !== '', function ($q) {
+            ->when(! $this->isFinalRound() && $this->activeGroupId !== '', function ($q) {
                 $q->where('competition_group_id', $this->activeGroupId);
+            })
+            ->when($this->isFinalRound(), function ($q) {
+                $q->whereIn('id', CompetitionRoundRegistration::where('eventner_id', $this->eventnerId)
+                    ->where('competition_round_id', $this->activeRound()->id)
+                    ->pluck('registration_id'));
             });
+    }
+
+    /**
+     * Nomor yang sudah terpakai di babak ini — per grup di penyisihan,
+     * se-tingkat di final.
+     */
+    private function nomorTerpakai(): array
+    {
+        if (! $this->isFinalRound()) {
+            return Registration::where('eventner_id', $this->eventnerId)
+                ->where('competition_category_id', $this->activeTab)
+                ->when($this->activeGroupId !== '', fn ($q) => $q->where('competition_group_id', $this->activeGroupId))
+                ->whereNotNull('urutan_tampil')
+                ->pluck('urutan_tampil')
+                ->map(fn ($n) => (int) $n)
+                ->all();
+        }
+
+        return CompetitionRoundRegistration::where('eventner_id', $this->eventnerId)
+            ->where('competition_round_id', $this->activeRound()->id)
+            ->whereNotNull('urutan_tampil')
+            ->pluck('urutan_tampil')
+            ->map(fn ($n) => (int) $n)
+            ->all();
+    }
+
+    /** Tulis nomor undian ke tempat yang benar untuk babak ini. */
+    private function simpanNomor($registrationId, int $nomor): void
+    {
+        if (! $this->isFinalRound()) {
+            Registration::whereKey($registrationId)->update(['urutan_tampil' => $nomor]);
+
+            return;
+        }
+
+        CompetitionRoundRegistration::where('competition_round_id', $this->activeRound()->id)
+            ->where('registration_id', $registrationId)
+            ->update(['urutan_tampil' => $nomor]);
     }
 
     /**
@@ -143,7 +241,36 @@ class Spin extends Component
     {
         $this->activeTab = $categoryId;
         $this->activeGroupId = '';
+        $this->activeRoundId = '';
         $this->groups = $this->groupsOfActiveTab();
+        $this->rounds = $this->roundsOfActiveTab();
+        $this->spinResult = null;
+        $this->isSpinning = false;
+        $this->loadNextSchool();
+    }
+
+    /**
+     * Ganti babak. Babak dari DOM wajib milik tingkat yang sedang diundi.
+     * Mengganti babak mengosongkan grup: pool final satu tingkat.
+     */
+    public function switchRound($roundId)
+    {
+        $this->activeRoundId = '';
+        $this->activeGroupId = '';
+
+        $ada = collect($this->rounds)->firstWhere('id', (string) $roundId);
+
+        if ($roundId !== '' && $roundId !== null && ! $ada) {
+            $this->addError('activeRoundId', 'Babak tidak ditemukan pada tingkat lomba ini.');
+
+            return;
+        }
+
+        if ($ada) {
+            $this->activeRoundId = (string) $ada['id'];
+        }
+
+        $this->resetErrorBag('activeRoundId');
         $this->spinResult = null;
         $this->isSpinning = false;
         $this->loadNextSchool();
@@ -156,6 +283,13 @@ class Spin extends Component
     public function switchGroup($groupId)
     {
         $this->activeGroupId = '';
+
+        // Pool final satu tingkat, jadi grup asal tidak menyaring apa pun —
+        // biarkan pemilihnya tidak berpengaruh daripada diam-diam mengubah
+        // daftar yang sedang diundi.
+        if ($this->isFinalRound()) {
+            return;
+        }
 
         if ($groupId !== '' && $groupId !== null) {
             $ada = CompetitionGroup::where('eventner_id', $this->eventnerId)
@@ -179,10 +313,20 @@ class Spin extends Component
 
     public function loadNextSchool()
     {
-        $this->currentSchool = $this->scopedRegistrations()
-            ->whereNull('urutan_tampil')
-            ->inRandomOrder()
-            ->first();
+        // Di babak final "belum diundi" berarti baris babaknya masih kosong,
+        // bukan kolom registrasi — nomor fase grup tidak dianggap undian final.
+        $query = $this->scopedRegistrations();
+
+        if ($this->isFinalRound()) {
+            $query->whereNotIn('id', CompetitionRoundRegistration::where('eventner_id', $this->eventnerId)
+                ->where('competition_round_id', $this->activeRound()->id)
+                ->whereNotNull('urutan_tampil')
+                ->pluck('registration_id'));
+        } else {
+            $query->whereNull('urutan_tampil');
+        }
+
+        $this->currentSchool = $query->inRandomOrder()->first();
 
         $this->allDrawn = is_null($this->currentSchool);
         $this->spinResult = null;
@@ -193,12 +337,10 @@ class Spin extends Component
         if (!$this->isAuthenticated) return;
         if (!$this->currentSchool || $this->isSpinning) return;
 
-        // Hitung nomor urut yang belum terpakai — per grup, karena nomor
-        // undian hanya unik di dalam grupnya sendiri.
-        $usedNumbers = $this->scopedRegistrations()
-            ->whereNotNull('urutan_tampil')
-            ->pluck('urutan_tampil')
-            ->toArray();
+        // Hitung nomor urut yang belum terpakai — per grup di penyisihan, karena
+        // nomor undian fase grup hanya unik di dalam grupnya sendiri; se-tingkat
+        // di final, karena pool finalnya satu tingkat.
+        $usedNumbers = $this->nomorTerpakai();
 
         $category = \App\Models\CompetitionCategory::where('eventner_id', $this->eventnerId)
             ->find($this->activeTab);
@@ -224,9 +366,7 @@ class Spin extends Component
         if (!$this->isAuthenticated) return;
         if (!$this->currentSchool || !$this->spinResult) return;
 
-        $this->currentSchool->update([
-            'urutan_tampil' => $this->spinResult,
-        ]);
+        $this->simpanNomor($this->currentSchool->id, (int) $this->spinResult);
 
         session()->flash('success', $this->currentSchool->nama_sekolah . ' mendapat urutan tampil #' . $this->spinResult);
 
@@ -236,6 +376,18 @@ class Spin extends Component
     public function resetDrawing()
     {
         if (!$this->isAuthenticated) return;
+
+        if ($this->isFinalRound()) {
+            // Satu tingkat, tanpa saringan grup — sama dengan pool undiannya.
+            // Hanya kolom babak yang dikosongkan: nomor undian fase grup tetap.
+            CompetitionRoundRegistration::where('eventner_id', $this->eventnerId)
+                ->where('competition_round_id', $this->activeRound()->id)
+                ->update(['urutan_tampil' => null]);
+
+            session()->flash('success', 'Semua hasil undian babak final pada kategori ini telah di-reset.');
+
+            return;
+        }
 
         // Level tingkat, sama dengan halaman Drawing: satu grup sudah bernilai
         // berarti undian tingkat ini tidak lagi cocok di grup mana pun.
@@ -264,10 +416,25 @@ class Spin extends Component
     {
         $eventner = Eventner::findOrFail($this->eventnerId);
 
-        $drawnSchools = $this->scopedRegistrations()
+        // Di babak final daftar terundinya disusun dari baris babak, bukan dari
+        // kolom registrasi — nomor fase grup bukan nomor undian final.
+        if ($this->isFinalRound()) {
+            $nomorPerRegistrasi = CompetitionRoundRegistration::where('eventner_id', $this->eventnerId)
+                ->where('competition_round_id', $this->activeRound()->id)
+                ->whereNotNull('urutan_tampil')
+                ->pluck('urutan_tampil', 'registration_id');
+
+            $drawnSchools = Registration::whereIn('id', $nomorPerRegistrasi->keys())
+                ->get()
+                ->each(fn ($reg) => $reg->urutan_tampil = $nomorPerRegistrasi->get($reg->id))
+                ->sortBy('urutan_tampil')
+                ->values();
+        } else {
+            $drawnSchools = $this->scopedRegistrations()
                 ->whereNotNull('urutan_tampil')
                 ->orderBy('urutan_tampil')
                 ->get();
+        }
 
         $category = \App\Models\CompetitionCategory::where('eventner_id', $eventner->id)
             ->find($this->activeTab);

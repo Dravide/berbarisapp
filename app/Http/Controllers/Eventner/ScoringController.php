@@ -381,7 +381,7 @@ class ScoringController extends Controller
             abort(400, 'Registration ID diperlukan.');
         }
 
-        $registration = Registration::with('competitionCategory', 'competitionGroup', 'competitionSeries')
+        $registration = Registration::with('competitionCategory', 'competitionGroup', 'competitionSeries', 'roundRegistrations')
             ->where('eventner_id', $eventner->id)
             ->findOrFail($registrationId);
 
@@ -458,13 +458,35 @@ class ScoringController extends Controller
         // Ini halaman rekap per peserta: pengurangan kategori mengisi kolom
         // kategorinya, pengurangan tingkat tidak menyentuh kolom mana pun —
         // keduanya tetap dipotongkan ke total akhir.
+        // Pengurangan yang berlaku DI BABAK INI saja.
+        //
+        // Dulu seluruh kelompok pengurangan milik event dibaca tanpa saringan
+        // babak, sehingga sanksi fase grup ikut memotong NILAI AKHIR di lembar
+        // final — kertasnya tidak cocok dengan panel. Pengurangan per kategori
+        // ikut babak lewat rubriknya; pengurangan tingkat lewat kolom
+        // competition_round_id-nya sendiri (NULL = semua babak).
         $deductionCategories = DeductionCategory::with(['criterias', 'assessmentCategory'])
             ->where('eventner_id', $eventner->id)
+            ->where(function ($q) use ($assessmentCategories, $registration, $roundId) {
+                $q->where(fn ($sq) => $sq->category()
+                        ->whereIn('assessment_category_id', $assessmentCategories->pluck('id')))
+                    ->orWhere(fn ($sq) => $sq->global()
+                        ->forLevel($registration->competition_category_id, $roundId));
+            })
             ->orderBy('sort_order')
             ->get();
 
+        // Hanya baris yang kriterianya termasuk di atas. Tanpa saringan ini
+        // pengurangan babak lain tetap ikut dijumlahkan ke total akhir walau
+        // tak satu pun barisnya tampil.
+        $allowedDeductionCriteriaIds = $deductionCategories
+            ->flatMap->criterias
+            ->pluck('id')
+            ->all();
+
         $scoreDeductions = ScoreDeduction::where('eventner_id', $eventner->id)
             ->where('registration_id', $registrationId)
+            ->whereIn('deduction_criteria_id', $allowedDeductionCriteriaIds)
             ->get();
 
         // Petakan deduction_criteria_id => assessment_category_id. Pengurangan
@@ -504,6 +526,9 @@ class ScoringController extends Controller
             // Babak final diwarnai berbeda di lembar ini supaya lembar penyisihan
             // dan final sekolah yang sama tidak tertukar saat keduanya dicetak.
             'roundIsFinal' => (bool) $round?->isFinal(),
+            // Nomor undian babak ini, bukan nomor fase grup: finalis punya
+            // undian finalnya sendiri, dan yang belum diundi tampil kosong.
+            'nomorUndian' => $registration->nomorUndian($round),
             'assessmentCategories' => $assessmentCategories,
             'criteriaTotals' => $criteriaTotals,
             'categoryTotals' => $categoryTotals,

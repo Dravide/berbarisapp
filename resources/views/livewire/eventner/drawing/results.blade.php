@@ -25,7 +25,7 @@
             </div>
 
             {{-- Category Select --}}
-            @if(count($categories) > 1 || count($groups) > 0)
+            @if(count($categories) > 1 || count($groups) > 0 || count($rounds) > 0)
                 <div class="mb-4">
                     <div class="d-flex gap-2 justify-content-center flex-wrap">
                         @if(count($categories) > 1)
@@ -39,7 +39,19 @@
                                 </select>
                             </div>
                         @endif
-                        @if(count($groups) > 0)
+                        @if(count($rounds) > 0)
+                            <div class="input-group" style="max-width: 260px;">
+                                <span class="input-group-text bg-success-subtle text-success"><i class="ti ti-flag"></i></span>
+                                <select class="form-select" wire:change="switchRound($event.target.value)">
+                                    <option value="">Penyisihan / Semua</option>
+                                    @foreach($rounds as $round)
+                                        <option value="{{ $round['id'] }}" @selected((string) $activeRoundId === (string) $round['id'])>{{ $round['name'] }}{{ $round['isFinal'] ? ' (Final)' : '' }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+                        @php $babakAktif = collect($rounds)->firstWhere('id', (string) $activeRoundId); @endphp
+                        @if(count($groups) > 0 && ! ($babakAktif['isFinal'] ?? false))
                             <div class="input-group" style="max-width: 240px;">
                                 <span class="input-group-text bg-warning-subtle text-warning"><i class="ti ti-users-group"></i></span>
                                 <select class="form-select" wire:change="switchGroup($event.target.value)">
@@ -52,6 +64,12 @@
                         @endif
                     </div>
                     @error('activeGroupId') <div class="alert alert-danger py-2 fs-2 mt-3 mb-0">{{ $message }}</div> @enderror
+                    @error('activeRoundId') <div class="alert alert-danger py-2 fs-2 mt-3 mb-0">{{ $message }}</div> @enderror
+                    @if($babakAktif['isFinal'] ?? false)
+                        <div class="alert alert-success-subtle text-success py-2 fs-3 mt-3 mb-0 text-center">
+                            <i class="ti ti-flag me-1"></i> Hasil undian <strong>babak final</strong>.
+                        </div>
+                    @endif
                 </div>
             @endif
 

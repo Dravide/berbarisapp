@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\WilayahService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -132,6 +133,62 @@ class Registration extends Model
     public function roundRegistrations()
     {
         return $this->hasMany(CompetitionRoundRegistration::class);
+    }
+
+    /**
+     * Nomor undian yang berlaku di babak ini. null = belum diundi di babak itu.
+     *
+     * Hanya babak FINAL yang menyimpan undiannya sendiri: competition_round_registrations
+     * hanya berisi finalis, jadi babak penyisihan tidak punya baris di sana sama
+     * sekali. Kalau pembacaan dipaksa lewat baris babak, nomor undian fase grup
+     * hilang dari panel nilai dan tablet juri. Karena itu bercabang menurut
+     * jenis babak, bukan sekadar null/tidak.
+     *
+     * Babak pembaca wajib memuatkan relasi roundRegistrations — tanpa itu
+     * pemanggilan di dalam loop jadi N+1.
+     */
+    public function nomorUndian(?CompetitionRound $round): ?int
+    {
+        if ($round === null || ! $round->isFinal()) {
+            return $this->urutan_tampil !== null ? (int) $this->urutan_tampil : null;
+        }
+
+        $baris = $this->roundRegistrations
+            ->firstWhere('competition_round_id', $round->id);
+
+        return $baris?->urutan_tampil !== null ? (int) $baris->urutan_tampil : null;
+    }
+
+    /**
+     * Urutkan daftar mengikuti nomor undian babak ini — peserta yang belum
+     * diundi (nomor null) paling bawah, lalu dirapikan per nama sekolah.
+     *
+     * Babak final mengambil nomornya dari competition_round_registrations;
+     * babak penyisihan dan tingkat tanpa babak tetap mengurut dari
+     * registrations.urutan_tampil seperti dulu.
+     *
+     * Sengaja lewat sub-query berkorelasi, BUKAN leftJoin: tabel itu juga punya
+     * kolom eventner_id dan competition_group_id, jadi join membuat setiap
+     * saringan pemanggil ("where eventner_id", "where competition_group_id")
+     * jadi ambigu dan query-nya gagal. Sub-query-nya kena unique index
+     * (competition_round_id, registration_id), jadi tetap satu pencarian
+     * index per baris.
+     *
+     * Dipisah jadi scope karena tiga layar (panel nilai, tablet juri, lembar
+     * PDF peserta) harus menampilkan urutan yang identik — kalau tiap layar
+     * menyusun ORDER BY sendiri, cepat atau lambat salah satunya menyimpang.
+     */
+    public function scopeUrutNomorUndian(Builder $query, ?CompetitionRound $round): Builder
+    {
+        if ($round === null || ! $round->isFinal()) {
+            return $query->orderByRaw('COALESCE(registrations.urutan_tampil, 999999)');
+        }
+
+        return $query->orderByRaw(
+            'COALESCE((SELECT undian.urutan_tampil FROM competition_round_registrations undian'
+            . ' WHERE undian.registration_id = registrations.id AND undian.competition_round_id = ?), 999999)',
+            [$round->id]
+        );
     }
 
     public function participants()

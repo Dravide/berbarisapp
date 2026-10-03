@@ -511,6 +511,23 @@
                                             @endif
                                         </div>
                                         <div class="card-body p-3">
+                                            @if($this->rounds->isNotEmpty())
+                                                {{-- Batas babak: kelompok tanpa babak berlaku di semua
+                                                     babak (perilaku lama). Sanksi fase grup yang dibiarkan
+                                                     tanpa batas ikut memotong NILAI AKHIR di fase final. --}}
+                                                <div class="d-flex align-items-center gap-2 mb-3">
+                                                    <label class="form-label fw-semibold fs-2 mb-0 text-nowrap">Berlaku di</label>
+                                                    <select class="form-select form-select-sm w-auto" wire:model="deductionRoundId.{{ $deductionCat->id }}">
+                                                        <option value="">— semua babak —</option>
+                                                        @foreach($this->rounds as $round)
+                                                            <option value="{{ $round->id }}">{{ $round->name }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <button class="btn btn-sm btn-outline-danger text-nowrap" wire:click="saveDeductionScope({{ $deductionCat->id }})">
+                                                        <i class="ti ti-device-floppy me-1"></i> Simpan Babak
+                                                    </button>
+                                                </div>
+                                            @endif
                                             @if($deductionCat->criterias->isNotEmpty())
                                                 <div class="table-responsive mb-3">
                                                     <table class="table table-sm align-middle mb-0">

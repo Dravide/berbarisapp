@@ -96,6 +96,10 @@
                 <div class="rounded-2xl border border-outline-variant/30 bg-white overflow-hidden shadow-sm divide-y divide-outline-variant/20">
                     @foreach($participants as $p)
                         @php
+                            // Nomor undian babak ini: babak final punya undian
+                            // sendiri, jadi finalis yang belum diundi tampil
+                            // tanpa nomor — bukan dengan nomor fase grupnya.
+                            $nomor = $p->nomorUndian($selectedRound);
                             $badge = match($p->judge_status) {
                                 'final'   => ['text' => 'Final',   'class' => 'bg-emerald-100 text-emerald-700 border-emerald-200', 'icon' => 'ti-lock'],
                                 'dinilai' => ['text' => 'Dinilai', 'class' => 'bg-amber-100 text-amber-700 border-amber-200',       'icon' => 'ti-progress'],
@@ -105,7 +109,7 @@
                         <button type="button" wire:click="selectParticipant({{ $p->id }})"
                                 class="w-full flex items-center gap-4 px-4 py-4 text-left hover:bg-primary/5 active:bg-primary/10 transition">
                             <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary font-display text-sm font-bold border border-primary/20">
-                                {{ $p->urutan_tampil ?? '–' }}
+                                {{ $nomor ?? '–' }}
                             </span>
                             <span class="min-w-0 flex-1">
                                 <span class="flex items-center gap-2 min-w-0">
@@ -154,7 +158,7 @@
                         3. Penilaian
                     </h2>
                     <p class="text-sm font-bold text-on-surface truncate m-0 mt-0.5">
-                        @if($registration->urutan_tampil) No. {{ $registration->urutan_tampil }} · @endif
+                        @if($registration->nomorUndian($selectedRound)) No. {{ $registration->nomorUndian($selectedRound) }} · @endif
                         {{ $registration->nama_sekolah }}
                         @if($registration->competitionSeries)
                             <span class="ml-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary align-middle">

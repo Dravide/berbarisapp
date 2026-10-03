@@ -56,10 +56,21 @@
                 @endforeach
             </select>
         </div>
+        @if($this->rounds->isNotEmpty())
+            <div class="input-group" style="max-width: 240px;">
+                <span class="input-group-text bg-success-subtle text-success"><i class="ti ti-flag"></i></span>
+                <select class="form-select" wire:change="switchRound($event.target.value)">
+                    <option value="">Penyisihan / Semua</option>
+                    @foreach($this->rounds as $round)
+                        <option value="{{ $round->id }}" @selected((string) $activeRoundId === (string) $round->id)>{{ $round->name }}{{ $round->isFinal() ? ' (Final)' : '' }}</option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
         @if($this->groups->isNotEmpty())
             <div class="input-group" style="max-width: 240px;">
                 <span class="input-group-text bg-warning-subtle text-warning"><i class="ti ti-users-group"></i></span>
-                <select class="form-select" wire:change="switchGroup($event.target.value)">
+                <select class="form-select" wire:change="switchGroup($event.target.value)" @disabled($this->rounds->firstWhere('id', (int) $activeRoundId)?->isFinal())>
                     <option value="">Seluruh Tingkat</option>
                     @foreach($this->groups as $group)
                         <option value="{{ $group->id }}" @selected((string) $activeGroupId === (string) $group->id)>{{ $group->name }}</option>
@@ -69,6 +80,12 @@
         @endif
     </div>
     @error('activeGroupId') <div class="alert alert-danger py-2 fs-2">{{ $message }}</div> @enderror
+    @error('activeRoundId') <div class="alert alert-danger py-2 fs-2">{{ $message }}</div> @enderror
+    @if($this->rounds->firstWhere('id', (int) $activeRoundId)?->isFinal())
+        <div class="alert alert-success-subtle text-success py-2 fs-2">
+            <i class="ti ti-flag me-1"></i> Mengundi <strong>babak final</strong>: satu pool se-tingkat, grup asal tidak berlaku. Nomor final tidak diambil dari nomor undian grup.
+        </div>
+    @endif
 
     <div class="row">
         {{-- Results Table --}}
@@ -80,7 +97,7 @@
                     </h5>
                     <div class="d-flex gap-2">
                         @if($drawnResults->count() > 0)
-                            <a href="{{ route('eventner.drawing.print', array_filter(['competition_category_id' => $activeTab, 'competition_group_id' => $activeGroupId ?: null])) }}" target="_blank" class="btn btn-sm btn-success">
+                            <a href="{{ route('eventner.drawing.print', array_filter(['competition_category_id' => $activeTab, 'competition_group_id' => $activeGroupId ?: null, 'competition_round_id' => $activeRoundId ?: null])) }}" target="_blank" class="btn btn-sm btn-success">
                                 <i class="ti ti-download me-1"></i> Unduh / Cetak
                             </a>
                         @endif
@@ -116,7 +133,8 @@
                                     @foreach($drawnResults as $reg)
                                         <tr>
                                             <td class="ps-4">
-                                                <span class="badge bg-primary px-3 py-2 fs-3">{{ $reg->urutan_tampil }}</span>
+                                                {{-- Di babak final nomor undiannya hidup di baris babak, bukan di kolom registrasi. --}}
+                                                <span class="badge bg-primary px-3 py-2 fs-3">{{ $nomorBabak ? ($nomorBabak[$reg->id] ?? '—') : $reg->urutan_tampil }}</span>
                                             </td>
                                             <td>
                                                 <h6 class="fw-semibold mb-0">{{ $reg->display_name }}</h6>

@@ -898,6 +898,7 @@ class Index extends Component
                 ->get()
                 ->groupBy('registration_id');
             $deductionLevelMap = \App\Models\DeductionCategory::levelMapOfCriteria($this->eventner->id);
+            $deductionRoundMap = \App\Models\DeductionCategory::roundMapOfCriteria($this->eventner->id);
 
             // Ambil semua kriteria beserta bobotnya untuk menghitung other_total
             $allCriteriaWeightMap = AssessmentCriteria::whereIn(
@@ -948,6 +949,11 @@ class Index extends Component
                         $allDeductions->get($participant->id, collect()),
                         $participant->competition_category_id,
                         $deductionLevelMap
+                    );
+                    $deductions = \App\Models\DeductionCategory::applicableToRound(
+                        $deductions,
+                        $deductionRoundMap,
+                        $selectedRound?->id
                     );
                     $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 

@@ -536,6 +536,22 @@ class Index extends Component
     }
 
     /**
+     * Baris babak yang sedang dibuka, atau null bila tingkat ini tanpa babak.
+     *
+     * Blade tidak bisa memanggil method private, dan memanggil nomorUndian()
+     * di dalam loop tanpa preload jadi N+1 — jadi objeknya disiapkan di sini
+     * sekali, dari koleksi rounds() yang sudah diambil, lalu dikirim ke view.
+     */
+    private function selectedRound(): ?CompetitionRound
+    {
+        if (! $this->selectedRoundId) {
+            return null;
+        }
+
+        return $this->rounds()->firstWhere('id', (int) $this->selectedRoundId);
+    }
+
+    /**
      * Setelah scope berganti, peserta yang sedang dibuka dan nilai di layar
      * bisa jadi milik grup/babak lain. Membiarkannya membuat operasi simpan
      * mendarat di peserta di luar daftar yang sedang dilihat.
@@ -552,6 +568,10 @@ class Index extends Component
 
             $this->loadJudges();
             $this->loadExistingScores();
+            // Pengurangan ikut dimuat ulang: himpunannya bergantung pada babak
+            // yang sedang dibuka, jadi sisa baris babak lama harus dibuang dari
+            // layar — bukan cuma dari angka yang tampil.
+            $this->loadDeductions();
         }
 
         $this->saveStatus = '';
@@ -1120,15 +1140,25 @@ class Index extends Component
         $this->deductionSaveStatus = '';
 
         $compCategoryId = $this->selectedRegistration->competition_category_id ?? null;
+        $roundId = $this->selectedRoundId ? (int) $this->selectedRoundId : null;
 
+        // Pengurangan per kategori ikut babak lewat rubrik yang ditempelinya:
+        // rubrik tanpa babak berlaku di semua babak, rubrik berbabak hanya di
+        // babaknya sendiri — klausa yang sama dengan scopeForLevel().
         $this->deductionCategories = DeductionCategory::with('criterias')
             ->where('eventner_id', $this->eventner->id)
             ->category()
-            ->whereHas('assessmentCategory', function ($q) use ($compCategoryId) {
+            ->whereHas('assessmentCategory', function ($q) use ($compCategoryId, $roundId) {
                 $q->where(function ($sq) use ($compCategoryId) {
                     $sq->where('competition_category_id', $compCategoryId)
                        ->orWhereNull('competition_category_id');
-                });
+                })
+                    ->when($roundId, function ($sq) use ($roundId) {
+                        $sq->where(function ($ssq) use ($roundId) {
+                            $ssq->where('competition_round_id', $roundId)
+                                ->orWhereNull('competition_round_id');
+                        });
+                    });
             })
             ->orderBy('sort_order')
             ->get();
@@ -1136,12 +1166,14 @@ class Index extends Component
         // Pengurangan tingkat: berlaku untuk semua kategori penilaian tetapi
         // hanya milik SATU tingkat lomba, jadi difilter competition_category_id
         // peserta ini — sanksi tingkat lain tidak boleh ikut memotong nilainya.
+        // Babaknya ikut disaring: pengurangan tingkat tidak menempel ke rubrik
+        // mana pun, jadi tanpa ini sanksi fase grup memotong NILAI AKHIR final.
         // Nilainya tetap masuk peta $this->deductions yang sama, dijumlahkan ke
         // NILAI AKHIR, bukan ke kolom kategori mana pun.
         $this->globalDeductionCategories = DeductionCategory::with('criterias')
             ->where('eventner_id', $this->eventner->id)
             ->global()
-            ->forLevel($compCategoryId)
+            ->forLevel($compCategoryId, $roundId)
             ->orderBy('sort_order')
             ->get();
 
@@ -1150,14 +1182,45 @@ class Index extends Component
             return;
         }
 
-        // Load existing deductions for this registration
+        // Hanya baris yang kriterianya masih berlaku di babak ini. Baris di
+        // luar cakupan sengaja tidak dimuat: kalau ia masuk $this->deductions,
+        // NILAI AKHIR di layar ikut terpotong sanksi babak lain — persis
+        // kebocoran yang dilaporkan, dan menyimpannya kembali justru menulis
+        // ulang angka babak lain dari layar babak ini.
+        $criteriaIds = $this->inScopeDeductionCriteriaIds();
+
+        if ($criteriaIds === []) {
+            return;
+        }
+
         $existingDeductions = ScoreDeduction::where('registration_id', $this->selectedRegistrationId)
             ->where('eventner_id', $this->eventner->id)
+            ->whereIn('deduction_criteria_id', $criteriaIds)
             ->get();
 
         foreach ($existingDeductions as $deduction) {
             $this->deductions[$deduction->deduction_criteria_id] = $deduction->amount;
         }
+    }
+
+    /**
+     * Id kriteria pengurangan yang berlaku di babak terpilih.
+     *
+     * Satu sumber untuk pemuatan, penyimpanan, dan penjumlahan NILAI AKHIR —
+     * tiga tempat itu dulu masing-masing membaca $this->deductions apa adanya,
+     * sehingga satu baris babak lain bisa memotong angka di layar ini.
+     *
+     * @return array<int>
+     */
+    private function inScopeDeductionCriteriaIds(): array
+    {
+        return $this->deductionCategories
+            ->concat($this->globalDeductionCategories)
+            ->flatMap(fn ($cat) => $cat->criterias->pluck('id'))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     public function saveDeductions()
@@ -1180,7 +1243,16 @@ class Index extends Component
             return;
         }
 
+        // Cakupan babak dijaga di sini juga: properti $deductions bisa memuat
+        // sisa state babak sebelumnya, dan tanpa pagar ini baris babak lain
+        // ikut ditulis (atau dihapus) dari layar babak ini.
+        $boleh = $this->inScopeDeductionCriteriaIds();
+
         foreach ($this->deductions as $criteriaId => $amount) {
+            if (! in_array((int) $criteriaId, $boleh, true)) {
+                continue;
+            }
+
             if ($amount === '' || $amount === null || (float) $amount == 0) {
                 // Remove if set to 0 or empty
                 ScoreDeduction::where('registration_id', $this->selectedRegistrationId)
@@ -1250,10 +1322,15 @@ class Index extends Component
             // lalu dirapikan per nama sekolah. Pola yang sama dipakai PDF
             // format nilai (FormatNilaiController) supaya semua daftar cetak
             // maupun layar menampilkan urutan yang identik.
+            //
+            // Babak final mengambil nomornya dari baris babaknya sendiri, jadi
+            // pengurutannya lewat scope (lihat Registration::scopeUrutNomorUndian).
+            // Relasi roundRegistrations ikut dimuat karena badge nomor di blade
+            // memanggil nomorUndian() untuk tiap baris.
             $query = Registration::where('eventner_id', $this->eventner->id)
                 ->where('competition_category_id', $this->selectedCategoryId)
-                ->with('competitionSeries')
-                ->orderByRaw('COALESCE(urutan_tampil, 999999)')
+                ->with(['competitionSeries', 'roundRegistrations'])
+                ->urutNomorUndian($this->selectedRound())
                 ->orderBy('nama_sekolah');
 
             // Chip grup: daftar menyempit ke peserta grup itu. "Semua" tidak
@@ -1372,8 +1449,18 @@ class Index extends Component
                 ->map(fn ($id) => (string) $id)
                 ->all();
 
+            // Hanya baris yang berlaku di babak ini. Properti $deductions
+            // sendiri sudah dijaga saat dimuat, tetapi penjumlahan ini tetap
+            // disaring: ia yang menulis NILAI AKHIR, dan satu baris babak lain
+            // yang lolos ke sini memotong angka tanpa terlihat sebagai baris.
+            $boleh = array_map('strval', $this->inScopeDeductionCriteriaIds());
+
             foreach ($this->deductions as $criteriaId => $amount) {
                 if ($amount === '' || $amount === null) {
+                    continue;
+                }
+
+                if (! in_array((string) $criteriaId, $boleh, true)) {
                     continue;
                 }
 
@@ -1418,6 +1505,7 @@ class Index extends Component
             'participants' => $participants,
             'selectedCategory' => $selectedCategory,
             'rounds' => $this->rounds(),
+            'selectedRound' => $this->selectedRound(),
             'groups' => $this->groups(),
             'groupCounts' => $groupCounts,
             'groupSeriesCounts' => $this->seriesCountsPerGroup(),

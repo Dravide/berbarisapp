@@ -356,6 +356,15 @@ class Builder extends Component
 
     public $rubricRoundId = [];
 
+    /**
+     * Babak per kelompok pengurangan TINGKAT, indeks = id kelompok.
+     * Kosong = berlaku di semua babak.
+     *
+     * Pengurangan per kategori tidak butuh array ini: babaknya sudah ikut
+     * lewat rubrik yang ditempelinya.
+     */
+    public $deductionRoundId = [];
+
     public function mount()
     {
         // Get the active eventner ID from the authenticated user
@@ -399,6 +408,46 @@ class Builder extends Component
         $this->rubricRoundId = $this->categories
             ->mapWithKeys(fn ($c) => [$c->id => $c->competition_round_id ? (string) $c->competition_round_id : ''])
             ->all();
+
+        $this->deductionRoundId = $this->globalDeductionCategories
+            ->mapWithKeys(fn ($c) => [$c->id => $c->competition_round_id ? (string) $c->competition_round_id : ''])
+            ->all();
+    }
+
+    /**
+     * Simpan babak sebuah kelompok pengurangan TINGKAT. Dipanggil dari tombol
+     * simpan di kartu kelompok (bukan saat ganti select), sama seperti
+     * saveRubricScope().
+     *
+     * Tanpa batas ini sanksi fase grup ikut memotong NILAI AKHIR di fase final
+     * — pengurangan tingkat tidak menempel ke rubrik mana pun, jadi babaknya
+     * tidak bisa dibaca dari mana pun selain kolom ini.
+     */
+    public function saveDeductionScope($categoryId)
+    {
+        $category = DeductionCategory::where('eventner_id', $this->eventnerId)
+            ->global()
+            ->findOrFail($categoryId);
+
+        $roundId = ($this->deductionRoundId[$categoryId] ?? null) ?: null;
+        $roundId = $roundId !== null ? (int) $roundId : null;
+
+        // Babak dari DOM wajib milik eventner ini DAN milik tingkat kelompoknya.
+        if ($roundId !== null && ! CompetitionRound::where('eventner_id', $this->eventnerId)
+            ->where('competition_category_id', $category->competition_category_id)
+            ->whereKey($roundId)
+            ->exists()) {
+            $this->gagal('Babak yang dipilih bukan milik tingkat lomba ini.');
+
+            return;
+        }
+
+        $category->update(['competition_round_id' => $roundId]);
+
+        unset($this->globalDeductionCategories);
+        $this->toast($roundId
+            ? 'Pengurangan tingkat dibatasi ke babak yang dipilih.'
+            : 'Pengurangan tingkat berlaku di semua babak.');
     }
 
     public function updatedActiveTab()

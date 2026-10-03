@@ -111,6 +111,10 @@ class ChampionCategoryController extends Controller
             ->groupBy('registration_id');
         $deductionLevelMap = \App\Models\DeductionCategory::levelMapOfCriteria($eventner->id);
 
+        // Pengurangan tingkat kini punya dimensi babak; sanksi fase grup tidak
+        // boleh ikut memotong peringkat final. Babak NULL = semua babak.
+        $deductionRoundMap = \App\Models\DeductionCategory::roundMapOfCriteria($eventner->id);
+
         // Ambil semua kriteria beserta bobotnya untuk menghitung other_total
         $allCriteriaWeightMap = AssessmentCriteria::whereIn(
             'assessment_sub_category_id',
@@ -168,6 +172,7 @@ class ChampionCategoryController extends Controller
                 $allDeductions,
                 $allCriteriaWeightMap,
                 $deductionLevelMap,
+                $deductionRoundMap,
                 $competitionRound?->id
             );
         }
@@ -257,6 +262,7 @@ class ChampionCategoryController extends Controller
      * @param  Collection<string, Collection<int, ScoreDeduction>>  $allDeductions
      * @param  array<int, int|float|null>  $allCriteriaWeightMap
      * @param  array<int, int|null>  $deductionLevelMap  tingkat lomba tiap kriteria pengurangan ber-scope 'global'
+     * @param  array<int, int|null>  $deductionRoundMap  babak tiap kriteria pengurangan; null = semua babak
      * @return array<int, array<string, mixed>>
      */
     private function rankParticipants(
@@ -266,6 +272,7 @@ class ChampionCategoryController extends Controller
         Collection $allDeductions,
         array $allCriteriaWeightMap,
         array $deductionLevelMap = [],
+        array $deductionRoundMap = [],
         ?int $roundId = null
     ): array {
         // Babak ikut menyaring kriteria: kategori juara yang mencakup rubrik
@@ -306,6 +313,7 @@ class ChampionCategoryController extends Controller
                 $participant->competition_category_id,
                 $deductionLevelMap
             );
+            $deductions = \App\Models\DeductionCategory::applicableToRound($deductions, $deductionRoundMap, $roundId);
             $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 
             $participantScores[] = [

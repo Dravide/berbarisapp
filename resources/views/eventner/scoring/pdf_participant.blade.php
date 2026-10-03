@@ -153,7 +153,7 @@
                  yang dipanggil, dan pelatih harus bisa mencocokkan lembarnya
                  sendiri tanpa menanyakan urutan tampil ke panitia. --}}
             <td class="lbl">No. Undian</td>
-            <td class="val">{{ $registration->urutan_tampil ?? '—' }}</td>
+            <td class="val">{{ $nomorUndian ?? '—' }}</td>
             <td class="lbl">Jumlah Juri</td>
             <td>{{ $judges->isNotEmpty() ? $judges->count() : '—' }}</td>
         </tr>
