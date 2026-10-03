@@ -957,9 +957,16 @@ class Index extends Component
                     );
                     $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
 
+                    // 'total' = nilai BERSIH (bruto dikurangi sanksi), sama
+                    // dengan PDF rekap juara, Rekap Nilai, dan halaman juara
+                    // publik. Dulu yang tersimpan nilai bruto, jadi halaman ini
+                    // menampilkan angka berbeda dari PDF untuk peserta yang
+                    // kena pengurangan — dan urutannya pun ikut berbeda, karena
+                    // pengurut pertama memakai kolom yang sama.
                     $participantScores[] = [
                         'participant' => $participant,
-                        'total' => $total,
+                        'total' => $total - $totalDeduction,
+                        'gross_total' => $total,
                         'tiebreak_total' => $tiebreakTotal,
                         'other_total' => $otherTotal,
                         'deduction' => $totalDeduction,
