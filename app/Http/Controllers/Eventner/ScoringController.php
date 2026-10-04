@@ -13,6 +13,7 @@ use App\Models\DeductionCategory;
 use App\Models\Judge;
 use App\Models\Registration;
 use App\Models\ScoreDeduction;
+use App\Services\ScoreRecapBuilder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -367,6 +368,64 @@ class ScoringController extends Controller
             $registration,
             $roundId ?? $this->roundFor($registration),
         );
+    }
+
+    /**
+     * Rekap keseluruhan satu tingkat lomba: seluruh grup dan seluruh babaknya
+     * dalam satu berkas PDF.
+     *
+     * Angkanya datang dari ScoreRecapBuilder — sumber yang sama dengan layar
+     * Rekap Nilai. Menyalin perhitungannya ke sini akan membuat berkas cetak
+     * dan layar berbeda begitu salah satunya diperbaiki, dan yang dicetak
+     * panitia untuk rapat juara justru yang tak bisa diperiksa ulang.
+     *
+     * Dulu halaman Rekap Nilai punya tombol "Download CSV" per kategori yang
+     * memakai perhitungan sendiri (`downloadCsv()`): ia mengabaikan pemecahan per
+     * babak sehingga nilai penyisihan dan final dijumlahkan jadi satu peringkat
+     * yang tak pernah dinilai siapa pun — peserta yang tampil bagus di
+     * penyisihan lalu biasa saja di final masih muncul di puncak. Tombol di
+     * halaman itu kini memakai berkas ini. `downloadCsv()` sendiri masih hidup
+     * karena panel Input Nilai memakainya untuk ekspor spreadsheet mentah.
+     */
+    public function downloadRecapPdf(Request $request)
+    {
+        $eventner = Auth::user()->eventner;
+        if (!$eventner) {
+            abort(403, 'Anda bukan Eventner yang sah.');
+        }
+
+        $categoryId = $request->query('category_id');
+        if (!$categoryId) {
+            abort(400, 'Category ID diperlukan.');
+        }
+
+        // Tingkat wajib milik eventner ini, dan wajib tingkat ANAK: registrasi
+        // selalu menempel ke anak, jadi tingkat induk menghasilkan rekap hampa.
+        $category = CompetitionCategory::where('eventner_id', $eventner->id)->find($categoryId);
+        if (!$category) {
+            abort(404, 'Kategori lomba tidak ditemukan.');
+        }
+
+        $rekap = (new ScoreRecapBuilder)->build($eventner, (int) $category->id);
+
+        $pdf = Pdf::loadView('eventner.scoring.pdf_recap', [
+            'eventner' => $eventner,
+            'category' => $category,
+            'sections' => $rekap['sections'],
+            'hasRounds' => $rekap['hasRounds'],
+            'rounds' => $rekap['rounds'],
+        ])
+            // Lanskap: satu baris memuat peringkat, kontingen, pelatih, kolom
+            // tiap rubrik, plus tiga kolom angka. Potret memaksa kolom rubrik
+            // berdesakan sampai angkanya tak terbaca.
+            ->setPaper('a4', 'landscape')
+            ->setOption('margin-top', '10mm')
+            ->setOption('margin-bottom', '10mm')
+            ->setOption('margin-left', '8mm')
+            ->setOption('margin-right', '8mm');
+
+        $name = str_replace(['/', '\\'], '-', $category->name);
+        return $pdf->download('Rekap_Nilai_' . $name . '.pdf');
     }
 
     public function downloadParticipantPdf(Request $request)

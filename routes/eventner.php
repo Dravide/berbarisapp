@@ -54,6 +54,10 @@ Route::get('registration-fields', App\Livewire\Eventner\RegistrationField\Index:
 Route::get('bank-accounts', App\Livewire\Eventner\Settings\BankAccount::class)->name('eventner.bank-accounts.index');
 Route::get('signatures', App\Livewire\Eventner\Settings\Signature::class)->name('eventner.signatures.index');
 Route::get('score-recap', App\Livewire\Eventner\ScoreRecap\Index::class)->name('eventner.score-recap.index');
+// Rekap keseluruhan tingkat terpilih (?category_id=) — seluruh grup & babaknya
+// dalam satu berkas. Terpisah dari scoring/pdf-participant yang mencetak SATU
+// peserta untuk dipegang juri/pelatih.
+Route::get('score-recap/pdf', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadRecapPdf'])->name('eventner.score-recap.pdf');
 Route::get('scoring/csv', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadCsv'])->name('eventner.scoring.csv');
 Route::get('scoring/pdf-participant', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadParticipantPdf'])->name('eventner.scoring.pdf-participant');
 Route::get('scoring', App\Livewire\Eventner\Scoring\Index::class)->name('eventner.scoring.index');

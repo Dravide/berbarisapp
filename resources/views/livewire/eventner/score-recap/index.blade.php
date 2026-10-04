@@ -26,9 +26,16 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="card-title fw-semibold mb-0">Rekapitulasi Nilai per Kategori</h5>
                 @if($selectedCategoryId)
-                    <a href="{{ route('eventner.scoring.csv', ['category_id' => $selectedCategoryId]) }}"
-                       class="btn btn-sm btn-outline-danger" target="_blank">
-                        <i class="ti ti-file-type-csv me-1"></i> Download CSV
+                    {{-- Satu berkas untuk tingkat yang sedang dibuka: seluruh grup
+                         dan babaknya, peringkat per bagian. Tombol CSV per kategori
+                         yang dulu berdiri di sini sudah dibuang — ia menghitung
+                         sendiri tanpa memecah babak, jadi nilai penyisihan dan final
+                         terjumlah jadi satu peringkat yang tak pernah dinilai siapa
+                         pun. Tombol ini memakai perhitungan yang sama dengan tabel
+                         di bawahnya. --}}
+                    <a href="{{ route('eventner.score-recap.pdf', ['category_id' => $selectedCategoryId]) }}"
+                       class="btn btn-sm btn-danger" target="_blank">
+                        <i class="ti ti-file-type-pdf me-1"></i> Unduh Rekap Keseluruhan (PDF)
                     </a>
                 @endif
             </div>
