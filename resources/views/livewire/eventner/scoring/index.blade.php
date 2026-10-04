@@ -391,13 +391,34 @@
                                  sudah tahu babaknya, dan tanpa itu lembar yang
                                  tercetak ditentukan tebakan controller — bukan
                                  apa yang sedang dilihat operator. --}}
-                            <a href="{{ route('eventner.scoring.pdf-participant', array_filter([
-                                    'registration_id' => $selectedRegistration->id,
-                                    'round_id' => $selectedRoundId,
-                               ])) }}"
-                               class="btn btn-sm btn-light" target="_blank">
-                                <i class="ti ti-file-type-pdf text-danger me-1"></i> PDF
-                            </a>
+                            <div class="d-flex align-items-center gap-2">
+                                {{-- Peringatan nilai kosong persis di samping PDF:
+                                     apa yang menghalangi finalisasi dan apa yang
+                                     dipakai memutuskan juara berasal dari angka
+                                     yang sama, jadi tempatnya di sebelah lembar
+                                     yang mencetaknya.
+
+                                     Hanya kabar belum lengkap yang ditulis. Bila
+                                     semua terisi, tombolnya hilang sendiri —
+                                     tak perlu pujian yang memakan tempat. --}}
+                                @if($nilaiKosong['total'] > 0)
+                                    <button type="button"
+                                            class="btn btn-sm btn-warning fw-semibold"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#nilaiKosongModal">
+                                        <i class="ti ti-alert-triangle me-1"></i>
+                                        {{ $nilaiKosong['total'] }} nilai masih kosong
+                                    </button>
+                                @endif
+
+                                <a href="{{ route('eventner.scoring.pdf-participant', array_filter([
+                                        'registration_id' => $selectedRegistration->id,
+                                        'round_id' => $selectedRoundId,
+                                   ])) }}"
+                                   class="btn btn-sm btn-light" target="_blank">
+                                    <i class="ti ti-file-type-pdf text-danger me-1"></i> PDF
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -943,6 +964,51 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal rincian nilai kosong. Dipisah dari lencana di kepala lembar
+         supaya lencananya tetap satu baris walau yang kosong puluhan kriteria;
+         nama kriteria per juri baru ditulis di sini. --}}
+    @if($nilaiKosong['total'] > 0)
+        <div class="modal fade" id="nilaiKosongModal" tabindex="-1" aria-labelledby="nilaiKosongModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header bg-warning-subtle">
+                        <h5 class="modal-title fw-bold" id="nilaiKosongModalLabel">
+                            <i class="ti ti-alert-triangle text-warning me-2"></i>
+                            {{ $nilaiKosong['total'] }} nilai masih kosong
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted small">
+                            Peserta <strong>{{ $selectedRegistration->display_name }}</strong>
+                            @if($selectedRound)
+                                pada babak <strong>{{ $selectedRound->name }}</strong>
+                            @endif
+                            belum lengkap. Nilai yang masih kosong menghalangi finalisasi,
+                            jadi perbaiki dulu sebelum mengunci.
+                        </p>
+
+                        @foreach($nilaiKosong['judges'] as $baris)
+                            <div class="d-flex align-items-start gap-2 mb-3">
+                                <span class="badge bg-secondary-subtle text-secondary fw-semibold flex-shrink-0">
+                                    {{ $baris['judge']->name }}
+                                </span>
+                                <div class="d-flex flex-wrap gap-1">
+                                    @foreach($baris['criteria'] as $nama)
+                                        <span class="badge bg-warning-subtle text-warning">{{ $nama }}</span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
     {{-- Modal Buka Kunci — satu peserta × satu juri. --}}
     @if($showUnlockModal)

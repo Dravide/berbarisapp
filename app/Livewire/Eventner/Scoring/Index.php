@@ -770,6 +770,83 @@ class Index extends Component
             ->all();
     }
 
+    /**
+     * Nilai yang belum diisi untuk peserta terpilih, dipecah per juri.
+     *
+     * Dipakai lencana peringatan di samping tombol PDF. Sejak satu lembar
+     * dinilai beberapa juri, "masih ada nilai kosong?" bukan satu pertanyaan
+     * tunggal: tiap juri memegang lembarnya sendiri, dan yang menghalangi
+     * finalisasi adalah kriteria kosong milik juri yang bersangkutan. Karena
+     * itu pertanyaannya diajukan PER JURI, terhadap rubrik yang juri itu memang
+     * boleh isi — pintu yang sama dengan tablet juri dan ScoreFinalizationService.
+     *
+     * Sengaja BUKAN rubrik seluruh babak seperti yang dicetak PDF. Sejak rubrik
+     * bisa dibagi antar juri, kolom juri lain tercetak oranye "-" di lembar
+     * peserta padahal kriteria itu memang bukan tugasnya; menghitungnya sebagai
+     * kosong akan menuduh juri atas kriteria yang tak pernah boleh ia isi.
+     * Di acara yang belum membagi rubrik, kedua hitungan ini sama persis.
+     *
+     * Baris yang ada tapi nilainya kosong ikut dihitung belum dinilai — aturan
+     * yang sama dengan finalize() (ScoreFinalizationService.php:64): baris
+     * seperti itu memang tak bisa difinalisasi, dan hapus-lalu-isi ulang bukan
+     * yang diharapkan operator.
+     *
+     * @return array{total:int, judges:array<int, array{judge:Judge, criteria:array<string>}>}
+     */
+    private function nilaiKosong(): array
+    {
+        $kosong = ['total' => 0, 'judges' => []];
+
+        // Sandbox tak menyimpan apa pun, jadi tak ada yang bisa dilaporkan —
+        // peringatan di sana cuma menuduh nilai yang tak pernah ditulis.
+        if ($this->simulateMode || ! $this->selectedRegistration || count($this->judges) === 0) {
+            return $kosong;
+        }
+
+        // Satu query untuk seluruh juri peserta ini, lalu dikelompokkan.
+        $tersimpan = AssessmentScore::where('registration_id', $this->selectedRegistrationId)
+            ->where('eventner_id', $this->eventner->id)
+            ->whereIn('judge_id', collect($this->judges)->pluck('id'))
+            ->get()
+            ->groupBy('judge_id');
+
+        foreach ($this->judges as $judge) {
+            $rubrik = AssessmentCategory::rubrikUntukPeserta(
+                $this->eventner->id,
+                $this->selectedRegistration->competition_category_id ?? null,
+                $this->selectedRegistration->competition_series_id,
+                $this->selectedRoundId ? (int) $this->selectedRoundId : null,
+                (int) $judge->id,
+            )->get();
+
+            $nilai = $tersimpan->get($judge->id, collect())
+                ->pluck('score', 'assessment_criteria_id');
+
+            $kriteria = [];
+            foreach ($rubrik as $cat) {
+                foreach ($cat->subCategories as $sub) {
+                    foreach ($sub->criterias as $crit) {
+                        $value = $nilai[$crit->id] ?? null;
+
+                        if ($value === '' || $value === null) {
+                            // Nama kategori ikut ditulis: dua seri boleh memakai
+                            // nama kriteria yang sama, dan tanpa induknya daftar
+                            // kosong ini terbaca sebagai kriteria kembar.
+                            $kriteria[] = $crit->name;
+                        }
+                    }
+                }
+            }
+
+            if ($kriteria) {
+                $kosong['judges'][] = ['judge' => $judge, 'criteria' => $kriteria];
+                $kosong['total'] += count($kriteria);
+            }
+        }
+
+        return $kosong;
+    }
+
     public function saveScores()
     {
         if ($this->simulateMode) return;
@@ -1501,6 +1578,9 @@ class Index extends Component
         // kosong supaya pesannya bisa menyebut baris mana yang perlu diisi.
         $barisPenugasan = $this->view === 'scoring' ? $this->namaBarisPenugasan() : null;
 
+        // Nilai kosong hanya berguna saat satu lembar sedang terbuka.
+        $nilaiKosong = $this->view === 'scoring' ? $this->nilaiKosong() : ['total' => 0, 'judges' => []];
+
         return view('livewire.eventner.scoring.index', [
             'participants' => $participants,
             'selectedCategory' => $selectedCategory,
@@ -1512,6 +1592,7 @@ class Index extends Component
             'groupJudgeNames' => $this->judgesPerGroupRow(),
             'judgeGroupLabels' => $judgeGroupLabels,
             'barisPenugasan' => $barisPenugasan,
+            'nilaiKosong' => $nilaiKosong,
             'ungroupedCount' => $ungroupedCount,
             'totalCount' => (int) $groupCounts->sum() + $ungroupedCount,
             'finalistCount' => $this->finalistIds()->count(),
