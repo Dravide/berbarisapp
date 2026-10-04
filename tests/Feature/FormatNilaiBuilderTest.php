@@ -186,4 +186,53 @@ class FormatNilaiBuilderTest extends TestCase
             'Kategori pengurangan tidak boleh jadi yatim tanpa format nilai.'
         );
     }
+
+    /**
+     * Label kriteria bebas diketik. Dulu ia dropdown dengan tujuh pilihan tetap,
+     * jadi istilah panitia sendiri (mis. "Kurang Rapi") tidak bisa dipakai —
+     * dan karena itu tak pernah muncul lagi di modal kriteria lain.
+     */
+    public function test_label_bebas_diketik_dan_tersimpan_apa_adanya()
+    {
+        $eventner = $this->buatEventner();
+        $tingkat = $this->tingkat($eventner);
+        $sub = $this->subKategori($eventner, $tingkat, 'Ketepatan');
+
+        $this->actingAs($eventner->user);
+
+        Livewire::test(Builder::class)
+            ->call('openCriteriaModal', $sub->id)
+            ->set('labelGroups', [['label' => 'Kurang Rapi', 'scores' => '10']])
+            ->set('criteriaModalName', 'Kerapian')
+            ->call('saveCriteriaModal');
+
+        $kriteria = AssessmentCriteria::where('assessment_sub_category_id', $sub->id)->firstOrFail();
+
+        $this->assertSame('Kurang Rapi', $kriteria->score_options[0]['label']);
+    }
+
+    /**
+     * Saran label ikut memuat istilah yang sudah dipakai event ini, bukan cuma
+     * daftar bawaan — supaya label yang baru diketik bisa dipilih lagi di
+     * kriteria berikutnya tanpa salah eja.
+     */
+    public function test_saran_label_memuat_label_yang_sudah_dipakai_event()
+    {
+        $eventner = $this->buatEventner();
+        $tingkat = $this->tingkat($eventner);
+        $sub = $this->subKategori($eventner, $tingkat, 'Ketepatan');
+
+        $this->actingAs($eventner->user);
+
+        Livewire::test(Builder::class)
+            ->call('openCriteriaModal', $sub->id)
+            ->set('labelGroups', [['label' => 'Kurang Rapi', 'scores' => '10']])
+            ->set('criteriaModalName', 'Kerapian')
+            ->call('saveCriteriaModal');
+
+        $saran = Livewire::test(Builder::class)->get('labelSuggestions');
+
+        $this->assertContains('Kurang Rapi', $saran);
+        $this->assertContains('Sangat Baik', $saran, 'Saran bawaan harus tetap ada.');
+    }
 }

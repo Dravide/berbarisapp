@@ -1183,6 +1183,38 @@ class Builder extends Component
         return $preview;
     }
 
+    /**
+     * Saran label untuk datalist di modal kriteria.
+     *
+     * Label bebas diketik — saran cuma mempercepat pengetikan dan menjaga
+     * ejaannya seragam antar rubrik. Nilai yang tak ada di daftar tetap
+     * tersimpan apa adanya, jadi daftar ini tidak pernah menjadi batas.
+     *
+     * Label yang sudah dipakai panitia di event ini didahulukan supaya istilah
+     * miliknya sendiri muncul sebelum istilah bawaan.
+     *
+     * @return array<int, string>
+     */
+    #[Computed]
+    public function labelSuggestions(): array
+    {
+        $bawaan = ['Kurang', 'Cukup', 'Baik', 'Sangat Baik', 'Memuaskan', 'Istimewa'];
+
+        $dipakai = AssessmentCriteria::whereHas(
+            'subCategory.category',
+            fn ($q) => $q->where('eventner_id', $this->eventnerId)
+        )
+            ->pluck('score_options')
+            ->flatMap(fn ($options) => collect($options ?? [])
+                ->map(fn ($opt) => is_array($opt) ? trim((string) ($opt['label'] ?? '')) : '')
+                ->filter())
+            ->unique()
+            ->values()
+            ->all();
+
+        return array_values(array_unique([...$dipakai, ...$bawaan]));
+    }
+
     // ============================================================
     // DEDUCTION CATEGORIES & CRITERIA
     // ============================================================

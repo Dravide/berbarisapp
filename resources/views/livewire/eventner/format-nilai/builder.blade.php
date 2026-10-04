@@ -819,7 +819,17 @@
                         <button class="btn btn-sm btn-outline-secondary" wire:click="fillLabelPreset">⚡ Preset</button>
                     </div>
                 </div>
-                <p class="text-muted fs-3 mb-3">Kelompokkan nilai ke dalam label agar mudah dinilai juri. Kosongkan label untuk nilai biasa.</p>
+                <p class="text-muted fs-3 mb-3">Kelompokkan nilai ke dalam label agar mudah dinilai juri. Label bebas diketik — kosongkan untuk nilai biasa.</p>
+
+                {{-- Datalist, bukan daftar tetap: panitia mengetik istilahnya
+                     sendiri, dan saran di bawah hanya mempercepat pengetikan
+                     sekaligus menyeragamkan ejaan antar rubrik. Label yang
+                     sudah dipakai event ini muncul lebih dulu. --}}
+                <datalist id="labelSaran">
+                    @foreach($this->labelSuggestions as $saran)
+                        <option value="{{ $saran }}"></option>
+                    @endforeach
+                </datalist>
 
                 <table class="table table-sm align-middle mb-3 border">
                     <thead class="table-light">
@@ -833,15 +843,8 @@
                         @foreach($labelGroups as $idx => $group)
                         <tr>
                             <td>
-                                <select class="form-select form-select-sm" wire:model="labelGroups.{{ $idx }}.label">
-                                    <option value="">— Tanpa Label —</option>
-                                    <option value="Kurang">Kurang</option>
-                                    <option value="Cukup">Cukup</option>
-                                    <option value="Baik">Baik</option>
-                                    <option value="Sangat Baik">Sangat Baik</option>
-                                    <option value="Memuaskan">Memuaskan</option>
-                                    <option value="Istimewa">Istimewa</option>
-                                </select>
+                                <input type="text" class="form-control form-control-sm" list="labelSaran"
+                                       wire:model="labelGroups.{{ $idx }}.label" placeholder="Cth: Sangat Baik (boleh kosong)">
                             </td>
                             <td>
                                 <input type="text" class="form-control form-control-sm" wire:model="labelGroups.{{ $idx }}.scores" placeholder="Cth: 23, 30 atau rentang 0 – 25">
