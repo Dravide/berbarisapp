@@ -552,7 +552,7 @@
                                             @endif
                                         </td>
                                         <td class="text-end">
-                                            <span class="fw-bold fs-5 {{ $ps['rank'] <= 3 ? 'text-dark' : '' }}">{{ $ps['total'] }}</span>
+                                            <span class="fw-bold fs-5 {{ $ps['rank'] <= 3 ? 'text-dark' : '' }}">{{ \App\Support\ScoreOptions::format((float) $ps['total']) }}</span>
                                         </td>
                                     </tr>
                                 @endforeach

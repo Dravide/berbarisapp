@@ -478,8 +478,11 @@
                                     $val = $scores[$crit->id] ?? null;
                                     if ($val !== '' && $val !== null) {
                                         // Dikalikan bobot — sama seperti rekap panitia
-                                        // dan papan skor publik.
-                                        $categoryTotal += (int) $val * ($crit->weight ?? 1);
+                                        // dan papan skor publik. Opsi nilai bisa
+                                        // berpecahan ("8.2"), jadi dibaca lewat
+                                        // ScoreOptions::value() — cast (int) dulu
+                                        // membuang pecahannya diam-diam.
+                                        $categoryTotal += \App\Support\ScoreOptions::value($val) * ($crit->weight ?? 1);
                                     }
                                 }
                             }
@@ -488,7 +491,7 @@
                         <div class="card w-100 mb-4">
                             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                                 <h5 class="mb-0 text-white fw-semibold"><i class="ti ti-category me-2"></i>{{ $assessmentCat->name }}</h5>
-                                <span class="badge bg-white text-primary fw-semibold">Subtotal: {{ $categoryTotal }}</span>
+                                <span class="badge bg-white text-primary fw-semibold">Subtotal: {{ \App\Support\ScoreOptions::format($categoryTotal) }}</span>
                             </div>
                             <div class="card-body p-4">
                                 @foreach($assessmentCat->subCategories as $subCat)
@@ -646,14 +649,14 @@
                                                 $val = $scores[$crit->id] ?? null;
                                                 if ($val !== '' && $val !== null) {
                                                     // Dikalikan bobot, konsisten dengan subtotal di atas.
-                                                    $catSub += (int) $val * ($crit->weight ?? 1);
+                                                    $catSub += \App\Support\ScoreOptions::value($val) * ($crit->weight ?? 1);
                                                 }
                                             }
                                         }
                                     @endphp
                                     <div class="d-flex justify-content-between align-items-center py-2 {{ !$loop->last ? 'border-bottom' : '' }}">
                                         <span class="text-muted small fw-semibold text-truncate me-2">{{ $assessmentCat->name }}</span>
-                                        <span class="fw-semibold text-dark">{{ $catSub }}</span>
+                                        <span class="fw-semibold text-dark">{{ \App\Support\ScoreOptions::format($catSub) }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -668,7 +671,7 @@
                                                 <span class="badge {{ $selectedJudgeId == $jt['judge']->id ? 'bg-primary' : 'bg-light text-dark border' }} rounded-circle" style="width:8px;height:8px;"></span>
                                                 <span class="small fw-semibold">{{ $jt['judge']->name }}</span>
                                             </div>
-                                            <span class="fw-semibold {{ $selectedJudgeId == $jt['judge']->id ? 'text-primary' : 'text-dark' }}">{{ $jt['total'] }}</span>
+                                            <span class="fw-semibold {{ $selectedJudgeId == $jt['judge']->id ? 'text-primary' : 'text-dark' }}">{{ \App\Support\ScoreOptions::format((float) $jt['total']) }}</span>
                                         </div>
                                     @endforeach
                                     {{-- Combined total --}}
@@ -677,7 +680,7 @@
                                     @endphp
                                     <div class="d-flex justify-content-between align-items-center pt-3 mt-2 border-top border-2">
                                         <span class="fw-bold text-dark"><i class="ti ti-sum me-1"></i> Jumlah Semua Juri</span>
-                                        <span class="fw-bold text-primary fs-5">{{ $combinedTotal }}</span>
+                                        <span class="fw-bold text-primary fs-5">{{ \App\Support\ScoreOptions::format((float) $combinedTotal) }}</span>
                                     </div>
                                 </div>
                             @endif
@@ -754,7 +757,7 @@
                                     {{-- Deduction summary --}}
                                     <div class="d-flex justify-content-between align-items-center pt-2 border-top">
                                         <span class="fw-semibold text-danger small">Total Pengurangan</span>
-                                        <span class="fw-bold text-danger">-{{ $totalDeductionsKategori + $totalDeductionsGlobal }}</span>
+                                        <span class="fw-bold text-danger">-{{ \App\Support\ScoreOptions::format((float) $totalDeductionsKategori + $totalDeductionsGlobal) }}</span>
                                     </div>
 
                                     @if($deductionSaveStatus === 'saved')
@@ -788,19 +791,19 @@
                                         <p class="text-white text-opacity-75 small fw-semibold text-uppercase mb-2">Nilai Akhir</p>
                                         <div class="d-flex justify-content-between align-items-center mb-1">
                                             <span class="small">Nilai Juri</span>
-                                            <span class="fw-semibold">{{ $judgeTotals->sum('total') }}</span>
+                                            <span class="fw-semibold">{{ \App\Support\ScoreOptions::format((float) $judgeTotals->sum('total')) }}</span>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center mb-1">
                                             <span class="small">Pengurangan Kategori</span>
-                                            <span class="fw-semibold {{ $totalDeductionsKategori > 0 ? 'text-danger' : 'text-white text-opacity-50' }}">-{{ $totalDeductionsKategori }}</span>
+                                            <span class="fw-semibold {{ $totalDeductionsKategori > 0 ? 'text-danger' : 'text-white text-opacity-50' }}">-{{ \App\Support\ScoreOptions::format((float) $totalDeductionsKategori) }}</span>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                             <span class="small">Pengurangan Tingkat</span>
-                                            <span class="fw-semibold {{ $totalDeductionsGlobal > 0 ? 'text-danger' : 'text-white text-opacity-50' }}">-{{ $totalDeductionsGlobal }}</span>
+                                            <span class="fw-semibold {{ $totalDeductionsGlobal > 0 ? 'text-danger' : 'text-white text-opacity-50' }}">-{{ \App\Support\ScoreOptions::format((float) $totalDeductionsGlobal) }}</span>
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center pt-2 border-top border-light">
                                             <span class="fw-bold">NILAI AKHIR</span>
-                                            <span class="fw-bold fs-4">{{ $judgeTotals->sum('total') - $totalDeductions }}</span>
+                                            <span class="fw-bold fs-4">{{ \App\Support\ScoreOptions::format((float) $judgeTotals->sum('total') - $totalDeductions) }}</span>
                                         </div>
                                     </div>
                                 @endif

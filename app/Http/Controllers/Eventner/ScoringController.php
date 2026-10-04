@@ -129,7 +129,7 @@ class ScoringController extends Controller
             $criteriaTotals = [];
             foreach ($participantScores as $score) {
                 $cid = $score->assessment_criteria_id;
-                $criteriaTotals[$cid] = ($criteriaTotals[$cid] ?? 0) + (int) $score->score;
+                $criteriaTotals[$cid] = ($criteriaTotals[$cid] ?? 0) + \App\Support\ScoreOptions::value($score->score);
             }
 
             $categoryTotals = [];
@@ -402,7 +402,7 @@ class ScoringController extends Controller
         $criteriaTotals = [];
         foreach ($allScores as $score) {
             $cid = $score->assessment_criteria_id;
-            $criteriaTotals[$cid] = ($criteriaTotals[$cid] ?? 0) + (int) $score->score;
+            $criteriaTotals[$cid] = ($criteriaTotals[$cid] ?? 0) + \App\Support\ScoreOptions::value($score->score);
         }
 
         // Calculate totals
@@ -428,7 +428,7 @@ class ScoringController extends Controller
         $judgeScores = [];
         foreach ($allScores as $score) {
             if ($score->judge_id && $judgeIds->contains($score->judge_id)) {
-                $judgeScores[$score->judge_id][$score->assessment_criteria_id] = (int) $score->score;
+                $judgeScores[$score->judge_id][$score->assessment_criteria_id] = \App\Support\ScoreOptions::value($score->score);
             }
         }
 

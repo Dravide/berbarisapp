@@ -295,7 +295,7 @@ class ChampionCategoryController extends Controller
             foreach ($scores as $score) {
                 $weight = $criteriaMap[$score->assessment_criteria_id] ?? null;
                 if ($weight !== null) {
-                    $scoreVal = (int) $score->score * $weight;
+                    $scoreVal = \App\Support\ScoreOptions::value($score->score) * $weight;
                     $total += $scoreVal;
 
                     if (in_array($score->assessment_criteria_id, $firstSubCriteriaIds)) {
@@ -303,7 +303,7 @@ class ChampionCategoryController extends Controller
                     }
                 } else {
                     $weightOther = $allCriteriaWeightMap[$score->assessment_criteria_id] ?? 1;
-                    $otherTotal += (int) $score->score * $weightOther;
+                    $otherTotal += \App\Support\ScoreOptions::value($score->score) * $weightOther;
                 }
             }
 

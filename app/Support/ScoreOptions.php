@@ -67,4 +67,31 @@ class ScoreOptions
 
         return $max;
     }
+
+    /**
+     * Nilai satu skor tersimpan sebagai angka.
+     *
+     * `assessment_scores.score` bertipe varchar dan opsinya bebas diketik, jadi
+     * "8.2" sah tersimpan apa adanya. Setiap pembaca yang meng-cast (int)
+     * membuang pecahannya diam-diam — nilai yang diketik juri 8.2 muncul dan
+     * dijumlahkan sebagai 8, di panel maupun di peringkat juara. Karena itu
+     * pembacaan satu-satunya lewat pintu ini, bukan cast di tiap layar.
+     *
+     * Teks yang tak memuat angka (mis. "-" pada opsi kosong) terbaca 0.
+     */
+    public static function value(mixed $raw): float
+    {
+        return is_numeric($raw) ? (float) $raw : 0.0;
+    }
+
+    /**
+     * Ubah float jadi teks ringkas: 8.0 → "8", 8.25 → "8.25".
+     *
+     * Dipakai di teks yang berdampingan dengan angka lain (mis. "Subtotal"),
+     * supaya nilai bulat tidak tampil "8.00" tapi pecahan tetap utuh.
+     */
+    public static function format(float $value): string
+    {
+        return rtrim(rtrim(number_format($value, 2, '.', ''), '0'), '.');
+    }
 }

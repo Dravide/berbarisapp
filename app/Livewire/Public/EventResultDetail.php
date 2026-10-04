@@ -75,11 +75,11 @@ class EventResultDetail extends Component
             }
 
             $weight = (float) ($crit->weight ?? 1);
-            $weighted = (int) $score->score * $weight;
+            $weighted = \App\Support\ScoreOptions::value($score->score) * $weight;
 
             $rowsByJudge[$judgeId][$sub->id]['items'][] = [
                 'criteria' => $crit,
-                'score' => (int) $score->score,
+                'score' => \App\Support\ScoreOptions::value($score->score),
                 'weight' => $weight,
                 'weighted' => $weighted,
             ];
@@ -104,7 +104,7 @@ class EventResultDetail extends Component
         );
 
         $grandTotal = array_sum($judgeScores);
-        $totalDeduction = (int) $deductions->sum(fn ($d) => $d->magnitude);
+        $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
         $finalTotal = $grandTotal - $totalDeduction;
 
         return view('livewire.public.event-result-detail', [

@@ -201,12 +201,12 @@ class Index extends Component
                     // Filter: only calculate scores matching the champion category rubrics
                     if (isset($criteriaMap[$score->assessment_criteria_id])) {
                         $weight = $criteriaMap[$score->assessment_criteria_id];
-                        $total += (int) $score->score * $weight;
+                        $total += \App\Support\ScoreOptions::value($score->score) * $weight;
                     }
                 } else {
                     // Default: sum all criteria scores (weighted)
                     $weight = $score->assessmentCriteria->weight ?? 1;
-                    $total += (int) $score->score * $weight;
+                    $total += \App\Support\ScoreOptions::value($score->score) * $weight;
                 }
             }
 

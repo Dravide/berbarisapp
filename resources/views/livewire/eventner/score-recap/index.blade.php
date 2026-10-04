@@ -185,24 +185,24 @@
                                                         $catFinal = $catScore + $catDed;
                                                     @endphp
                                                     <td class="text-center">
-                                                        <span class="fw-semibold {{ $catFinal > 0 ? '' : 'text-muted' }}">{{ $catFinal }}</span>
+                                                        <span class="fw-semibold {{ $catFinal > 0 ? '' : 'text-muted' }}">{{ \App\Support\ScoreOptions::format($catFinal) }}</span>
                                                         @if($catDed < 0)
-                                                            <div class="text-danger fs-3" title="Pengurangan kategori ini">({{ $catDed }})</div>
+                                                            <div class="text-danger fs-3" title="Pengurangan kategori ini">({{ \App\Support\ScoreOptions::format($catDed) }})</div>
                                                         @endif
                                                     </td>
                                                 @endforeach
                                                 <td class="text-center">
-                                                    <span class="badge bg-primary fw-semibold fs-3 px-3">{{ $data['grandTotal'] }}</span>
+                                                    <span class="badge bg-primary fw-semibold fs-3 px-3">{{ \App\Support\ScoreOptions::format((float) $data['grandTotal']) }}</span>
                                                 </td>
                                                 <td class="text-center">
                                                     @if($data['totalDeduction'] < 0)
-                                                        <span class="badge bg-danger-subtle text-danger fw-semibold fs-3 px-3">{{ $data['totalDeduction'] }}</span>
+                                                        <span class="badge bg-danger-subtle text-danger fw-semibold fs-3 px-3">{{ \App\Support\ScoreOptions::format((float) $data['totalDeduction']) }}</span>
                                                     @else
                                                         <span class="text-muted">0</span>
                                                     @endif
                                                 </td>
                                                 <td class="text-center">
-                                                    <span class="badge {{ $data['finalScore'] >= $data['grandTotal'] ? 'bg-primary' : 'bg-dark' }} fw-semibold fs-3 px-3">{{ $data['finalScore'] }}</span>
+                                                    <span class="badge {{ $data['finalScore'] >= $data['grandTotal'] ? 'bg-primary' : 'bg-dark' }} fw-semibold fs-3 px-3">{{ \App\Support\ScoreOptions::format((float) $data['finalScore']) }}</span>
                                                 </td>
                                                 <td class="text-center">
                                                     <a href="{{ route('eventner.scoring.pdf-participant', array_filter(['registration_id' => $data['participant']->id, 'round_id' => $section['round_id'] ?? null])) }}"
@@ -226,7 +226,7 @@
                             <div class="card mb-0 bg-success-subtle border-0">
                                 <div class="card-body p-3 text-center">
                                     <p class="text-muted small mb-1 fw-semibold">Nilai Tertinggi</p>
-                                    <h3 class="fw-semibold text-success mb-0">{{ $scoringData->max('finalScore') }}</h3>
+                                    <h3 class="fw-semibold text-success mb-0">{{ \App\Support\ScoreOptions::format((float) $scoringData->max('finalScore')) }}</h3>
                                 </div>
                             </div>
                         </div>
@@ -234,7 +234,7 @@
                             <div class="card mb-0 bg-danger-subtle border-0">
                                 <div class="card-body p-3 text-center">
                                     <p class="text-muted small mb-1 fw-semibold">Nilai Terendah</p>
-                                    <h3 class="fw-semibold text-danger mb-0">{{ $scoringData->min('finalScore') }}</h3>
+                                    <h3 class="fw-semibold text-danger mb-0">{{ \App\Support\ScoreOptions::format((float) $scoringData->min('finalScore')) }}</h3>
                                 </div>
                             </div>
                         </div>

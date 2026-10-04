@@ -166,15 +166,15 @@ class ChampionCalculator
             foreach ($scores as $score) {
                 $weight = $criteriaMap[$score->assessment_criteria_id] ?? null;
                 if ($weight !== null) {
-                    $total += (int) $score->score * $weight;
+                    $total += \App\Support\ScoreOptions::value($score->score) * $weight;
                 } else {
                     $weightOther = $allCriteriaWeightMap[$score->assessment_criteria_id] ?? 1;
-                    $otherTotal += (int) $score->score * $weightOther;
+                    $otherTotal += \App\Support\ScoreOptions::value($score->score) * $weightOther;
                 }
 
                 $tbWeight = $tiebreakCriteriaMap[$score->assessment_criteria_id] ?? null;
                 if ($tbWeight !== null) {
-                    $tiebreakTotal += (int) $score->score * $tbWeight;
+                    $tiebreakTotal += \App\Support\ScoreOptions::value($score->score) * $tbWeight;
                 }
             }
 

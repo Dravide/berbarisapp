@@ -646,7 +646,7 @@ class Dashboard extends Component
             $total = 0;
             foreach ($scores as $score) {
                 $weight = $score->assessmentCriteria->weight ?? 1;
-                $total += (int) $score->score * $weight;
+                $total += \App\Support\ScoreOptions::value($score->score) * $weight;
             }
             $data[] = [
                 'name' => $participant->display_name,

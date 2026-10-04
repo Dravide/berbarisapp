@@ -112,7 +112,7 @@
                                     @if($p2['title'])
                                         <div class="badge bg-success-subtle text-success border border-success rounded-pill px-2 py-0 mt-1" style="font-size: 0.7rem;">{{ $p2['title'] }}</div>
                                     @endif
-                                    <div class="text-primary fw-semibold small mb-2 mt-1">{{ number_format($p2['total'], 0) }}</div>
+                                    <div class="text-primary fw-semibold small mb-2 mt-1">{{ \App\Support\ScoreOptions::format($p2['total']) }}</div>
                                     <div class="bg-secondary bg-opacity-25 border border-secondary border-opacity-25 rounded-top d-flex flex-column justify-content-center align-items-center w-100" style="height: 100px; min-height: 80px;">
                                         <span class="badge bg-secondary text-dark rounded-circle fs-5" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">2</span>
                                     </div>
@@ -133,7 +133,7 @@
                                     @if($p1['title'])
                                         <div class="badge bg-warning text-dark border border-warning rounded-pill px-2 py-0 mt-1" style="font-size: 0.75rem;">{{ $p1['title'] }}</div>
                                     @endif
-                                    <div class="text-primary fw-bold mb-2 mt-1">{{ number_format($p1['total'], 0) }}</div>
+                                    <div class="text-primary fw-bold mb-2 mt-1">{{ \App\Support\ScoreOptions::format($p1['total']) }}</div>
                                     <div class="bg-warning bg-opacity-25 border border-warning rounded-top d-flex flex-column justify-content-center align-items-center w-100" style="height: 140px; min-height: 110px;">
                                         <span class="badge bg-warning text-dark rounded-circle fs-4" style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;">1</span>
                                     </div>
@@ -151,7 +151,7 @@
                                     @if($p3['title'])
                                         <div class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2 py-0 mt-1" style="font-size: 0.7rem;">{{ $p3['title'] }}</div>
                                     @endif
-                                    <div class="text-primary fw-semibold small mb-2 mt-1">{{ number_format($p3['total'], 0) }}</div>
+                                    <div class="text-primary fw-semibold small mb-2 mt-1">{{ \App\Support\ScoreOptions::format($p3['total']) }}</div>
                                     <div class="bg-info-subtle border border-info-subtle rounded-top d-flex flex-column justify-content-center align-items-center w-100" style="height: 80px; min-height: 60px;">
                                         <span class="badge bg-info-subtle text-dark rounded-circle fs-5" style="width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center;">3</span>
                                     </div>
@@ -221,7 +221,7 @@
                                                 <small class="text-muted">NPSN: {{ $item['npsn'] }}</small>
                                             </td>
                                             <td class="text-end pe-4">
-                                                <span class="fw-semibold text-primary">{{ number_format($item['total'], 0) }}</span>
+                                                <span class="fw-semibold text-primary">{{ \App\Support\ScoreOptions::format($item['total']) }}</span>
                                             </td>
                                         </tr>
                                     @endforeach

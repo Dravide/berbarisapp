@@ -149,7 +149,7 @@
                                                 <i class="ti ti-award"></i> {{ $rank2['title'] }}
                                             </span>
                                         @endif
-                                        <span class="font-display font-extrabold text-primary text-sm">{{ number_format($rank2['total'], 0) }}</span>
+                                        <span class="font-display font-extrabold text-primary text-sm">{{ \App\Support\ScoreOptions::format($rank2['total']) }}</span>
                                     </a>
                                     <div class="w-full bg-slate-200 border border-slate-200/80 rounded-t-xl mt-3 flex items-center justify-center" style="height: 80px;">
                                         <span class="font-display text-3xl font-extrabold text-slate-400">2</span>
@@ -181,7 +181,7 @@
                                                 <i class="ti ti-award"></i> {{ $rank1['title'] }}
                                             </span>
                                         @endif
-                                        <span class="font-display font-extrabold text-primary text-base">{{ number_format($rank1['total'], 0) }}</span>
+                                        <span class="font-display font-extrabold text-primary text-base">{{ \App\Support\ScoreOptions::format($rank1['total']) }}</span>
                                     </a>
                                     <div class="w-full bg-amber-300 border border-amber-300/80 rounded-t-xl mt-3 flex items-center justify-center" style="height: 110px;">
                                         <span class="font-display text-4xl font-extrabold text-amber-500/80">1</span>
@@ -206,7 +206,7 @@
                                                 <i class="ti ti-award"></i> {{ $rank3['title'] }}
                                             </span>
                                         @endif
-                                        <span class="font-display font-extrabold text-primary text-sm">{{ number_format($rank3['total'], 0) }}</span>
+                                        <span class="font-display font-extrabold text-primary text-sm">{{ \App\Support\ScoreOptions::format($rank3['total']) }}</span>
                                     </a>
                                     <div class="w-full bg-sky-200 border border-sky-200/80 rounded-t-xl mt-3 flex items-center justify-center" style="height: 60px;">
                                         <span class="font-display text-3xl font-extrabold text-sky-400/80">3</span>
@@ -254,7 +254,7 @@
 
                                     {{-- Score --}}
                                     <div class="shrink-0 text-right">
-                                        <span class="font-display font-extrabold text-primary text-lg">{{ number_format($ps['total'], 0) }}</span>
+                                        <span class="font-display font-extrabold text-primary text-lg">{{ \App\Support\ScoreOptions::format($ps['total']) }}</span>
                                         <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider block">Skor</span>
                                     </div>
                                     <i class="ti ti-chevron-right text-on-surface-variant/60 shrink-0"></i>

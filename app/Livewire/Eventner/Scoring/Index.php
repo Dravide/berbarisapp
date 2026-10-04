@@ -1426,7 +1426,7 @@ class Index extends Component
 
                 foreach ($this->judges as $judge) {
                     $judgeScores = $allJudgeScores->get($judge->id, collect());
-                    $total = $judgeScores->sum(fn($s) => (int) $s->score * ($criteriaWeights[$s->assessment_criteria_id] ?? 1));
+                    $total = $judgeScores->sum(fn($s) => \App\Support\ScoreOptions::value($s->score) * ($criteriaWeights[$s->assessment_criteria_id] ?? 1));
                     $filled = $judgeScores->count();
                     $judgeTotals->push([
                         'judge' => $judge,

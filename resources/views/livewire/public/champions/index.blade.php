@@ -124,7 +124,7 @@
                                             @endif
                                         </td>
                                         <td class="text-end pe-4">
-                                            <span class="fw-semibold fs-3 text-primary">{{ number_format($ps['total'], 0) }}</span>
+                                            <span class="fw-semibold fs-3 text-primary">{{ \App\Support\ScoreOptions::format($ps['total']) }}</span>
                                         </td>
                                     </tr>
                                 @endforeach

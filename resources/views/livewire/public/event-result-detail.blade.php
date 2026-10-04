@@ -57,7 +57,7 @@
                 </div>
 
                 <div class="shrink-0 text-center sm:text-right">
-                    <span class="font-display text-3xl font-extrabold text-primary block">{{ number_format($finalTotal, 0) }}</span>
+                    <span class="font-display text-3xl font-extrabold text-primary block">{{ \App\Support\ScoreOptions::format($finalTotal) }}</span>
                     <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Total Poin Akhir</span>
                 </div>
             </div>
@@ -137,7 +137,7 @@
                                     <h4 class="text-sm font-bold text-deep-slate leading-tight">{{ $judge->name }}</h4>
                                 </div>
                                 <div class="shrink-0 text-right">
-                                    <span class="font-display font-extrabold text-primary text-lg">{{ number_format($judgeScores[$judge->id] ?? 0, 0) }}</span>
+                                    <span class="font-display font-extrabold text-primary text-lg">{{ \App\Support\ScoreOptions::format($judgeScores[$judge->id] ?? 0) }}</span>
                                     <span class="text-[9px] font-bold text-on-surface-variant uppercase tracking-wider block">Total Juri</span>
                                 </div>
                             </div>
@@ -150,14 +150,14 @@
                                             <div class="flex items-center gap-2 bg-surface-container-low px-4 py-2.5 border-b border-outline-variant/20">
                                                 <i class="ti ti-subtask text-primary text-sm"></i>
                                                 <span class="text-xs font-bold text-deep-slate">{{ $row['sub']->name }}</span>
-                                                <span class="ml-auto font-display font-bold text-primary text-sm">{{ number_format($row['subtotal'], 0) }}</span>
+                                                <span class="ml-auto font-display font-bold text-primary text-sm">{{ \App\Support\ScoreOptions::format($row['subtotal']) }}</span>
                                             </div>
                                             <div class="divide-y divide-outline-variant/20">
                                                 @foreach($row['items'] as $item)
                                                     <div class="flex items-center gap-3 px-4 py-2.5">
                                                         <span class="text-xs text-on-surface-variant flex-1 min-w-0">{{ $item['criteria']->name }}</span>
-                                                        <span class="text-xs font-semibold text-deep-slate shrink-0">{{ number_format($item['score'], 0) }} × {{ rtrim(rtrim(number_format($item['weight'], 2, '.', ''), '0'), '.') }}</span>
-                                                        <span class="font-display font-bold text-deep-slate text-sm w-14 text-right shrink-0">{{ number_format($item['weighted'], 0) }}</span>
+                                                        <span class="text-xs font-semibold text-deep-slate shrink-0">{{ \App\Support\ScoreOptions::format($item['score']) }} × {{ rtrim(rtrim(number_format($item['weight'], 2, '.', ''), '0'), '.') }}</span>
+                                                        <span class="font-display font-bold text-deep-slate text-sm w-14 text-right shrink-0">{{ \App\Support\ScoreOptions::format($item['weighted']) }}</span>
                                                     </div>
                                                 @endforeach
                                             </div>
@@ -197,15 +197,15 @@
                 <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-0 sm:justify-between">
                     <div class="flex items-center justify-between sm:block sm:text-center sm:flex-1">
                         <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider sm:block sm:mb-1">Total Gabungan Juri</span>
-                        <span class="font-display font-extrabold text-deep-slate text-xl sm:text-2xl">{{ number_format($grandTotal, 0) }}</span>
+                        <span class="font-display font-extrabold text-deep-slate text-xl sm:text-2xl">{{ \App\Support\ScoreOptions::format($grandTotal) }}</span>
                     </div>
                     <div class="flex items-center justify-between sm:block sm:text-center sm:flex-1">
                         <span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider sm:block sm:mb-1">Potongan</span>
-                        <span class="font-display font-extrabold {{ $totalDeduction > 0 ? 'text-red-500' : 'text-deep-slate' }} text-xl sm:text-2xl">-{{ number_format($totalDeduction, 0) }}</span>
+                        <span class="font-display font-extrabold {{ $totalDeduction > 0 ? 'text-red-500' : 'text-deep-slate' }} text-xl sm:text-2xl">-{{ \App\Support\ScoreOptions::format($totalDeduction) }}</span>
                     </div>
                     <div class="flex items-center justify-between sm:block sm:text-center sm:flex-1 border-t border-outline-variant/30 pt-3 sm:border-t-0 sm:pt-0">
                         <span class="text-[10px] font-bold text-primary uppercase tracking-wider sm:block sm:mb-1">Total Akhir</span>
-                        <span class="font-display font-extrabold text-primary text-2xl sm:text-3xl">{{ number_format($finalTotal, 0) }}</span>
+                        <span class="font-display font-extrabold text-primary text-2xl sm:text-3xl">{{ \App\Support\ScoreOptions::format($finalTotal) }}</span>
                     </div>
                 </div>
 
@@ -216,7 +216,7 @@
                             @foreach($deductions as $d)
                                 <div class="flex items-center justify-between text-xs">
                                     <span class="text-on-surface-variant">{{ $d->note ?: 'Potongan nilai' }}</span>
-                                    <span class="font-semibold text-red-500">-{{ number_format($d->magnitude, 0) }}</span>
+                                    <span class="font-semibold text-red-500">-{{ \App\Support\ScoreOptions::format($d->magnitude) }}</span>
                                 </div>
                             @endforeach
                         </div>

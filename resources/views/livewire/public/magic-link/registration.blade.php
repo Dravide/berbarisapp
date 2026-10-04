@@ -181,7 +181,7 @@
                                     $jid = $score->judge_id;
                                     $cid = $crit->subCategory?->assessment_category_id;
                                     if (!$cid) continue;
-                                    $weighted = (int) $score->score * (float) ($crit->weight ?? 1);
+                                    $weighted = \App\Support\ScoreOptions::value($score->score) * (float) ($crit->weight ?? 1);
                                     $scoreTable[$jid][$cid] = ($scoreTable[$jid][$cid] ?? 0) + $weighted;
                                 }
 
@@ -203,32 +203,32 @@
                                             @if($val !== null)
                                                 <div class="flex justify-between text-xs font-semibold text-on-surface-variant mb-1 ml-5">
                                                     <span>{{ $cat->name }}</span>
-                                                    <span class="text-deep-slate">{{ number_format($val, 0, ',', '.') }}</span>
+                                                    <span class="text-deep-slate">{{ \App\Support\ScoreOptions::format($val) }}</span>
                                                 </div>
                                             @endif
                                         @endforeach
                                         <div class="flex justify-between text-xs font-bold text-deep-slate ml-5 mt-2 border-t border-outline-variant/30 pt-1.5">
                                             <span>Subtotal Juri</span>
-                                            <span class="text-primary">{{ number_format($jTotal, 0, ',', '.') }}</span>
+                                            <span class="text-primary">{{ \App\Support\ScoreOptions::format($jTotal) }}</span>
                                         </div>
                                         @php $totalAllJudges += $jTotal; @endphp
                                     </div>
                                 @endforeach
                                 <div class="mt-4 p-3 bg-primary text-white rounded-lg flex justify-between items-center">
                                     <span class="font-bold text-xs">TOTAL KESELURUHAN</span>
-                                    <span class="font-extrabold text-sm">{{ number_format($totalAllJudges, 0, ',', '.') }}</span>
+                                    <span class="font-extrabold text-sm">{{ \App\Support\ScoreOptions::format($totalAllJudges) }}</span>
                                 </div>
-                                @php $totalDeduction = (int) $deductions->sum('amount'); @endphp
+                                @php $totalDeduction = (float) $deductions->sum('amount'); @endphp
                                 @if($deductions->isNotEmpty())
                                     @foreach($deductions as $deduction)
                                         <div class="flex justify-between text-xs font-semibold text-red-600 mb-1 ml-5 mt-2">
                                             <span>Pengurangan {{ $deduction->deductionCriteria?->name ?? 'Nilai' }}</span>
-                                            <span>-{{ number_format(abs($deduction->amount), 0, ',', '.') }}</span>
+                                            <span>-{{ \App\Support\ScoreOptions::format(abs((float) $deduction->amount)) }}</span>
                                         </div>
                                     @endforeach
                                     <div class="flex justify-between text-xs font-bold text-deep-slate ml-5 mt-2 border-t border-outline-variant/30 pt-1.5">
                                         <span>Total Setelah Pengurangan</span>
-                                        <span class="text-primary">{{ number_format($totalAllJudges - $totalDeduction, 0, ',', '.') }}</span>
+                                        <span class="text-primary">{{ \App\Support\ScoreOptions::format($totalAllJudges - $totalDeduction) }}</span>
                                     </div>
                                 @endif
                             </div>

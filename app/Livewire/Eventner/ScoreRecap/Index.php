@@ -525,7 +525,7 @@ class Index extends Component
             foreach ($participantScores as $score) {
                 $cid = $score->assessment_criteria_id;
                 $criteriaWeight = $score->assessmentCriteria->weight ?? 1;
-                $criteriaTotals[$cid] = ($criteriaTotals[$cid] ?? 0) + ((int) $score->score * $criteriaWeight);
+                $criteriaTotals[$cid] = ($criteriaTotals[$cid] ?? 0) + (\App\Support\ScoreOptions::value($score->score) * $criteriaWeight);
             }
 
             // Distribusikan pengurangan ke kategori penilaian targetnya.
