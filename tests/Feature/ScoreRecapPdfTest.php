@@ -269,6 +269,60 @@ class ScoreRecapPdfTest extends TestCase
         $this->assertSame('application/pdf', $res->headers->get('content-type'));
     }
 
+    /**
+     * Judul bagian hidup di dalam thead, bukan di atas tabel.
+     *
+     * Tabel rekap level ini boleh lebih tinggi dari satu halaman, dan dompdf
+     * hanya mengulang thead di halaman lanjutan. Judul yang berdiri sendiri di
+     * atas tabel akan tertinggal di halaman pertama — halaman kedua jadi penuh
+     * angka tanpa nama grup maupun babaknya.
+     */
+    public function test_judul_bagian_di_dalam_thead()
+    {
+        [$penyisihan] = $this->kriteriaBabak($this->penyisihan);
+        $this->nilai($this->regA, $penyisihan, '20');
+
+        $html = view('eventner.scoring.pdf_recap', [
+            'eventner' => $this->eventner,
+            'category' => $this->level,
+            'sections' => $this->rekap()['sections'],
+            'hasRounds' => true,
+            'rounds' => collect(),
+        ])->render();
+
+        $thead = substr($html, strpos($html, '<thead>'), strpos($html, '</thead>') - strpos($html, '<thead>'));
+
+        $this->assertStringContainsString('Penyisihan — Grup A', $thead,
+            'Judul babak + grup harus ikut tercetak ulang di tiap halaman.');
+        $this->assertStringContainsString('display: table-header-group', $html);
+    }
+
+    /**
+     * Blok bagian TIDAK dikunci utuh dalam satu halaman.
+     *
+     * page-break-inside: avoid pada blok yang lebih tinggi dari satu halaman
+     * tak bisa dipatuhi dompdf — seluruh tabelnya terdorong bulat ke halaman
+     * berikutnya dan menyisakan setengah halaman kosong. Inilah yang dulu
+     * membuat rekap tingkat padat seolah seluruhnya pindah ke laman 2.
+     */
+    public function test_bagian_tidak_dikunci_satu_halaman()
+    {
+        [$penyisihan] = $this->kriteriaBabak($this->penyisihan);
+        $this->nilai($this->regA, $penyisihan, '20');
+
+        $html = view('eventner.scoring.pdf_recap', [
+            'eventner' => $this->eventner,
+            'category' => $this->level,
+            'sections' => $this->rekap()['sections'],
+            'hasRounds' => true,
+            'rounds' => collect(),
+        ])->render();
+
+        $this->assertStringNotContainsString('.bagian { margin-bottom: 14px; page-break-inside: avoid; }', $html);
+        $this->assertStringContainsString('table.rekap tr { page-break-inside: avoid; }', $html,
+            'Baris peserta sendiri tetap tak boleh terpotong dua halaman.');
+    }
+
     /** Tingkat milik tenant lain tidak bisa direkap. */
     public function test_tingkat_tenant_lain_ditolak()
     {

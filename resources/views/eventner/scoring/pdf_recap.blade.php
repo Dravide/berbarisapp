@@ -28,12 +28,27 @@
         .judul-sub { background: #2c3e50; color: #f1c40f; text-align: center; padding: 5px; font-size: 10px; font-weight: bold; letter-spacing: 1px; margin-bottom: 10px; }
 
         /* BAGIAN (babak / grup) */
-        .bagian { margin-bottom: 14px; page-break-inside: avoid; }
-        .bagian-head { background: #ecf0f1; border-left: 4px solid #2c3e50; padding: 5px 8px; font-size: 10px; font-weight: bold; color: #2c3e50; }
-        .bagian-head .final { color: #b8860b; }
-        .bagian-note { padding: 4px 8px; font-size: 8px; color: #b8860b; background: #fef9e7; border-left: 4px solid #e67e22; }
+        /* Sengaja TIDAK page-break-inside: avoid. Blok yang lebih tinggi dari
+           satu halaman tak bisa dipatuhi dompdf, dan hasilnya seluruh tabel
+           terdorong bulat ke halaman berikutnya — grup padat meninggalkan
+           setengah halaman kosong lalu semua isinya pindah ke laman 2.
+           Tabelnya dibiarkan terpotong; yang dijaga justru bagian-bagiannya:
+           kepala babak/grup tak boleh terpisah dari tabelnya, header kolom
+           diulang di halaman lanjutan, dan satu baris peserta tak dipotong
+           jadi dua halaman. */
+        .bagian { margin-bottom: 14px; }
+        /* Judul bagian hidup di dalam thead, bukan di atas tabel, supaya
+           ikut tercetak ulang di halaman lanjutan — tabel yang kini boleh
+           dipotong akan kehilangan nama grupnya kalau judulnya di luar. */
+        table.rekap th.judul-bagian { background: #ecf0f1; border-left: 4px solid #2c3e50; border-right: none; color: #2c3e50; font-size: 10px; letter-spacing: 0; padding: 5px 8px; text-align: left; text-transform: none; }
+        table.rekap th.judul-bagian .final { color: #b8860b; }
+        .bagian-note { padding: 4px 8px; font-size: 8px; color: #b8860b; background: #fef9e7; border-left: 4px solid #e67e22; page-break-after: avoid; }
 
-        table.rekap { width: 100%; border-collapse: collapse; margin-top: 4px; }
+        table.rekap { width: 100%; border-collapse: collapse; margin-top: 4px; page-break-inside: auto; }
+        /* Header kolom dicetak ulang di tiap halaman lanjutan — tanpa ini
+           halaman kedua penuh angka tanpa judul kolom. */
+        table.rekap thead { display: table-header-group; }
+        table.rekap tr { page-break-inside: avoid; }
         table.rekap th { background: #2c3e50; color: #fff; padding: 4px 5px; font-size: 7px; font-weight: bold; text-transform: uppercase; border: 1px solid #1a1a2e; }
         table.rekap th.num { text-align: center; }
         table.rekap td { padding: 4px 5px; border: 1px solid #ddd; font-size: 9px; }
@@ -96,17 +111,7 @@
                 // yang perlu terbaca justru "babak ini kosong", bukan enam tabel
                 // kosong berjudul grup.
                 $adaPeserta = collect($block['groups'])->contains(fn ($g) => ($g['data'] ?? []) !== []);
-
-                // Judul babak hanya dicetak kalau tabel di bawahnya memang ada;
-                // tanpa ini berkasnya penuh judul tanpa isi.
-                $judulBabak = $block['label'] && $adaPeserta;
             @endphp
-
-            @if($judulBabak)
-                <div class="bagian-head">
-                    <span class="{{ $block['final'] ? 'final' : '' }}">{{ $block['final'] ? '★ ' : '' }}{{ $block['label'] }}</span>
-                </div>
-            @endif
 
             @if($block['label'] && ! $adaPeserta)
                 <div class="kosong">
@@ -117,16 +122,21 @@
             @endif
 
             @foreach($block['groups'] as $grup)
-                @php $rows = $grup['data'] ?? []; @endphp
-                @if($rows === [])
-                    @continue
-                @endif
+                @php
+                    $rows = $grup['data'] ?? [];
+                    if ($rows === []) {
+                        continue;
+                    }
+
+                    // Judul babak + grup digabung di satu baris: judul babaknya
+                    // dulu berdiri sendiri di atas tabel, dan begitu tabelnya
+                    // berlanjut ke halaman berikutnya judulnya tertinggal di
+                    // halaman pertama. Di dalam thead ia ikut tercetak ulang.
+                    $judulBagian = ($block['label'] ? $block['label'] . ' — ' : '') . $grup['label'];
+                    $jumlahKolom = 3 + count($grup['assessmentCategories']) + 3;
+                @endphp
 
                 <div class="bagian">
-                    <div class="bagian-head">
-                        <span class="final">{{ $block['label'] ? $block['label'] . ' — ' : '' }}{{ $grup['label'] }}</span>
-                    </div>
-
                     @if($grup['tanpa_rubrik'] ?? false)
                         <div class="bagian-note">
                             {{ $grup['label'] }} belum punya format penilaian, jadi kolom nilainya kosong.
@@ -135,6 +145,12 @@
 
                     <table class="rekap">
                         <thead>
+                            <tr>
+                                <th colspan="{{ $jumlahKolom }}" class="judul-bagian">
+                                    @if($block['final'] ?? false)<span class="final">★</span>@endif
+                                    {{ $judulBagian }}
+                                </th>
+                            </tr>
                             <tr>
                                 <th style="width: 30px;" class="num">Rank</th>
                                 <th style="width: 150px;">Kontingen</th>
