@@ -299,4 +299,29 @@ class PanitiaEntryTest extends TestCase
 
         $this->assertNull(Eventner::factory()->create(['panitia_token' => null])->panitiaEntryUrl());
     }
+
+    /**
+     * Link yang masa berlakunya habis harus DIKATAKAN di modal.
+     *
+     * Tanpa ini, "Buat Akses" pada event yang tanggalnya sudah lewat
+     * menghasilkan link yang 404 begitu dibuka, dan pemilik event tak punya
+     * cara tahu sebabnya dari dashboard.
+     */
+    public function test_modal_memperingatkan_link_kedaluwarsa()
+    {
+        $this->eventner->update(['tanggal' => now()->subMonths(3)->toDateString(), 'tanggal_akhir' => null]);
+
+        Livewire::actingAs($this->eventner->user)
+            ->test(JudgeIndex::class)
+            ->call('openPanitiaModal')
+            ->assertSee('Link ini tidak bisa dibuka');
+    }
+
+    public function test_modal_tidak_memperingatkan_saat_masih_berlaku()
+    {
+        Livewire::actingAs($this->eventner->user)
+            ->test(JudgeIndex::class)
+            ->call('openPanitiaModal')
+            ->assertDontSee('Link ini tidak bisa dibuka');
+    }
 }

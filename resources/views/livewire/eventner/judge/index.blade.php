@@ -244,7 +244,15 @@
 
     <!-- Modal Akses Entry Panitia (link + PIN) -->
     @if($showPanitiaModal)
-    @php $panitia = $this->panitiaEventner; @endphp
+    @php
+        $panitia = $this->panitiaEventner;
+        // Halaman /panitia/{token} 404 setelah masa berlaku link habis — aturan
+        // yang sama dengan tablet juri. Tanpa ditampilkan di sini, "Buat Akses"
+        // pada event yang tanggalnya sudah lewat menghasilkan link yang mati
+        // begitu dibuka, tanpa satu pun petunjuk sebabnya.
+        $batasPanitia = $panitia->judgeAccessExpiresAt();
+        $panitiaKedaluwarsa = $batasPanitia && now()->gt($batasPanitia);
+    @endphp
     <div class="modal fade show d-block" tabindex="-1" style="display:block; background-color: rgba(0,0,0,.5); z-index: 1050;">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -256,6 +264,21 @@
                 </div>
                 <div class="modal-body">
                     @if($panitia->panitia_token)
+                        @if($panitiaKedaluwarsa)
+                            <div class="alert alert-danger border-0 mb-3">
+                                <p class="fw-semibold mb-1">
+                                    <i class="ti ti-alert-triangle me-1"></i>
+                                    Link ini tidak bisa dibuka (404).
+                                </p>
+                                <p class="fs-3 mb-0">
+                                    Masa berlaku akses berakhir
+                                    <strong>{{ $batasPanitia->translatedFormat('d F Y') }}</strong>, dan tanggal itu sudah
+                                    lewat. Halaman entry menolak link kedaluwarsa — sama seperti tablet juri.
+                                    Perbarui tanggal event di pengaturan event bila lomba masih berjalan.
+                                </p>
+                            </div>
+                        @endif
+
                         <p class="text-muted fs-3 mb-1">Link entry (buka di laptop/HP petugas):</p>
                         <div class="input-group mb-3">
                             <input type="text" class="form-control" readonly
