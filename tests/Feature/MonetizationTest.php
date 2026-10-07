@@ -330,6 +330,86 @@ class MonetizationTest extends TestCase
             ->assertSee('Daftar Gratis');
     }
 
+    /**
+     * Paket gratis harus bisa dipilih lewat slug ASLINYA dari DB.
+     *
+     * Slug paket gratis ditentukan admin (produksi memakai 'gratis'), sementara
+     * komponen ini dulu mengunci literal 'free' di rules() dan di $plan awal.
+     * Akibatnya memilih paket gratis selalu ditolak "plan yang dipilih tidak
+     * valid" — paket termurah, di halaman yang justru jadi pintu masuk semua
+     * pendaftar.
+     */
+    public function test_pendaftaran_menerima_paket_gratis_lewat_slug_asli()
+    {
+        $gratis = SaasPlan::where('is_free', true)->firstOrFail();
+        $this->assertSame('gratis', $gratis->slug);
+
+        Livewire::test(\App\Livewire\Public\EventnerRegister::class)
+            ->assertSet('plan', 'gratis') // terpilih otomatis, tanpa ?plan=
+            ->set('name', 'Panitia Baru')
+            ->set('username', 'panitiabaru')
+            ->set('email', 'baru@example.test')
+            ->set('password', 'rahasiaku123')
+            ->set('password_confirmation', 'rahasiaku123')
+            ->set('nama_event', 'Lomba Uji')
+            ->set('lokasi', 'Bandung')
+            ->set('agreeTerms', true)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('eventners', [
+            'nama_event' => 'Lomba Uji',
+            'plan' => 'free',
+        ]);
+    }
+
+    /** Slug paket gratis dari query param (tautan halaman harga) juga diterima. */
+    public function test_pendaftaran_menerima_slug_gratis_dari_query_param()
+    {
+        Livewire::withQueryParams(['plan' => 'gratis'])
+            ->test(\App\Livewire\Public\EventnerRegister::class)
+            ->assertSet('plan', 'gratis');
+    }
+
+    /** Paket gratis yang dinamai admin lain tetap gratis — penentu is_free. */
+    public function test_paket_gratis_ber_slug_lain_tetap_diperlakukan_gratis()
+    {
+        SaasPlan::where('is_free', true)->update(['is_active' => false]);
+        SaasPlan::create([
+            'name' => 'Coba Dulu', 'slug' => 'coba-dulu',
+            'price' => 0, 'registration_fee' => 0,
+            'is_active' => true, 'is_free' => true, 'is_contact' => false, 'sort_order' => 1,
+        ]);
+
+        Livewire::test(\App\Livewire\Public\EventnerRegister::class)
+            ->assertSet('plan', 'coba-dulu')
+            ->set('name', 'Panitia Kedua')
+            ->set('username', 'panitiakedua')
+            ->set('email', 'kedua@example.test')
+            ->set('password', 'rahasiaku123')
+            ->set('password_confirmation', 'rahasiaku123')
+            ->set('nama_event', 'Lomba Uji 2')
+            ->set('lokasi', 'Bogor')
+            ->set('agreeTerms', true)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('eventners', [
+            'nama_event' => 'Lomba Uji 2',
+            'plan' => 'free',
+            'saas_plan_id' => null,
+        ]);
+    }
+
+    /** Halaman harga menautkan slug asli, bukan literal 'free'. */
+    public function test_tautan_daftar_di_halaman_harga_memakai_slug_asli()
+    {
+        $this->get(route('pricing'))
+            ->assertOk()
+            ->assertSee('?plan=gratis', false)
+            ->assertDontSee('?plan=free', false);
+    }
+
     public function test_admin_pricing_settings_page_saves_plan()
     {
         $admin = User::factory()->admin()->create();
@@ -480,7 +560,8 @@ class MonetizationTest extends TestCase
     public function test_eventner_baru_tidak_langsung_mengaktifkan_voting()
     {
         Livewire::test(\App\Livewire\Public\EventnerRegister::class)
-            ->set('plan', 'free')
+            // Tidak menyetel plan: paket gratis sudah terpilih sendiri dari DB.
+            // Menyetelnya ke literal 'free' justru ditolak validasi.
             ->set('name', 'Panitia Baru')
             ->set('username', 'panitia_vote')
             ->set('email', 'vote@example.com')

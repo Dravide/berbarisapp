@@ -25,7 +25,7 @@ class EventnerRegister extends Component
     public $password_confirmation = '';
     public $nama_event = '';
     public $lokasi = '';
-    public $plan = 'free';
+    public $plan = '';
     public $agreeTerms = false;
 
     // Payment state
@@ -37,16 +37,27 @@ class EventnerRegister extends Component
 
     public function mount()
     {
+        // Paket gratis dipilih dari DB, bukan dari literal 'free': slug paket
+        // gratis bisa apa saja (produksi memakai 'gratis'), dan literal 'free'
+        // membuat Rule::in menolaknya — "plan yang dipilih tidak valid".
+        $this->plan = $this->freePlan()?->slug ?? '';
+
         // Pre-select dari query param (?plan=slug)
         if (request()->query('plan')) {
             $this->plan = request()->query('plan');
         }
     }
 
+    /** Paket yang menggratiskan pendaftaran (is_free), kalau admin punya. */
+    private function freePlan(): ?SaasPlan
+    {
+        return SaasPlan::where('is_active', true)->where('is_free', true)->orderBy('sort_order')->first();
+    }
+
     public function rules(): array
     {
         $slugs = array_merge(
-            ['free'],
+            array_filter([$this->freePlan()?->slug]),
             SaasPlan::where('is_active', true)->where('is_free', false)->where('is_contact', false)->pluck('slug')->all()
         );
 
@@ -62,13 +73,20 @@ class EventnerRegister extends Component
         ];
     }
 
+    /**
+     * Paket berbayar yang dipilih; null berarti paket gratis.
+     *
+     * Dicocokkan lewat is_free, bukan lewat slug: pemilik event boleh menamai
+     * paket gratisnya apa saja, dan yang menentukan gratis adalah centang
+     * is_free di halaman Paket Harga.
+     */
     private function selectedPlan(): ?SaasPlan
     {
-        if ($this->plan === 'free') {
-            return null;
-        }
-
-        return SaasPlan::where('is_active', true)->where('is_free', false)->where('is_contact', false)->where('slug', $this->plan)->first();
+        return SaasPlan::where('is_active', true)
+            ->where('is_contact', false)
+            ->where('slug', $this->plan)
+            ->where('is_free', false)
+            ->first();
     }
 
     public function updated($propertyName)

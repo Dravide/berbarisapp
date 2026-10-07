@@ -97,7 +97,7 @@
                                 <i class="ti ti-message-circle"></i> Hubungi Admin
                             </a>
                         @elseif(!auth()->check())
-                            <a href="{{ route('register.eventner') }}{{ $plan['is_free'] ? '?plan=free' : '?plan=' . $plan['slug'] }}"
+                            <a href="{{ route('register.eventner') }}?plan={{ urlencode($plan['slug']) }}"
                                 class="{{ $plan['highlight'] ? 'btn-primary' : 'btn-ghost' }} w-full justify-center">
                                 {{ $plan['is_free'] ? 'Daftar Gratis' : 'Mulai Sekarang' }}
                             </a>
