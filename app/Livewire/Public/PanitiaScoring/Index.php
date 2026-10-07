@@ -95,7 +95,19 @@ class Index extends Component
             ->where('status', 'approved')
             ->first();
 
-        abort_if(! $eventner, 404);
+        if (! $eventner) {
+            // Halaman ini 404 karena TIGA sebab berbeda, dan dari luar semuanya
+            // tampak sama. Tanpa baris ini, "kenapa panitia tak bisa masuk"
+            // hanya bisa dijawab dengan menebak. Yang dicatat cuma potongan
+            // token — cukup untuk mencocokkan link yang dipakai, tak cukup
+            // untuk dipakai masuk kalau log-nya bocor.
+            Log::warning('Akses entry panitia ditolak: token tak cocok', [
+                'token_awal' => substr($token, 0, 6),
+                'ada_di_event_lain' => Eventner::where('panitia_token', $token)->exists(),
+            ]);
+
+            abort(404);
+        }
 
         // Batas masa berlaku link, sama dengan tablet juri: setelah lomba usai
         // link lama tidak boleh hidup selamanya. Alasan sebenarnya dicatat di
