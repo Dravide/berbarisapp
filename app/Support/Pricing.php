@@ -29,8 +29,7 @@ class Pricing
                 'id' => $p->id,
                 'name' => $p->name,
                 'slug' => $p->slug,
-                'price' => $p->price,
-                'registration_fee' => $p->registration_fee,
+                'price' => (int) $p->price,
                 'description' => $p->description,
                 'is_free' => $p->is_free,
                 'is_contact' => $p->is_contact,
@@ -51,13 +50,6 @@ class Pricing
         $plan = self::paidPlan();
 
         return $plan?->price ?? (int) Setting::get('eventner_plan_price', 150000);
-    }
-
-    public static function registrationFee(): int
-    {
-        $plan = self::paidPlan();
-
-        return $plan?->registration_fee ?? (int) Setting::get('eventner_registration_fee', 50000);
     }
 
     private static function paidPlan(): ?SaasPlan
@@ -112,7 +104,6 @@ class Pricing
             'name' => 'Gratis',
             'slug' => 'gratis',
             'price' => 0,
-            'registration_fee' => 0,
             'description' => 'Untuk mulai mengelola lomba',
             'is_free' => true,
             'highlight' => false,
@@ -127,10 +118,11 @@ class Pricing
             'name' => 'Event Penuh',
             'slug' => 'event-penuh',
             'price' => self::planPrice(),
-            'registration_fee' => self::registrationFee(),
             'description' => 'Bayar sekali, aktif selama event',
             'is_free' => false,
             'highlight' => true,
+            'is_contact' => false,
+            'contact_url' => null,
             'features' => collect(self::premiumFeatures())->pluck('key')->all(),
         ];
     }

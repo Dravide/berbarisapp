@@ -34,8 +34,8 @@ class Index extends Component
     public $site_font_sans = 'Inter';
     public $site_font_display = 'Plus Jakarta Sans';
 
-    // Biaya pendaftaran eventner
-    public $eventner_registration_fee = 50000;
+    // Biaya pendaftaran eventner sudah tidak ada: harga paket tunggal diatur
+    // per paket di /admin/pricing-settings (saas_plans.price).
 
     public function mount()
     {
@@ -52,9 +52,6 @@ class Index extends Component
         $this->site_accent_color = Setting::get('site_accent_color', '#a3e635');
         $this->site_font_sans = Setting::get('site_font_sans', 'Inter');
         $this->site_font_display = Setting::get('site_font_display', 'Plus Jakarta Sans');
-
-        // Biaya
-        $this->eventner_registration_fee = (int) Setting::get('eventner_registration_fee', 50000);
     }
 
     public function save()
@@ -75,7 +72,6 @@ class Index extends Component
         Setting::set('site_accent_color', $this->site_accent_color);
         Setting::set('site_font_sans', $this->site_font_sans);
         Setting::set('site_font_display', $this->site_font_display);
-        Setting::set('eventner_registration_fee', $this->eventner_registration_fee);
 
         if ($this->new_logo_dark) {
             if ($this->logo_dark_path) Storage::disk('public')->delete($this->logo_dark_path);

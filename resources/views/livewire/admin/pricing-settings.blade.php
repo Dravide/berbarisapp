@@ -53,7 +53,6 @@
                                 <tr>
                                     <th>Paket</th>
                                     <th>Harga</th>
-                                    <th>Biaya Daftar</th>
                                     <th>Fitur</th>
                                     <th>Urutan</th>
                                     <th>Status</th>
@@ -80,13 +79,6 @@
                                             @endif
                                         </td>
                                         <td>
-                                            @if($plan->is_contact)
-                                                <span class="text-muted">-</span>
-                                            @else
-                                                Rp {{ number_format($plan->registration_fee, 0, ',', '.') }}
-                                            @endif
-                                        </td>
-                                        <td>
                                             @if($plan->is_free)
                                                 <span class="text-muted fs-3">Dasar saja</span>
                                             @else
@@ -109,7 +101,7 @@
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="7" class="text-center text-muted py-4">Belum ada paket — halaman harga memakai paket bawaan (Gratis + Event Penuh).</td></tr>
+                                    <tr><td colspan="6" class="text-center text-muted py-4">Belum ada paket — halaman harga memakai paket bawaan (Gratis + Event Penuh).</td></tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -146,12 +138,7 @@
                                     <input type="number" class="form-control @error('price') is-invalid @enderror" wire:model="price" min="0" step="1000" @disabled($is_free || $is_contact)>
                                     @error('price') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     @if($is_contact) <div class="form-text">Harga disepakati langsung dengan admin.</div> @endif
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Biaya Pendaftaran (Rp)</label>
-                                    <input type="number" class="form-control @error('registration_fee') is-invalid @enderror" wire:model="registration_fee" min="0" step="1000" @disabled($is_free || $is_contact)>
-                                    @error('registration_fee') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                                    <div class="form-text">Dibayar saat mendaftar dengan paket ini. 0 = gratis.</div>
+                                    <div class="form-text">Satu-satunya harga paket — ditagih sekali via QRIS, dan divalidasi webhook.</div>
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Deskripsi Singkat</label>

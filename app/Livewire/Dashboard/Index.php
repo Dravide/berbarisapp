@@ -23,7 +23,7 @@ class Index extends Component
         if (!$user->is_active && $user->role === 'Eventner') {
             $this->eventner = $user->eventner;
             if ($this->eventner && $this->eventner->plan === 'paid' && $this->eventner->status === 'pending') {
-                $this->paymentAmount = (int) \App\Models\Setting::get('eventner_registration_fee', 50000);
+                $this->paymentAmount = (int) \App\Models\Setting::get('eventner_plan_price', 150000);
             }
             return;
         }
@@ -47,7 +47,11 @@ class Index extends Component
 
         try {
             $autoGoPay = app(AutoGoPay::class);
-            $fee = (int) \App\Models\Setting::get('eventner_registration_fee', 50000);
+            // Harga paket yang dipasang ke eventner ini — sama dengan yang
+            // divalidasi webhook ($eventner->saasPlan->price), supaya nominal
+            // QRIS tidak lagi ditolak saat settlement.
+            $fee = (int) ($this->eventner->saasPlan?->price
+                ?? \App\Models\Setting::get('eventner_plan_price', 150000));
             $result = $autoGoPay->generateQris($fee);
 
             if ($result['success'] ?? false) {

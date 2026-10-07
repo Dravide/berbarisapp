@@ -45,7 +45,7 @@ class PaymentLifecycleTest extends TestCase
     {
         return SaasPlan::create([
             'name' => 'Event Penuh', 'slug' => 'penuh-' . uniqid(),
-            'price' => $harga, 'registration_fee' => 50000,
+            'price' => $harga, 'registration_fee' => 0,
             'is_active' => true, 'is_free' => false, 'is_contact' => false, 'sort_order' => 1,
         ]);
     }

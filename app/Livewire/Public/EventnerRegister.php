@@ -115,7 +115,12 @@ class EventnerRegister extends Component
         $this->validate();
 
         $paidPlan = $this->selectedPlan();
-        $fee = $paidPlan?->registration_fee ?? 0;
+
+        // Satu-satunya harga paket = kolom price. Dulu di sini ditagih
+        // registration_fee (50.000) sementara webhook memvalidasi ke price
+        // (150.000), jadi settlement selalu ditolak diam-diam dan akun
+        // menggantung sampai pengguna menekan "Cek Pembayaran".
+        $fee = $paidPlan?->price ?? 0;
 
         $user = User::create([
             'name' => $this->name,

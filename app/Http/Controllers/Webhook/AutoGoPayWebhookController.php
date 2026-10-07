@@ -134,18 +134,23 @@ class AutoGoPayWebhookController extends Controller
         // Tanpa ini, payload bertanda tangan dengan transaction_id benar tapi
         // amount palsu tetap mengaktifkan paket.
         //
+        // Yang dibandingkan adalah kolom price — satu-satunya harga paket.
+        // Semua tempat yang menagih QRIS (daftar, dashboard, upgrade) memakai
+        // harga yang sama, jadi settlement tidak lagi ditolak diam-diam hanya
+        // karena penagih memakai registration_fee yang lebih kecil.
+        //
         // Catatan: bila QR lama digenerasi ulang, settle untuk QR yang sudah
         // mati tidak lagi menemukan eventner (transaction id-nya sudah
         // diganti), jadi tidak ada aktivasi ganda.
-        $expected = $eventner->saasPlan?->price
-            ?? (int) Setting::get('eventner_plan_price', 150000);
+        $expected = (int) ($eventner->saasPlan?->price
+            ?? Setting::get('eventner_plan_price', 150000));
         $paidAmount = $transactionData['amount'] ?? null;
 
         if ($paidAmount !== null && (int) $paidAmount < (int) $expected) {
             Log::warning('Eventner webhook: amount mismatch', [
                 'transaction_id' => $transactionId,
                 'eventner_id' => $eventner->id,
-                'expected' => (int) $expected,
+                'expected' => $expected,
                 'paid' => (int) $paidAmount,
             ]);
 

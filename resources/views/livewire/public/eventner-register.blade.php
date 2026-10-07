@@ -131,7 +131,7 @@
                     <div>
                         <div class="flex items-baseline justify-between">
                             <span class="block text-sm font-semibold text-deep-slate">Pilih Paket <span class="text-error">*</span></span>
-                            <span class="text-xs text-on-surface-variant">Biaya pendaftaran, dibayar sekali</span>
+                            <span class="text-xs text-on-surface-variant">Sekali bayar per event</span>
                         </div>
 
                         <div class="mt-3 grid gap-3 sm:grid-cols-2">
@@ -157,7 +157,7 @@
 
                                     <div class="mt-3">
                                         <span class="font-display text-xl font-extrabold {{ $selected ? 'text-primary' : 'text-deep-slate' }}">
-                                            Rp {{ number_format($planOption->registration_fee, 0, ',', '.') }}
+                                            Rp {{ number_format($planOption->price, 0, ',', '.') }}
                                         </span>
                                         @if($planOption->highlight)
                                             <span class="chip ml-1 align-middle">Rekomendasi</span>

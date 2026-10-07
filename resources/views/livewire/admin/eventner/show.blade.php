@@ -336,9 +336,6 @@
                                         Paket gratis
                                     @else
                                         Rp {{ number_format($eventner->saasPlan->price, 0, ',', '.') }}
-                                        @if($eventner->saasPlan->registration_fee > 0)
-                                            + daftar Rp {{ number_format($eventner->saasPlan->registration_fee, 0, ',', '.') }}
-                                        @endif
                                         — sekali bayar per event
                                     @endif
                                 </p>

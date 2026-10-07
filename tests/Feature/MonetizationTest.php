@@ -408,6 +408,52 @@ class MonetizationTest extends TestCase
         ]);
     }
 
+    /**
+     * Nominal QRIS pendaftaran HARUS kolom price, bukan registration_fee.
+     *
+     * Dulu di sini ditagih registration_fee (50.000) sementara webhook
+     * memvalidasi ke price (150.000). Settlement selalu ditolak diam-diam,
+     * akun menggantung di status pending, dan hanya sembuh kalau pengguna
+     * menekan "Cek Pembayaran" — jalur polling yang tidak memeriksa nominal.
+     *
+     * Paketnya sengaja dipasang dengan registration_fee berbeda supaya
+     * perbedaan itu benar-benar terlihat kalau suatu saat kembali terpakai.
+     */
+    public function test_pendaftaran_menagih_harga_paket_bukan_biaya_daftar()
+    {
+        $this->fakeAutoGoPay();
+
+        SaasPlan::where('is_active', true)->update(['is_active' => false]);
+        SaasPlan::create([
+            'name' => 'Gratis', 'slug' => 'gratis-tagih',
+            'price' => 0, 'registration_fee' => 0,
+            'is_active' => true, 'is_free' => true, 'is_contact' => false, 'sort_order' => 0,
+        ]);
+        SaasPlan::create([
+            'name' => 'Event Penuh', 'slug' => 'penuh-tagih',
+            'price' => 150000, 'registration_fee' => 50000,
+            'is_active' => true, 'is_free' => false, 'is_contact' => false, 'sort_order' => 1,
+        ]);
+
+        Livewire::withQueryParams(['plan' => 'penuh-tagih'])
+            ->test(\App\Livewire\Public\EventnerRegister::class)
+            ->set('name', 'Panitia Tagih')
+            ->set('username', 'panitiatagih')
+            ->set('email', 'tagih@example.test')
+            ->set('no_hp', '0812 3456 7890')
+            ->set('password', 'rahasiaku123')
+            ->set('password_confirmation', 'rahasiaku123')
+            ->set('nama_event', 'Lomba Tagih')
+            ->set('lokasi', 'Bandung')
+            ->set('agreeTerms', true)
+            ->call('save')
+            ->assertHasNoErrors();
+
+        // Yang dikirim ke gateway harus price, bukan registration_fee.
+        Http::assertSent(fn ($request) => str_contains($request->url(), 'qris/generate')
+            && (int) $request['amount'] === 150000);
+    }
+
     /** Halaman harga menautkan slug asli, bukan literal 'free'. */
     public function test_tautan_daftar_di_halaman_harga_memakai_slug_asli()
     {
@@ -425,7 +471,6 @@ class MonetizationTest extends TestCase
             ->call('createPlan')
             ->set('name', 'Paket Standar')
             ->set('price', 250000)
-            ->set('registration_fee', 75000)
             ->set('sort_order', 3)
             ->set('plan_features.tickets', true)
             ->set('plan_features.certificate', false)
@@ -435,7 +480,6 @@ class MonetizationTest extends TestCase
         $plan = \App\Models\SaasPlan::where('name', 'Paket Standar')->first();
         $this->assertNotNull($plan);
         $this->assertEquals(250000, $plan->price);
-        $this->assertEquals(75000, $plan->registration_fee);
         $this->assertTrue($plan->features->pluck('feature_key')->contains('tickets'));
         $this->assertFalse($plan->features->pluck('feature_key')->contains('certificate'));
     }

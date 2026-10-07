@@ -17,7 +17,6 @@ class PricingSettings extends Component
     // Form paket
     public string $name = '';
     public $price = 0;
-    public $registration_fee = 0;
     public string $description = '';
     public bool $is_active = true;
     public bool $is_free = false;
@@ -49,7 +48,6 @@ class PricingSettings extends Component
         return [
             'name' => 'required|string|max:100',
             'price' => 'required|integer|min:0',
-            'registration_fee' => 'required|integer|min:0',
             'description' => 'nullable|string|max:255',
             'contact_url' => 'nullable|url|max:255',
             'sort_order' => 'required|integer|min:0',
@@ -70,7 +68,6 @@ class PricingSettings extends Component
         $this->planId = $plan->id;
         $this->name = $plan->name;
         $this->price = $plan->price;
-        $this->registration_fee = $plan->registration_fee;
         $this->description = (string) $plan->description;
         $this->is_active = $plan->is_active;
         $this->is_free = $plan->is_free;
@@ -98,7 +95,6 @@ class PricingSettings extends Component
             'name' => $this->name,
             'slug' => \Illuminate\Support\Str::slug($this->name) . '-' . strtolower(\Illuminate\Support\Str::random(5)),
             'price' => $this->is_free ? 0 : (int) $this->price,
-            'registration_fee' => $this->is_free ? 0 : (int) $this->registration_fee,
             'description' => $this->description ?: null,
             'is_active' => $this->is_active,
             'is_free' => $this->is_free,
@@ -152,7 +148,7 @@ class PricingSettings extends Component
 
     private function resetForm(): void
     {
-        $this->reset('planId', 'name', 'price', 'registration_fee', 'description', 'is_active', 'is_free', 'is_contact', 'contact_url', 'highlight', 'sort_order');
+        $this->reset('planId', 'name', 'price', 'description', 'is_active', 'is_free', 'is_contact', 'contact_url', 'highlight', 'sort_order');
         $this->is_active = true;
         $this->loadFeatureDefaults();
     }

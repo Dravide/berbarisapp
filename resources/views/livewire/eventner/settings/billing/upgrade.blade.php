@@ -200,9 +200,6 @@
                                 <p class="text-muted small mb-0">{{ $plan->description ?? 'Bayar sekali per event' }}</p>
                             </div>
                             <h3 class="fw-bold mb-1">Rp {{ number_format($plan->price, 0, ',', '.') }}</h3>
-                            @if($plan->registration_fee > 0)
-                                <p class="text-muted small mb-1">+ biaya pendaftaran Rp {{ number_format($plan->registration_fee, 0, ',', '.') }}</p>
-                            @endif
                             <p class="text-muted small mb-3">Sekali bayar, aktif selama event ini</p>
                             <ul class="list-unstyled d-flex flex-column gap-2 mb-4 small">
                                 <li><i class="ti ti-check text-success me-2"></i>Semua fitur paket gratis</li>
