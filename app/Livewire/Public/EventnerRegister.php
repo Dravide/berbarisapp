@@ -25,6 +25,7 @@ class EventnerRegister extends Component
     public $password_confirmation = '';
     public $nama_event = '';
     public $lokasi = '';
+    public $no_hp = '';
     public $plan = '';
     public $agreeTerms = false;
 
@@ -65,6 +66,12 @@ class EventnerRegister extends Component
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:users,username', 'regex:/^[a-z0-9_]+$/'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            // Wajib, tapi tidak harus unik: satu orang boleh punya lebih dari
+            // satu akun event (dua lomba berbeda), dan menolak nomor kedua
+            // membuat pemiliknya mengarang nomor palsu. Yang dijaga adalah
+            // bentuknya — sudah dalam bentuk normalisasi: 08 + 8..11 digit
+            // (nomor seluler Indonesia 10-13 digit).
+            'no_hp' => ['required', 'string', 'regex:/^08[0-9]{8,11}$/'],
             'password' => ['required', 'min:8', 'confirmed'],
             'nama_event' => ['required', 'string', 'max:255'],
             'lokasi' => ['required', 'string', 'max:255'],
@@ -91,11 +98,20 @@ class EventnerRegister extends Component
 
     public function updated($propertyName)
     {
+        // Nomor dirapikan DULU supaya yang divalidasi (dan yang tampil kembali
+        // di layar) adalah bentuk simpannya. Tanpa ini, "0812-3456-7890" yang
+        // diketik wajar ditolak regex yang menuntut digit polos.
+        if ($propertyName === 'no_hp') {
+            $this->no_hp = normalisasi_no_hp($this->no_hp) ?? '';
+        }
+
         $this->validateOnly($propertyName);
     }
 
     public function save()
     {
+        $this->no_hp = normalisasi_no_hp($this->no_hp) ?? '';
+
         $this->validate();
 
         $paidPlan = $this->selectedPlan();
@@ -105,6 +121,7 @@ class EventnerRegister extends Component
             'name' => $this->name,
             'username' => $this->username,
             'email' => $this->email,
+            'no_hp' => $this->no_hp,
             'password' => Hash::make($this->password),
             'role' => 'Eventner',
             'is_active' => $paidPlan === null, // free langsung aktif, paid nanti setelah bayar

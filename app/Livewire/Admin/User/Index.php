@@ -20,6 +20,7 @@ class Index extends Component
     public $name = '';
     public $username = '';
     public $email = '';
+    public $no_hp = '';
     public $password = '';
     public $role = 'Eventner';
     public $is_active = true;
@@ -66,7 +67,7 @@ class Index extends Component
 
     public function resetForm()
     {
-        $this->reset(['userId', 'name', 'username', 'email', 'password', 'role', 'is_active', 'isEditMode']);
+        $this->reset(['userId', 'name', 'username', 'email', 'no_hp', 'password', 'role', 'is_active', 'isEditMode']);
         $this->is_active = true;
         $this->resetValidation();
     }
@@ -75,6 +76,9 @@ class Index extends Component
     {
         $rules = [
             'name' => 'required|string|max:255',
+            // Opsional (akun lama & akun admin internal boleh kosong), tapi
+            // bila diisi harus berbentuk nomor yang bisa dihubungi.
+            'no_hp' => 'nullable|string|max:20',
             'role' => 'required|in:Admin,Eventner',
             'is_active' => 'boolean',
         ];
@@ -92,12 +96,18 @@ class Index extends Component
 
         $this->validate($rules);
 
+        // Simpan dalam bentuk yang seragam, sama seperti pendaftaran mandiri —
+        // admin yang mengetik "0812-3456-7890" tidak boleh menghasilkan nomor
+        // yang berbeda di daftar.
+        $noHp = normalisasi_no_hp($this->no_hp);
+
         if ($this->isEditMode) {
             $user = User::findOrFail($this->userId);
             $data = [
                 'name' => strip_tags($this->name),
                 'username' => strip_tags($this->username),
                 'email' => strip_tags($this->email),
+                'no_hp' => $noHp,
                 'role' => $this->role,
                 'is_active' => $this->is_active,
             ];
@@ -113,6 +123,7 @@ class Index extends Component
                 'name' => strip_tags($this->name),
                 'username' => strip_tags($this->username),
                 'email' => strip_tags($this->email),
+                'no_hp' => $noHp,
                 'password' => Hash::make($this->password),
                 'role' => $this->role,
                 'is_active' => $this->is_active,
@@ -134,6 +145,7 @@ class Index extends Component
         $this->name = $user->name;
         $this->username = $user->username;
         $this->email = $user->email;
+        $this->no_hp = $user->no_hp ?? '';
         $this->role = $user->role;
         $this->is_active = $user->is_active;
         $this->password = '';

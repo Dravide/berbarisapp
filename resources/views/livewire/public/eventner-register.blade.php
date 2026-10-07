@@ -227,6 +227,22 @@
                             </div>
                         </div>
 
+                        <div>
+                            <label for="no_hp" class="mb-1.5 block text-sm font-semibold text-deep-slate">
+                                Nomor HP <span class="text-error">*</span>
+                            </label>
+                            <input type="tel" wire:model.blur="no_hp" id="no_hp" inputmode="tel"
+                                   class="field-input w-full @error('no_hp') border-error @enderror"
+                                   placeholder="08123456789">
+                            @error('no_hp')
+                                <p class="mt-1.5 text-xs text-error">{{ $message }}</p>
+                            @else
+                                <p class="mt-1.5 text-xs text-on-surface-variant">
+                                    Nomor WhatsApp aktif. Dipakai admin untuk menghubungi Anda soal pendaftaran &amp; pembayaran.
+                                </p>
+                            @enderror
+                        </div>
+
                         <div class="grid gap-5 sm:grid-cols-2">
                             <div>
                                 <label for="password" class="mb-1.5 block text-sm font-semibold text-deep-slate">

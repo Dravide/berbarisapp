@@ -111,6 +111,43 @@ if (!function_exists('panitia_entry_url')) {
     }
 }
 
+if (!function_exists('normalisasi_no_hp')) {
+    /**
+     * Rapikan nomor HP Indonesia jadi bentuk tunggal: 08xxxxxxxxxx.
+     *
+     * Orang menuliskan nomornya dengan cara berbeda-beda — "+62 812-3456-7890",
+     * "0812 3456 7890", "6281234567890". Disimpan apa adanya, tiga bentuk itu
+     * jadi tiga nomor berbeda di database, dan admin yang menyalinnya ke
+     * WhatsApp harus menebak-nebak. Semuanya dinormalkan di sini.
+     *
+     * Bukan validasi: panjang dan awalan diperiksa oleh rules() pemanggil.
+     * Nomor yang tidak dikenali dikembalikan sebagai digit apa adanya supaya
+     * pengguna melihat kembali apa yang ia ketik, bukan string kosong.
+     */
+    function normalisasi_no_hp(?string $nomor): ?string
+    {
+        if ($nomor === null) {
+            return null;
+        }
+
+        // Buang semua kecuali digit; "+62 812-3456" → "628123456".
+        $digit = preg_replace('/\D+/', '', $nomor);
+
+        if ($digit === '') {
+            return null;
+        }
+
+        // 62… dan +62… → 0…; "8…" yang diketik tanpa awalan juga dilengkapi.
+        if (str_starts_with($digit, '62')) {
+            $digit = '0' . substr($digit, 2);
+        } elseif (str_starts_with($digit, '8')) {
+            $digit = '0' . $digit;
+        }
+
+        return $digit;
+    }
+}
+
 if (!function_exists('qr_data_uri')) {
     /**
      * QR sebagai data-URI PNG — siap dipakai di <img src> view dompdf.

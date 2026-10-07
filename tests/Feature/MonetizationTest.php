@@ -349,6 +349,7 @@ class MonetizationTest extends TestCase
             ->set('name', 'Panitia Baru')
             ->set('username', 'panitiabaru')
             ->set('email', 'baru@example.test')
+            ->set('no_hp', '0812-3456-7890')
             ->set('password', 'rahasiaku123')
             ->set('password_confirmation', 'rahasiaku123')
             ->set('nama_event', 'Lomba Uji')
@@ -360,6 +361,11 @@ class MonetizationTest extends TestCase
         $this->assertDatabaseHas('eventners', [
             'nama_event' => 'Lomba Uji',
             'plan' => 'free',
+        ]);
+        // Nomor diketik dengan tanda hubung; yang tersimpan harus digit polos.
+        $this->assertDatabaseHas('users', [
+            'email' => 'baru@example.test',
+            'no_hp' => '081234567890',
         ]);
     }
 
@@ -386,6 +392,7 @@ class MonetizationTest extends TestCase
             ->set('name', 'Panitia Kedua')
             ->set('username', 'panitiakedua')
             ->set('email', 'kedua@example.test')
+            ->set('no_hp', '0856 111 222')
             ->set('password', 'rahasiaku123')
             ->set('password_confirmation', 'rahasiaku123')
             ->set('nama_event', 'Lomba Uji 2')
@@ -565,6 +572,7 @@ class MonetizationTest extends TestCase
             ->set('name', 'Panitia Baru')
             ->set('username', 'panitia_vote')
             ->set('email', 'vote@example.com')
+            ->set('no_hp', '081234567899')
             ->set('password', 'password123')
             ->set('password_confirmation', 'password123')
             ->set('nama_event', 'Event Vote Baru')

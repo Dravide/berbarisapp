@@ -422,9 +422,26 @@
                                 <label class="text-muted fs-2 d-block mb-1">Username:</label>
                                 <div class="bg-light p-2 rounded fw-bold text-dark">{{ $eventner->user->username }}</div>
                             </div>
-                            <div>
+                            <div class="mb-3">
                                 <label class="text-muted fs-2 d-block mb-1">Email:</label>
                                 <div class="bg-light p-2 rounded fw-bold text-dark">{{ $eventner->user->email }}</div>
+                            </div>
+                            {{-- Kontak akun: inilah gunanya nomor ini — admin
+                                 menghubungi pemilik event soal verifikasi dan
+                                 pembayaran, dan tautan WhatsApp langsung
+                                 menghemat langkah menyalin nomor. --}}
+                            <div>
+                                <label class="text-muted fs-2 d-block mb-1">No. HP:</label>
+                                @if($eventner->user->no_hp)
+                                    <a href="https://wa.me/{{ preg_replace('/^0/', '62', $eventner->user->no_hp) }}"
+                                       target="_blank" rel="noopener"
+                                       class="bg-light p-2 rounded fw-bold text-dark d-inline-flex align-items-center gap-2 text-decoration-none">
+                                        {{ $eventner->user->no_hp }}
+                                        <i class="ti ti-brand-whatsapp text-success"></i>
+                                    </a>
+                                @else
+                                    <div class="bg-light p-2 rounded text-muted">Belum diisi</div>
+                                @endif
                             </div>
                         </div>
                     </div>

@@ -51,6 +51,7 @@
                             <th scope="col" class="ps-0">Nama</th>
                             <th scope="col">Username</th>
                             <th scope="col">Email</th>
+                            <th scope="col">No. HP</th>
                             <th scope="col">Role</th>
                             <th scope="col">Status</th>
                             <th scope="col" class="text-end">Aksi</th>
@@ -77,6 +78,18 @@
                                 </td>
                                 <td>
                                     <span class="fs-3">{{ $user->email }}</span>
+                                </td>
+                                <td>
+                                    @if($user->no_hp)
+                                        <a href="https://wa.me/{{ preg_replace('/^0/', '62', $user->no_hp) }}"
+                                           target="_blank" rel="noopener"
+                                           class="text-decoration-none d-inline-flex align-items-center gap-1">
+                                            <span class="fs-3">{{ $user->no_hp }}</span>
+                                            <i class="ti ti-brand-whatsapp text-success"></i>
+                                        </a>
+                                    @else
+                                        <span class="fs-3 text-muted">—</span>
+                                    @endif
                                 </td>
                                 <td>
                                     <span class="badge bg-{{ $user->role === 'Admin' ? 'primary' : 'info' }}-subtle text-{{ $user->role === 'Admin' ? 'primary' : 'info' }}">
@@ -155,6 +168,11 @@
                                 <label class="form-label">Email <span class="text-danger">*</span></label>
                                 <input type="email" class="form-control @error('email') is-invalid @enderror" wire:model="email" placeholder="Alamat email">
                                 @error('email') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">No. HP</label>
+                                <input type="tel" inputmode="tel" class="form-control @error('no_hp') is-invalid @enderror" wire:model="no_hp" placeholder="08123456789">
+                                @error('no_hp') <div class="invalid-feedback">{{ $message }}</div> @enderror
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">
