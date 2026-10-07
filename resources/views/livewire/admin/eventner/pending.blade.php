@@ -54,6 +54,9 @@
                                 </td>
                                 <td class="text-end">
                                     <div class="d-flex gap-1 justify-content-end">
+                                        <button type="button" class="btn btn-light btn-sm rounded-2" wire:click="openDetailModal({{ $e->id }})" title="Detail & kontak">
+                                            <i class="ti ti-info-circle"></i>
+                                        </button>
                                         <button type="button" class="btn btn-success btn-sm rounded-2" wire:click="approve({{ $e->id }})" wire:loading.attr="disabled">
                                             <i class="ti ti-check"></i> Setujui
                                         </button>
@@ -70,6 +73,104 @@
         @endif
     </div>
 </div>
+
+{{-- Detail & Kontak Modal --}}
+@if($showDetailModal && $detail)
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0">
+                    <h6 class="modal-title fw-semibold"><i class="ti ti-user-search text-primary me-1"></i> Detail Pendaftaran</h6>
+                    <button type="button" class="btn-close" wire:click="$set('showDetailModal', false)"></button>
+                </div>
+                <div class="modal-body">
+                    {{-- Kontak --}}
+                    <div class="mb-2 text-muted fs-2 fw-semibold text-uppercase">Kontak Pendaftar</div>
+                    <div class="list-group list-group-flush mb-4">
+                        <div class="list-group-item px-0 d-flex justify-content-between gap-3">
+                            <span class="text-muted"><i class="ti ti-user me-1"></i>Nama Penyelenggara</span>
+                            <span class="fw-semibold text-end">{{ $detail['penyelenggara'] ?: '—' }}</span>
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between gap-3">
+                            <span class="text-muted"><i class="ti ti-at me-1"></i>Username</span>
+                            <span class="fw-semibold text-end">{{ $detail['username'] ?: '—' }}</span>
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between gap-3">
+                            <span class="text-muted"><i class="ti ti-mail me-1"></i>Email</span>
+                            @if($detail['email'])
+                                <a href="mailto:{{ $detail['email'] }}" class="fw-semibold text-end text-decoration-none">{{ $detail['email'] }}</a>
+                            @else
+                                <span class="fw-semibold text-end">—</span>
+                            @endif
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between gap-3">
+                            <span class="text-muted"><i class="ti ti-brand-whatsapp me-1"></i>WhatsApp</span>
+                            @if($detail['whatsapp_url'])
+                                <a href="{{ $detail['whatsapp_url'] }}" target="_blank" rel="noopener" class="fw-semibold text-end text-decoration-none">{{ $detail['whatsapp'] }}</a>
+                            @else
+                                {{-- Nomor telepon tidak diminta saat mendaftar; isian ini
+                                     baru ada kalau eventner mengisi Tautan Tambahan. --}}
+                                <span class="text-muted text-end fst-italic">Belum diisi</span>
+                            @endif
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between gap-3">
+                            <span class="text-muted"><i class="ti ti-brand-instagram me-1"></i>Instagram</span>
+                            @if($detail['instagram'])
+                                <a href="{{ $detail['instagram'] }}" target="_blank" rel="noopener" class="fw-semibold text-end text-decoration-none text-truncate" style="max-width: 16rem;">{{ $detail['instagram'] }}</a>
+                            @else
+                                <span class="text-muted text-end fst-italic">Belum diisi</span>
+                            @endif
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between gap-3">
+                            <span class="text-muted"><i class="ti ti-brand-tiktok me-1"></i>TikTok</span>
+                            @if($detail['tiktok'])
+                                <a href="{{ $detail['tiktok'] }}" target="_blank" rel="noopener" class="fw-semibold text-end text-decoration-none text-truncate" style="max-width: 16rem;">{{ $detail['tiktok'] }}</a>
+                            @else
+                                <span class="text-muted text-end fst-italic">Belum diisi</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Info pendaftaran --}}
+                    <div class="mb-2 text-muted fs-2 fw-semibold text-uppercase">Info Pendaftaran</div>
+                    <div class="list-group list-group-flush">
+                        <div class="list-group-item px-0 d-flex justify-content-between gap-3">
+                            <span class="text-muted"><i class="ti ti-calendar-event me-1"></i>Tanggal Daftar</span>
+                            <span class="fw-semibold text-end">{{ $detail['terdaftar']->format('d/m/Y H:i') }}</span>
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between gap-3">
+                            <span class="text-muted"><i class="ti ti-route me-1"></i>Sumber</span>
+                            <span class="fw-semibold text-end">{{ $detail['sumber'] }}</span>
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between gap-3">
+                            <span class="text-muted"><i class="ti ti-package me-1"></i>Paket</span>
+                            <span class="fw-semibold text-end">{{ $detail['paket'] }}</span>
+                        </div>
+                        <div class="list-group-item px-0 d-flex justify-content-between gap-3">
+                            <span class="text-muted"><i class="ti ti-credit-card me-1"></i>Pembayaran</span>
+                            @if($detail['dibayar'])
+                                <span class="badge bg-success-subtle text-success-emphasis rounded-1">Sudah dibayar</span>
+                            @else
+                                <span class="badge bg-warning-subtle text-warning-emphasis rounded-1">Belum dibayar</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 justify-content-between">
+                    <button type="button" class="btn btn-secondary btn-sm rounded-2" wire:click="$set('showDetailModal', false)">Tutup</button>
+                    <div class="d-flex gap-1">
+                        <button type="button" class="btn btn-danger btn-sm rounded-2" wire:click="openRejectModal({{ $detail['id'] }})">
+                            <i class="ti ti-x"></i> Tolak
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm rounded-2" wire:click="approve({{ $detail['id'] }})">
+                            <i class="ti ti-check"></i> Setujui
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
 
 {{-- Reject Modal --}}
 @if($showRejectModal)
