@@ -1,3 +1,8 @@
+{{-- Modal detail & tolak HARUS di dalam elemen root ini: Livewire hanya
+     memorph root element, jadi modal yang ditaruh setelah </div> penutup
+     tidak pernah muncul setelah aksi wire:click. Pola yang sama dipakai
+     pricing-settings.blade.php dan school/show.blade.php. --}}
+<div>
 <div class="card">
     <div class="card-body">
         <div class="d-flex align-items-center justify-content-between mb-4">
@@ -200,3 +205,4 @@
         </div>
     </div>
 @endif
+</div>

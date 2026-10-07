@@ -90,4 +90,55 @@ class AdminPendingDetailTest extends TestCase
             ->assertSet('showDetailModal', false)
             ->assertSet('detail', null);
     }
+
+    /**
+     * Modal tolak juga harus ikut ter-render saat diminta.
+     *
+     * Dulu kedua modal ditulis SETELAH `</div>` penutup berkas, jadi berada
+     * di luar satu-satunya root element komponen. Livewire hanya memorph root
+     * element: server mengirim markup modalnya, tapi browser tidak pernah
+     * menampilkannya — tombolnya seolah tidak jalan, tanpa error apa pun.
+     */
+    public function test_modal_tolak_ter_render()
+    {
+        $eventner = Eventner::factory()->pending()->create();
+
+        Livewire::actingAs($this->admin())
+            ->test(Pending::class)
+            ->call('openRejectModal', $eventner->id)
+            ->assertSet('showRejectModal', true)
+            ->assertSee('Tolak Pendaftaran');
+    }
+
+    /**
+     * Penjaga regresi: seluruh markup komponen — modal termasuk — harus
+     * berada di dalam SATU root element. Menambah modal baru di luar `</div>`
+     * penutup akan menggagalkan test ini, bukan diam-diam tak tampil.
+     */
+    public function test_komponen_punya_satu_root_element()
+    {
+        $eventner = Eventner::factory()->pending()->create();
+
+        $html = Livewire::actingAs($this->admin())
+            ->test(Pending::class)
+            ->call('openDetailModal', $eventner->id)
+            ->html();
+
+        $dom = new \DOMDocument();
+        $dom->loadHTML($html, LIBXML_NOERROR);
+        $body = $dom->getElementsByTagName('body')->item(0);
+
+        $roots = 0;
+        foreach ($body->childNodes as $child) {
+            if ($child->nodeType === XML_ELEMENT_NODE) {
+                $roots++;
+            }
+        }
+
+        $this->assertSame(1, $roots, 'Komponen Livewire harus punya tepat satu root element.');
+
+        // Modal-nya benar-benar di dalam root itu, bukan saudara di luarnya.
+        $this->assertStringContainsString('modal fade show', $html);
+        $this->assertStringContainsString('wire:id', substr($html, 0, 100));
+    }
 }
