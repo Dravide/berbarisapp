@@ -324,4 +324,143 @@ class PanitiaEntryTest extends TestCase
             ->call('openPanitiaModal')
             ->assertDontSee('Link ini tidak bisa dibuka');
     }
+
+    /**
+     * Kartu akses panitia: link + QR + PIN dalam satu PDF.
+     *
+     * Isinya diperiksa lewat render view, bukan byte PDF — dompdf memampatkan
+     * aliran teksnya, jadi string match ke berkas PDF akan gagal walau isinya
+     * benar (pola yang sama dengan JudgeAccessCardTest).
+     */
+    public function test_kartu_panitia_memuat_link_qr_dan_pin()
+    {
+        // Tanggal event dipatok: masa berlaku hanya ikut tercetak bila event
+        // punya tanggal, dan asersi di bawah menuntut tanggal itu ada.
+        $this->eventner->update(['tanggal' => '2026-10-18', 'tanggal_akhir' => null]);
+
+        $this->actingAs($this->eventner->user)
+            ->get(route('eventner.judges.kartu-panitia'))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf');
+
+        $html = view('eventner.panitia.pdf_kartu_akses', [
+            'eventner' => $this->eventner,
+            'url' => $this->eventner->panitiaEntryUrl(),
+            'qrImage' => qr_data_uri($this->eventner->panitiaEntryUrl(), 12),
+        ])->render();
+
+        $this->assertStringContainsString('Kartu Akses Entry Nilai Panitia', $html);
+        $this->assertStringContainsString('entry.berbaris.test/panitia/tok-panitia-40', $html);
+        $this->assertStringContainsString('123456', $html);
+
+        // Harus PNG: dompdf membuang SVG diam-diam, dan kartu tanpa QR tetap
+        // terunduh tanpa keluhan — panitia baru sadar saat mencetaknya.
+        $this->assertStringContainsString('data:image/png;base64,', $html);
+
+        // Data-URI dilepas dulu sebelum mencari "svg": alfabet base64 PNG
+        // memuat huruf s, v, g, jadi string "svg" bisa muncul acak di dalam
+        // gambar yang sah dan tes gagal sesekali tanpa ada yang berubah.
+        $tanpaDataUri = preg_replace('#data:image/[a-z+]+;base64,[A-Za-z0-9+/=]+#', '', $html);
+
+        $this->assertStringNotContainsString('<svg', strtolower($tanpaDataUri));
+        $this->assertStringNotContainsString('image/svg', strtolower($tanpaDataUri));
+
+        // Masa berlaku ikut tercetak: halaman entry 404 sesudahnya, dan kartu
+        // tanpa tanggal membuat panitia mengira PIN-nya yang salah.
+        // (Dulu blok "Masa Berlaku" sendiri; sekarang satu langkah di daftar
+        // "Cara Membuka" supaya kartu tetap muat satu lembar.)
+        $this->assertStringContainsString('Halaman menolak dibuka?', $html);
+        $this->assertStringContainsString('18 Oktober 2026', $html);
+    }
+
+    /**
+     * Kartu harus SATU lembar — termasuk saat nama event & penyelenggara panjang.
+     *
+     * Kartu ini dicetak lalu diserahkan ke meja; lembar kedua yang cuma berisi
+     * ekor peringatan mudah terlewat, dan di situlah PIN-nya berada. Batasnya
+     * pernah kesentuh (nama panjang + banyak tempat = 2 halaman), jadi angkanya
+     * diuji, bukan dikira-kira.
+     */
+    public function test_kartu_panitia_satu_lembar_walau_nama_event_panjang()
+    {
+        $this->eventner->update([
+            'nama_event' => 'Kejuaraan Nasional Baris Berbaris, Ketangkasan, dan Variasi Formasi '
+                . 'Antar Sekolah Menengah Atas Serta Madrasah Aliyah Se-Indonesia Tahun Anggaran 2026',
+            'diselenggarakan_oleh' => 'Kementerian Pendidikan, Kebudayaan, Riset, dan Teknologi '
+                . 'Direktorat Jenderal Pendidikan Anak Usia Dini, Pendidikan Dasar, dan Pendidikan Menengah',
+            'tanggal' => '2026-10-18',
+            'tanggal_akhir' => '2026-10-21',
+            'venue' => 'GOR Padjadjaran / Stadion Si Jalak Harupat / Lapangan Gasibu',
+        ]);
+
+        $html = view('eventner.panitia.pdf_kartu_akses', [
+            'eventner' => $this->eventner,
+            'url' => $this->eventner->panitiaEntryUrl(),
+            'qrImage' => qr_data_uri($this->eventner->panitiaEntryUrl(), 12),
+        ])->render();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadHTML($html)
+            ->setPaper('a4', 'portrait')
+            ->output();
+
+        // Dompdf menulis /Type /Page untuk tiap halaman dan /Type /Pages untuk
+        // katalognya — polanya harus mengecualikan yang kedua.
+        $halaman = preg_match_all('#/Type\s*/Page[^s]#', $pdf);
+
+        $this->assertSame(1, $halaman, 'Kartu akses panitia harus muat satu lembar A4.');
+    }
+
+    /** Nama berkas ikut nama event, dan isinya bukan milik event lain. */
+    public function test_kartu_panitia_terpisah_per_event()
+    {
+        $lain = Eventner::factory()->create([
+            'user_id' => User::factory()->eventner()->create(['is_active' => true])->id,
+            'status' => 'approved',
+            'panitia_token' => 'tok-panitia-lain',
+            'panitia_pin' => '999999',
+        ]);
+
+        $this->actingAs($lain->user)
+            ->get(route('eventner.judges.kartu-panitia'))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf');
+
+        $html = view('eventner.panitia.pdf_kartu_akses', [
+            'eventner' => $lain,
+            'url' => $lain->panitiaEntryUrl(),
+            'qrImage' => qr_data_uri($lain->panitiaEntryUrl(), 12),
+        ])->render();
+
+        // Token & PIN event lain tidak boleh bocor ke kartu ini.
+        $this->assertStringNotContainsString('tok-panitia-40', $html);
+        $this->assertStringNotContainsString('123456', $html);
+        $this->assertStringContainsString('tok-panitia-lain', $html);
+        $this->assertStringContainsString('999999', $html);
+    }
+
+    /** Belum ada akses = tidak ada yang bisa dicetak; 404, bukan kartu kosong. */
+    public function test_kartu_panitia_404_saat_akses_belum_dibuat()
+    {
+        $this->eventner->update(['panitia_token' => null, 'panitia_pin' => null]);
+
+        $this->actingAs($this->eventner->user)
+            ->get(route('eventner.judges.kartu-panitia'))
+            ->assertStatus(404);
+    }
+
+    /** Tamu tanpa event tidak boleh mengunduh kartu milik siapa pun. */
+    public function test_kartu_panitia_menolak_pengguna_tanpa_event()
+    {
+        $this->actingAs(User::factory()->create(['is_active' => true]))
+            ->get(route('eventner.judges.kartu-panitia'))
+            ->assertStatus(403);
+    }
+
+    public function test_modal_menawarkan_unduh_kartu_saat_akses_ada()
+    {
+        Livewire::actingAs($this->eventner->user)
+            ->test(JudgeIndex::class)
+            ->call('openPanitiaModal')
+            ->assertSee('Unduh Kartu Akses');
+    }
 }

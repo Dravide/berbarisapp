@@ -314,6 +314,14 @@
                                 yang bisa dibaca peserta.
                             </p>
                         </div>
+
+                        {{-- Cetak: link + QR + PIN dalam satu lembar untuk dibagikan
+                             ke petugas meja. Tanpa ini panitia menyalin link dari layar
+                             satu per satu, dan PIN-nya dikirim lewat chat. --}}
+                        <a href="{{ route('eventner.judges.kartu-panitia') }}" target="_blank"
+                           class="btn btn-outline-primary w-100 mt-3">
+                            <i class="ti ti-file-type-pdf me-1"></i> Unduh Kartu Akses (PDF + QR)
+                        </a>
                     @else
                         <p class="text-muted mb-3">
                             Belum ada akses entry panitia untuk event ini. Buat satu link + PIN, lalu bagikan ke petugas

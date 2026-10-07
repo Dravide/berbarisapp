@@ -15,6 +15,9 @@ Route::get('judges', App\Livewire\Eventner\Judge\Index::class)->name('eventner.j
 // Kartu akses juri (2 lembar: identitas + instruksi, lalu QR). Tanpa
 // {judge} = kartu semua juri, satu juri per dua halaman.
 Route::get('judges/kartu-akses/{judge?}', [App\Http\Controllers\Eventner\JudgeCardController::class, 'download'])->name('eventner.judges.kartu-akses');
+// Kartu akses entry panitia — satu lembar: link, QR, dan PIN. Token & PIN
+// dibaca dari event milik pengguna, jadi tidak ada parameter yang bisa dipalsukan.
+Route::get('judges/kartu-panitia', [App\Http\Controllers\Eventner\PanitiaCardController::class, 'download'])->name('eventner.judges.kartu-panitia');
 Route::get('judges/{judge}/format-pdf/{competitionCategoryId?}', [App\Http\Controllers\Eventner\FormatNilaiController::class, 'downloadPdfByJudge'])->name('eventner.judges.format-pdf');
 Route::get('venues', App\Livewire\Eventner\Venue\Index::class)->name('eventner.venues.index');
 Route::get('competition-categories', App\Livewire\Eventner\CompetitionCategory\Index::class)->name('eventner.competition-categories.index');
