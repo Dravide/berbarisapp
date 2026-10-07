@@ -89,6 +89,28 @@ if (!function_exists('judge_entry_url')) {
     }
 }
 
+if (!function_exists('panitia_entry_url')) {
+    /**
+     * URL absolut halaman entry nilai panitia di host entry milik platform.
+     *
+     * Skema & host diselesaikan persis seperti judge_entry_url(): dibangun dari
+     * config, bukan dari host request, dan https dipaksa di luar local/testing
+     * karena token event ada di dalam URL ini.
+     */
+    function panitia_entry_url(string $token): string
+    {
+        $scheme = parse_url((string) config('app.entry_host'), PHP_URL_SCHEME)
+            ?: parse_url((string) config('app.url'), PHP_URL_SCHEME)
+            ?: 'http';
+
+        if ($scheme === 'http' && ! app()->environment(['local', 'testing'])) {
+            $scheme = 'https';
+        }
+
+        return $scheme . '://' . judge_entry_host() . '/panitia/' . rawurlencode($token);
+    }
+}
+
 if (!function_exists('qr_data_uri')) {
     /**
      * QR sebagai data-URI PNG — siap dipakai di <img src> view dompdf.

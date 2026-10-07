@@ -64,6 +64,8 @@ class Eventner extends Model
         'kwitansi_required',
         'checkin_token',
         'checkin_pin',
+        'panitia_token',
+        'panitia_pin',
         'active_signature_id',
     ];
 
@@ -517,6 +519,17 @@ class Eventner extends Model
         return $akhir && $akhir->gte($tanggal)
             ? $akhir->endOfDay()
             : $tanggal->endOfDay()->addDays(6);
+    }
+
+    /**
+     * Link entry nilai panitia — null selama pemilik event belum membuatnya.
+     *
+     * URL-nya hidup di host entry platform, jadi dibangun dari config dan bukan
+     * dari host request; lihat panitia_entry_url().
+     */
+    public function panitiaEntryUrl(): ?string
+    {
+        return $this->panitia_token ? panitia_entry_url($this->panitia_token) : null;
     }
 
     public function approvedBy()

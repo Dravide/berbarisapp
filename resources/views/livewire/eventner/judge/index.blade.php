@@ -32,6 +32,11 @@
                                 <i class="ti ti-id-badge-2 me-1"></i> Kartu Akses Semua Juri
                             </a>
                         @endif
+                        <button type="button" class="btn btn-outline-light btn-sm fw-semibold"
+                                wire:click="openPanitiaModal"
+                                title="Link + PIN untuk petugas yang mengetik nilai — bukan kartu juri">
+                            <i class="ti ti-keyboard me-1"></i> Akses Entry Panitia
+                        </button>
                         <button type="button" class="btn btn-light btn-sm fw-semibold" wire:click="openCreate">
                             <i class="ti ti-plus me-1"></i> Tambah Juri
                         </button>
@@ -231,6 +236,88 @@
                         <i class="ti ti-refresh me-1"></i> Ganti Token
                     </button>
                     <button type="button" class="btn btn-secondary" wire:click="closeTabletModal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Modal Akses Entry Panitia (link + PIN) -->
+    @if($showPanitiaModal)
+    @php $panitia = $this->panitiaEventner; @endphp
+    <div class="modal fade show d-block" tabindex="-1" style="display:block; background-color: rgba(0,0,0,.5); z-index: 1050;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title text-white fw-semibold">
+                        <i class="ti ti-keyboard me-1"></i> Akses Entry Nilai Panitia
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" wire:click="closePanitiaModal"></button>
+                </div>
+                <div class="modal-body">
+                    @if($panitia->panitia_token)
+                        <p class="text-muted fs-3 mb-1">Link entry (buka di laptop/HP petugas):</p>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" readonly
+                                   value="{{ $panitia->panitiaEntryUrl() }}" onclick="this.select()">
+                            <button type="button" class="btn btn-outline-primary"
+                                    onclick="navigator.clipboard.writeText(this.previousElementSibling.value).then(() => window.beToast('Link disalin.','success'))">
+                                <i class="ti ti-copy"></i> Salin
+                            </button>
+                            <a href="{{ $panitia->panitiaEntryUrl() }}" target="_blank" class="btn btn-outline-primary">
+                                <i class="ti ti-external-link"></i> Buka
+                            </a>
+                        </div>
+
+                        <p class="text-muted fs-3 mb-1">PIN entry:</p>
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="badge bg-primary-subtle text-primary fw-bold"
+                                  style="font-size: 1.75rem; letter-spacing: .35rem;">{{ $panitia->panitia_pin }}</span>
+                            <button type="button" class="btn btn-outline-secondary btn-sm"
+                                    onclick="navigator.clipboard.writeText('{{ $panitia->panitia_pin }}').then(() => window.beToast('PIN disalin.','success'))">
+                                <i class="ti ti-copy"></i> Salin PIN
+                            </button>
+                        </div>
+
+                        <div class="alert alert-light border mb-0">
+                            <p class="fs-3 mb-1">
+                                <i class="ti ti-info-circle me-1"></i>
+                                Halaman ini untuk <strong>petugas yang mengetik nilai dari lembar juri</strong>, bukan
+                                kartu akses juri. Juri tetap memakai tabletnya sendiri.
+                            </p>
+                            <p class="fs-3 mb-0 text-danger">
+                                <i class="ti ti-alert-triangle me-1"></i>
+                                Link sudah memuat token event; PIN adalah lapis kedua. Jangan tempel keduanya di tempat
+                                yang bisa dibaca peserta.
+                            </p>
+                        </div>
+                    @else
+                        <p class="text-muted mb-3">
+                            Belum ada akses entry panitia untuk event ini. Buat satu link + PIN, lalu bagikan ke petugas
+                            yang akan mengetik nilai.
+                        </p>
+                    @endif
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <div>
+                        @if($panitia->panitia_token)
+                            <button type="button" class="btn btn-outline-danger"
+                                    wire:click="regeneratePanitiaAccess"
+                                    wire:confirm="Ganti link dan PIN? Yang lama tidak akan berlaku lagi, dan petugas yang sedang membuka halaman akan diminta PIN baru.">
+                                <i class="ti ti-refresh me-1"></i> Ganti Link & PIN
+                            </button>
+                            <button type="button" class="btn btn-outline-danger"
+                                    wire:click="revokePanitiaAccess"
+                                    wire:confirm="Cabut akses entry panitia? Link lama langsung mati.">
+                                <i class="ti ti-ban me-1"></i> Cabut
+                            </button>
+                        @else
+                            <button type="button" class="btn btn-primary" wire:click="generatePanitiaAccess">
+                                <i class="ti ti-plus me-1"></i> Buat Akses
+                            </button>
+                        @endif
+                    </div>
+                    <button type="button" class="btn btn-secondary" wire:click="closePanitiaModal">Tutup</button>
                 </div>
             </div>
         </div>

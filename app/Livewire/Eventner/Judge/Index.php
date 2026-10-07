@@ -316,6 +316,88 @@ class Index extends Component
         $this->toast('Token akses tablet juri diperbarui. Link lama tidak berlaku lagi.');
     }
 
+    // ------------------------------------------------------------------
+    // Akses entry nilai panitia (host entry, /panitia/{token} + PIN event)
+    // ------------------------------------------------------------------
+
+    public bool $showPanitiaModal = false;
+
+    /**
+     * Event milik pengguna, untuk membaca token & PIN panitia di modal.
+     */
+    #[Computed]
+    public function panitiaEventner()
+    {
+        return \App\Models\Eventner::findOrFail($this->eventnerId);
+    }
+
+    public function openPanitiaModal()
+    {
+        $this->showPanitiaModal = true;
+    }
+
+    public function closePanitiaModal()
+    {
+        $this->showPanitiaModal = false;
+    }
+
+    /**
+     * Buat akses panitia pertama kali.
+     *
+     * Token 40 karakter, bukan 16 seperti tablet juri: link ini ditempel di
+     * grup WhatsApp panitia dan tersimpan di riwayat browser bersama, jadi
+     * ruang tebaknya dibuat jauh lebih lebar. PIN 6 digit ditegakkan sama
+     * lebarnya dengan kolomnya, termasuk nol di depan.
+     */
+    public function generatePanitiaAccess()
+    {
+        $eventner = $this->panitiaEventner;
+
+        $eventner->update([
+            'panitia_token' => \Illuminate\Support\Str::random(40),
+            'panitia_pin' => str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT),
+        ]);
+
+        unset($this->panitiaEventner);
+
+        $this->toast('Akses entry panitia dibuat.');
+    }
+
+    /**
+     * Ganti token DAN PIN sekaligus.
+     *
+     * Mengganti token saja akan menyisakan PIN lama yang sudah beredar di
+     * grup panitia; keduanya diganti bersamaan supaya "ganti akses" benar-benar
+     * memutus yang lama.
+     */
+    public function regeneratePanitiaAccess()
+    {
+        $eventner = $this->panitiaEventner;
+
+        $eventner->update([
+            'panitia_token' => \Illuminate\Support\Str::random(40),
+            'panitia_pin' => str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT),
+        ]);
+
+        unset($this->panitiaEventner);
+
+        $this->toast('Link & PIN baru dibuat. Yang lama tidak berlaku lagi.');
+    }
+
+    public function revokePanitiaAccess()
+    {
+        $eventner = $this->panitiaEventner;
+
+        $eventner->update([
+            'panitia_token' => null,
+            'panitia_pin' => null,
+        ]);
+
+        unset($this->panitiaEventner);
+
+        $this->toast('Akses entry panitia dicabut.');
+    }
+
     public function delete($id)
     {
         $judge = Judge::where('eventner_id', $this->eventnerId)->findOrFail($id);
