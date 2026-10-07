@@ -22,6 +22,32 @@ class PublicPagesTest extends TestCase
         $response->assertStatus(200);
     }
 
+    /**
+     * Tautan nav yang menunjuk section yang tidak ada = klik yang tidak terjadi
+     * apa-apa. Halaman ini pernah punya dua (#vote, #gallery): nav-nya aktif
+     * sementara komponennya berhenti render begitu datanya kosong.
+     */
+    public function test_tautan_nav_landing_menunjuk_ke_section_yang_ada()
+    {
+        Eventner::factory(3)->create(['status' => 'approved']);
+
+        $html = $this->get('/')->getContent();
+        $header = substr($html, 0, strpos($html, '</header>'));
+
+        preg_match_all('/href="#([^"]+)"/', $header, $matches);
+        $anchors = array_unique($matches[1]);
+
+        $this->assertNotEmpty($anchors, 'Nav landing tidak punya tautan anchor sama sekali.');
+
+        foreach ($anchors as $anchor) {
+            $this->assertStringContainsString(
+                'id="' . $anchor . '"',
+                $html,
+                "Tautan nav #{$anchor} tidak punya section dengan id itu di halaman."
+            );
+        }
+    }
+
     public function test_penyelenggara_menampilkan_tanggal_pelaksanaan()
     {
         Eventner::factory()->create([

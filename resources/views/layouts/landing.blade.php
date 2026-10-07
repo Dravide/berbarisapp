@@ -111,21 +111,32 @@
                 {{-- Desktop nav — dynamic based on active sections --}}
                 @php
                     $sectionsActive = $sectionsActive ?? [];
+                    $sectionsRender = $sectionsRender ?? [];
+                    // Hanya section yang benar-benar dirender. Dulu di sini ada
+                    // 'vote' dan 'gallery': dua tautan yang tidak menuju apa pun
+                    // karena komponennya berhenti render begitu datanya kosong.
+                    // Saklar di pengaturan tidak cukup untuk tahu itu — section
+                    // yang menyala tapi datanya kosong tetap tidak menghasilkan
+                    // markup, jadi `$sectionsRender` (dihitung di komponen dari
+                    // hasil query yang sama) yang menentukan.
+                    //
+                    // Kolom ketiga = section yang menaungi anchor itu. 'contact'
+                    // sekarang kartu di dalam #faq, jadi dia ikut hidup-matinya
+                    // FAQ, bukan punya kunci sendiri.
                     $navItems = [
-                        'hero' => 'Beranda',
-                        'features' => 'Fitur',
-                        'about' => 'Tentang',
-                        'eventners' => 'Eventner',
-                        'vote' => 'Vote',
-                        'ticket' => 'Tiket',
-                        'testimonials' => 'Testimoni',
-                        'faq' => 'FAQ',
-                        'contact' => 'Kontak',
+                        ['hero', 'Beranda', 'hero'],
+                        ['features', 'Fitur', 'features'],
+                        ['pricing', 'Harga', 'pricing'],
+                        ['eventners', 'Event', 'eventners'],
+                        ['ticket', 'Tiket', 'ticket'],
+                        ['faq', 'FAQ', 'faq'],
+                        ['contact', 'Kontak', 'faq'],
                     ];
+                    $navTampil = fn (string $gate) => ($sectionsActive[$gate] ?? true) && ($sectionsRender[$gate] ?? true);
                 @endphp
                 <nav class="hidden items-center gap-8 lg:flex" id="landing-desktop-nav">
-                    @foreach($navItems as $id => $label)
-                        @if(($sectionsActive[$id] ?? true) || $id === 'hero')
+                    @foreach($navItems as [$id, $label, $gate])
+                        @if($id === 'hero' || $navTampil($gate))
                             <a href="#{{ $id }}" data-nav="{{ $id }}"
                                class="text-sm font-medium transition-colors duration-200 text-on-surface-variant hover:text-primary">
                                 {{ $label }}
@@ -153,8 +164,8 @@
         {{-- Mobile menu --}}
         <div id="landing-mobile-menu" class="hidden border-t border-outline-variant/50 bg-white/95 backdrop-blur-xl lg:hidden">
             <nav class="container-landing flex flex-col gap-1 py-4">
-                @foreach($navItems as $id => $label)
-                    @if(($sectionsActive[$id] ?? true) || $id === 'hero')
+                @foreach($navItems as [$id, $label, $gate])
+                    @if($id === 'hero' || $navTampil($gate))
                         <a href="#{{ $id }}" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">{{ $label }}</a>
                     @endif
                 @endforeach
@@ -174,7 +185,7 @@
     {{-- Footer (Deep Slate) --}}
     <footer class="bg-deep-slate text-white/70">
         <div class="container-landing py-16">
-            <div class="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-4">
+            <div class="grid grid-cols-1 gap-10 md:grid-cols-3">
                 {{-- Brand --}}
                 <div class="lg:col-span-1">
                     <a href="{{ url('/') }}" class="mb-4 flex items-center gap-2">
@@ -197,28 +208,19 @@
                     <ul class="space-y-2.5 text-sm">
                         <li><a href="#hero" class="transition hover:text-secondary">Beranda</a></li>
                         <li><a href="#features" class="transition hover:text-secondary">Fitur</a></li>
-                        <li><a href="#about" class="transition hover:text-secondary">Tentang</a></li>
+                        <li><a href="#pricing" class="transition hover:text-secondary">Harga</a></li>
+                        <li><a href="#eventners" class="transition hover:text-secondary">Event</a></li>
                         <li><a href="#faq" class="transition hover:text-secondary">FAQ</a></li>
-                        <li><a href="#contact" class="transition hover:text-secondary">Kontak</a></li>
                     </ul>
                 </div>
 
-                {{-- Layanan --}}
-                <div>
-                    <h4 class="mb-4 font-display text-sm font-semibold uppercase tracking-wider text-white">Layanan</h4>
-                    <ul class="space-y-2.5 text-sm">
-                        <li><a href="#features" class="transition hover:text-secondary">Pendaftaran Event</a></li>
-                        <li><a href="#features" class="transition hover:text-secondary">Penilaian Juri</a></li>
-                        <li><a href="#features" class="transition hover:text-secondary">Voting Online</a></li>
-                        <li><a href="#features" class="transition hover:text-secondary">E-Tiket</a></li>
-                        <li><a href="#features" class="transition hover:text-secondary">Live Scoreboard</a></li>
-                    </ul>
-                </div>
-
-                {{-- Kontak / Legal --}}
+                {{-- Legal + sosial. Dulu ada kolom "Layanan" yang isinya lima
+                     tautan yang semuanya menunjuk #features — daftar fitur yang
+                     sudah tampil utuh beberapa layar di atasnya. --}}
                 <div>
                     <h4 class="mb-4 font-display text-sm font-semibold uppercase tracking-wider text-white">Kontak</h4>
                     <ul class="space-y-2.5 text-sm">
+                        <li><a href="#contact" class="transition hover:text-secondary">Hubungi Kami</a></li>
                         <li><a href="{{ route('privacy') }}" class="transition hover:text-secondary">Kebijakan Privasi</a></li>
                         <li><a href="{{ route('terms') }}" class="transition hover:text-secondary">Syarat &amp; Ketentuan</a></li>
                         <li><a href="{{ route('help') }}" class="transition hover:text-secondary">Bantuan &amp; Support</a></li>

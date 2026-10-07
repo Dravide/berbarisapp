@@ -73,12 +73,6 @@
             </div>
             @endforeach
         </div>
-
-        @if($eventners->count() > 8)
-        <div class="mt-10 text-center">
-            <a href="#" class="btn-ghost">Lihat Semua Event</a>
-        </div>
-        @endif
     </div>
 </section>
 @endif

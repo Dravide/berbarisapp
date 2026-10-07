@@ -11,7 +11,7 @@
     $hasPaid = $eventner && $eventner->hasActivePlan();
 @endphp
 
-<section id="pricing" class="section-pad bg-surface">
+<section id="pricing" class="section-pad bg-surface-container-low">
     <div class="container-landing">
         <div class="mx-auto max-w-2xl text-center">
             <span class="overline justify-center">Harga</span>

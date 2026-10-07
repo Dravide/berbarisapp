@@ -17,6 +17,15 @@
         'icon7.png' => 'ti-cash',
         'icon8.png' => 'ti-plug-connected',
     ];
+
+    // Poin dari section "Tentang" yang dibuang. Dulu tiga blok ceklis
+    // tersendiri beberapa layar di bawah section ini dan mengulang hal yang
+    // sama; sekarang jadi satu baris chip di bawah judul.
+    $about = json_decode(\App\Models\Setting::get('landing_about') ?? 'null', true) ?? [];
+    $poin = collect($about['points'] ?? [])
+        ->pluck('title')
+        ->filter()
+        ->take(4);
 @endphp
 
 <section id="features" class="section-pad bg-surface">
@@ -25,6 +34,17 @@
             <span class="overline justify-center">Fitur</span>
             <h2 class="mt-4 text-3xl font-bold md:text-4xl">{{ $title }}</h2>
             <p class="mt-4 text-on-surface-variant">Semua yang Anda butuhkan untuk menyelenggarakan event &amp; kompetisi dalam satu platform terpadu.</p>
+
+            @if($poin->isNotEmpty())
+            <ul class="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm font-medium text-deep-slate">
+                @foreach($poin as $p)
+                <li class="inline-flex items-center gap-1.5">
+                    <i class="ti ti-check text-secondary"></i>
+                    {{ $p }}
+                </li>
+                @endforeach
+            </ul>
+            @endif
         </div>
 
         <div class="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">

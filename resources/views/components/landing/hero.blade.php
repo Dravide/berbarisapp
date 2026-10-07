@@ -6,6 +6,15 @@
     $ctaUrl = $data['cta_url'] ?? route('login');
     $videoUrl = $data['video_url'] ?? '';
     $bgImage = $data['background_image'] ?? '';
+
+    // Visual produk: gambar/video yang dulu dipasang di section "Tentang".
+    // Section itu dibuang (isinya mengulang #features), tapi visualnya sayang
+    // dibuang — sekarang jadi latar di bawah hero. Kuncinya masih
+    // `landing_about` supaya gambar yang sudah diunggah admin tidak perlu
+    // dipindah; namanya warisan, bukan salah tulis.
+    $about = json_decode(\App\Models\Setting::get('landing_about') ?? 'null', true) ?? [];
+    $vizImage = $about['image'] ?? '';
+    $vizVideo = $about['video'] ?? '';
 @endphp
 
 <section id="hero" class="relative overflow-hidden">
@@ -48,22 +57,24 @@
             </div>
         </div>
 
-        {{-- Floating stat cards --}}
-        <div class="mx-auto mt-16 grid max-w-4xl grid-cols-2 gap-4 md:grid-cols-4">
-            @foreach([
-                ['icon' => 'ti-users-group', 'value' => '500+', 'label' => 'Event'],
-                ['icon' => 'ti-user-plus', 'value' => '10K+', 'label' => 'Peserta'],
-                ['icon' => 'ti-map-pin', 'value' => '50+', 'label' => 'Kota'],
-                ['icon' => 'ti-live-photo', 'value' => 'Real-time', 'label' => 'Scoreboard'],
-            ] as $stat)
-            <div class="surface-card surface-card-hover p-5 text-center">
-                <div class="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <i class="ti {{ $stat['icon'] }} text-xl"></i>
-                </div>
-                <div class="font-display text-xl font-bold text-deep-slate">{{ $stat['value'] }}</div>
-                <div class="text-xs uppercase tracking-wide text-on-surface-variant">{{ $stat['label'] }}</div>
+        {{-- Visual produk. Dulu empat kartu angka di sini ("500+ Event",
+             "10K+ Peserta", "50+ Kota") — angka karangan yang tidak bisa
+             diedit admin dan bertabrakan dengan section statistik di bawahnya.
+             Diganti tangkapan layar asli: jujur, dan tidak perlu dirawat.
+             Gambar menang atas video bawaan supaya video seeder tidak
+             menutupi gambar yang sengaja dipasang admin. --}}
+        @if($vizImage || $vizVideo)
+        <div class="mx-auto mt-16 max-w-5xl">
+            <div class="overflow-hidden rounded-2xl border border-outline-variant/60 shadow-[0_8px_30px_rgba(0,98,255,0.06)]">
+                @if($vizImage)
+                    <img src="{{ Storage::url($vizImage) }}" alt="{{ app_name() }}" class="h-full w-full object-cover">
+                @else
+                    <video autoplay muted loop playsinline class="aspect-[16/9] w-full object-cover">
+                        <source src="{{ $vizVideo }}" type="video/mp4">
+                    </video>
+                @endif
             </div>
-            @endforeach
         </div>
+        @endif
     </div>
 </section>

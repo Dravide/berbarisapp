@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Livewire\Admin\Setting\LandingPage;
 use App\Livewire\Public\HelpSupport;
 use App\Livewire\Public\LandingPage as PublicLandingPage;
-use App\Models\Eventner;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,7 +17,7 @@ class AdminLandingSettingsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_admin_saves_contact_and_schedule_settings()
+    public function test_admin_saves_contact_settings()
     {
         $admin = User::factory()->admin()->create();
 
@@ -26,19 +25,14 @@ class AdminLandingSettingsTest extends TestCase
         $comp->set('contact_phone', '+62 800-123-4567')
             ->set('contact_email', 'kontak@berbaris.test')
             ->set('contact_address', 'Jl. Test No. 1')
-            ->set('schedule_title', 'Jadwal Event')
-            ->call('addScheduleItem')
-            ->set('schedule_items.0.date', '10 Jul')
-            ->set('schedule_items.0.title', 'Pembukaan')
             ->call('save');
 
+        // Kartu kontak tampil di dalam section FAQ, bukan section sendiri —
+        // tapi kuncinya tetap `landing_contact` lewat tab "Kontak".
         $contact = json_decode(Setting::get('landing_contact'), true);
         $this->assertEquals('+62 800-123-4567', $contact['phone']);
         $this->assertEquals('kontak@berbaris.test', $contact['email']);
-
-        $schedule = json_decode(Setting::get('landing_schedule'), true);
-        $this->assertEquals('Jadwal Event', $schedule['title']);
-        $this->assertEquals('Pembukaan', $schedule['items'][0]['title']);
+        $this->assertEquals('Jl. Test No. 1', $contact['address']);
     }
 
     public function test_gambar_hero_tetap_ada_setelah_simpan_dua_kali()
@@ -62,92 +56,49 @@ class AdminLandingSettingsTest extends TestCase
         Storage::disk('public')->assertExists($second);
     }
 
-    public function test_gambar_galeri_tersimpan_dan_muncul_di_state()
+    public function test_gambar_visual_tersimpan_dan_muncul_di_state()
     {
         Storage::fake('public');
         $admin = User::factory()->admin()->create();
 
         $comp = Livewire::actingAs($admin)->test(LandingPage::class);
-        $comp->call('addGalleryItem')
-            ->set('gallery_items.0.image_upload', UploadedFile::fake()->image('galeri.png', 400, 300))
-            ->set('gallery_items.0.caption', 'Foto Pembukaan')
+        $comp->set('about_image', UploadedFile::fake()->image('visual.png', 400, 300))
             ->call('save');
 
-        $saved = json_decode(Setting::get('landing_gallery'), true)['items'][0];
-        $this->assertNotEmpty($saved['image']);
-        $this->assertSame('Foto Pembukaan', $saved['caption']);
-        Storage::disk('public')->assertExists($saved['image']);
+        $saved = json_decode(Setting::get('landing_about'), true)['image'];
+        $this->assertNotEmpty($saved);
+        Storage::disk('public')->assertExists($saved);
 
         // State komponen harus mencerminkan path tersimpan supaya preview muncul
-        // dan upload yang sama tidak diproses ulang di simpan berikutnya.
-        $state = $comp->get('gallery_items')[0];
-        $this->assertSame($saved['image'], $state['image']);
-        $this->assertArrayNotHasKey('image_upload', $state);
-    }
-
-    public function test_admin_toggles_auto_statistics()
-    {
-        $admin = User::factory()->admin()->create();
-
-        $comp = Livewire::actingAs($admin)->test(LandingPage::class);
-        $comp->set('activeTab', 'statistics')
-            ->call('toggleStatAuto')
-            ->set('statistics_auto_metrics', ['events', 'registrations'])
-            ->call('save');
-
-        $stats = json_decode(Setting::get('landing_statistics'), true);
-        $this->assertTrue($stats['auto']);
-        $this->assertEquals(['events', 'registrations'], $stats['metrics']);
-    }
-
-    public function test_public_statistics_renders_auto_metrics()
-    {
-        $user = User::factory()->admin()->create();
-        Setting::set('landing_statistics', json_encode([
-            'auto' => true,
-            'metrics' => ['events', 'registrations'],
-            'items' => [],
-        ]));
-        Setting::set('landing_sections_order', json_encode(['statistics']));
-        Setting::set('landing_sections_active', json_encode(['statistics' => true]));
-
-        Eventner::factory()->create(['status' => 'approved']);
-
-        $comp = Livewire::test(PublicLandingPage::class);
-        $html = $comp->html();
-
-        $this->assertStringContainsString('Event Diselenggarakan', $html);
-        $this->assertStringContainsString('Pendaftaran', $html);
+        // dan simpan berikutnya tidak menghapus gambar yang baru diunggah.
+        $this->assertSame($saved, $comp->get('about_image_current'));
     }
 
     public function test_gambar_about_menang_atas_video_bawaan()
     {
         Setting::set('landing_about', json_encode([
-            'heading' => 'Platform Event & Kompetisi Terpadu',
-            'description' => 'Deskripsi',
             'image' => 'landing/about.jpg',
             'video' => 'https://videos.pexels.com/video-files/3209259/3209259-hd_1920_1080_25fps.mp4',
             'points' => [],
         ]));
-        Setting::set('landing_sections_order', json_encode(['about']));
-        Setting::set('landing_sections_active', json_encode(['about' => true]));
 
         $html = Livewire::test(PublicLandingPage::class)->html();
 
-        // Periksa markup section About saja — snapshot Livewire memuat JSON
+        // Periksa markup section Hero saja — snapshot Livewire memuat JSON
         // mentah pengaturan, jadi pencarian di seluruh HTML bisa menyesatkan.
-        $about = $this->aboutSectionMarkup($html);
+        // Visualnya pindah ke sini setelah section "Tentang" dibuang.
+        $hero = $this->heroSectionMarkup($html);
 
-        $this->assertStringContainsString('<img', $about);
-        $this->assertStringContainsString('landing/about.jpg', $about);
-        $this->assertStringNotContainsString('<video', $about);
+        $this->assertStringContainsString('<img', $hero);
+        $this->assertStringContainsString('landing/about.jpg', $hero);
+        $this->assertStringNotContainsString('<video', $hero);
     }
 
-    /** Potongan markup <section id="about"> dari HTML halaman landing. */
-    private function aboutSectionMarkup(string $html): string
+    /** Potongan markup <section id="hero"> dari HTML halaman landing. */
+    private function heroSectionMarkup(string $html): string
     {
-        $start = strpos($html, '<section id="about"');
-        $this->assertNotFalse($start, 'Section about tidak ditemukan di halaman landing.');
+        $start = strpos($html, '<section id="hero"');
+        $this->assertNotFalse($start, 'Section hero tidak ditemukan di halaman landing.');
 
         $end = strpos($html, '</section>', $start);
 
@@ -157,19 +108,15 @@ class AdminLandingSettingsTest extends TestCase
     public function test_video_about_dipakai_saat_gambar_kosong()
     {
         Setting::set('landing_about', json_encode([
-            'heading' => 'Platform Event & Kompetisi Terpadu',
-            'description' => 'Deskripsi',
             'image' => '',
             'video' => 'https://contoh.test/promo.mp4',
             'points' => [],
         ]));
-        Setting::set('landing_sections_order', json_encode(['about']));
-        Setting::set('landing_sections_active', json_encode(['about' => true]));
 
-        $about = $this->aboutSectionMarkup(Livewire::test(PublicLandingPage::class)->html());
+        $hero = $this->heroSectionMarkup(Livewire::test(PublicLandingPage::class)->html());
 
-        $this->assertStringContainsString('<video', $about);
-        $this->assertStringContainsString('https://contoh.test/promo.mp4', $about);
+        $this->assertStringContainsString('<video', $hero);
+        $this->assertStringContainsString('https://contoh.test/promo.mp4', $hero);
     }
 
     public function test_help_support_faq_comes_from_setting()

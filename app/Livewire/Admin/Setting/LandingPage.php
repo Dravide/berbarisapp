@@ -14,6 +14,17 @@ class LandingPage extends Component
 {
     use WithFileUploads;
 
+    /**
+     * Section yang benar-benar punya komponen Blade-nya.
+     *
+     * Urutan section tersimpan di settings dan disunting lewat panel
+     * naik/turun, jadi daftarnya bisa memuat nama lama (mis. dari susunan
+     * 12 blok sebelum penyederhanaan). Nama yang tidak ada di sini disaring
+     * saat menyimpan — kalau tidak, landing akan memanggil view yang sudah
+     * dihapus dan error 500.
+     */
+    private const SECTION_DIKENAL = ['hero', 'features', 'pricing', 'eventners', 'ticket', 'faq', 'cta'];
+
     // Active tab
     public $activeTab = 'hero';
 
@@ -47,11 +58,8 @@ class LandingPage extends Component
 
     public $pricing_subtitle;
 
-    // About fields
-    public $about_heading;
-
-    public $about_description;
-
+    // Visual & poin (kunci settingnya masih `landing_about` — nama warisan;
+    // isinya sekarang tampil di dalam section hero dan features).
     public $about_image;
 
     public $about_image_current;
@@ -73,19 +81,6 @@ class LandingPage extends Component
 
     public $cta_image_current;
 
-    // Testimonials fields
-    public $testimonials_title;
-
-    public $testimonials_items = [];
-
-    // Statistics fields
-    public $statistics_items = [];
-
-    // Statistics auto mode
-    public $statistics_auto = false;
-
-    public $statistics_auto_metrics = [];
-
     // Contact fields
     public $contact_phone;
 
@@ -95,30 +90,15 @@ class LandingPage extends Component
 
     public $contact_map_embed_url;
 
-    // Schedule fields
-    public $schedule_title;
-
-    public $schedule_items = [];
-
     // FAQ fields
     public $faq_title;
 
     public $faq_items = [];
 
-    // Gallery fields
-    public $gallery_title;
-
-    public $gallery_items = [];
-
     // Ticket section (live data; admin sets heading only)
     public $ticket_title;
 
     public $ticket_subtitle;
-
-    // Vote section (live data; admin sets heading only)
-    public $vote_title;
-
-    public $vote_subtitle;
 
     // Social links
     public $social_instagram;
@@ -132,8 +112,8 @@ class LandingPage extends Component
     public function mount()
     {
         // Load section order & active
-        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', '["hero","features","about","pricing","eventners","ticket","vote","cta"]'), true);
-        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', '{"hero":true,"features":true,"about":true,"pricing":true,"eventners":true,"ticket":true,"vote":true,"cta":true}'), true);
+        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', '["hero","features","pricing","eventners","ticket","faq","cta"]'), true);
+        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', '{"hero":true,"features":true,"pricing":true,"eventners":true,"ticket":true,"faq":true,"cta":true}'), true);
 
         // Load Hero
         $hero = json_decode(Setting::get('landing_hero', '{}'), true) ?? [];
@@ -154,10 +134,8 @@ class LandingPage extends Component
         $this->pricing_title = $pricing['title'] ?? 'Harga & Paket';
         $this->pricing_subtitle = $pricing['subtitle'] ?? 'Kelola perlombaan sekolah dengan gratis. Aktifkan fitur premium sekali bayar per event — tanpa langganan bulanan.';
 
-        // Load About
+        // Load About (kunci warisan — lihat catatan di deklarasi propertinya)
         $about = json_decode(Setting::get('landing_about', '{}'), true) ?? [];
-        $this->about_heading = $about['heading'] ?? 'Platform Event & Kompetisi Terpadu';
-        $this->about_description = $about['description'] ?? '';
         $this->about_image_current = $about['image'] ?? '';
         $this->about_video = $about['video'] ?? '';
         $this->about_points = $about['points'] ?? [];
@@ -170,17 +148,6 @@ class LandingPage extends Component
         $this->cta_button_url = $cta['button_url'] ?? route('login');
         $this->cta_image_current = $cta['image'] ?? '';
 
-        // Load Testimonials
-        $testimonials = json_decode(Setting::get('landing_testimonials', '{}'), true) ?? [];
-        $this->testimonials_title = $testimonials['title'] ?? 'Apa Kata Mereka?';
-        $this->testimonials_items = $testimonials['items'] ?? [];
-
-        // Load Statistics
-        $statistics = json_decode(Setting::get('landing_statistics', '{}'), true) ?? [];
-        $this->statistics_items = $statistics['items'] ?? [];
-        $this->statistics_auto = (bool) ($statistics['auto'] ?? false);
-        $this->statistics_auto_metrics = $statistics['metrics'] ?? ['events', 'registrations', 'schools'];
-
         // Load Contact
         $contact = json_decode(Setting::get('landing_contact', '{}'), true) ?? [];
         $this->contact_phone = $contact['phone'] ?? '';
@@ -188,30 +155,15 @@ class LandingPage extends Component
         $this->contact_address = $contact['address'] ?? '';
         $this->contact_map_embed_url = $contact['map_embed_url'] ?? '';
 
-        // Load Schedule
-        $schedule = json_decode(Setting::get('landing_schedule', '{}'), true) ?? [];
-        $this->schedule_title = $schedule['title'] ?? 'Jadwal Acara';
-        $this->schedule_items = $schedule['items'] ?? [];
-
         // Load FAQ
         $faq = json_decode(Setting::get('landing_faq', '{}'), true) ?? [];
         $this->faq_title = $faq['title'] ?? 'Pertanyaan yang Sering Diajukan';
         $this->faq_items = $faq['items'] ?? [];
 
-        // Load Gallery
-        $gallery = json_decode(Setting::get('landing_gallery', '{}'), true) ?? [];
-        $this->gallery_title = $gallery['title'] ?? 'Galeri';
-        $this->gallery_items = $gallery['items'] ?? [];
-
         // Load Ticket section
         $ticket = json_decode(Setting::get('landing_ticket', '{}'), true) ?? [];
         $this->ticket_title = $ticket['title'] ?? 'E-Tiket Digital';
         $this->ticket_subtitle = $ticket['subtitle'] ?? 'Beli tiket event favoritmu secara online. Praktis, aman, dengan QR code check-in.';
-
-        // Load Vote section
-        $vote = json_decode(Setting::get('landing_vote', '{}'), true) ?? [];
-        $this->vote_title = $vote['title'] ?? 'Voting Online';
-        $this->vote_subtitle = $vote['subtitle'] ?? 'Dukung peserta favoritmu lewat voting online. Setiap suara menentukan juara favorit.';
 
         // Load Social Links
         $socials = json_decode(Setting::get('landing_social_links', '{}'), true) ?? [];
@@ -273,50 +225,6 @@ class LandingPage extends Component
         $this->about_points = array_values($this->about_points);
     }
 
-    // -- Testimonial item management --
-    public function addTestimonialItem()
-    {
-        $this->testimonials_items[] = ['name' => '', 'role' => '', 'text' => '', 'rating' => 5, 'avatar' => ''];
-    }
-
-    public function removeTestimonialItem($index)
-    {
-        unset($this->testimonials_items[$index]);
-        $this->testimonials_items = array_values($this->testimonials_items);
-    }
-
-    // -- Statistics item management --
-    public function addStatisticItem()
-    {
-        $this->statistics_items[] = ['value' => '', 'label' => '', 'suffix' => '+'];
-    }
-
-    public function removeStatisticItem($index)
-    {
-        unset($this->statistics_items[$index]);
-        $this->statistics_items = array_values($this->statistics_items);
-    }
-
-    public function toggleStatAuto()
-    {
-        $this->statistics_auto = ! $this->statistics_auto;
-        if ($this->statistics_auto && empty($this->statistics_auto_metrics)) {
-            $this->statistics_auto_metrics = ['events', 'registrations', 'schools'];
-        }
-    }
-
-    // -- Schedule item management --
-    public function addScheduleItem()
-    {
-        $this->schedule_items[] = ['date' => '', 'time' => '', 'title' => '', 'description' => '', 'location' => ''];
-    }
-
-    public function removeScheduleItem($index)
-    {
-        unset($this->schedule_items[$index]);
-        $this->schedule_items = array_values($this->schedule_items);
-    }
-
     // -- FAQ item management --
     public function addFaqItem()
     {
@@ -329,25 +237,16 @@ class LandingPage extends Component
         $this->faq_items = array_values($this->faq_items);
     }
 
-    // -- Gallery item management --
-    public function addGalleryItem()
-    {
-        $this->gallery_items[] = ['image' => '', 'caption' => ''];
-    }
-
-    public function removeGalleryItem($index)
-    {
-        // Delete image if exists
-        if (! empty($this->gallery_items[$index]['image'])) {
-            Storage::disk('public')->delete($this->gallery_items[$index]['image']);
-        }
-        unset($this->gallery_items[$index]);
-        $this->gallery_items = array_values($this->gallery_items);
-    }
-
     public function save()
     {
-        // Save section order & active
+        // Save section order & active — disaring dulu supaya nama section
+        // lama yang komponennya sudah dihapus tidak ikut tersimpan.
+        $this->sectionsOrder = array_values(array_filter(
+            $this->sectionsOrder,
+            fn ($type) => in_array($type, self::SECTION_DIKENAL, true)
+        ));
+        $this->sectionsActive = array_intersect_key($this->sectionsActive, array_flip(self::SECTION_DIKENAL));
+
         Setting::set('landing_sections_order', json_encode($this->sectionsOrder));
         Setting::set('landing_sections_active', json_encode($this->sectionsActive));
 
@@ -393,8 +292,6 @@ class LandingPage extends Component
             $this->about_image_current = $aboutImage;
         }
         Setting::set('landing_about', json_encode([
-            'heading' => $this->about_heading,
-            'description' => $this->about_description,
             'image' => $aboutImage,
             'video' => $this->about_video,
             'points' => $this->about_points,
@@ -417,19 +314,6 @@ class LandingPage extends Component
             'image' => $ctaImage,
         ]));
 
-        // Save Testimonials
-        Setting::set('landing_testimonials', json_encode([
-            'title' => $this->testimonials_title,
-            'items' => $this->testimonials_items,
-        ]));
-
-        // Save Statistics
-        Setting::set('landing_statistics', json_encode([
-            'auto' => (bool) $this->statistics_auto,
-            'metrics' => array_values($this->statistics_auto_metrics),
-            'items' => $this->statistics_items,
-        ]));
-
         // Save Contact
         Setting::set('landing_contact', json_encode([
             'phone' => $this->contact_phone,
@@ -438,37 +322,10 @@ class LandingPage extends Component
             'map_embed_url' => $this->contact_map_embed_url,
         ]));
 
-        // Save Schedule
-        Setting::set('landing_schedule', json_encode([
-            'title' => $this->schedule_title,
-            'items' => $this->schedule_items,
-        ]));
-
         // Save FAQ
         Setting::set('landing_faq', json_encode([
             'title' => $this->faq_title,
             'items' => $this->faq_items,
-        ]));
-
-        // Save Gallery (process uploaded images)
-        $galleryItems = $this->gallery_items;
-        foreach ($galleryItems as &$item) {
-            if (isset($item['image_upload']) && $item['image_upload']) {
-                if (! empty($item['image'])) {
-                    Storage::disk('public')->delete($item['image']);
-                }
-                $item['image'] = $item['image_upload']->store('landing/gallery', 'public');
-            }
-            // `image_upload` ikut dibuang dari state komponen, bukan hanya dari
-            // salinan lokal — kalau tidak, preview gambar baru tidak pernah
-            // muncul dan upload yang sama diproses ulang di simpan berikutnya.
-            unset($item['image_upload']);
-        }
-        unset($item);
-        $this->gallery_items = $galleryItems;
-        Setting::set('landing_gallery', json_encode([
-            'title' => $this->gallery_title,
-            'items' => $galleryItems,
         ]));
 
         // Save Social Links
@@ -485,11 +342,9 @@ class LandingPage extends Component
             'subtitle' => $this->ticket_subtitle,
         ]));
 
-        // Save Vote section
-        Setting::set('landing_vote', json_encode([
-            'title' => $this->vote_title,
-            'subtitle' => $this->vote_subtitle,
-        ]));
+        // Simpan section yang sudah dibuang: baris settingnya sengaja
+        // dibiarkan di DB (tulisan admin tidak boleh hilang diam-diam), tapi
+        // tidak lagi ditulis ulang dari sini.
 
         $this->reset(['hero_background_image', 'about_image', 'cta_image']);
         session()->flash('success', 'Landing page berhasil diperbarui.');

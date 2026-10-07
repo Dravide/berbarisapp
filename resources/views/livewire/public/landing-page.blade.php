@@ -7,9 +7,6 @@
             @case('features')
                 @include('components.landing.features', ['section' => (object)['content' => $section['content']]])
                 @break
-            @case('about')
-                @include('components.landing.about', ['section' => (object)['content' => $section['content']]])
-                @break
             @case('pricing')
                 @include('components.landing.pricing', ['section' => (object)['content' => $section['content']]])
                 @break
@@ -19,32 +16,11 @@
             @case('ticket')
                 @include('components.landing.ticket', ['section' => (object)['content' => $section['content']], 'events' => $ticketEvents])
                 @break
-            @case('vote')
-                @include('components.landing.vote', ['section' => (object)['content' => $section['content']], 'events' => $voteEvents])
-                @break
             @case('cta')
                 @include('components.landing.cta', ['section' => (object)['content' => $section['content']]])
                 @break
-            @case('testimonials')
-                @include('components.landing.testimonials', ['section' => (object)['content' => $section['content']]])
-                @break
-            @case('statistics')
-                @include('components.landing.statistics', ['section' => (object)['content' => $section['content']]])
-                @break
             @case('faq')
                 @include('components.landing.faq', ['section' => (object)['content' => $section['content']]])
-                @break
-            @case('gallery')
-                @include('components.landing.gallery', ['section' => (object)['content' => $section['content']]])
-                @break
-            @case('schedule')
-                @include('components.landing.schedule', ['section' => (object)['content' => $section['content']]])
-                @break
-            @case('contact')
-                @include('components.landing.contact', ['section' => (object)['content' => $section['content']]])
-                @break
-            @case('partners')
-                @include('components.landing.partners', ['section' => (object)['content' => $section['content']], 'logos' => $schoolLogos])
                 @break
         @endswitch
     @endforeach

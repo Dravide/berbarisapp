@@ -47,17 +47,12 @@
                                         @foreach([
                                             'hero' => 'Hero',
                                             'features' => 'Fitur',
-                                            'about' => 'Tentang',
+                                            'about' => 'Visual & Poin',
                                             'pricing' => 'Harga',
-                                            'cta' => 'CTA',
-                                            'testimonials' => 'Testimoni',
-                                            'statistics' => 'Statistik',
-                                            'faq' => 'FAQ',
-                                            'gallery' => 'Galeri',
                                             'ticket' => 'Tiket',
-                                            'vote' => 'Vote',
+                                            'faq' => 'FAQ',
                                             'contact' => 'Kontak',
-                                            'schedule' => 'Jadwal',
+                                            'cta' => 'CTA',
                                             'social' => 'Sosial Media',
                                         ] as $key => $label)
                                         <li class="nav-item">
@@ -181,18 +176,19 @@
                                     {{-- ==================== ABOUT TAB ==================== --}}
                                     @if($activeTab === 'about')
                                     <div wire:key="tab-about">
-                                        <h5 class="fw-semibold mb-3"><i class="ti ti-info-circle me-2"></i>About Section</h5>
+                                        {{-- Section "Tentang" sendiri sudah dibuang dari laman
+                                             (isinya mengulang #features). Yang tersisa dari
+                                             kuncinya dipakai di dua tempat lain: gambarnya jadi
+                                             visual di bawah Hero, poin-poinnya jadi chip di bawah
+                                             judul #features. --}}
+                                        <h5 class="fw-semibold mb-3"><i class="ti ti-info-circle me-2"></i>Visual &amp; Poin</h5>
+                                        <div class="alert alert-info py-2 small mb-3">
+                                            Gambar &amp; poin di sini tampil di bagian lain laman, bukan sebagai section sendiri:
+                                            gambarnya jadi visual di bawah Hero, poinnya jadi ringkasan di bawah judul Fitur.
+                                        </div>
                                         <div class="row">
-                                            <div class="col-12 mb-3">
-                                                <label class="form-label">Judul</label>
-                                                <input type="text" class="form-control" wire:model="about_heading">
-                                            </div>
-                                            <div class="col-12 mb-3">
-                                                <label class="form-label">Deskripsi</label>
-                                                <textarea class="form-control" wire:model="about_description" rows="4"></textarea>
-                                            </div>
                                             <div class="col-md-6 mb-3">
-                                                <label class="form-label">Gambar</label>
+                                                <label class="form-label">Gambar (tampil di bawah Hero)</label>
                                                 @if($about_image_current)
                                                     <div class="mb-2">
                                                         <img src="{{ Storage::url($about_image_current) }}" class="img-fluid rounded border p-1" style="max-height: 120px;">
@@ -208,7 +204,7 @@
                                             <div class="col-md-6">
                                                 <div class="border rounded p-3">
                                                     <div class="d-flex justify-content-between align-items-center mb-2">
-                                                        <label class="form-label mb-0">Poin-Poin</label>
+                                                        <label class="form-label mb-0">Poin-Poin (tampil di bawah judul Fitur)</label>
                                                         <button type="button" class="btn btn-sm btn-outline-primary" wire:click="addAboutPoint">
                                                             <i class="ti ti-plus"></i>
                                                         </button>
@@ -262,118 +258,7 @@
                                     </div>
                                     @endif
 
-                                    {{-- ==================== TESTIMONIALS TAB ==================== --}}
-                                    @if($activeTab === 'testimonials')
-                                    <div wire:key="tab-testimonials">
-                                        <h5 class="fw-semibold mb-3"><i class="ti ti-quote me-2"></i>Testimonials Section</h5>
-                                        <div class="mb-3">
-                                            <label class="form-label">Judul Section</label>
-                                            <input type="text" class="form-control" wire:model="testimonials_title">
-                                        </div>
-                                        <div class="d-flex justify-content-end mb-2">
-                                            <button type="button" class="btn btn-sm btn-outline-primary" wire:click="addTestimonialItem">
-                                                <i class="ti ti-plus me-1"></i> Tambah Testimoni
-                                            </button>
-                                        </div>
-                                        @foreach($testimonials_items as $i => $item)
-                                        <div class="border rounded p-3 mb-2" wire:key="testi-{{ $i }}">
-                                            <div class="row">
-                                                <div class="col-md-4 mb-2">
-                                                    <label class="form-label small">Nama</label>
-                                                    <input type="text" class="form-control form-control-sm" wire:model="testimonials_items.{{ $i }}.name">
-                                                </div>
-                                                <div class="col-md-3 mb-2">
-                                                    <label class="form-label small">Role/Jabatan</label>
-                                                    <input type="text" class="form-control form-control-sm" wire:model="testimonials_items.{{ $i }}.role">
-                                                </div>
-                                                <div class="col-md-2 mb-2">
-                                                    <label class="form-label small">Rating</label>
-                                                    <select class="form-select form-select-sm" wire:model="testimonials_items.{{ $i }}.rating">
-                                                        @for($r = 1; $r <= 5; $r++)<option value="{{ $r }}">{{ $r }} ⭐</option>@endfor
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-2 d-flex align-items-end">
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" wire:click="removeTestimonialItem({{ $i }})">
-                                                        <i class="ti ti-trash"></i>
-                                                    </button>
-                                                </div>
-                                                <div class="col-12">
-                                                    <label class="form-label small">Testimoni</label>
-                                                    <textarea class="form-control form-control-sm" wire:model="testimonials_items.{{ $i }}.text" rows="2"></textarea>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        @endforeach
-                                    </div>
-                                    @endif
 
-                                    {{-- ==================== STATISTICS TAB ==================== --}}
-                                    @if($activeTab === 'statistics')
-                                    <div wire:key="tab-statistics">
-                                        <h5 class="fw-semibold mb-3"><i class="ti ti-chart-bar me-2"></i>Statistics Section</h5>
-
-                                        <div class="border rounded p-3 mb-3 bg-light">
-                                            <div class="form-check form-switch mb-2">
-                                                <input class="form-check-input" type="checkbox" role="switch"
-                                                    wire:model="statistics_auto" id="statAuto" wire:change="toggleStatAuto">
-                                                <label class="form-check-label fw-semibold" for="statAuto">
-                                                    Hitung Otomatis dari Data
-                                                </label>
-                                            </div>
-                                            <small class="text-muted d-block mb-2">
-                                                Ambil angka real dari database (event, pendaftaran, sekolah, transaksi). Matikan untuk angka manual.
-                                            </small>
-                                            @if($statistics_auto)
-                                                <div class="d-flex flex-wrap gap-3">
-                                                    @foreach([
-                                                        'events' => 'Event Diselenggarakan',
-                                                        'registrations' => 'Pendaftaran',
-                                                        'schools' => 'Sekolah Bergabung',
-                                                        'votes' => 'Vote / Transaksi',
-                                                    ] as $metricKey => $metricLabel)
-                                                        <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox"
-                                                                wire:model="statistics_auto_metrics" value="{{ $metricKey }}"
-                                                                id="stat_metric_{{ $metricKey }}">
-                                                            <label class="form-check-label" for="stat_metric_{{ $metricKey }}">{{ $metricLabel }}</label>
-                                                        </div>
-                                                    @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
-
-                                        @if(!$statistics_auto)
-                                        <div class="d-flex justify-content-end mb-2">
-                                            <button type="button" class="btn btn-sm btn-outline-primary" wire:click="addStatisticItem">
-                                                <i class="ti ti-plus me-1"></i> Tambah Statistik
-                                            </button>
-                                        </div>
-                                        @endif
-                                        @foreach($statistics_items as $i => $item)
-                                        <div class="border rounded p-3 mb-2" wire:key="stat-{{ $i }}">
-                                            <div class="row">
-                                                <div class="col-md-4 mb-2">
-                                                    <label class="form-label small">Nilai</label>
-                                                    <input type="text" class="form-control form-control-sm" wire:model="statistics_items.{{ $i }}.value" placeholder="500+">
-                                                </div>
-                                                <div class="col-md-4 mb-2">
-                                                    <label class="form-label small">Label</label>
-                                                    <input type="text" class="form-control form-control-sm" wire:model="statistics_items.{{ $i }}.label" placeholder="Event Diselenggarakan">
-                                                </div>
-                                                <div class="col-md-3 mb-2">
-                                                    <label class="form-label small">Suffix</label>
-                                                    <input type="text" class="form-control form-control-sm" wire:model="statistics_items.{{ $i }}.suffix" placeholder="+">
-                                                </div>
-                                                <div class="col-md-1 d-flex align-items-end">
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" wire:click="removeStatisticItem({{ $i }})">
-                                                        <i class="ti ti-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        @endforeach
-                                    </div>
-                                    @endif
 
                                     {{-- ==================== FAQ TAB ==================== --}}
                                     @if($activeTab === 'faq')
@@ -406,43 +291,6 @@
                                     </div>
                                     @endif
 
-                                    {{-- ==================== GALLERY TAB ==================== --}}
-                                    @if($activeTab === 'gallery')
-                                    <div wire:key="tab-gallery">
-                                        <h5 class="fw-semibold mb-3"><i class="ti ti-photo me-2"></i>Galeri Section</h5>
-                                        <div class="mb-3">
-                                            <label class="form-label">Judul Section</label>
-                                            <input type="text" class="form-control" wire:model="gallery_title">
-                                        </div>
-                                        <div class="d-flex justify-content-end mb-2">
-                                            <button type="button" class="btn btn-sm btn-outline-primary" wire:click="addGalleryItem">
-                                                <i class="ti ti-plus me-1"></i> Tambah Foto
-                                            </button>
-                                        </div>
-                                        @foreach($gallery_items as $i => $item)
-                                        <div class="border rounded p-3 mb-2" wire:key="gallery-{{ $i }}">
-                                            <div class="row">
-                                                <div class="col-md-4 mb-2">
-                                                    <label class="form-label small">Gambar</label>
-                                                    @if(!empty($item['image']))
-                                                        <img src="{{ Storage::url($item['image']) }}" class="img-fluid rounded border p-1 mb-1" style="max-height: 80px;">
-                                                    @endif
-                                                    <input type="file" class="form-control form-control-sm" wire:model="gallery_items.{{ $i }}.image_upload" accept="image/*">
-                                                </div>
-                                                <div class="col-md-6 mb-2">
-                                                    <label class="form-label small">Caption</label>
-                                                    <input type="text" class="form-control form-control-sm" wire:model="gallery_items.{{ $i }}.caption" placeholder="Deskripsi gambar">
-                                                </div>
-                                                <div class="col-md-2 d-flex align-items-end">
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" wire:click="removeGalleryItem({{ $i }})">
-                                                        <i class="ti ti-trash"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        @endforeach
-                                    </div>
-                                    @endif
 
                                     {{-- ==================== TICKET TAB ==================== --}}
                                     @if($activeTab === 'ticket')
@@ -465,26 +313,6 @@
                                     </div>
                                     @endif
 
-                                    {{-- ==================== VOTE TAB ==================== --}}
-                                    @if($activeTab === 'vote')
-                                    <div wire:key="tab-vote">
-                                        <h5 class="fw-semibold mb-3"><i class="ti ti-thumb-up me-2"></i>Section Vote</h5>
-                                        <div class="alert alert-light border d-flex align-items-center mb-3">
-                                            <i class="ti ti-info-circle fs-6 me-2 text-primary"></i>
-                                            <span class="fs-2">Menampilkan event yang mengaktifkan voting secara <strong>otomatis (data live)</strong>. Atur hanya judul &amp; subjudul section.</span>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-12 mb-3">
-                                                <label class="form-label">Judul Section</label>
-                                                <input type="text" class="form-control" wire:model="vote_title" placeholder="Mis: Voting Online">
-                                            </div>
-                                            <div class="col-12 mb-3">
-                                                <label class="form-label">Subjudul</label>
-                                                <textarea class="form-control" wire:model="vote_subtitle" rows="2" placeholder="Deskripsi singkat section vote"></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    @endif
 
                                     {{-- ==================== CONTACT TAB ==================== --}}
                                     @if($activeTab === 'contact')
@@ -513,55 +341,6 @@
                                     </div>
                                     @endif
 
-                                    {{-- ==================== SCHEDULE TAB ==================== --}}
-                                    @if($activeTab === 'schedule')
-                                    <div wire:key="tab-schedule">
-                                        <h5 class="fw-semibold mb-3"><i class="ti ti-calendar-event me-2"></i>Jadwal Acara</h5>
-                                        <div class="row g-3 mb-4">
-                                            <div class="col-md-6">
-                                                <label class="form-label">Judul Section</label>
-                                                <input type="text" class="form-control" wire:model="schedule_title" placeholder="Jadwal Acara">
-                                            </div>
-                                        </div>
-
-                                        <div class="d-flex justify-content-end mb-2">
-                                            <button type="button" class="btn btn-sm btn-outline-primary" wire:click="addScheduleItem">
-                                                <i class="ti ti-plus me-1"></i> Tambah Jadwal
-                                            </button>
-                                        </div>
-                                        @foreach($schedule_items as $i => $item)
-                                        <div class="border rounded p-3 mb-2" wire:key="sched-{{ $i }}">
-                                            <div class="row">
-                                                <div class="col-md-2 mb-2">
-                                                    <label class="form-label small">Tanggal</label>
-                                                    <input type="text" class="form-control form-control-sm" wire:model="schedule_items.{{ $i }}.date" placeholder="12 Jul">
-                                                </div>
-                                                <div class="col-md-2 mb-2">
-                                                    <label class="form-label small">Waktu</label>
-                                                    <input type="text" class="form-control form-control-sm" wire:model="schedule_items.{{ $i }}.time" placeholder="09:00 WIB">
-                                                </div>
-                                                <div class="col-md-4 mb-2">
-                                                    <label class="form-label small">Judul</label>
-                                                    <input type="text" class="form-control form-control-sm" wire:model="schedule_items.{{ $i }}.title" placeholder="Upacara Pembukaan">
-                                                </div>
-                                                <div class="col-md-3 mb-2">
-                                                    <label class="form-label small">Lokasi</label>
-                                                    <input type="text" class="form-control form-control-sm" wire:model="schedule_items.{{ $i }}.location" placeholder="Lapangan Utama">
-                                                </div>
-                                                <div class="col-md-1 d-flex align-items-end">
-                                                    <button type="button" class="btn btn-sm btn-outline-danger" wire:click="removeScheduleItem({{ $i }})">
-                                                        <i class="ti ti-trash"></i>
-                                                    </button>
-                                                </div>
-                                                <div class="col-12">
-                                                    <label class="form-label small">Deskripsi</label>
-                                                    <textarea class="form-control form-control-sm" wire:model="schedule_items.{{ $i }}.description" rows="2" placeholder="Keterangan singkat acara"></textarea>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        @endforeach
-                                    </div>
-                                    @endif
 
                                     {{-- ==================== SOCIAL MEDIA TAB ==================== --}}
                                     @if($activeTab === 'social')

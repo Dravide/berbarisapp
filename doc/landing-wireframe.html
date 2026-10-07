@@ -1,0 +1,715 @@
+<title>Landing Page Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;600;700&amp;display=swap">
+<style>
+/* Layout: dokumen spesifikasi halaman — tiap section satu baris, mockup di kiri, anotasi di kanan. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --lime:#a3e635; --lime-ink:#2c4703;
+  --warn:#c2410c; --warn-soft:#fff1e8;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --lime:#b6f24e; --lime-ink:#16250a;
+    --warn:#ff9a6b; --warn-soft:#2e2018;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --lime:#b6f24e; --lime-ink:#16250a;
+  --warn:#ff9a6b; --warn-soft:#2e2018;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{
+  max-width:1180px;
+  margin-inline:auto;
+  padding-inline:clamp(16px,4vw,40px);
+  padding-block:clamp(28px,5vw,56px);
+}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 10px;
+}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:64ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{
+  font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap;
+}
+button.toggle{
+  font-family:var(--mono);font-size:12px;padding:7px 14px;border-radius:999px;
+  border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);
+  cursor:pointer;white-space:nowrap;
+}
+button.toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.toggle[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.spec{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-top:28px;
+}
+.spec > div{background:var(--panel);padding:16px 18px}
+.spec dt{
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;
+}
+.spec dd{margin:0;font-size:14px;line-height:1.5}
+.swatches{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.sw{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.sw i{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.15);display:block}
+
+/* ---------- tumpukan blok sebelum / sesudah ---------- */
+.stack-pair{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:clamp(20px,3vw,36px);margin-top:clamp(28px,4vw,44px);
+}
+.stack h3{font-size:15px;font-weight:600;margin-bottom:12px}
+.stack h3 .sub{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:400;margin-left:8px}
+.blks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.blk{
+  display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:center;
+  border:1px solid var(--line);border-radius:8px;background:var(--panel);
+  padding:8px 11px;font-size:13px;
+}
+.blk .no{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.blk .nm{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.blk .nm em{font-family:var(--sans);font-style:normal;color:var(--muted);margin-left:8px;font-size:12px}
+.blk .tag{
+  font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted);white-space:nowrap;
+}
+.blk.bad{border-color:var(--warn);background:var(--warn-soft)}
+.blk.bad .tag{border-color:var(--warn);color:var(--warn)}
+.blk.keep{border-color:var(--accent);background:var(--accent-soft)}
+.blk.keep .tag{border-color:var(--accent);color:var(--accent)}
+.blk.cta{border-style:dashed}
+/* Tombol "sorot" meredupkan blok yang aman supaya yang bermasalah menonjol. */
+.wrap[data-sorot="on"] .blk.keep{opacity:.3}
+.wrap[data-sorot="on"] .blk.bad{border-width:2px}
+
+/* ---------- slide ---------- */
+.slide{
+  margin-top:clamp(32px,5vw,56px);
+  display:grid;
+  grid-template-columns:minmax(0,560px) minmax(0,1fr);
+  gap:clamp(20px,3vw,44px);
+  align-items:start;
+}
+@media (max-width:900px){ .slide{grid-template-columns:minmax(0,1fr)} }
+.slide-head{grid-column:1/-1}
+.slide-head h2{font-size:clamp(19px,2.2vw,23px);font-weight:700}
+.slide-head .num{
+  font-family:var(--mono);font-size:12px;color:var(--accent);
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.slide-head .goal{color:var(--muted);font-size:14px;margin-top:6px;max-width:70ch}
+
+/* Mockup halaman: bukan artboard 4:5 seperti wireframe Instagram — yang
+   digambar di sini halaman web, jadi lebarnya 1180 px desain dan tingginya
+   mengikuti isi section. */
+.frame{
+  position:relative;
+  width:100%;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  overflow:hidden;
+  container-type:inline-size;
+  --u:0.0847cqw; /* 1 px desain (lebar 1180) */
+}
+.frame > .chrome{
+  display:flex;align-items:center;gap:calc(8*var(--u));
+  padding:calc(14*var(--u)) calc(20*var(--u));
+  border-bottom:1px solid var(--line-soft);background:var(--panel-2);
+}
+.chrome .dot{width:calc(10*var(--u));height:calc(10*var(--u));border-radius:50%;background:var(--ph-line)}
+.chrome .url{
+  flex:1;height:calc(20*var(--u));border-radius:999px;background:var(--ph-fill);
+  display:flex;align-items:center;padding-inline:calc(12*var(--u));
+  font-family:var(--mono);font-size:calc(11*var(--u));color:var(--muted);
+}
+.mock{
+  display:flex;flex-direction:column;gap:calc(22*var(--u));
+  padding:calc(34*var(--u)) calc(40*var(--u)) calc(42*var(--u));
+}
+.mock.tight{gap:calc(14*var(--u))}
+.bar{background:var(--ph-fill);border-radius:calc(4*var(--u));height:calc(11*var(--u))}
+.bar.t{height:calc(24*var(--u));background:var(--ph-line)}
+.bar.h{height:calc(30*var(--u));background:linear-gradient(90deg,var(--ph-line),var(--ph-fill))}
+.bar.s{height:calc(8*var(--u))}
+.bar.acc{background:var(--accent);height:calc(26*var(--u));border-radius:calc(7*var(--u))}
+.bar.lim{background:var(--lime);height:calc(26*var(--u));border-radius:calc(7*var(--u))}
+.w100{width:100%}.w80{width:80%}.w70{width:70%}.w60{width:60%}.w50{width:50%}.w40{width:40%}.w30{width:30%}
+.cx{align-items:center;text-align:center}
+.row{display:flex;gap:calc(14*var(--u));align-items:center}
+.row.g{flex:1}
+.col{display:flex;flex-direction:column;gap:calc(10*var(--u))}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:calc(14*var(--u))}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(14*var(--u))}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:calc(14*var(--u))}
+.card{
+  border:1px solid var(--line);border-radius:calc(9*var(--u));
+  padding:calc(16*var(--u));display:flex;flex-direction:column;gap:calc(9*var(--u));
+}
+.card.hi{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent-soft)}
+.card.dark{background:#14181f;border-color:#14181f}
+.card.dark .bar{background:#2b3138}
+.thumb{
+  background:var(--ph-fill);border-radius:calc(6*var(--u));
+  aspect-ratio:4/3;width:100%;
+}
+.pill{
+  font-family:var(--mono);font-size:calc(10*var(--u));color:var(--muted);
+  border:1px solid var(--line);border-radius:999px;padding:calc(3*var(--u)) calc(9*var(--u));
+  white-space:nowrap;align-self:flex-start;
+}
+.pill.acc{border-color:var(--accent);color:var(--accent)}
+.pill.warn{border-color:var(--warn);color:var(--warn)}
+.pill.lim{border-color:var(--lime);color:var(--lime-ink);background:var(--lime)}
+.accordion{border:1px solid var(--line);border-radius:calc(8*var(--u));padding:calc(13*var(--u)) calc(16*var(--u))}
+.ghost{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    repeating-linear-gradient(to right, transparent 0, transparent calc(1180*var(--u)/12 - 1px), color-mix(in srgb, var(--accent) 12%, transparent) calc(1180*var(--u)/12));
+  opacity:0;transition:opacity .15s;
+}
+.wrap[data-grid="on"] .ghost{opacity:1}
+.phone{
+  max-width:390px;margin-inline:auto;border:1px solid var(--line);
+  border-radius:18px;background:var(--panel);overflow:hidden;
+  container-type:inline-size;
+  width:100%;
+}
+/* `cqw` menilik container terdekat. Kalau unitnya dipasang di `.phone`
+   sendiri, yang terbaca adalah lebar `.frame` — jadi skala ponsel dipasang
+   di lapis dalam, tempat container terdekatnya sudah `.phone`. */
+.phone > *{--u:0.256cqw}
+
+.notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.notes li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;align-items:baseline}
+.notes .n{
+  font-family:var(--mono);font-size:11px;color:var(--accent);
+  border-top:1px solid var(--accent);padding-top:4px;
+}
+.notes b{font-weight:600;font-size:14.5px}
+.notes .dim{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px;white-space:nowrap}
+.notes p{font-size:13.5px;color:var(--muted);margin-top:2px;line-height:1.5}
+.notes code{color:var(--ink)}
+
+.rules{
+  margin-top:clamp(40px,6vw,72px);
+  border-top:1px solid var(--line);padding-top:clamp(24px,3vw,36px);
+}
+.rules h2{font-size:clamp(19px,2.2vw,23px)}
+.rules .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;margin-top:20px}
+.rules ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--muted)}
+.rules ul strong{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;margin-top:18px;font-size:13.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+th{
+  font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);font-weight:400;border-bottom-color:var(--line);
+}
+td:first-child{font-family:var(--mono);font-size:12.5px;white-space:nowrap;color:var(--ink)}
+td:last-child{color:var(--muted)}
+footer{
+  margin-top:clamp(32px,5vw,56px);border-top:1px solid var(--line);padding-top:20px;
+  font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em;
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+
+<div class="wrap" data-sorot="off" data-grid="off">
+
+  <header>
+    <p class="eyebrow">BERBARIS APP — Laman utama</p>
+    <h1>Wireframe penyederhanaan landing</h1>
+    <p class="lede">Laman utama menumpuk dua belas blok. Beberapa isinya mengulang blok lain, dua di antaranya tidak pernah muncul sama sekali, dan satu blok memampangkan angka yang tidak bisa dipertahankan. Wireframe ini menggambar susunannya sesudah dipangkas: enam section plus satu ajakan penutup, tiap blok punya alasan untuk ada, dan tidak ada tautan nav yang menuju kekosongan.</p>
+    <div class="meta">
+      <span class="chip">1180 px · desktop</span>
+      <span class="chip">12 blok → 6 + CTA</span>
+      <span class="chip">satu section satu alasan</span>
+      <span class="chip">7 tautan nav, semua hidup</span>
+      <button class="toggle" id="ts" type="button" aria-pressed="false">Sorot blok bermasalah</button>
+      <button class="toggle" id="tg" type="button" aria-pressed="false">Tampilkan kolom 12</button>
+    </div>
+  </header>
+
+  <dl class="spec">
+    <div>
+      <dt>Kanvas</dt>
+      <dd>Kolom desktop 1180 px, gutter 16–40 px. Bukan artboard 4:5 — yang digambar halaman, bukan slide.</dd>
+    </div>
+    <div>
+      <dt>Warna</dt>
+      <dd>
+        <span class="swatches">
+          <span class="sw"><i style="background:#f3f4f7"></i>paper</span>
+          <span class="sw"><i style="background:#ffffff"></i>panel</span>
+          <span class="sw"><i style="background:#14181f"></i>ink</span>
+          <span class="sw"><i style="background:#0062ff"></i>accent</span>
+          <span class="sw"><i style="background:#a3e635"></i>lime</span>
+        </span>
+        Ritme latar berselang-seling: <code>surface</code> → <code>surface-container-low</code> → <code>surface</code>.
+      </dd>
+    </div>
+    <div>
+      <dt>Sumber isi</dt>
+      <dd>Tiap section membaca satu kunci setting (<code>landing_hero</code>, <code>landing_features</code>, …). Urutan dan saklar hidup-matinya disimpan di <code>landing_sections_order</code> / <code>landing_sections_active</code>.</dd>
+    </div>
+    <div>
+      <dt>Jumlah section</dt>
+      <dd>Sebelum 12 + CTA + footer. Sesudah <strong>6 + CTA</strong> + footer. Section yang dibuang tidak dihapus barisnya dari DB — hanya komponennya yang hilang dari urutan.</dd>
+    </div>
+  </dl>
+
+  <!-- ============ SEBELUM / SESUDAH ============ -->
+  <div class="stack-pair">
+    <div class="stack">
+      <h3>Sebelum <span class="sub">12 blok</span></h3>
+      <ol class="blks">
+        <li class="blk bad"><span class="no">01</span><span class="nm">hero<em>+ 4 kartu angka literal</em></span><span class="tag">palsu</span></li>
+        <li class="blk"><span class="no">02</span><span class="nm">features</span><span class="tag">tetap</span></li>
+        <li class="blk bad"><span class="no">03</span><span class="nm">about<em>mengulang features</em></span><span class="tag">duplikat</span></li>
+        <li class="blk bad"><span class="no">04</span><span class="nm">statistics<em>500+ / 50K / 1jt+ / 99.9%</em></span><span class="tag">palsu</span></li>
+        <li class="blk"><span class="no">05</span><span class="nm">eventners</span><span class="tag">tetap</span></li>
+        <li class="blk"><span class="no">06</span><span class="nm">ticket</span><span class="tag">tetap</span></li>
+        <li class="blk bad"><span class="no">07</span><span class="nm">vote<em>data kosong</em></span><span class="tag">mati</span></li>
+        <li class="blk bad"><span class="no">08</span><span class="nm">schedule<em>"cara mulai" = features</em></span><span class="tag">duplikat</span></li>
+        <li class="blk bad"><span class="no">09</span><span class="nm">testimonials<em>nama karangan</em></span><span class="tag">palsu</span></li>
+        <li class="blk"><span class="no">10</span><span class="nm">faq</span><span class="tag">tetap</span></li>
+        <li class="blk bad"><span class="no">11</span><span class="nm">gallery<em>data kosong</em></span><span class="tag">mati</span></li>
+        <li class="blk"><span class="no">12</span><span class="nm">cta</span><span class="tag">tetap</span></li>
+        <li class="blk cta"><span class="no">—</span><span class="nm">contact<em>3 kartu</em></span><span class="tag">digabung</span></li>
+        <li class="blk cta"><span class="no">—</span><span class="nm">partners<em>tak punya tab admin</em></span><span class="tag">tak terjangkau</span></li>
+      </ol>
+    </div>
+
+    <div class="stack">
+      <h3>Sesudah <span class="sub">6 + CTA</span></h3>
+      <ol class="blks">
+        <li class="blk keep"><span class="no">01</span><span class="nm">hero<em>+ visual produk</em></span><span class="tag">#hero</span></li>
+        <li class="blk keep"><span class="no">02</span><span class="nm">features<em>+ chip poin about</em></span><span class="tag">#features</span></li>
+        <li class="blk keep"><span class="no">03</span><span class="nm">pricing<em>naik dari shim</em></span><span class="tag">#pricing</span></li>
+        <li class="blk keep"><span class="no">04</span><span class="nm">eventners<em>limit 12 → 6</em></span><span class="tag">#eventners</span></li>
+        <li class="blk keep"><span class="no">05</span><span class="nm">ticket</span><span class="tag">#ticket</span></li>
+        <li class="blk keep"><span class="no">06</span><span class="nm">faq<em>+ kartu kontak</em></span><span class="tag">#faq</span></li>
+        <li class="blk cta"><span class="no">—</span><span class="nm">cta</span><span class="tag">tanpa id</span></li>
+        <li class="blk cta"><span class="no">—</span><span class="nm">footer<em>3 kolom</em></span><span class="tag">tanpa id</span></li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 1 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Section 1 / 6 · #hero</p>
+      <h2>Hero — janji satu baris, lalu bukti</h2>
+      <p class="goal">Yang paling dulu terlihat: judul, satu baris penjelas, dua tombol, dan tangkapan layar produk. Empat kartu angka karangan yang dulu menempel di bawah CTA dibuang ke laut.</p>
+    </div>
+
+    <div class="frame">
+      <div class="ghost"></div>
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/</span></div>
+      <div class="mock cx">
+        <span class="pill acc">Platform Event &amp; Kompetisi</span>
+        <div class="bar h w70"></div>
+        <div class="bar w50"></div>
+        <div class="bar s w40"></div>
+        <div class="row" style="justify-content:center;margin-top:calc(6*var(--u))">
+          <span class="bar acc" style="width:calc(200*var(--u))"></span>
+          <span class="bar" style="width:calc(170*var(--u));height:calc(26*var(--u));border-radius:calc(7*var(--u));background:var(--panel);border:1px solid var(--line)"></span>
+        </div>
+        <div class="thumb" style="aspect-ratio:16/9;margin-top:calc(18*var(--u));border:1px solid var(--line)"></div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Visual produk mengambil gambar dari <code>landing_about</code></b><span class="dim">warisan nama</span><p>Section "Tentang" dibuang, tapi gambarnya sayang. Kuncinya tetap <code>landing_about</code> supaya unggahan admin yang sudah ada tidak perlu dipindah. Nama warisan, bukan salah tulis — ada komentarnya di kode.</p></div></li>
+      <li><span class="n">02</span><div><b>Gambar menang atas video</b><span class="dim">precedence</span><p>Video bawaan tidak boleh menutupi gambar yang sengaja dipasang admin. Perilakunya dipindah apa adanya dari komponen lama dan dijaga dua test.</p></div></li>
+      <li><span class="n">03</span><div><b>Empat kartu angka dibuang</b><span class="dim">500+ / 10K+ / 50+ / Real-time</span><p>Angka ini literal di dalam Blade — admin tidak bisa mengeditnya, dan isinya bertabrakan dengan section statistik beberapa layar di bawah. Dua blok mengklaim hal berbeda tentang hal yang sama.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SECTION 2 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Section 2 / 6 · #features</p>
+      <h2>Fitur — enam kartu, satu baris pengantar</h2>
+      <p class="goal">Grid enam kartu tetap. Yang berubah: tiga poin dari section "Tentang" yang dulu berdiri sendiri beberapa layar di bawah kini jadi satu baris chip di bawah judul.</p>
+    </div>
+
+    <div class="frame">
+      <div class="ghost"></div>
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/#features</span></div>
+      <div class="mock cx">
+        <span class="pill acc">Fitur</span>
+        <div class="bar h w50"></div>
+        <div class="row" style="justify-content:center;margin-top:calc(6*var(--u));flex-wrap:wrap">
+          <span class="pill">Pendaftaran digital</span>
+          <span class="pill">Penilaian juri</span>
+          <span class="pill">E-tiket QR</span>
+          <span class="pill">Live scoreboard</span>
+        </div>
+        <div class="grid3" style="margin-top:calc(16*var(--u))">
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(40*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(40*var(--u))"></span><div class="bar t w60"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(40*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w60"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(40*var(--u))"></span><div class="bar t w60"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(40*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w60"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(40*var(--u))"></span><div class="bar t w60"></div><div class="bar"></div><div class="bar w80"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Chip poin dibaca dari <code>landing_about.points</code></b><span class="dim">maks 4</span><p>Dulu tiga blok ceklis tersendiri. Sekarang satu baris ringkas, dan <code>take(4)</code> supaya daftar panjang tidak mendorong grid fitur turun.</p></div></li>
+      <li><span class="n">02</span><div><b>Tab admin ikut berubah</b><span class="dim">"Visual &amp; Poin"</span><p>Judul dan deskripsi <code>about</code> tidak lagi disunting — tidak ada tempat menampilkannya. Dua kolom tersisa: gambar (tampil di bawah Hero) dan daftar poin (tampil di sini).</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SECTION 3 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Section 3 / 6 · #pricing</p>
+      <h2>Harga — naik ke urutan yang benar</h2>
+      <p class="goal">Isinya tidak berubah sama sekali. Yang berubah cuma dua: posisinya (dulu diselipkan diam-diam oleh sebuah shim di dalam kode) dan latar section-nya.</p>
+    </div>
+
+    <div class="frame">
+      <div class="ghost"></div>
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/#pricing</span></div>
+      <div class="mock cx">
+        <span class="pill acc">Harga</span>
+        <div class="bar h w50"></div>
+        <div class="bar w60"></div>
+        <div class="grid3" style="margin-top:calc(16*var(--u));text-align:left">
+          <div class="card"><div class="bar t w50"></div><span class="pill lim">Gratis</span><div class="bar"></div><div class="bar w70"></div><span class="bar acc" style="width:100%"></span></div>
+          <div class="card hi"><div class="bar t w50"></div><span class="pill acc">Populer</span><div class="bar"></div><div class="bar w70"></div><span class="bar acc" style="width:100%"></span></div>
+          <div class="card"><div class="bar t w60"></div><div class="bar s w40"></div><div class="bar"></div><div class="bar w70"></div><span class="bar" style="width:100%;height:calc(26*var(--u));border-radius:calc(7*var(--u))"></span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Sumbernya <code>App\Support\Pricing::plans()</code></b><span class="dim">bukan <code>landing_pricing</code></span><p>Kunci setting itu cuma menyimpan judul dan subjudul — kartunya datang dari definisi paket. Nama cadangannya <code>Gratis</code> dan <code>Event Penuh</code>.</p></div></li>
+      <li><span class="n">02</span><div><b>Latar <code>surface-container-low</code></b><span class="dim">berselang-seling</span><p>Supaya batas antar section terbaca tanpa garis pemisah: features <code>surface</code>, pricing <code>container-low</code>, eventners <code>surface</code>, ticket <code>container-low</code>.</p></div></li>
+      <li><span class="n">03</span><div><b>Shim penyisip dihapus</b><span class="dim">di komponen publik</span><p>Dulu urutan lama tidak memuat <code>pricing</code>, jadi kode menyelipkannya sendiri setelah <code>features</code>. Sekarang namanya ada di default, jadi shim-nya mubazir dan membingungkan.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SECTION 4 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Section 4 / 6 · #eventners</p>
+      <h2>Event — enam kartu, lampau tetap ditandai</h2>
+      <p class="goal">Section ini satu-satunya tempat hasil event yang sudah lewat muncul di laman publik. Karena itu event lampau tetap ditampilkan bertanda "Terlaksana" — yang dipangkas hanya jumlahnya, dari dua belas jadi enam.</p>
+    </div>
+
+    <div class="frame">
+      <div class="ghost"></div>
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/#eventners</span></div>
+      <div class="mock">
+        <div class="col cx" style="align-items:center">
+          <span class="pill acc">Event</span>
+          <div class="bar h w40"></div>
+        </div>
+        <div class="grid3" style="margin-top:calc(8*var(--u))">
+          <div class="card" style="padding:0;overflow:hidden"><span class="thumb" style="border-radius:0;border-bottom:1px solid var(--line)"></span><div class="col" style="padding:calc(16*var(--u))"><div class="bar t w80"></div><div class="bar s w50"></div><div class="row"><span class="pill">Lokasi</span><span class="pill">Tanggal</span></div><span class="bar acc" style="width:100%"></span></div></div>
+          <div class="card" style="padding:0;overflow:hidden"><span class="thumb" style="border-radius:0;border-bottom:1px solid var(--line)"></span><div class="col" style="padding:calc(16*var(--u))"><div class="bar t w70"></div><div class="bar s w50"></div><div class="row"><span class="pill">Lokasi</span><span class="pill">Tanggal</span></div><span class="bar acc" style="width:100%"></span></div></div>
+          <div class="card" style="padding:0;overflow:hidden;position:relative">
+            <span class="thumb" style="border-radius:0;border-bottom:1px solid var(--line);opacity:.55"></span>
+            <span class="pill warn" style="position:absolute;top:calc(12*var(--u));left:calc(12*var(--u));background:var(--panel-2)">Terlaksana</span>
+            <div class="col" style="padding:calc(16*var(--u))"><div class="bar t w70"></div><div class="bar s w50"></div><div class="row"><span class="pill">Lokasi</span><span class="pill">Tanggal</span></div><span class="bar" style="width:100%;height:calc(26*var(--u));border-radius:calc(7*var(--u))"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Markup penandaan tidak disentuh</b><span class="dim">5 test mengunci</span><p><code>chip-past</code>, <code>card-past</code>, teks "Terlaksana", dan tombol "Lihat Hasil" / "Lihat Event" dibiarkan apa adanya. Mengubahnya berarti membuang satu-satunya jalan publik ke hasil event lampau.</p></div></li>
+      <li><span class="n">02</span><div><b>Tautan "Lihat Semua Event" dibuang</b><span class="dim"><code>href="#"</code></span><p>Sudah diperiksa: tidak ada route daftar event publik — <code>route:list</code> hanya memuat <code>api/v1/events</code> dan <code>event/{slug}</code>. Tautan yang menunjuk ke dirinya sendiri lebih buruk daripada tidak ada tautan.</p></div></li>
+      <li><span class="n">03</span><div><b>Urut tanggal pelaksanaan</b><span class="dim">bukan <code>created_at</code></span><p>Penyelenggara yang eventnya paling dekat tampil di depan. Hanya event <code>approved</code> — yang <code>pending</code> belum punya halaman publik, kartunya akan menautkan ke 404.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SECTION 5 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Section 5 / 6 · #ticket</p>
+      <h2>E-Tiket — event bertiket saja</h2>
+      <p class="goal">Sama seperti sebelumnya, empat kolom. Yang perlu dijaga: harga yang tampil bisa datang dari event, bisa dari tempat.</p>
+    </div>
+
+    <div class="frame">
+      <div class="ghost"></div>
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/#ticket</span></div>
+      <div class="mock cx">
+        <span class="pill acc">E-Tiket</span>
+        <div class="bar h w40"></div>
+        <div class="bar w60"></div>
+        <div class="grid4" style="margin-top:calc(16*var(--u));text-align:left">
+          <div class="card" style="padding:0;overflow:hidden;position:relative"><span class="thumb" style="border-radius:0"></span><span class="pill acc" style="position:absolute;bottom:calc(56*var(--u));left:calc(10*var(--u));background:var(--panel-2)">Mulai Rp</span><div class="col" style="padding:calc(14*var(--u))"><div class="bar t w90"></div><div class="bar s w60"></div><span class="bar lim" style="width:100%;height:calc(24*var(--u));border-radius:calc(6*var(--u))"></span></div></div>
+          <div class="card" style="padding:0;overflow:hidden;position:relative"><span class="thumb" style="border-radius:0"></span><span class="pill" style="position:absolute;bottom:calc(56*var(--u));left:calc(10*var(--u));background:var(--panel-2)">GRATIS</span><div class="col" style="padding:calc(14*var(--u))"><div class="bar t w80"></div><div class="bar s w60"></div><span class="bar lim" style="width:100%;height:calc(24*var(--u));border-radius:calc(6*var(--u))"></span></div></div>
+          <div class="card" style="padding:0;overflow:hidden;position:relative"><span class="thumb" style="border-radius:0"></span><span class="pill acc" style="position:absolute;bottom:calc(56*var(--u));left:calc(10*var(--u));background:var(--panel-2)">Mulai Rp</span><div class="col" style="padding:calc(14*var(--u))"><div class="bar t w90"></div><div class="bar s w60"></div><span class="bar lim" style="width:100%;height:calc(24*var(--u));border-radius:calc(6*var(--u))"></span></div></div>
+          <div class="card" style="padding:0;overflow:hidden;position:relative"><span class="thumb" style="border-radius:0"></span><span class="pill acc" style="position:absolute;bottom:calc(56*var(--u));left:calc(10*var(--u));background:var(--panel-2)">Mulai Rp</span><div class="col" style="padding:calc(14*var(--u))"><div class="bar t w80"></div><div class="bar s w60"></div><span class="bar lim" style="width:100%;height:calc(24*var(--u));border-radius:calc(6*var(--u))"></span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Harga lewat <code>startingTicketPrice()</code></b><span class="dim">bukan <code>ticket_price</code></span><p>Event yang menjual tiket per tempat tidak punya <code>ticket_price</code>. Membacanya langsung membuat event itu terlabel GRATIS di landing.</p></div></li>
+      <li><span class="n">02</span><div><b>Gerbangnya bisa mati</b><span class="dim">nav ikut mati</span><p>Kalau tidak ada event bertiket, section ini tidak render — dan tautan "Tiket" di nav hilang bersamanya. Inilah bug yang ditemukan test nav, bukan sesuatu yang ditambal dengan menyembunyikan tautannya saja.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SECTION 6 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Section 6 / 6 · #faq</p>
+      <h2>FAQ + Kontak — satu section, dua kolom</h2>
+      <p class="goal">Dulu dua section terpisah: accordion FAQ, lalu tiga kartu besar berisi nomor telepon dan alamat. Orang yang membaca FAQ adalah orang yang sedang mencari bantuan — di situ juga tempatnya bertanya.</p>
+    </div>
+
+    <div class="frame">
+      <div class="ghost"></div>
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/#faq</span></div>
+      <div class="mock">
+        <div class="col cx" style="align-items:center">
+          <span class="pill acc">FAQ</span>
+          <div class="bar h w40"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:calc(24*var(--u));margin-top:calc(8*var(--u));align-items:start">
+          <div class="col" style="gap:calc(12*var(--u))">
+            <div class="accordion"><div class="row"><div class="bar w80"></div><span class="thumb" style="width:calc(22*var(--u));aspect-ratio:1;border-radius:50%"></span></div></div>
+            <div class="accordion"><div class="col" style="gap:calc(8*var(--u))"><div class="row"><div class="bar w70"></div><span class="thumb" style="width:calc(22*var(--u));aspect-ratio:1;border-radius:50%"></span></div><div class="bar s"></div><div class="bar s w60"></div></div></div>
+            <div class="accordion"><div class="row"><div class="bar w80"></div><span class="thumb" style="width:calc(22*var(--u));aspect-ratio:1;border-radius:50%"></span></div></div>
+            <div class="accordion"><div class="row"><div class="bar w60"></div><span class="thumb" style="width:calc(22*var(--u));aspect-ratio:1;border-radius:50%"></span></div></div>
+          </div>
+          <div class="card" style="position:relative">
+            <span class="pill acc" style="position:absolute;top:calc(-9*var(--u));right:calc(12*var(--u));background:var(--panel-2)">id="contact"</span>
+            <div class="bar t w80"></div>
+            <div class="bar s w60"></div>
+            <div class="row" style="margin-top:calc(8*var(--u))"><span class="thumb" style="width:calc(30*var(--u));aspect-ratio:1;border-radius:calc(8*var(--u))"></span><div class="bar w70"></div></div>
+            <div class="row"><span class="thumb" style="width:calc(30*var(--u));aspect-ratio:1;border-radius:calc(8*var(--u))"></span><div class="bar w80"></div></div>
+            <div class="row"><span class="thumb" style="width:calc(30*var(--u));aspect-ratio:1;border-radius:calc(8*var(--u))"></span><div class="bar w60"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b><code>id="contact"</code> tetap dipasang</b><span class="dim">di kartu kanan</span><p>Tautan lama ke <code>#contact</code> tidak boleh mati. Anchor-nya pindah dari section sendiri ke kartu di dalam FAQ, dan footernya menyebut "Hubungi Kami" menunjuk ke sana.</p></div></li>
+      <li><span class="n">02</span><div><b>Gerbangnya gabungan</b><span class="dim">FAQ <em>atau</em> kontak</span><p>Section render kalau ada pertanyaan, <em>atau</em> ada satu saja kolom kontak. Kalau keduanya kosong, section hilang — dan dua tautan nav (FAQ, Kontak) ikut hilang.</p></div></li>
+      <li><span class="n">03</span><div><b>Tautan nav menunjuk section yang hidup</b><span class="dim">kolom ketiga</span><p>Entri nav jadi <code>[id, label, gerbang]</code>. "Kontak" bergerbang <code>faq</code> — dia tidak punya saklar sendiri lagi, jadi tidak mungkin jadi tautan mati.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SECTION 7 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Penutup · CTA + footer</p>
+      <h2>Ajakan penutup dan footer tiga kolom</h2>
+      <p class="goal">CTA tetap seperti semula, tanpa <code>id</code> karena tidak ada yang menautkannya. Footer kehilangan satu kolom: daftar "Layanan" yang isinya mengulang grid fitur.</p>
+    </div>
+
+    <div class="frame">
+      <div class="ghost"></div>
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/ — penutup</span></div>
+      <div class="mock tight">
+        <div class="card dark" style="align-items:center;text-align:center;padding:calc(28*var(--u))">
+          <div class="bar h w50"></div>
+          <div class="bar w60"></div>
+          <span class="bar lim" style="width:calc(190*var(--u))"></span>
+        </div>
+        <div class="grid3" style="margin-top:calc(10*var(--u))">
+          <div class="col"><div class="bar t w40"></div><div class="bar s w80"></div><div class="row" style="gap:calc(10*var(--u))"><span class="thumb" style="width:calc(20*var(--u));aspect-ratio:1;border-radius:calc(5*var(--u))"></span><span class="thumb" style="width:calc(20*var(--u));aspect-ratio:1;border-radius:calc(5*var(--u))"></span><span class="thumb" style="width:calc(20*var(--u));aspect-ratio:1;border-radius:calc(5*var(--u))"></span></div></div>
+          <div class="col"><div class="bar t w40"></div><div class="bar s w60"></div><div class="bar s w50"></div><div class="bar s w60"></div></div>
+          <div class="col"><div class="bar t w50"></div><div class="bar s w70"></div><div class="bar s w60"></div><div class="bar s w50"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Kolom "Layanan" dihapus</b><span class="dim">4 → 3 kolom</span><p>Isinya daftar tautan yang menunjuk kembali ke <code>#features</code> — daftar fitur yang sama, dibaca dua kali dalam satu halaman.</p></div></li>
+      <li><span class="n">02</span><div><b>Kolom Navigasi menyusut</b><span class="dim">Beranda · Fitur · Harga · Event · FAQ</span><p>"Tiket" dan "Kontak" tidak masuk kolom ini; keduanya sudah ada di nav atas dan di kartu FAQ. Kolom Kontak tetap dan mendapat "Hubungi Kami" menuju <code>#contact</code>.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ MOBILE ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Varian · 390 px</p>
+      <h2>Lebar ponsel — hero dan harga</h2>
+      <p class="goal">Dua section yang paling berisiko pecah di layar sempit. Sisanya satu kolom penuh dan tidak punya masalah tata letak.</p>
+    </div>
+
+    <div class="frame" style="padding:calc(24*var(--u));background:var(--panel-2)">
+      <div class="row" style="gap:calc(20*var(--u));align-items:flex-start;justify-content:center;flex-wrap:wrap">
+        <div class="phone">
+          <div class="mock tight cx" style="padding:calc(22*var(--u)) calc(20*var(--u))">
+            <span class="pill acc">Platform Event</span>
+            <div class="bar h w80"></div>
+            <div class="bar h w60"></div>
+            <div class="bar s w80"></div>
+            <span class="bar acc" style="width:100%;margin-top:calc(8*var(--u))"></span>
+            <div class="thumb" style="aspect-ratio:16/10;margin-top:calc(10*var(--u))"></div>
+          </div>
+        </div>
+        <div class="phone">
+          <div class="mock tight" style="padding:calc(22*var(--u)) calc(20*var(--u));align-items:center">
+            <span class="pill acc">Harga</span>
+            <div class="bar h w70"></div>
+            <div class="card" style="width:100%;margin-top:calc(8*var(--u))"><div class="bar t w50"></div><span class="pill lim">Gratis</span><div class="bar w70"></div><span class="bar acc" style="width:100%"></span></div>
+            <div class="card hi" style="width:100%"><div class="bar t w50"></div><span class="pill acc">Populer</span><div class="bar w70"></div><span class="bar acc" style="width:100%"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Kartu menumpuk satu kolom</b><span class="dim">grid → stack</span><p>Grid fitur 3 kolom jadi 1, kartu harga 3 jadi 1, kartu event 3 jadi 1. Semua sudah memakai kelas responsif Tailwind yang ada, tidak ada CSS baru.</p></div></li>
+      <li><span class="n">02</span><div><b>Nav atas jadi menu lipat</b><span class="dim">hamburger</span><p>Daftar tautan yang sama, sumbernya satu variabel <code>$navItems</code> — jadi desktop dan mobile tidak mungkin berbeda isi.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ YANG DIBUANG ============ -->
+  <section class="rules">
+    <h2>Yang dibuang, dan alasannya</h2>
+    <table>
+      <thead>
+        <tr><th>Blok</th><th>Alasan</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>#statistics</td><td>Angka palsu: "500+ Event Terkelola", "50K Penyelenggara Aktif", "1jt+ Peserta Terdaftar", "99.9% Uptime Server". Database sebenarnya berisi belasan event dan puluhan peserta — klaim ini yang pertama dilihat pengunjung dan tidak bisa dipertahankan.</td></tr>
+        <tr><td>4 kartu di #hero</td><td>Statistik kedua: "500+ / 10K+ / 50+ / Real-time", literal di dalam Blade sehingga admin tidak bisa mengeditnya sama sekali.</td></tr>
+        <tr><td>#about</td><td>Isinya mengulang <code>#features</code>. Yang masih berguna dipindah: gambarnya jadi visual hero, tiga poinnya jadi chip di bawah judul fitur.</td></tr>
+        <tr><td>#vote</td><td>Tidak pernah render — <code>@if(count($items) &gt; 0)</code> dan datanya kosong. Tautan nav-nya tetap ada, jadi kliknya tidak terjadi apa-apa.</td></tr>
+        <tr><td>#gallery</td><td>Sama: <code>items: []</code>, tidak pernah render, nav-nya mati.</td></tr>
+        <tr><td>#schedule</td><td>"Cara mulai pakai" empat langkah — tumpang tindih dengan grid fitur.</td></tr>
+        <tr><td>#testimonials</td><td>Enam testimoni sintetis dengan nama dan jabatan karangan. Tidak bisa diverifikasi siapa pun.</td></tr>
+        <tr><td>#partners</td><td>Tidak punya tab admin dan tidak punya baris setting; hanya render kalau ada logo sekolah. Satu-satunya section yang tidak bisa disunting siapa pun.</td></tr>
+        <tr><td>#contact</td><td>Digabung ke kolom kanan <code>#faq</code>. Anchor <code>id="contact"</code> dipertahankan supaya tautan lama tidak mati.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="cols">
+      <ul>
+        <li><strong>Baris setting-nya tidak dihapus.</strong> <code>landing_vote</code>, <code>landing_gallery</code>, dan kawan-kawan dibiarkan di DB. Menghapusnya berarti membuang tulisan admin; membiarkannya tidak merugikan apa pun.</li>
+        <li><strong>Tiga lapis penjagaan nama section.</strong> Default di komponen publik, migration, dan penyaring saat menyimpan di komponen admin semuanya menyebut tujuh nama yang sama. Kalau tidak, landing akan memanggil view yang sudah dihapus dan error 500.</li>
+      </ul>
+      <ul>
+        <li><strong>Migration tidak menimpa susunan admin.</strong> Nilai ditulis ulang hanya kalau masih persis sama dengan default lama. Kalau admin pernah menyusun ulang section-nya sendiri, susunan itu miliknya.</li>
+        <li><strong>Test yang baru menjaga nav.</strong> Setiap <code>href="#x"</code> di blok header harus punya <code>id="x"</code> di halaman. Inilah yang seharusnya mencegah masalah #vote dan #gallery kembali.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ PANEL ADMIN ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Pendamping · /admin/setting/landing-page</p>
+      <h2>Panel urutan section</h2>
+      <p class="goal">Panelnya tetap ada dan sekarang hanya memuat tujuh nama. Menyimpan tidak akan menghidupkan kembali section yang sudah dibuang.</p>
+    </div>
+
+    <div class="frame">
+      <div class="ghost"></div>
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/admin/setting/landing-page</span></div>
+      <div class="mock">
+        <div class="row" style="gap:calc(8*var(--u));flex-wrap:wrap">
+          <span class="pill acc">Hero</span>
+          <span class="pill">Fitur</span>
+          <span class="pill">Harga</span>
+          <span class="pill">Visual &amp; Poin</span>
+          <span class="pill">CTA</span>
+          <span class="pill">FAQ</span>
+          <span class="pill">Tiket</span>
+          <span class="pill">Kontak</span>
+          <span class="pill">Sosial</span>
+        </div>
+        <div class="col" style="gap:calc(8*var(--u));margin-top:calc(6*var(--u))">
+          <div class="card" style="flex-direction:row;align-items:center;gap:calc(12*var(--u))"><span class="no" style="font-family:var(--mono);font-size:calc(11*var(--u));color:var(--muted)">1</span><span class="bar w30" style="margin:0"></span><span class="pill">↑ ↓</span><span class="pill acc">aktif</span></div>
+          <div class="card" style="flex-direction:row;align-items:center;gap:calc(12*var(--u))"><span class="no" style="font-family:var(--mono);font-size:calc(11*var(--u));color:var(--muted)">2</span><span class="bar w30" style="margin:0"></span><span class="pill">↑ ↓</span><span class="pill acc">aktif</span></div>
+          <div class="card" style="flex-direction:row;align-items:center;gap:calc(12*var(--u))"><span class="no" style="font-family:var(--mono);font-size:calc(11*var(--u));color:var(--muted)">3</span><span class="bar w30" style="margin:0"></span><span class="pill">↑ ↓</span><span class="pill acc">aktif</span></div>
+          <div class="card" style="flex-direction:row;align-items:center;gap:calc(12*var(--u))"><span class="no" style="font-family:var(--mono);font-size:calc(11*var(--u));color:var(--muted)">4</span><span class="bar w30" style="margin:0"></span><span class="pill">↑ ↓</span><span class="pill acc">aktif</span></div>
+          <div class="card" style="flex-direction:row;align-items:center;gap:calc(12*var(--u))"><span class="no" style="font-family:var(--mono);font-size:calc(11*var(--u));color:var(--muted)">5</span><span class="bar w30" style="margin:0"></span><span class="pill">↑ ↓</span><span class="pill acc">aktif</span></div>
+          <div class="card" style="flex-direction:row;align-items:center;gap:calc(12*var(--u))"><span class="no" style="font-family:var(--mono);font-size:calc(11*var(--u));color:var(--muted)">6</span><span class="bar w30" style="margin:0"></span><span class="pill">↑ ↓</span><span class="pill acc">aktif</span></div>
+          <div class="card" style="flex-direction:row;align-items:center;gap:calc(12*var(--u))"><span class="no" style="font-family:var(--mono);font-size:calc(11*var(--u));color:var(--muted)">7</span><span class="bar w30" style="margin:0"></span><span class="pill">↑ ↓</span><span class="pill acc">aktif</span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Lima tab dihapus</b><span class="dim">14 → 9</span><p>Testimoni, statistik, galeri, vote, dan jadwal tidak punya section lagi. Propertinya, method pengelola itemnya, dan blok simpannya ikut dibuang dari komponen — bukan cuma disembunyikan dari tab.</p></div></li>
+      <li><span class="n">02</span><div><b>Tab "Visual &amp; Poin" menggantikan "Tentang"</b><span class="dim">9 tab tersisa</span><p>Hero, Fitur, Harga, Visual &amp; Poin, CTA, FAQ, Tiket, Kontak, Sosial. Isinya gambar dan daftar poin — dua hal yang benar-benar masih tampil di laman.</p></div></li>
+      <li><span class="n">03</span><div><b>Nama section disaring saat menyimpan</b><span class="dim"><code>SECTION_DIKENAL</code></span><p>Daftar nama lama yang komponennya sudah dihapus tidak ikut tersimpan. Tanpa saringan ini, satu klik simpan bisa menyimpan nama yang tidak punya view — dan laman langsung error 500.</p></div></li>
+    </ol>
+  </article>
+
+  <footer>BERBARIS APP · wireframe penyederhanaan laman utama · kanvas 1180 px · 12 blok → 6 + CTA</footer>
+
+</div>
+
+<script>
+(function () {
+  var wrap = document.querySelector('.wrap');
+  var pairs = [
+    ['ts', 'sorot', 'Sorot blok bermasalah'],
+    ['tg', 'grid', 'Tampilkan kolom 12']
+  ];
+
+  pairs.forEach(function (p) {
+    var btn = document.getElementById(p[0]);
+    if (!btn) return;
+
+    btn.addEventListener('click', function () {
+      var on = wrap.getAttribute('data-' + p[1]) === 'on';
+      wrap.setAttribute('data-' + p[1], on ? 'off' : 'on');
+      btn.setAttribute('aria-pressed', on ? 'false' : 'true');
+    });
+  });
+
+  // Tombol sorot hanya berguna kalau kolom "Sebelum" sedang terlihat.
+  var first = document.querySelector('.stack-pair');
+  if (first && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        document.getElementById('ts').style.visibility = e.isIntersecting ? 'visible' : 'hidden';
+      });
+    }, { threshold: 0 }).observe(first);
+  }
+})();
+</script>
