@@ -73,7 +73,13 @@ class LandingPage extends Component
     {
         // Urut tanggal pelaksanaan, bukan tanggal dibuat — penyelenggara yang
         // eventnya paling dekat tampil di depan, bukan yang paling baru daftar.
-        $eventners = Eventner::withCount('registrations')
+        //
+        // Hanya event yang sudah disetujui: yang masih `pending` (belum
+        // dibayar/diverifikasi admin) belum punya halaman publik sama sekali,
+        // jadi kartunya akan menautkan ke 404. Sama seperti scopeApproved()
+        // yang dipakai semua halaman publik lain.
+        $eventners = Eventner::approved()
+            ->withCount('registrations')
             ->orderBy('tanggal')
             ->limit(12)
             ->get();
@@ -81,7 +87,8 @@ class LandingPage extends Component
         // Event yang menjual tiket per tempat tidak punya `eventners.ticket_price`,
         // jadi penyaring harga dipindah ke hasTicketPrice() — kalau tidak, event
         // itu hilang dari section E-Tiket di landing.
-        $ticketEvents = Eventner::where('ticket_active', true)
+        $ticketEvents = Eventner::approved()
+            ->where('ticket_active', true)
             ->with('venues')
             ->where(function ($q) {
                 $q->whereNotNull('ticket_price')
@@ -97,7 +104,8 @@ class LandingPage extends Component
             ->filter(fn ($event) => $event->hasTicketPrice())
             ->values();
 
-        $voteEvents = Eventner::where('vote_active', true)
+        $voteEvents = Eventner::approved()
+            ->where('vote_active', true)
             ->where(function ($q) {
                 $q->whereNull('vote_end')
                   ->orWhere('vote_end', '>=', now());

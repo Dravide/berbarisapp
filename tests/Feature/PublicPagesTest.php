@@ -83,6 +83,23 @@ class PublicPagesTest extends TestCase
     }
 
     /**
+     * Event yang belum disetujui admin (pending) belum punya halaman publik —
+     * kartunya akan menautkan ke 404, jadi jangan ikut ditampilkan.
+     */
+    public function test_penyelenggara_menyembunyikan_event_belum_aktif()
+    {
+        Eventner::factory()->pending()->create([
+            'nama_event' => 'Lomba Belum Disetujui',
+            'tanggal' => now()->addMonth()->toDateString(),
+        ]);
+
+        $response = $this->get('/');
+
+        $response->assertDontSee('Lomba Belum Disetujui', false);
+        $this->assertStringNotContainsString('<section id="eventners"', $response->getContent());
+    }
+
+    /**
      * Tanggal akhir yang masih hari ini belum dihitung terlaksana — event
      * sehari tidak boleh berubah jadi "Terlaksana" begitu lewat tengah malam.
      */
