@@ -6,6 +6,7 @@ use App\Models\CompetitionCategory;
 use App\Models\Eventner;
 use App\Models\Participant;
 use App\Models\Registration;
+use App\Models\Setting;
 use App\Models\Sponsor;
 use App\Models\Tenant;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -46,6 +47,49 @@ class PublicPagesTest extends TestCase
                 "Tautan nav #{$anchor} tidak punya section dengan id itu di halaman."
             );
         }
+    }
+
+    /**
+     * Urutan section yang tersimpan di DB bisa tertinggal dari kode — dan di
+     * produksi memang tertinggal. Akibatnya nyata: laman harga hilang dari
+     * halaman depan, karena `pricing` tidak ada di urutan lama dan shim yang
+     * dulu menyelipkannya sudah dibuang.
+     */
+    public function test_landing_tetap_menampilkan_harga_walau_urutan_tersimpan_tertinggal()
+    {
+        Setting::set('landing_sections_order', json_encode([
+            'hero', 'features', 'about', 'statistics', 'eventners', 'ticket',
+            'vote', 'schedule', 'testimonials', 'faq', 'gallery', 'cta', 'contact',
+        ]));
+        Setting::set('landing_sections_active', json_encode([
+            'hero' => true, 'features' => true, 'about' => true, 'statistics' => true,
+            'eventners' => true, 'ticket' => true, 'vote' => true, 'schedule' => true,
+            'testimonials' => true, 'faq' => true, 'gallery' => true, 'cta' => true,
+            'contact' => true,
+        ]));
+
+        $html = $this->get('/')->getContent();
+
+        $this->assertStringContainsString('id="pricing"', $html);
+        $this->assertStringContainsString('Daftar Gratis', $html);
+    }
+
+    /**
+     * Nama section lama yang komponennya sudah dihapus tidak boleh ikut
+     * dirender — kalau ikut, landing memanggil view yang tidak ada dan
+     * halaman depan error 500.
+     */
+    public function test_landing_menyaring_nama_section_yang_komponennya_sudah_dihapus()
+    {
+        Setting::set('landing_sections_order', json_encode([
+            'testimonials', 'gallery', 'vote', 'schedule', 'statistics', 'about',
+        ]));
+        Setting::set('landing_sections_active', json_encode([
+            'testimonials' => true, 'gallery' => true, 'vote' => true,
+            'schedule' => true, 'statistics' => true, 'about' => true,
+        ]));
+
+        $this->get('/')->assertStatus(200);
     }
 
     public function test_penyelenggara_menampilkan_tanggal_pelaksanaan()

@@ -10,6 +10,22 @@ use Illuminate\Support\Facades\Storage;
 
 class LandingPage extends Component
 {
+    /**
+     * Section yang punya komponen Blade-nya, dalam urutan bawaan.
+     *
+     * Urutan yang tersimpan di settings hanya *preferensi urutan* milik admin;
+     * daftar section yang benar-benar ada ditentukan di sini. Kalau halaman
+     * mempercayai urutan tersimpan apa adanya, dua hal bisa terjadi: nama lama
+     * yang view-nya sudah dihapus dipanggil (error 500), dan section yang
+     * belum ada di urutan lama tidak pernah muncul sama sekali.
+     *
+     * Yang kedua itu nyata terjadi: `pricing` dulu diselipkan oleh shim di
+     * dalam mount() karena urutan bawaan komponen admin tidak memuatnya.
+     * Begitu shim-nya dibuang dan urutan lama masih tersimpan di DB,
+     * halaman harga hilang dari laman produksi.
+     */
+    private const SECTION_DIKENAL = ['hero', 'features', 'pricing', 'eventners', 'ticket', 'faq', 'cta'];
+
     public $sections = [];
     public $sectionsOrder = [];
     public $sectionsActive = [];
@@ -35,8 +51,13 @@ class LandingPage extends Component
         // lagi di footer) atau yang tidak pernah render sama sekali karena
         // datanya kosong (vote, galeri) — nav-nya tetap aktif, jadi kliknya
         // tidak terjadi apa-apa.
-        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', '["hero","features","pricing","eventners","ticket","faq","cta"]'), true);
-        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', '{"hero":true,"features":true,"pricing":true,"eventners":true,"ticket":true,"faq":true,"cta":true}'), true);
+        $tersimpan = json_decode(Setting::get('landing_sections_order', '[]'), true) ?: [];
+        $this->sectionsOrder = $this->lengkapiUrutan($tersimpan);
+
+        $this->sectionsActive = json_decode(
+            Setting::get('landing_sections_active', '{"hero":true,"features":true,"pricing":true,"eventners":true,"ticket":true,"faq":true,"cta":true}'),
+            true
+        );
 
         // Load each section's content
         foreach ($this->sectionsOrder as $type) {
@@ -51,6 +72,54 @@ class LandingPage extends Component
                 'content' => $content,
             ];
         }
+    }
+
+    /**
+     * Urutan tersimpan → urutan yang benar-benar bisa dirender.
+     *
+     * Dua penyaringan, dan keduanya perlu:
+     *
+     * 1. Nama yang tidak punya komponen Blade dibuang. Kalau tidak, urutan
+     *    lama yang masih tersimpan (mis. `testimonials`, `gallery`, `vote`)
+     *    akan memanggil view yang sudah dihapus — error 500 di laman depan.
+     * 2. Nama yang belum ada di urutan tersimpan ditambahkan di posisi
+     *    bawaannya. Ini yang bikin section baru muncul tanpa harus menunggu
+     *    admin menyusun ulang atau migration dijalankan — persis kasus
+     *    `pricing` di produksi.
+     *
+     * Urutan relatif pilihan admin tidak diusik: yang tersimpan tetap
+     * berurutan seperti semula, tambahan hanya menempel di sekitarnya.
+     */
+    private function lengkapiUrutan(array $tersimpan): array
+    {
+        $urutan = array_values(array_filter(
+            $tersimpan,
+            fn ($type) => in_array($type, self::SECTION_DIKENAL, true)
+        ));
+
+        foreach (self::SECTION_DIKENAL as $posisi => $type) {
+            if (in_array($type, $urutan, true)) {
+                continue;
+            }
+
+            // Sisipkan setelah tetangga terdekat yang sudah ada di urutan
+            // tersimpan, supaya section baru tidak selalu jatuh ke paling
+            // belakang. Kalau tidak ada satu pun tetangga sebelumnya,
+            // taruh di depan.
+            $jangkarkan = null;
+            for ($i = $posisi - 1; $i >= 0; $i--) {
+                $kandidat = self::SECTION_DIKENAL[$i];
+                $di = array_search($kandidat, $urutan, true);
+                if ($di !== false) {
+                    $jangkarkan = $di + 1;
+                    break;
+                }
+            }
+
+            array_splice($urutan, $jangkarkan ?? 0, 0, [$type]);
+        }
+
+        return $urutan;
     }
 
     public function render()
