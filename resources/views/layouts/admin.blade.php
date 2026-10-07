@@ -221,7 +221,12 @@
 
     document.addEventListener('livewire:init', function () {
       Livewire.on('toast', function (event) {
-        const d = (event && event.detail) || {};
+        // Livewire v4 menyerahkan `event.detail` SUDAH dilepas: parameter yang
+        // sampai ke sini adalah objek dispatchnya sendiri
+        // ({message, type, url, label}). Bentuk `event.detail` tetap didukung
+        // karena `$dispatch` dari Alpine memang mengirim CustomEvent ber-detail.
+        // Sebelum ini d selalu {}, jadi pesan gagal pun tampil hijau "Berhasil.".
+        const d = (event && event.detail) || event || {};
         const message = typeof d === 'string' ? d : (d.message || 'Berhasil.');
         const type = (typeof d === 'object' && d.type) || 'success';
         // Tautan opsional: pesan blokir sering menuntut operator pindah layar

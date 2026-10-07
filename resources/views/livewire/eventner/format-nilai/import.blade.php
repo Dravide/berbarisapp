@@ -144,7 +144,7 @@ document.addEventListener('livewire:init', () => {
             bootstrap.Modal.getOrCreateInstance(modalEl).hide();
         }
 
-        const d = (event && event.detail) || {};
+        const d = (event && event.detail) || event || {};
         const message = typeof d === 'string' ? d : (d.message || 'Import berhasil.');
         if (window.Swal) {
             Swal.fire({

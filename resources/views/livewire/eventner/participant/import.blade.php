@@ -170,7 +170,7 @@
 // lewat event $refresh dari komponen, jadi tidak perlu reload halaman.
 document.addEventListener('livewire:init', () => {
     Livewire.on('import:done', (event) => {
-        const d = (event && event.detail) || {};
+        const d = (event && event.detail) || event || {};
         const message = typeof d === 'string' ? d : (d.message || 'Import berhasil.');
 
         if (window.Swal) {

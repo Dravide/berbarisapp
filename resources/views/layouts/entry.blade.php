@@ -119,11 +119,38 @@
         // confirm() bawaan browser sudah sinkron dan benar, sedangkan menimpa
         // window.confirm membuat aksi Livewire batal diam-diam.
         window.beToast = function(message, icon) {
-            if (!window.Swal) { return; }
+            const tipe = icon || 'success';
+
+            // SweetAlert2 datang dari CDN, dan meja sekretariat sering kehilangan
+            // internet justru saat lomba berjalan. Dulu tanpa Swal fungsi ini
+            // `return` diam-diam: PIN salah tak memunculkan apa pun, layar
+            // tampak membeku, dan panitia menyimpulkan halamannya rusak.
+            // Jadi sediakan penggantinya — satu baris teks di tepi atas.
+            if (!window.Swal) {
+                let el = document.getElementById('be-toast-fallback');
+                if (!el) {
+                    el = document.createElement('div');
+                    el.id = 'be-toast-fallback';
+                    el.style.cssText = 'position:fixed;top:12px;left:50%;transform:translateX(-50%);' +
+                        'z-index:9999;max-width:90vw;padding:10px 16px;border-radius:12px;' +
+                        'font-size:13px;font-weight:600;color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.18);';
+                    document.body.appendChild(el);
+                }
+
+                el.style.background = tipe === 'error' ? '#dc2626' : '#16a34a';
+                el.textContent = message;
+                el.style.display = 'block';
+
+                clearTimeout(window.__beToastTimer);
+                window.__beToastTimer = setTimeout(function() { el.style.display = 'none'; }, 4000);
+
+                return;
+            }
+
             Swal.fire({
                 toast: true,
                 position: 'top-end',
-                icon: icon || 'success',
+                icon: tipe,
                 title: message,
                 showConfirmButton: false,
                 timer: 3500,
@@ -133,7 +160,13 @@
 
         document.addEventListener('livewire:init', function () {
             Livewire.on('toast', function (event) {
-                const d = (event && event.detail) || {};
+                // Livewire v4 menyerahkan `event.detail` SUDAH dilepas: parameter
+                // yang sampai ke sini adalah objek dispatchnya sendiri
+                // ({message, type, url, label}). Bentuk `event.detail` yang lama
+                // dipertahankan karena `$dispatch` dari Alpine memang memakai
+                // CustomEvent ber-detail. Tanpa cabang pertama, pesannya jatuh
+                // ke 'Berhasil.' — error tampil hijau "Berhasil.".
+                const d = (event && event.detail) || event || {};
                 const message = typeof d === 'string' ? d : (d.message || 'Berhasil.');
                 const type = (typeof d === 'object' && d.type) || 'success';
                 window.beToast(message, type);
