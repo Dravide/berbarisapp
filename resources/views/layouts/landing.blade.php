@@ -127,6 +127,7 @@
                         ['hero', 'Beranda', 'hero'],
                         ['features', 'Fitur', 'features'],
                         ['pricing', 'Harga', 'pricing'],
+                        ['perbandingan', 'Perbandingan', 'perbandingan'],
                         ['eventners', 'Event', 'eventners'],
                         ['ticket', 'Tiket', 'ticket'],
                         ['faq', 'FAQ', 'faq'],

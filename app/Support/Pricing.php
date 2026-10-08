@@ -45,6 +45,58 @@ class Pricing
         return $plans->all();
     }
 
+    /**
+     * Fitur yang terbuka di paket mana pun, termasuk paket gratis.
+     *
+     * Dipakai dua tempat: daftar cek di kartu paket gratis dan tabel
+     * perbandingan. Sebelum ini daftarnya ditulis ulang di dalam Blade kartu
+     * harga; begitu tabel perbandingan menyusul, dua salinan itu pasti
+     * berbeda diam-diam.
+     */
+    public static function baseFeatures(): array
+    {
+        return [
+            'Dashboard event & profil',
+            'Kategori lomba & pendaftaran peserta',
+            'Manajemen juri & input nilai',
+            'Rekap nilai & scoreboard publik',
+            'QR check-in peserta',
+        ];
+    }
+
+    /**
+     * Matriks perbandingan paket: baris = fitur, kolom = paket.
+     *
+     * Dua lapis baris: fitur dasar (selalu terbuka) dan fitur premium dari
+     * config. Sel premium dihitung dari paket DB yang sama dengan halaman
+     * harga, jadi paket yang baru dibuat admin langsung muncul jadi kolom
+     * tanpa perubahan kode.
+     */
+    public static function comparisonMatrix(): array
+    {
+        $plans = self::plans();
+
+        $rows = [];
+        foreach (self::baseFeatures() as $label) {
+            $rows[] = ['label' => $label, 'cells' => array_fill(0, count($plans), true)];
+        }
+
+        foreach (config('eventner_features', []) as $key => $config) {
+            // locked_free = false → selalu terbuka, bukan fitur jualan paket.
+            $terbuka = ! ($config['locked_free'] ?? true);
+
+            $rows[] = [
+                'label' => $config['label'],
+                'cells' => array_map(
+                    fn ($plan) => $terbuka || (! $plan['is_free'] && in_array($key, $plan['features'], true)),
+                    $plans
+                ),
+            ];
+        }
+
+        return ['plans' => $plans, 'rows' => $rows];
+    }
+
     public static function planPrice(): int
     {
         $plan = self::paidPlan();

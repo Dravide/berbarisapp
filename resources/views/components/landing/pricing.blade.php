@@ -62,13 +62,7 @@
                     // Daftar fitur dipadatkan: sisanya disembunyikan di balik toggle
                     // supaya kartu tidak memanjang ke bawah saat semua fitur aktif.
                     if ($plan['is_free']) {
-                        $features = [
-                            'Dashboard event & profil',
-                            'Kategori lomba & pendaftaran peserta',
-                            'Manajemen juri & input nilai',
-                            'Rekap nilai & scoreboard publik',
-                            'QR check-in peserta',
-                        ];
+                        $features = \App\Support\Pricing::baseFeatures();
                     } else {
                         $features = array_merge(
                             ['Semua fitur paket gratis'],

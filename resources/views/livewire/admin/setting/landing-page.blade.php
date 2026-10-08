@@ -49,6 +49,7 @@
                                             'features' => 'Fitur',
                                             'about' => 'Visual & Poin',
                                             'pricing' => 'Harga',
+                                            'perbandingan' => 'Perbandingan',
                                             'ticket' => 'Tiket',
                                             'faq' => 'FAQ',
                                             'contact' => 'Kontak',
@@ -169,6 +170,25 @@
                                         <div class="mb-3">
                                             <label class="form-label">Subjudul</label>
                                             <textarea class="form-control" rows="2" wire:model="pricing_subtitle"></textarea>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    {{-- ==================== PERBANDINGAN TAB ==================== --}}
+                                    @if($activeTab === 'perbandingan')
+                                    <div wire:key="tab-perbandingan">
+                                        <h5 class="fw-semibold mb-3"><i class="ti ti-table me-2"></i>Section Perbandingan</h5>
+                                        <div class="alert alert-light border d-flex align-items-center mb-3">
+                                            <i class="ti ti-info-circle fs-6 me-2 text-primary"></i>
+                                            <span class="fs-2">Tabel fitur per paket dihitung <strong>otomatis dari paket aktif</strong> (sama dengan section Harga). Di sini cukup judul &amp; subjudul.</span>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Judul Section</label>
+                                            <input type="text" class="form-control" wire:model="perbandingan_title" placeholder="Mis: Bandingkan Paket">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Subjudul</label>
+                                            <textarea class="form-control" rows="2" wire:model="perbandingan_subtitle" placeholder="Kalimat pengantar di bawah judul"></textarea>
                                         </div>
                                     </div>
                                     @endif

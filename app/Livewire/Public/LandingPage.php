@@ -24,7 +24,7 @@ class LandingPage extends Component
      * Begitu shim-nya dibuang dan urutan lama masih tersimpan di DB,
      * halaman harga hilang dari laman produksi.
      */
-    private const SECTION_DIKENAL = ['hero', 'features', 'pricing', 'eventners', 'ticket', 'faq', 'cta'];
+    private const SECTION_DIKENAL = ['hero', 'features', 'pricing', 'perbandingan', 'eventners', 'ticket', 'faq', 'cta'];
 
     public $sections = [];
     public $sectionsOrder = [];
@@ -55,7 +55,7 @@ class LandingPage extends Component
         $this->sectionsOrder = $this->lengkapiUrutan($tersimpan);
 
         $this->sectionsActive = json_decode(
-            Setting::get('landing_sections_active', '{"hero":true,"features":true,"pricing":true,"eventners":true,"ticket":true,"faq":true,"cta":true}'),
+            Setting::get('landing_sections_active', '{"hero":true,"features":true,"pricing":true,"perbandingan":true,"eventners":true,"ticket":true,"faq":true,"cta":true}'),
             true
         );
 
@@ -177,6 +177,7 @@ class LandingPage extends Component
             'hero' => true,
             'features' => true,
             'pricing' => true,
+            'perbandingan' => true,
             'eventners' => $eventners->isNotEmpty(),
             'ticket' => $ticketEvents->isNotEmpty(),
             'cta' => true,

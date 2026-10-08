@@ -23,7 +23,7 @@ class LandingPage extends Component
      * saat menyimpan — kalau tidak, landing akan memanggil view yang sudah
      * dihapus dan error 500.
      */
-    private const SECTION_DIKENAL = ['hero', 'features', 'pricing', 'eventners', 'ticket', 'faq', 'cta'];
+    private const SECTION_DIKENAL = ['hero', 'features', 'pricing', 'perbandingan', 'eventners', 'ticket', 'faq', 'cta'];
 
     // Active tab
     public $activeTab = 'hero';
@@ -57,6 +57,11 @@ class LandingPage extends Component
     public $pricing_title;
 
     public $pricing_subtitle;
+
+    // Comparison fields
+    public $perbandingan_title;
+
+    public $perbandingan_subtitle;
 
     // Visual & poin (kunci settingnya masih `landing_about` — nama warisan;
     // isinya sekarang tampil di dalam section hero dan features).
@@ -112,8 +117,8 @@ class LandingPage extends Component
     public function mount()
     {
         // Load section order & active
-        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', '["hero","features","pricing","eventners","ticket","faq","cta"]'), true);
-        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', '{"hero":true,"features":true,"pricing":true,"eventners":true,"ticket":true,"faq":true,"cta":true}'), true);
+        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', '["hero","features","pricing","perbandingan","eventners","ticket","faq","cta"]'), true);
+        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', '{"hero":true,"features":true,"pricing":true,"perbandingan":true,"eventners":true,"ticket":true,"faq":true,"cta":true}'), true);
 
         // Load Hero
         $hero = json_decode(Setting::get('landing_hero', '{}'), true) ?? [];
@@ -133,6 +138,11 @@ class LandingPage extends Component
         $pricing = json_decode(Setting::get('landing_pricing', '{}'), true) ?? [];
         $this->pricing_title = $pricing['title'] ?? 'Harga & Paket';
         $this->pricing_subtitle = $pricing['subtitle'] ?? 'Kelola perlombaan sekolah dengan gratis. Aktifkan fitur premium sekali bayar per event — tanpa langganan bulanan.';
+
+        // Load Comparison
+        $perbandingan = json_decode(Setting::get('landing_perbandingan', '{}'), true) ?? [];
+        $this->perbandingan_title = $perbandingan['title'] ?? 'Bandingkan Paket';
+        $this->perbandingan_subtitle = $perbandingan['subtitle'] ?? 'Fitur dasar sudah terbuka di paket gratis. Fitur premium dibuka sekali bayar per event — tanpa langganan bulanan.';
 
         // Load About (kunci warisan — lihat catatan di deklarasi propertinya)
         $about = json_decode(Setting::get('landing_about', '{}'), true) ?? [];
@@ -280,6 +290,12 @@ class LandingPage extends Component
         Setting::set('landing_pricing', json_encode([
             'title' => $this->pricing_title,
             'subtitle' => $this->pricing_subtitle,
+        ]));
+
+        // Save Comparison
+        Setting::set('landing_perbandingan', json_encode([
+            'title' => $this->perbandingan_title,
+            'subtitle' => $this->perbandingan_subtitle,
         ]));
 
         // Save About

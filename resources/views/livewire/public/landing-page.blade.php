@@ -10,6 +10,9 @@
             @case('pricing')
                 @include('components.landing.pricing', ['section' => (object)['content' => $section['content']]])
                 @break
+            @case('perbandingan')
+                @include('components.landing.perbandingan', ['section' => (object)['content' => $section['content']]])
+                @break
             @case('eventners')
                 @include('components.landing.eventners', ['eventners' => $eventners])
                 @break

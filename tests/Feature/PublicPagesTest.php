@@ -196,6 +196,73 @@ class PublicPagesTest extends TestCase
         return substr($html, $start, $end - $start);
     }
 
+    /** Potongan markup <section id="perbandingan"> dari HTML halaman landing. */
+    private function perbandinganSection(string $html): string
+    {
+        $start = strpos($html, '<section id="perbandingan"');
+        $this->assertNotFalse($start, 'Section perbandingan tidak ditemukan di halaman landing.');
+
+        $end = strpos($html, '</section>', $start);
+
+        return substr($html, $start, $end - $start);
+    }
+
+    public function test_perbandingan_menampilkan_nama_paket_sebagai_kolom()
+    {
+        $html = $this->perbandinganSection($this->get('/')->getContent());
+
+        $this->assertStringContainsString('Gratis', $html);
+        $this->assertStringContainsString('Event Penuh', $html);
+    }
+
+    /**
+     * Tabel perbandingan harus sepakat dengan paket di DB, bukan dengan daftar
+     * yang ditulis di Blade: paket berbayar yang tidak memuat 'certificate'
+     * tidak boleh mencentang barisnya.
+     */
+    public function test_perbandingan_mengikuti_fitur_paket_dari_database()
+    {
+        $plan = \App\Models\SaasPlan::where('is_free', false)->firstOrFail();
+        $plan->features()->delete();
+        $plan->features()->createMany([
+            ['feature_key' => 'tickets'],
+        ]);
+
+        $html = $this->perbandinganSection($this->get('/')->getContent());
+
+        $this->assertStringContainsString('Tiket Event', $html);
+        $this->assertStringContainsString('Sertifikat', $html);
+
+        // Baris Sertifikat: kurang di kolom berbayar, karena paketnya tidak
+        // memuat fitur itu. Baris dihitung lewat nama fiturnya di tabel.
+        $baris = substr($html, strpos($html, 'Sertifikat'));
+        $this->assertStringContainsString('ti-minus', substr($baris, 0, 400));
+    }
+
+    /** Fitur dasar terbuka di semua paket, termasuk paket gratis. */
+    public function test_perbandingan_mencentang_fitur_dasar_di_paket_gratis()
+    {
+        $html = $this->perbandinganSection($this->get('/')->getContent());
+
+        $this->assertStringContainsString('Manajemen juri &amp; input nilai', $html);
+    }
+
+    /** Section-nya bisa dimatikan admin dari panel urutan &amp; visibilitas. */
+    public function test_perbandingan_hilang_saat_saklarnya_dimatikan()
+    {
+        Setting::set('landing_sections_active', json_encode([
+            'hero' => true, 'features' => true, 'pricing' => true, 'perbandingan' => false,
+            'eventners' => true, 'ticket' => true, 'faq' => true, 'cta' => true,
+        ]));
+
+        $response = $this->get('/');
+
+        $this->assertStringNotContainsString('<section id="perbandingan"', $response->getContent());
+        // Nav-nya ikut hilang, bukan jadi tautan yang kliknya tidak terjadi apa-apa.
+        $header = substr($response->getContent(), 0, strpos($response->getContent(), '</header>'));
+        $this->assertStringNotContainsString('href="#perbandingan"', $header);
+    }
+
     public function test_event_detail_loads()
     {
         $eventner = Eventner::factory()->create([
