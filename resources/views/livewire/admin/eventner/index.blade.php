@@ -79,9 +79,12 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <span
-                                        class="badge bg-primary-subtle text-primary">{{ $eventner->user->username }}</span>
+                                    <span class="badge {{ $eventner->user->is_active ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger' }}">
+                                        {{ $eventner->user->is_active ? 'Aktif' : 'Suspend' }}
+                                    </span>
+                                    <span class="badge bg-primary-subtle text-primary d-block mt-1">{{ $eventner->user->username }}</span>
                                     <span class="d-block fs-2">{{ $eventner->user->email }}</span>
+                                </td>
                                 </td>
                                 <td>
                                     @php
@@ -111,6 +114,12 @@
                                     <button type="button" class="btn btn-sm btn-info me-1"
                                         wire:click="edit({{ $eventner->id }})">
                                         <i class="ti ti-pencil"></i>
+                                    </button>
+                                    <button type="button"
+                                        class="btn btn-sm {{ $eventner->user->is_active ? 'btn-warning' : 'btn-success' }} me-1"
+                                        wire:click="toggleActive({{ $eventner->id }})"
+                                        title="{{ $eventner->user->is_active ? 'Suspend akun penyelenggara' : 'Aktifkan kembali akun' }}">
+                                        <i class="ti {{ $eventner->user->is_active ? 'ti-lock' : 'ti-lock-open' }}"></i>
                                     </button>
                                     <button type="button" class="btn btn-sm btn-danger"
                                         wire:click="delete({{ $eventner->id }})"

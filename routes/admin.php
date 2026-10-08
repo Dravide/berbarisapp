@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Admin\ExportController;
+
 Route::get('dashboard', App\Livewire\Admin\Dashboard::class)->name('admin.dashboard');
 Route::get('revenue', App\Livewire\Admin\RevenueDashboard::class)->name('admin.revenue');
 Route::get('eventner/pending', App\Livewire\Admin\Eventner\Pending::class)->name('admin.eventner.pending');
@@ -17,3 +19,9 @@ Route::get('schools/{npsn}/edit', App\Livewire\Admin\School\Edit::class)->name('
 Route::get('settings', App\Livewire\Admin\Setting\Index::class)->name('admin.settings.index');
 Route::get('settings/landing-page', App\Livewire\Admin\Setting\LandingPage::class)->name('admin.settings.landing-page');
 Route::get('pricing-settings', App\Livewire\Admin\PricingSettings::class)->name('admin.pricing-settings');
+Route::get('audit-log', App\Livewire\Admin\AuditLog::class)->name('admin.audit-log');
+
+// Ekspor CSV (pola eventner.tickets.csv)
+Route::get('exports/eventners', [ExportController::class, 'eventners'])->name('admin.exports.eventners');
+Route::get('exports/registrations', [ExportController::class, 'registrations'])->name('admin.exports.registrations');
+Route::get('exports/transactions', [ExportController::class, 'transactions'])->name('admin.exports.transactions');

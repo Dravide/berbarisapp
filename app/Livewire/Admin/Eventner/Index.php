@@ -222,4 +222,23 @@ class Index extends Component
         session()->flash('success', 'Data Eventner dan Akun User berhasil dihapus.');
         $this->loadEventners();
     }
+
+    /**
+     * Suspend / aktifkan: menonaktifkan akun user di balik eventner.
+     * CheckRole middleware menolak seluruh /eventner untuk akun nonaktif,
+     * jadi satu flag ini memblokir akses penyelenggara tanpa menghapus data.
+     */
+    public function toggleActive($id)
+    {
+        $eventner = Eventner::with('user')->findOrFail($id);
+        $user = $eventner->user;
+
+        $user->update(['is_active' => ! $user->is_active]);
+
+        session()->flash('success', $user->is_active
+            ? "Akun penyelenggara \"{$eventner->nama_event}\" diaktifkan kembali."
+            : "Akun penyelenggara \"{$eventner->nama_event}\" dinonaktifkan (suspend).");
+
+        $this->loadEventners();
+    }
 }

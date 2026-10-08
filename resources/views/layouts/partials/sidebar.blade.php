@@ -133,6 +133,15 @@
               <span class="hide-menu">Pendapatan Platform</span>
             </a>
           </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('admin.audit-log') ? 'active' : '' }}"
+              href="{{ route('admin.audit-log') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-history"></i>
+              </span>
+              <span class="hide-menu">Audit Log</span>
+            </a>
+          </li>
         @endif
 
         @if(auth()->user()->role === 'Eventner')
