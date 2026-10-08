@@ -37,7 +37,7 @@
                                placeholder="Cari event, user, sekolah, atau pendaftar... (min. 2 karakter)">
                         <button type="button" class="btn-close position-absolute top-50 translate-middle-y me-2"
                                 wire:click="closeSearch" style="right: 0;"
-                                wire:show="$showSearchResults"></button>
+                                wire:show="showSearchResults"></button>
                     </div>
 
                     @if($showSearchResults && $searchResults)
