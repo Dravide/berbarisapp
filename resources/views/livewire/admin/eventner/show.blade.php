@@ -6,7 +6,28 @@
                 <div class="card-body px-4 py-3">
                     <div class="row align-items-center">
                         <div class="col-9">
-                            <h4 class="fw-semibold mb-8">Detail Event: {{ $eventner->nama_event }}</h4>
+                            <h4 class="fw-semibold mb-1">Detail Event: {{ $eventner->nama_event }}</h4>
+                            <div class="d-flex align-items-center gap-2 flex-wrap mb-2">
+                                @php $approvedBy = $eventner->approvedBy; @endphp
+                                @if($eventner->status === 'approved')
+                                    <span class="badge bg-success fs-2"><i class="ti ti-circle-check me-1"></i>Disetujui</span>
+                                    @if($approvedBy)
+                                        <span class="text-muted fs-2">oleh {{ $approvedBy->name }} &bull; {{ $eventner->approved_at?->format('d M Y H:i') }}</span>
+                                    @endif
+                                @elseif($eventner->status === 'rejected')
+                                    <span class="badge bg-danger fs-2"><i class="ti ti-circle-x me-1"></i>Ditolak</span>
+                                @else
+                                    <span class="badge bg-warning text-dark fs-2"><i class="ti ti-hourglass me-1"></i>Menunggu Persetujuan</span>
+                                @endif
+                                @if($eventner->registration_status === 'open')
+                                    <span class="badge bg-success-subtle text-success fs-2">Pendaftaran Buka</span>
+                                @else
+                                    <span class="badge bg-danger-subtle text-danger fs-2">Pendaftaran Tutup</span>
+                                @endif
+                            </div>
+                            @if($eventner->status === 'rejected' && $eventner->rejection_reason)
+                                <div class="alert alert-danger py-2 px-3 mb-2 fs-2">Alasan penolakan: {{ $eventner->rejection_reason }}</div>
+                            @endif
                             <nav aria-label="breadcrumb">
                                 <ol class="breadcrumb">
                                     <li class="breadcrumb-item">
@@ -85,6 +106,24 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tautan Sub-laman -->
+            <div class="card mb-4">
+                <div class="card-body py-3">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="fw-semibold text-muted me-2"><i class="ti ti-eye me-1"></i>Detail seluruh informasi:</span>
+                        <a href="{{ route('admin.eventner.penilaian', $eventner->id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="ti ti-checklist me-1"></i>Rubrik Penilaian
+                        </a>
+                        <a href="{{ route('admin.eventner.struktur', $eventner->id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="ti ti-sitemap me-1"></i>Struktur & Juri
+                        </a>
+                        <a href="{{ route('admin.eventner.modul', $eventner->id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="ti ti-layout-grid me-1"></i>Modul (Data Lengkap)
+                        </a>
                     </div>
                 </div>
             </div>
@@ -178,9 +217,17 @@
                                             <span class="text-muted">Venue / Lokasi</span>
                                             <span class="fw-bold text-end">{{ $eventner->venue }}, {{ $eventner->lokasi }}</span>
                                         </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-bottom-0">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                                             <span class="text-muted">Technical Meeting</span>
                                             <span class="fw-bold">{{ $eventner->technical_meeting }}</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 border-bottom-0">
+                                            <span class="text-muted">Status Pendaftaran</span>
+                                            @if($eventner->registration_status === 'open')
+                                                <span class="badge bg-success">Buka</span>
+                                            @else
+                                                <span class="badge bg-danger">Tutup</span>
+                                            @endif
                                         </li>
                                     </ul>
                                 </div>
@@ -396,6 +443,61 @@
                                         <span class="fw-semibold">{{ $eventner->trial_ends_at->format('d M Y') }}</span>
                                     </li>
                                 @endif
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Akses & Token -->
+                    <div class="card mb-4">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title fw-semibold mb-0">Akses &amp; Token</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0 small">
+                                <li class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted">Subdomain</span>
+                                    <span class="fw-semibold">
+                                        @if($eventner->subdomain)
+                                            <a href="{{ event_url($eventner, 'detail') }}" target="_blank">{{ $eventner->subdomain }}</a>
+                                        @else
+                                            <span class="badge bg-secondary-subtle text-secondary">Belum dibuat</span>
+                                        @endif
+                                    </span>
+                                </li>
+                                <li class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted">Slug</span>
+                                    <span class="fw-semibold">{{ $eventner->slug ?? '-' }}</span>
+                                </li>
+                                <li class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted">Kode Input Nilai</span>
+                                    <span class="fw-semibold">{{ $eventner->scoring_code ?? '-' }}</span>
+                                </li>
+                                <li class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="text-muted">Token Check-in <span class="fs-2 text-muted">(/scan/{token})</span></span>
+                                    <span class="fw-semibold">
+                                        @if($eventner->checkin_token)
+                                            {{ $eventner->checkin_token }}
+                                            @if($eventner->checkin_pin)
+                                                <span class="text-muted ms-1">PIN: {{ $eventner->checkin_pin }}</span>
+                                            @endif
+                                        @else
+                                            <span class="badge bg-secondary-subtle text-secondary">Belum dibuat</span>
+                                        @endif
+                                    </span>
+                                </li>
+                                <li class="d-flex justify-content-between align-items-center mb-0">
+                                    <span class="text-muted">Token Panitia <span class="fs-2 text-muted">(entry nilai)</span></span>
+                                    <span class="fw-semibold">
+                                        @if($eventner->panitia_token)
+                                            @if($eventner->panitia_pin)
+                                                <span class="text-muted me-1">PIN: {{ $eventner->panitia_pin }}</span>
+                                            @endif
+                                            {{ $eventner->panitia_token }}
+                                        @else
+                                            <span class="badge bg-secondary-subtle text-secondary">Belum dibuat</span>
+                                        @endif
+                                    </span>
+                                </li>
                             </ul>
                         </div>
                     </div>

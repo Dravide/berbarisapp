@@ -63,7 +63,7 @@
             </a>
           </li>
           <li class="sidebar-item">
-            <a class="sidebar-link {{ request()->routeIs('admin.eventner.index') || request()->routeIs('admin.eventner.show') ? 'active' : '' }}"
+            <a class="sidebar-link {{ request()->routeIs('admin.eventner.index') || request()->routeIs('admin.eventner.show') || request()->routeIs('admin.eventner.penilaian') || request()->routeIs('admin.eventner.struktur') || request()->routeIs('admin.eventner.modul') ? 'active' : '' }}"
               href="{{ route('admin.eventner.index') }}" aria-expanded="false">
               <span>
                 <i class="ti ti-building"></i>

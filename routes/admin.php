@@ -7,6 +7,9 @@ Route::get('revenue', App\Livewire\Admin\RevenueDashboard::class)->name('admin.r
 Route::get('eventner/pending', App\Livewire\Admin\Eventner\Pending::class)->name('admin.eventner.pending');
 Route::get('eventner', App\Livewire\Admin\Eventner\Index::class)->name('admin.eventner.index');
 Route::get('eventner/{id}', App\Livewire\Admin\Eventner\Show::class)->name('admin.eventner.show');
+Route::get('eventner/{id}/penilaian', App\Livewire\Admin\Eventner\Penilaian::class)->name('admin.eventner.penilaian');
+Route::get('eventner/{id}/struktur', App\Livewire\Admin\Eventner\Struktur::class)->name('admin.eventner.struktur');
+Route::get('eventner/{id}/modul', App\Livewire\Admin\Eventner\Modul::class)->name('admin.eventner.modul');
 Route::get('users', App\Livewire\Admin\User\Index::class)->name('admin.users.index');
 Route::get('schools', App\Livewire\Admin\School\Index::class)->name('admin.schools.index');
 Route::get('schools/{npsn}', App\Livewire\Admin\School\Show::class)->name('admin.schools.show');
