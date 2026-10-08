@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Services\JudgeScoreComparison;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -720,5 +721,231 @@ class JudgeScoreComparisonTest extends TestCase
         }
 
         return $this->get($url)->assertOk()->getContent();
+    }
+
+    // ── Perbandingan pasangan (dua juri) ────────────────────────────────
+
+    /**
+     * Dua juri, enam sel bersama: statistika pasangannya harus menyebut arah,
+     * jumlah sel, dan berapa yang berselisih.
+     */
+    public function test_pasangan_menghitung_selisih_dua_juri()
+    {
+        $crit = $this->rubrik('Kriteria', [0, 100]);
+
+        foreach ($this->pesertaBanyak(6) as $reg) {
+            $this->nilai($reg, $crit, $this->juriA, 50);
+            $this->nilai($reg, $crit, $this->juriB, 90);
+        }
+
+        $p = (new JudgeScoreComparison)->bandingkanDuaJuri(
+            $this->bangun(),
+            $this->juriA->id,
+            $this->juriB->id,
+        );
+
+        $this->assertSame('ok', $p['keadaan']);
+        $this->assertCount(6, $p['sel']);
+        $this->assertSame(6, $p['ringkas']['sel_bersama']);
+
+        // 50 vs 90 pada skala 0–100 = 0,40 selisih, di atas ambang 0,20.
+        $this->assertSame(6, $p['ringkas']['sel_ditandai']);
+
+        // −40% skala: juri A selalu lebih rendah.
+        $this->assertEqualsWithDelta(-0.40, $p['ringkas']['rerata_selisih'], 1e-9);
+        $this->assertSame('b', $p['ringkas']['arah'], 'Juri B yang lebih tinggi.');
+        $this->assertTrue($p['ringkas']['konsisten']);
+    }
+
+    /** Selisih lebar di sebagian sel saja → tanda bahaya, dan arahnya tetap terbaca. */
+    public function test_pasangan_menandai_sel_yang_berselisih_jauh()
+    {
+        $crit = $this->rubrik('Kriteria', [0, 100]);
+
+        $regs = $this->pesertaBanyak(6);
+
+        // Lima sel seimbang, satu sel terpaut jauh.
+        foreach ($regs as $i => $reg) {
+            $this->nilai($reg, $crit, $this->juriA, 50);
+            $this->nilai($reg, $crit, $this->juriB, $i === 0 ? 100 : 50);
+        }
+
+        $p = (new JudgeScoreComparison)->bandingkanDuaJuri($this->bangun(), $this->juriA->id, $this->juriB->id);
+
+        $this->assertSame(1, $p['ringkas']['sel_ditandai']);
+        $this->assertSame(6, $p['ringkas']['sel_bersama']);
+
+        // Sel terlebar diurut paling depan supaya langsung terlihat.
+        $this->assertEqualsWithDelta(0.50, abs($p['sel'][0]['selisih']), 1e-9);
+        $this->assertTrue($p['sel'][0]['flag']);
+        $this->assertFalse($p['sel'][1]['flag']);
+    }
+
+    /**
+     * Juri yang hanya mengisi sel yang rekannya belum isi bukan "berbeda
+     * pendapat" — isian itu belum ada. Jumlahnya dilaporkan terpisah.
+     */
+    public function test_pasangan_memisahkan_sel_belum_diisi_dari_selisih()
+    {
+        $critA = $this->rubrik('Pegang A', [0, 100]);
+        $critB = $this->rubrik('Pegang B', [0, 100]);
+
+        $bersama = $this->peserta('Sekolah Bersama');
+        $this->nilai($bersama, $critA, $this->juriA, 50);
+        $this->nilai($bersama, $critA, $this->juriB, 50);
+
+        // Dua peserta yang hanya juri A nilai.
+        foreach (['Sekolah A1', 'Sekolah A2'] as $nama) {
+            $reg = $this->peserta($nama);
+            $this->nilai($reg, $critB, $this->juriA, 70);
+        }
+
+        $p = (new JudgeScoreComparison)->bandingkanDuaJuri($this->bangun(), $this->juriA->id, $this->juriB->id);
+
+        $this->assertSame(1, $p['ringkas']['sel_bersama'], 'Hanya sel yang keduanya isi.');
+        $this->assertCount(1, $p['sel']);
+        $this->assertSame(2, $p['ringkas']['hanya_a']);
+        $this->assertSame(0, $p['ringkas']['hanya_b']);
+        $this->assertSame(0, $p['ringkas']['sel_ditandai'], 'Belum diisi bukan selisih.');
+    }
+
+    /** Juri yang sama dengan dirinya sendiri tidak menghasilkan analisis. */
+    public function test_pasangan_menolak_juri_yang_sama()
+    {
+        $crit = $this->rubrik('Kriteria', [0, 100]);
+        $reg = $this->peserta('Sekolah 1');
+        $this->nilai($reg, $crit, $this->juriA, 50);
+
+        $p = (new JudgeScoreComparison)->bandingkanDuaJuri($this->bangun(), $this->juriA->id, $this->juriA->id);
+
+        $this->assertSame('juri_sama', $p['keadaan']);
+        $this->assertSame([], $p['sel']);
+    }
+
+    /** Dua juri tanpa sel beririsan: dikatakan, bukan ditampilkan sebagai nol. */
+    public function test_pasangan_mengatakan_bila_tak_ada_sel_bersama()
+    {
+        $critA = $this->rubrik('Pegang A', [0, 100], pengisi: $this->juriA);
+        $critB = $this->rubrik('Pegang B', [0, 100], pengisi: $this->juriB);
+
+        $reg = $this->peserta('Sekolah 1');
+        $this->nilai($reg, $critA, $this->juriA, 80);
+        $this->nilai($reg, $critB, $this->juriB, 40);
+
+        $p = (new JudgeScoreComparison)->bandingkanDuaJuri($this->bangun(), $this->juriA->id, $this->juriB->id);
+
+        $this->assertSame('tanpa_sel_bersama', $p['keadaan']);
+        $this->assertNull($p['ringkas']['rerata_selisih'], 'Tidak ada sel → tidak ada angka.');
+        $this->assertNull($p['ringkas']['arah']);
+    }
+
+    /** Id juri di luar pilihan ini tidak dipaksakan jadi pasangan. */
+    public function test_pasangan_menolak_juri_di_luar_tingkat_terpilih()
+    {
+        $crit = $this->rubrik('Kriteria', [0, 100]);
+        $reg = $this->peserta('Sekolah 1');
+        $this->nilai($reg, $crit, $this->juriA, 50);
+        $this->nilai($reg, $crit, $this->juriB, 60);
+
+        $lain = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Juri Luar']);
+
+        $p = (new JudgeScoreComparison)->bandingkanDuaJuri($this->bangun(), $this->juriA->id, $lain->id);
+
+        $this->assertSame('juri_tidak_ada', $p['keadaan']);
+    }
+
+    /** Tombolnya ada saat ada dua juri yang bisa dibandingkan. */
+    public function test_tombol_bandingkan_dua_juri_ada_saat_cukup_juri()
+    {
+        $crit = $this->rubrik('Kriteria', [0, 100]);
+
+        foreach ($this->pesertaBanyak(6) as $reg) {
+            $this->nilai($reg, $crit, $this->juriA, 50);
+            $this->nilai($reg, $crit, $this->juriB, 90);
+        }
+
+        // Ditandai lewat pemicunya, bukan judulnya: judul modal selalu ada di
+        // DOM (modal tersembunyi), jadi ia tak bisa membedakan ada-tidaknya
+        // tombol.
+        $this->assertStringContainsString('wire:click="bukaPasangan"', $this->halaman());
+    }
+
+    /**
+     * Membuka modal tanpa argumen memilihkan pasangan yang benar-benar punya
+     * sel bersama — bukan dua baris teratas, yang bisa saja juri tanpa irisan.
+     */
+    public function test_modal_memilihkan_pasangan_yang_punya_sel_bersama()
+    {
+        $crit = $this->rubrik('Kriteria', [0, 100]);
+
+        foreach ($this->pesertaBanyak(6) as $reg) {
+            $this->nilai($reg, $crit, $this->juriA, 50);
+            $this->nilai($reg, $crit, $this->juriB, 90);
+        }
+
+        $komponen = Livewire::test(\App\Livewire\Eventner\Scoring\Perbandingan::class, [
+            'selectedCategoryId' => $this->level->id,
+        ])->call('bukaPasangan');
+
+        $komponen->assertSet('pairTerbuka', true);
+
+        // Terisi sendiri dengan dua juri yang berbeda, tanpa dipilih manual.
+        $this->assertNotSame('', $komponen->get('juriAId'));
+        $this->assertNotSame('', $komponen->get('juriBId'));
+        $this->assertNotSame($komponen->get('juriAId'), $komponen->get('juriBId'));
+
+        $p = $komponen->instance()->pasangan();
+
+        $this->assertSame('ok', $p['keadaan']);
+        $this->assertSame(6, $p['ringkas']['sel_bersama']);
+
+        // Arahnya tak digantung pada urutan dropdown: yang menilai 90 harus
+        // jadi pihak "a" atau "b" sesuai tempat duduknya, bukan selalu "b".
+        $tertinggi = $p['ringkas']['arah'] === 'a' ? $p['juri_a']['judge']->id : $p['juri_b']['judge']->id;
+        $this->assertSame($this->juriB->id, $tertinggi, 'Juri B yang menilai 90.');
+        $this->assertEqualsWithDelta(0.40, abs($p['ringkas']['rerata_selisih']), 1e-9);
+
+        // Isi modal benar-benar dirender: bukan sekadar tombolnya ada.
+        $komponen->assertSee('Juri pertama')->assertSee('Sel berselisih');
+    }
+
+    /**
+     * Ganti tingkat = pasangan lama tak berlaku.
+     *
+     * Juri tingkat ini tak ada di tingkat itu, jadi membiarkan pilihannya
+     * berarti modal terbuka dengan "juri tidak ada di pilihan ini".
+     */
+    public function test_pasangan_dilepas_saat_tingkat_berganti()
+    {
+        $crit = $this->rubrik('Kriteria', [0, 100]);
+
+        foreach ($this->pesertaBanyak(6) as $reg) {
+            $this->nilai($reg, $crit, $this->juriA, 50);
+            $this->nilai($reg, $crit, $this->juriB, 90);
+        }
+
+        $lain = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => $this->level->parent_id,
+        ]);
+
+        Livewire::test(\App\Livewire\Eventner\Scoring\Perbandingan::class, [
+            'selectedCategoryId' => $this->level->id,
+        ])
+            ->call('bukaPasangan')
+            ->assertSet('juriAId', fn ($v) => $v !== '')
+            ->call('selectCategory', $lain->id)
+            ->assertSet('juriAId', '')
+            ->assertSet('juriBId', '');
+    }
+
+    /** Tingkat tanpa juri yang cukup: tombolnya tidak dipasang. */
+    public function test_tombol_bandingkan_dua_juri_tersembunyi_tanpa_dua_juri()
+    {
+        $crit = $this->rubrik('Kriteria', [0, 100]);
+        $reg = $this->peserta('Sekolah 1');
+        $this->nilai($reg, $crit, $this->juriA, 50);
+
+        $this->assertStringNotContainsString('wire:click="bukaPasangan"', $this->halaman());
     }
 }

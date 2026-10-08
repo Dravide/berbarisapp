@@ -205,12 +205,25 @@
         {{-- Per juri --}}
         <div class="card w-100 mb-4">
             <div class="card-body p-4">
-                <h6 class="fw-semibold mb-1">Per Juri</h6>
-                <p class="text-muted small mb-3">
-                    Bias = rata-rata selisih nilai juri ini terhadap rekannya, dihitung hanya pada sel yang mereka berdua isi.
-                    Nilai positif berarti cenderung lebih tinggi. Angka di bawah {{ \App\Services\JudgeScoreComparison::MIN_SEL }} sel pembanding tidak
-                    diberi putusan — terlalu sedikit untuk disimpulkan.
-                </p>
+                <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+                    <div>
+                        <h6 class="fw-semibold mb-1">Per Juri</h6>
+                        <p class="text-muted small mb-0">
+                            Bias = rata-rata selisih nilai juri ini terhadap rekannya, dihitung hanya pada sel yang mereka berdua isi.
+                            Nilai positif berarti cenderung lebih tinggi. Angka di bawah {{ \App\Services\JudgeScoreComparison::MIN_SEL }} sel pembanding tidak
+                            diberi putusan — terlalu sedikit untuk disimpulkan.
+                        </p>
+                    </div>
+                    {{-- Pertanyaan yang paling sering datang ("juri A dan B ini
+                         sepakat atau tidak?") butuh dua orang, bukan sebelas
+                         tabel. Tombolnya membuka modal yang menjawabnya. --}}
+                    @if($ringkas['juri_dibandingkan'] >= 2)
+                        <button type="button" class="btn btn-sm btn-outline-primary fw-semibold text-nowrap"
+                                wire:click="bukaPasangan">
+                            <i class="ti ti-arrows-diff me-1"></i> Bandingkan Dua Juri
+                        </button>
+                    @endif
+                </div>
 
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -432,6 +445,238 @@
         </div>
     @endif
 
+    {{-- Modal perbandingan dua juri. Sama seperti modal sel di bawah: WAJIB di
+         dalam root, kalau tidak ia tidak pernah tampil. --}}
+    <div class="modal fade" id="pasanganModal" tabindex="-1" aria-labelledby="pasanganModalLabel" aria-hidden="true" wire:ignore.self>
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0" id="pasanganModalLabel">
+                            <i class="ti ti-arrows-diff me-1"></i> Bandingkan Dua Juri
+                        </h5>
+                        <div class="small text-muted">
+                            Hanya sel yang <strong>keduanya</strong> isi yang dihitung sebagai selisih.
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" wire:click="tutupPasangan"></button>
+                </div>
+
+                <div class="modal-body">
+                    {{-- Pemilih pasangan. Di dalam modal, bukan di tabel atas:
+                         pertanyaan "A dan B ini sepakat?" hanya perlu dua nama. --}}
+                    @php
+                        $namaJuriPasangan = collect($kriteriaJuri)->mapWithKeys(fn ($j) => [$j['judge']->id => $j['judge']->name]);
+                        $r = $pasangan['ringkas'] ?? null;
+                    @endphp
+
+                    <div class="d-flex align-items-end gap-2 mb-3 flex-wrap">
+                        <div class="flex-grow-1" style="min-width: 160px;">
+                            <label class="form-label small fw-semibold mb-1">Juri pertama</label>
+                            <select class="form-select form-select-sm" wire:model.live="juriAId" aria-label="Juri pertama">
+                                <option value="">Pilih juri</option>
+                                @foreach($kriteriaJuri as $j)
+                                    <option value="{{ $j['judge']->id }}">{{ $j['judge']->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="pb-2"><span class="text-muted small fw-semibold">vs</span></div>
+                        <div class="flex-grow-1" style="min-width: 160px;">
+                            <label class="form-label small fw-semibold mb-1">Juri kedua</label>
+                            <select class="form-select form-select-sm" wire:model.live="juriBId" aria-label="Juri kedua">
+                                <option value="">Pilih juri</option>
+                                @foreach($kriteriaJuri as $j)
+                                    <option value="{{ $j['judge']->id }}">{{ $j['judge']->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    @if(! $pasangan || $pasangan['keadaan'] === 'belum_lengkap')
+                        <div class="text-center text-muted small py-5">
+                            <i class="ti ti-users-minus" style="font-size: 2rem;"></i>
+                            <p class="mt-2 mb-0">Pilih dua juri untuk melihat di mana nilai mereka berbeda.</p>
+                        </div>
+                    @elseif($pasangan['keadaan'] === 'juri_sama')
+                        <div class="alert alert-warning small mb-0">
+                            <strong>Juri yang sama.</strong> Pilih dua juri yang berbeda — membandingkan seseorang dengan dirinya sendiri
+                            selalu menghasilkan selisih nol dan tidak berarti apa-apa.
+                        </div>
+                    @elseif($pasangan['keadaan'] === 'juri_tidak_ada')
+                        <div class="alert alert-warning small mb-0">
+                            <strong>Juri tidak ada di pilihan ini.</strong> Salah satu juri tidak menilai peserta pada
+                            tingkat/babak/grup yang sedang dibuka. Ganti tingkatnya, atau pilih juri lain.
+                        </div>
+                    @elseif($pasangan['keadaan'] === 'tanpa_sel_bersama')
+                        <div class="alert alert-secondary small mb-0">
+                            <strong>Tidak ada sel yang bisa dibandingkan.</strong>
+                            <span class="d-block mt-1">
+                                {{ $namaJuriPasangan[$pasangan['juri_a']['judge']->id] ?? 'Juri pertama' }} dan
+                                {{ $namaJuriPasangan[$pasangan['juri_b']['judge']->id] ?? 'Juri kedua' }}
+                                tidak mengisi satu pun kriteria yang sama, jadi tidak ada penilaian beririsan untuk dibandingkan.
+                            </span>
+                            @if($r['hanya_a'] > 0 || $r['hanya_b'] > 0)
+                                <span class="d-block mt-1">
+                                    Yang pertama mengisi {{ $r['hanya_a'] }} sel yang kedua belum isi, dan sebaliknya
+                                    {{ $r['hanya_b'] }} sel. Isian yang belum lengkap bukan selisih pendapat.
+                                </span>
+                            @endif
+                            <span class="d-block mt-1">
+                                Pembagian rubrik seperti ini sah; yang tidak bisa dilakukan hanyalah membandingkan nilainya.
+                            </span>
+                        </div>
+                    @else
+                        @php
+                            $namaA = $pasangan['juri_a']['judge']->name;
+                            $namaB = $pasangan['juri_b']['judge']->name;
+                            $seimbang = $r['arah'] === 'seimbang';
+                            $lebihTinggi = $r['arah'] === 'a' ? $namaA : $namaB;
+                            $lebihRendah = $r['arah'] === 'a' ? $namaB : $namaA;
+                            $sepakat = $r['sel_bersama'] > 0
+                                ? (($r['sel_bersama'] - $r['sel_ditandai']) / $r['sel_bersama']) * 100
+                                : 0;
+                        @endphp
+
+                        {{-- Statistik pasangan --}}
+                        <div class="row g-2 mb-3">
+                            <div class="col-4">
+                                <div class="border rounded p-2 text-center h-100">
+                                    <div class="text-muted" style="font-size: .7rem;">Sel bersama</div>
+                                    <div class="fs-4 fw-bold">{{ $r['sel_bersama'] }}</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-2 text-center h-100">
+                                    <div class="text-muted" style="font-size: .7rem;">Sel berselisih</div>
+                                    <div class="fs-4 fw-bold {{ $r['sel_ditandai'] > 0 ? 'text-danger' : 'text-success' }}">
+                                        {{ $r['sel_ditandai'] }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="border rounded p-2 text-center h-100">
+                                    <div class="text-muted" style="font-size: .7rem;">Rerata selisih</div>
+                                    <div class="fs-4 fw-bold {{ $seimbang ? 'text-success' : 'text-warning' }}">
+                                        {{ $r['rerata_selisih'] > 0 ? '+' : '' }}{{ number_format($r['rerata_selisih'] * 100, 1, ',', '.') }}%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Bar kesepakatan: satu pandangan sebelum membaca tabelnya. --}}
+                        <div class="mb-1 d-flex justify-content-between small">
+                            <span class="text-muted">
+                                {{ $r['sel_bersama'] - $r['sel_ditandai'] }} dari {{ $r['sel_bersama'] }} sel sepakat
+                            </span>
+                            <span class="text-muted">
+                                ambang {{ (int) round(\App\Services\JudgeScoreComparison::AMBANG_RENTANG_SEL * 100) }}% skala
+                            </span>
+                        </div>
+                        <div class="progress mb-3" style="height: 8px;">
+                            <div class="progress-bar bg-success" style="width: {{ $sepakat }}%"></div>
+                            <div class="progress-bar bg-danger" style="width: {{ 100 - $sepakat }}%"></div>
+                        </div>
+
+                        {{-- Analisis. Sengaja kalimat, bukan hanya angka: yang
+                             dicari panitia adalah "jadi ini masalah atau bukan". --}}
+                        <div class="alert {{ $seimbang ? 'alert-success' : 'alert-warning' }} small">
+                            <ul class="mb-0 ps-3">
+                                @if($seimbang)
+                                    <li>
+                                        <strong>Seimbang.</strong> Rata-rata selisih {{ $namaA }} dan {{ $namaB }} hanya
+                                        {{ number_format(abs($r['rerata_selisih']) * 100, 1, ',', '.') }}% skala — di bawah ambang
+                                        {{ (int) round(\App\Services\JudgeScoreComparison::AMBANG_BIAS * 100) }}%, jadi tidak ada yang
+                                        cenderung lebih tinggi.
+                                    </li>
+                                @else
+                                    <li>
+                                        <strong>{{ $lebihTinggi }} cenderung lebih tinggi</strong> daripada {{ $lebihRendah }}:
+                                        rata-rata {{ number_format(abs($r['rerata_selisih']) * 100, 1, ',', '.') }}% skala lebih tinggi
+                                        di {{ $r['sel_bersama'] }} sel yang keduanya nilai.
+                                    </li>
+                                @endif
+
+                                <li>
+                                    @if($r['konsisten'])
+                                        Selisihnya <strong>searah dan konsisten</strong> (sebarannya cuma
+                                        {{ number_format($r['sigma_selisih'] * 100, 1, ',', '.') }}% skala) —
+                                        ini kecenderungan tetap yang bisa dikoreksi dengan memberi tahu jurinya, bukan perbedaan sesaat.
+                                    @else
+                                        Sebaran selisihnya <strong>lebar</strong> ({{ number_format($r['sigma_selisih'] * 100, 1, ',', '.') }}% skala) —
+                                        kadang {{ $namaA }} lebih tinggi, kadang {{ $namaB }}.
+                                        Jadi bukan salah satu yang selalu lebih tinggi, melainkan keduanya tidak sepakat soal peserta mana
+                                        yang bagus. Itu dua hal berbeda, dan penanganannya juga berbeda.
+                                    @endif
+                                </li>
+
+                                @if($r['hanya_a'] > 0 || $r['hanya_b'] > 0)
+                                    <li>
+                                        Di luar itu, {{ $namaA }} mengisi <strong>{{ $r['hanya_a'] }}</strong> sel yang {{ $namaB }} belum isi,
+                                        dan sebaliknya <strong>{{ $r['hanya_b'] }}</strong> sel. Isian yang belum lengkap tidak dihitung sebagai
+                                        selisih — ia belum ada, bukan berbeda.
+                                    </li>
+                                @endif
+                            </ul>
+                        </div>
+
+                        {{-- Tabel sel, terlebar lebih dulu. --}}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Peserta</th>
+                                        <th>Kriteria</th>
+                                        <th class="text-end">{{ $namaA }}</th>
+                                        <th class="text-end">{{ $namaB }}</th>
+                                        <th class="text-end">Selisih</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($pasangan['sel'] as $s)
+                                        @php
+                                            $selisihPoin = $s['a']['raw'] - $s['b']['raw'];
+                                            $aTinggi = $s['lebih_tinggi'] === 'a';
+                                        @endphp
+                                        <tr class="{{ $s['flag'] ? 'table-danger' : '' }}">
+                                            <td class="fw-semibold small">{{ $s['peserta'] }}</td>
+                                            <td>
+                                                <div class="small">{{ $s['criteria']->name }}</div>
+                                                <div class="text-muted" style="font-size: .7rem;">skala 0–{{ $s['skala'] }}</div>
+                                            </td>
+                                            <td class="text-end {{ $aTinggi ? 'fw-bold text-danger' : '' }}">
+                                                {{ \App\Support\ScoreOptions::format($s['a']['raw']) }}
+                                            </td>
+                                            <td class="text-end {{ ! $aTinggi && $s['lebih_tinggi'] === 'b' ? 'fw-bold text-danger' : '' }}">
+                                                {{ \App\Support\ScoreOptions::format($s['b']['raw']) }}
+                                            </td>
+                                            <td class="text-end">
+                                                <span class="{{ $s['flag'] ? 'fw-semibold text-danger' : 'text-muted' }}">
+                                                    {{ $selisihPoin > 0 ? '+' : '' }}{{ \App\Support\ScoreOptions::format($selisihPoin) }}
+                                                </span>
+                                                <span class="text-muted small">
+                                                    ({{ number_format($s['selisih'] * 100, 0, ',', '.') }}%)
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <p class="text-muted small mt-3 mb-0">
+                            Persen dihitung dari skala kriteria masing-masing, jadi kriteria berskala 0–25 dan 0–100 bisa
+                            dibandingkan setara. Baris merah berarti selisihnya melewati ambang.
+                        </p>
+                    @endif
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal" wire:click="tutupPasangan">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Modal rincian satu sel. WAJIB di dalam root komponen ini — modal yang
          diletakkan setelah </div> penutup tidak pernah tampil (lihat
          catatan livewire-modal-di-luar-root). --}}
@@ -506,14 +751,19 @@
         // Modal Bootstrap tidak bisa dibuka dari Blade saja: Livewire menukar
         // DOM-nya, jadi instance Bootstrap lama harus dibuang tiap kali isi sel
         // berganti. Karena itu show/hide dipicu lewat event, bukan atribut.
-        $wire.on('buka-sel', () => {
-            const el = document.getElementById('selModal');
-            if (el && window.bootstrap) bootstrap.Modal.getOrCreateInstance(el).show();
-        });
-        $wire.on('tutup-sel', () => {
-            const el = document.getElementById('selModal');
-            if (el && window.bootstrap) bootstrap.Modal.getInstance(el)?.hide();
-        });
+        const modalDari = (id) => {
+            const el = document.getElementById(id);
+            return (el && window.bootstrap) ? bootstrap.Modal.getOrCreateInstance(el) : null;
+        };
+
+        $wire.on('buka-sel', () => modalDari('selModal')?.show());
+        $wire.on('tutup-sel', () => modalDari('selModal')?.hide());
+
+        // Modal pasangan dibuka lewat wire:click, bukan atribut data-bs-toggle:
+        // atributnya akan membuka modal kosong sebelum Livewire sempat mengisi
+        // dropdown dan tabelnya.
+        $wire.on('buka-pasangan', () => modalDari('pasanganModal')?.show());
+        $wire.on('tutup-pasangan', () => modalDari('pasanganModal')?.hide());
     </script>
     @endscript
 </div>

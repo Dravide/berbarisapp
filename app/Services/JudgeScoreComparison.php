@@ -586,6 +586,139 @@ class JudgeScoreComparison
         return $label === [] ? '—' : implode(' + ', $label);
     }
 
+    /**
+     * Dua juri berhadapan: di sel mana mereka berbeda, seberapa jauh, dan ke
+     * arah mana.
+     *
+     * Menerima hasil build() apa adanya, bukan menerima Eventner lalu
+     * menghitung sendiri. Angka bias yang muncul di modal WAJIB sama dengan
+     * angka di tabel halaman; menurunkan ulang dengan rumus yang sama-sama
+     * benar tapi ditulis dua kali adalah cara termudah membuat satu layar
+     * bertentangan dengan dirinya sendiri. Sekaligus: satu permintaan tidak
+     * menghitung seluruh analisis dua kali.
+     *
+     * Hanya sel yang KEDUANYA isi yang masuk daftar. Sel yang cuma diisi salah
+     * satu bukan selisih nilai — itu juri yang belum mengisi, dan jumlahnya
+     * dilaporkan terpisah supaya tidak terbaca sebagai perbedaan pendapat.
+     *
+     * @return array{keadaan: string, sel: array, ringkas: array, juri_a: ?array, juri_b: ?array}
+     */
+    public function bandingkanDuaJuri(array $hasil, int $juriA, int $juriB): array
+    {
+        $baris = [];
+
+        foreach ($hasil['juri'] as $j) {
+            $baris[$j['judge']->id] = $j;
+        }
+
+        if ($juriA <= 0 || $juriB <= 0) {
+            return $this->pasanganKosong('belum_lengkap');
+        }
+
+        if ($juriA === $juriB) {
+            return $this->pasanganKosong('juri_sama');
+        }
+
+        if (! isset($baris[$juriA]) || ! isset($baris[$juriB])) {
+            return $this->pasanganKosong('juri_tidak_ada');
+        }
+
+        $sel = [];
+        $hanyaA = 0;
+        $hanyaB = 0;
+
+        foreach ($hasil['sel'] as $s) {
+            $na = $s['nilai'][$juriA] ?? null;
+            $nb = $s['nilai'][$juriB] ?? null;
+
+            if ($na === null && $nb === null) {
+                continue;
+            }
+
+            if ($nb === null) {
+                $hanyaA++;
+
+                continue;
+            }
+
+            if ($na === null) {
+                $hanyaB++;
+
+                continue;
+            }
+
+            $selisih = $na['porsi'] - $nb['porsi'];
+
+            $sel[] = [
+                'peserta' => $s['peserta'],
+                'criteria' => $s['criteria'],
+                'kategori' => $s['kategori'],
+                'skala' => $s['skala'],
+                'a' => $na,
+                'b' => $nb,
+                'selisih' => $selisih,
+                'lebih_tinggi' => $selisih > 0 ? 'a' : ($selisih < 0 ? 'b' : null),
+                'flag' => abs($selisih) > self::AMBANG_RENTANG_SEL,
+            ];
+        }
+
+        // Selisih terlebar lebih dulu — itu yang paling perlu dilihat.
+        usort($sel, fn ($x, $y) => abs($y['selisih']) <=> abs($x['selisih']));
+
+        $deret = array_map(fn ($s) => $s['selisih'], $sel);
+        $n = count($deret);
+        $ditandai = count(array_filter($deret, fn ($d) => abs($d) > self::AMBANG_RENTANG_SEL));
+
+        $rerata = $n > 0 ? array_sum($deret) / $n : null;
+        $sigma = $n > 0 ? $this->simpanganBaku($deret) : null;
+
+        return [
+            'keadaan' => $n === 0 ? 'tanpa_sel_bersama' : 'ok',
+            'juri_a' => $baris[$juriA],
+            'juri_b' => $baris[$juriB],
+            'sel' => $sel,
+            'ringkas' => [
+                'sel_bersama' => $n,
+                'sel_ditandai' => $ditandai,
+                'hanya_a' => $hanyaA,
+                'hanya_b' => $hanyaB,
+                'rerata_selisih' => $rerata,
+                'sigma_selisih' => $sigma,
+                'selisih_ekstrem' => $n > 0 ? max(array_map('abs', $deret)) : null,
+                // Ke arah mana pasangan ini condong. Dipakai ambang yang sama
+                // dengan bias per juri, supaya "condong" di sini dan "seimbang"
+                // di tabel atas tak bisa berbeda arti.
+                'arah' => $rerata === null
+                    ? null
+                    : (abs($rerata) <= self::AMBANG_BIAS ? 'seimbang' : ($rerata > 0 ? 'a' : 'b')),
+                // Selisih yang naik-turun berarti keduanya tidak sepakat soal
+                // siapa yang bagus, bukan salah satu yang selalu lebih tinggi.
+                'konsisten' => $sigma !== null && $sigma <= self::AMBANG_SIGMA,
+            ],
+        ];
+    }
+
+    private function pasanganKosong(string $keadaan): array
+    {
+        return [
+            'keadaan' => $keadaan,
+            'juri_a' => null,
+            'juri_b' => null,
+            'sel' => [],
+            'ringkas' => [
+                'sel_bersama' => 0,
+                'sel_ditandai' => 0,
+                'hanya_a' => 0,
+                'hanya_b' => 0,
+                'rerata_selisih' => null,
+                'sigma_selisih' => null,
+                'selisih_ekstrem' => null,
+                'arah' => null,
+                'konsisten' => null,
+            ],
+        ];
+    }
+
     /** Batas atas skala satu kriteria; 0 jatuh ke cadangan. */
     private function skala(?AssessmentCriteria $criteria): int
     {

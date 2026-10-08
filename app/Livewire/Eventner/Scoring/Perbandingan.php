@@ -42,6 +42,14 @@ class Perbandingan extends Component
      */
     public $detailSelKey = null;
 
+    /** Dua juri yang dihadapkan di modal (id Judge). */
+    public $juriAId = '';
+
+    public $juriBId = '';
+
+    /** Modal perbandingan pasangan sedang terbuka. */
+    public $pairTerbuka = false;
+
     protected $queryString = [
         'selectedCategoryId' => ['except' => ''],
         'selectedRoundId' => ['except' => ''],
@@ -97,8 +105,10 @@ class Perbandingan extends Component
     {
         if ((string) $this->selectedCategoryId !== (string) $id) {
             // Babak dan grup menempel pada tingkat; keduanya wajib dilepas.
+            // Pasangan juri ikut: juri tingkat lain tak ada di tingkat ini.
             $this->selectedRoundId = '';
             $this->selectedGroupId = '';
+            $this->lepaskanPasangan();
         }
 
         $this->selectedCategoryId = $id;
@@ -112,6 +122,7 @@ class Perbandingan extends Component
         $this->saringBabak();
         $this->detailSelKey = null;
         $this->hasilCache = null;
+        $this->lepaskanPasangan();
     }
 
     public function selectGroup($id)
@@ -120,6 +131,7 @@ class Perbandingan extends Component
         $this->saringGrup();
         $this->detailSelKey = null;
         $this->hasilCache = null;
+        $this->lepaskanPasangan();
     }
 
     public function updatedSelectedCategoryId()
@@ -130,6 +142,7 @@ class Perbandingan extends Component
 
         $this->saringBabak();
         $this->saringGrup();
+        $this->lepaskanPasangan();
     }
 
     public function updatedSelectedRoundId()
@@ -137,6 +150,7 @@ class Perbandingan extends Component
         $this->saringBabak();
         $this->detailSelKey = null;
         $this->hasilCache = null;
+        $this->lepaskanPasangan();
     }
 
     public function updatedSelectedGroupId()
@@ -144,6 +158,14 @@ class Perbandingan extends Component
         $this->saringGrup();
         $this->detailSelKey = null;
         $this->hasilCache = null;
+        $this->lepaskanPasangan();
+    }
+
+    /** Juri yang bisa dibandingkan berubah begitu tingkat/babak/grup berganti. */
+    private function lepaskanPasangan(): void
+    {
+        $this->juriAId = '';
+        $this->juriBId = '';
     }
 
     /** Babak wajib milik tingkat terpilih; kalau tidak, dilepas. */
@@ -200,6 +222,95 @@ class Perbandingan extends Component
     public function kunciSel(array $sel): string
     {
         return $sel['registration_id'] . '-' . $sel['criteria']->id;
+    }
+
+    // ── Perbandingan pasangan (dua juri, di modal) ───────────────────────
+
+    /**
+     * Buka modal dan pilihkan dua juri pertama yang punya sel bersama.
+     *
+     * Mengisi pilihannya lebih dulu, bukan menyerahkan dua dropdown kosong:
+     * juri yang tak punya satu sel pun beririsan dengan siapa pun akan
+     * menghasilkan modal kosong tanpa penjelasan. Yang dipilih di sini adalah
+     * pasangan yang memang bisa dibandingkan.
+     */
+    public function bukaPasangan()
+    {
+        $this->pairTerbuka = true;
+
+        if ($this->juriAId === '' || $this->juriBId === '') {
+            [$this->juriAId, $this->juriBId] = $this->pasanganAwal();
+        } else {
+            $this->saringPasangan();
+        }
+
+        $this->dispatch('buka-pasangan');
+    }
+
+    public function tutupPasangan()
+    {
+        $this->pairTerbuka = false;
+        $this->dispatch('tutup-pasangan');
+    }
+
+    public function updatedJuriAId()
+    {
+        $this->saringPasangan();
+    }
+
+    public function updatedJuriBId()
+    {
+        $this->saringPasangan();
+    }
+
+    /** Juri di luar tingkat/babak/grup terpilih dilepas dari pilihan. */
+    private function saringPasangan(): void
+    {
+        $sah = collect($this->hasil()['juri'])->map(fn ($j) => (string) $j['judge']->id)->all();
+
+        if ($this->juriAId !== '' && ! in_array((string) $this->juriAId, $sah, true)) {
+            $this->juriAId = '';
+        }
+
+        if ($this->juriBId !== '' && ! in_array((string) $this->juriBId, $sah, true)) {
+            $this->juriBId = '';
+        }
+    }
+
+    /**
+     * Pasangan pertama yang benar-benar punya sel bersama.
+     *
+     * Dipilih dari jumlah pembanding tiap juri, bukan dari dua baris teratas:
+     * juri "Tak dapat dibandingkan" selalu muncul di daftar tapi tak akan
+     * pernah punya sel bersama siapa pun.
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function pasanganAwal(): array
+    {
+        $baris = collect($this->hasil()['juri'])
+            ->filter(fn ($j) => $j['pembanding'] > 0)
+            ->take(2)
+            ->values();
+
+        return [
+            $baris->get(0) ? (string) $baris[0]['judge']->id : '',
+            $baris->get(1) ? (string) $baris[1]['judge']->id : '',
+        ];
+    }
+
+    /** Hasil perbandingan dua juri terpilih; null kalau belum lengkap. */
+    public function pasangan(): ?array
+    {
+        if ($this->juriAId === '' || $this->juriBId === '') {
+            return null;
+        }
+
+        return (new JudgeScoreComparison)->bandingkanDuaJuri(
+            $this->hasil(),
+            (int) $this->juriAId,
+            (int) $this->juriBId,
+        );
     }
 
     /** Hasil analisis untuk tingkat/babak/grup yang sedang dipilih. */
@@ -259,6 +370,7 @@ class Perbandingan extends Component
             'hasil' => $hasil,
             'selTerbuka' => $this->cariSel($hasil),
             'kunciSel' => fn (array $sel) => $this->kunciSel($sel),
+            'pasangan' => $this->pasangan(),
         ])->title('Perbandingan Nilai Juri - ' . $this->eventner->nama_event);
     }
 
