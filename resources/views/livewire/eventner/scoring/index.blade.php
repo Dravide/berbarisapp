@@ -23,8 +23,22 @@
     {{-- Flash error dari action (finalize massal dll) dirender sebagai
          toast SweetAlert via listener di bawah --}}
 
-    {{-- Mode Simulasi (Sandbox) — tombol kecil, pengaturan di modal --}}
-    <div class="d-flex justify-content-end mb-3">
+    {{-- Mode Simulasi (Sandbox) + pintu ke Perbandingan Nilai Juri. --}}
+    <div class="d-flex justify-content-end align-items-center gap-2 mb-3">
+        {{-- Tombol perbandingan hanya berarti saat satu tingkat sudah dipilih:
+             tanpa tingkat, tak ada nilai yang bisa dipasangkan. Babak yang
+             sedang dibuka ikut dibawa supaya halaman tujuan menganalisis babak
+             yang sama, bukan gabungan yang angkanya beda dari layar ini. --}}
+        @if($selectedCategoryId)
+            <a href="{{ route('eventner.scoring.perbandingan', array_filter([
+                    'selectedCategoryId' => $selectedCategoryId,
+                    'selectedRoundId' => $selectedRoundId,
+                ])) }}"
+               class="btn btn-sm btn-outline-primary fw-semibold">
+                <i class="ti ti-git-compare me-1"></i> Perbandingan Nilai Juri
+            </a>
+        @endif
+
         <button type="button"
                 class="btn btn-sm {{ $simulateMode ? 'btn-warning fw-bold' : 'btn-outline-warning fw-semibold' }}"
                 data-bs-toggle="modal" data-bs-target="#simulateModal">

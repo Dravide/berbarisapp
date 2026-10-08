@@ -63,6 +63,9 @@ Route::get('score-recap', App\Livewire\Eventner\ScoreRecap\Index::class)->name('
 Route::get('score-recap/pdf', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadRecapPdf'])->name('eventner.score-recap.pdf');
 Route::get('scoring/csv', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadCsv'])->name('eventner.scoring.csv');
 Route::get('scoring/pdf-participant', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadParticipantPdf'])->name('eventner.scoring.pdf-participant');
+// Perbandingan nilai antar juri. Didaftarkan SEBELUM baris `scoring` supaya
+// `scoring` tidak menelan `scoring/perbandingan` sebagai parameter.
+Route::get('scoring/perbandingan', App\Livewire\Eventner\Scoring\Perbandingan::class)->name('eventner.scoring.perbandingan');
 Route::get('scoring', App\Livewire\Eventner\Scoring\Index::class)->name('eventner.scoring.index');
 Route::get('champion-categories', App\Livewire\Eventner\ChampionCategory\Index::class)->name('eventner.champion-categories.index');
 Route::get('champion-categories/pdf', [App\Http\Controllers\Eventner\ChampionCategoryController::class, 'downloadPdf'])->name('eventner.champion-categories.pdf');

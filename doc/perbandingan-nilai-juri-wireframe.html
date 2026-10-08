@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perbandingan Nilai Juri Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: dokumen spesifikasi halaman — tiap blok satu baris, mockup di kiri, anotasi di kanan. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --lime:#a3e635; --lime-ink:#2c4703;
+  --warn:#c2410c; --warn-soft:#fff1e8;
+  --ok:#15803d; --ok-soft:#ecfdf3;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --lime:#b6f24e; --lime-ink:#16250a;
+    --warn:#ff9a6b; --warn-soft:#2e2018;
+    --ok:#4ade80; --ok-soft:#122117;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --lime:#b6f24e; --lime-ink:#16250a;
+  --warn:#ff9a6b; --warn-soft:#2e2018;
+  --ok:#4ade80; --ok-soft:#122117;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{
+  max-width:1180px;margin-inline:auto;
+  padding-inline:clamp(16px,4vw,40px);
+  padding-block:clamp(28px,5vw,56px);
+}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 10px;
+}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:66ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{
+  font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap;
+}
+button.toggle{
+  font-family:var(--mono);font-size:12px;padding:7px 14px;border-radius:999px;
+  border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);
+  cursor:pointer;white-space:nowrap;
+}
+button.toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.toggle[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.spec{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-top:28px;
+}
+.spec > div{background:var(--panel);padding:16px 18px}
+.spec dt{
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;
+}
+.spec dd{margin:0;font-size:14px;line-height:1.5}
+.swatches{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.sw{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.sw i{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.15);display:block}
+
+.slide{
+  margin-top:clamp(32px,5vw,56px);
+  display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);
+  gap:clamp(20px,3vw,44px);align-items:start;
+}
+@media (max-width:900px){ .slide{grid-template-columns:minmax(0,1fr)} }
+.slide-head{grid-column:1/-1}
+.slide-head h2{font-size:clamp(19px,2.2vw,23px);font-weight:700}
+.slide-head .num{
+  font-family:var(--mono);font-size:12px;color:var(--accent);
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.slide-head .goal{color:var(--muted);font-size:14px;margin-top:6px;max-width:70ch}
+
+/* Mockup halaman: lebar 1180 px desain, tinggi mengikuti isi. */
+.frame{
+  position:relative;width:100%;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+  container-type:inline-size;
+  --u:0.0847cqw; /* 1 px desain (lebar 1180) */
+}
+.frame > .chrome{
+  display:flex;align-items:center;gap:calc(8*var(--u));
+  padding:calc(14*var(--u)) calc(20*var(--u));
+  border-bottom:1px solid var(--line-soft);background:var(--panel-2);
+}
+.chrome .dot{width:calc(10*var(--u));height:calc(10*var(--u));border-radius:50%;background:var(--ph-line)}
+.chrome .url{
+  flex:1;height:calc(20*var(--u));border-radius:999px;background:var(--ph-fill);
+  display:flex;align-items:center;padding-inline:calc(12*var(--u));
+  font-family:var(--mono);font-size:calc(11*var(--u));color:var(--muted);
+  overflow:hidden;white-space:nowrap;
+}
+.mock{display:flex;flex-direction:column;gap:calc(20*var(--u));padding:calc(30*var(--u)) calc(38*var(--u)) calc(38*var(--u))}
+.mock.tight{gap:calc(13*var(--u))}
+
+.bar{background:var(--ph-fill);border-radius:calc(4*var(--u));height:calc(11*var(--u))}
+.bar.t{height:calc(22*var(--u));background:var(--ph-line)}
+.bar.s{height:calc(8*var(--u))}
+.bar.acc{background:var(--accent);height:calc(26*var(--u));border-radius:calc(7*var(--u))}
+.w100{width:100%}.w80{width:80%}.w70{width:70%}.w60{width:60%}.w50{width:50%}
+.w40{width:40%}.w30{width:30%}.w20{width:20%}.w15{width:15%}
+
+.cx{align-items:center;text-align:center}
+.row{display:flex;gap:calc(12*var(--u));align-items:center}
+.row.wrap{flex-wrap:wrap}
+.row.between{justify-content:space-between}
+.col{display:flex;flex-direction:column;gap:calc(9*var(--u))}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:calc(12*var(--u))}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(12*var(--u))}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:calc(12*var(--u))}
+
+.card{
+  border:1px solid var(--line);border-radius:calc(9*var(--u));
+  padding:calc(15*var(--u));display:flex;flex-direction:column;gap:calc(8*var(--u));
+}
+.card.hi{border-color:var(--accent);background:var(--accent-soft)}
+.card.warn{border-color:var(--warn);background:var(--warn-soft)}
+.card.ok{border-color:var(--ok);background:var(--ok-soft)}
+.card .k{font-family:var(--mono);font-size:calc(11*var(--u));letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+
+.pill{
+  font-family:var(--mono);font-size:calc(10*var(--u));color:var(--muted);
+  border:1px solid var(--line);border-radius:999px;
+  padding:calc(3*var(--u)) calc(9*var(--u));white-space:nowrap;
+}
+.pill.acc{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.pill.warn{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+.pill.ok{border-color:var(--ok);color:var(--ok);background:var(--ok-soft)}
+.pill.lim{border-color:var(--lime);color:var(--lime-ink);background:var(--lime);font-weight:600}
+
+.head{
+  border:1px solid var(--line);border-left:calc(5*var(--u)) solid var(--accent);
+  border-radius:calc(9*var(--u));padding:calc(15*var(--u)) calc(18*var(--u));
+  display:flex;justify-content:space-between;align-items:center;gap:calc(14*var(--u));
+  background:var(--panel-2);
+}
+.band{
+  border:1px solid var(--warn);border-radius:calc(8*var(--u));
+  background:var(--warn-soft);padding:calc(11*var(--u)) calc(14*var(--u));
+  display:flex;align-items:center;gap:calc(10*var(--u));
+}
+
+/* Tabel mockup — garis saja, tanpa isi asli supaya tetap wireframe. */
+table.wf{width:100%;border-collapse:collapse;font-size:calc(12*var(--u))}
+table.wf th,table.wf td{
+  border:1px solid var(--line);padding:calc(8*var(--u)) calc(10*var(--u));
+  text-align:left;vertical-align:middle;
+}
+table.wf th{
+  font-family:var(--mono);font-size:calc(10*var(--u));letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted);font-weight:400;background:var(--panel-2);
+}
+table.wf td.c,table.wf th.c{text-align:center}
+table.wf tr.flag td{background:var(--warn-soft)}
+table.wf tr.flag td:first-child{box-shadow:inset calc(4*var(--u)) 0 0 var(--warn)}
+.jchip{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:calc(26*var(--u));height:calc(22*var(--u));border-radius:calc(5*var(--u));
+  border:1px solid var(--line);background:var(--panel);
+  font-family:var(--mono);font-size:calc(10*var(--u));color:var(--ink);
+}
+.jchip.hi{border-color:var(--warn);background:var(--warn-soft);color:var(--warn)}
+.jchip.lo{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.jchip.empty{color:var(--ph-line);border-style:dashed}
+.spread{display:flex;gap:calc(6*var(--u));align-items:center;justify-content:center}
+
+.modal{
+  border:1px solid var(--line);border-radius:calc(10*var(--u));overflow:hidden;
+  box-shadow:0 calc(18*var(--u)) calc(40*var(--u)) rgba(20,24,31,.18);
+}
+.modal .mh{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:calc(14*var(--u)) calc(18*var(--u));
+  border-bottom:1px solid var(--line-soft);background:var(--panel-2);
+}
+.modal .mb{padding:calc(16*var(--u)) calc(18*var(--u));display:flex;flex-direction:column;gap:calc(12*var(--u))}
+.scrim{
+  position:absolute;inset:0;background:rgba(20,24,31,.32);
+  display:flex;align-items:center;justify-content:center;padding:calc(40*var(--u));
+}
+.scrim .modal{background:var(--panel);width:100%}
+
+.phone{
+  max-width:390px;margin-inline:auto;border:1px solid var(--line);
+  border-radius:18px;background:var(--panel);overflow:hidden;
+  container-type:inline-size;width:100%;
+}
+.phone > *{--u:0.256cqw}
+
+.notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.notes li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;align-items:baseline}
+.notes .n{
+  font-family:var(--mono);font-size:11px;color:var(--accent);
+  border-top:1px solid var(--accent);padding-top:4px;
+}
+.notes b{font-weight:600;font-size:14.5px}
+.notes .dim{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px;white-space:nowrap}
+.notes p{font-size:13.5px;color:var(--muted);margin-top:2px;line-height:1.5}
+.notes code{color:var(--ink)}
+
+.stack-pair{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:clamp(20px,3vw,36px);margin-top:clamp(28px,4vw,44px);
+}
+.stack h3{font-size:15px;font-weight:600;margin-bottom:12px}
+.stack h3 .sub{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:400;margin-left:8px}
+.blks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.blk{
+  display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:center;
+  border:1px solid var(--line);border-radius:8px;background:var(--panel);
+  padding:8px 11px;font-size:13px;
+}
+.blk .no{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.blk .nm{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.blk .nm em{font-family:var(--sans);font-style:normal;color:var(--muted);margin-left:8px;font-size:12px}
+.blk .tag{
+  font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted);white-space:nowrap;
+}
+.blk.bad{border-color:var(--warn);background:var(--warn-soft)}
+.blk.bad .tag{border-color:var(--warn);color:var(--warn)}
+.blk.keep{border-color:var(--accent);background:var(--accent-soft)}
+.blk.keep .tag{border-color:var(--accent);color:var(--accent)}
+.wrap[data-sorot="on"] .blk.keep{opacity:.3}
+.wrap[data-sorot="on"] .blk.bad{border-width:2px}
+
+.rules{
+  margin-top:clamp(40px,6vw,72px);
+  border-top:1px solid var(--line);padding-top:clamp(24px,3vw,36px);
+}
+.rules h2{font-size:clamp(19px,2.2vw,23px)}
+.rules .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;margin-top:20px}
+.rules ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--muted)}
+.rules ul strong{color:var(--ink);font-weight:600}
+table.spec-t{width:100%;border-collapse:collapse;margin-top:18px;font-size:13.5px}
+table.spec-t th,table.spec-t td{
+  text-align:left;padding:9px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top;
+}
+table.spec-t th{
+  font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);font-weight:400;border-bottom-color:var(--line);
+}
+table.spec-t td:first-child{font-family:var(--mono);font-size:12.5px;white-space:nowrap;color:var(--ink)}
+table.spec-t td:last-child{color:var(--muted)}
+footer{
+  margin-top:clamp(32px,5vw,56px);border-top:1px solid var(--line);padding-top:20px;
+  font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em;
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+
+<div class="wrap" data-sorot="off">
+
+  <header>
+    <p class="eyebrow">BERBARIS APP — Laman input nilai</p>
+    <h1>Wireframe perbandingan nilai juri</h1>
+    <p class="lede">Panitia melihat angka akhir peserta tapi tidak pernah melihat <em>bagaimana</em> angka itu terbentuk: juri mana yang konsisten, sel mana yang jurinya berseberangan, dan kriteria mana yang sebarannya paling lebar. Halaman ini menjawab tiga pertanyaan itu tanpa menyentuh satu nilai pun — ia hanya membaca. Karena rubrik boleh dibagi antar juri, pembandingnya bukan total per juri melainkan <strong>sel peserta × kriteria</strong>, satu-satunya satuan yang benar-benar setara.</p>
+    <div class="meta">
+      <span class="chip">1180 px · desktop</span>
+      <span class="chip">laman baru, bukan modal</span>
+      <span class="chip">hanya membaca</span>
+      <span class="chip">/eventner/scoring/perbandingan</span>
+      <button class="toggle" id="ts" type="button" aria-pressed="false">Sorot keputusan yang mudah salah</button>
+    </div>
+  </header>
+
+  <dl class="spec">
+    <div>
+      <dt>Kanvas</dt>
+      <dd>Kolom desktop 1180 px, gutter 16–40 px. Sama dengan layar Rekap Nilai — halaman ini bersebelahan dengannya di menu, jadi lebarnya harus terasa satu keluarga.</dd>
+    </div>
+    <div>
+      <dt>Warna</dt>
+      <dd>
+        <span class="swatches">
+          <span class="sw"><i style="background:#0062ff"></i>accent</span>
+          <span class="sw"><i style="background:#a3e635"></i>lime</span>
+          <span class="sw"><i style="background:#c2410c"></i>warn</span>
+          <span class="sw"><i style="background:#15803d"></i>ok</span>
+        </span>
+        <code>accent</code> = informasi, <code>warn</code> = perlu ditinjau, <code>ok</code> = seimbang. Lime hanya dipakai sekali, di tombol masuk halaman.
+      </dd>
+    </div>
+    <div>
+      <dt>Sumber angka</dt>
+      <dd>Hanya <code>assessment_scores</code> yang dibaca lewat <code>ScoreOptions::value()</code>. Tidak ada tabel baru, tidak ada kolom baru — halaman ini tidak menulis apa pun.</dd>
+    </div>
+    <div>
+      <dt>Teknologi</dt>
+      <dd>Komponen Bootstrap template (<code>card</code>, <code>table</code>, <code>badge</code>, <code>input-group</code>) seperti layar Eventner lain. Tidak ada komponen Tailwind baru, jadi <code>vite build</code> kemungkinan besar tidak perlu dijalankan ulang.</dd>
+    </div>
+  </dl>
+
+  <!-- ============ TITIK MASUK ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Blok 1 · /eventner/scoring?selectedCategoryId=27</p>
+      <h2>Titik masuk: satu tombol di baris Mode Simulasi</h2>
+      <p class="goal">Panitia sudah berada di layar Input Nilai ketika pertanyaannya muncul. Pintunya harus ada di layar itu, di baris yang sudah dipakai kendali sekunder — bukan di menu baru yang harus dicari.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/eventner/scoring?selectedCategoryId=27</span></div>
+      <div class="mock tight">
+        <div class="head">
+          <div class="col" style="gap:calc(6*var(--u))">
+            <span class="bar t w30" style="margin:0"></span>
+            <span class="bar s w50" style="margin:0"></span>
+          </div>
+        </div>
+        <div class="row between">
+          <span class="pill">Kategori: PBB Tingkat SMP</span>
+          <div class="row">
+            <span class="pill acc">Perbandingan Nilai Juri</span>
+            <span class="pill">Mode Simulasi</span>
+          </div>
+        </div>
+        <div class="g3">
+          <div class="card"><span class="k">Peserta</span><span class="bar w60"></span></div>
+          <div class="card"><span class="k">Juri</span><span class="bar w40"></span></div>
+          <div class="card"><span class="k">Kriteria</span><span class="bar w50"></span></div>
+        </div>
+        <span class="bar w100"></span>
+        <span class="bar w100"></span>
+        <span class="bar w80"></span>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Satu tombol, bukan dua</b><span class="dim">btn-sm btn-outline-primary</span><p>Mode Simulasi sudah menempati sisi kanan baris itu. Tombol baru berdiri di sebelah kirinya supaya barisnya tetap satu kendali sekunder, bukan dua kelompok tombol yang bersaing.</p></div></li>
+      <li><span class="n">02</span><div><b>Membawa tingkat &amp; babak yang sedang dibuka</b><span class="dim">query string</span><p>Tautannya menyertakan <code>selectedCategoryId</code> dan <code>selectedRoundId</code> dari layar asal. Tanpa itu panitia mendarat di analisis gabungan semua babak padahal angka di depannya angka satu babak — dua angka berbeda untuk satu pertanyaan yang sama.</p></div></li>
+      <li><span class="n">03</span><div><b>Muncul hanya saat tingkat terpilih</b><span class="dim">—</span><p>Di layar pemilihan kategori belum ada yang bisa dibandingkan. Tombol yang selalu ada tapi tidak melakukan apa-apa lebih buruk daripada tombol yang belum muncul.</p></div></li>
+      <li><span class="n">04</span><div><b>Bukan tautan menu</b><span class="dim">—</span><p>Halaman ini tidak masuk sidebar. Ia selalu punya konteks (tingkat + babak), dan sidebar tidak bisa membawa konteks.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ KEPALA HALAMAN ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Blok 2 · kepala halaman</p>
+      <h2>Kepala, filter, dan spanduk simulasi</h2>
+      <p class="goal">Bentuk kepala mengikuti halaman Rekap Nilai supaya panitia tidak perlu belajar tata letak baru. Isi baris filternya yang berbeda: tingkat, babak, grup.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/eventner/scoring/perbandingan?selectedCategoryId=27&amp;selectedRoundId=4</span></div>
+      <div class="mock tight">
+        <div class="head">
+          <div class="col" style="gap:calc(6*var(--u))">
+            <span class="bar t w40" style="margin:0"></span>
+            <span class="bar s w60" style="margin:0"></span>
+          </div>
+          <div class="row"><span class="pill">Peringatan penilaian</span></div>
+        </div>
+        <div class="band">
+          <span class="pill warn">Simulasi</span>
+          <span class="bar w70" style="margin:0"></span>
+        </div>
+        <div class="row wrap">
+          <span class="pill acc">Tingkat: PBB SMP</span>
+          <span class="pill">Babak: Penyisihan</span>
+          <span class="pill">Grup: Semua Grup</span>
+        </div>
+        <div class="row between">
+          <span class="bar s w30" style="margin:0"></span>
+          <span class="pill">Catatan metode</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Breadcrumb berakhir di "Perbandingan Nilai"</b><span class="dim">—</span><p>Rekap Nilai dan Perbandingan Nilai bersaudara; keduanya di bawah nama event. Panitia yang tersesat harus bisa naik satu langkah ke layar yang dikenalnya.</p></div></li>
+      <li><span class="n">02</span><div><b>Spanduk simulasi, bukan larangan</b><span class="dim">hanya saat simulateMode menyala</span><p>Halaman ini selalu membaca nilai <em>tersimpan</em>. Saat sandbox menyala, panitia harus diberi tahu bahwa angka di layar ini bukan latihannya — kalau tidak, ia menyangka pekerjaan latihannya sudah masuk.</p></div></li>
+      <li><span class="n">03</span><div><b>Tiga filter, bukan empat</b><span class="dim">tingkat · babak · grup</span><p>Persis pemisahan yang dihormati perhitungannya. Tidak ada filter seri: seri sudah ikut lewat rubrik peserta, dan menambah filternya akan menawarkan saringan yang tidak pernah memisahkan apa pun di tabel ini.</p></div></li>
+      <li><span class="n">04</span><div><b>Filter babak hanya muncul kalau tingkatnya berbabak</b><span class="dim">—</span><p>Aturan yang sama dengan layar Input Nilai. Tingkat tanpa babak tidak diberi pilihan "Babak" kosong.</p></div></li>
+      <li><span class="n">05</span><div><b>"Catatan metode" membuka panel</b><span class="dim">bukan halaman terpisah</span><p>Rumus dan ambangnya harus bisa dibaca panitia, tapi bukan hal yang dibaca tiap hari. Satu panel yang bisa dibuka, di dalam halaman ini juga.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ POTRET ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Blok 3 · potret</p>
+      <h2>Empat angka sebelum tabel apa pun</h2>
+      <p class="goal">Pertanyaan "apakah nilai jurinya seimbang?" harus terjawab dalam satu pandangan, sebelum mata masuk ke tabel. Kalau jawabannya butuh membaca matriks dulu, halamannya gagal.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">…/scoring/perbandingan?selectedCategoryId=27&amp;selectedRoundId=4</span></div>
+      <div class="mock">
+        <div class="g4">
+          <div class="card hi">
+            <span class="k">Juri dibandingkan</span>
+            <span class="bar t w30" style="margin:0"></span>
+            <span class="bar s w80" style="margin:0"></span>
+          </div>
+          <div class="card ok">
+            <span class="k">Seimbang</span>
+            <span class="bar t w30" style="margin:0"></span>
+            <span class="bar s w60" style="margin:0"></span>
+          </div>
+          <div class="card warn">
+            <span class="k">Perlu ditinjau</span>
+            <span class="bar t w30" style="margin:0"></span>
+            <span class="bar s w70" style="margin:0"></span>
+          </div>
+          <div class="card warn">
+            <span class="k">Sel berselisih</span>
+            <span class="bar t w30" style="margin:0"></span>
+            <span class="bar s w50" style="margin:0"></span>
+          </div>
+        </div>
+        <div class="col" style="gap:calc(7*var(--u))">
+          <div class="row">
+            <span class="pill warn">perhatian</span>
+            <span class="bar w80" style="margin:0"></span>
+          </div>
+          <div class="row">
+            <span class="pill warn">perhatian</span>
+            <span class="bar w60" style="margin:0"></span>
+          </div>
+          <div class="row">
+            <span class="pill acc">info</span>
+            <span class="bar w70" style="margin:0"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>"Juri dibandingkan" &amp; "Tanpa pembanding"</b><span class="dim">dua angka di satu kartu</span><p>Kartu pertama selalu menyebut berapa juri yang punya pembanding dan berapa yang tidak. Juri yang memegang rubrik tanpa irisan bukan juri bermasalah — dan angkanya harus terlihat supaya "Tidak dapat dibandingkan" di tabel bawah tidak terbaca sebagai kegagalan.</p></div></li>
+      <li><span class="n">02</span><div><b>Temuan tintinggi 3, bukan daftar penuh</b><span class="dim">teks, bukan tabel</span><p>Tiap temuan satu baris: apa yang terlihat, di mana, dan berapa sel yang mendasarinya. Daftar penuhnya ada di tabel bawah; yang di sini hanya pemicu perhatian.</p></div></li>
+      <li><span class="n">03</span><div><b>Tidak ada satupun temuan = satu kalimat</b><span class="dim">—</span><p>Kalau semuanya seimbang, jangan biarkan panel kosong terbaca sebagai "belum dihitung". Tulis apa adanya: "Tidak ada selisih yang mencolok di babak ini."</p></div></li>
+      <li><span class="n">04</span><div><b>Bentuknya temuan, bukan putusan</b><span class="dim">—</span><p>Tidak ada kata "salah", "curang", "tidak kompeten". Semua berbunyi "cenderung lebih tinggi", "sebarannya lebar" — plus jumlah sel yang mendasari, supaya panitia bisa menilai sendiri.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ TABEL PER JURI ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Blok 4 · tabel per juri</p>
+      <h2>Baris pertama: kecenderungan tiap juri</h2>
+      <p class="goal">Inilah jawaban "apakah seimbang, terlalu besar, atau terlalu kecil". Satu baris satu juri, dengan satuan yang setara: penyimpangan dari rata-rata sel yang ia isi bersama juri lain.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">…/scoring/perbandingan · tabel per juri</span></div>
+      <div class="mock">
+        <table class="wf">
+          <thead>
+            <tr>
+              <th>Juri</th>
+              <th>Penugasan</th>
+              <th class="c">Sel dinilai</th>
+              <th class="c">Pembanding</th>
+              <th class="c">Bias</th>
+              <th class="c">Sebaran</th>
+              <th>Putusan</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="bar w60" style="margin:0"></span></td>
+              <td><span class="pill">Grup A</span></td>
+              <td class="c"><span class="bar w20" style="margin:0 auto"></span></td>
+              <td class="c"><span class="bar w20" style="margin:0 auto"></span></td>
+              <td class="c"><span class="pill ok">+0,4 poin</span></td>
+              <td class="c"><span class="pill ok">0,03</span></td>
+              <td><span class="pill ok">Seimbang</span></td>
+            </tr>
+            <tr class="flag">
+              <td><span class="bar w70" style="margin:0"></span></td>
+              <td><span class="pill">Grup A</span></td>
+              <td class="c"><span class="bar w20" style="margin:0 auto"></span></td>
+              <td class="c"><span class="bar w20" style="margin:0 auto"></span></td>
+              <td class="c"><span class="pill warn">+1,9 poin</span></td>
+              <td class="c"><span class="pill ok">0,04</span></td>
+              <td><span class="pill warn">Cenderung tinggi</span></td>
+            </tr>
+            <tr class="flag">
+              <td><span class="bar w50" style="margin:0"></span></td>
+              <td><span class="pill">Grup B</span></td>
+              <td class="c"><span class="bar w20" style="margin:0 auto"></span></td>
+              <td class="c"><span class="bar w20" style="margin:0 auto"></span></td>
+              <td class="c"><span class="pill ok">−0,3 poin</span></td>
+              <td class="c"><span class="pill warn">0,21</span></td>
+              <td><span class="pill warn">Tak konsisten</span></td>
+            </tr>
+            <tr>
+              <td><span class="bar w40" style="margin:0"></span></td>
+              <td><span class="pill">Seluruh Tingkat</span></td>
+              <td class="c"><span class="bar w20" style="margin:0 auto"></span></td>
+              <td class="c"><span class="pill warn">3</span></td>
+              <td class="c"><span class="pill">—</span></td>
+              <td class="c"><span class="pill">—</span></td>
+              <td><span class="pill">Data belum cukup</span></td>
+            </tr>
+            <tr>
+              <td><span class="bar w50" style="margin:0"></span></td>
+              <td><span class="pill">Final</span></td>
+              <td class="c"><span class="bar w20" style="margin:0 auto"></span></td>
+              <td class="c"><span class="pill">0</span></td>
+              <td class="c"><span class="pill">—</span></td>
+              <td class="c"><span class="pill">—</span></td>
+              <td><span class="pill">Tidak dapat dibandingkan</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <span class="bar s w70" style="margin:0"></span>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>"Bias" selalu penyimpangan, bukan total</b><span class="dim">poin kriteria, bukan persen</span><p>Dihitung pada porsi skala lalu ditampilkan kembali dalam poin — supaya juri yang memegang kriteria 0–25 dan juri yang memegang 0–100 bisa dibandingkan tanpa panitia harus menerjemahkan persen sendiri.</p></div></li>
+      <li><span class="n">02</span><div><b>"Sebaran" berdiri sendiri di sebelah bias</b><span class="dim">stdev penyimpangan</span><p>Juri bisa <em>selalu</em> lebih tinggi 8% (bias besar, sebaran kecil — bisa dikoreksi dengan sadar) atau <em>acak</em> (bias kecil, sebaran besar). Dua kolom, bukan satu putusan yang mencampur keduanya.</p></div></li>
+      <li><span class="n">03</span><div><b>"Pembanding" wajib terlihat</b><span class="dim">jumlah sel beririsan</span><p>Ini penyangga seluruh tabel. Juri dengan 3 sel pembanding tidak diberi putusan meski angkanya tampak ekstrem — ambangnya 5. Tanpa kolom ini, "Data belum cukup" terbaca seperti bug.</p></div></li>
+      <li><span class="n">04</span><div><b>Baris bermasalah diberi garis kiri oranye</b><span class="dim">bukan baris merah</span><p>Oranye = perlu ditinjau. Merah di halaman yang menyangkut orang akan terbaca sebagai tuduhan; warnanya sengaja lebih lunak dari merah.</p></div></li>
+      <li><span class="n">05</span><div><b>Kolom "Penugasan" menyebut sumber barisnya</b><span class="dim">Grup A · Grup B · Final · Seluruh Tingkat</span><p>Istilah yang sama dengan <code>CompetitionGroup::SCOPE_LABELS</code>. Dua juri di baris penugasan berbeda memang menilai pool yang berbeda — itu bukan selisih, dan tabelnya harus mengatakannya sebelum panitia menyimpulkan sendiri.</p></div></li>
+      <li><span class="n">06</span><div><b>Tidak ada tombol di tabel ini</b><span class="dim">—</span><p>Tidak ada "koreksi", tidak ada "kunci", tidak ada "abaikan". Halaman ini hanya membaca; mengubah nilai tetap lewat Input Nilai.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ MATRIKS SEL ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Blok 5 · matriks sel</p>
+      <h2>Baris kedua: peta peserta × kriteria</h2>
+      <p class="goal">Tabel per juri menjawab "siapa". Yang ini menjawab "di mana" — peserta dan kriteria mana yang jurinya berseberangan. Klik satu sel membuka nilainya per juri.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">…/scoring/perbandingan · matriks sel</span></div>
+      <div class="mock tight">
+        <div class="row between">
+          <span class="bar s w30" style="margin:0"></span>
+          <span class="pill">Hanya tampilkan sel berselisih</span>
+        </div>
+        <table class="wf">
+          <thead>
+            <tr>
+              <th>Peserta</th>
+              <th class="c">Kerapian</th>
+              <th class="c">Ketepatan</th>
+              <th class="c">Penampilan</th>
+              <th class="c">Kekompakan</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="bar w70" style="margin:0"></span></td>
+              <td class="c"><span class="spread"><span class="jchip">D</span><span class="jchip">R</span></span></td>
+              <td class="c"><span class="spread"><span class="jchip">D</span><span class="jchip">R</span></span></td>
+              <td class="c"><span class="spread"><span class="jchip">D</span></span></td>
+              <td class="c"><span class="spread"><span class="jchip">D</span><span class="jchip">R</span></span></td>
+            </tr>
+            <tr class="flag">
+              <td><span class="bar w60" style="margin:0"></span></td>
+              <td class="c"><span class="spread"><span class="jchip hi">D</span><span class="jchip lo">R</span></span></td>
+              <td class="c"><span class="spread"><span class="jchip">D</span><span class="jchip">R</span></span></td>
+              <td class="c"><span class="spread"><span class="jchip">D</span></span></td>
+              <td class="c"><span class="spread"><span class="jchip empty">·</span><span class="jchip empty">·</span></span></td>
+            </tr>
+            <tr>
+              <td><span class="bar w80" style="margin:0"></span></td>
+              <td class="c"><span class="spread"><span class="jchip">D</span><span class="jchip">R</span></span></td>
+              <td class="c"><span class="spread"><span class="jchip">D</span></span></td>
+              <td class="c"><span class="spread"><span class="jchip empty">·</span></span></td>
+              <td class="c"><span class="spread"><span class="jchip">D</span><span class="jchip">R</span></span></td>
+            </tr>
+          </tbody>
+        </table>
+        <span class="bar s w80" style="margin:0"></span>
+        <span class="bar s w50" style="margin:0"></span>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Satu sel = satu peserta × satu kriteria</b><span class="dim">bukan peserta × juri</span><p>Unique index <code>unique_score_participant_criteria_judge</code> menjamin satu sel berisi paling banyak satu nilai per juri. Karena itu sel ini tepat, bukan agregat yang bisa salah dijumlahkan.</p></div></li>
+      <li><span class="n">02</span><div><b>Lencana = inisial juri, bukan angka</b><span class="dim">chip kecil</span><p>Angka di dalam sel tidak akan terbaca di 1180 px dengan empat kolom kriteria. Yang penting di sini adalah <em>berapa juri yang mengisi</em>; angkanya ada di modal.</p></div></li>
+      <li><span class="n">03</span><div><b>Chip oranye/biru menandai yang paling jauh</b><span class="dim">menyimpang dari rata-rata sel</span><p>Bukan merah: yang disorot adalah jarak dari rata-rata, bukan kesalahan. Chip abu-abu berarti jurinya sebaris dengan yang lain.</p></div></li>
+      <li><span class="n">04</span><div><b>Chip bergaris putus = belum diisi</b><span class="dim">—</span><p>Sel yang jadi tugas juri tapi masih kosong. Ini juga pintu masuk ke lencana kelengkapan di layar Input Nilai — angkanya harus sepakat dengan <code>nilaiKosong()</code>.</p></div></li>
+      <li><span class="n">05</span><div><b>Barisnya hanya diberi garis kiri kalau ada sel berselisih</b><span class="dim">rentang &gt; 20% skala</span><p>Ambangnya tetap, bukan "yang paling besar di tabel". Ambang tetap membuat dua kali buka halaman menghasilkan penandaan yang sama.</p></div></li>
+      <li><span class="n">06</span><div><b>Satu saklar di atas tabel</b><span class="dim">"Hanya tampilkan sel berselisih"</span><p>Dengan 30 peserta × 8 kriteria tabelnya panjang. Saklarnya menyaring ke yang perlu dilihat, tanpa menghilangkan kemampuan memeriksa seluruhnya.</p></div></li>
+      <li><span class="n">07</span><div><b>Kriteria berseri muncul sebagai kolom terpisah</b><span class="dim">—</span><p>Dua seri boleh memakai nama kriteria yang sama. Nama kolomnya karena itu diberi lencana seri, sama seperti cara rekap nilai membedakan dua kolom bernama sama.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ MODAL SEL ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Blok 6 · rincian satu sel</p>
+      <h2>Modal kecil: nilai satu sel, juri per juri</h2>
+      <p class="goal">Ini satu-satunya modal di halaman, dan cakupannya sengaja sempit — satu peserta, satu kriteria. Di sinilah angka mentahnya boleh muncul.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">…/scoring/perbandingan · rincian sel</span></div>
+      <div class="mock" style="padding:0">
+        <div style="position:relative;min-height:calc(300*var(--u))">
+          <div class="scrim">
+            <div class="modal">
+              <div class="mh">
+                <div class="col" style="gap:calc(5*var(--u))">
+                  <span class="bar t w40" style="margin:0"></span>
+                  <span class="bar s w60" style="margin:0"></span>
+                </div>
+                <span class="pill">tutup</span>
+              </div>
+              <div class="mb">
+                <div class="g3">
+                  <div class="card"><span class="k">Rata-rata</span><span class="bar w50"></span></div>
+                  <div class="card warn"><span class="k">Rentang</span><span class="bar w60"></span></div>
+                  <div class="card"><span class="k">Skala kriteria</span><span class="bar w40"></span></div>
+                </div>
+                <table class="wf">
+                  <thead>
+                    <tr><th>Juri</th><th class="c">Nilai</th><th class="c">Selisih dari rata-rata</th><th>Catatan</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><span class="bar w50" style="margin:0"></span></td>
+                      <td class="c"><span class="bar w15" style="margin:0 auto"></span></td>
+                      <td class="c"><span class="pill ok">+0,0</span></td>
+                      <td><span class="pill">sebaris</span></td>
+                    </tr>
+                    <tr class="flag">
+                      <td><span class="bar w40" style="margin:0"></span></td>
+                      <td class="c"><span class="bar w15" style="margin:0 auto"></span></td>
+                      <td class="c"><span class="pill warn">+5,0</span></td>
+                      <td><span class="pill warn">jauh di atas rata-rata</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <span class="bar s w70" style="margin:0"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Modal ini di dalam root komponen yang sama</b><span class="dim">jebakan yang sudah tercatat</span><p>Modal Livewire yang ditulis setelah <code>&lt;/div&gt;</code> root tidak pernah tampil, dan <code>assertSee</code> tetap lulus. Di sini modalnya duduk di dalam root, dan tidak ada <code>wire:confirm</code> di dalamnya.</p></div></li>
+      <li><span class="n">02</span><div><b>Tidak ada aksi di dalam modal</b><span class="dim">tombolnya cuma "tutup"</span><p>Tidak ada simpan, tidak ada koreksi. Tanpa aksi tulis, dua jebakan modal Livewire (confirm ter-override, dispatch tanpa detail) tidak pernah tersentuh.</p></div></li>
+      <li><span class="n">03</span><div><b>Skala kriteria selalu disebut</b><span class="dim">0 – 25 · 0 – 100</span><p>"10 vs 15" tidak berarti apa-apa tanpa tahu skalanya. Selisih 5 poin di skala 25 adalah 20% — persis yang membuat sel ini ditandai.</p></div></li>
+      <li><span class="n">04</span><div><b>Tidak menyebut juri mana yang "benar"</b><span class="dim">—</span><p>Yang ditampilkan jarak dari rata-rata, bukan penilaian benar/salah. Panitia yang memutuskan.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ TABEL KRITERIA ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Blok 7 · tabel per kriteria</p>
+      <h2>Baris ketiga: sebaran tiap kriteria</h2>
+      <p class="goal">Kalau justru kriterianya yang bermasalah — opsinya terlalu lebar, atau namanya ambigu sehingga tiap juri memahaminya berbeda — itu tidak terlihat di tabel per juri. Di sini terlihat.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">…/scoring/perbandingan · sebaran kriteria</span></div>
+      <div class="mock">
+        <table class="wf">
+          <thead>
+            <tr>
+              <th>Kriteria</th>
+              <th class="c">Skala</th>
+              <th class="c">n</th>
+              <th class="c">Rata-rata</th>
+              <th class="c">Median</th>
+              <th class="c">Min</th>
+              <th class="c">Maks</th>
+              <th class="c">Rentang</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="bar w60" style="margin:0"></span></td>
+              <td class="c"><span class="pill">0 – 25</span></td>
+              <td class="c"><span class="bar w15" style="margin:0 auto"></span></td>
+              <td class="c"><span class="bar w20" style="margin:0 auto"></span></td>
+              <td class="c"><span class="bar w20" style="margin:0 auto"></span></td>
+              <td class="c"><span class="bar w15" style="margin:0 auto"></span></td>
+              <td class="c"><span class="bar w15" style="margin:0 auto"></span></td>
+              <td class="c"><span class="pill ok">4</span></td>
+            </tr>
+            <tr class="flag">
+              <td><span class="bar w70" style="margin:0"></span></td>
+              <td class="c"><span class="pill">0 – 25</span></td>
+              <td class="c"><span class="bar w15" style="margin:0 auto"></span></td>
+              <td class="c"><span class="bar w20" style="margin:0 auto"></span></td>
+              <td class="c"><span class="bar w20" style="margin:0 auto"></span></td>
+              <td class="c"><span class="bar w15" style="margin:0 auto"></span></td>
+              <td class="c"><span class="bar w15" style="margin:0 auto"></span></td>
+              <td class="c"><span class="pill warn">11</span></td>
+            </tr>
+            <tr>
+              <td><span class="bar w50" style="margin:0"></span></td>
+              <td class="c"><span class="pill">0 – 100</span></td>
+              <td class="c"><span class="bar w15" style="margin:0 auto"></span></td>
+              <td class="c"><span class="bar w20" style="margin:0 auto"></span></td>
+              <td class="c"><span class="bar w20" style="margin:0 auto"></span></td>
+              <td class="c"><span class="bar w15" style="margin:0 auto"></span></td>
+              <td class="c"><span class="bar w15" style="margin:0 auto"></span></td>
+              <td class="c"><span class="pill ok">9</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <span class="bar s w60" style="margin:0"></span>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Rentang ditandai dalam persen skala, bukan poin</b><span class="dim">—</span><p>Rentang 11 poin di skala 25 berarti 44%; di skala 100 hanya 11%. Angka poinnya tetap ditampilkan, tapi penandaannya memakai porsi — kalau tidak, kriteria berskala besar selalu terlihat paling bermasalah.</p></div></li>
+      <li><span class="n">02</span><div><b>Median di samping rata-rata</b><span class="dim">—</span><p>Selisih jauh antara keduanya berarti sebarannya miring, bukan sekadar lebar. Dua kolom, bukan satu.</p></div></li>
+      <li><span class="n">03</span><div><b>Bobot kriteria sengaja tidak muncul</b><span class="dim">—</span><p>Bobot mengubah nilai akhir, tapi tidak mengubah sebaran juri. Menampilkannya di sini mengundang panitia mengalikan sendiri lalu salah. Bobot tetap hidup di rekap dan peringkat juara, tempat ia memang berhak.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ KEADAAN KOSONG ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Blok 8 · keadaan kosong</p>
+      <h2>Tiga jalan buntu, tiga kalimat berbeda</h2>
+      <p class="goal">Halaman analisis paling mudah menyesatkan justru saat kosong. "Belum ada data" untuk tiga sebab berbeda membuat panitia mencari masalah di tempat yang salah.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">…/scoring/perbandingan · keadaan kosong</span></div>
+      <div class="mock">
+        <div class="card">
+          <span class="k">Tanpa peserta di tingkat ini</span>
+          <span class="bar w80"></span>
+          <span class="bar w50"></span>
+          <span class="pill acc">Pilih tingkat lain</span>
+        </div>
+        <div class="card">
+          <span class="k">Ada peserta, belum ada nilai</span>
+          <span class="bar w70"></span>
+          <span class="bar w60"></span>
+          <span class="pill">Buka Input Nilai</span>
+        </div>
+        <div class="card warn">
+          <span class="k">Nilai lengkap, belum punya pembanding</span>
+          <span class="bar w80"></span>
+          <span class="bar w40"></span>
+          <span class="pill warn">Periksa pembagian rubrik</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Keadaan ketiga yang paling penting</b><span class="dim">—</span><p>Nilai terisi penuh tapi tiap juri memegang kriteria yang berbeda. Halaman ini tidak bisa membandingkan apa pun, dan itu <em>bukan</em> kesalahan data — itu pembagian rubrik. Kalimatnya harus menuntun ke panel rubrik, bukan menyuruh menilai ulang.</p></div></li>
+      <li><span class="n">02</span><div><b>Tiap keadaan punya satu jalan keluar</b><span class="dim">—</span><p>Kartunya menyebut apa yang kurang dan ke mana harus pergi. Tanpa tautan, panitia kembali ke menu dan menebak.</p></div></li>
+      <li><span class="n">03</span><div><b>Tidak ada tabel kosong yang tetap digambar</b><span class="dim">—</span><p>Kepala tabel dengan badan kosong terbaca sebagai "belum dimuat", bukan "tidak ada isinya". Ketiga blok (per juri, matriks, kriteria) digantikan kartu ini seluruhnya.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ MOBILE ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Blok 9 · 390 px</p>
+      <h2>Ponsel: potret dulu, tabel digulir mendatar</h2>
+      <p class="goal">Panitia di lapangan membuka ini dari ponsel. Empat kartu potret tetap empat, tapi tabelnya tidak ditumpuk jadi kartu — perbandingan hanya terbaca kalau kolomnya sejajar.</p>
+    </div>
+
+    <div class="phone">
+      <div class="chrome" style="display:flex;align-items:center;gap:calc(8*var(--u));padding:calc(14*var(--u)) calc(20*var(--u));border-bottom:1px solid var(--line-soft);background:var(--panel-2)">
+        <span class="dot" style="width:calc(10*var(--u));height:calc(10*var(--u));border-radius:50%;background:var(--ph-line);display:block"></span>
+        <span class="dot" style="width:calc(10*var(--u));height:calc(10*var(--u));border-radius:50%;background:var(--ph-line);display:block"></span>
+        <span class="url" style="flex:1;height:calc(20*var(--u));border-radius:999px;background:var(--ph-fill);display:flex;align-items:center;padding-inline:calc(12*var(--u));font-family:var(--mono);font-size:calc(11*var(--u));color:var(--muted);overflow:hidden;white-space:nowrap">…/perbandingan</span>
+      </div>
+      <div class="mock tight" style="gap:calc(14*var(--u));padding:calc(20*var(--u))">
+        <div class="head" style="padding:calc(14*var(--u));border-left-width:calc(5*var(--u))">
+          <span class="bar t w60" style="margin:0"></span>
+        </div>
+        <div class="g2">
+          <div class="card ok"><span class="k">Seimbang</span><span class="bar w40"></span></div>
+          <div class="card warn"><span class="k">Ditinjau</span><span class="bar w40"></span></div>
+          <div class="card"><span class="k">Dibandingkan</span><span class="bar w40"></span></div>
+          <div class="card warn"><span class="k">Sel selisih</span><span class="bar w40"></span></div>
+        </div>
+        <div class="row"><span class="pill acc">Tingkat</span><span class="pill">Babak</span><span class="pill">Grup</span></div>
+        <div style="overflow:hidden;border:1px solid var(--line);border-radius:calc(9*var(--u))">
+          <table class="wf" style="min-width:calc(420*var(--u))">
+            <thead>
+              <tr><th>Juri</th><th class="c">Bias</th><th class="c">Sebaran</th><th>Putusan</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><span class="bar w60" style="margin:0"></span></td><td class="c"><span class="pill ok">+0,4</span></td><td class="c"><span class="pill ok">0,03</span></td><td><span class="pill ok">Seimbang</span></td></tr>
+              <tr class="flag"><td><span class="bar w50" style="margin:0"></span></td><td class="c"><span class="pill warn">+1,9</span></td><td class="c"><span class="pill ok">0,04</span></td><td><span class="pill warn">Tinggi</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <span class="bar s w70" style="margin:0"></span>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Potret jadi 2 × 2</b><span class="dim">bukan satu kolom</span><p>Empat kartu satu kolom mendorong tabelnya jauh ke bawah. Dua kolom masih terbaca sekali pandang.</p></div></li>
+      <li><span class="n">02</span><div><b>Tabel digulir mendatar</b><span class="dim">min-width tetap</span><p>Sama dengan keputusan di tabel perbandingan paket di laman utama: menumpuk kolom jadi kartu menghancurkan gunanya tabel. Digulir, bukan ditumpuk.</p></div></li>
+      <li><span class="n">03</span><div><b>Filter jadi chip yang bisa digulir</b><span class="dim">—</span><p>Tiga <code>input-group</code> selebar penuh menumpuk jadi tiga baris. Chip menjaga kepala halaman tetap pendek.</p></div></li>
+      <li><span class="n">04</span><div><b>Matriks sel diganti daftar di ponsel</b><span class="dim">—</span><p>30 peserta × 8 kriteria di 390 px bukan tabel, itu teka-teki. Di ponsel yang tampil hanya daftar sel berselisih: satu baris satu sel, dengan nama peserta dan kriteria utuh. Matriks penuhnya tetap ada di layar lebar.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ KENAPA LAMAN ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Keputusan · laman, bukan modal</p>
+      <h2>Kenapa bukan modal</h2>
+      <p class="goal">User membuka dua pilihan. Yang dipilih laman khusus, karena tiga hal yang semuanya sudah terbukti di proyek ini.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">perbandingan bentuk</span></div>
+      <div class="mock">
+        <div class="g2">
+          <div class="card warn">
+            <span class="k">Modal</span>
+            <span class="bar s w80"></span>
+            <span class="bar s w70"></span>
+            <span class="bar s w60"></span>
+          </div>
+          <div class="card ok">
+            <span class="k">Laman</span>
+            <span class="bar s w80"></span>
+            <span class="bar s w70"></span>
+            <span class="bar s w60"></span>
+          </div>
+        </div>
+        <span class="bar w100"></span>
+        <span class="bar w80"></span>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Lebarnya tidak cukup</b><span class="dim">1280 px → ~1140 px isi</span><p>Isinya matriks peserta × kriteria. Di dalam modal, 3–4 kolom kriteria sudah mepet di desktop dan pecah di tablet meja panitia. Laman penuh memakai lebar yang sama dengan Rekap Nilai.</p></div></li>
+      <li><span class="n">02</span><div><b>Tautannya harus bisa dikirim</b><span class="dim">query string</span><p>Rekap Nilai sudah punya alamat per tingkat dan per grup. "Lihat selisih juri Grup A babak final" adalah kalimat yang wajar diucapkan antar panitia — dan modal tidak punya alamat untuk dikirim.</p></div></li>
+      <li><span class="n">03</span><div><b>Modal Livewire punya dua jebakan tercatat</b><span class="dim">—</span><p>Modal di luar root tidak pernah tampil sementara <code>assertSee</code> tetap lulus; <code>wire:confirm</code> di dalam modal Bootstrap selalu batal; <code>event.detail</code> pada dispatch sudah dilepas. Laman biasa tidak menyentuh satu pun.</p></div></li>
+      <li><span class="n">04</span><div><b>Modal tetap dipakai, tapi untuk satu sel</b><span class="dim">blok 6</span><p>Bukan untuk seluruh analisis. Cakupannya sempit, tanpa aksi tulis, jadi tidak ada satu pun jebakan itu yang tersentuh.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ YANG DIBUANG ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Batas · yang tidak dikerjakan</p>
+      <h2>Yang sengaja tidak ada di halaman ini</h2>
+      <p class="goal">Halaman analisis gampang membengkak jadi sepuluh fitur. Batasnya ditulis di sini supaya tidak ditambahkan tanpa berpikir.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">batas lingkup</span></div>
+      <div class="mock tight">
+        <ul class="blks">
+          <li class="blk bad"><span class="no">01</span><span class="nm">Ubah nilai dari sini</span><span class="tag">hanya baca</span></li>
+          <li class="blk bad"><span class="no">02</span><span class="nm">Hitung ulang peringkat juara</span><span class="tag">punya ChampionCalculator</span></li>
+          <li class="blk bad"><span class="no">03</span><span class="nm">Putusan "juri X salah"</span><span class="tag">hanya kecenderungan</span></li>
+          <li class="blk bad"><span class="no">04</span><span class="nm">Audit trail baru</span><span class="tag">sudah ada Activity Log</span></li>
+          <li class="blk bad"><span class="no">05</span><span class="nm">Ekspor PDF / CSV</span><span class="tag">versi berikutnya</span></li>
+          <li class="blk bad"><span class="no">06</span><span class="nm">Filter per seri</span><span class="tag">tidak memisahkan apa pun</span></li>
+          <li class="blk keep"><span class="no">07</span><span class="nm">Laman perbandingan</span><span class="tag">dibangun</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Satu pintu tulis tetap satu</b><span class="dim">Input Nilai</span><p>Menambah tombol koreksi di sini berarti ada dua jalur yang menulis <code>assessment_scores</code> — dan dua jalur itu pasti berbeda begitu salah satunya diperbaiki.</p></div></li>
+      <li><span class="n">02</span><div><b>Rumus peringkat tidak digandakan</b><span class="dim"><code>ChampionCalculator</code> + <code>ScoreRecapBuilder</code></span><p>Sudah ada dua pembaca resmi angka peringkat. Menyalinnya di sini bikin salinan ketiga yang akan menyimpang.</p></div></li>
+      <li><span class="n">03</span><div><b>Service dipisah supaya ekspor nanti murah</b><span class="dim"><code>JudgeScoreComparison</code></span><p>Seluruh matematikanya di service tanpa Livewire — alasan yang sama dengan <code>ScoreRecapBuilder</code>. PDF/CSV tinggal memanggilnya, tanpa menyalin satu rumus pun.</p></div></li>
+      <li><span class="n">04</span><div><b>Batas 5 sel pembanding</b><span class="dim">MIN_SEL</span><p>Di bawah itu rata-rata dan sebarannya tidak berarti apa-apa. Lebih jujur mengatakan "data belum cukup" daripada menampilkan angka yang tampak meyakinkan.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ RUMUS ============ -->
+  <section class="rules">
+    <h2>Rumus &amp; ambang</h2>
+    <p class="lede" style="margin-top:10px;font-size:14.5px">Ditetapkan sebagai konstanta di <code>JudgeScoreComparison</code>, bukan angka berserak di Blade — supaya ambangnya bisa ditinjau dan diubah di satu tempat.</p>
+
+    <table class="spec-t">
+      <thead>
+        <tr><th>Konstanta</th><th>Nilai</th><th>Arti</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>AMBANG_BIAS</td><td>0,05</td><td>5% skala — batas "seimbang". Di bawah ini penyimpangan juri dianggap wajar.</td></tr>
+        <tr><td>AMBANG_SIGMA</td><td>0,10</td><td>10% skala — batas konsistensi. Di atas ini juri dinilai tak konsisten meski rata-ratanya seimbang.</td></tr>
+        <tr><td>AMBANG_RENTANG_SEL</td><td>0,20</td><td>20% skala — sel ditandai kalau rentang nilai antar jurinya lewat ini.</td></tr>
+        <tr><td>MIN_SEL</td><td>5</td><td>Juri dengan kurang dari 5 sel pembanding tidak diberi putusan.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="cols">
+      <div>
+        <h3 style="font-size:15px;font-weight:600">Normalisasi</h3>
+        <ul>
+          <li><strong>x</strong> = <code>ScoreOptions::value()</code> — kolomnya varchar, jadi pembacaannya harus lewat pintu itu.</li>
+          <li><strong>m</strong> = <code>ScoreOptions::maxValue()</code> — batas atas skala kriteria; 0 jatuh ke cadangan 100.</li>
+          <li><strong>p = x / m</strong> — porsi skala, satuan semua statistik di halaman ini.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="font-size:15px;font-weight:600">Per juri</h3>
+        <ul>
+          <li><strong>d</strong> = nilai juri − rata-rata sel itu (hanya sel yang juga diisi juri lain).</li>
+          <li><strong>bias</strong> = rata-rata d — arah dan besarnya kecenderungan.</li>
+          <li><strong>sigma</strong> = simpangan baku d — seberapa liar, lepas dari arahnya.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="font-size:15px;font-weight:600">Urutan putusan</h3>
+        <ul>
+          <li>Pembanding &lt; 5 → <strong>Data belum cukup</strong>.</li>
+          <li>|bias| ≤ 5% dan sigma ≤ 10% → <strong>Seimbang</strong>.</li>
+          <li>|bias| ≤ 5% tapi sigma &gt; 10% → <strong>Tak konsisten</strong>.</li>
+          <li>bias &gt; 5% → <strong>Cenderung tinggi</strong>; selainnya <strong>Cenderung rendah</strong>.</li>
+        </ul>
+      </div>
+      <div>
+        <h3 style="font-size:15px;font-weight:600">Pemisahan yang dihormati</h3>
+        <ul>
+          <li><strong>Babak</strong> — nilai penyisihan dan final tinggal di kriteria berbeda.</li>
+          <li><strong>Grup</strong> — peserta Grup A bukan pembanding Grup B.</li>
+          <li><strong>Seri</strong> — lewat <code>rubrikUntukPeserta()</code>, pintu yang sama dengan tablet juri.</li>
+          <li><strong>Bobot kriteria tidak dipakai</strong> — ia sifat kriteria, bukan sifat juri.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>BERBARIS APP · wireframe perbandingan nilai juri · kanvas 1180 px · hanya membaca · /eventner/scoring/perbandingan</footer>
+
+</div>
+
+<script>
+(function () {
+  var wrap = document.querySelector('.wrap');
+  var btn = document.getElementById('ts');
+  if (btn) {
+    btn.addEventListener('click', function () {
+      var on = wrap.getAttribute('data-sorot') === 'on';
+      wrap.setAttribute('data-sorot', on ? 'off' : 'on');
+      btn.setAttribute('aria-pressed', on ? 'false' : 'true');
+    });
+  }
+})();
+</script>
+
+</body>
+</html>
