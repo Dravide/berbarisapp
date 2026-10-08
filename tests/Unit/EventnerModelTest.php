@@ -3,8 +3,10 @@
 namespace Tests\Unit;
 
 use App\Models\Eventner;
+use App\Models\SaasPlan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class EventnerModelTest extends TestCase
@@ -171,6 +173,142 @@ class EventnerModelTest extends TestCase
 
         $this->assertArrayHasKey('tickets', $locked);
         $this->assertArrayNotHasKey('free_feature', $locked);
+    }
+
+    // ── Paket dari DB ───────────────────────────────────────────────────
+    //
+    // Empat bentuk eventner:
+    //
+    //   trial aktif    → semua terbuka
+    //   trial lewat    → fitur config terkunci
+    //   paket gratis   → fitur config terkunci (nol feature_key)
+    //   paket berbayar → hanya fitur paketnya yang terbuka
+    //
+    // Bentuk "paket gratis" yang paling mudah salah: plan-nya tetap 'free'
+    // sementara trial_ends_at sudah dinolkan assignPlan(). Cabang yang
+    // bercabang pada `plan` saja akan menjatuhkannya ke aturan trial habis —
+    // hasil akhirnya kebetulan sama-sama mengunci, tapi lewat jalur yang
+    // salah, dan itu baru terlihat pada fitur config ber-locked_free=false.
+
+    /** Fitur di luar config tak pernah dikunci, apa pun paketnya. */
+    public function test_fitur_di_luar_config_terbuka_untuk_paket_berbayar()
+    {
+        config(['eventner_features' => ['tickets' => ['label' => 'Tiket', 'locked_free' => true]]]);
+
+        $plan = $this->buatPaket(['certificate']);
+        $eventner = Eventner::factory()->paid()->create(['saas_plan_id' => $plan->id]);
+
+        $this->assertFalse($eventner->canAccessFeature('tickets'), 'Tidak dicentang di paket.');
+        $this->assertTrue($eventner->canAccessFeature('certificate'));
+
+        // Halaman log aktivitas pernah melempar pengguna berbayar ke /upgrade
+        // karena cabang paket memeriksa daftar feature_key untuk SEMUA kunci,
+        // termasuk yang tak pernah ada di config.
+        $this->assertTrue($eventner->canAccessFeature('activity_log'));
+        $this->assertTrue($eventner->canAccessFeature('scoring'));
+    }
+
+    /** Paket gratis terkunci di fitur config, bukan di seluruh aplikasi. */
+    public function test_paket_gratis_terkunci_hanya_di_fitur_config()
+    {
+        config(['eventner_features' => ['tickets' => ['label' => 'Tiket', 'locked_free' => true]]]);
+
+        $plan = $this->buatPaket([], isFree: true);
+        $eventner = Eventner::factory()->paketGratis()->create(['saas_plan_id' => $plan->id]);
+
+        $this->assertFalse($eventner->canAccessFeature('tickets'));
+        $this->assertTrue($eventner->canAccessFeature('activity_log'));
+        $this->assertTrue($eventner->canAccessFeature('scoring'));
+        $this->assertArrayHasKey('tickets', $eventner->lockedFeatures());
+    }
+
+    /**
+     * Baris fitur terselip di paket gratis diabaikan.
+     *
+     * Admin bisa mengubah paket berbayar menjadi gratis tanpa membersihkan
+     * centang fiturnya. Membaca baris sisa itu akan membuat paket gratis
+     * membuka fitur premium — kebalikan dari artinya.
+     */
+    public function test_paket_gratis_mengabaikan_baris_fitur_terselip()
+    {
+        config(['eventner_features' => ['tickets' => ['label' => 'Tiket', 'locked_free' => true]]]);
+
+        $plan = $this->buatPaket([], isFree: true);
+        $plan->features()->create(['feature_key' => 'tickets']);
+
+        $eventner = Eventner::factory()->paketGratis()->create(['saas_plan_id' => $plan->id]);
+
+        $this->assertFalse($eventner->canAccessFeature('tickets'), 'Identitas paket gratis = is_free, bukan isi fiturnya.');
+        $this->assertSame([], $eventner->fiturPaket());
+    }
+
+    /** Paket gratis tak boleh terbaca sebagai trial yang masih berjalan. */
+    public function test_paket_gratis_bukan_trial()
+    {
+        $plan = $this->buatPaket([], isFree: true);
+        $eventner = Eventner::factory()->paketGratis()->create(['saas_plan_id' => $plan->id]);
+
+        $this->assertFalse($eventner->isOnTrial());
+        $this->assertFalse($eventner->isTrialExpired());
+        $this->assertSame(0, $eventner->trialDaysLeft());
+        $this->assertTrue($eventner->hasActivePlan());
+    }
+
+    /** Paket yang dihapus admin (id yatim) → aturan legacy, bukan error. */
+    public function test_paket_yatim_jatuh_ke_aturan_legacy()
+    {
+        config(['eventner_features' => ['tickets' => ['label' => 'Tiket', 'locked_free' => true]]]);
+
+        $plan = $this->buatPaket(['certificate']);
+        $eventner = Eventner::factory()->paid()->create(['saas_plan_id' => $plan->id]);
+
+        // Relasi nullOnDelete: paketnya hilang, kolom saas_plan_id tertinggal.
+        SaasPlan::where('id', $plan->id)->delete();
+        $eventner->refresh();
+
+        $this->assertNull($eventner->saasPlan);
+        $this->assertFalse($eventner->punyaPaketDb());
+        $this->assertTrue($eventner->canAccessFeature('tickets'), 'Legacy paid tetap akses penuh.');
+    }
+
+    /**
+     * Fitur config yang memang tak dikunci tetap terbuka di paket gratis.
+     *
+     * Inilah bedanya jalur paket dan jalur trial-habis: keduanya mengunci
+     * fitur ber-locked_free, jadi hasilnya baru berbeda di sini.
+     */
+    public function test_paket_gratis_tidak_mengunci_fitur_config_yang_terbuka()
+    {
+        config(['eventner_features' => [
+            'tickets' => ['label' => 'Tiket', 'locked_free' => true],
+            'laporan' => ['label' => 'Laporan', 'locked_free' => false],
+        ]]);
+
+        $plan = $this->buatPaket([], isFree: true);
+        $eventner = Eventner::factory()->paketGratis()->create(['saas_plan_id' => $plan->id]);
+
+        $this->assertTrue($eventner->canAccessFeature('laporan'));
+        $this->assertArrayNotHasKey('laporan', $eventner->lockedFeatures());
+    }
+
+    private function buatPaket(array $features, bool $isFree = false): SaasPlan
+    {
+        $plan = SaasPlan::create([
+            'name' => $isFree ? 'Gratis' : 'Event Penuh',
+            'slug' => Str::slug(($isFree ? 'gratis' : 'penuh') . '-' . Str::random(6)),
+            'price' => $isFree ? 0 : 150000,
+            'registration_fee' => 0,
+            'is_active' => true,
+            'is_free' => $isFree,
+            'is_contact' => false,
+            'sort_order' => 0,
+        ]);
+
+        $plan->features()->createMany(
+            collect($features)->map(fn ($key) => ['feature_key' => $key])->all()
+        );
+
+        return $plan;
     }
 
     public function test_public_url_with_subdomain()

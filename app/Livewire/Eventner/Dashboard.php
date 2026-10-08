@@ -114,10 +114,14 @@ class Dashboard extends Component
         // Kunci paket SaaS: satu-satunya sumber kebenaran soal fitur mana yang
         // termasuk paket. Dipakai hanya kalau paketnya benar-benar terpasang.
         // Paket bisa sudah dihapus admin (relasi nullOnDelete) — tanpa
-        // pemeriksaan saasPlan, halaman dashboard melempar error.
-        $planKeys = ($e->plan === 'paid' && $e->saasPlan)
-            ? $e->saasPlan->features->pluck('feature_key')->all()
-            : null;
+        // pemeriksaan punyaPaketDb(), halaman dashboard melempar error.
+        //
+        // Daftarnya dari fiturPaket() (trait), bukan dari relasi langsung:
+        // paket gratis harus terbaca kosong walau ada baris fitur terselip
+        // (mis. paket berbayar yang diubah jadi gratis tanpa membersihkan
+        // centangnya). Menyalin ulang aturan itu di sini adalah cara termudah
+        // membuat header dashboard berbeda dari penegakan aksesnya.
+        $planKeys = $e->punyaPaketDb() ? $e->fiturPaket() : null;
 
         $included = [];
         foreach ($gated as $key => $config) {

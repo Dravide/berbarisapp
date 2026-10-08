@@ -7,6 +7,23 @@ use Illuminate\Support\Facades\Config;
 trait HasFeatureGates
 {
     /**
+     * Eventner ini punya paket dari DB yang boleh dibaca fiturnya.
+     *
+     * Bukan sekadar `saas_plan_id !== null`: relasinya nullOnDelete, jadi paket
+     * yang dihapus admin meninggalkan id yatim yang menunjuk ke ketiadaan.
+     * Membaca ->features dari relasi null melempar error, bukan jatuh ke aturan
+     * legacy — itu sebabnya pemeriksaannya lewat relasi, bukan lewat kolom.
+     *
+     * Publik karena ringkasan paket di dashboard memakai patokan yang sama;
+     * menuliskan ulang pemeriksaan ini di sana adalah cara termudah membuat
+     * header berbeda dari penegakan aksesnya.
+     */
+    public function punyaPaketDb(): bool
+    {
+        return $this->saasPlan !== null;
+    }
+
+    /**
      * Cek apakah eventner sedang dalam masa trial (free plan).
      */
     public function isOnTrial(): bool
@@ -39,49 +56,86 @@ trait HasFeatureGates
     }
 
     /**
+     * Feature key yang dibawa paket DB.
+     *
+     * Paket gratis SELALU mengembalikan kosong: identitasnya `is_free`, bukan
+     * isi tabel fiturnya. Baris fitur yang terselip di paket gratis — mis. admin
+     * mengubah paket berbayar menjadi gratis tanpa membersihkan centangnya —
+     * adalah data sisa, dan membacanya membuat "gratis" justru membuka fitur
+     * premium. Satu tempat ini yang menentukan, supaya canAccessFeature(),
+     * lockedFeatures(), dan ringkasan paket di dashboard tak bisa berbeda
+     * jawaban.
+     *
+     * @return array<int, string>
+     */
+    public function fiturPaket(): array
+    {
+        if (! $this->punyaPaketDb() || $this->saasPlan->is_free) {
+            return [];
+        }
+
+        return $this->saasPlan->features->pluck('feature_key')->all();
+    }
+
+    /**
      * Cek apakah fitur tertentu bisa diakses.
      *
-     * Multi-paket: eventner paid dengan saas_plan_id → fitur dari paket DB.
-     * Legacy (plan 'paid' tanpa paket) & trial → semua terbuka.
+     * Lapis pertama adalah yang paling sering terlewat: **fitur yang tak
+     * pernah bisa dikunci selalu terbuka**, apa pun paketnya. config/
+     * eventner_features.php hanya memuat fitur yang BOLEH dikunci — dashboard,
+     * peserta, juri, input nilai, rekap, scoreboard, log aktivitas tidak ada
+     * di sana justru karena tak pernah dikunci. Cabang paket dulu memeriksa
+     * `features->contains($key)` untuk semua kunci, sehingga paket berbayar
+     * pun mengunci `activity_log`: halaman Log Aktivitas melempar pengguna yang
+     * sudah membayar ke /upgrade.
+     *
+     * Lapis kedua: paket DB, dibaca lewat RELASI bukan lewat kolom `plan`.
+     * Dulu cabangnya `plan === 'paid'`, sehingga eventner ber-paket GRATIS
+     * (plan='free', saas_plan_id = paket is_free) tidak masuk cabang mana pun:
+     * bukan 'paid', dan trial-nya sudah dinolkan assignPlan() sehingga
+     * isOnTrial() juga false. Ia jatuh ke aturan locked_free di lapis ketiga.
+     * Hasil akhirnya kebetulan sama-sama mengunci, jadi bug ini tak terlihat
+     * sampai ada fitur config ber-locked_free=false.
+     *
+     * Lapis ketiga: sisa, yaitu free tanpa paket — trial aktif membuka semua,
+     * lewat trial berarti terkunci.
+     *
+     * Paket yatim (saas_plan_id menunjuk paket yang sudah dihapus admin)
+     * sengaja diperlakukan sebagai tidak punya paket: pemiliknya pernah
+     * membayar, jadi ia direndahkan ke aturan trial/config, bukan dikunci total.
      */
     public function canAccessFeature(string $feature): bool
     {
-        // Paid plan legacy — semua fitur terbuka.
-        //
-        // Harus diperiksa SEBELUM jalur paket: saas_plan_id bisa yatim
-        // (relasinya nullOnDelete, jadi paketnya ada yang dihapus admin), dan
-        // eventner legacy memang tidak pernah punya paket. Dulu jalur paket
-        // memakai `saas_plan_id` polos lalu membaca ->features, sehingga
-        // eventner ber-paket-dihapus melempar error, bukan jatuh ke aturan
-        // legacy di bawah.
-        if ($this->plan === 'paid' && ! $this->saasPlan) {
+        $featureConfig = Config::get("eventner_features.{$feature}");
+
+        // Dua bentuk "tidak pernah bisa dikunci", dan keduanya harus menang
+        // atas paket apa pun:
+        //   - tak terdaftar di config (dashboard, peserta, juri, rekap, …)
+        //   - terdaftar tapi locked_free = false
+        // Komentar di config/eventner_features.php menuliskan yang kedua
+        // sebagai "available to all plans", jadi membiarkan cabang paket
+        // menimpanya berarti kode dan dokumentasinya berbeda. Fitur seperti ini
+        // juga bukan milik paket mana pun, jadi paket tak bisa "tidak
+        // memberikannya".
+        if ($featureConfig === null || ! ($featureConfig['locked_free'] ?? true)) {
             return true;
         }
 
-        // Multi-paket via DB
-        if ($this->plan === 'paid') {
-            return $this->saasPlan->features->pluck('feature_key')->contains($feature);
+        if ($this->punyaPaketDb()) {
+            return in_array($feature, $this->fiturPaket(), true);
         }
 
-        // Free plan — cek trial
+        // Legacy `plan='paid'` tanpa paket — semua fitur terbuka.
+        if ($this->plan === 'paid') {
+            return true;
+        }
+
+        // Free plan — trial aktif membuka semua.
         if ($this->isOnTrial()) {
             return true;
         }
 
-        // Trial expired atau tidak ada trial — cek config
-        $featureConfig = Config::get("eventner_features.{$feature}");
-
-        // Fitur tidak terdaftar di config → selalu tersedia
-        if ($featureConfig === null) {
-            return true;
-        }
-
-        // locked_free = false → selalu tersedia
-        if (!($featureConfig['locked_free'] ?? true)) {
-            return true;
-        }
-
-        // locked_free = true → terkunci
+        // Sisa: trial berakhir / tidak ada trial, dan fitur memang dikunci.
         return false;
     }
 
@@ -90,26 +144,25 @@ trait HasFeatureGates
      */
     public function lockedFeatures(): array
     {
-        // Legacy / paket yatim — tidak ada paket untuk dibaca, jadi tidak ada
-        // yang terkunci (lihat canAccessFeature()).
-        if ($this->plan === 'paid' && ! $this->saasPlan) {
-            return [];
+        // Hanya fitur config ber-locked_free yang bisa terkunci — sama seperti
+        // canAccessFeature(), supaya kedua daftar tak bisa berbeda isi.
+        $dapatDikunci = collect(Config::get('eventner_features', []))
+            ->filter(fn ($config) => $config['locked_free'] ?? true);
+
+        // Paket DB — terkunci = dapat dikunci tapi tak dibawa paketnya.
+        // Paket gratis membawa nol fitur (lihat fiturPaket()), jadi semuanya
+        // terkunci; itu jawaban yang benar untuk paket gratis.
+        if ($this->punyaPaketDb()) {
+            $planKeys = $this->fiturPaket();
+
+            return $dapatDikunci
+                ->reject(fn ($config, $key) => in_array($key, $planKeys, true))
+                ->map(fn ($config) => $config['label'])
+                ->all();
         }
 
-        // Multi-paket via DB
-        if ($this->plan === 'paid') {
-            $planKeys = $this->saasPlan->features->pluck('feature_key')->all();
-
-            $locked = [];
-            foreach (Config::get('eventner_features', []) as $key => $config) {
-                if (!in_array($key, $planKeys, true)) {
-                    $locked[$key] = $config['label'];
-                }
-            }
-
-            return $locked;
-        }
-
+        // Legacy `plan='paid'` tanpa paket — tak ada paket untuk dibaca, jadi
+        // tak ada yang terkunci (lihat canAccessFeature()).
         if ($this->plan === 'paid') {
             return [];
         }
@@ -118,13 +171,6 @@ trait HasFeatureGates
             return [];
         }
 
-        $locked = [];
-        foreach (Config::get('eventner_features', []) as $key => $config) {
-            if ($config['locked_free'] ?? false) {
-                $locked[$key] = $config['label'];
-            }
-        }
-
-        return $locked;
+        return $dapatDikunci->map(fn ($config) => $config['label'])->all();
     }
 }

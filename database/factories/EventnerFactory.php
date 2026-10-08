@@ -72,6 +72,23 @@ class EventnerFactory extends Factory
     }
 
     /**
+     * Eventner yang memakai paket GRATIS dari DB — hasil assignPlan() admin.
+     *
+     * Bentuknya sengaja yang paling mudah salah dibaca: plan tetap 'free'
+     * (paket gratis bukan paket berbayar) sementara trial_ends_at dinolkan
+     * karena paket terpasang langsung berlaku. Setiap cabang yang bercabang
+     * pada `plan` saja akan salah menilai eventner seperti ini.
+     */
+    public function paketGratis(): static
+    {
+        return $this->state(fn () => [
+            'plan' => 'free',
+            'trial_ends_at' => null,
+            'registration_paid_at' => now(),
+        ]);
+    }
+
+    /**
      * Eventner pending approval.
      */
     public function pending(): static
