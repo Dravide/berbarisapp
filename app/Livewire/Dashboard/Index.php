@@ -47,10 +47,11 @@ class Index extends Component
 
         try {
             $autoGoPay = app(AutoGoPay::class);
-            // Harga paket yang dipasang ke eventner ini — sama dengan yang
-            // divalidasi webhook ($eventner->saasPlan->price), supaya nominal
-            // QRIS tidak lagi ditolak saat settlement.
-            $fee = (int) ($this->eventner->saasPlan?->price
+            // Harga efektif paket (price dikurangi diskon) yang dipasang ke
+            // eventner ini — sama dengan yang divalidasi webhook
+            // ($eventner->saasPlan->effective_price), supaya nominal QRIS
+            // tidak ditolak saat settlement.
+            $fee = (int) ($this->eventner->saasPlan?->effective_price
                 ?? \App\Models\Setting::get('eventner_plan_price', 150000));
             $result = $autoGoPay->generateQris($fee);
 

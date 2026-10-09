@@ -199,7 +199,10 @@
                                 <h5 class="fw-semibold mb-1">{{ $plan->name }}</h5>
                                 <p class="text-muted small mb-0">{{ $plan->description ?? 'Bayar sekali per event' }}</p>
                             </div>
-                            <h3 class="fw-bold mb-1">Rp {{ number_format($plan->price, 0, ',', '.') }}</h3>
+                            @if($plan->has_discount)
+                                <p class="text-muted small mb-0"><span class="text-decoration-line-through">Rp {{ number_format($plan->price, 0, ',', '.') }}</span> <span class="badge bg-danger-subtle text-danger ms-1">Hemat {{ $plan->discount_percent }}%</span></p>
+                            @endif
+                            <h3 class="fw-bold mb-1">Rp {{ number_format($plan->effective_price, 0, ',', '.') }}</h3>
                             <p class="text-muted small mb-3">Sekali bayar, aktif selama event ini</p>
                             <ul class="list-unstyled d-flex flex-column gap-2 mb-4 small">
                                 <li><i class="ti ti-check text-success me-2"></i>Semua fitur paket gratis</li>

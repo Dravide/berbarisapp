@@ -84,7 +84,7 @@ class Upgrade extends Component
                 } elseif (($status['success'] ?? false) && $txStatus !== 'expire') {
                     $this->paymentTransactionId = $this->eventner->autogopay_transaction_id;
                     $this->paymentQrUrl = $this->eventner->qr_url;
-                    $this->paymentAmount = $this->eventner->saasPlan?->price
+                    $this->paymentAmount = $this->eventner->saasPlan?->effective_price
                         ?? (int) Setting::get('eventner_plan_price', 150000);
                     $this->selectedPlan = $this->eventner->saasPlan
                         ?? SaasPlan::where('is_active', true)->where('is_free', false)->orderBy('sort_order')->first();
@@ -110,7 +110,9 @@ class Upgrade extends Component
             ? SaasPlan::where('is_active', true)->where('is_free', false)->where('is_contact', false)->findOrFail($planId)
             : SaasPlan::where('is_active', true)->where('is_free', false)->where('is_contact', false)->orderBy('sort_order')->first();
 
-        $price = $plan?->price ?? (int) Setting::get('eventner_plan_price', 150000);
+        // Harga efektif (price dikurangi diskon) — webhook memvalidasi nominal
+        // yang sama via SaasPlan::effective_price, jadi settlement tidak ditolak.
+        $price = $plan?->effective_price ?? (int) Setting::get('eventner_plan_price', 150000);
 
         // QR lama dibatalkan dulu. Dulu transaction id-nya ditimpa begitu
         // saja, jadi QR yang masih tampil di layar pembeli tetap bisa

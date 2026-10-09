@@ -97,7 +97,13 @@
                             <span class="text-4xl font-extrabold {{ $hargaKelas }}">Kustom</span>
                             <p class="mt-1 text-xs {{ $redupKelas }}">Harga disepakati bersama admin</p>
                         @else
-                            <span class="text-4xl font-extrabold {{ $hargaKelas }}">Rp {{ number_format($plan['price'], 0, ',', '.') }}</span>
+                            @if($plan['has_discount'])
+                                <span class="block text-sm line-through {{ $redupKelas }}">Rp {{ number_format($plan['price'], 0, ',', '.') }}</span>
+                                <span class="text-4xl font-extrabold {{ $hargaKelas }}">Rp {{ number_format($plan['effective_price'], 0, ',', '.') }}</span>
+                                <span class="mt-1 inline-block rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-bold text-deep-slate">Hemat {{ $plan['discount_percent'] }}%</span>
+                            @else
+                                <span class="text-4xl font-extrabold {{ $hargaKelas }}">Rp {{ number_format($plan['effective_price'], 0, ',', '.') }}</span>
+                            @endif
                             <p class="mt-1 text-xs {{ $redupKelas }}">Sekali bayar per event</p>
                         @endif
                     </div>

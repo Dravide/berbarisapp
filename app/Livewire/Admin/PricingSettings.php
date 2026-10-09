@@ -17,6 +17,7 @@ class PricingSettings extends Component
     // Form paket
     public string $name = '';
     public $price = 0;
+    public $discount_percent = 0;
     public string $description = '';
     public bool $is_active = true;
     public bool $is_free = false;
@@ -48,6 +49,7 @@ class PricingSettings extends Component
         return [
             'name' => 'required|string|max:100',
             'price' => 'required|integer|min:0',
+            'discount_percent' => 'required|integer|min:0|max:90',
             'description' => 'nullable|string|max:255',
             'contact_url' => 'nullable|url|max:255',
             'sort_order' => 'required|integer|min:0',
@@ -68,6 +70,7 @@ class PricingSettings extends Component
         $this->planId = $plan->id;
         $this->name = $plan->name;
         $this->price = $plan->price;
+        $this->discount_percent = $plan->discount_percent;
         $this->description = (string) $plan->description;
         $this->is_active = $plan->is_active;
         $this->is_free = $plan->is_free;
@@ -95,6 +98,7 @@ class PricingSettings extends Component
             'name' => $this->name,
             'slug' => \Illuminate\Support\Str::slug($this->name) . '-' . strtolower(\Illuminate\Support\Str::random(5)),
             'price' => $this->is_free ? 0 : (int) $this->price,
+            'discount_percent' => $this->is_free || $this->is_contact ? 0 : (int) $this->discount_percent,
             'description' => $this->description ?: null,
             'is_active' => $this->is_active,
             'is_free' => $this->is_free,
@@ -148,7 +152,7 @@ class PricingSettings extends Component
 
     private function resetForm(): void
     {
-        $this->reset('planId', 'name', 'price', 'description', 'is_active', 'is_free', 'is_contact', 'contact_url', 'highlight', 'sort_order');
+        $this->reset('planId', 'name', 'price', 'discount_percent', 'description', 'is_active', 'is_free', 'is_contact', 'contact_url', 'highlight', 'sort_order');
         $this->is_active = true;
         $this->loadFeatureDefaults();
     }

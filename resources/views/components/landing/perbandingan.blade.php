@@ -41,8 +41,11 @@
                                             Rp 0
                                         @elseif($plan['is_contact'] ?? false)
                                             Kustom
+                                        @elseif($plan['has_discount'] ?? false)
+                                            <span class="line-through">Rp {{ number_format($plan['price'], 0, ',', '.') }}</span>
+                                            Rp {{ number_format($plan['effective_price'], 0, ',', '.') }}
                                         @else
-                                            Rp {{ number_format($plan['price'], 0, ',', '.') }}
+                                            Rp {{ number_format($plan['effective_price'], 0, ',', '.') }}
                                         @endif
                                     </span>
                                     @if($kolomRekomendasi[$i])

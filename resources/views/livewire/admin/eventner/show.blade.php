@@ -381,6 +381,11 @@
                                 <p class="text-muted fs-2 mb-3">
                                     @if($eventner->saasPlan->is_free)
                                         Paket gratis
+                                    @elseif($eventner->saasPlan->has_discount)
+                                        <span class="text-decoration-line-through">Rp {{ number_format($eventner->saasPlan->price, 0, ',', '.') }}</span>
+                                        Rp {{ number_format($eventner->saasPlan->effective_price, 0, ',', '.') }}
+                                        (diskon {{ $eventner->saasPlan->discount_percent }}%)
+                                        — sekali bayar per event
                                     @else
                                         Rp {{ number_format($eventner->saasPlan->price, 0, ',', '.') }}
                                         — sekali bayar per event

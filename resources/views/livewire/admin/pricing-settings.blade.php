@@ -74,6 +74,10 @@
                                         <td>
                                             @if($plan->is_contact)
                                                 <span class="text-muted">Kustom</span>
+                                            @elseif($plan->has_discount)
+                                                <span class="text-decoration-line-through text-muted">Rp {{ number_format($plan->price, 0, ',', '.') }}</span>
+                                                <span class="d-block fw-semibold">Rp {{ number_format($plan->effective_price, 0, ',', '.') }}</span>
+                                                <span class="badge bg-danger-subtle text-danger fs-2">Diskon {{ $plan->discount_percent }}%</span>
                                             @else
                                                 Rp {{ number_format($plan->price, 0, ',', '.') }}
                                             @endif
@@ -135,10 +139,26 @@
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Harga (Rp)</label>
-                                    <input type="number" class="form-control @error('price') is-invalid @enderror" wire:model="price" min="0" step="1000" @disabled($is_free || $is_contact)>
+                                    <input type="number" class="form-control @error('price') is-invalid @enderror" wire:model.live="price" min="0" step="1000" @disabled($is_free || $is_contact)>
                                     @error('price') <div class="invalid-feedback">{{ $message }}</div> @enderror
                                     @if($is_contact) <div class="form-text">Harga disepakati langsung dengan admin.</div> @endif
                                     <div class="form-text">Satu-satunya harga paket — ditagih sekali via QRIS, dan divalidasi webhook.</div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Diskon (%)</label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control @error('discount_percent') is-invalid @enderror" wire:model.live="discount_percent" min="0" max="90" step="5" @disabled($is_free || $is_contact)>
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                    @error('discount_percent') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                                    @if(!$is_free && !$is_contact && (int) $discount_percent > 0 && (int) $price > 0)
+                                        <div class="form-text">
+                                            Harga tagihan: <span class="fw-semibold">Rp {{ number_format((int) round($price * (100 - (int) $discount_percent) / 100), 0, ',', '.') }}</span>
+                                            (asli Rp {{ number_format((int) $price, 0, ',', '.') }}).
+                                        </div>
+                                    @else
+                                        <div class="form-text">0 = tanpa diskon. Dipakai penagihan QRIS &amp; validasi webhook.</div>
+                                    @endif
                                 </div>
                                 <div class="col-12 mb-3">
                                     <label class="form-label">Deskripsi Singkat</label>

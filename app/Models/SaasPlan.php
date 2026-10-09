@@ -10,6 +10,7 @@ class SaasPlan extends Model
         'name',
         'slug',
         'price',
+        'discount_percent',
         'registration_fee',
         'description',
         'is_active',
@@ -26,6 +27,7 @@ class SaasPlan extends Model
         'is_contact' => 'boolean',
         'highlight' => 'boolean',
         'price' => 'integer',
+        'discount_percent' => 'integer',
         'registration_fee' => 'integer',
     ];
 
@@ -42,5 +44,27 @@ class SaasPlan extends Model
     public function eventners()
     {
         return $this->hasMany(Eventner::class, 'saas_plan_id');
+    }
+
+    /**
+     * Harga yang ditagih & divalidasi webhook: price dikurangi diskon.
+     *
+     * SEMUA penagihan QRIS dan cek nominal webhook wajib lewat sini —
+     * kalau penagih memakai `price` mentah sementara webhook memakai
+     * accessor (atau sebaliknya), settlement ditolak diam-diam karena
+     * nominal tidak cocok (preseden bug registration_fee).
+     */
+    public function getEffectivePriceAttribute(): int
+    {
+        if ($this->discount_percent <= 0) {
+            return (int) $this->price;
+        }
+
+        return (int) round($this->price * (100 - $this->discount_percent) / 100);
+    }
+
+    public function getHasDiscountAttribute(): bool
+    {
+        return $this->discount_percent > 0 && $this->effective_price < $this->price;
     }
 }
