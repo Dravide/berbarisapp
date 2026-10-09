@@ -24,7 +24,7 @@ class LandingPage extends Component
      * Begitu shim-nya dibuang dan urutan lama masih tersimpan di DB,
      * halaman harga hilang dari laman produksi.
      */
-    private const SECTION_DIKENAL = ['hero', 'features', 'pricing', 'perbandingan', 'eventners', 'ticket', 'faq', 'cta'];
+    private const SECTION_DIKENAL = ['hero', 'features', 'pricing', 'perbandingan', 'eventners', 'ticket', 'faq', 'team', 'sponsor', 'cta'];
 
     public $sections = [];
     public $sectionsOrder = [];
@@ -182,6 +182,9 @@ class LandingPage extends Component
             'ticket' => $ticketEvents->isNotEmpty(),
             'cta' => true,
             'faq' => $this->faqRenderable(),
+            // Gerbang section sponsor: ada partner aktif, apapun tipenya.
+            'sponsor' => \App\Models\LandingPartner::where('is_active', true)->exists(),
+            'team' => $this->teamRenderable(),
         ];
 
         return view('livewire.public.landing-page', [
@@ -195,6 +198,18 @@ class LandingPage extends Component
                 'sectionsRender' => $sectionsRender,
             ])
             ->title(app_name());
+    }
+
+    /**
+     * Section team merender kalau ada minimal satu anggota bernama — item
+     * kosong hasil "Tambah" lalu disimpan tanpa diisi tidak dihitung.
+     */
+    private function teamRenderable(): bool
+    {
+        $team = json_decode(Setting::get('landing_team') ?? 'null', true) ?? [];
+
+        return collect($team['items'] ?? [])
+            ->contains(fn ($item) => ! empty($item['name']));
     }
 
     /**

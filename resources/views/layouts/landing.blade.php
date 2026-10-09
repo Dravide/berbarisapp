@@ -130,6 +130,7 @@
                         ['perbandingan', 'Perbandingan', 'perbandingan'],
                         ['eventners', 'Event', 'eventners'],
                         ['ticket', 'Tiket', 'ticket'],
+                        ['team', 'Tim', 'team'],
                         ['faq', 'FAQ', 'faq'],
                         ['contact', 'Kontak', 'faq'],
                     ];
@@ -211,6 +212,7 @@
                         <li><a href="#features" class="transition hover:text-secondary">Fitur</a></li>
                         <li><a href="#pricing" class="transition hover:text-secondary">Harga</a></li>
                         <li><a href="#eventners" class="transition hover:text-secondary">Event</a></li>
+                        <li><a href="#team" class="transition hover:text-secondary">Tim</a></li>
                         <li><a href="#faq" class="transition hover:text-secondary">FAQ</a></li>
                     </ul>
                 </div>

@@ -23,7 +23,7 @@ class LandingPage extends Component
      * saat menyimpan — kalau tidak, landing akan memanggil view yang sudah
      * dihapus dan error 500.
      */
-    private const SECTION_DIKENAL = ['hero', 'features', 'pricing', 'perbandingan', 'eventners', 'ticket', 'faq', 'cta'];
+    private const SECTION_DIKENAL = ['hero', 'features', 'pricing', 'perbandingan', 'eventners', 'ticket', 'faq', 'team', 'sponsor', 'cta'];
 
     // Active tab
     public $activeTab = 'hero';
@@ -105,6 +105,17 @@ class LandingPage extends Component
 
     public $ticket_subtitle;
 
+    // Team section (profil tim di landing — item: nama, peran, foto)
+    public $team_title;
+
+    public $team_subtitle;
+
+    public $team_items = [];
+
+    /** Path foto yang ada di DB saat mount — pembanding di save() supaya
+     * foto yang diganti atau ditinggalkan tidak jadi sampah di disk. */
+    public array $team_photos_lama = [];
+
     // Social links
     public $social_instagram;
 
@@ -174,6 +185,16 @@ class LandingPage extends Component
         $ticket = json_decode(Setting::get('landing_ticket', '{}'), true) ?? [];
         $this->ticket_title = $ticket['title'] ?? 'E-Tiket Digital';
         $this->ticket_subtitle = $ticket['subtitle'] ?? 'Beli tiket event favoritmu secara online. Praktis, aman, dengan QR code check-in.';
+
+        // Load Team section
+        $team = json_decode(Setting::get('landing_team', '{}'), true) ?? [];
+        $this->team_title = $team['title'] ?? 'Tim Kami';
+        $this->team_subtitle = $team['subtitle'] ?? 'Orang-orang di balik platform ini.';
+        $this->team_items = $team['items'] ?? [];
+        $this->team_photos_lama = collect($this->team_items)
+            ->map(fn ($item) => $item['photo'] ?? null)
+            ->filter()
+            ->all();
 
         // Load Social Links
         $socials = json_decode(Setting::get('landing_social_links', '{}'), true) ?? [];
@@ -245,6 +266,20 @@ class LandingPage extends Component
     {
         unset($this->faq_items[$index]);
         $this->faq_items = array_values($this->faq_items);
+    }
+
+    // -- Team member management --
+    public function addTeamItem()
+    {
+        $this->team_items[] = ['name' => '', 'role' => '', 'photo' => null];
+    }
+
+    public function removeTeamItem($index)
+    {
+        // File fotonya tidak dihapus di sini — admin bisa membatalkan tanpa
+        // menyimpan. Pembersihan file lama terjadi di save().
+        unset($this->team_items[$index]);
+        $this->team_items = array_values($this->team_items);
     }
 
     public function save()
@@ -358,12 +393,38 @@ class LandingPage extends Component
             'subtitle' => $this->ticket_subtitle,
         ]));
 
+        // Save Team — foto per item ter-bind langsung di `team_items.*.photo`;
+        // yang terunggah (TemporaryUploadedFile) disimpan ke disk public. Foto
+        // lama yang tidak lagi dipakai siapa pun dihapus.
+        $timTersimpan = [];
+        foreach ($this->team_items as $item) {
+            $foto = $item['photo'] ?? null;
+            if ($foto instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile) {
+                $foto = $foto->store('landing', 'public');
+            }
+            $timTersimpan[] = [
+                'name' => $item['name'] ?? '',
+                'role' => $item['role'] ?? '',
+                'photo' => $foto,
+            ];
+        }
+        $dipakai = collect($timTersimpan)->pluck('photo')->filter()->all();
+        foreach ($this->team_photos_lama as $lama) {
+            if (! in_array($lama, $dipakai, true)) {
+                Storage::disk('public')->delete($lama);
+            }
+        }
+        Setting::set('landing_team', json_encode([
+            'title' => $this->team_title,
+            'subtitle' => $this->team_subtitle,
+            'items' => $timTersimpan,
+        ]));
+
         // Simpan section yang sudah dibuang: baris settingnya sengaja
         // dibiarkan di DB (tulisan admin tidak boleh hilang diam-diam), tapi
         // tidak lagi ditulis ulang dari sini.
 
-        $this->reset(['hero_background_image', 'about_image', 'cta_image']);
-        session()->flash('success', 'Landing page berhasil diperbarui.');
+        $this->reset(['hero_background_image', 'about_image', 'cta_image']);        session()->flash('success', 'Landing page berhasil diperbarui.');
     }
 
     private function defaultFeatures(): array

@@ -52,6 +52,7 @@
                                             'perbandingan' => 'Perbandingan',
                                             'ticket' => 'Tiket',
                                             'faq' => 'FAQ',
+                                            'team' => 'Tim',
                                             'contact' => 'Kontak',
                                             'cta' => 'CTA',
                                             'social' => 'Sosial Media',
@@ -333,6 +334,61 @@
                                     </div>
                                     @endif
 
+
+                                    {{-- ==================== TEAM TAB ==================== --}}
+                                    @if($activeTab === 'team')
+                                    <div wire:key="tab-team">
+                                        <h5 class="fw-semibold mb-3"><i class="ti ti-users-group me-2"></i>Section Tim</h5>
+                                        <div class="row">
+                                            <div class="col-12 mb-3">
+                                                <label class="form-label">Judul Section</label>
+                                                <input type="text" class="form-control" wire:model="team_title" placeholder="Mis: Tim Kami">
+                                            </div>
+                                            <div class="col-12 mb-3">
+                                                <label class="form-label">Subjudul</label>
+                                                <textarea class="form-control" wire:model="team_subtitle" rows="2" placeholder="Deskripsi singkat section tim"></textarea>
+                                            </div>
+                                        </div>
+
+                                        <div class="border rounded p-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                                <h6 class="mb-0">Anggota Tim</h6>
+                                                <button type="button" class="btn btn-sm btn-outline-primary" wire:click="addTeamItem">
+                                                    <i class="ti ti-plus me-1"></i> Tambah
+                                                </button>
+                                            </div>
+                                            @foreach($team_items as $i => $item)
+                                            <div class="border rounded p-3 mb-2" wire:key="team-{{ $i }}">
+                                                <div class="row">
+                                                    <div class="col-md-4 mb-2">
+                                                        <label class="form-label fs-3">Nama</label>
+                                                        <input type="text" class="form-control" wire:model="team_items.{{ $i }}.name" placeholder="Nama lengkap">
+                                                    </div>
+                                                    <div class="col-md-4 mb-2">
+                                                        <label class="form-label fs-3">Peran</label>
+                                                        <input type="text" class="form-control" wire:model="team_items.{{ $i }}.role" placeholder="Mis: Founder & Lead Developer">
+                                                    </div>
+                                                    <div class="col-md-4 mb-2">
+                                                        <label class="form-label fs-3">Foto (opsional)</label>
+                                                        @if(!empty($item['photo']) && !($item['photo'] instanceof \Livewire\Features\SupportFileUploads\TemporaryUploadedFile))
+                                                            <div class="mb-1">
+                                                                <img src="{{ Storage::url($item['photo']) }}" class="img-fluid rounded border p-1" style="max-height: 50px;">
+                                                                <small class="d-block text-muted">Foto saat ini — unggah baru untuk mengganti.</small>
+                                                            </div>
+                                                        @endif
+                                                        <input type="file" class="form-control" wire:model="team_items.{{ $i }}.photo" accept="image/*">
+                                                    </div>
+                                                </div>
+                                                <div class="text-end">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger" wire:click="removeTeamItem({{ $i }})">
+                                                        <i class="ti ti-trash me-1"></i> Hapus
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    @endif
 
                                     {{-- ==================== CONTACT TAB ==================== --}}
                                     @if($activeTab === 'contact')

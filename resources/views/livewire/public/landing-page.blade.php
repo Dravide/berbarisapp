@@ -25,6 +25,12 @@
             @case('faq')
                 @include('components.landing.faq', ['section' => (object)['content' => $section['content']]])
                 @break
+            @case('team')
+                @include('components.landing.team', ['section' => (object)['content' => $section['content']]])
+                @break
+            @case('sponsor')
+                @include('components.landing.sponsor')
+                @break
         @endswitch
     @endforeach
 </div>

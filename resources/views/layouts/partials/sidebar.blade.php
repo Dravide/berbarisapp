@@ -125,6 +125,15 @@
             </a>
           </li>
           <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('admin.landing-partners') ? 'active' : '' }}"
+              href="{{ route('admin.landing-partners') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-speartwo"></i>
+              </span>
+              <span class="hide-menu">Sponsor Landing</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('admin.revenue') ? 'active' : '' }}"
               href="{{ route('admin.revenue') }}" aria-expanded="false">
               <span>
