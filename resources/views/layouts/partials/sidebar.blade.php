@@ -125,6 +125,15 @@
             </a>
           </li>
           <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('admin.vouchers') ? 'active' : '' }}"
+              href="{{ route('admin.vouchers') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-ticket"></i>
+              </span>
+              <span class="hide-menu">Kode Promo</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('admin.landing-partners') ? 'active' : '' }}"
               href="{{ route('admin.landing-partners') }}" aria-expanded="false">
               <span>

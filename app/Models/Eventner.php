@@ -19,6 +19,8 @@ class Eventner extends Model
         'rejection_reason',
         'plan',
         'saas_plan_id',
+        'registration_voucher_id',
+        'voucher_discount',
         'trial_ends_at',
         'registration_source',
         'autogopay_transaction_id',
@@ -150,6 +152,11 @@ class Eventner extends Model
     public function saasPlan()
     {
         return $this->belongsTo(SaasPlan::class, 'saas_plan_id');
+    }
+
+    public function registrationVoucher()
+    {
+        return $this->belongsTo(RegistrationVoucher::class, 'registration_voucher_id');
     }
 
     /**

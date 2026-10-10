@@ -134,16 +134,20 @@ class AutoGoPayWebhookController extends Controller
         // Tanpa ini, payload bertanda tangan dengan transaction_id benar tapi
         // amount palsu tetap mengaktifkan paket.
         //
-        // Yang dibandingkan adalah harga efektif paket (price dikurangi diskon).
+        // Yang dibandingkan adalah harga efektif paket (price dikurangi diskon)
+        // dikurangi potongan kode promo pendaftaran (snapshot voucher_discount).
         // Semua tempat yang menagih QRIS (daftar, dashboard, upgrade) memakai
-        // harga efektif yang sama via SaasPlan::effective_price, jadi settlement
-        // tidak ditolak hanya karena paket sedang dipotong diskon.
+        // harga efektif yang sama via SaasPlan::effective_price — dan
+        // pendaftar berkode promo ditagih efektif dikurangi voucher — jadi
+        // settlement tidak ditolak hanya karena paket sedang dipotong diskon.
         //
         // Catatan: bila QR lama digenerasi ulang, settle untuk QR yang sudah
         // mati tidak lagi menemukan eventner (transaction id-nya sudah
         // diganti), jadi tidak ada aktivasi ganda.
         $expected = (int) ($eventner->saasPlan?->effective_price
             ?? Setting::get('eventner_plan_price', 150000));
+        $expected -= (int) $eventner->voucher_discount;
+        $expected = max(0, $expected);
         $paidAmount = $transactionData['amount'] ?? null;
 
         if ($paidAmount !== null && (int) $paidAmount < (int) $expected) {

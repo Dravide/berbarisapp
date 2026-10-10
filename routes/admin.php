@@ -19,6 +19,7 @@ Route::get('schools/{npsn}/edit', App\Livewire\Admin\School\Edit::class)->name('
 Route::get('settings', App\Livewire\Admin\Setting\Index::class)->name('admin.settings.index');
 Route::get('settings/landing-page', App\Livewire\Admin\Setting\LandingPage::class)->name('admin.settings.landing-page');
 Route::get('pricing-settings', App\Livewire\Admin\PricingSettings::class)->name('admin.pricing-settings');
+Route::get('vouchers', App\Livewire\Admin\VoucherIndex::class)->name('admin.vouchers');
 Route::get('landing-partners', App\Livewire\Admin\LandingPartnerIndex::class)->name('admin.landing-partners');
 Route::get('audit-log', App\Livewire\Admin\AuditLog::class)->name('admin.audit-log');
 Route::get('error-log', App\Livewire\Admin\ErrorLogIndex::class)->name('admin.error-log');

@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use App\Models\User;
 use App\Models\Eventner;
+use App\Models\RegistrationVoucher;
 use App\Models\SaasPlan;
 use App\Services\AutoGoPay;
 use Illuminate\Support\Facades\Hash;
@@ -28,6 +29,13 @@ class EventnerRegister extends Component
     public $no_hp = '';
     public $plan = '';
     public $agreeTerms = false;
+
+    // Kode promo pendaftaran — potongan biaya paket berbayar.
+    public $kodePromo = '';
+    public $voucherId = null;
+    public $voucherLabel = '';
+    public $voucherError = '';
+    public $voucherDiscount = 0;
 
     // Payment state
     public $showPayment = false;
@@ -105,7 +113,48 @@ class EventnerRegister extends Component
             $this->no_hp = normalisasi_no_hp($this->no_hp) ?? '';
         }
 
+        // Ganti paket setelah kode diterapkan → kode dinilai ulang: voucher
+        // boleh dibatasi ke satu paket, dan nominal persen mengikuti paket.
+        if ($propertyName === 'plan' && $this->voucherId) {
+            $this->applyPromo();
+        }
+
         $this->validateOnly($propertyName);
+    }
+
+    /**
+     * Nilai kode promo saat ini. Kode ditolak TIDAK pernah memotong harga —
+     * blok rincian hilang dan QRIS tetap nominal penuh.
+     */
+    public function applyPromo(): void
+    {
+        $this->voucherError = '';
+        $this->voucherId = null;
+        $this->voucherLabel = '';
+        $this->voucherDiscount = 0;
+
+        $kode = strtoupper(trim($this->kodePromo));
+        if ($kode === '') {
+            return;
+        }
+
+        $voucher = RegistrationVoucher::where('code', $kode)->first();
+        if (! $voucher) {
+            $this->voucherError = 'Kode promo tidak ditemukan.';
+            return;
+        }
+
+        $plan = SaasPlan::where('is_active', true)->where('is_free', false)->where('is_contact', false)
+            ->where('slug', $this->plan)->first();
+
+        if ($alasan = $voucher->alasanDitolak($plan?->id)) {
+            $this->voucherError = $alasan;
+            return;
+        }
+
+        $this->voucherId = $voucher->id;
+        $this->voucherLabel = $voucher->code;
+        $this->voucherDiscount = $voucher->diskonUntuk($plan);
     }
 
     public function save()
@@ -114,13 +163,22 @@ class EventnerRegister extends Component
 
         $this->validate();
 
+        // Kode promo divalidasi ulang saat submit — nilai form bisa berubah
+        // sejak applyPromo terakhir (kuota habis, periode lewat).
+        if (strtoupper(trim($this->kodePromo)) !== ($this->voucherId ? $this->voucherLabel : '')) {
+            $this->applyPromo();
+        }
+
         $paidPlan = $this->selectedPlan();
 
-        // Harga efektif paket (price dikurangi diskon). Dulu di sini ditagih
-        // registration_fee (50.000) sementara webhook memvalidasi ke price
-        // (150.000), jadi settlement selalu ditolak diam-diam dan akun
-        // menggantung sampai pengguna menekan "Cek Pembayaran".
-        $fee = $paidPlan?->effective_price ?? 0;
+        // Harga efektif paket (price dikurangi diskon) dikurangi potongan kode
+        // promo. Dulu di sini ditagih registration_fee (50.000) sementara
+        // webhook memvalidasi ke price (150.000), jadi settlement selalu
+        // ditolak diam-diam dan akun menggantung sampai pengguna menekan
+        // "Cek Pembayaran". Nominal voucher dibekukan ke eventners.
+        $voucher = $this->voucherId ? RegistrationVoucher::find($this->voucherId) : null;
+        $this->voucherDiscount = $voucher && $paidPlan ? $voucher->diskonUntuk($paidPlan) : 0;
+        $fee = max(0, ($paidPlan?->effective_price ?? 0) - $this->voucherDiscount);
 
         $user = User::create([
             'name' => $this->name,
@@ -137,6 +195,8 @@ class EventnerRegister extends Component
             'status' => 'pending',
             'plan' => $paidPlan ? 'paid' : 'free',
             'saas_plan_id' => $paidPlan?->id,
+            'registration_voucher_id' => $this->voucherDiscount > 0 ? $this->voucherId : null,
+            'voucher_discount' => $this->voucherDiscount,
             'trial_ends_at' => $paidPlan === null ? now()->addDays(3) : null,
             'registration_source' => 'self',
             'nama_event' => $this->nama_event,

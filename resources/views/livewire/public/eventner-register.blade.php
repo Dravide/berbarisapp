@@ -80,7 +80,13 @@
                             <span class="text-sm text-on-surface-variant">Paket</span>
                             <span class="text-sm font-semibold text-deep-slate">Berbayar</span>
                         </div>
-                        <div class="mt-3 flex items-center justify-between">
+                        @if($voucherDiscount > 0)
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-on-surface-variant">Diskon <span class="font-mono text-xs">{{ $voucherLabel }}</span></span>
+                                <span class="text-sm font-semibold text-[#5a7d00]">− Rp {{ number_format($voucherDiscount, 0, ',', '.') }}</span>
+                            </div>
+                        @endif
+                        <div class="mt-3 flex items-center justify-between border-t border-outline-variant/40 pt-3">
                             <span class="text-sm text-on-surface-variant">Total</span>
                             <span class="font-display text-xl font-extrabold text-primary">Rp {{ number_format($paymentAmount, 0, ',', '.') }}</span>
                         </div>
@@ -188,6 +194,31 @@
                         @error('plan')
                             <p class="mt-2 text-xs text-error"><i class="ti ti-alert-circle"></i> {{ $message }}</p>
                         @enderror
+                    </div>
+
+                    {{-- ---------- Kode Promo ---------- --}}
+                    <div>
+                        <label for="kodePromo" class="mb-1.5 block text-sm font-semibold text-deep-slate">
+                            Kode Promo
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="text" wire:model.blur="kodePromo" wire:keydown.enter="applyPromo" id="kodePromo"
+                                   placeholder="Punya kode promo? Masukkan di sini"
+                                   class="field-input w-full font-mono uppercase tracking-wide @error('kodePromo') border-error @enderror">
+                            <button type="button" wire:click="applyPromo" wire:loading.attr="disabled" wire:target="applyPromo"
+                                    class="shrink-0 rounded-lg border border-outline-variant/60 px-4 text-sm font-semibold text-on-surface-variant transition-colors hover:border-primary/40 hover:text-primary cursor-pointer">
+                                Terapkan
+                            </button>
+                        </div>
+                        @if($voucherError)
+                            <p class="mt-2 text-xs text-error"><i class="ti ti-alert-circle"></i> {{ $voucherError }}</p>
+                        @elseif($voucherId && $voucherDiscount > 0)
+                            <p class="mt-2 text-xs text-[#5a7d00]">
+                                <i class="ti ti-circle-check"></i>
+                                Kode <strong class="font-mono">{{ $voucherLabel }}</strong> diterapkan — hemat
+                                Rp {{ number_format($voucherDiscount, 0, ',', '.') }}
+                            </p>
+                        @endif
                     </div>
 
                     {{-- ---------- Data Akun ---------- --}}
