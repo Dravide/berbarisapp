@@ -211,27 +211,71 @@ class VideotronDisplay extends Component
 
         $this->championName = $kategori->name;
 
-        $component = new \App\Livewire\Public\Champions\Index();
-        $component->eventner = $this->eventner;
-        $component->selectedCategoryId = $this->categoryId ?? $this->categories->first()?->id;
-        $component->selectedGroupId = (string) ($this->groupId ?? '');
-        $component->calculateRankings();
+        // Layar venue tidak boleh mati karena perhitungan juara: gagal apa
+        // pun (data janggal, cache bermasalah) cukup tampil "Belum Ada Juara".
+        try {
+            $component = new \App\Livewire\Public\Champions\Index();
+            $component->eventner = $this->eventner;
+            $component->selectedCategoryId = $this->categoryId ?? $this->categories->first()?->id;
+            $component->selectedGroupId = (string) ($this->groupId ?? '');
+            $component->calculateRankings();
 
-        $first = collect($component->allRankings)->firstWhere('champion.id', $kategori->id)
-            ?? collect($component->allRankings)->first();
+            $first = $this->rankingSah($component->allRankings, $kategori->id);
 
-        if ($first && isset($first['participants'][0])) {
-            $this->championRanking = collect($first['participants'])
-                ->take(3)
-                ->map(fn ($ps) => [
-                    'rank' => $ps['rank'],
-                    'title' => $ps['title'],
-                    'nama' => $ps['participant']->display_name,
-                    'total' => $ps['total'],
-                ])
-                ->all();
-            $this->championTitle = $first['participants'][0]['title'] ?? $kategori->name;
+            if ($first && isset($first['participants'][0])) {
+                $this->championRanking = collect($first['participants'])
+                    ->take(3)
+                    ->map(fn ($ps) => [
+                        'rank' => $ps['rank'],
+                        'title' => $ps['title'],
+                        'nama' => $ps['participant']->display_name,
+                        'total' => $ps['total'],
+                    ])
+                    ->all();
+                $this->championTitle = $first['participants'][0]['title'] ?? $kategori->name;
+            }
+        } catch (\Throwable $e) {
+            report($e);
+
+            return;
         }
+    }
+
+    /**
+     * Cari baris peringkat untuk kategori juara tanpa data_get bertingkat.
+     *
+     * Dulu: firstWhere('champion.id', ...) menelusuri struktur item cache via
+     * data_get — di produksi warn itu jadi ErrorException dan layar videotron
+     * 500 (ErrorException di data_get, helpers.php, dipanggil firstWhere).
+     * Sekarang tiap item divalidasi eksplisit; item berstruktur janggal —
+     * mis. dari cache yang ditulis versi kode lama — dilewati, bukan memicu
+     * error. Kandidat pertama yang sah dipakai bila id tak cocok.
+     *
+     * @param  mixed  $rankings  allRankings dari Champions\Index (cache atau segar)
+     */
+    private function rankingSah($rankings, int $kategoriId): ?array
+    {
+        if (! is_array($rankings)) {
+            return null;
+        }
+
+        $cocok = null;
+
+        foreach ($rankings as $ranking) {
+            if (! is_array($ranking)
+                || ! ($ranking['champion'] ?? null) instanceof ChampionCategory
+                || ! is_array($ranking['participants'] ?? null)) {
+                continue;
+            }
+
+            if ((int) $ranking['champion']->id === $kategoriId) {
+                return $ranking;
+            }
+
+            $cocok ??= $ranking;
+        }
+
+        return $cocok;
     }
 
     /** Rundown hari ini — baris "sekarang" ditentukan dari start_time. */

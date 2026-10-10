@@ -187,6 +187,70 @@ class VideotronDisplayTest extends TestCase
             ->assertSee('Festival Videotron Uji');
     }
 
+    public function test_videotron_mode_champion_menampilkan_juara_dari_cache()
+    {
+        $eventner = $this->buatEvent();
+        $kategori = CompetitionCategory::factory()->for($eventner, 'eventner')->create();
+        $juara = ChampionCategory::create([
+            'eventner_id' => $eventner->id,
+            'name' => 'Juara Umum',
+            'quantity' => 3,
+            'is_public' => true,
+        ]);
+        $reg = Registration::factory()->for($eventner, 'eventner')->create([
+            'competition_category_id' => $kategori->id,
+            'nama_sekolah' => 'SMA Juara Satu',
+        ]);
+
+        // Perhitungan /champions membaca cache ini; videotron ikut pakai.
+        cache()->put(
+            "champions:{$eventner->id}:cat:{$kategori->id}:group:",
+            [[
+                'champion' => $juara,
+                'rankTitles' => [],
+                'participants' => [
+                    ['rank' => 1, 'title' => 'Juara Satu', 'participant' => $reg, 'total' => 95.5],
+                ],
+            ]],
+            300
+        );
+
+        $this->get('/event/' . $eventner->slug . '/videotron?mode=champion&categoryId=' . $kategori->id)
+            ->assertOk()
+            ->assertSee('SMA Juara Satu')
+            ->assertSee('Juara Umum');
+    }
+
+    public function test_videotron_mode_champion_cache_rusak_tetap_tampil()
+    {
+        // Regresi: firstWhere('champion.id', ...) di produksi memicu warning
+        // via data_get dan layar 500. Struktur janggal harus dilewati.
+        $eventner = $this->buatEvent();
+        $kategori = CompetitionCategory::factory()->for($eventner, 'eventner')->create();
+        ChampionCategory::create([
+            'eventner_id' => $eventner->id,
+            'name' => 'Juara Umum',
+            'quantity' => 3,
+            'is_public' => true,
+        ]);
+
+        cache()->put(
+            "champions:{$eventner->id}:cat:{$kategori->id}:group:",
+            [
+                null,
+                'string-biasa',
+                42,
+                ['champion' => 'bukan-model', 'participants' => null],
+                ['champion' => null, 'participants' => [['rank' => 1]]],
+            ],
+            300
+        );
+
+        $this->get('/event/' . $eventner->slug . '/videotron?mode=champion&categoryId=' . $kategori->id)
+            ->assertOk()
+            ->assertSee('Belum Ada Juara');
+    }
+
     public function test_videotron_event_tidak_disetujui_gagal()
     {
         $eventner = Eventner::factory()->create([
