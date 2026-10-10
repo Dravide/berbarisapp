@@ -22,6 +22,19 @@ class AuditLog extends Component
     public $search = '';
     public $filterLog = '';
 
+    /** Activity yang sedang dibuka di modal detail (null = modal tertutup). */
+    public ?int $detailId = null;
+
+    public function showDetail(int $id)
+    {
+        $this->detailId = $id;
+    }
+
+    public function closeDetail()
+    {
+        $this->detailId = null;
+    }
+
     public function updatingSearch()
     {
         $this->resetPage();
@@ -66,7 +79,13 @@ class AuditLog extends Component
 
         $activities = $query->paginate(25);
 
-        return view('livewire.admin.audit-log', ['activities' => $activities])
+        return view('livewire.admin.audit-log', [
+            'activities' => $activities,
+            // eager load supaya modal tidak N+1 tiap baris punya tombol detail
+            'detail' => $this->detailId
+                ? Activity::with(['causer', 'subject'])->find($this->detailId)
+                : null,
+        ])
             ->title('Audit Log - ' . app_name());
     }
 }

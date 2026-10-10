@@ -193,6 +193,62 @@ class AdminTierTwoTest extends TestCase
             ->assertSee('Perubahan paket uji');
     }
 
+    public function test_audit_log_modal_detail_menampilkan_perubahan()
+    {
+        $admin = $this->admin();
+        // Registration pakai trait LogsActivity; Eventner tidak.
+        $registration = Registration::factory()->create(['nama_sekolah' => 'SMA Lama']);
+
+        // Auth dulu supaya trait LogsActivity mencatat causer = admin.
+        $this->actingAs($admin);
+        $registration->update(['nama_sekolah' => 'SMA Baru']);
+
+        $activity = Activity::latest('id')->first();
+
+        Livewire::actingAs($admin)
+            ->test(AuditLog::class)
+            ->call('showDetail', $activity->id)
+            ->assertSee('Detail Aktivitas #' . $activity->id)
+            ->assertSee('SMA Lama')   // nilai lama
+            ->assertSee('SMA Baru')   // nilai baru
+            ->assertSee('nama_sekolah')
+            ->assertSee($admin->name);
+    }
+
+    public function test_audit_log_modal_detail_tertutup_default_dan_bisa_ditutup()
+    {
+        $admin = $this->admin();
+        $eventner = Eventner::factory()->create();
+
+        activity()->performedOn($eventner)->log('Aktivitas modal uji');
+
+        $activity = Activity::latest('id')->first();
+
+        // Default: modal tidak ada
+        Livewire::actingAs($admin)
+            ->test(AuditLog::class)
+            ->assertDontSee('Detail Aktivitas #')
+            ->call('showDetail', $activity->id)
+            ->assertSee('Detail Aktivitas #' . $activity->id)
+            ->assertSee('Aktivitas modal uji')
+            ->call('closeDetail')
+            ->assertDontSee('Detail Aktivitas #');
+    }
+
+    public function test_audit_log_modal_detail_log_tanpa_properti()
+    {
+        $admin = $this->admin();
+
+        activity()->inLog('uji')->log('Log polos tanpa properti');
+
+        $activity = Activity::latest('id')->first();
+
+        Livewire::actingAs($admin)
+            ->test(AuditLog::class)
+            ->call('showDetail', $activity->id)
+            ->assertSee('Tidak ada properti tercatat.');
+    }
+
     // ────────────────────────────────────────────────
     // Suspend / aktifkan eventner
     // ────────────────────────────────────────────────
