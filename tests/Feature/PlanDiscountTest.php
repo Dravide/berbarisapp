@@ -134,14 +134,17 @@ class PlanDiscountTest extends TestCase
         SaasPlan::query()->update(['is_active' => false]);
         $plan = $this->buatPlan(150000, 20); // tagih 120.000
 
-        $eventner = Eventner::factory()->create([
-            'plan' => 'paid',
-            'saas_plan_id' => $plan->id,
-            'status' => 'pending',
-        ]);
-        // Nonaktif = jalur "unpaid paid plan" di mount() — tanpa ini mount()
-        // me-redirect ke eventner.dashboard dan snapshot Livewire rusak.
-        $eventner->user->update(['is_active' => false]);
+        // User factory melempar role acak Admin/Eventner — kalau Admin,
+        // mount() dashboard tak pernah memasang $eventner dan generatePayment()
+        // pulang tanpa request (kegagalan 50% yang tak ada hubungannya dengan
+        // kode yang diuji). Paksa Eventner.
+        $eventner = Eventner::factory()
+            ->for(User::factory()->eventner()->inactive(), 'user')
+            ->create([
+                'plan' => 'paid',
+                'saas_plan_id' => $plan->id,
+                'status' => 'pending',
+            ]);
 
         Livewire::actingAs($eventner->user)
             ->test(\App\Livewire\Dashboard\Index::class)
