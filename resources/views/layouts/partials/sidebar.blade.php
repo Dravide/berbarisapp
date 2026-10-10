@@ -151,6 +151,15 @@
               <span class="hide-menu">Audit Log</span>
             </a>
           </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('admin.error-log') ? 'active' : '' }}"
+              href="{{ route('admin.error-log') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-bug"></i>
+              </span>
+              <span class="hide-menu">Log Error</span>
+            </a>
+          </li>
         @endif
 
         @if(auth()->user()->role === 'Eventner')

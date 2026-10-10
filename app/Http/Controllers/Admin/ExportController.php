@@ -193,4 +193,62 @@ class ExportController extends Controller
             fclose($file);
         }, $fileName, $headers);
     }
+
+    public function errorLogs()
+    {
+        $fileName = 'log-error-' . date('Y-m-d') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        return response()->streamDownload(function () {
+            $file = fopen('php://output', 'w');
+
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+            fputcsv($file, [
+                'No',
+                'Kode',
+                'Waktu',
+                'HTTP',
+                'Exception',
+                'Pesan',
+                'URL',
+                'Method',
+                'User',
+                'Event',
+                'Status Selesai',
+                'Diselesaikan Oleh',
+            ]);
+
+            $no = 1;
+
+            \App\Models\ErrorLog::query()
+                ->with(['user:id,name,email', 'eventner:id,nama_event', 'resolver:id,name'])
+                ->orderByDesc('id')
+                ->each(function (\App\Models\ErrorLog $log) use ($file, &$no) {
+                    fputcsv($file, [
+                        $no++,
+                        $log->code,
+                        $log->created_at ? $log->created_at->format('Y-m-d H:i:s') : '-',
+                        $log->http_status ?? '-',
+                        $log->exception_class,
+                        $log->message,
+                        $log->url ?? '-',
+                        $log->method ?? '-',
+                        $log->user ? ($log->user->name . ' <' . $log->user->email . '>') : '-',
+                        $log->eventner?->nama_event ?? '-',
+                        $log->resolved_at ? 'Selesai' : 'Belum',
+                        $log->resolver?->name ?? '-',
+                    ]);
+                });
+
+            fclose($file);
+        }, $fileName, $headers);
+    }
 }

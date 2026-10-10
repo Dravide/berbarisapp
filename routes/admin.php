@@ -21,8 +21,10 @@ Route::get('settings/landing-page', App\Livewire\Admin\Setting\LandingPage::clas
 Route::get('pricing-settings', App\Livewire\Admin\PricingSettings::class)->name('admin.pricing-settings');
 Route::get('landing-partners', App\Livewire\Admin\LandingPartnerIndex::class)->name('admin.landing-partners');
 Route::get('audit-log', App\Livewire\Admin\AuditLog::class)->name('admin.audit-log');
+Route::get('error-log', App\Livewire\Admin\ErrorLogIndex::class)->name('admin.error-log');
 
 // Ekspor CSV (pola eventner.tickets.csv)
 Route::get('exports/eventners', [ExportController::class, 'eventners'])->name('admin.exports.eventners');
 Route::get('exports/registrations', [ExportController::class, 'registrations'])->name('admin.exports.registrations');
 Route::get('exports/transactions', [ExportController::class, 'transactions'])->name('admin.exports.transactions');
+Route::get('exports/error-logs', [ExportController::class, 'errorLogs'])->name('admin.exports.error-logs');

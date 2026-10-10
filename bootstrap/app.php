@@ -47,5 +47,38 @@ return Application::configure(basePath: dirname(__DIR__))
             'subdomain' => \App\Http\Middleware\ResolveEventnerSubdomain::class,
         ]);
     })
-    ->withExceptions()
+    ->withExceptions(function (\Illuminate\Foundation\Configuration\Exceptions $exceptions): void {
+        // Kode error publik (ER-XXXXXX): setiap error tak terduga dicatat ke
+        // error_logs dan kodenya ditempel ke exception, lalu dibaca render()
+        // untuk ditampilkan di halaman 500 — user cukup melaporkan kodenya.
+        $exceptions->report(function (\Throwable $e): void {
+            if (property_exists($e, 'errorCode') && $e->errorCode !== null) {
+                return; // sudah dicatat — jangan dobel (mis. report ulang di job)
+            }
+
+            $log = app(\App\Support\RecordsErrorReport::class)->record($e);
+
+            if ($log) {
+                $e->errorCode = $log->code;
+            }
+        });
+
+        $exceptions->render(function (\Throwable $e, \Illuminate\Http\Request $request) {
+            $code = property_exists($e, 'errorCode') ? $e->errorCode : null;
+
+            if ($request->expectsJson()) {
+                return $code
+                    ? response()->json(['message' => $e->getMessage() ?: 'Server Error', 'error_code' => $code], 500)
+                    : null;
+            }
+
+            // Halaman 500 khusus (dengan kode) hanya saat debug off; 404 dan
+            // layar debug Laravel tetap memakai jalur bawaan.
+            if ($code && ! config('app.debug')) {
+                return response()->view('errors.500', ['errorCode' => $code], 500);
+            }
+
+            return null;
+        });
+    })
     ->create();
