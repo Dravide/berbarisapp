@@ -271,6 +271,16 @@
               @if($ev && !$ev->canAccessFeature('rundown')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.schedule.*') ? 'active' : '' }}"
+              href="{{ route('eventner.schedule.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-calendar-time"></i>
+              </span>
+              <span class="hide-menu">Jadwal Pertandingan</span>
+              @if($ev && !$ev->canAccessFeature('schedule')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
+            </a>
+          </li>
 
           {{-- ============================================ --}}
           {{-- PENILAIAN --}}

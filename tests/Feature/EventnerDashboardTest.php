@@ -431,7 +431,7 @@ class EventnerDashboardTest extends TestCase
 
         $this->assertSame('Gratis (masa uji coba)', $component->get('planInfo')['name']);
         $this->assertSame('Trial 5 hari lagi', $component->get('planInfo')['status']);
-        $this->assertCount(15, $component->get('planInfo')['included']);
+        $this->assertCount(16, $component->get('planInfo')['included']);
         $this->assertSame([], $component->get('lockedFeatures'));
 
         $component
@@ -451,7 +451,7 @@ class EventnerDashboardTest extends TestCase
         $this->assertSame('Gratis', $component->get('planInfo')['name']);
         $this->assertSame('Trial Berakhir', $component->get('planInfo')['status']);
         $this->assertSame([], $component->get('planInfo')['included']);
-        $this->assertCount(15, $component->get('lockedFeatures'));
+        $this->assertCount(16, $component->get('lockedFeatures'));
 
         $component
             ->assertSee('Trial Berakhir')

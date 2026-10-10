@@ -207,6 +207,16 @@ class Eventner extends Model
         return $this->hasMany(CompetitionCategory::class);
     }
 
+    public function competitionGroups()
+    {
+        return $this->hasMany(CompetitionGroup::class);
+    }
+
+    public function competitionRounds()
+    {
+        return $this->hasMany(CompetitionRound::class);
+    }
+
     public function registrations()
     {
         return $this->hasMany(Registration::class);
@@ -350,6 +360,11 @@ class Eventner extends Model
     public function eventRundowns()
     {
         return $this->hasMany(EventRundown::class);
+    }
+
+    public function eventSchedules()
+    {
+        return $this->hasMany(EventSchedule::class);
     }
 
     public function faqs()

@@ -24,6 +24,8 @@ Route::get('competition-categories', App\Livewire\Eventner\CompetitionCategory\I
 Route::get('participants', App\Livewire\Eventner\Participant\Index::class)->name('eventner.participants.index');
 // Meja daftar ulang — hadir, grup, seri, nomor undian dalam satu layar.
 Route::get('daftar-ulang', App\Livewire\Eventner\DaftarUlang\Index::class)->name('eventner.daftar-ulang.index');
+// Scan QR kartu peserta di meja yang sama — pengganti mencari manual di tabel.
+Route::get('daftar-ulang/scan', App\Livewire\Eventner\DaftarUlang\Scan::class)->name('eventner.daftar-ulang.scan');
 // Didaftarkan SEBELUM rute {registration} — kalau tidak, "daftar-ulang" akan
 // ditangkap sebagai id registrasi dan berakhir 404.
 Route::get('participants/daftar-ulang', [App\Http\Controllers\Eventner\ParticipantController::class, 'downloadDaftarUlang'])->name('eventner.participants.daftar-ulang');
@@ -77,6 +79,9 @@ Route::get('drawing', App\Livewire\Eventner\Drawing\Index::class)->name('eventne
 Route::get('drawing/print', [App\Http\Controllers\Eventner\DrawingController::class, 'print'])->name('eventner.drawing.print');
 Route::get('rundown', App\Livewire\Eventner\Rundown\Index::class)->name('eventner.rundown.index');
 Route::get('rundown/print', [App\Http\Controllers\Eventner\RundownController::class, 'print'])->name('eventner.rundown.print');
+// Jadwal pertandingan — pertemuan per tingkat/grup/babak/venue; tampil di
+// halaman rundown publik di atas rundown acara.
+Route::get('schedule', App\Livewire\Eventner\Schedule\Index::class)->name('eventner.schedule.index');
 Route::get('livestream', App\Livewire\Eventner\Livestream\Manage::class)->name('eventner.livestream.index');
 Route::get('faq', App\Livewire\Eventner\Faq\Index::class)->name('eventner.faq.index');
 Route::get('gallery', App\Livewire\Eventner\Gallery\Index::class)->name('eventner.gallery.index');

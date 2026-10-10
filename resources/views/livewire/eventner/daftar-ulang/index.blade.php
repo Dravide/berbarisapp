@@ -1,12 +1,17 @@
 <div>
     {{-- Page Header --}}
     <div class="card bg-info-subtle shadow-none position-relative overflow-hidden mb-4">
-        <div class="card-body px-4 py-3">
-            <h4 class="fw-semibold mb-8">Daftar Ulang</h4>
-            <p class="mb-0 text-muted fs-2">
-                Meja pendaftaran ulang: tandai kehadiran, tetapkan grup, seri penilaian, dan nomor undian
-                dalam satu layar.
-            </p>
+        <div class="card-body px-4 py-3 d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="fw-semibold mb-8">Daftar Ulang</h4>
+                <p class="mb-0 text-muted fs-2">
+                    Meja pendaftaran ulang: tandai kehadiran, tetapkan grup, seri penilaian, dan nomor undian
+                    dalam satu layar.
+                </p>
+            </div>
+            <a href="{{ route('eventner.daftar-ulang.scan') }}" class="btn btn-primary btn-sm">
+                <i class="ti ti-qrcode me-1"></i> Scan QR
+            </a>
         </div>
     </div>
 

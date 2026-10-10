@@ -17,6 +17,10 @@ Route::get('/event/{slug}/rundown', App\Livewire\Public\EventRundown::class)->na
 Route::get('/event/{slug}/results', App\Livewire\Public\EventResult::class)->name('event.results');
 Route::get('/event/{slug}/results/{registration}', App\Livewire\Public\EventResultDetail::class)->name('event.results.detail');
 
+// Hall of Fame — rekap juara lintas event satu penyelenggara (host utama
+// saja: subdomain melayani satu event, rekap lintas event tak relevan).
+Route::get('/hall-of-fame/{penyelenggara}', App\Livewire\Public\HallOfFame::class)->name('public.hall-of-fame');
+
 // Voting Routes
 Route::get('/event/{slug}/vote', App\Livewire\Public\EventVote::class)->name('event.vote');
 Route::post('/webhook/autogopay', [App\Http\Controllers\Webhook\AutoGoPayWebhookController::class, 'handle']);

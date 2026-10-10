@@ -57,7 +57,58 @@
         </div>
     </div>
 
-    {{-- ========== LIST RUNDOWN ========== --}}
+    {{-- ========== JADWAL PERTANDINGAN ========== --}}
+    {{-- Hanya render bila panitia mengisi jadwal — event lama tak berubah tampak. --}}
+    @if($scheduleDays->isNotEmpty())
+        <div class="container-landing pt-8">
+            <div class="surface-card overflow-hidden">
+                <div class="flex items-center justify-between bg-surface-container px-6 py-4 border-b border-outline-variant/40">
+                    <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">
+                        <i class="ti ti-calendar-time text-primary text-lg"></i>
+                        Jadwal Pertandingan
+                    </h3>
+                </div>
+                @foreach($scheduleDays as $day)
+                    <div class="border-b border-outline-variant/30 last:border-b-0">
+                        <div class="px-6 py-2.5 bg-surface-container-low flex items-center gap-2">
+                            <i class="ti ti-calendar text-primary"></i>
+                            <span class="text-xs font-extrabold uppercase tracking-wider text-deep-slate">
+                                {{ $day['tanggal']?->translatedFormat('l, d F Y') ?? 'Hari Pelaksanaan' }}
+                            </span>
+                        </div>
+                        @foreach($day['venues'] as $venueGroup)
+                            <div class="px-6 py-4">
+                                @if($venueGroup['venue'])
+                                    <div class="flex items-center gap-1.5 mb-2 text-xs font-bold text-on-surface-variant">
+                                        <i class="ti ti-map-pin text-primary"></i> {{ $venueGroup['venue'] }}
+                                    </div>
+                                @endif
+                                <div class="grid gap-2 md:grid-cols-2">
+                                    @foreach($venueGroup['items'] as $s)
+                                        <div class="flex items-start gap-3 rounded-lg border border-outline-variant/30 px-3 py-2.5 bg-surface-container-lowest">
+                                            <span class="shrink-0 rounded bg-primary/10 text-primary px-2 py-1 font-mono text-[11px] font-extrabold leading-normal">
+                                                {{ $s->start_time?->format('H:i') }}@if($s->end_time)<span class="text-primary/50">–</span>{{ $s->end_time->format('H:i') }}@endif
+                                            </span>
+                                            <div class="min-w-0">
+                                                <div class="text-xs font-bold text-deep-slate leading-tight">{{ $s->title ?? $s->category?->name }}</div>
+                                                <div class="text-[11px] text-on-surface-variant mt-0.5">
+                                                    {{ $s->category?->parent?->name ? $s->category->parent->name . ' — ' . $s->category->name : $s->category?->name }}
+                                                    @if($s->group) · {{ $s->group->name }} @endif
+                                                    @if($s->round) · {{ $s->round->name }} @endif
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
+
+    {{-- ========== LIST RUNDOWN ========== --}} --}}
     <div class="container-landing py-8">
         @if($rundowns->isNotEmpty())
             <div class="surface-card overflow-hidden">

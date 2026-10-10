@@ -58,6 +58,10 @@ return [
         'label' => 'Rundown Acara',
         'locked_free' => true,
     ],
+    'schedule' => [
+        'label' => 'Jadwal Pertandingan',
+        'locked_free' => true,
+    ],
     'livestream' => [
         'label' => 'Livestream Overlay',
         'locked_free' => true,
