@@ -203,13 +203,17 @@ class VideotronDisplayTest extends TestCase
         ]);
 
         // Perhitungan /champions membaca cache ini; videotron ikut pakai.
+        // Format champions:v2: array murni — model Eloquent tak boleh menyeberang
+        // cache database (serializable_classes=false → __PHP_IncompleteClass).
         cache()->put(
-            "champions:{$eventner->id}:cat:{$kategori->id}:group:",
+            "champions:v2:{$eventner->id}:cat:{$kategori->id}:group:",
             [[
-                'champion' => $juara,
+                'champion' => ['id' => $juara->id, 'name' => 'Juara Umum'],
                 'rankTitles' => [],
                 'participants' => [
-                    ['rank' => 1, 'title' => 'Juara Satu', 'participant' => $reg, 'total' => 95.5],
+                    ['rank' => 1, 'title' => 'Juara Satu', 'total' => 95.5,
+                     'nama_sekolah' => 'SMA Juara Satu', 'display_name' => 'SMA Juara Satu',
+                     'npsn' => $reg->npsn, 'logo_sekolah' => $reg->logo_sekolah],
                 ],
             ]],
             300
@@ -235,12 +239,12 @@ class VideotronDisplayTest extends TestCase
         ]);
 
         cache()->put(
-            "champions:{$eventner->id}:cat:{$kategori->id}:group:",
+            "champions:v2:{$eventner->id}:cat:{$kategori->id}:group:",
             [
                 null,
                 'string-biasa',
                 42,
-                ['champion' => 'bukan-model', 'participants' => null],
+                ['champion' => 'bukan-array', 'participants' => null],
                 ['champion' => null, 'participants' => [['rank' => 1]]],
             ],
             300
@@ -249,6 +253,82 @@ class VideotronDisplayTest extends TestCase
         $this->get('/event/' . $eventner->slug . '/videotron?mode=champion&categoryId=' . $kategori->id)
             ->assertOk()
             ->assertSee('Belum Ada Juara');
+    }
+
+    /**
+     * Regresi produksi: CACHE_STORE=database + serializable_classes=false
+     * membuat unserialize mengembalikan __PHP_IncompleteClass untuk model
+     * Eloquent di cache. Payload champions:v2 wajib array murni — dulu versi
+     * lama menyimpan model ChampionCategory/Registration dan halaman /champions
+     * 500 saat membaca dari request lain.
+     */
+    public function test_payload_cache_champions_murni_array_tahan_unserialize_tanpa_class()
+    {
+        $eventner = $this->buatEvent();
+        // Kategori juara dihitung per TINGKAT (child) — tanpa parent,
+        // /champions tak memilihnya dan payload cache tak tertulis.
+        $parent = CompetitionCategory::factory()->for($eventner, 'eventner')->create();
+        $kategori = CompetitionCategory::factory()->for($eventner, 'eventner')->create(['parent_id' => $parent->id]);
+        $juara = ChampionCategory::create([
+            'eventner_id' => $eventner->id,
+            'name' => 'Juara Umum',
+            'quantity' => 3,
+            'is_public' => true,
+        ]);
+        $reg = Registration::factory()->for($eventner, 'eventner')->create([
+            'competition_category_id' => $kategori->id,
+            'nama_sekolah' => 'SMA Juara Murni',
+        ]);
+        \App\Models\AssessmentCategory::create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $kategori->id,
+            'name' => 'Penampilan',
+        ]);
+        $sub = \App\Models\AssessmentSubCategory::create([
+            'assessment_category_id' => \App\Models\AssessmentCategory::where('eventner_id', $eventner->id)->first()->id,
+            'name' => 'Sub Penampilan',
+        ]);
+        $criteria = \App\Models\AssessmentCriteria::create([
+            'assessment_sub_category_id' => $sub->id,
+            'name' => 'Keterampilan',
+            'score_options' => [['score' => 10], ['score' => 20]],
+            'weight' => 1,
+        ]);
+        $juara->assessmentSubCategories()->sync([$sub->id]);
+        \App\Models\AssessmentScore::create([
+            'eventner_id' => $eventner->id,
+            'registration_id' => $reg->id,
+            'assessment_criteria_id' => $criteria->id,
+            'judge_id' => \App\Models\Judge::create([
+                'eventner_id' => $eventner->id,
+                'name' => 'Juri Uji',
+            ])->id,
+            'score' => 20,
+            'is_finalized' => true,
+        ]);
+
+        // Perhitungan /champions — menulis payload v2 ke cache.
+        // scoring_code diset: mount komponen cari event lewat kolom ini,
+        // dan footer blade butuh parameter route-nya.
+        $eventner->update(['scoring_code' => 'CH-V2-RT']);
+
+        \Livewire\Livewire::test(\App\Livewire\Public\Champions\Index::class, [
+            'scoringCode' => 'CH-V2-RT',
+        ]);
+
+        $payload = cache()->get("champions:v2:{$eventner->id}:cat:{$kategori->id}:group:");
+        $this->assertNotNull($payload);
+
+        // Simulasi baca produksi: DatabaseStore::unserialize pakai
+        // allowed_classes=false. Payload ber-model menghasilkan
+        // __PHP_IncompleteClass di sini; array murni lolos utuh.
+        $roundtrip = unserialize(serialize($payload), ['allowed_classes' => false]);
+        $this->assertSame($payload, $roundtrip, 'Payload cache berubah lewat round-trip unserialize tanpa class — berarti masih membawa objek.');
+
+        // Halaman /champions render juara dari payload array tersebut.
+        $this->get('/champions/CH-V2-RT')
+            ->assertOk()
+            ->assertSee('SMA Juara Murni');
     }
 
     public function test_videotron_event_tidak_disetujui_gagal()

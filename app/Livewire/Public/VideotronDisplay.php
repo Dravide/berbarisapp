@@ -228,7 +228,7 @@ class VideotronDisplay extends Component
                     ->map(fn ($ps) => [
                         'rank' => $ps['rank'],
                         'title' => $ps['title'],
-                        'nama' => $ps['participant']->display_name,
+                        'nama' => $ps['display_name'],
                         'total' => $ps['total'],
                     ])
                     ->all();
@@ -251,6 +251,9 @@ class VideotronDisplay extends Component
      * mis. dari cache yang ditulis versi kode lama — dilewati, bukan memicu
      * error. Kandidat pertama yang sah dipakai bila id tak cocok.
      *
+     * Payload champions:v2 berupa array murni (bukan model Eloquent) —
+     * 'champion' divalidasi sebagai array ber-'id', bukan instanceof.
+     *
      * @param  mixed  $rankings  allRankings dari Champions\Index (cache atau segar)
      */
     private function rankingSah($rankings, int $kategoriId): ?array
@@ -263,12 +266,12 @@ class VideotronDisplay extends Component
 
         foreach ($rankings as $ranking) {
             if (! is_array($ranking)
-                || ! ($ranking['champion'] ?? null) instanceof ChampionCategory
+                || ! is_array($ranking['champion'] ?? null)
                 || ! is_array($ranking['participants'] ?? null)) {
                 continue;
             }
 
-            if ((int) $ranking['champion']->id === $kategoriId) {
+            if ((int) ($ranking['champion']['id'] ?? 0) === $kategoriId) {
                 return $ranking;
             }
 

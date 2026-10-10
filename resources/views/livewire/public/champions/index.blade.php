@@ -44,18 +44,18 @@
             <div class="card mb-4">
                 <div class="card-header bg-dark text-white">
                     <h5 class="card-title fw-semibold mb-0">
-                        <i class="ti ti-trophy text-warning me-2"></i> {{ $group['champion']->name }}
+                        <i class="ti ti-trophy text-warning me-2"></i> {{ $group['champion']['name'] }}
                     </h5>
                 </div>
 
                 {{-- Rank Title Legend --}}
-                @if($group['rankTitles']->count() > 0)
+                @if(count($group['rankTitles']) > 0)
                     <div class="px-3 pt-3 pb-0">
                         <div class="d-flex flex-wrap gap-2 mb-3">
                             @foreach($group['rankTitles'] as $rt)
                                 <span class="badge bg-warning-subtle text-dark border border-warning rounded-pill px-3 py-2">
-                                    <i class="ti ti-medal me-1"></i> {{ $rt->title }}
-                                    <small class="text-muted ms-1">(Rank {{ $rt->rank_start }}-{{ $rt->rank_end }})</small>
+                                    <i class="ti ti-medal me-1"></i> {{ $rt['title'] }}
+                                    <small class="text-muted ms-1">(Rank {{ $rt['rank_start'] }}-{{ $rt['rank_end'] }})</small>
                                 </span>
                             @endforeach
                         </div>
@@ -103,16 +103,16 @@
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center gap-2">
-                                                @if($ps['participant']->logo_sekolah)
-                                                    <img src="{{ asset('storage/' . $ps['participant']->logo_sekolah) }}" class="rounded-circle border" width="32" height="32" style="object-fit:cover;" alt="">
+                                                @if($ps['logo_sekolah'])
+                                                    <img src="{{ asset('storage/' . $ps['logo_sekolah']) }}" class="rounded-circle border" width="32" height="32" style="object-fit:cover;" alt="">
                                                 @else
                                                     <div class="bg-primary bg-opacity-25 rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;">
                                                         <i class="ti ti-school text-primary"></i>
                                                     </div>
                                                 @endif
                                                 <div>
-                                                    <span class="fw-semibold">{{ $ps['participant']->display_name }}</span>
-                                                    <br><small class="text-muted">NPSN: {{ $ps['participant']->npsn }}</small>
+                                                    <span class="fw-semibold">{{ $ps['display_name'] }}</span>
+                                                    <br><small class="text-muted">NPSN: {{ $ps['npsn'] }}</small>
                                                 </div>
                                             </div>
                                         </td>

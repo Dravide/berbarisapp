@@ -105,7 +105,11 @@ class Index extends Component
     {
         $this->allRankings = [];
 
-        $cacheKey = "champions:{$this->eventner->id}:cat:{$this->selectedCategoryId}:group:{$this->selectedGroupId}";
+        // v2: payload cache array murni. Versi lama menyimpan model Eloquent —
+        // di produksi (CACHE_STORE=database + serializable_classes=false)
+        // unserialize mengembalikan __PHP_IncompleteClass dan halaman 500.
+        // Kunci v2 memastikan payload lama tak pernah dibaca lagi.
+        $cacheKey = "champions:v2:{$this->eventner->id}:cat:{$this->selectedCategoryId}:group:{$this->selectedGroupId}";
 
         $cached = cache()->get($cacheKey);
         if ($cached !== null) {
@@ -237,10 +241,36 @@ class Index extends Component
             unset($ps);
 
             if (count($participantScores) > 0) {
+                // Strip ke array murni SEBELUM masuk cache — model Eloquent
+                // (champion + participant) tak boleh menyeberang cache database:
+                // serializable_classes=false membuatnya __PHP_IncompleteClass
+                // saat dibaca request lain.
                 $this->allRankings[] = [
-                    'champion' => $champion,
-                    'rankTitles' => $champion->rankTitles,
-                    'participants' => array_values($participantScores),
+                    'champion' => [
+                        'id' => $champion->id,
+                        'name' => $champion->name,
+                    ],
+                    'rankTitles' => $champion->rankTitles
+                        ->map(fn ($rt) => [
+                            'title' => $rt->title,
+                            'rank_start' => $rt->rank_start,
+                            'rank_end' => $rt->rank_end,
+                        ])
+                        ->all(),
+                    'participants' => array_values(array_map(function ($ps) {
+                        /** @var Registration $p */
+                        $p = $ps['participant'];
+
+                        return [
+                            'rank' => $ps['rank'],
+                            'title' => $ps['title'],
+                            'total' => $ps['total'],
+                            'nama_sekolah' => $p->nama_sekolah,
+                            'display_name' => $p->display_name,
+                            'npsn' => $p->npsn,
+                            'logo_sekolah' => $p->logo_sekolah,
+                        ];
+                    }, $participantScores)),
                 ];
             }
         }
