@@ -11,8 +11,9 @@ return new class extends Migration
         Schema::table('error_logs', function (Blueprint $table) {
             // Error sama (kode sama) dicatat sebagai satu baris:
             // occurrences = berapa kali terjadi, last_seen_at = kategori
-            // terakhir dilihat.
-            $table->unsignedInteger('occurrences')->default(1)->after('code');
+            // terakhir dilihat. Nullable: baris yang dibuat sebelum kolom
+            // ada tetap valid (tampil sebagai 1×).
+            $table->unsignedInteger('occurrences')->nullable()->after('code');
             $table->timestamp('last_seen_at')->nullable()->index()->after('occurrences');
         });
     }

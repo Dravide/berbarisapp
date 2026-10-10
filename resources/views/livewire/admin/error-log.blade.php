@@ -79,8 +79,9 @@
                                             <code class="fw-bold" style="font-size: 13px;">{{ $log->code }}</code>
                                         </td>
                                         <td>
-                                            <span class="fw-semibold">{{ $log->last_seen_at->format('d/m/Y') }}</span>
-                                            <br><span class="text-muted fs-2" title="{{ $log->last_seen_at->format('H:i:s') }}">{{ $log->last_seen_at->diffForHumans() }}</span>
+                                            @php $terakhir = $log->last_seen_at ?? $log->created_at; @endphp
+                                            <span class="fw-semibold">{{ $terakhir->format('d/m/Y') }}</span>
+                                            <br><span class="text-muted fs-2" title="{{ $terakhir->format('H:i:s') }}">{{ $terakhir->diffForHumans() }}</span>
                                         </td>
                                         <td>
                                             @if(($log->occurrences ?? 1) > 1)
@@ -158,14 +159,15 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <h6 class="text-muted fs-3 mb-1">Waktu</h6>
+                                @php $terakhir = $detail->last_seen_at ?? $detail->created_at; @endphp
                                 <p class="fw-semibold mb-0">
                                     Pertama: {{ $detail->created_at->translatedFormat('d F Y, H:i:s') }}
                                     <span class="text-muted fs-3">({{ $detail->created_at->diffForHumans() }})</span>
                                 </p>
                                 <p class="fw-semibold mb-0">
-                                    Terakhir: {{ $detail->last_seen_at->translatedFormat('d F Y, H:i:s') }}
-                                    <span class="text-muted fs-3">({{ $detail->last_seen_at->diffForHumans() }})</span>
-                                    <span class="badge bg-danger-subtle text-danger ms-1">Terjadi {{ $detail->occurrences }}×</span>
+                                    Terakhir: {{ $terakhir->translatedFormat('d F Y, H:i:s') }}
+                                    <span class="text-muted fs-3">({{ $terakhir->diffForHumans() }})</span>
+                                    <span class="badge bg-danger-subtle text-danger ms-1">Terjadi {{ $detail->occurrences ?? 1 }}×</span>
                                 </p>
                             </div>
                             <div class="col-md-6">

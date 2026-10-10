@@ -95,7 +95,8 @@ class ErrorLogIndex extends Component
     {
         $query = ErrorLog::query()
             ->with(['user', 'eventner', 'resolver'])
-            ->orderByDesc('last_seen_at');
+            // last_seen_at bisa NULL di baris yang dibuat sebelum kolom ada.
+            ->orderByRaw('COALESCE(last_seen_at, created_at) DESC');
 
         if ($this->search !== '') {
             $needle = '%' . $this->search . '%';

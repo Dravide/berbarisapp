@@ -231,13 +231,14 @@ class ExportController extends Controller
 
             \App\Models\ErrorLog::query()
                 ->with(['user:id,name,email', 'eventner:id,nama_event', 'resolver:id,name'])
-                ->orderByDesc('last_seen_at')
+                ->orderByRaw('COALESCE(last_seen_at, created_at) DESC')
                 ->each(function (\App\Models\ErrorLog $log) use ($file, &$no) {
+                    $terakhir = $log->last_seen_at ?? $log->created_at;
                     fputcsv($file, [
                         $no++,
                         $log->code,
                         $log->occurrences ?? 1,
-                        $log->last_seen_at ? $log->last_seen_at->format('Y-m-d H:i:s') : '-',
+                        $terakhir ? $terakhir->format('Y-m-d H:i:s') : '-',
                         $log->http_status ?? '-',
                         $log->exception_class,
                         $log->message,

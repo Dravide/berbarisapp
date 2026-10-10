@@ -85,6 +85,21 @@ class AdminErrorLogTest extends TestCase
             ->assertDontSee('ER-CCCCCC');
     }
 
+    public function test_baris_legacy_tanpa_occurrences_tetap_tampil()
+    {
+        // Baris yang dibuat sebelum migration occurrences/last_seen_at ada.
+        ErrorLogModel::factory()->create([
+            'code' => 'ER-LEGACY',
+            'occurrences' => null,
+            'last_seen_at' => null,
+        ]);
+
+        Livewire::actingAs($this->admin())
+            ->test(ErrorLogIndex::class)
+            ->assertSee('ER-LEGACY')
+            ->assertSee('1×');
+    }
+
     // ────────────────────────────────────────────────
     // Aksi tandai selesai / buka kembali
     // ────────────────────────────────────────────────
