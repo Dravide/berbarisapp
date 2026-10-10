@@ -178,6 +178,46 @@
         </div>
     </div>
 
+    {{-- ========== VIDEOTRON DISPLAY (layar venue) ========== --}}
+    <div class="card border-0 shadow-sm mb-5">
+        <div class="card-body p-5">
+            <h5 class="fs-6 fw-bold text-deep-slate mb-1"><i class="ti ti-device-tv me-1 text-primary"></i> Videotron Display</h5>
+            <p class="text-xs text-on-surface-variant mb-4">Layar big-screen di venue (bukan overlay OBS). Buka di TV/browser layar, fit otomatis 16:9.</p>
+
+            <div class="row g-3 mb-4">
+                @php $vtModes = ['welcome' => ['Selamat Datang', 'ti-home', '#0062ff'], 'drawing' => ['Urutan Tampil', 'ti-list-numbers', '#6366f1'], 'vote' => ['Klasemen Vote', 'ti-heart-filled', '#f59e0b'], 'champion' => ['Pengumuman Juara', 'ti-trophy', '#eab308'], 'rundown' => ['Agenda', 'ti-calendar-stats', '#22c55e'], 'sponsor' => ['Sponsor', 'ti-star-filled', '#ec4899'], 'loop' => ['Auto-loop', 'ti-refresh', '#0ea5e9']]; @endphp
+                @foreach($vtModes as $vtMode => [$label, $icon, $color])
+                    <div class="col-6 col-lg-3">
+                        <a href="{{ event_url($eventner, 'videotron') }}?mode={{ $vtMode }}" target="_blank"
+                           class="d-block p-3 rounded-2xl text-decoration-none transition"
+                           style="background: #f6f8fb; border: 2px solid #e2e8f0;">
+                            <span class="d-inline-flex align-items-center justify-center" style="width: 38px; height: 38px; border-radius: 11px; background: {{ $color }}15; color: {{ $color }}; font-size: 19px; margin-bottom: 6px;">
+                                <i class="ti {{ $icon }}"></i>
+                            </span>
+                            <h6 class="fw-bold text-deep-slate mb-0" style="font-size: 12.5px;">{{ $label }}</h6>
+                        </a>
+                    </div>
+                @endforeach
+            </div>
+
+            @php $vtUrl = event_url($eventner, 'videotron'); @endphp
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <code class="flex-fill p-3 rounded-xl bg-light d-inline-block" style="font-size: 12px; word-break: break-all; max-width: 700px;">
+                    {{ $vtUrl }}?mode=loop
+                </code>
+                <button type="button" class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 px-4"
+                        style="border-radius: 12px; font-weight: 600; font-size: 13px; border-color: #dbe4f0;"
+                        onclick="navigator.clipboard.writeText('{{ $vtUrl }}?mode=loop'); this.innerHTML='<i class=\'ti ti-check\'></i> Tersalin!'">
+                    <i class="ti ti-copy"></i> Salin
+                </button>
+                <a href="{{ $vtUrl }}?mode=loop" target="_blank" class="btn btn-primary d-inline-flex align-items-center gap-2 px-4"
+                   style="border-radius: 12px; font-weight: 600; font-size: 13px;">
+                    <i class="ti ti-external-link"></i> Buka
+                </a>
+            </div>
+        </div>
+    </div>
+
     {{-- ========== URL PREVIEW + COPY ========== --}}
     <div class="card border-0 shadow-sm">
         <div class="card-body p-5">

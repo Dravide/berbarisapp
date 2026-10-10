@@ -56,6 +56,9 @@ Route::get('/champions/{scoringCode}', App\Livewire\Public\Champions\Index::clas
 // Livestream Overlay
 Route::get('/event/{slug}/overlay', App\Livewire\Public\LivestreamOverlay::class)->name('event.overlay');
 
+// Videotron Display — layar big-screen venue (beda kasus dari overlay OBS)
+Route::get('/event/{slug}/videotron', App\Livewire\Public\VideotronDisplay::class)->name('event.videotron');
+
 // Legal & Support Pages
 Route::get('/privacy', App\Livewire\Public\PrivacyPolicy::class)->name('privacy');
 Route::get('/terms', App\Livewire\Public\TermsConditions::class)->name('terms');

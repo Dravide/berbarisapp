@@ -559,6 +559,7 @@ class Eventner extends Model
                 'drawing.results' => '/hasil-drawing',
                 'checkin.scan' => '/scan',
                 'overlay' => '/overlay',
+                'videotron' => '/videotron',
                 'juknis' => '/juknis',
             ];
             $path = $paths[$route] ?? '/';

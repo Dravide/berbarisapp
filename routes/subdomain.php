@@ -28,5 +28,6 @@ Route::get('/daftar', App\Livewire\Public\Registration\Create::class)->name('sub
 Route::get('/drawing', App\Livewire\Eventner\Drawing\Spin::class)->name('subdomain.drawing.spin');
 Route::get('/hasil-drawing', App\Livewire\Eventner\Drawing\Results::class)->name('subdomain.drawing.results');
 Route::get('/overlay', App\Livewire\Public\LivestreamOverlay::class)->name('subdomain.overlay');
+Route::get('/videotron', App\Livewire\Public\VideotronDisplay::class)->name('subdomain.videotron');
 Route::get('/juknis', [App\Http\Controllers\Public\PublicJuknisController::class, 'downloadJuknis'])->name('subdomain.juknis');
 Route::get('/scan/{token}', App\Livewire\Public\Checkin\Scan::class)->name('subdomain.checkin.scan');
