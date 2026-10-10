@@ -16,7 +16,7 @@ class Index extends Component
     use WithPagination;
     use FeatureGatedComponent;
 
-    protected string $requiredFeature = 'vote_transactions';
+    protected string $requiredFeature = 'vote_comments';
 
     protected string $paginationTheme = 'bootstrap';
 

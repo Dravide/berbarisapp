@@ -247,7 +247,7 @@ class SearchLinks extends Component
                         'label' => 'Komentar Voting',
                         'route' => 'eventner.vote-comments.index',
                         'icon' => 'ti ti-messages',
-                        'locked' => $locked('vote_transactions'),
+                        'locked' => $locked('vote_comments'),
                     ],
                 ],
             ],

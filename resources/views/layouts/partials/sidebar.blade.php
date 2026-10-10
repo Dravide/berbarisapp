@@ -280,22 +280,15 @@
             <span class="hide-menu">Penilaian</span>
           </li>
           <li class="sidebar-item">
-            <a class="sidebar-link {{ request()->routeIs(['eventner.format-nilai.builder','eventner.format-nilai.copy-form','eventner.format-nilai.copy-execute','eventner.format-nilai.pdf','eventner.format-nilai.pdf-child']) ? 'active' : '' }}"
+            {{-- Unduh format (route format-nilai.download) kini menu di
+                 dropdown "Unduh & Import" halaman Builder — dua item menu
+                 untuk satu fitur jadi satu. --}}
+            <a class="sidebar-link {{ request()->routeIs(['eventner.format-nilai.builder','eventner.format-nilai.copy-form','eventner.format-nilai.copy-execute','eventner.format-nilai.pdf','eventner.format-nilai.pdf-child','eventner.format-nilai.download','eventner.format-nilai.download-pdf','eventner.format-nilai.template']) ? 'active' : '' }}"
               href="{{ route('eventner.format-nilai.builder') }}" aria-expanded="false">
               <span>
                 <i class="ti ti-checklist"></i>
               </span>
               <span class="hide-menu">Format Penilaian</span>
-              @if($ev && !$ev->canAccessFeature('format_nilai')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
-            </a>
-          </li>
-          <li class="sidebar-item">
-            <a class="sidebar-link {{ request()->routeIs('eventner.format-nilai.download') ? 'active' : '' }}"
-              href="{{ route('eventner.format-nilai.download') }}" aria-expanded="false">
-              <span>
-                <i class="ti ti-file-download"></i>
-              </span>
-              <span class="hide-menu">Unduh Format Penilaian</span>
               @if($ev && !$ev->canAccessFeature('format_nilai')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
@@ -392,7 +385,7 @@
                 <i class="ti ti-messages"></i>
               </span>
               <span class="hide-menu">Komentar Voting</span>
-              @if($ev && !$ev->canAccessFeature('vote_transactions')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
+              @if($ev && !$ev->canAccessFeature('vote_comments')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
             </a>
           </li>
 
@@ -439,6 +432,16 @@
               </span>
               <span class="hide-menu">Livestream Overlay</span>
               @if($ev && !$ev->canAccessFeature('livestream')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
+            </a>
+          </li>
+          {{-- Layar venue — buka langsung mode loop; semua mode lain
+               bertaut dari halaman Livestream Overlay. --}}
+          <li class="sidebar-item">
+            <a class="sidebar-link" href="{{ event_url($ev, 'videotron') }}?mode=loop" target="_blank" aria-expanded="false">
+              <span>
+                <i class="ti ti-device-tv"></i>
+              </span>
+              <span class="hide-menu">Videotron Display</span>
             </a>
           </li>
           @if(auth()->user()->eventner && auth()->user()->eventner->scoring_code)
@@ -582,7 +585,11 @@
               <span class="hide-menu">TTD &amp; Stempel</span>
             </a>
           </li>
-          @if($ev && $ev->plan !== 'paid')
+          {{-- Identitas sudah bayar = registration_paid_at (bukan plan —
+               plan='paid' ter-set sejak daftar, sebelum membayar). Paket yatim
+               (plan='paid', tak ber-paket, belum bayar) tetap melihat menu ini
+               sebagai jalur pemulihan. --}}
+          @if($ev && $ev->registration_paid_at === null)
             <li class="sidebar-item">
               <a class="sidebar-link {{ request()->routeIs('eventner.billing.*') ? 'active' : '' }}"
                 href="{{ route('eventner.billing.upgrade') }}" aria-expanded="false">

@@ -38,6 +38,10 @@ return [
         'label' => 'Transaksi Voting',
         'locked_free' => true,
     ],
+    'vote_comments' => [
+        'label' => 'Komentar Voting',
+        'locked_free' => true,
+    ],
     'champion_categories' => [
         'label' => 'Kategori Juara',
         'locked_free' => true,
