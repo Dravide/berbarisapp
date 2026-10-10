@@ -128,7 +128,7 @@
             <a class="sidebar-link {{ request()->routeIs('admin.landing-partners') ? 'active' : '' }}"
               href="{{ route('admin.landing-partners') }}" aria-expanded="false">
               <span>
-                <i class="ti ti-speartwo"></i>
+                <i class="ti ti-heart-handshake"></i>
               </span>
               <span class="hide-menu">Sponsor Landing</span>
             </a>
