@@ -1,10 +1,10 @@
-<div class="videotron-container flex flex-col overflow-hidden"
-     style="background: #0a0d1a;"
+<div class="videotron-container flex flex-col overflow-hidden videotron-root"
+     style="background: #f6f5f1; color: #15171c;"
      x-data="vtclock"
      x-init="init()">
 <script>
     document.addEventListener('alpine:init', () => {
-        // Jam berjalan — pola sama dengan clock di livestream overlay.
+        // Jam berjalan — dipakai semua mode kecuali sponsor.
         Alpine.data('vtclock', () => ({
             time: '', date: '',
             init() {
@@ -23,83 +23,76 @@
 </script>
 
 <style>
-    /* ====== Animasi murni CSS — TANPA anime.js. Semua keyframes lokal di sini. ====== */
+    /* ====== Tema editorial terang: kertas gading + tinta + aksen tema. ====== */
+    .videotron-root {
+        --vt-ink: #15171c;
+        --vt-paper: #f6f5f1;
+        --vt-line: #dcd9ce;
+        --vt-muted: #6d7178;
+    }
+
+    /* Animasi murni CSS — TANPA anime.js. Fade halus + marquee saja. */
     @keyframes vt-marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-    @keyframes vt-fade-up {
-        from { opacity: 0; transform: translateY(24px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes vt-fade-in { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes vt-ping-red {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: .5; transform: scale(1.15); }
-    }
-    @keyframes vt-glow {
-        0%, 100% { filter: drop-shadow(0 0 10px rgba(245,158,11,.45)); }
-        50% { filter: drop-shadow(0 0 22px rgba(245,158,11,.8)); }
-    }
-    @keyframes vt-bar-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-    @keyframes vt-slide-l { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes vt-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes vt-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes vt-beat { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+    @keyframes vt-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
-    .vt-anim-up { animation: vt-fade-up .7s cubic-bezier(.2,.8,.2,1) both; }
-    .vt-anim-in { animation: vt-fade-in .6s ease both; }
-    .vt-anim-l { animation: vt-slide-l .7s cubic-bezier(.2,.8,.2,1) both; }
-    .vt-anim-bar { transform-origin: left; animation: vt-bar-grow 1.1s cubic-bezier(.2,.8,.2,1) both; }
-    .vt-live-dot { animation: vt-ping-red 1.6s ease-in-out infinite; }
-    .vt-crown { animation: vt-glow 2.4s ease-in-out infinite; }
-
-    /* Stagger: delay per baris via CSS var */
-    .vt-stagger > * { animation: vt-fade-up .6s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 90ms); }
+    .vt-rise { animation: vt-rise .55s cubic-bezier(.2,.8,.2,1) both; }
+    .vt-in { animation: vt-in .5s ease both; }
+    .vt-beat { animation: vt-beat 1.6s ease-in-out infinite; }
+    .vt-bar { transform-origin: left; animation: vt-bar 1s cubic-bezier(.2,.8,.2,1) both; }
+    .vt-stagger > * { animation: vt-rise .5s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 80ms); }
 
     .vt-scroll::-webkit-scrollbar { width: 4px; }
     .vt-scroll::-webkit-scrollbar-track { background: transparent; }
-    .vt-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.14); border-radius: 10px; }
+    .vt-scroll::-webkit-scrollbar-thumb { background: rgba(21,23,28,.2); border-radius: 8px; }
 
-    .vt-card {
-        background: rgba(255,255,255,.02);
-        border: 1px solid rgba(255,255,255,.05);
-        border-radius: 20px;
+    /* Panel kertas: putih dengan garis rambut, sudut hampir tajam. */
+    .vt-panel { background: #fff; border: 1px solid var(--vt-line); border-radius: 10px; }
+    .vt-kicker { text-transform: uppercase; letter-spacing: .28em; font-weight: 700; }
+    .vt-grid-paper {
+        background-image:
+            linear-gradient(rgba(21,23,28,.045) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(21,23,28,.045) 1px, transparent 1px);
+        background-size: 96px 96px;
     }
 </style>
 
     {{-- ==================== HEADER (bukan welcome/sponsor) ==================== --}}
     @if(!in_array($mode, ['welcome', 'sponsor']))
-    <header class="shrink-0 flex items-center gap-5 px-12 h-[84px] relative overflow-hidden"
-            style="background: #090c17; border-bottom: 1px solid rgba(255,255,255,0.06);">
-        <div class="absolute top-0 inset-x-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(var(--color-primary-rgb),0.35), transparent);"></div>
+    <header class="shrink-0 flex items-center gap-6 px-14 h-[88px] relative bg-white" style="border-bottom: 1px solid var(--vt-line);">
+        <div class="absolute top-0 inset-x-0 h-[3px]" style="background: var(--color-primary);"></div>
 
         @if($eventner->logo_event)
-            <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="relative z-10 h-12 w-12 rounded-2xl object-cover border border-white/10 shrink-0">
+            <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="h-14 w-14 rounded-lg object-cover shrink-0" style="border: 1px solid var(--vt-ink);">
         @else
-            <span class="relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl text-white/35 border border-white/10 shrink-0" style="background: rgba(255,255,255,0.03);">
-                <i class="ti ti-calendar-event text-xl"></i>
+            <span class="flex h-14 w-14 items-center justify-center rounded-lg shrink-0" style="background: #fff; border: 1px solid var(--vt-ink);">
+                <i class="ti ti-calendar-event text-2xl" style="color: var(--vt-ink);"></i>
             </span>
         @endif
 
-        <div class="relative z-10 flex-1 min-w-0">
-            <h1 class="font-display text-xl font-extrabold text-white leading-tight tracking-tight truncate">
+        <div class="flex-1 min-w-0">
+            <h1 class="font-display text-[26px] font-extrabold leading-tight tracking-tight truncate" style="color: var(--vt-ink);">
                 {{ $eventner->nama_event }}
             </h1>
             @if($eventner->venue)
-                <p class="text-[12px] text-white/35 font-medium truncate flex items-center gap-1.5">
-                    <i class="ti ti-map-pin-filled text-[11px]" style="color: #ef4444;"></i> {{ $eventner->venue }}
+                <p class="text-[14px] font-medium truncate flex items-center gap-1.5" style="color: var(--vt-muted);">
+                    <i class="ti ti-map-pin text-[14px]" style="color: var(--color-primary);"></i> {{ $eventner->venue }}
                 </p>
             @endif
         </div>
 
-        <div class="relative z-10 flex items-center gap-6 shrink-0">
-            <div class="flex items-center gap-2 rounded-full px-5 py-2 text-[12px] font-bold uppercase tracking-[0.15em]"
-                 style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25);">
-                <span class="relative flex h-2.5 w-2.5">
-                    <span class="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 vt-live-dot"></span>
-                    <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500"></span>
-                </span>
-                <span style="color: #f87171;">Live</span>
+        <div class="flex items-center gap-6 shrink-0">
+            <div class="flex items-center gap-2.5 px-4 py-2 text-[12px] font-bold uppercase tracking-[0.2em] text-white"
+                 style="background: #c8102e;">
+                <span class="h-2 w-2 rounded-full bg-white vt-beat"></span>
+                Live
             </div>
-            <div class="h-9 w-px" style="background: rgba(255,255,255,0.08);"></div>
+            <div class="h-10 w-px" style="background: var(--vt-line);"></div>
             <div class="text-right">
-                <div class="font-mono text-[30px] font-bold text-white tabular-nums leading-none tracking-tight" x-text="time"></div>
-                <div class="text-[11px] text-white/25 font-medium leading-tight mt-1" x-text="date"></div>
+                <div class="font-mono text-[32px] font-bold tabular-nums leading-none tracking-tight" style="color: var(--vt-ink);" x-text="time"></div>
+                <div class="text-[12px] font-medium leading-tight mt-1" style="color: var(--vt-muted);" x-text="date"></div>
             </div>
         </div>
     </header>
@@ -107,40 +100,44 @@
 
     {{-- ==================== MODE: WELCOME ==================== --}}
     @if($mode === 'welcome')
-        <main class="flex-1 flex flex-col items-center justify-center relative overflow-hidden vt-anim-in"
-              style="background: radial-gradient(ellipse at 50% 30%, rgba(var(--color-primary-rgb),0.10) 0%, transparent 65%), #0a0d1a;">
-            <div class="absolute inset-0 opacity-[0.03]" style="background-image: linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px); background-size: 120px 120px;"></div>
+        <main class="flex-1 flex flex-col items-center justify-center relative overflow-hidden vt-in" style="background: var(--vt-paper);">
+            <div class="absolute top-0 inset-x-0 h-[6px]" style="background: var(--color-primary);"></div>
+            <div class="absolute inset-0 vt-grid-paper opacity-70"></div>
 
-            <div class="relative z-10 flex flex-col items-center text-center gap-8">
+            <div class="relative z-10 flex flex-col items-center text-center gap-9 px-20">
                 @if($eventner->logo_event)
                     <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt=""
-                         class="h-40 w-40 rounded-[32px] object-cover border border-white/10 vt-anim-up"
-                         style="box-shadow: 0 20px 70px rgba(var(--color-primary-rgb),0.25);">
+                         class="h-36 w-36 rounded-xl object-cover vt-rise"
+                         style="border: 1px solid var(--vt-ink); box-shadow: 8px 8px 0 rgba(var(--color-primary-rgb),0.9);">
                 @else
-                    <span class="flex h-40 w-40 items-center justify-center rounded-[32px] vt-anim-up" style="background: rgba(var(--color-primary-rgb),0.1); border: 1px solid rgba(var(--color-primary-rgb),0.25);">
+                    <span class="flex h-36 w-36 items-center justify-center rounded-xl vt-rise" style="background: #fff; border: 1px solid var(--vt-ink); box-shadow: 8px 8px 0 rgba(var(--color-primary-rgb),0.9);">
                         <i class="ti ti-calendar-event text-6xl" style="color: var(--color-primary);"></i>
                     </span>
                 @endif
 
                 <div>
-                    <div class="text-[16px] font-bold uppercase tracking-[0.35em] mb-6 vt-anim-up" style="color: var(--color-primary); animation-delay: .15s;">Selamat Datang</div>
-                    <h1 class="font-display font-extrabold leading-[1.05] tracking-tight text-white vt-anim-up" style="font-size: 96px; animation-delay: .3s;">
+                    <div class="flex items-center justify-center gap-5 mb-7 vt-rise" style="animation-delay: .12s;">
+                        <span class="h-px w-24" style="background: var(--vt-ink);"></span>
+                        <span class="text-[18px] font-bold uppercase tracking-[0.4em]" style="color: var(--color-primary);">Selamat Datang</span>
+                        <span class="h-px w-24" style="background: var(--vt-ink);"></span>
+                    </div>
+                    <h1 class="font-display font-extrabold leading-[1.03] tracking-tight vt-rise" style="font-size: 100px; color: var(--vt-ink); animation-delay: .22s;">
                         {{ $eventner->nama_event }}
                     </h1>
                     @if($eventner->venue || $eventner->tanggal)
-                        <p class="mt-7 text-[26px] font-medium text-white/45 flex items-center justify-center gap-6 vt-anim-up" style="animation-delay: .45s;">
+                        <p class="mt-8 text-[24px] font-medium flex items-center justify-center gap-6 vt-rise" style="color: #3d4048; animation-delay: .34s;">
                             @if($eventner->venue)
-                                <span class="inline-flex items-center gap-2"><i class="ti ti-map-pin-filled" style="color: var(--color-primary);"></i>{{ $eventner->venue }}</span>
+                                <span class="inline-flex items-center gap-2"><i class="ti ti-map-pin" style="color: var(--color-primary);"></i>{{ $eventner->venue }}</span>
                             @endif
-                            @if($eventner->venue && $eventner->tanggal)<span class="text-white/20">·</span>@endif
+                            @if($eventner->venue && $eventner->tanggal)<span style="color: var(--vt-line);">/</span>@endif
                             @if($eventner->tanggal)
-                                <span class="inline-flex items-center gap-2"><i class="ti ti-calendar-filled" style="color: var(--color-primary);"></i>{{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d F Y') }}</span>
+                                <span class="inline-flex items-center gap-2"><i class="ti ti-calendar" style="color: var(--color-primary);"></i>{{ \Carbon\Carbon::parse($eventner->tanggal)->translatedFormat('d F Y') }}</span>
                             @endif
                         </p>
                     @endif
                 </div>
 
-                <div class="mt-6 font-mono text-[40px] font-bold text-white/70 tabular-nums tracking-tight vt-anim-up" style="animation-delay: .6s;" x-text="time"></div>
+                <div class="mt-5 font-mono text-[42px] font-bold tabular-nums tracking-tight vt-rise" style="color: var(--vt-ink); animation-delay: .45s;" x-text="time"></div>
             </div>
         </main>
 
@@ -150,68 +147,67 @@
             @if($categoryId && count($drawingQueue) > 0)
                 @php $berikutnya = $drawingQueue[0] ?? null; @endphp
                 <div class="grid grid-cols-3 gap-6 flex-1 min-h-0">
-                    {{-- Kolom utama: antrean --}}
-                    <div class="col-span-2 vt-card flex flex-col overflow-hidden">
-                        <div class="shrink-0 flex items-center gap-3 px-8 py-4" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                            <i class="ti ti-list-numbers text-base" style="color: var(--color-primary);"></i>
-                            <span class="text-[13px] font-bold uppercase tracking-[0.2em] text-white/45">Urutan Tampil</span>
-                            <span class="ml-auto text-[11px] font-bold px-3 py-1 rounded-full" style="background: rgba(var(--color-primary-rgb),0.15); color: #fff;">{{ count($drawingQueue) }} kontingen menunggu</span>
+                    {{-- Kolom utama: antrean, gaya tabel garis rambut --}}
+                    <div class="col-span-2 vt-panel flex flex-col overflow-hidden">
+                        <div class="shrink-0 flex items-center gap-3 px-8 py-4" style="border-bottom: 1px solid var(--vt-line);">
+                            <i class="ti ti-list-numbers text-lg" style="color: var(--color-primary);"></i>
+                            <span class="vt-kicker text-[13px]" style="color: var(--vt-ink);">Urutan Tampil</span>
+                            <span class="ml-auto text-[12px] font-bold px-3 py-1" style="background: rgba(var(--color-primary-rgb),0.1); color: var(--color-primary);">{{ count($drawingQueue) }} kontingen menunggu</span>
                         </div>
-                        <div class="flex-1 overflow-y-auto vt-scroll p-3 flex flex-col gap-1.5 vt-stagger">
+                        <div class="flex-1 overflow-y-auto vt-scroll divide-y" style="border-color: var(--vt-line);">
                             @foreach($drawingQueue as $i => $reg)
-                                <div class="relative flex items-center gap-4 px-6 py-3.5 rounded-2xl overflow-hidden {{ $i === 0 ? 'vt-anim-up' : '' }}"
-                                     style="background: {{ $i === 0 ? 'rgba(var(--color-primary-rgb),0.1); border: 2px solid var(--color-primary)' : 'border: 1px solid transparent' }};">
-                                    <span class="shrink-0 inline-flex items-center justify-center h-11 w-11 rounded-xl text-base font-extrabold"
-                                          style="{{ $i === 0 ? 'background: var(--color-primary); color: #fff;' : 'background: rgba(255,255,255,.05); color: rgba(255,255,255,.5);' }}">
+                                <div class="relative flex items-center gap-5 px-8 py-4 vt-stagger" style="--i: {{ $i % 8 }}; {{ $i === 0 ? 'background: rgba(var(--color-primary-rgb),0.06); box-shadow: inset 5px 0 0 var(--color-primary);' : '' }}">
+                                    <span class="shrink-0 inline-flex items-center justify-center h-11 w-11 text-lg font-extrabold"
+                                          style="{{ $i === 0 ? 'background: var(--color-primary); color: #fff;' : 'background: #fff; color: var(--vt-ink); border: 1px solid var(--vt-line);' }}">
                                         {{ $reg['no'] }}
                                     </span>
-                                    <span class="flex-1 text-[19px] font-bold {{ $i === 0 ? 'text-white' : 'text-white/65' }} truncate">
+                                    <span class="flex-1 text-[21px] font-bold {{ $i === 0 ? '' : '' }} truncate" style="color: {{ $i === 0 ? 'var(--vt-ink)' : '#3d4048' }};">
                                         {{ $reg['nama'] }}
                                     </span>
                                     @if($i === 0)
-                                        <span class="shrink-0 text-[11px] font-bold uppercase tracking-[0.18em] px-4 py-1.5 rounded-full" style="background: var(--color-primary); color: #fff;">Berikutnya</span>
+                                        <span class="shrink-0 text-[11px] font-bold uppercase tracking-[0.18em] px-4 py-1.5 text-white" style="background: var(--vt-ink);">Berikutnya</span>
                                     @endif
                                 </div>
                             @endforeach
                         </div>
                     </div>
 
-                    {{-- Kolom kanan: sudah tampil --}}
-                    <div class="flex flex-col gap-5">
-                        <div class="vt-card flex flex-col overflow-hidden flex-1">
-                            <div class="shrink-0 flex items-center gap-3 px-7 py-4" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                <i class="ti ti-check text-base" style="color: #22c55e;"></i>
-                                <span class="text-[13px] font-bold uppercase tracking-[0.2em] text-white/45">Sudah Tampil</span>
+                    {{-- Kolom kanan: sudah tampil + sedang bersiap --}}
+                    <div class="flex flex-col gap-6">
+                        <div class="vt-panel flex flex-col overflow-hidden flex-1">
+                            <div class="shrink-0 flex items-center gap-3 px-7 py-4" style="border-bottom: 1px solid var(--vt-line);">
+                                <i class="ti ti-check text-lg" style="color: #15803d;"></i>
+                                <span class="vt-kicker text-[13px]" style="color: var(--vt-ink);">Sudah Tampil</span>
                             </div>
-                            <div class="flex-1 flex flex-col justify-center gap-3 p-5">
+                            <div class="flex-1 flex flex-col justify-center gap-2.5 p-5">
                                 @forelse(array_reverse($drawingDone) as $done)
-                                    <div class="flex items-center gap-4 px-5 py-4 rounded-2xl" style="background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.14);">
-                                        <span class="shrink-0 inline-flex items-center justify-center h-10 w-10 rounded-xl text-sm font-extrabold" style="background: rgba(34,197,94,0.15); color: #4ade80;">
+                                    <div class="flex items-center gap-4 px-5 py-3.5" style="background: var(--vt-paper); border: 1px solid var(--vt-line); border-radius: 8px;">
+                                        <span class="shrink-0 inline-flex items-center justify-center h-9 w-9 text-sm font-extrabold" style="border: 1px solid var(--vt-line); color: var(--vt-ink);">
                                             {{ $done['no'] }}
                                         </span>
-                                        <span class="flex-1 text-[16px] font-bold text-white/70 truncate">{{ $done['nama'] }}</span>
-                                        <i class="ti ti-circle-check text-lg" style="color: #22c55e;"></i>
+                                        <span class="flex-1 text-[17px] font-semibold truncate" style="color: #3d4048;">{{ $done['nama'] }}</span>
+                                        <i class="ti ti-circle-check text-lg" style="color: #15803d;"></i>
                                     </div>
                                 @empty
-                                    <p class="text-sm text-white/25 text-center">Belum ada yang tampil</p>
+                                    <p class="text-sm text-center" style="color: var(--vt-muted);">Belum ada yang tampil</p>
                                 @endforelse
                             </div>
                         </div>
                         @if($berikutnya)
-                            <div class="vt-card p-7 text-center" style="border-color: rgba(var(--color-primary-rgb),0.35); background: rgba(var(--color-primary-rgb),0.06);">
-                                <div class="text-[11px] font-bold uppercase tracking-[0.25em]" style="color: rgba(var(--color-primary-rgb),0.9);">Sedang Bersiap</div>
-                                <div class="font-display font-extrabold text-white text-[30px] leading-tight mt-3 vt-anim-up" wire:key="berikut-{{ $berikutnya['id'] }}">{{ $berikutnya['nama'] }}</div>
-                                <div class="text-sm text-white/40 mt-2">Nomor {{ $berikutnya['no'] }}</div>
+                            <div class="p-8 text-center" style="background: var(--vt-ink); border-radius: 10px;">
+                                <div class="text-[11px] font-bold uppercase tracking-[0.3em]" style="color: rgba(255,255,255,.5);">Sedang Bersiap</div>
+                                <div class="font-display font-extrabold text-white text-[30px] leading-tight mt-3 vt-rise" wire:key="berikut-{{ $berikutnya['id'] }}">{{ $berikutnya['nama'] }}</div>
+                                <div class="text-sm font-medium mt-2" style="color: rgba(255,255,255,.55);">Nomor {{ $berikutnya['no'] }}</div>
                             </div>
                         @endif
                     </div>
                 </div>
             @else
-                <div class="flex-1 flex flex-col items-center justify-center gap-4">
-                    <div class="flex h-20 w-20 items-center justify-center rounded-3xl" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                        <i class="ti ti-list-numbers text-3xl text-white/15"></i>
+                <div class="flex-1 flex flex-col items-center justify-center gap-5">
+                    <div class="flex h-20 w-20 items-center justify-center vt-panel" style="border-radius: 10px;">
+                        <i class="ti ti-list-numbers text-3xl" style="color: var(--vt-line);"></i>
                     </div>
-                    <p class="text-white/30 text-lg">Belum ada urutan tampil — pilih tingkat lewat URL (?categoryId=...).</p>
+                    <p class="text-lg" style="color: var(--vt-muted);">Belum ada urutan tampil — pilih tingkat lewat URL (?categoryId=...).</p>
                 </div>
             @endif
         </main>
@@ -219,16 +215,20 @@
     {{-- ==================== MODE: VOTE ==================== --}}
     @elseif($mode === 'vote')
         <main class="flex-1 flex flex-col px-14 py-8 overflow-hidden" wire:poll.10s="refreshData">
-            <h2 class="font-display text-[30px] font-extrabold text-white text-center tracking-wide shrink-0 mb-4">Klasemen Vote</h2>
+            <div class="shrink-0 flex items-center justify-center gap-5 mb-6">
+                <span class="h-px w-32" style="background: var(--vt-ink);"></span>
+                <h2 class="font-display text-[30px] font-extrabold tracking-wide" style="color: var(--vt-ink);">Klasemen Vote</h2>
+                <span class="h-px w-32" style="background: var(--vt-ink);"></span>
+            </div>
             <div class="flex items-center justify-center gap-14 mb-7 shrink-0">
                 <div class="text-center">
-                    <span class="font-display text-[56px] font-extrabold text-white leading-none">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
-                    <span class="text-[12px] font-bold text-white/30 uppercase tracking-[0.2em] block mt-2">Total Vote</span>
+                    <span class="font-mono text-[52px] font-bold tabular-nums leading-none" style="color: var(--vt-ink);">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
+                    <span class="vt-kicker text-[11px] block mt-2" style="color: var(--vt-muted);">Total Vote</span>
                 </div>
-                <div class="h-14 w-px" style="background: rgba(255,255,255,0.08);"></div>
+                <div class="h-14 w-px" style="background: var(--vt-line);"></div>
                 <div class="text-center">
-                    <span class="font-display text-[56px] font-extrabold text-white leading-none">{{ count($topVote) }}</span>
-                    <span class="text-[12px] font-bold text-white/30 uppercase tracking-[0.2em] block mt-2">Kontingen</span>
+                    <span class="font-mono text-[52px] font-bold tabular-nums leading-none" style="color: var(--vt-ink);">{{ count($topVote) }}</span>
+                    <span class="vt-kicker text-[11px] block mt-2" style="color: var(--vt-muted);">Kontingen</span>
                 </div>
             </div>
 
@@ -239,54 +239,45 @@
                     $maxV = max($topVote[0]['total_votes'] ?? 1, 1);
                 @endphp
 
-                <div class="flex-1 flex gap-7 min-h-0">
-                    {{-- Podium --}}
-                    <div class="flex-1 vt-card flex flex-col p-8">
-                        <div class="flex items-end justify-center gap-10 flex-1">
-                            @foreach([1, 0, 2] as $posisi)
-                                @php
-                                    $r = $top3[$posisi] ?? null;
-                                    if (! $r) continue;
-                                    $tinggi = $posisi === 0 ? '150px' : ($posisi === 1 ? '100px' : '76px');
-                                    $warna = $posisi === 0 ? '#f59e0b' : ($posisi === 1 ? '#94a3b8' : '#38bdf8');
-                                @endphp
-                                <div class="flex flex-col items-center flex-1 max-w-[240px]">
-                                    <div class="relative {{ $posisi === 0 ? 'vt-anim-up' : 'vt-anim-in' }}" style="animation-delay: {{ $posisi === 0 ? 0 : $posisi * 0.15 }}s;">
-                                        @if($posisi === 0)
-                                            <i class="ti ti-crown-filled text-2xl absolute -top-5 left-1/2 -translate-x-1/2 z-10 vt-crown" style="color: #f59e0b;"></i>
-                                        @endif
-                                        @if($r['logo_sekolah'])
-                                            <img src="{{ asset('storage/' . $r['logo_sekolah']) }}" class="h-20 w-20 rounded-full object-cover border-2" style="border-color: {{ $warna }}66; box-shadow: 0 0 34px {{ $warna }}22;">
-                                        @else
-                                            <span class="flex h-20 w-20 items-center justify-center rounded-full border-2 text-white/30" style="border-color: {{ $warna }}66; background: rgba(255,255,255,.03);"><i class="ti ti-school text-3xl"></i></span>
-                                        @endif
-                                    </div>
-                                    <h3 class="mt-3 text-[15px] font-bold text-white text-center leading-tight line-clamp-2 max-w-[210px]">{{ $r['display_name'] ?? $r['nama_sekolah'] }}</h3>
-                                    <span class="font-display font-extrabold text-[22px] mt-1" style="color: {{ $warna }};">{{ number_format($r['total_votes'] ?? 0, 0, ',', '.') }}</span>
-                                    <span class="text-[10px] font-bold uppercase tracking-widest text-white/25">suara</span>
-                                    <div class="w-full rounded-t-2xl mt-2 flex items-start justify-center vt-anim-in" style="height: {{ $tinggi }}; background: linear-gradient(180deg, {{ $warna }}22 0%, {{ $warna }}05 100%); border: 1px solid {{ $warna }}1e;">
-                                        <span class="font-display text-5xl font-extrabold" style="color: {{ $warna }}33;">{{ $posisi + 1 }}</span>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
+                <div class="flex-1 flex flex-col gap-6 min-h-0">
+                    {{-- Papan peringkat 1-3: baris utama + dua panel --}}
+                    <div class="flex gap-6 shrink-0">
+                        @foreach($top3 as $i => $r)
+                            @php
+                                $warna = $i === 0 ? 'var(--color-primary)' : ($i === 1 ? '#8a6d1f' : '#4d6a8a');
+                            @endphp
+                            <div class="flex-1 vt-panel flex flex-col items-center p-6 vt-rise {{ $i === 0 ? 'row-span-1' : '' }}"
+                                 style="animation-delay: {{ $i * 0.12 }}s; {{ $i === 0 ? 'border-top: 5px solid var(--color-primary);' : '' }}">
+                                <span class="text-[11px] font-bold uppercase tracking-[0.25em] px-3 py-1 text-white" style="background: {{ $warna }};">
+                                    {{ ['Juara 1', 'Juara 2', 'Juara 3'][$i] }}
+                                </span>
+                                @if($r['logo_sekolah'])
+                                    <img src="{{ asset('storage/' . $r['logo_sekolah']) }}" class="h-16 w-16 rounded-full object-cover mt-4" style="border: 2px solid {{ $i === 0 ? 'var(--color-primary)' : 'var(--vt-line)' }};">
+                                @else
+                                    <span class="flex h-16 w-16 items-center justify-center rounded-full mt-4" style="background: var(--vt-paper); border: 1px solid var(--vt-line);"><i class="ti ti-school text-2xl" style="color: var(--vt-muted);"></i></span>
+                                @endif
+                                <h3 class="mt-3 text-[16px] font-bold text-center leading-tight line-clamp-2" style="color: var(--vt-ink);">{{ $r['display_name'] ?? $r['nama_sekolah'] }}</h3>
+                                <span class="font-mono font-bold text-[30px] tabular-nums mt-1" style="color: {{ $warna }};">{{ number_format($r['total_votes'] ?? 0, 0, ',', '.') }}</span>
+                                <span class="vt-kicker text-[10px]" style="color: var(--vt-muted);">suara</span>
+                            </div>
+                        @endforeach
                     </div>
 
-                    {{-- Rank 4+ --}}
+                    {{-- Peringkat 4+: daftar bar proporsional --}}
                     @if(count($rest) > 0)
-                        <div class="w-[560px] shrink-0 vt-card flex flex-col overflow-hidden">
-                            <div class="shrink-0 flex items-center gap-3 px-7 py-4" style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-                                <i class="ti ti-trophy text-sm" style="color: #f59e0b;"></i>
-                                <span class="text-[12px] font-bold uppercase tracking-[0.2em] text-white/40">Peringkat 4+</span>
+                        <div class="vt-panel flex-1 flex flex-col overflow-hidden min-h-0">
+                            <div class="shrink-0 flex items-center gap-3 px-7 py-3.5" style="border-bottom: 1px solid var(--vt-line);">
+                                <i class="ti ti-trophy text-base" style="color: var(--color-primary);"></i>
+                                <span class="vt-kicker text-[12px]" style="color: var(--vt-ink);">Peringkat 4+</span>
                             </div>
-                            <div class="flex-1 overflow-y-auto vt-scroll divide-y flex flex-col justify-center" style="border-color: rgba(255,255,255,0.04);">
+                            <div class="flex-1 overflow-y-auto vt-scroll divide-y flex flex-col justify-center" style="border-color: var(--vt-line);">
                                 @foreach($rest as $i => $reg)
                                     @php $pct = min((($reg['total_votes'] ?? 0) / $maxV) * 100, 100); @endphp
-                                    <div class="relative flex items-center gap-4 px-7 py-3.5 overflow-hidden vt-stagger" style="--i: {{ $i }};">
-                                        <div class="absolute inset-y-0 left-0 pointer-events-none vt-anim-bar" style="width: {{ $pct }}%; background: linear-gradient(90deg, rgba(var(--color-primary-rgb),0.12), transparent);"></div>
-                                        <span class="relative shrink-0 inline-flex items-center justify-center h-9 w-9 rounded-lg text-sm font-bold" style="background: rgba(255,255,255,.04); color: rgba(255,255,255,.4);">{{ $i + 4 }}</span>
-                                        <span class="relative flex-1 text-[16px] font-bold text-white/70 truncate">{{ $reg['display_name'] ?? $reg['nama_sekolah'] }}</span>
-                                        <span class="relative font-display font-extrabold text-[18px]" style="color: var(--color-primary);">{{ number_format($reg['total_votes'] ?? 0, 0, ',', '.') }}</span>
+                                    <div class="relative flex items-center gap-4 px-7 py-3 overflow-hidden vt-stagger" style="--i: {{ $i }};">
+                                        <div class="absolute inset-y-0 left-0 pointer-events-none vt-bar" style="width: {{ $pct }}%; background: rgba(var(--color-primary-rgb),0.08);"></div>
+                                        <span class="relative shrink-0 inline-flex items-center justify-center h-8 w-8 text-sm font-bold" style="border: 1px solid var(--vt-line); color: var(--vt-muted);">{{ $i + 4 }}</span>
+                                        <span class="relative flex-1 text-[17px] font-semibold truncate" style="color: var(--vt-ink);">{{ $reg['display_name'] ?? $reg['nama_sekolah'] }}</span>
+                                        <span class="relative font-mono font-bold text-[19px] tabular-nums" style="color: var(--color-primary);">{{ number_format($reg['total_votes'] ?? 0, 0, ',', '.') }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -296,10 +287,10 @@
             @else
                 <div class="flex-1 flex items-center justify-center">
                     <div class="text-center">
-                        <div class="flex h-20 w-20 items-center justify-center rounded-3xl mx-auto mb-5" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                            <i class="ti ti-heart-off text-3xl text-white/15"></i>
+                        <div class="flex h-20 w-20 items-center justify-center mx-auto mb-5 vt-panel" style="border-radius: 10px;">
+                            <i class="ti ti-heart-off text-3xl" style="color: var(--vt-line);"></i>
                         </div>
-                        <h3 class="font-display text-2xl font-bold text-white/40">Belum Ada Vote</h3>
+                        <h3 class="font-display text-2xl font-bold" style="color: var(--vt-muted);">Belum Ada Vote</h3>
                     </div>
                 </div>
             @endif
@@ -307,28 +298,28 @@
 
     {{-- ==================== MODE: CHAMPION ==================== --}}
     @elseif($mode === 'champion')
-        <main class="flex-1 flex flex-col items-center justify-center px-16 relative overflow-hidden"
-              style="background: radial-gradient(ellipse at 50% 25%, rgba(245,158,11,0.08) 0%, transparent 60%), #0a0d1a;">
+        <main class="flex-1 flex flex-col items-center justify-center px-16 relative overflow-hidden" style="background: var(--vt-paper);">
+            <div class="absolute top-0 inset-x-0 h-[6px]" style="background: var(--color-primary);"></div>
             @if($championRanking && count($championRanking) > 0)
                 <div class="text-center flex flex-col items-center gap-6 max-w-[1300px]">
                     @if($championName)
-                        <div class="text-[14px] font-bold uppercase tracking-[0.3em] vt-anim-up" style="color: #f59e0b;">
+                        <div class="vt-kicker text-[15px] vt-rise" style="color: var(--color-primary);">
                             <i class="ti ti-trophy-filled me-2"></i>{{ $championName }}
                         </div>
                     @endif
                     @if($championTitle)
-                        <div class="font-display font-extrabold text-white vt-anim-up" style="font-size: 72px; animation-delay: .1s; letter-spacing: -0.02em;">
+                        <div class="font-display font-extrabold vt-rise" style="font-size: 72px; animation-delay: .1s; letter-spacing: -0.02em; color: var(--vt-ink);">
                             {{ $championTitle }}
                         </div>
                     @endif
-                    <div class="relative vt-anim-up" style="animation-delay: .25s;">
-                        <i class="ti ti-crown-filled text-3xl absolute -top-7 left-1/2 -translate-x-1/2 z-10 vt-crown" style="color: #f59e0b;"></i>
+                    {{-- Pemenang: blok tinta dengan teks kertas --}}
+                    <div class="relative px-16 py-9 mt-2 vt-rise" style="background: var(--vt-ink); border-radius: 12px; animation-delay: .22s; box-shadow: 10px 10px 0 rgba(var(--color-primary-rgb),0.85);">
                         @if($championRanking[0]['nama'])
                             <div class="font-display font-extrabold text-white leading-tight" style="font-size: 52px;">
                                 {{ $championRanking[0]['nama'] }}
                             </div>
                         @endif
-                        <div class="font-mono text-[22px] font-bold mt-3" style="color: #f59e0b;">
+                        <div class="font-mono text-[22px] font-bold mt-3" style="color: #d9e2ff;">
                             Nilai {{ number_format($championRanking[0]['total'], 2, ',', '.') }}
                         </div>
                     </div>
@@ -337,18 +328,17 @@
                     @if(count($championRanking) > 1)
                         <div class="flex gap-6 mt-8 w-full justify-center">
                             @foreach(array_slice($championRanking, 1) as $i => $ps)
-                                @php $warna = $i === 0 ? '#94a3b8' : '#38bdf8'; @endphp
-                                <div class="vt-card px-10 py-5 flex items-center gap-5 vt-anim-up" style="animation-delay: {{ 0.4 + $i * 0.15 }}s; min-width: 380px;">
-                                    <span class="shrink-0 inline-flex items-center justify-center h-12 w-12 rounded-2xl text-lg font-extrabold" style="background: {{ $warna }}1f; color: {{ $warna }};">
+                                <div class="vt-panel px-10 py-5 flex items-center gap-5 vt-rise" style="animation-delay: {{ 0.4 + $i * 0.15 }}s; min-width: 380px; border-top: 4px solid {{ $i === 0 ? '#8a6d1f' : '#4d6a8a' }};">
+                                    <span class="shrink-0 inline-flex items-center justify-center h-12 w-12 text-lg font-extrabold text-white" style="background: {{ $i === 0 ? '#8a6d1f' : '#4d6a8a' }};">
                                         {{ $ps['rank'] }}
                                     </span>
                                     <div class="text-left flex-1 min-w-0">
                                         @if($ps['title'])
-                                            <div class="text-[11px] font-bold uppercase tracking-widest" style="color: {{ $warna }};">{{ $ps['title'] }}</div>
+                                            <div class="vt-kicker text-[11px]" style="color: var(--vt-muted);">{{ $ps['title'] }}</div>
                                         @endif
-                                        <div class="text-[20px] font-bold text-white/80 truncate">{{ $ps['nama'] }}</div>
+                                        <div class="text-[20px] font-bold truncate" style="color: var(--vt-ink);">{{ $ps['nama'] }}</div>
                                     </div>
-                                    <span class="font-display font-extrabold text-[22px]" style="color: {{ $warna }};">{{ number_format($ps['total'], 2, ',', '.') }}</span>
+                                    <span class="font-mono font-bold text-[22px] tabular-nums" style="color: var(--color-primary);">{{ number_format($ps['total'], 2, ',', '.') }}</span>
                                 </div>
                             @endforeach
                         </div>
@@ -356,23 +346,23 @@
                 </div>
             @else
                 <div class="text-center">
-                    <div class="flex h-20 w-20 items-center justify-center rounded-3xl mx-auto mb-5" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                        <i class="ti ti-trophy text-3xl text-white/15"></i>
+                    <div class="flex h-20 w-20 items-center justify-center mx-auto mb-5 vt-panel" style="border-radius: 10px;">
+                        <i class="ti ti-trophy text-3xl" style="color: var(--vt-line);"></i>
                     </div>
-                    <h3 class="font-display text-2xl font-bold text-white/40">Belum Ada Juara</h3>
-                    <p class="text-white/25 mt-2">Hasil akan tampil setelah kategori juara dipublikasikan.</p>
+                    <h3 class="font-display text-2xl font-bold" style="color: var(--vt-muted);">Belum Ada Juara</h3>
+                    <p class="mt-2" style="color: var(--vt-muted);">Hasil akan tampil setelah kategori juara dipublikasikan.</p>
                 </div>
             @endif
         </main>
 
     {{-- ==================== MODE: RUNDOWN ==================== --}}
     @elseif($mode === 'rundown')
-        <main class="flex-1 flex flex-col items-center justify-center px-20 overflow-hidden" wire:poll.30s="refreshData">
+        <main class="flex-1 flex flex-col items-center justify-center px-20 overflow-hidden" wire:poll.30s="refreshData" style="background: var(--vt-paper);">
             <div class="w-full max-w-[1400px]">
                 <div class="text-center mb-10">
-                    <div class="inline-flex items-center gap-3 px-6 py-2.5 rounded-full mb-5" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06);">
-                        <span class="h-2 w-2 rounded-full" style="background: var(--color-primary);"></span>
-                        <span class="text-[13px] font-bold uppercase tracking-[0.25em] text-white/40">Agenda <span x-text="date"></span></span>
+                    <div class="inline-flex items-center gap-3 px-6 py-2.5 mb-5" style="background: #fff; border: 1px solid var(--vt-line); border-radius: 999px;">
+                        <span class="h-2 w-2" style="background: var(--color-primary);"></span>
+                        <span class="vt-kicker text-[13px]" style="color: var(--vt-ink);">Agenda <span x-text="date"></span></span>
                     </div>
                 </div>
 
@@ -380,29 +370,29 @@
                     <div class="flex flex-col gap-3 vt-stagger">
                         @foreach($rundowns as $r)
                             @php $aktif = $rundownSekarang !== null && $r['id'] == $rundownSekarang; @endphp
-                            <div class="flex items-center gap-8 px-10 py-6 rounded-3xl transition-all"
-                                 style="{{ $aktif
-                                    ? 'background: rgba(var(--color-primary-rgb),0.1); border: 2px solid var(--color-primary); box-shadow: 0 10px 50px rgba(var(--color-primary-rgb),0.15);'
-                                    : 'background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);' }}">
-                                <span class="font-mono text-[28px] font-bold tabular-nums shrink-0" style="{{ $aktif ? 'color: var(--color-primary);' : 'color: rgba(255,255,255,.4);' }}">
+                            <div class="flex items-center gap-8 px-10 py-6 transition-all"
+                                 style="border-radius: 10px; {{ $aktif
+                                    ? 'background: var(--vt-ink); border: 1px solid var(--vt-ink);'
+                                    : 'background: #fff; border: 1px solid var(--vt-line);' }}">
+                                <span class="font-mono text-[28px] font-bold tabular-nums shrink-0" style="{{ $aktif ? 'color: #d9e2ff;' : 'color: var(--color-primary);' }}">
                                     {{ $r['start'] }}
                                 </span>
-                                <div class="h-10 w-px" style="background: rgba(255,255,255,0.08);"></div>
-                                <span class="flex-1 text-[26px] font-bold {{ $aktif ? 'text-white' : 'text-white/60' }}">{{ $r['title'] }}</span>
+                                <div class="h-10 w-px" style="{{ $aktif ? 'background: rgba(255,255,255,.2);' : 'background: var(--vt-line);' }}"></div>
+                                <span class="flex-1 text-[26px] font-bold" style="{{ $aktif ? 'color: #fff;' : 'color: #3d4048;' }}">{{ $r['title'] }}</span>
                                 @if($aktif)
-                                    <span class="shrink-0 inline-flex items-center gap-2.5 px-5 py-2 rounded-full text-[12px] font-bold uppercase tracking-[0.18em]" style="background: var(--color-primary); color: #fff;">
-                                        <span class="h-2 w-2 rounded-full bg-white vt-live-dot"></span> Sekarang
+                                    <span class="shrink-0 inline-flex items-center gap-2.5 px-5 py-2 text-[12px] font-bold uppercase tracking-[0.18em] text-white" style="background: var(--color-primary);">
+                                        <span class="h-2 w-2 bg-white vt-beat"></span> Sekarang
                                     </span>
                                 @endif
                             </div>
                         @endforeach
                     </div>
                 @else
-                    <div class="flex flex-col items-center gap-4 py-16">
-                        <div class="flex h-20 w-20 items-center justify-center rounded-3xl" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                            <i class="ti ti-folder-off text-3xl text-white/15"></i>
+                    <div class="flex flex-col items-center gap-5 py-16">
+                        <div class="flex h-20 w-20 items-center justify-center vt-panel" style="border-radius: 10px;">
+                            <i class="ti ti-folder-off text-3xl" style="color: var(--vt-line);"></i>
                         </div>
-                        <p class="text-white/30 text-lg">Rundown belum tersedia.</p>
+                        <p class="text-lg" style="color: var(--vt-muted);">Rundown belum tersedia.</p>
                     </div>
                 @endif
             </div>
@@ -410,31 +400,31 @@
 
     {{-- ==================== MODE: SPONSOR ==================== --}}
     @elseif($mode === 'sponsor')
-        <main class="flex-1 flex flex-col relative overflow-hidden"
-              style="background: radial-gradient(ellipse at 50% 40%, rgba(var(--color-primary-rgb),0.06) 0%, transparent 65%), #0a0d1a;">
+        <main class="flex-1 flex flex-col relative overflow-hidden" style="background: var(--vt-paper);">
+            <div class="absolute top-0 inset-x-0 h-[6px]" style="background: var(--color-primary);"></div>
             <div class="text-center pt-14 pb-8 shrink-0">
-                <span class="text-[15px] font-bold uppercase tracking-[0.35em] text-white/35">Didukung Oleh</span>
+                <span class="vt-kicker text-[15px]" style="color: var(--vt-muted);">Didukung Oleh</span>
             </div>
             @if(count($sponsorLogos) > 0)
                 <div class="flex-1 flex flex-col justify-center px-20 pb-14">
                     <div class="grid grid-cols-3 gap-8 vt-stagger">
                         @foreach($sponsorLogos as $i => $sp)
-                            <div class="vt-card flex items-center justify-center p-10 min-h-[200px]" style="--i: {{ $i % 6 }};">
+                            <div class="vt-panel flex items-center justify-center p-10 min-h-[200px]" style="--i: {{ $i % 6 }}; border-bottom: 4px solid var(--vt-ink);">
                                 @if(!empty($sp['logo']))
                                     <img src="{{ asset('storage/' . $sp['logo']) }}" alt="{{ $sp['name'] }}" class="max-h-[120px] max-w-full object-contain">
                                 @else
-                                    <span class="font-display text-[26px] font-extrabold text-white/55 text-center">{{ $sp['name'] }}</span>
+                                    <span class="font-display text-[26px] font-extrabold text-center" style="color: var(--vt-ink);">{{ $sp['name'] }}</span>
                                 @endif
                             </div>
                         @endforeach
                     </div>
                 </div>
             @else
-                <div class="flex-1 flex flex-col items-center justify-center gap-4">
-                    <div class="flex h-20 w-20 items-center justify-center rounded-3xl" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                        <i class="ti ti-speartwo text-3xl text-white/15"></i>
+                <div class="flex-1 flex flex-col items-center justify-center gap-5">
+                    <div class="flex h-20 w-20 items-center justify-center vt-panel" style="border-radius: 10px;">
+                        <i class="ti ti-heart-handshake text-3xl" style="color: var(--vt-line);"></i>
                     </div>
-                    <p class="text-white/30 text-lg">Belum ada sponsor &amp; media partner.</p>
+                    <p class="text-lg" style="color: var(--vt-muted);">Belum ada sponsor &amp; media partner.</p>
                 </div>
             @endif
         </main>
@@ -445,59 +435,60 @@
               x-init="setInterval(() => s = (s + 1) % 4, 30000)">
             {{-- Slide tiap 30 dtk: welcome/vote/rundown/sponsor diputar --}}
 
-            <div x-show="s === 0" class="absolute inset-0 flex flex-col" style="background: #0a0d1a;">
-                <div class="flex-1 flex flex-col items-center justify-center gap-7">
+            <div x-show="s === 0" class="absolute inset-0 flex flex-col" style="background: var(--vt-paper);">
+                <div class="absolute top-0 inset-x-0 h-[6px]" style="background: var(--color-primary);"></div>
+                <div class="flex-1 flex flex-col items-center justify-center gap-8">
                     @if($eventner->logo_event)
-                        <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="h-28 w-28 rounded-3xl object-cover border border-white/10">
+                        <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="h-28 w-28 rounded-xl object-cover" style="border: 1px solid var(--vt-ink); box-shadow: 6px 6px 0 rgba(var(--color-primary-rgb),0.9);">
                     @endif
-                    <h1 class="font-display font-extrabold text-white text-[64px] tracking-tight">{{ $eventner->nama_event }}</h1>
-                    <div class="font-mono text-3xl font-bold text-white/60" x-text="time"></div>
+                    <h1 class="font-display font-extrabold text-[64px] tracking-tight text-center px-20" style="color: var(--vt-ink);">{{ $eventner->nama_event }}</h1>
+                    <div class="font-mono text-3xl font-bold tabular-nums" style="color: var(--vt-muted);" x-text="time"></div>
                 </div>
             </div>
 
-            <div x-show="s === 1" x-cloak class="absolute inset-0 flex flex-col" style="background: #0a0d1a;" wire:poll.15s="refreshData">
+            <div x-show="s === 1" x-cloak class="absolute inset-0 flex flex-col" style="background: var(--vt-paper);" wire:poll.15s="refreshData">
                 <div class="flex-1 flex items-center justify-center gap-16 flex-col px-20">
                     <div class="text-center">
-                        <span class="text-[13px] font-bold uppercase tracking-[0.3em] text-white/35 block mb-4">Klasemen Vote</span>
-                        <span class="font-display font-extrabold text-white text-[96px] leading-none">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
-                        <span class="text-[13px] font-bold text-white/30 uppercase tracking-[0.2em] block mt-3">Total Suara</span>
+                        <span class="vt-kicker text-[13px] block mb-4" style="color: var(--vt-muted);">Klasemen Vote</span>
+                        <span class="font-mono font-bold text-[96px] tabular-nums leading-none" style="color: var(--vt-ink);">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
+                        <span class="vt-kicker text-[13px] block mt-3" style="color: var(--vt-muted);">Total Suara</span>
                     </div>
                     <div class="w-full max-w-[1200px] flex flex-col gap-2.5">
                         @foreach(array_slice($topVote, 0, 5) as $i => $reg)
-                            <div class="flex items-center gap-5 px-8 py-4 rounded-2xl" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                                <span class="shrink-0 inline-flex items-center justify-center h-11 w-11 rounded-xl text-base font-extrabold {{ $i === 0 ? '' : '' }}"
-                                      style="{{ $i === 0 ? 'background: #f59e0b; color: #231a02;' : 'background: rgba(255,255,255,.05); color: rgba(255,255,255,.5);' }}">
+                            <div class="flex items-center gap-5 px-8 py-4" style="background: #fff; border: 1px solid var(--vt-line); border-radius: 8px;">
+                                <span class="shrink-0 inline-flex items-center justify-center h-11 w-11 text-base font-extrabold"
+                                      style="{{ $i === 0 ? 'background: var(--color-primary); color: #fff;' : 'border: 1px solid var(--vt-line); color: var(--vt-muted);' }}">
                                     {{ $i + 1 }}
                                 </span>
-                                <span class="flex-1 text-[20px] font-bold text-white/80 truncate">{{ $reg['display_name'] ?? $reg['nama_sekolah'] }}</span>
-                                <span class="font-display font-extrabold text-[24px]" style="color: var(--color-primary);">{{ number_format($reg['total_votes'] ?? 0, 0, ',', '.') }}</span>
+                                <span class="flex-1 text-[20px] font-semibold truncate" style="color: var(--vt-ink);">{{ $reg['display_name'] ?? $reg['nama_sekolah'] }}</span>
+                                <span class="font-mono font-bold text-[24px] tabular-nums" style="color: var(--color-primary);">{{ number_format($reg['total_votes'] ?? 0, 0, ',', '.') }}</span>
                             </div>
                         @endforeach
                     </div>
                 </div>
             </div>
 
-            <div x-show="s === 2" x-cloak class="absolute inset-0 flex flex-col" style="background: #0a0d1a;">
+            <div x-show="s === 2" x-cloak class="absolute inset-0 flex flex-col" style="background: var(--vt-paper);">
                 <div class="flex-1 flex flex-col justify-center px-24 gap-3">
-                    <span class="text-[13px] font-bold uppercase tracking-[0.3em] text-white/35 text-center mb-6">Agenda</span>
+                    <span class="vt-kicker text-[13px] text-center mb-6" style="color: var(--vt-muted);">Agenda</span>
                     @foreach(array_slice($rundowns, 0, 6) as $r)
-                        <div class="flex items-center gap-6 px-8 py-4 rounded-2xl" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
-                            <span class="font-mono text-xl font-bold shrink-0" style="color: var(--color-primary);">{{ $r['start'] }}</span>
-                            <span class="text-[20px] font-bold text-white/70">{{ $r['title'] }}</span>
+                        <div class="flex items-center gap-6 px-8 py-4" style="background: #fff; border: 1px solid var(--vt-line); border-radius: 8px;">
+                            <span class="font-mono text-xl font-bold shrink-0 tabular-nums" style="color: var(--color-primary);">{{ $r['start'] }}</span>
+                            <span class="text-[20px] font-semibold" style="color: #3d4048;">{{ $r['title'] }}</span>
                         </div>
                     @endforeach
                 </div>
             </div>
 
-            <div x-show="s === 3" x-cloak class="absolute inset-0 flex flex-col" style="background: #0a0d1a;">
+            <div x-show="s === 3" x-cloak class="absolute inset-0 flex flex-col" style="background: var(--vt-paper);">
                 <div class="flex-1 flex items-center justify-center px-20">
                     <div class="grid grid-cols-2 gap-7 w-full">
                         @foreach(array_slice($sponsorLogos, 0, 4) as $sp)
-                            <div class="vt-card flex items-center justify-center p-10 min-h-[180px]">
+                            <div class="vt-panel flex items-center justify-center p-10 min-h-[180px]" style="border-bottom: 4px solid var(--vt-ink);">
                                 @if(!empty($sp['logo']))
                                     <img src="{{ asset('storage/' . $sp['logo']) }}" alt="{{ $sp['name'] }}" class="max-h-[110px] max-w-full object-contain">
                                 @else
-                                    <span class="font-display text-2xl font-extrabold text-white/55">{{ $sp['name'] }}</span>
+                                    <span class="font-display text-2xl font-extrabold" style="color: var(--vt-ink);">{{ $sp['name'] }}</span>
                                 @endif
                             </div>
                         @endforeach
@@ -506,24 +497,23 @@
             </div>
 
             {{-- Indikator slide --}}
-            <div class="shrink-0 flex items-center justify-center gap-2.5 py-4" style="border-top: 1px solid rgba(255,255,255,0.05);">
+            <div class="shrink-0 flex items-center justify-center gap-2.5 py-4" style="border-top: 1px solid var(--vt-line); background: #fff;">
                 <template x-for="(i) in 4" :key="i">
-                    <span class="rounded-full transition-all duration-500"
-                          :style="s === i - 1 ? 'width: 30px; height: 6px; background: var(--color-primary);' : 'width: 6px; height: 6px; background: rgba(255,255,255,.2);'"></span>
+                    <span class="transition-all duration-500"
+                          :style="s === i - 1 ? 'width: 30px; height: 6px; background: var(--color-primary);' : 'width: 6px; height: 6px; background: rgba(21,23,28,.2);'"></span>
                 </template>
             </div>
         </main>
     @endif
 
-    {{-- ==================== MARQUEE BAWAH (bukan welcome) ==================== --}}
+    {{-- ==================== MARQUEE BAWAH (bukan welcome/loop) ==================== --}}
     @if(!in_array($mode, ['welcome', 'loop']))
-        <footer class="shrink-0 flex items-center h-[56px] px-12 gap-8 relative overflow-hidden" style="background: #060912; border-top: 1px solid rgba(255,255,255,0.05);">
-            <div class="absolute top-0 inset-x-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(var(--color-primary-rgb),0.2), transparent);"></div>
+        <footer class="shrink-0 flex items-center h-[56px] px-12 gap-8 relative overflow-hidden" style="background: var(--vt-ink); border-top: 3px solid var(--color-primary);">
             @if(count($sponsorLogos) > 0)
                 <div class="flex-1 min-w-0 relative overflow-hidden">
                     <div class="flex items-center gap-14 whitespace-nowrap" style="animation: vt-marquee 40s linear infinite; width: max-content;">
                         @foreach(array_merge($sponsorLogos, $sponsorLogos) as $sp)
-                            <span class="text-[15px] font-bold text-white/45 flex items-center gap-2.5">
+                            <span class="text-[15px] font-semibold flex items-center gap-2.5" style="color: rgba(255,255,255,.72);">
                                 @if(!empty($sp['logo']))
                                     <img src="{{ asset('storage/' . $sp['logo']) }}" class="h-6 max-w-[70px] object-contain" alt=""> {{ $sp['name'] }}
                                 @else
@@ -536,7 +526,7 @@
             @else
                 <div class="flex-1"></div>
             @endif
-            <span class="shrink-0 text-[12px] font-medium" style="color: rgba(255,255,255,0.25);">Powered by <strong class="font-bold" style="color: rgba(255,255,255,0.4);">{{ app_name() }}</strong></span>
+            <span class="shrink-0 text-[12px] font-medium" style="color: rgba(255,255,255,.4);">Powered by <strong class="font-bold" style="color: rgba(255,255,255,.75);">{{ app_name() }}</strong></span>
         </footer>
     @endif
 </div>
