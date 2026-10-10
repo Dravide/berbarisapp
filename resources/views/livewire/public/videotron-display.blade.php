@@ -44,9 +44,9 @@
     .vt-bar { transform-origin: left; animation: vt-bar 1s cubic-bezier(.2,.8,.2,1) both; }
     .vt-stagger > * { animation: vt-rise .5s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i, 0) * 80ms); }
 
-    .vt-scroll::-webkit-scrollbar { width: 4px; }
-    .vt-scroll::-webkit-scrollbar-track { background: transparent; }
-    .vt-scroll::-webkit-scrollbar-thumb { background: rgba(21,23,28,.2); border-radius: 8px; }
+    /* Welcome: animasi digerakkan anime.js (script di mode welcome).
+       CSS hanya menyediakan bentuk dasar butir debunya. */
+    .vt-mote { position: absolute; bottom: -2%; width: 9px; height: 9px; background: var(--color-primary); opacity: 0; }
 
     /* Panel kertas: putih dengan garis rambut, sudut hampir tajam. */
     .vt-panel { background: #fff; border: 1px solid var(--vt-line); border-radius: 10px; }
@@ -102,28 +102,42 @@
     @if($mode === 'welcome')
         <main class="flex-1 flex flex-col items-center justify-center relative overflow-hidden vt-in" style="background: var(--vt-paper);">
             <div class="absolute top-0 inset-x-0 h-[6px]" style="background: var(--color-primary);"></div>
-            <div class="absolute inset-0 vt-grid-paper opacity-70"></div>
+            <div class="absolute inset-0 vt-grid-paper opacity-70 vt-drift"></div>
+
+            {{-- Debu tinta melayang naik — aksen ambien di atas kertas --}}
+            <div class="absolute inset-0 vt-grid-paper opacity-70" id="vt-paper"></div>
+
+            {{-- Debu tinta melayang — digerakkan anime.js, 14 butir --}}
+            <div class="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true" id="vt-motes">
+                @foreach(range(1, 14) as $i)
+                    <span class="vt-mote" style="left: {{ ($i * 7 + 3) % 100 }}%;"></span>
+                @endforeach
+            </div>
 
             <div class="relative z-10 flex flex-col items-center text-center gap-9 px-20">
-                @if($eventner->logo_event)
-                    <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt=""
-                         class="h-36 w-36 rounded-xl object-cover vt-rise"
-                         style="border: 1px solid var(--vt-ink); box-shadow: 8px 8px 0 rgba(var(--color-primary-rgb),0.9);">
-                @else
-                    <span class="flex h-36 w-36 items-center justify-center rounded-xl vt-rise" style="background: #fff; border: 1px solid var(--vt-ink); box-shadow: 8px 8px 0 rgba(var(--color-primary-rgb),0.9);">
-                        <i class="ti ti-calendar-event text-6xl" style="color: var(--color-primary);"></i>
-                    </span>
-                @endif
+                <div id="vt-logo-wrap" class="flex">
+                    @if($eventner->logo_event)
+                        <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt=""
+                             class="h-36 w-36 rounded-xl object-cover vt-rise"
+                             style="border: 1px solid var(--vt-ink); box-shadow: 8px 8px 0 rgba(var(--color-primary-rgb),0.9);">
+                    @else
+                        <span class="flex h-36 w-36 items-center justify-center rounded-xl vt-rise"
+                              style="background: #fff; border: 1px solid var(--vt-ink); box-shadow: 8px 8px 0 rgba(var(--color-primary-rgb),0.9);">
+                            <i class="ti ti-calendar-event text-6xl" style="color: var(--color-primary);"></i>
+                        </span>
+                    @endif
+                </div>
 
                 <div>
-                    <div class="flex items-center justify-center gap-5 mb-7 vt-rise" style="animation-delay: .12s;">
-                        <span class="h-px w-24" style="background: var(--vt-ink);"></span>
+                    <div class="flex items-center justify-center gap-5 mb-7" id="vt-sapa">
+                        <span class="h-px w-24" id="vt-garis-kiri" style="background: var(--vt-ink);"></span>
                         <span class="text-[18px] font-bold uppercase tracking-[0.4em]" style="color: var(--color-primary);">Selamat Datang</span>
-                        <span class="h-px w-24" style="background: var(--vt-ink);"></span>
+                        <span class="h-px w-24" id="vt-garis-kanan" style="background: var(--vt-ink);"></span>
                     </div>
                     <h1 class="font-display font-extrabold leading-[1.03] tracking-tight vt-rise" style="font-size: 100px; color: var(--vt-ink); animation-delay: .22s;">
                         {{ $eventner->nama_event }}
                     </h1>
+                    <div class="mt-6 mx-auto h-[3px] w-56" id="vt-underline" style="background: var(--color-primary); transform: scaleX(0);"></div>
                     @if($eventner->venue || $eventner->tanggal)
                         <p class="mt-8 text-[24px] font-medium flex items-center justify-center gap-6 vt-rise" style="color: #3d4048; animation-delay: .34s;">
                             @if($eventner->venue)
@@ -140,6 +154,85 @@
                 <div class="mt-5 font-mono text-[42px] font-bold tabular-nums tracking-tight vt-rise" style="color: var(--vt-ink); animation-delay: .45s;" x-text="time"></div>
             </div>
         </main>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                if (typeof anime !== 'function') return;
+
+                // Underline judul tumbuh sekali setelah judul muncul.
+                anime({
+                    targets: '#vt-underline',
+                    scaleX: [0, 1],
+                    opacity: [0, 1],
+                    duration: 900,
+                    delay: 650,
+                    easing: 'easeOutQuart',
+                });
+
+                // Garis pengapit sapaan tumbuh dari tengah, lalu berdenyut pelan terus-menerus.
+                ['#vt-garis-kiri', '#vt-garis-kanan'].forEach((sel, i) => {
+                    anime({
+                        targets: sel,
+                        scaleX: [0, 1],
+                        duration: 700,
+                        delay: 250 + i * 120,
+                        easing: 'easeOutQuart',
+                    });
+                    anime({
+                        targets: sel,
+                        opacity: [1, 0.35],
+                        direction: 'alternate',
+                        loop: true,
+                        duration: 2200,
+                        delay: 1200 + i * 120,
+                        easing: 'easeInOutSine',
+                    });
+                });
+
+                // Logo melayang pelan tanpa henti — offset shadow ikut mungging
+                // (dianimasikan via CSS var agar tak menimpa transform elemennya).
+                anime({
+                    targets: '#vt-logo-wrap',
+                    translateY: [-9, 0],
+                    direction: 'alternate',
+                    loop: true,
+                    duration: 3000,
+                    easing: 'easeInOutSine',
+                });
+
+                // Kertas grid bergeser sangat pelan — seolah digeser tangan.
+                anime({
+                    targets: '#vt-paper',
+                    backgroundPosition: ['0px 0px', '96px 96px'],
+                    duration: 60000,
+                    loop: true,
+                    easing: 'linear',
+                });
+
+                // Debu tinta: naik dari bawah, sedikit bergoyang, memudar — terus berulang.
+                document.querySelectorAll('#vt-motes .vt-mote').forEach((mote, i) => {
+                    const dur = 11000 + (i % 5) * 3200;
+                    anime({
+                        targets: mote,
+                        translateY: [-880, -960],
+                        translateX: [
+                            { value: (i % 2 ? 1 : -1) * (14 + (i % 4) * 12), duration: dur / 2, easing: 'easeInOutSine' },
+                            { value: 0, duration: dur / 2, easing: 'easeInOutSine' },
+                        ],
+                        opacity: [
+                            { value: 0.16, duration: dur * 0.2, easing: 'easeInQuad' },
+                            { value: 0.16, duration: dur * 0.55, easing: 'linear' },
+                            { value: 0, duration: dur * 0.25, easing: 'easeOutQuad' },
+                        ],
+                        duration: dur,
+                        delay: i * 900,
+                        loop: true,
+                        easing: 'linear',
+                    });
+                });
+            });
+        </script>
 
     {{-- ==================== MODE: DRAWING ==================== --}}
     @elseif($mode === 'drawing')
