@@ -95,7 +95,7 @@ class ErrorLogIndex extends Component
     {
         $query = ErrorLog::query()
             ->with(['user', 'eventner', 'resolver'])
-            ->latest();
+            ->orderByDesc('last_seen_at');
 
         if ($this->search !== '') {
             $needle = '%' . $this->search . '%';

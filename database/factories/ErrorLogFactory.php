@@ -23,6 +23,8 @@ class ErrorLogFactory extends Factory
 
         return [
             'code' => ErrorCode::generate(),
+            'occurrences' => 1,
+            'last_seen_at' => now(),
             'message' => fake()->sentence(8),
             'exception_class' => $exception,
             'file' => 'app/Livewire/Admin/Dashboard.php',

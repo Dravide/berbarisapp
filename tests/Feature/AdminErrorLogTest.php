@@ -142,7 +142,45 @@ class AdminErrorLogTest extends TestCase
         $this->assertSame('boom', $log->message);
         $this->assertSame(\RuntimeException::class, $log->exception_class);
         $this->assertSame(500, $log->http_status);
+        $this->assertSame(1, $log->occurrences);
         $this->assertDatabaseCount('error_logs', 1);
+    }
+
+    public function test_error_sama_pakai_kode_sama_dan_kejadian_bertambah()
+    {
+        $service = app(RecordsErrorReport::class);
+
+        // getFile()/getLine() menunjuk baris tempat `new` dipanggil, jadi
+        // kedua kejadian dibuat dari closure yang sama (baris sama).
+        $make = fn () => new \RuntimeException('boom');
+        $pertama = $service->record($make());
+        $kedua = $service->record($make());
+
+        // Error sama (class+file+line) = kode sama, satu baris, counter naik.
+        $this->assertSame($pertama->code, $kedua->code);
+        $this->assertSame($pertama->id, $kedua->id);
+        $this->assertSame(2, $kedua->occurrences);
+        $this->assertDatabaseCount('error_logs', 1);
+
+        $lain = $service->record(new \Error('beda', 7));
+        $this->assertNotSame($pertama->code, $lain->code);
+        $this->assertDatabaseCount('error_logs', 2);
+    }
+
+    public function test_error_selesai_muncul_lagi_terbuka_otomatis()
+    {
+        $service = app(RecordsErrorReport::class);
+        $admin = $this->admin();
+        $make = fn () => new \RuntimeException('boom');
+        $log = $service->record($make());
+        $log->update(['resolved_at' => now(), 'resolved_by' => $admin->id]);
+
+        $service->record($make());
+
+        $log->refresh();
+        $this->assertNull($log->resolved_at);
+        $this->assertNull($log->resolved_by);
+        $this->assertSame(2, $log->occurrences);
     }
 
     public function test_record_melewati_not_found_http()
@@ -177,7 +215,8 @@ class AdminErrorLogTest extends TestCase
     {
         config(['app.debug' => false]);
 
-        $this->getJson('/_test-500')
+        // Route beda dari test HTML supaya sidik jari (file:line) tak sama.
+        $this->getJson('/_test-500-json')
             ->assertStatus(500)
             ->assertJsonPath('error_code', ErrorLogModel::sole()->code);
     }

@@ -62,7 +62,8 @@
                             <thead class="bg-light">
                                 <tr>
                                     <th class="ps-4" width="130px">Kode</th>
-                                    <th width="120px">Waktu</th>
+                                    <th width="120px">Terakhir</th>
+                                    <th width="60px">×</th>
                                     <th width="70px">HTTP</th>
                                     <th width="170px">Exception</th>
                                     <th>Pesan</th>
@@ -78,8 +79,15 @@
                                             <code class="fw-bold" style="font-size: 13px;">{{ $log->code }}</code>
                                         </td>
                                         <td>
-                                            <span class="fw-semibold">{{ $log->created_at->format('d/m/Y') }}</span>
-                                            <br><span class="text-muted fs-2" title="{{ $log->created_at->format('H:i:s') }}">{{ $log->created_at->diffForHumans() }}</span>
+                                            <span class="fw-semibold">{{ $log->last_seen_at->format('d/m/Y') }}</span>
+                                            <br><span class="text-muted fs-2" title="{{ $log->last_seen_at->format('H:i:s') }}">{{ $log->last_seen_at->diffForHumans() }}</span>
+                                        </td>
+                                        <td>
+                                            @if(($log->occurrences ?? 1) > 1)
+                                                <span class="badge bg-danger-subtle text-danger" title="Terjadi {{ $log->occurrences }} kali">{{ $log->occurrences }}×</span>
+                                            @else
+                                                <span class="text-muted">1×</span>
+                                            @endif
                                         </td>
                                         <td>
                                             <span class="badge bg-danger-subtle text-danger">{{ $log->http_status ?? '—' }}</span>
@@ -150,8 +158,14 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <h6 class="text-muted fs-3 mb-1">Waktu</h6>
-                                <p class="fw-semibold mb-0">{{ $detail->created_at->translatedFormat('d F Y, H:i:s') }}
+                                <p class="fw-semibold mb-0">
+                                    Pertama: {{ $detail->created_at->translatedFormat('d F Y, H:i:s') }}
                                     <span class="text-muted fs-3">({{ $detail->created_at->diffForHumans() }})</span>
+                                </p>
+                                <p class="fw-semibold mb-0">
+                                    Terakhir: {{ $detail->last_seen_at->translatedFormat('d F Y, H:i:s') }}
+                                    <span class="text-muted fs-3">({{ $detail->last_seen_at->diffForHumans() }})</span>
+                                    <span class="badge bg-danger-subtle text-danger ms-1">Terjadi {{ $detail->occurrences }}×</span>
                                 </p>
                             </div>
                             <div class="col-md-6">

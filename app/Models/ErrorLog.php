@@ -18,6 +18,7 @@ class ErrorLog extends Model
 
     protected $fillable = [
         'code',
+        'occurrences',
         'message',
         'exception_class',
         'file',
@@ -38,8 +39,10 @@ class ErrorLog extends Model
     {
         return [
             'resolved_at' => 'datetime',
+            'last_seen_at' => 'datetime',
             'line' => 'integer',
             'http_status' => 'integer',
+            'occurrences' => 'integer',
         ];
     }
 

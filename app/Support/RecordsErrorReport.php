@@ -16,6 +16,12 @@ use Throwable;
 /**
  * Mencatat error tak terduga ke tabel error_logs dengan kode publik
  * (ER-XXXXXX). Dipanggil dari $exceptions->report() di bootstrap/app.php.
+ *
+ * Kode diturunkan dari sidik jari (class+file+line): error yang sama
+ * selalu memakai kode yang sama — baris lama dinaikkan `occurrences`
+ * dan konteksnya (url/user/ip/trace) diperbarui. Error yang sudah
+ * ditandai selesai tapi muncul lagi dibuka kembali otomatis.
+ *
  * Aman rekursif: jika DB mati, fallback error_log() — jangan pernah lempar.
  */
 class RecordsErrorReport
@@ -29,8 +35,6 @@ class RecordsErrorReport
         $request = app()->bound('request') ? app(Request::class) : null;
         $user = $request?->user();
 
-        // 419/404 yang lolos filter di atas tetap tak perlu baris sendiri;
-        // di sini hanya error benar-benar tak terduga.
         $data = [
             'message' => mb_substr($e->getMessage() !== '' ? $e->getMessage() : get_class($e), 0, 2000),
             'exception_class' => get_class($e),
@@ -44,14 +48,34 @@ class RecordsErrorReport
             'user_agent' => $request?->userAgent(),
             'ip' => $request?->ip(),
             'trace' => mb_substr($e->getTraceAsString(), 0, 60000),
-            'code' => $this->uniqueCode(),
         ];
 
         try {
-            return ErrorLog::create($data);
+            // Sidik jari = class + file + line: error yang sama dari tempat
+            // yang sama = satu baris, kode sama, occurrences bertambah.
+            $fingerprint = $data['exception_class'] . '|' . ($data['file'] ?? '-') . '|' . ($data['line'] ?? 0);
+            $code = ErrorCode::fromFingerprint($fingerprint);
+
+            $log = ErrorLog::firstOrNew(['code' => $code]);
+
+            if (! $log->exists) {
+                $log->code = $code;
+                $log->occurrences = 0;
+            } elseif ($log->resolved_at !== null) {
+                // Error yang dianggap selesai muncul lagi → aktif kembali.
+                $log->resolved_at = null;
+                $log->resolved_by = null;
+            }
+
+            $log->fill($data);
+            $log->occurrences = ($log->occurrences ?? 0) + 1;
+            $log->last_seen_at = now();
+            $log->save();
+
+            return $log;
         } catch (\Throwable $db) {
             // DB mati / migrasi belum jalan: jangan gagalkan pelaporan asli.
-            error_log('[error_logs] gagal mencatat ' . $data['code'] . ': ' . $db->getMessage());
+            error_log('[error_logs] gagal mencatat: ' . $db->getMessage());
             error_log('[error_logs] asli: ' . $e->getMessage());
 
             return null;
@@ -69,18 +93,5 @@ class RecordsErrorReport
             || $e instanceof NotFoundHttpException
             // HttpException di bawah 500 (403, 404 abort, dsb.) — alur normal.
             || ($e instanceof HttpExceptionInterface && $e->getStatusCode() < 500);
-    }
-
-    private function uniqueCode(): string
-    {
-        for ($i = 0; $i < 5; $i++) {
-            $code = ErrorCode::generate();
-
-            if (! ErrorLog::where('code', $code)->exists()) {
-                return $code;
-            }
-        }
-
-        return 'ER-' . time();
     }
 }
