@@ -25,6 +25,64 @@
     });
 </script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+<script>
+    // Helper ambien bersama semua mode overlay: stagger entri + angka count-up.
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof anime !== 'function') return;
+
+        // Semua panel masuk bergelombang dari bawah.
+        document.querySelectorAll('[data-ov-stagger]').forEach((grup) => {
+            anime({
+                targets: grup.children,
+                translateY: [14, 0],
+                opacity: [0, 1],
+                delay: anime.stagger(60),
+                duration: 560,
+                easing: 'easeOutQuart',
+            });
+        });
+
+        // Kartu komentar melayang pelan terus-menerus.
+        anime({
+            targets: '.ov-comment-float',
+            translateY: [0, -4],
+            direction: 'alternate',
+            delay: anime.stagger(150),
+            duration: 2400,
+            loop: true,
+            easing: 'easeInOutSine',
+        });
+
+        // Watermark logo di tengah chroma bernapas sangat pelan (hanya full mode).
+        anime({
+            targets: '#ov-chroma-logo',
+            opacity: [0.05, 0.09],
+            direction: 'alternate',
+            duration: 3400,
+            loop: true,
+            easing: 'easeInOutSine',
+        });
+
+        // Count-up angka (data-ov-count, opsional data-ov-decimals).
+        document.querySelectorAll('[data-ov-count]').forEach((el) => {
+            const target = parseFloat(el.dataset.ovCount) || 0;
+            const dec = parseInt(el.dataset.ovDecimals || '0', 10);
+            const obj = { v: 0 };
+            anime({
+                targets: obj,
+                v: target,
+                duration: 1300,
+                delay: 450,
+                easing: 'easeOutQuart',
+                update: () => {
+                    el.textContent = obj.v.toLocaleString('id-ID', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+                },
+            });
+        });
+    });
+</script>
+
 <style>
     /* ====== Tema editorial terang (satu keluarga dengan videotron):
                kertas gading + tinta + aksen tema, panel garis rambut. ====== */
@@ -60,6 +118,9 @@
     .leaderboard-scroll::-webkit-scrollbar { width: 4px; }
     .leaderboard-scroll::-webkit-scrollbar-track { background: transparent; }
     .leaderboard-scroll::-webkit-scrollbar-thumb { background: rgba(21,23,28,.2); border-radius: 8px; }
+
+    /* anime.js: kartu komentar diberi kelas penanda melayang; panel diberi
+       data-ov-stagger untuk entri bergelombang. CSS tetap sumber bentuk. */
 </style>
 
     {{-- ============================================================ --}}
@@ -173,10 +234,10 @@
         <main class="flex-1 flex flex-col justify-end items-stretch overflow-hidden" wire:poll.10s="refreshVoteData"
               style="background: var(--ov-paper);">
             @php $comsC = array_slice($overlayComments ?? [], 0, 6); @endphp
-            <div class="flex flex-col-reverse gap-2.5 px-16 pb-10 max-w-[1100px] w-full mx-auto">
+            <div class="flex flex-col-reverse gap-2.5 px-16 pb-10 max-w-[1100px] w-full mx-auto" data-ov-stagger>
                 @forelse($comsC as $c)
                     @php $initial = strtoupper(mb_substr(trim($c['voter_name'] ?? '?'), 0, 1)); @endphp
-                    <div class="flex items-start gap-3 px-5 py-3 self-start ov-panel ov-rise"
+                    <div class="flex items-start gap-3 px-5 py-3 self-start ov-panel ov-rise ov-comment-float"
                          style="border-left: 3px solid var(--color-primary); max-width: 720px; box-shadow: 5px 5px 0 rgba(var(--color-primary-rgb),0.85);">
                         <span class="shrink-0 flex items-center justify-center w-9 h-9 ov-num text-sm font-bold" style="background: var(--ov-ink); color: #fff;">{{ $initial }}</span>
                         <div class="flex-1 min-w-0">
@@ -214,12 +275,12 @@
                     </h1>
                 </div>
                 <div class="text-right shrink-0">
-                    <span class="ov-num text-3xl font-extrabold leading-none" style="color: var(--ov-ink);">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
+                    <span class="ov-num text-3xl font-extrabold leading-none" style="color: var(--ov-ink);" data-ov-count="{{ $totalVoteCount }}">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
                     <span class="ov-kicker text-[9px] block mt-1" style="color: var(--ov-muted);">Total Vote</span>
                 </div>
             </div>
 
-            <div class="flex-1 flex gap-5 overflow-hidden min-h-0">
+            <div class="flex-1 flex gap-5 overflow-hidden min-h-0" data-ov-stagger>
                 {{-- Kiri: Leaderboard top 10 kategori --}}
                 <div class="flex-1 flex flex-col overflow-hidden ov-panel">
                     <div class="shrink-0 flex items-center gap-2.5 px-6 py-3" style="border-bottom: 1px solid var(--ov-line);">
@@ -301,13 +362,13 @@
                 @if($overlaySetting?->show_vote_leaderboard)
                 <div class="flex-1 flex flex-col p-8 overflow-hidden" wire:poll.10s="refreshVoteData">
                     {{-- Stats bar --}}
-                    <div class="flex items-center justify-center gap-6 mb-8">
+                    <div class="flex items-center justify-center gap-6 mb-8" data-ov-stagger>
                         <div class="text-center px-10 py-4 ov-panel">
-                            <span class="ov-num text-2xl font-extrabold block" style="color: var(--ov-ink);">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
+                            <span class="ov-num text-2xl font-extrabold block" style="color: var(--ov-ink);" data-ov-count="{{ $totalVoteCount }}">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
                             <span class="ov-kicker text-[9px] block mt-1" style="color: var(--ov-muted);">Total Vote</span>
                         </div>
                         <div class="text-center px-10 py-4 ov-panel">
-                            <span class="ov-num text-2xl font-extrabold block" style="color: var(--ov-ink);">{{ count($topVoteData) }}</span>
+                            <span class="ov-num text-2xl font-extrabold block" style="color: var(--ov-ink);" data-ov-count="{{ count($topVoteData) }}">{{ count($topVoteData) }}</span>
                             <span class="ov-kicker text-[9px] block mt-1" style="color: var(--ov-muted);">Kontingen</span>
                         </div>
                     </div>
@@ -315,7 +376,7 @@
                     @if(count($topVoteData) > 0)
                         @php $maxV = $topVoteData[0]['total_votes'] ?? 1; @endphp
                         {{-- Top 3: tiga kartu sejajar, peringkat 1 ditonjolkan --}}
-                        <div class="flex items-stretch justify-center gap-5 flex-1 max-w-4xl mx-auto w-full mb-6">
+                        <div class="flex items-stretch justify-center gap-5 flex-1 max-w-4xl mx-auto w-full mb-6" data-ov-stagger>
                             @foreach(array_slice($topVoteData, 0, 3) as $i => $r)
                                 @php $votes = $r['total_votes'] ?? 0; @endphp
                                 <div class="flex-1 {{ $i === 0 ? 'max-w-[300px]' : 'max-w-[240px]' }} flex flex-col items-center justify-center p-6 ov-panel ov-rise"
@@ -368,7 +429,7 @@
                         <span class="h-1 w-4" style="background: var(--color-primary);"></span>
                         <span class="ov-kicker text-[10px]" style="color: var(--ov-muted);">Kegiatan</span>
                     </div>
-                    <div class="flex flex-col gap-2 flex-1 overflow-y-auto leaderboard-scroll">
+                    <div class="flex flex-col gap-2 flex-1 overflow-y-auto leaderboard-scroll" data-ov-stagger>
                         @forelse($categoriesData as $cat)
                             <div class="flex items-center justify-between px-4 py-3" style="background: #fff; border: 1px solid var(--ov-line); border-left: 3px solid var(--color-primary); border-radius: 8px;">
                                 <span class="text-xs font-medium truncate" style="color: #3d4048;">{{ $cat->full_name }}</span>
@@ -425,17 +486,17 @@
               style="background: var(--ov-paper);">
 
             {{-- Stats bar --}}
-            <div class="flex items-center justify-center gap-6 mb-8 shrink-0">
+            <div class="flex items-center justify-center gap-6 mb-8 shrink-0" data-ov-stagger>
                 <div class="text-center px-12 py-5 ov-panel">
-                    <span class="ov-num text-4xl font-extrabold block leading-none" style="color: var(--ov-ink);">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
+                    <span class="ov-num text-4xl font-extrabold block leading-none" style="color: var(--ov-ink);" data-ov-count="{{ $totalVoteCount }}">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
                     <span class="ov-kicker text-[10px] block mt-2" style="color: var(--ov-muted);">Total Vote</span>
                 </div>
                 <div class="text-center px-12 py-5 ov-panel">
-                    <span class="ov-num text-4xl font-extrabold block leading-none" style="color: var(--ov-ink);">{{ count($topVoteData) }}</span>
+                    <span class="ov-num text-4xl font-extrabold block leading-none" style="color: var(--ov-ink);" data-ov-count="{{ count($topVoteData) }}">{{ count($topVoteData) }}</span>
                     <span class="ov-kicker text-[10px] block mt-2" style="color: var(--ov-muted);">Kontingen</span>
                 </div>
                 <div class="text-center px-12 py-5 ov-panel">
-                    <span class="ov-num text-4xl font-extrabold block leading-none" style="color: var(--ov-ink);">{{ number_format($totalParticipants) }}</span>
+                    <span class="ov-num text-4xl font-extrabold block leading-none" style="color: var(--ov-ink);" data-ov-count="{{ $totalParticipants }}">{{ number_format($totalParticipants) }}</span>
                     <span class="ov-kicker text-[10px] block mt-2" style="color: var(--ov-muted);">Total Peserta</span>
                 </div>
             </div>
@@ -450,7 +511,7 @@
                         <span class="ov-kicker text-[10px]" style="color: var(--ov-ink);">Klasemen Vote</span>
                         <span class="h-1 w-1" style="background: var(--ov-amber);"></span>
                     </div>
-                    <div class="flex items-stretch justify-center gap-5 px-6 py-6">
+                    <div class="flex items-stretch justify-center gap-5 px-6 py-6" data-ov-stagger>
                         @foreach([1, 0, 2] as $posisi)
                             @php
                                 $r = $topVoteData[$posisi] ?? null;
@@ -530,7 +591,7 @@
             </div>
 
             @if(count($categoriesData) > 0)
-                <div class="grid grid-cols-2 gap-5 w-full max-w-[1500px] mb-10">
+                <div class="grid grid-cols-2 gap-5 w-full max-w-[1500px] mb-10" data-ov-stagger>
                     @foreach($categoriesData as $cat)
                         <div class="relative flex items-center gap-6 px-8 py-6 bg-white ov-stagger" style="--i: {{ $loop->index % 8 }}; border: 1px solid var(--ov-line); border-radius: 10px;">
                             <div class="relative flex-1 min-w-0">
@@ -540,19 +601,19 @@
                                 @endif
                             </div>
                             <div class="relative shrink-0 text-right">
-                                <span class="ov-num text-3xl font-extrabold" style="color: var(--color-primary);">{{ number_format($cat->registrations_count ?? 0) }}</span>
+                                <span class="ov-num text-3xl font-extrabold" style="color: var(--color-primary);" data-ov-count="{{ $cat->registrations_count ?? 0 }}">{{ number_format($cat->registrations_count ?? 0) }}</span>
                                 <span class="ov-kicker text-[9px] block mt-0.5" style="color: var(--ov-muted);">Kontingen</span>
                             </div>
                         </div>
                     @endforeach
                 </div>
 
-                <div class="inline-flex items-center gap-5 px-12 py-6" style="background: var(--ov-ink); border-radius: 10px; box-shadow: 8px 8px 0 rgba(var(--color-primary-rgb),0.85);">
+                <div class="inline-flex items-center gap-5 px-12 py-6" data-ov-stagger style="background: var(--ov-ink); border-radius: 10px; box-shadow: 8px 8px 0 rgba(var(--color-primary-rgb),0.85);">
                     <span class="flex h-12 w-12 items-center justify-center" style="background: rgba(255,255,255,0.12); color: #fff;">
                         <i class="ti ti-users text-xl"></i>
                     </span>
                     <div>
-                        <span class="ov-num font-extrabold text-4xl block leading-none text-white">{{ number_format($totalParticipants) }}</span>
+                        <span class="ov-num font-extrabold text-4xl block leading-none text-white" data-ov-count="{{ $totalParticipants }}">{{ number_format($totalParticipants) }}</span>
                         <span class="ov-kicker text-[10px] block mt-1" style="color: rgba(255,255,255,0.6);">Total Peserta</span>
                     </div>
                 </div>
@@ -590,6 +651,7 @@
                     $maxVotes = max($top7[0]['total_votes'] ?? 1, 1);
                 @endphp
                 <div class="flex-1 overflow-y-auto p-3 gap-1.5 flex flex-col leaderboard-scroll"
+                     data-ov-stagger
                      x-data="{ h: -1 }"
                      x-init="setInterval(() => h = (h + 1) % {{ max(count($top7), 1) }}, 5000)">
                     @forelse($top7 as $i => $reg)
@@ -599,7 +661,7 @@
                             $pct = min(round(($votes / $maxVotes) * 100), 100);
                             $medal = $rank === 1 ? '#b45309' : ($rank === 2 ? '#8a6d1f' : ($rank === 3 ? '#4d6a8a' : null));
                         @endphp
-                        <div class="relative overflow-hidden transition-colors duration-500"
+                        <div class="relative overflow-hidden transition-colors duration-500 ov-comment-float"
                              :style="h === {{ $i }}
                                 ? 'background: rgba(var(--color-primary-rgb), 0.08); border: 1px solid var(--color-primary);'
                                 : 'background: {{ $i % 2 === 0 ? '#ffffff' : 'var(--ov-paper)' }}; border: 1px solid var(--ov-line);'">
@@ -644,13 +706,13 @@
             </aside>
 
             {{-- CENTER: Greenscreen (chroma key #00FF00 untuk OBS — jangan ganti warna) --}}
-            <div class="flex-1 bg-[#00FF00] relative overflow-hidden">
+            <div class="flex-1 bg-[#00FF00] relative overflow-hidden" id="ov-chroma">
                 <div class="absolute top-6 left-6 w-14 h-14 border-t border-l" style="border-color: rgba(255,255,255,0.75);"></div>
                 <div class="absolute top-6 right-6 w-14 h-14 border-t border-r" style="border-color: rgba(255,255,255,0.75);"></div>
                 <div class="absolute bottom-6 left-6 w-14 h-14 border-b border-l" style="border-color: rgba(255,255,255,0.75);"></div>
                 <div class="absolute bottom-6 right-6 w-14 h-14 border-b border-r" style="border-color: rgba(255,255,255,0.75);"></div>
                 @if($eventner->logo_event)
-                    <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-20 w-20 opacity-[0.06] rounded-md object-cover">
+                    <img src="{{ asset('storage/' . $eventner->logo_event) }}" id="ov-chroma-logo" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-20 w-20 opacity-[0.06] rounded-md object-cover">
                 @endif
             </div>
 
@@ -668,7 +730,7 @@
                 </div>
 
                 @php $coms3 = array_slice($this->overlayComments ?? [], 0, 5); @endphp
-                <div class="flex-1 overflow-y-auto p-4 space-y-3 leaderboard-scroll">
+                <div class="flex-1 overflow-y-auto p-4 space-y-3 leaderboard-scroll" data-ov-stagger>
                     @forelse($coms3 as $c)
                         @php $initial = strtoupper(mb_substr(trim($c['voter_name'] ?? '?'), 0, 1)); @endphp
                         <div class="flex items-start gap-2.5">

@@ -22,6 +22,30 @@
     });
 </script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+<script>
+    // Count-up angka — dipakai semua mode lewat atribut data-vt-count
+    // (data-vt-decimals untuk nilai desimal, contoh nilai juri).
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof anime !== 'function') return;
+        document.querySelectorAll('[data-vt-count]').forEach((el) => {
+            const target = parseFloat(el.dataset.vtCount) || 0;
+            const dec = parseInt(el.dataset.vtDecimals || '0', 10);
+            const obj = { v: 0 };
+            anime({
+                targets: obj,
+                v: target,
+                duration: 1400,
+                delay: 550,
+                easing: 'easeOutQuart',
+                update: () => {
+                    el.textContent = obj.v.toLocaleString('id-ID', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+                },
+            });
+        });
+    });
+</script>
+
 <style>
     /* ====== Tema editorial terang: kertas gading + tinta + aksen tema. ====== */
     .videotron-root {
@@ -47,6 +71,10 @@
     /* Welcome: animasi digerakkan anime.js (script di mode welcome).
        CSS hanya menyediakan bentuk dasar butir debunya. */
     .vt-mote { position: absolute; bottom: -2%; width: 9px; height: 9px; background: var(--color-primary); opacity: 0; }
+
+    /* Mode anime.js lain: baris dianimasikan script mode, mulai tersembunyi
+       lalu anime.js memunculkannya (fallback: tanpa JS tetap terlihat —
+       opacity diset script, bukan CSS). */
 
     /* Panel kertas: putih dengan garis rambut, sudut hampir tajam. */
     .vt-panel { background: #fff; border: 1px solid var(--vt-line); border-radius: 10px; }
@@ -247,7 +275,7 @@
                             <span class="vt-kicker text-[13px]" style="color: var(--vt-ink);">Urutan Tampil</span>
                             <span class="ml-auto text-[12px] font-bold px-3 py-1" style="background: rgba(var(--color-primary-rgb),0.1); color: var(--color-primary);">{{ count($drawingQueue) }} kontingen menunggu</span>
                         </div>
-                        <div class="flex-1 overflow-y-auto vt-scroll divide-y" style="border-color: var(--vt-line);">
+                        <div class="flex-1 overflow-y-auto vt-scroll divide-y" id="vt-drawing-queue" style="border-color: var(--vt-line);">
                             @foreach($drawingQueue as $i => $reg)
                                 <div class="relative flex items-center gap-5 px-8 py-4 vt-stagger" style="--i: {{ $i % 8 }}; {{ $i === 0 ? 'background: rgba(var(--color-primary-rgb),0.06); box-shadow: inset 5px 0 0 var(--color-primary);' : '' }}">
                                     <span class="shrink-0 inline-flex items-center justify-center h-11 w-11 text-lg font-extrabold"
@@ -305,6 +333,32 @@
             @endif
         </main>
 
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                if (typeof anime !== 'function') return;
+
+                // Baris antrean masuk bergelombang dari bawah.
+                anime({
+                    targets: '#vt-drawing-queue > div',
+                    translateY: [18, 0],
+                    opacity: [0, 1],
+                    delay: anime.stagger(70),
+                    duration: 600,
+                    easing: 'easeOutQuart',
+                });
+
+                // Baris pertama berdenyut pelan — penanda "berikutnya".
+                anime({
+                    targets: '#vt-drawing-queue > div:first-child',
+                    scale: [1, 1.008, 1],
+                    duration: 2400,
+                    loop: true,
+                    easing: 'easeInOutSine',
+                });
+            });
+        </script>
+
     {{-- ==================== MODE: VOTE ==================== --}}
     @elseif($mode === 'vote')
         <main class="flex-1 flex flex-col px-14 py-8 overflow-hidden" wire:poll.10s="refreshData">
@@ -315,12 +369,12 @@
             </div>
             <div class="flex items-center justify-center gap-14 mb-7 shrink-0">
                 <div class="text-center">
-                    <span class="font-mono text-[52px] font-bold tabular-nums leading-none" style="color: var(--vt-ink);">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
+                    <span class="font-mono text-[52px] font-bold tabular-nums leading-none" style="color: var(--vt-ink);" data-vt-count="{{ $totalVoteCount }}">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
                     <span class="vt-kicker text-[11px] block mt-2" style="color: var(--vt-muted);">Total Vote</span>
                 </div>
                 <div class="h-14 w-px" style="background: var(--vt-line);"></div>
                 <div class="text-center">
-                    <span class="font-mono text-[52px] font-bold tabular-nums leading-none" style="color: var(--vt-ink);">{{ count($topVote) }}</span>
+                    <span class="font-mono text-[52px] font-bold tabular-nums leading-none" style="color: var(--vt-ink);" data-vt-count="{{ count($topVote) }}">{{ count($topVote) }}</span>
                     <span class="vt-kicker text-[11px] block mt-2" style="color: var(--vt-muted);">Kontingen</span>
                 </div>
             </div>
@@ -332,7 +386,7 @@
                     $maxV = max($topVote[0]['total_votes'] ?? 1, 1);
                 @endphp
 
-                <div class="flex-1 flex flex-col gap-6 min-h-0">
+                <div class="flex-1 flex flex-col gap-6 min-h-0" id="vt-vote-body">
                     {{-- Papan peringkat 1-3: baris utama + dua panel --}}
                     <div class="flex gap-6 shrink-0">
                         @foreach($top3 as $i => $r)
@@ -358,7 +412,7 @@
 
                     {{-- Peringkat 4+: daftar bar proporsional --}}
                     @if(count($rest) > 0)
-                        <div class="vt-panel flex-1 flex flex-col overflow-hidden min-h-0">
+                        <div class="vt-panel flex-1 flex flex-col overflow-hidden min-h-0" id="vt-vote-rest">
                             <div class="shrink-0 flex items-center gap-3 px-7 py-3.5" style="border-bottom: 1px solid var(--vt-line);">
                                 <i class="ti ti-trophy text-base" style="color: var(--color-primary);"></i>
                                 <span class="vt-kicker text-[12px]" style="color: var(--vt-ink);">Peringkat 4+</span>
@@ -389,6 +443,33 @@
             @endif
         </main>
 
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                if (typeof anime !== 'function') return;
+
+                // Kartu podium naik bergelombang (CSS vt-rise sudah memainkan fade,
+                // di sini hanya pelan pelan melayang terus-menerus agar hidup).
+                anime({
+                    targets: '#vt-vote-body > div:first-child > div',
+                    translateY: [0, -6],
+                    direction: 'alternate',
+                    delay: anime.stagger(160),
+                    duration: 2600,
+                    loop: true,
+                    easing: 'easeInOutSine',
+                });
+
+                // Bar proporsional peringkat 4+ mengembang dari nol.
+                anime({
+                    targets: '#vt-vote-rest .vt-bar',
+                    scaleX: [0, 1],
+                    delay: 500,
+                    duration: 900,
+                    easing: 'easeOutQuart',
+                });
+            });
+        </script>
+
     {{-- ==================== MODE: CHAMPION ==================== --}}
     @elseif($mode === 'champion')
         <main class="flex-1 flex flex-col items-center justify-center px-16 relative overflow-hidden" style="background: var(--vt-paper);">
@@ -406,20 +487,20 @@
                         </div>
                     @endif
                     {{-- Pemenang: blok tinta dengan teks kertas --}}
-                    <div class="relative px-16 py-9 mt-2 vt-rise" style="background: var(--vt-ink); border-radius: 12px; animation-delay: .22s; box-shadow: 10px 10px 0 rgba(var(--color-primary-rgb),0.85);">
+                    <div class="relative px-16 py-9 mt-2 vt-rise" id="vt-champion-block" style="background: var(--vt-ink); border-radius: 12px; animation-delay: .22s; box-shadow: 10px 10px 0 rgba(var(--color-primary-rgb),0.85);">
                         @if($championRanking[0]['nama'])
                             <div class="font-display font-extrabold text-white leading-tight" style="font-size: 52px;">
                                 {{ $championRanking[0]['nama'] }}
                             </div>
                         @endif
-                        <div class="font-mono text-[22px] font-bold mt-3" style="color: #d9e2ff;">
+                        <div class="font-mono text-[22px] font-bold mt-3" style="color: #d9e2ff;" data-vt-count="{{ $championRanking[0]['total'] }}" data-vt-decimals="2">
                             Nilai {{ number_format($championRanking[0]['total'], 2, ',', '.') }}
                         </div>
                     </div>
 
                     {{-- Runner-up --}}
                     @if(count($championRanking) > 1)
-                        <div class="flex gap-6 mt-8 w-full justify-center">
+                        <div class="flex gap-6 mt-8 w-full justify-center" id="vt-champion-runners">
                             @foreach(array_slice($championRanking, 1) as $i => $ps)
                                 <div class="vt-panel px-10 py-5 flex items-center gap-5 vt-rise" style="animation-delay: {{ 0.4 + $i * 0.15 }}s; min-width: 380px; border-top: 4px solid {{ $i === 0 ? '#8a6d1f' : '#4d6a8a' }};">
                                     <span class="shrink-0 inline-flex items-center justify-center h-12 w-12 text-lg font-extrabold text-white" style="background: {{ $i === 0 ? '#8a6d1f' : '#4d6a8a' }};">
@@ -448,6 +529,33 @@
             @endif
         </main>
 
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                if (typeof anime !== 'function') return;
+
+                // Blok juara bernapas pelan — bayangan offset ikut memberi ritme.
+                anime({
+                    targets: '#vt-champion-block',
+                    translateY: [0, -7],
+                    direction: 'alternate',
+                    duration: 2800,
+                    loop: true,
+                    easing: 'easeInOutSine',
+                });
+
+                // Kartu runner-up melayang bergantian dengan jeda.
+                anime({
+                    targets: '#vt-champion-runners > div',
+                    translateY: [0, -5],
+                    direction: 'alternate',
+                    delay: anime.stagger(220),
+                    duration: 2400,
+                    loop: true,
+                    easing: 'easeInOutSine',
+                });
+            });
+        </script>
+
     {{-- ==================== MODE: RUNDOWN ==================== --}}
     @elseif($mode === 'rundown')
         <main class="flex-1 flex flex-col items-center justify-center px-20 overflow-hidden" wire:poll.30s="refreshData" style="background: var(--vt-paper);">
@@ -460,7 +568,7 @@
                 </div>
 
                 @if(count($rundowns) > 0)
-                    <div class="flex flex-col gap-3 vt-stagger">
+                    <div class="flex flex-col gap-3 vt-stagger" id="vt-rundown-list">
                         @foreach($rundowns as $r)
                             @php $aktif = $rundownSekarang !== null && $r['id'] == $rundownSekarang; @endphp
                             <div class="flex items-center gap-8 px-10 py-6 transition-all"
@@ -491,6 +599,22 @@
             </div>
         </main>
 
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                if (typeof anime !== 'function') return;
+
+                // Baris agenda masuk bergelombang.
+                anime({
+                    targets: '#vt-rundown-list > div',
+                    translateX: [-24, 0],
+                    opacity: [0, 1],
+                    delay: anime.stagger(90),
+                    duration: 650,
+                    easing: 'easeOutQuart',
+                });
+            });
+        </script>
+
     {{-- ==================== MODE: SPONSOR ==================== --}}
     @elseif($mode === 'sponsor')
         <main class="flex-1 flex flex-col relative overflow-hidden" style="background: var(--vt-paper);">
@@ -500,7 +624,7 @@
             </div>
             @if(count($sponsorLogos) > 0)
                 <div class="flex-1 flex flex-col justify-center px-20 pb-14">
-                    <div class="grid grid-cols-3 gap-8 vt-stagger">
+                    <div class="grid grid-cols-3 gap-8 vt-stagger" id="vt-sponsor-grid">
                         @foreach($sponsorLogos as $i => $sp)
                             <div class="vt-panel flex items-center justify-center p-10 min-h-[200px]" style="--i: {{ $i % 6 }}; border-bottom: 4px solid var(--vt-ink);">
                                 @if(!empty($sp['logo']))
@@ -522,13 +646,30 @@
             @endif
         </main>
 
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                if (typeof anime !== 'function') return;
+
+                // Kartu sponsor melayang pelan berselang-seling — hidup tanpa riuh.
+                anime({
+                    targets: '#vt-sponsor-grid > div',
+                    translateY: [0, -7],
+                    direction: 'alternate',
+                    delay: anime.stagger(180),
+                    duration: 2600,
+                    loop: true,
+                    easing: 'easeInOutSine',
+                });
+            });
+        </script>
+
     {{-- ==================== MODE: LOOP ==================== --}}
     @elseif($mode === 'loop')
         <main class="flex-1 relative overflow-hidden" x-data="{ s: 0 }"
-              x-init="setInterval(() => s = (s + 1) % 4, 30000)">
+              x-init="init = () => {}; setInterval(() => { s = (s + 1) % 4; vtLoopEnter(s); }, 30000); vtLoopEnter(0);">
             {{-- Slide tiap 30 dtk: welcome/vote/rundown/sponsor diputar --}}
 
-            <div x-show="s === 0" class="absolute inset-0 flex flex-col" style="background: var(--vt-paper);">
+            <div x-show="s === 0" id="vt-loop-slide-0" class="absolute inset-0 flex flex-col" style="background: var(--vt-paper);">
                 <div class="absolute top-0 inset-x-0 h-[6px]" style="background: var(--color-primary);"></div>
                 <div class="flex-1 flex flex-col items-center justify-center gap-8">
                     @if($eventner->logo_event)
@@ -539,14 +680,14 @@
                 </div>
             </div>
 
-            <div x-show="s === 1" x-cloak class="absolute inset-0 flex flex-col" style="background: var(--vt-paper);" wire:poll.15s="refreshData">
+            <div x-show="s === 1" x-cloak id="vt-loop-slide-1" class="absolute inset-0 flex flex-col" style="background: var(--vt-paper);" wire:poll.15s="refreshData">
                 <div class="flex-1 flex items-center justify-center gap-16 flex-col px-20">
                     <div class="text-center">
                         <span class="vt-kicker text-[13px] block mb-4" style="color: var(--vt-muted);">Klasemen Vote</span>
-                        <span class="font-mono font-bold text-[96px] tabular-nums leading-none" style="color: var(--vt-ink);">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
+                        <span class="font-mono font-bold text-[96px] tabular-nums leading-none" style="color: var(--vt-ink);" data-vt-count="{{ $totalVoteCount }}">{{ number_format($totalVoteCount, 0, ',', '.') }}</span>
                         <span class="vt-kicker text-[13px] block mt-3" style="color: var(--vt-muted);">Total Suara</span>
                     </div>
-                    <div class="w-full max-w-[1200px] flex flex-col gap-2.5">
+                    <div class="w-full max-w-[1200px] flex flex-col gap-2.5" data-vt-slide-item>
                         @foreach(array_slice($topVote, 0, 5) as $i => $reg)
                             <div class="flex items-center gap-5 px-8 py-4" style="background: #fff; border: 1px solid var(--vt-line); border-radius: 8px;">
                                 <span class="shrink-0 inline-flex items-center justify-center h-11 w-11 text-base font-extrabold"
@@ -561,8 +702,8 @@
                 </div>
             </div>
 
-            <div x-show="s === 2" x-cloak class="absolute inset-0 flex flex-col" style="background: var(--vt-paper);">
-                <div class="flex-1 flex flex-col justify-center px-24 gap-3">
+            <div x-show="s === 2" x-cloak id="vt-loop-slide-2" class="absolute inset-0 flex flex-col" style="background: var(--vt-paper);">
+                <div class="flex-1 flex flex-col justify-center px-24 gap-3" data-vt-slide-item>
                     <span class="vt-kicker text-[13px] text-center mb-6" style="color: var(--vt-muted);">Agenda</span>
                     @foreach(array_slice($rundowns, 0, 6) as $r)
                         <div class="flex items-center gap-6 px-8 py-4" style="background: #fff; border: 1px solid var(--vt-line); border-radius: 8px;">
@@ -573,9 +714,9 @@
                 </div>
             </div>
 
-            <div x-show="s === 3" x-cloak class="absolute inset-0 flex flex-col" style="background: var(--vt-paper);">
+            <div x-show="s === 3" x-cloak id="vt-loop-slide-3" class="absolute inset-0 flex flex-col" style="background: var(--vt-paper);">
                 <div class="flex-1 flex items-center justify-center px-20">
-                    <div class="grid grid-cols-2 gap-7 w-full">
+                    <div class="grid grid-cols-2 gap-7 w-full" data-vt-slide-item>
                         @foreach(array_slice($sponsorLogos, 0, 4) as $sp)
                             <div class="vt-panel flex items-center justify-center p-10 min-h-[180px]" style="border-bottom: 4px solid var(--vt-ink);">
                                 @if(!empty($sp['logo']))
@@ -597,6 +738,27 @@
                 </template>
             </div>
         </main>
+
+        <script>
+            // Transisi konten saat tiap slide loop muncul. Slide disembunyikan
+            // Alpine (x-show), jadi anime.js memainkan ulang animasinya setiap
+            // pergantian slide lewat vtLoopEnter(index).
+            function vtLoopEnter(idx) {
+                if (typeof anime !== 'function') return;
+                const slide = document.getElementById('vt-loop-slide-' + idx);
+                if (!slide) return;
+                const anak = slide.querySelectorAll('h1, img, .vt-panel, .vt-kicker, .font-mono, [data-vt-slide-item]');
+                anime({
+                    targets: anak,
+                    translateY: [16, 0],
+                    opacity: [0, 1],
+                    delay: anime.stagger(70),
+                    duration: 620,
+                    easing: 'easeOutQuart',
+                });
+            }
+            document.addEventListener('DOMContentLoaded', () => vtLoopEnter(0));
+        </script>
     @endif
 
     {{-- ==================== MARQUEE BAWAH (bukan welcome/loop) ==================== --}}
