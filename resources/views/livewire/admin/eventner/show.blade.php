@@ -390,15 +390,21 @@
                                                 </td>
                                                 <td>
                                                     {{ $activity->description }}
-                                                    @if($activity->properties->get('old') || $activity->properties->get('attributes'))
+                                                    @php
+                                                        // Nilai properti bisa berupa array (kolom
+                                                        // yang di-cast, mis. score_options) —
+                                                        // json-encode sebelum interpolasi.
+                                                        $formatNilai = fn ($v) => is_array($v) ? json_encode($v, JSON_UNESCAPED_UNICODE) : $v;
+                                                        $old = collect($activity->properties->get('old') ?? [])
+                                                            ->map(fn ($v, $k) => $k.': '.$formatNilai($v));
+                                                        $new = collect($activity->properties->get('attributes') ?? [])
+                                                            ->map(fn ($v, $k) => $k.': '.$formatNilai($v));
+                                                    @endphp
+                                                    @if($old->isNotEmpty() || $new->isNotEmpty())
                                                         <br><span class="text-muted fs-2">
-                                                            @if($activity->properties->get('old'))
-                                                                Lama: {{ collect($activity->properties->get('old'))->map(fn ($v, $k) => "{$k}: {$v}")->implode(', ') }}
-                                                            @endif
-                                                            @if($activity->properties->get('attributes'))
-                                                                @if($activity->properties->get('old')) &bull; @endif
-                                                                Baru: {{ collect($activity->properties->get('attributes'))->map(fn ($v, $k) => "{$k}: {$v}")->implode(', ') }}
-                                                            @endif
+                                                            @if($old->isNotEmpty()) Lama: {{ $old->implode(', ') }} @endif
+                                                            @if($old->isNotEmpty() && $new->isNotEmpty()) &bull; @endif
+                                                            @if($new->isNotEmpty()) Baru: {{ $new->implode(', ') }} @endif
                                                         </span>
                                                     @endif
                                                 </td>

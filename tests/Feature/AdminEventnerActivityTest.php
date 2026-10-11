@@ -87,6 +87,32 @@ class AdminEventnerActivityTest extends TestCase
             ->assertSee('SMA Uji Coba');
     }
 
+    public function test_nilai_properti_berupa_array_tidak_bikin_error()
+    {
+        $eventner = $this->eventnerWithOwner();
+        $kategori = \App\Models\AssessmentCategory::create([
+            'eventner_id' => $eventner->id,
+            'name' => 'Kategori Uji',
+        ]);
+
+        // AssessmentCriteria punya kolom cast array (score_options) — log-nya
+        // menyimpan array di properties dan dulu memicu "Array to string
+        // conversion" saat dirender.
+        \App\Models\AssessmentCriteria::create([
+            'assessment_sub_category_id' => \App\Models\AssessmentSubCategory::create([
+                'assessment_category_id' => $kategori->id,
+                'name' => 'Sub Uji',
+            ])->id,
+            'name' => 'Kritik Uji',
+            'score_options' => ['A' => 100, 'B' => 50],
+        ]);
+
+        Livewire::actingAs($this->admin())
+            ->test(\App\Livewire\Admin\Eventner\Show::class, ['id' => $eventner->id])
+            ->assertOk()
+            ->assertSee('Kritik Uji');
+    }
+
     public function test_aktivitas_akun_lain_tidak_bocor_ke_panel()
     {
         $eventner = $this->eventnerWithOwner();
