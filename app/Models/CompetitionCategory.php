@@ -38,9 +38,19 @@ class CompetitionCategory extends Model
         return $this->belongsTo(EventnerVenue::class, 'venue_id');
     }
 
+    /**
+     * Juri yang menilai tingkat ini, dari competition_group_judge — pivot yang
+     * sama dengan layar penugasan di halaman detail, yang satu-satunya jalur
+     * tulisnya. Relasi lama membaca competition_category_judge yang sudah tak
+     * pernah ditulis lagi sejak penugasan pindah per grup, sehingga daftar
+     * selalu menampilkan "belum ada juri" meski centangannya lengkap.
+     *
+     * distinct(): satu juri sering menilai dua grup sekaligus — dua baris
+     * pivot, satu model.
+     */
     public function judges()
     {
-        return $this->belongsToMany(Judge::class);
+        return $this->belongsToMany(Judge::class, 'competition_group_judge')->distinct();
     }
 
     public function registrations()
