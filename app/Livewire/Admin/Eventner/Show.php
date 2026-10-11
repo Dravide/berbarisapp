@@ -11,6 +11,7 @@ use Illuminate\Validation\Rule;
 use App\Models\VoteTransaction;
 use App\Models\CompetitionCategory;
 use App\Models\Judge;
+use Spatie\Activitylog\Models\Activity;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 
@@ -57,6 +58,68 @@ class Show extends Component
             ->where('eventner_id', $this->eventnerId)
             ->orderBy('created_at', 'desc')
             ->limit(10)
+            ->get();
+    }
+
+    /**
+     * Aktivitas terakhir akun panitia event ini: login/logout (tercatat via
+     * listener di AppServiceProvider) + perubahan data milik event
+     * (tercatat otomatis oleh spatie activitylog di model-modelnya).
+     */
+    public function getRecentActivitiesProperty(): Collection
+    {
+        $owner = $this->eventner->user;
+
+        return Activity::with('causer')
+            ->where(function ($q) use ($owner) {
+                $eventnerId = $this->eventnerId;
+
+                // Perubahan data model yang langsung punya eventner_id
+                foreach ([
+                    Registration::class,
+                    CompetitionCategory::class,
+                    \App\Models\ChampionCategory::class,
+                    \App\Models\AssessmentCategory::class,
+                    Judge::class,
+                ] as $type) {
+                    $q->orWhere(function ($q) use ($type, $eventnerId) {
+                        $q->where('subject_type', $type)
+                            ->whereIn('subject_id', $type::where('eventner_id', $eventnerId)->pluck('id'));
+                    });
+                }
+
+                // AssessmentSubCategory/Criteria tak punya eventner_id —
+                // dilacak lewat rantai relasinya ke AssessmentCategory.
+                $kategoriIds = \App\Models\AssessmentCategory::where('eventner_id', $eventnerId)->pluck('id');
+                $subIds = \App\Models\AssessmentSubCategory::whereIn('assessment_category_id', $kategoriIds)->pluck('id');
+
+                $q->orWhere(function ($q) use ($subIds) {
+                    $q->where('subject_type', \App\Models\AssessmentSubCategory::class)
+                        ->whereIn('subject_id', $subIds);
+                })->orWhere(function ($q) use ($subIds) {
+                    $q->where('subject_type', \App\Models\AssessmentCriteria::class)
+                        ->whereIn('subject_id',
+                            \App\Models\AssessmentCriteria::whereIn('assessment_sub_category_id', $subIds)->pluck('id'));
+                });
+
+                // Aktivitas siapa pun di sesi akun panitia (login/logout)
+                if ($owner) {
+                    $q->orWhere(function ($q) use ($owner) {
+                        $q->where('causer_type', $owner::class)
+                            ->where('causer_id', $owner->id)
+                            ->whereIn('event', ['login', 'logout']);
+                    });
+
+                    // Aktivitas pada akun panitia itu sendiri
+                    // (mis. approval/suspend oleh admin).
+                    $q->orWhere(function ($q) use ($owner) {
+                        $q->where('subject_type', $owner::class)
+                            ->where('subject_id', $owner->id);
+                    });
+                }
+            })
+            ->latest()
+            ->limit(15)
             ->get();
     }
 

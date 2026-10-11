@@ -348,6 +348,81 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Aktivitas Akun -->
+                    <div class="card">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="card-title fw-semibold mb-0">Aktivitas Akun &amp; Data</h5>
+                            <span class="badge bg-info-subtle text-info">15 terakhir</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="ps-4" width="150px">Waktu</th>
+                                            <th width="140px">Jenis</th>
+                                            <th>Deskripsi</th>
+                                            <th width="150px">Oleh</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @forelse($this->recentActivities as $activity)
+                                            <tr>
+                                                <td class="ps-4">
+                                                    <span class="fw-semibold">{{ $activity->created_at->format('d/m/Y') }}</span>
+                                                    <br><span class="text-muted fs-2">{{ $activity->created_at->format('H:i') }}</span>
+                                                </td>
+                                                <td>
+                                                    @if($activity->event === 'login')
+                                                        <span class="badge bg-success-subtle text-success"><i class="ti ti-login me-1"></i>Login</span>
+                                                    @elseif($activity->event === 'logout')
+                                                        <span class="badge bg-secondary-subtle text-secondary"><i class="ti ti-logout me-1"></i>Logout</span>
+                                                    @elseif($activity->event === 'created')
+                                                        <span class="badge bg-primary-subtle text-primary">Dibuat</span>
+                                                    @elseif($activity->event === 'updated')
+                                                        <span class="badge bg-info-subtle text-info">Diubah</span>
+                                                    @elseif($activity->event === 'deleted')
+                                                        <span class="badge bg-danger-subtle text-danger">Dihapus</span>
+                                                    @else
+                                                        <span class="badge bg-light text-dark border">{{ class_basename($activity->subject_type) }}</span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    {{ $activity->description }}
+                                                    @if($activity->properties->get('old') || $activity->properties->get('attributes'))
+                                                        <br><span class="text-muted fs-2">
+                                                            @if($activity->properties->get('old'))
+                                                                Lama: {{ collect($activity->properties->get('old'))->map(fn ($v, $k) => "{$k}: {$v}")->implode(', ') }}
+                                                            @endif
+                                                            @if($activity->properties->get('attributes'))
+                                                                @if($activity->properties->get('old')) &bull; @endif
+                                                                Baru: {{ collect($activity->properties->get('attributes'))->map(fn ($v, $k) => "{$k}: {$v}")->implode(', ') }}
+                                                            @endif
+                                                        </span>
+                                                    @endif
+                                                </td>
+                                                <td>
+                                                    @if($activity->causer)
+                                                        {{ $activity->causer->name ?? 'System' }}
+                                                    @else
+                                                        <span class="text-muted">System</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @empty
+                                            <tr>
+                                                <td colspan="4" class="text-center p-4 text-muted">
+                                                    <i class="ti ti-history fs-8"></i>
+                                                    <p class="mb-0 mt-2">Belum ada aktivitas tercatat.</p>
+                                                </td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Right Column -->
