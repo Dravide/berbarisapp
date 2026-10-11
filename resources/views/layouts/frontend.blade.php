@@ -285,7 +285,7 @@
 
                 {{-- Navigasi Column --}}
                 <div>
-                    <h4 class="overline !text-white/90 mb-4">Navigasi</h4>
+                    <h4 class="mb-4 text-xs font-semibold uppercase tracking-[0.15em] text-white/90">Navigasi</h4>
                     <ul class="space-y-2 text-sm list-none p-0 m-0">
                         @isset($eventner?->slug)
                             <li><a href="{{ event_url($eventner, 'detail') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Info Event</a></li>
@@ -306,7 +306,7 @@
 
                 {{-- Kontak Column --}}
                 <div>
-                    <h4 class="overline !text-white/90 mb-4">Kontak</h4>
+                    <h4 class="mb-4 text-xs font-semibold uppercase tracking-[0.15em] text-white/90">Kontak</h4>
                     <ul class="space-y-2 text-sm list-none p-0 m-0">
                         @if($eventner?->link_whatsapp)
                             <li>
@@ -341,12 +341,12 @@
 
                 {{-- Penyelenggara Column --}}
                 <div>
-                    <h4 class="overline !text-white/90 mb-4">Penyelenggara</h4>
+                    <h4 class="mb-4 text-xs font-semibold uppercase tracking-[0.15em] text-white/90">Penyelenggara</h4>
                     <ul class="space-y-2 text-sm list-none p-0 m-0 text-white/60">
                         <li class="font-medium text-white/80">{{ $eventner?->diselenggarakan_oleh ?? '-' }}</li>
                         @if($eventner?->lokasi)
                             <li class="inline-flex items-center gap-1.5 leading-normal">
-                                <i class="ti ti-map-pin text-primary text-base shrink-0"></i> {{ $eventner->lokasi }}
+                                <i class="ti ti-map-pin text-base shrink-0"></i> {{ $eventner->lokasi }}
                             </li>
                         @endif
                     </ul>
