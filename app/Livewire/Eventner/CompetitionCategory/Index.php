@@ -684,11 +684,10 @@ class Index extends Component
     /**
      * Pratinjau N terbaik tiap grup dari nilai babak penyisihan.
      *
-     * Angka totalnya datang dari ChampionCalculator::rankOrdered() — sort yang
-     * sama dengan penentu juara, supaya "peringkat 1 grup" di sini identik
-     * dengan yang diumumkan. Nilai yang TAMPIL adalah nilai akhir (total minus
-     * pengurangan yang berlaku di tingkat & babak ini), sama seperti papan skor
-     * dan Rekap Nilai — peringkat tetap miliki kalkulator.
+     * Nilai yang TAMPIL dan URUTANNYA memakai nilai akhir (total minus
+     * pengurangan yang berlaku di tingkat & babak penyisihan), sama seperti
+     * papan skor dan Rekap Nilai. Peringkat dihitung ulang di sini per grup
+     * dari nilai akhir itu — nilai sama berperingkat sama.
      */
     #[Computed]
     public function qualifyPreview()
@@ -739,6 +738,21 @@ class Index extends Component
                 $deductions = $deductions->reject(fn ($d) => ($deductionRoundMap[$d->deduction_criteria_id] ?? null) !== null
                     && ! in_array((int) $deductionRoundMap[$d->deduction_criteria_id], $babakPenyisihanIds, true));
                 $row['final_total'] = $row['total'] - $deductions->sum(fn ($d) => $d->magnitude);
+            }
+            unset($row);
+
+            // Urut & peringkatkan ulang dari nilai akhir: peserta bersanksi
+            // benar-benar turun di daftar, bukan hanya angkanya dipotong.
+            usort($rows, fn ($a, $b) => $b['final_total'] <=> $a['final_total']);
+
+            $rank = 0;
+            $sebelumnya = null;
+            foreach ($rows as $index => &$row) {
+                if ($sebelumnya === null || $row['final_total'] !== $sebelumnya) {
+                    $rank = $index + 1;
+                }
+                $sebelumnya = $row['final_total'];
+                $row['rank'] = $rank;
             }
             unset($row);
 

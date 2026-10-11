@@ -182,9 +182,9 @@ class FinalQualificationTest extends TestCase
 
     /**
      * Pratinjau & tersimpan memakai NILAI AKHIR: pengurangan yang berlaku di
-     * tingkat & babak penyisihan memotong angka, sama seperti Rekap Nilai.
-     * Peringkat tetap milik kalkulator — peserta bersanksi hanya turun bila
-     * kalkulator juga menurunkannya (pemecah nilai sama).
+     * tingkat & babak penyisihan memotong angka, sama seperti Rekap Nilai —
+     * dan URUTAN daftar ikut nilai akhir itu: peserta bersanksi turun ke
+     * peringkat bawah.
      */
     public function test_pratinjau_dan_tersimpan_mengurangi_pengurangan()
     {
@@ -204,33 +204,36 @@ class FinalQualificationTest extends TestCase
         $krit = \App\Models\DeductionCriteria::create([
             'deduction_category_id' => $globalCat->id,
             'name' => 'Terlambat',
-            'deduction_options' => [-7],
+            'deduction_options' => [-15],
             'sort_order' => 1,
         ]);
         \App\Models\ScoreDeduction::create([
             'eventner_id' => $this->eventner->id,
             'registration_id' => $a1->id,
             'deduction_criteria_id' => $krit->id,
-            'amount' => -7,
+            'amount' => -15,
         ]);
 
         $component = $this->panel()->set('qualifyTopN', 2);
-        $selection = $component->get('qualifySelection');
 
-        $this->assertTrue($selection[(string) $a1->id]);
-        $this->assertTrue($selection[(string) $a2->id], 'Nilai akhir 10 tetap di atas nol — tetap diusulkan.');
-
+        // A1 (20 - 15 = 5) turun di bawah A2 (10) di daftar pratinjau.
         $html = $component->html();
-        $this->assertStringContainsString('nilai 13', $html, 'Pratinjau menampilkan nilai akhir (20 - 7).');
+        $this->assertStringContainsString('nilai 5', $html, 'Pratinjau menampilkan nilai akhir (20 - 15).');
+        $this->assertStringContainsString('#2</span>', $html, 'Peserta bersanksi dapat peringkat dua.');
         $this->assertStringNotContainsString('— nilai 20', $html);
 
         $component->call('saveQualify');
 
-        $pivot = CompetitionRoundRegistration::where('competition_round_id', $this->final->id)
+        $pivotA1 = CompetitionRoundRegistration::where('competition_round_id', $this->final->id)
             ->where('registration_id', $a1->id)
             ->first();
+        $pivotA2 = CompetitionRoundRegistration::where('competition_round_id', $this->final->id)
+            ->where('registration_id', $a2->id)
+            ->first();
 
-        $this->assertSame('13.00', (string) $pivot->preliminary_total, 'Yang tersimpan nilai akhir, bukan total mentah.');
+        $this->assertSame('5.00', (string) $pivotA1->preliminary_total, 'Yang tersimpan nilai akhir, bukan total mentah.');
+        $this->assertSame(2, (int) $pivotA1->seed, 'Seed ikut peringkat dari nilai akhir.');
+        $this->assertSame(1, (int) $pivotA2->seed);
     }
 
     public function test_menyimpan_dua_kali_tidak_menggandakan_finalis()
