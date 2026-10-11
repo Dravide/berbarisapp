@@ -10,10 +10,10 @@ use Spatie\Activitylog\Models\Activity;
 use Tests\TestCase;
 
 /**
- * Panel aktivitas akun di detail event admin (/admin/eventner/{id}).
- *
- * Mencakup dua sumber data: log login/logout akun panitia (listener di
- * AppServiceProvider) dan perubahan data event (spatie activitylog).
+ * Pelacakan aktivitas akun: halaman terpisah /admin/eventner/{id}/aktivitas
+ * (rincian, filter, paginasi) + kartu ringkas di Show. Sumber datanya dua:
+ * log login/logout akun panitia (listener di AppServiceProvider) dan
+ * perubahan data event (spatie activitylog).
  */
 class AdminEventnerActivityTest extends TestCase
 {
@@ -31,16 +31,15 @@ class AdminEventnerActivityTest extends TestCase
         return Eventner::factory()->create(['user_id' => $owner->id]);
     }
 
-    public function test_halaman_detail_menampilkan_aktivitas_tercatat()
+    public function test_halaman_aktivitas_menampilkan_aktivitas_tercatat()
     {
         $eventner = $this->eventnerWithOwner();
 
         activity()->performedOn($eventner->user)->event('login')->log('Akun berhasil masuk (login).');
 
         Livewire::actingAs($this->admin())
-            ->test(\App\Livewire\Admin\Eventner\Show::class, ['id' => $eventner->id])
+            ->test(\App\Livewire\Admin\Eventner\Aktivitas::class, ['id' => $eventner->id])
             ->assertOk()
-            ->assertSee('Aktivitas Akun')
             ->assertSee('Akun berhasil masuk (login).');
     }
 
@@ -71,7 +70,7 @@ class AdminEventnerActivityTest extends TestCase
         );
     }
 
-    public function test_perubahan_data_event_muncul_di_panel()
+    public function test_perubahan_data_event_muncul_di_halaman()
     {
         $eventner = $this->eventnerWithOwner();
         $reg = \App\Models\Registration::factory()->create([
@@ -82,9 +81,24 @@ class AdminEventnerActivityTest extends TestCase
         $reg->update(['nama_sekolah' => 'SMA Berubah']);
 
         Livewire::actingAs($this->admin())
-            ->test(\App\Livewire\Admin\Eventner\Show::class, ['id' => $eventner->id])
+            ->test(\App\Livewire\Admin\Eventner\Aktivitas::class, ['id' => $eventner->id])
             ->assertOk()
             ->assertSee('SMA Uji Coba');
+    }
+
+    public function test_filter_jenis_login_hanya_menampilkan_login()
+    {
+        $eventner = $this->eventnerWithOwner();
+
+        activity()->by($eventner->user)->event('login')->log('Akun berhasil masuk (login).');
+        activity()->performedOn($eventner->user)->event('created')->log('Pendaftaran SMA Baru dibuat.');
+
+        Livewire::actingAs($this->admin())
+            ->test(\App\Livewire\Admin\Eventner\Aktivitas::class, ['id' => $eventner->id])
+            ->set('filterJenis', 'login')
+            ->assertOk()
+            ->assertSee('Akun berhasil masuk (login).')
+            ->assertDontSee('Pendaftaran SMA Baru dibuat.');
     }
 
     public function test_nilai_properti_berupa_array_tidak_bikin_error()
@@ -108,12 +122,12 @@ class AdminEventnerActivityTest extends TestCase
         ]);
 
         Livewire::actingAs($this->admin())
-            ->test(\App\Livewire\Admin\Eventner\Show::class, ['id' => $eventner->id])
+            ->test(\App\Livewire\Admin\Eventner\Aktivitas::class, ['id' => $eventner->id])
             ->assertOk()
             ->assertSee('Kritik Uji');
     }
 
-    public function test_aktivitas_akun_lain_tidak_bocor_ke_panel()
+    public function test_aktivitas_akun_lain_tidak_bocor()
     {
         $eventner = $this->eventnerWithOwner();
         $lain = $this->eventnerWithOwner();
@@ -121,8 +135,21 @@ class AdminEventnerActivityTest extends TestCase
         activity()->by($lain->user)->event('login')->log('Login event lain.');
 
         Livewire::actingAs($this->admin())
-            ->test(\App\Livewire\Admin\Eventner\Show::class, ['id' => $eventner->id])
+            ->test(\App\Livewire\Admin\Eventner\Aktivitas::class, ['id' => $eventner->id])
             ->assertOk()
             ->assertDontSee('Login event lain.');
+    }
+
+    public function test_show_menampilkan_ringkasan_dan_tautan_ke_halaman_aktivitas()
+    {
+        $eventner = $this->eventnerWithOwner();
+
+        activity()->by($eventner->user)->event('login')->log('Akun berhasil masuk (login).');
+
+        Livewire::actingAs($this->admin())
+            ->test(\App\Livewire\Admin\Eventner\Show::class, ['id' => $eventner->id])
+            ->assertOk()
+            ->assertSee('Login Terakhir')
+            ->assertSee(route('admin.eventner.aktivitas', $eventner->id));
     }
 }

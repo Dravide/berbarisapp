@@ -12,6 +12,7 @@ Route::get('eventner/{id}', App\Livewire\Admin\Eventner\Show::class)->name('admi
 Route::get('eventner/{id}/penilaian', App\Livewire\Admin\Eventner\Penilaian::class)->name('admin.eventner.penilaian');
 Route::get('eventner/{id}/struktur', App\Livewire\Admin\Eventner\Struktur::class)->name('admin.eventner.struktur');
 Route::get('eventner/{id}/modul', App\Livewire\Admin\Eventner\Modul::class)->name('admin.eventner.modul');
+Route::get('eventner/{id}/aktivitas', App\Livewire\Admin\Eventner\Aktivitas::class)->name('admin.eventner.aktivitas');
 Route::get('users', App\Livewire\Admin\User\Index::class)->name('admin.users.index');
 Route::get('schools', App\Livewire\Admin\School\Index::class)->name('admin.schools.index');
 Route::get('schools/{npsn}', App\Livewire\Admin\School\Show::class)->name('admin.schools.show');

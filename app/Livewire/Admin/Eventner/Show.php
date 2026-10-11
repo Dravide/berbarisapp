@@ -62,18 +62,16 @@ class Show extends Component
     }
 
     /**
-     * Aktivitas terakhir akun panitia event ini: login/logout (tercatat via
-     * listener di AppServiceProvider) + perubahan data milik event
-     * (tercatat otomatis oleh spatie activitylog di model-modelnya).
+     * Ringkasan aktivitas untuk kartu kecil di Show — rincian di halaman
+     * terpisah (admin.eventner.aktivitas).
      */
     public function getRecentActivitiesProperty(): Collection
     {
         $owner = $this->eventner->user;
+        $eventnerId = $this->eventnerId;
 
         return Activity::with('causer')
-            ->where(function ($q) use ($owner) {
-                $eventnerId = $this->eventnerId;
-
+            ->where(function ($q) use ($owner, $eventnerId) {
                 // Perubahan data model yang langsung punya eventner_id
                 foreach ([
                     Registration::class,
@@ -102,7 +100,7 @@ class Show extends Component
                             \App\Models\AssessmentCriteria::whereIn('assessment_sub_category_id', $subIds)->pluck('id'));
                 });
 
-                // Aktivitas siapa pun di sesi akun panitia (login/logout)
+                // Aktivitas sesi akun panitia (login/logout)
                 if ($owner) {
                     $q->orWhere(function ($q) use ($owner) {
                         $q->where('causer_type', $owner::class)
@@ -110,7 +108,7 @@ class Show extends Component
                             ->whereIn('event', ['login', 'logout']);
                     });
 
-                    // Aktivitas pada akun panitia itu sendiri
+                    // Aksi pada akun panitia itu sendiri
                     // (mis. approval/suspend oleh admin).
                     $q->orWhere(function ($q) use ($owner) {
                         $q->where('subject_type', $owner::class)
@@ -119,7 +117,7 @@ class Show extends Component
                 }
             })
             ->latest()
-            ->limit(15)
+            ->limit(5)
             ->get();
     }
 

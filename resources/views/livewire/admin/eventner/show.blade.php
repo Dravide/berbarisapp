@@ -124,6 +124,9 @@
                         <a href="{{ route('admin.eventner.modul', $eventner->id) }}" class="btn btn-sm btn-outline-primary">
                             <i class="ti ti-layout-grid me-1"></i>Modul (Data Lengkap)
                         </a>
+                        <a href="{{ route('admin.eventner.aktivitas', $eventner->id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="ti ti-history me-1"></i>Aktivitas
+                        </a>
                     </div>
                 </div>
             </div>
@@ -349,84 +352,45 @@
                         </div>
                     </div>
 
-                    <!-- Aktivitas Akun -->
+                    <!-- Aktivitas Akun — ringkasan; rincian di halaman terpisah -->
                     <div class="card">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center">
                             <h5 class="card-title fw-semibold mb-0">Aktivitas Akun &amp; Data</h5>
-                            <span class="badge bg-info-subtle text-info">15 terakhir</span>
+                            <a href="{{ route('admin.eventner.aktivitas', $eventner->id) }}" class="btn btn-sm btn-outline-primary">
+                                <i class="ti ti-history me-1"></i>Lihat Semua
+                            </a>
                         </div>
                         <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle mb-0">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th class="ps-4" width="150px">Waktu</th>
-                                            <th width="140px">Jenis</th>
-                                            <th>Deskripsi</th>
-                                            <th width="150px">Oleh</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @forelse($this->recentActivities as $activity)
-                                            <tr>
-                                                <td class="ps-4">
-                                                    <span class="fw-semibold">{{ $activity->created_at->format('d/m/Y') }}</span>
-                                                    <br><span class="text-muted fs-2">{{ $activity->created_at->format('H:i') }}</span>
-                                                </td>
-                                                <td>
-                                                    @if($activity->event === 'login')
-                                                        <span class="badge bg-success-subtle text-success"><i class="ti ti-login me-1"></i>Login</span>
-                                                    @elseif($activity->event === 'logout')
-                                                        <span class="badge bg-secondary-subtle text-secondary"><i class="ti ti-logout me-1"></i>Logout</span>
-                                                    @elseif($activity->event === 'created')
-                                                        <span class="badge bg-primary-subtle text-primary">Dibuat</span>
-                                                    @elseif($activity->event === 'updated')
-                                                        <span class="badge bg-info-subtle text-info">Diubah</span>
-                                                    @elseif($activity->event === 'deleted')
-                                                        <span class="badge bg-danger-subtle text-danger">Dihapus</span>
-                                                    @else
-                                                        <span class="badge bg-light text-dark border">{{ class_basename($activity->subject_type) }}</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    {{ $activity->description }}
-                                                    @php
-                                                        // Nilai properti bisa berupa array (kolom
-                                                        // yang di-cast, mis. score_options) —
-                                                        // json-encode sebelum interpolasi.
-                                                        $formatNilai = fn ($v) => is_array($v) ? json_encode($v, JSON_UNESCAPED_UNICODE) : $v;
-                                                        $old = collect($activity->properties->get('old') ?? [])
-                                                            ->map(fn ($v, $k) => $k.': '.$formatNilai($v));
-                                                        $new = collect($activity->properties->get('attributes') ?? [])
-                                                            ->map(fn ($v, $k) => $k.': '.$formatNilai($v));
-                                                    @endphp
-                                                    @if($old->isNotEmpty() || $new->isNotEmpty())
-                                                        <br><span class="text-muted fs-2">
-                                                            @if($old->isNotEmpty()) Lama: {{ $old->implode(', ') }} @endif
-                                                            @if($old->isNotEmpty() && $new->isNotEmpty()) &bull; @endif
-                                                            @if($new->isNotEmpty()) Baru: {{ $new->implode(', ') }} @endif
-                                                        </span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if($activity->causer)
-                                                        {{ $activity->causer->name ?? 'System' }}
-                                                    @else
-                                                        <span class="text-muted">System</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @empty
-                                            <tr>
-                                                <td colspan="4" class="text-center p-4 text-muted">
-                                                    <i class="ti ti-history fs-8"></i>
-                                                    <p class="mb-0 mt-2">Belum ada aktivitas tercatat.</p>
-                                                </td>
-                                            </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
+                            @php
+                                $loginTerakhir = $this->recentActivities->firstWhere('event', 'login');
+                            @endphp
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-4">
+                                    <span class="text-muted">Login Terakhir</span>
+                                    <span class="fw-semibold">
+                                        @if($loginTerakhir)
+                                            {{ $loginTerakhir->created_at->format('d/m/Y H:i') }}
+                                        @else
+                                            <span class="text-muted">Belum ada catatan</span>
+                                        @endif
+                                    </span>
+                                </li>
+                                @foreach($this->recentActivities as $activity)
+                                    <li class="list-group-item d-flex justify-content-between align-items-center px-4">
+                                        <span>
+                                            <span class="fw-semibold">{{ $activity->created_at->format('d/m H:i') }}</span>
+                                            <span class="text-muted ms-2">{{ $activity->description }}</span>
+                                        </span>
+                                        <span class="text-muted fs-2 text-end">
+                                            @if($activity->causer)
+                                                {{ $activity->causer->name ?? 'System' }}
+                                            @else
+                                                System
+                                            @endif
+                                        </span>
+                                    </li>
+                                @endforeach
+                            </ul>
                         </div>
                     </div>
                 </div>
