@@ -30,8 +30,7 @@
 <section id="pricing" class="section-pad bg-surface-container-low">
     <div class="container-landing">
         <div class="mx-auto max-w-2xl text-center">
-            <span class="overline justify-center">Harga</span>
-            <h2 class="mt-4 text-3xl font-bold md:text-4xl">{{ $title }}</h2>
+            <h2 class="text-3xl font-bold md:text-4xl">{{ $title }}</h2>
             <p class="mt-4 text-on-surface-variant">{{ $subtitle }}</p>
         </div>
 

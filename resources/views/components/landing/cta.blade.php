@@ -9,12 +9,10 @@
 
 <section class="section-pad bg-surface">
     <div class="container-landing">
-        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#0c1020] via-primary to-[#00174b] px-6 py-16 text-center shadow-[0_20px_60px_rgba(0,98,255,0.30)] md:px-12 md:py-20">
-            {{-- Decorative blobs --}}
-            <div class="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-tertiary/20 blur-3xl"></div>
-            <div class="absolute -bottom-24 -right-16 h-72 w-72 rounded-full bg-secondary/20 blur-3xl"></div>
-
-            <div class="relative mx-auto max-w-2xl">
+        {{-- Panel gelap solid: satu-satunya blok gelap di halaman, jadi penutup
+             yang menonjol tanpa gradien dan tanpa glow (R-01/R-13). --}}
+        <div class="rounded-3xl bg-deep-slate px-6 py-16 text-center md:px-12 md:py-20">
+            <div class="mx-auto max-w-2xl">
                 @if($image)
                 <div class="mx-auto mb-8 overflow-hidden rounded-2xl border border-white/20">
                     <img src="{{ Storage::url($image) }}" alt="CTA" class="max-h-64 w-full object-cover">
@@ -27,7 +25,6 @@
                 <div class="mt-8 flex justify-center">
                     <a href="{{ $buttonUrl }}" class="btn-primary">
                         {{ $buttonText }}
-                        <i class="ti ti-arrow-right"></i>
                     </a>
                 </div>
             </div>

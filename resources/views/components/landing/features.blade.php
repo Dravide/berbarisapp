@@ -10,12 +10,15 @@
         ['icon' => 'icon8.png', 'title' => 'Drawing & Undian', 'description' => 'Sistem undian digital untuk menentukan urutan tampil peserta dengan animasi menarik.'],
     ];
     $iconMap = [
-        'icon3.png' => 'ti-chart-bar',
-        'icon4.png' => 'ti-shield-lock',
-        'icon5.png' => 'ti-clipboard-list',
-        'icon6.png' => 'ti-device-mobile',
-        'icon7.png' => 'ti-cash',
-        'icon8.png' => 'ti-plug-connected',
+        // Ikon dipilih dari isi fiturnya: pendaftaran = form, tiket = tiket,
+        // voting = bintang, penilaian = penghargaan, skor = papan, undian =
+        // nomor urut.
+        'icon3.png' => 'ti-forms',
+        'icon4.png' => 'ti-award',
+        'icon5.png' => 'ti-star',
+        'icon6.png' => 'ti-ticket',
+        'icon7.png' => 'ti-scoreboard',
+        'icon8.png' => 'ti-list-numbers',
     ];
 
     // Poin dari section "Tentang" yang dibuang. Dulu tiga blok ceklis
@@ -31,8 +34,7 @@
 <section id="features" class="section-pad bg-surface">
     <div class="container-landing">
         <div class="mx-auto max-w-2xl text-center">
-            <span class="overline justify-center">Fitur</span>
-            <h2 class="mt-4 text-3xl font-bold md:text-4xl">{{ $title }}</h2>
+            <h2 class="text-3xl font-bold md:text-4xl">{{ $title }}</h2>
             <p class="mt-4 text-on-surface-variant">Semua yang Anda butuhkan untuk menyelenggarakan event &amp; kompetisi dalam satu platform terpadu.</p>
 
             @if($poin->isNotEmpty())
@@ -50,7 +52,7 @@
         <div class="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             @foreach($items as $index => $item)
             <div class="surface-card surface-card-hover group p-7" wire:key="feature-{{ $index }}">
-                <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition group-hover:bg-secondary group-hover:text-deep-slate">
+                <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     @if(!empty($item['icon_custom']))
                         <img src="{{ Storage::url($item['icon_custom']) }}" alt="{{ $item['title'] ?? '' }}" class="h-7 w-7 object-contain">
                     @else

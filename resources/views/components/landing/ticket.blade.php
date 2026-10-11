@@ -9,8 +9,7 @@
 <section id="ticket" class="section-pad bg-surface-container-low">
     <div class="container-landing">
         <div class="mx-auto max-w-2xl text-center">
-            <span class="overline justify-center"><i class="ti ti-ticket"></i> E-Tiket</span>
-            <h2 class="mt-4 text-3xl font-bold md:text-4xl">{{ $title }}</h2>
+            <h2 class="text-3xl font-bold md:text-4xl">{{ $title }}</h2>
             <p class="mt-4 text-on-surface-variant">{{ $subtitle }}</p>
         </div>
 
@@ -26,9 +25,9 @@
             <div class="surface-card surface-card-hover group flex flex-col overflow-hidden p-0">
                 <a href="{{ event_url($event, 'detail') }}" class="relative block aspect-[4/3] overflow-hidden">
                     @if($event->poster)
-                        <img src="{{ Storage::url($event->poster) }}" alt="{{ $event->nama_event }}" class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
+                        <img src="{{ Storage::url($event->poster) }}" alt="{{ $event->nama_event }}" class="h-full w-full object-cover">
                     @else
-                        <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/15 via-surface-container-lowest to-tertiary/15">
+                        <div class="flex h-full w-full items-center justify-center bg-surface-container-high">
                             <span class="font-display text-4xl font-extrabold text-primary/50">
                                 {{ strtoupper(substr($event->nama_event ?? '?', 0, 1)) }}
                             </span>
@@ -43,7 +42,7 @@
                         @if($event->sellsTicketPerVenue())Mulai @endif Rp {{ number_format($mulaiHarga, 0, ',', '.') }}
                     </span>
                     @else
-                    <span class="chip absolute bottom-3 left-3 backdrop-blur">GRATIS</span>
+                    <span class="absolute bottom-3 left-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-deep-slate backdrop-blur">GRATIS</span>
                     @endif
                 </a>
 
@@ -56,12 +55,11 @@
                         <span class="inline-flex items-center gap-1"><i class="ti ti-map-pin text-primary"></i>{{ \Illuminate\Support\Str::limit($event->lokasi, 15) }}</span>
                         @endif
                         @if($tgl)
-                        <span class="inline-flex items-center gap-1"><i class="ti ti-calendar-event text-[#5a7d00]"></i>{{ $tgl }}</span>
+                        <span class="inline-flex items-center gap-1"><i class="ti ti-calendar-event text-on-surface-variant"></i>{{ $tgl }}</span>
                         @endif
                     </div>
 
                     <a href="{{ event_url($event, 'ticket') }}" class="btn-primary mt-4 w-full">
-                        <i class="ti ti-ticket"></i>
                         Beli Tiket
                     </a>
                 </div>

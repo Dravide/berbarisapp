@@ -16,8 +16,7 @@
 <section id="sponsor" class="section-pad bg-surface-container-low">
     <div class="container-landing">
         <div class="mx-auto max-w-2xl text-center">
-            <span class="overline justify-center">Mitra</span>
-            <h2 class="mt-4 text-3xl font-bold md:text-4xl">Sponsor &amp; Media Partner</h2>
+            <h2 class="text-3xl font-bold md:text-4xl">Sponsor &amp; Media Partner</h2>
             <p class="mt-4 text-on-surface-variant">Terima kasih kepada para mitra yang mendukung platform ini.</p>
         </div>
 
@@ -25,7 +24,7 @@
             @foreach($grupTipe as $tipe => $grup)
                 @if(!empty($partners[$tipe]))
                     <div class="w-full">
-                        <span class="overline block text-center mb-6">{{ $grup['label'] }}</span>
+                        <span class="mb-6 block text-center text-xs font-semibold uppercase tracking-[0.15em] text-on-surface-variant">{{ $grup['label'] }}</span>
                         <div class="flex flex-wrap items-center justify-center gap-8 md:gap-12">
                             @foreach($partners[$tipe] as $partner)
                                 @if($partner->link)

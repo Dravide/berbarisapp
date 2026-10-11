@@ -6,8 +6,7 @@
 <section id="eventners" class="section-pad bg-surface">
     <div class="container-landing">
         <div class="mx-auto max-w-2xl text-center">
-            <span class="overline justify-center">Penyelenggara</span>
-            <h2 class="mt-4 text-3xl font-bold md:text-4xl">Penyelenggara Event yang Telah Bergabung</h2>
+            <h2 class="text-3xl font-bold md:text-4xl">Penyelenggara Event yang Telah Bergabung</h2>
             <p class="mt-4 text-on-surface-variant">Mereka telah mempercayakan pengelolaan event dan kompetisi mereka melalui platform kami.</p>
         </div>
 
@@ -19,24 +18,24 @@
                 $tanggalSelesai = $eventner->tanggal_akhir ?: $eventner->tanggal;
                 $sudahTerlaksana = $tanggalSelesai && \Carbon\Carbon::parse($tanggalSelesai)->endOfDay()->isPast();
             @endphp
-            <div class="surface-card surface-card-hover group flex flex-col overflow-hidden p-0 {{ $sudahTerlaksana ? 'card-past' : '' }}">
+            <div class="surface-card surface-card-hover group flex flex-col overflow-hidden p-0 {{ $sudahTerlaksana ? 'card-past' : '' }}" {{ $sudahTerlaksana ? 'data-past=true' : '' }}>
                 {{-- Poster banner --}}
                 <a href="{{ event_url($eventner, 'detail') }}" class="card-past-media relative block aspect-[4/3] overflow-hidden">
                     @if($eventner->poster)
-                        <img src="{{ Storage::url($eventner->poster) }}" alt="{{ $eventner->nama_event }}" class="h-full w-full object-cover transition duration-500 group-hover:scale-105">
+                        <img src="{{ Storage::url($eventner->poster) }}" alt="{{ $eventner->nama_event }}" class="h-full w-full object-cover">
                     @else
-                        <div class="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/15 via-surface-container-lowest to-tertiary/15">
+                        <div class="flex h-full w-full items-center justify-center bg-surface-container-high">
                             <span class="font-display text-4xl font-extrabold text-primary/50">
                                 {{ strtoupper(substr($eventner->nama_event ?? '?', 0, 1)) }}
                             </span>
                         </div>
                     @endif
                     @if($eventner->tingkat_perlombaan)
-                    <span class="chip absolute left-3 top-3 backdrop-blur">{{ $eventner->tingkat_perlombaan }}</span>
+                    <span class="absolute left-3 top-3 rounded-full bg-deep-slate/85 px-3 py-1 text-xs font-semibold text-white backdrop-blur">{{ $eventner->tingkat_perlombaan }}</span>
                     @endif
                     @if($sudahTerlaksana)
                     {{-- Ditandai di kanan supaya tidak menutup chip tingkat perlombaan. --}}
-                    <span class="chip-past absolute right-3 top-3 backdrop-blur">Terlaksana</span>
+                    <span class="absolute right-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-deep-slate backdrop-blur">Terlaksana</span>
                     @endif
                 </a>
 
@@ -60,14 +59,13 @@
                         </span>
                         @endif
                         <span class="inline-flex items-center gap-1">
-                            <i class="ti ti-users text-[#5a7d00]"></i>
+                            <i class="ti ti-users text-on-surface-variant"></i>
                             {{ $eventner->registrations_count ?? $eventner->registrations->count() }} peserta
                         </span>
                     </div>
 
-                    <a href="{{ event_url($eventner, 'detail') }}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary transition group-hover:gap-2">
+                    <a href="{{ event_url($eventner, 'detail') }}" class="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary transition-colors group-hover:underline">
                         {{ $sudahTerlaksana ? 'Lihat Hasil' : 'Lihat Event' }}
-                        <i class="ti ti-arrow-right"></i>
                     </a>
                 </div>
             </div>

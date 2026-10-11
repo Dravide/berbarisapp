@@ -152,7 +152,6 @@
                     <a href="{{ route('login') }}" class="btn-ghost">Login</a>
                     <a href="{{ route('register.eventner') }}" class="btn-primary">
                         Daftar Eventner
-                        <i class="ti ti-arrow-right"></i>
                     </a>
                 </div>
 
@@ -241,8 +240,7 @@
             </div>
 
             <div class="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs sm:flex-row">
-                <p>&copy; {{ date('Y') }} {{ get_setting('site_title', 'Berbaris App') }}. All Rights Reserved.</p>
-                <p>Powered by <span class="font-semibold text-secondary">{{ get_setting('site_title', 'Berbaris App') }}</span></p>
+                <p>&copy; {{ date('Y') }} {{ get_setting('site_title', 'Berbaris App') }}. Semua hak dilindungi.</p>
             </div>
         </div>
     </footer>

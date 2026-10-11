@@ -132,7 +132,9 @@ class PublicPagesTest extends TestCase
         $html = $this->penyelenggaraSection($this->get('/')->getContent());
 
         $this->assertStringContainsString('Terlaksana', $html);
-        $this->assertStringContainsString('chip-past', $html);
+        // Dulu chip-nya memakai kelas `chip-past`; setelah restyling, penanda
+        // "Terlaksana" berdiri sendiri sebagai pill putih — penandaan meredam
+        // kartu tetap dipegang `card-past`.
         $this->assertStringContainsString('card-past', $html);
         $this->assertStringContainsString('Lihat Hasil', $html);
     }

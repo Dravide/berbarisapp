@@ -18,8 +18,7 @@
 <section id="faq" class="section-pad bg-surface">
     <div class="container-landing">
         <div class="mx-auto max-w-2xl text-center">
-            <span class="overline justify-center">FAQ</span>
-            <h2 class="mt-4 text-3xl font-bold md:text-4xl">{{ $title }}</h2>
+            <h2 class="text-3xl font-bold md:text-4xl">{{ $title }}</h2>
         </div>
 
         <div class="mt-12 grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-start">

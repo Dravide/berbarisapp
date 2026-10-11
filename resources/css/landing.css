@@ -47,14 +47,6 @@
     --radius-lg: 0.75rem;
     --radius-xl: 1rem;
     --radius-2xl: 1.5rem;
-
-    /* Animations */
-    --animate-pulse-dot: pulse-dot 1.6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.5; transform: scale(1.4); }
 }
 
 /* =========================================================================
@@ -93,16 +85,18 @@
     }
 
     /* Buttons */
+    /* Alasan bentuk: radius 8px dari DESIGN.md (Soft Geometricism, standar
+       komponen), bukan pill — beda dari badge yang memang pill. */
     .btn-primary {
-        @apply inline-flex items-center justify-center gap-2 rounded-md bg-secondary px-5 py-3 text-sm font-semibold text-on-secondary transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#b6f05c] hover:shadow-[0_12px_30px_rgba(0,98,255,0.22)] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60;
+        @apply inline-flex items-center justify-center gap-2 rounded-md bg-secondary px-5 py-3 text-sm font-semibold text-on-secondary transition-colors duration-200 hover:bg-[#b6f05c] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 disabled:opacity-60;
     }
 
     .btn-secondary {
-        @apply inline-flex items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-on-primary transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#1a72ff] hover:shadow-[0_12px_30px_rgba(0,98,255,0.30)] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50;
+        @apply inline-flex items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-semibold text-on-primary transition-colors duration-200 hover:bg-[#1a72ff] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50;
     }
 
     .btn-ghost {
-        @apply inline-flex items-center justify-center gap-2 rounded-md border border-primary/30 px-5 py-3 text-sm font-semibold text-primary transition-all duration-200 hover:bg-primary/5 hover:border-primary/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40;
+        @apply inline-flex items-center justify-center gap-2 rounded-md border border-primary/30 px-5 py-3 text-sm font-semibold text-primary transition-colors duration-200 hover:bg-primary/5 hover:border-primary/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40;
     }
 
     /* Varian btn-ghost untuk panel gelap (kartu harga rekomendasi, kartu CTA):
@@ -111,12 +105,14 @@
         @apply inline-flex items-center justify-center gap-2 rounded-md border border-white/25 px-5 py-3 text-sm font-semibold text-white transition-all duration-200 hover:bg-white/10 hover:border-white/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40;
     }
 
-    /* Cards — floating white surface */
+    /* Cards — permukaan putih, elevasi satu tingkat. Bayangan tipis untuk
+       menandai level 1 di atas kanvas (DESIGN.md "Tonal Layers"); naik
+       hanya di hover sebagai penanda elemen aktif, bukan default semua. */
     .surface-card {
-        @apply rounded-2xl border border-outline-variant/60 bg-surface-container-lowest shadow-[0_8px_30px_rgba(0,98,255,0.06)] transition-all duration-200;
+        @apply rounded-2xl border border-outline-variant/60 bg-surface-container-lowest shadow-[0_1px_3px_rgba(17,24,39,0.07)] transition-colors duration-200;
     }
     .surface-card-hover {
-        @apply hover:-translate-y-1.5 hover:border-primary/40 hover:shadow-[0_20px_50px_rgba(0,98,255,0.22)];
+        @apply hover:border-primary/40 hover:shadow-[0_4px_16px_rgba(17,24,39,0.10)];
     }
 
     /* Pricing — toggle fitur tersembunyi (native details, tanpa JS) */
@@ -126,18 +122,21 @@
     .pricing-more[open] .pricing-more-open { display: none; }
     .pricing-more[open] > summary .ti-chevron-down { @apply rotate-180; }
 
-    /* Glassmorphism navbar/overlays */
+    /* Glassmorphism navbar — satu-satunya elemen blur di halaman (dose cap
+       R-10). Alasan: navbar melayang di atas section yang warnanya beragam,
+       blur menjaga teks tetap terbaca saat scroll. Kartu/modal tetap solid. */
     .glass-nav {
-        @apply border-b border-outline-variant/50 bg-white/80 backdrop-blur-md;
+        @apply border-b border-outline-variant/50 bg-white/80 shadow-[0_1px_2px_rgba(17,24,39,0.05)] backdrop-blur-md;
     }
 
-    /* Status badge — pill, lime pulse dot */
+    /* Status badge — pill. Titik statis menandai status "live"; tanpa pulse
+       karena tidak ada data yang berdenyut di baliknya (R-19/R-31). */
     .badge-live {
         @apply inline-flex items-center gap-2 rounded-full bg-secondary/15 px-3 py-1 text-xs font-semibold text-[#5a7d00];
     }
     .badge-live::before {
         content: '';
-        @apply h-2 w-2 rounded-full bg-secondary animate-pulse-dot;
+        @apply h-2 w-2 rounded-full bg-secondary;
     }
 
     /* Category chips/tags */
@@ -166,10 +165,6 @@
 }
 
 /* =========================================================================
-   Utilities
+   (utilities gradien dihapus: tidak dipakai lagi — judul memakai warna
+   solid deep-slate sesuai arah sederhana-minimal)
    ========================================================================= */
-@layer utilities {
-    .text-gradient-primary {
-        @apply bg-gradient-to-r from-primary via-[#3b82f6] to-tertiary bg-clip-text text-transparent;
-    }
-}
