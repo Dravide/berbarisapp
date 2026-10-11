@@ -33,8 +33,8 @@ class HelpSupport extends Component
             ? Storage::disk('public')->url($faviconSetting)
             : null;
 
-        $this->contact = Setting::get('landing_contact', []);
-        $this->social = Setting::get('landing_social_links', []);
+        $this->contact = json_decode(Setting::get('landing_contact', '{}'), true) ?? [];
+        $this->social = json_decode(Setting::get('landing_social_links', '{}'), true) ?? [];
 
         // FAQ dari Setting landing_faq (dikelola admin di tab FAQ); fallback ke default.
         $faqSetting = json_decode(Setting::get('landing_faq', '{}'), true) ?? [];

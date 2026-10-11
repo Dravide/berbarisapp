@@ -12,14 +12,15 @@
 
     {{-- Quick Contact Cards --}}
     @php
-        $phone = $contact['phone'] ?? '+62 812-3456-7890';
-        $email = $contact['email'] ?? 'halo@berbaris.local';
+        $phone = $contact['phone'] ?? '';
+        $email = $contact['email'] ?? '';
         $waNumber = preg_replace('/[^0-9]/', '', $phone);
         $instagram = $social['instagram'] ?? '';
     @endphp
     <div class="section-pad bg-surface-container-lowest">
         <div class="container-landing">
             <div class="grid gap-6 md:grid-cols-3">
+                @if($waNumber !== '')
                 <div class="surface-card p-8 text-center">
                     <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500">
                         <i class="ti ti-brand-whatsapp text-3xl"></i>
@@ -31,7 +32,9 @@
                         <i class="ti ti-brand-whatsapp"></i> Chat Sekarang
                     </a>
                 </div>
+                @endif
 
+                @if($email !== '')
                 <div class="surface-card p-8 text-center">
                     <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                         <i class="ti ti-mail text-3xl"></i>
@@ -43,7 +46,9 @@
                         <i class="ti ti-mail"></i> Kirim Email
                     </a>
                 </div>
+                @endif
 
+                @if($instagram !== '')
                 <div class="surface-card p-8 text-center">
                     <div class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-pink-500/10 text-pink-500">
                         <i class="ti ti-brand-instagram text-3xl"></i>
@@ -56,6 +61,7 @@
                         <i class="ti ti-brand-instagram"></i> Follow Kami
                     </a>
                 </div>
+                @endif
             </div>
         </div>
     </div>
@@ -90,6 +96,7 @@
     </div>
 
     {{-- CTA --}}
+    @if($waNumber !== '')
     <div class="section-pad bg-primary text-white">
         <div class="container-landing">
             <div class="flex flex-col items-center justify-between gap-6 md:flex-row">
@@ -104,4 +111,5 @@
             </div>
         </div>
     </div>
+    @endif
 </div>
