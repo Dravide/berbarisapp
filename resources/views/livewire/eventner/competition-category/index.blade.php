@@ -668,7 +668,10 @@
                                             <label class="form-check-label flex-grow-1" for="q_{{ $rowId }}">
                                                 <span class="badge bg-light-secondary text-secondary">#{{ $row['rank'] }}</span>
                                                 {{ $row['registration']->display_name }}
-                                                <span class="text-muted fs-2">— nilai {{ $row['total'] }}</span>
+                                                <span class="text-muted fs-2">— nilai {{ $row['final_total'] ?? $row['total'] }}</span>
+                                                @if(isset($row['final_total']) && (float) $row['final_total'] !== (float) $row['total'])
+                                                    <span class="text-muted fs-2 text-decoration-line-through">{{ $row['total'] }}</span>
+                                                @endif
                                                 @if($sudahFinalis)
                                                     <span class="badge bg-success-subtle text-success">sudah finalis</span>
                                                 @endif

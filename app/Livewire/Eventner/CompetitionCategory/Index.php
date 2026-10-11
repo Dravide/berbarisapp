@@ -9,11 +9,13 @@ use App\Models\CompetitionGroup;
 use App\Models\CompetitionRound;
 use App\Models\CompetitionRoundRegistration;
 use App\Models\CompetitionSeries;
+use App\Models\DeductionCategory;
 use App\Models\EventnerVenue;
 use App\Models\Judge;
 use App\Livewire\Concerns\MelaporKePengguna;
 use App\Models\Registration;
 use App\Services\ChampionCalculator;
+use App\Models\ScoreDeduction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -684,7 +686,9 @@ class Index extends Component
      *
      * Angka totalnya datang dari ChampionCalculator::rankOrdered() — sort yang
      * sama dengan penentu juara, supaya "peringkat 1 grup" di sini identik
-     * dengan yang diumumkan.
+     * dengan yang diumumkan. Nilai yang TAMPIL adalah nilai akhir (total minus
+     * pengurangan yang berlaku di tingkat & babak ini), sama seperti papan skor
+     * dan Rekap Nilai — peringkat tetap miliki kalkulator.
      */
     #[Computed]
     public function qualifyPreview()
@@ -705,6 +709,42 @@ class Index extends Component
         // + kriteria tanpa babak), dipakai apa adanya sebagai peta bobot.
         $weights = $this->roundCriteriaWeights($eventner->id, $round->competition_category_id, CompetitionRound::TYPE_PRELIMINARY);
 
+        // Saringan pengurangan yang sama dengan kalkulator: berlaku di tingkat
+        // pesertanya sendiri, dan di babak penyisihan ini saja — bukan babak
+        // final yang sedang dibuka panelnya. Sanksi fase final tidak boleh
+        // memotong usulan lolos, sebagaimana tidak memotong peringkat
+        // penyisihan.
+        $deductionLevelMap = DeductionCategory::levelMapOfCriteria($eventner->id);
+        $deductionRoundMap = DeductionCategory::roundMapOfCriteria($eventner->id);
+        $babakPenyisihanIds = CompetitionRound::where('eventner_id', $eventner->id)
+            ->where('competition_category_id', $round->competition_category_id)
+            ->where('type', CompetitionRound::TYPE_PRELIMINARY)
+            ->pluck('id')
+            ->all();
+
+        $allDeductions = ScoreDeduction::where('eventner_id', $eventner->id)
+            ->get()
+            ->groupBy('registration_id');
+
+        $kurangi = function ($rows) use ($allDeductions, $deductionLevelMap, $deductionRoundMap, $babakPenyisihanIds) {
+            foreach ($rows as &$row) {
+                $participant = $row['registration'];
+                $deductions = DeductionCategory::applicableToLevel(
+                    $allDeductions->get($participant->id, collect()),
+                    $participant->competition_category_id,
+                    $deductionLevelMap
+                );
+                // Tanpa babak = berlaku di semua babak; dengan babak = hanya
+                // bila babaknya termasuk penyisihan tingkat ini.
+                $deductions = $deductions->reject(fn ($d) => ($deductionRoundMap[$d->deduction_criteria_id] ?? null) !== null
+                    && ! in_array((int) $deductionRoundMap[$d->deduction_criteria_id], $babakPenyisihanIds, true));
+                $row['final_total'] = $row['total'] - $deductions->sum(fn ($d) => $d->magnitude);
+            }
+            unset($row);
+
+            return $rows;
+        };
+
         $groups = [];
         $groupModels = CompetitionGroup::where('eventner_id', $this->eventnerId)
             ->where('competition_category_id', $round->competition_category_id)
@@ -722,7 +762,7 @@ class Index extends Component
                 $round->id,
             );
 
-            $groups[] = ['group' => $group, 'rows' => $rows];
+            $groups[] = ['group' => $group, 'rows' => $kurangi($rows)];
         }
 
         // Peserta yang belum bergrup: satu pool umum, supaya panitia juga bisa
@@ -738,7 +778,7 @@ class Index extends Component
         );
         $rows = array_values(array_filter($rows, fn ($r) => !$r['registration']->competition_group_id));
         if ($rows) {
-            $groups[] = ['group' => null, 'rows' => $rows];
+            $groups[] = ['group' => null, 'rows' => $kurangi($rows)];
         }
 
         $sudahFinalis = CompetitionRoundRegistration::where('competition_round_id', $round->id)
@@ -882,7 +922,9 @@ class Index extends Component
                 $existing->update([
                     'competition_group_id' => $registration->competition_group_id,
                     'seed' => $row['rank'],
-                    'preliminary_total' => $row['total'],
+                    // Yang disimpan nilai akhir (sudah dipotong pengurangan),
+                    // sama dengan angka yang ditampilkan di pratinjau.
+                    'preliminary_total' => $row['final_total'] ?? $row['total'],
                 ]);
                 $diperbarui++;
             } else {
@@ -892,7 +934,7 @@ class Index extends Component
                     'registration_id' => $registrationId,
                     'competition_group_id' => $registration->competition_group_id,
                     'seed' => $row['rank'],
-                    'preliminary_total' => $row['total'],
+                    'preliminary_total' => $row['final_total'] ?? $row['total'],
                 ]);
                 $ditambah++;
             }
