@@ -125,19 +125,25 @@
                                 <label class="form-label fw-semibold">Grup</label>
                                 <select class="form-select form-select-sm" wire:model="groupId">
                                     <option value="">— Semua —</option>
-                                    @foreach($groups as $g)
-                                        <option value="{{ $g['id'] }}">{{ $g['name'] }}</option>
+                                    @foreach($this->groups as $g)
+                                        <option value="{{ $g->id }}">{{ $g->name }}</option>
                                     @endforeach
                                 </select>
+                                @if(count($categories) > 0 && !$this->groups->count())
+                                    <span class="text-muted fs-2 d-block mt-1">Tingkat ini belum punya grup — diatur di tab "Grup & Juri".</span>
+                                @endif
                             </div>
                             <div class="col-6">
                                 <label class="form-label fw-semibold">Babak</label>
                                 <select class="form-select form-select-sm" wire:model="roundId">
                                     <option value="">— Penyisihan —</option>
-                                    @foreach($rounds as $r)
-                                        <option value="{{ $r['id'] }}">{{ $r['name'] }}</option>
+                                    @foreach($this->rounds as $r)
+                                        <option value="{{ $r->id }}">{{ $r->name }}</option>
                                     @endforeach
                                 </select>
+                                @if(count($categories) > 0 && !$this->rounds->count())
+                                    <span class="text-muted fs-2 d-block mt-1">Tingkat ini belum punya babak — diatur di tab "Babak".</span>
+                                @endif
                             </div>
                         </div>
                         <div class="row g-2 mb-3">

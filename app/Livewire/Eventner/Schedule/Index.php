@@ -4,6 +4,8 @@ namespace App\Livewire\Eventner\Schedule;
 
 use App\Livewire\Concerns\MelaporKePengguna;
 use App\Models\EventSchedule;
+use App\Models\CompetitionGroup;
+use App\Models\CompetitionRound;
 use App\Models\Registration;
 use App\Traits\FeatureGatedComponent;
 use Carbon\Carbon;
@@ -34,8 +36,6 @@ class Index extends Component
 
     public $eventner;
     public $categories = [];
-    public $groups = [];
-    public $rounds = [];
     public $venues = [];
 
     // Form manual
@@ -70,11 +70,36 @@ class Index extends Component
             ->get()
             ->toArray();
 
-        $this->groups = $this->eventner->competitionGroups()->orderBy('sort_order')->get(['id', 'competition_category_id', 'name'])->toArray();
-        $this->rounds = $this->eventner->competitionRounds()->orderBy('sort_order')->get(['id', 'competition_category_id', 'name'])->toArray();
+        // Grup & babak tidak dimuat di sini: keduanya computed per tingkat
+        // terpilih (getGroupsProperty/getRoundsProperty), karena dropdownnya
+        // harus mengikuti tingkat yang sedang dipilih di form.
         $this->venues = $this->eventner->activeVenues() // Collection jadi — activeVenues() sudah ->get()
             ->map(fn ($v) => ['id' => $v->id, 'name' => $v->name])
             ->toArray();
+    }
+
+    /** Grup milik tingkat terpilih — kosong bila belum memilih. */
+    public function getGroupsProperty()
+    {
+        return $this->grupBabakTingkat(CompetitionGroup::class);
+    }
+
+    /** Babak milik tingkat terpilih — kosong bila belum memilih. */
+    public function getRoundsProperty()
+    {
+        return $this->grupBabakTingkat(CompetitionRound::class);
+    }
+
+    private function grupBabakTingkat(string $model)
+    {
+        if (! $this->categoryId) {
+            return collect();
+        }
+
+        return $model::where('eventner_id', $this->eventner->id)
+            ->where('competition_category_id', (int) $this->categoryId)
+            ->orderBy('sort_order')
+            ->get();
     }
 
     private function rules(): array
@@ -99,16 +124,34 @@ class Index extends Component
         ];
     }
 
-    /** Tingkat, grup, babak, venue yang dipilih harus milik event ini. */
+    /** Tingkat & venue yang dipilih harus milik event ini; grup & babak harus milik tingkatnya. */
     private function relasiSah(): bool
     {
         $categoryId = (int) $this->categoryId;
         $milikEvent = fn ($list, $id) => $id === 0 || collect($list)->contains('id', $id);
 
-        return $milikEvent($this->categories, $categoryId)
-            && $milikEvent($this->groups, (int) $this->groupId)
-            && $milikEvent($this->rounds, (int) $this->roundId)
-            && $milikEvent($this->venues, (int) $this->venueId);
+        if (! $milikEvent($this->categories, $categoryId)
+            || ! $milikEvent($this->venues, (int) $this->venueId)) {
+            return false;
+        }
+
+        // Milik event saja tidak cukup: grup & babak harus milik TINGKAT yang
+        // dipilih. Dropdownnya sudah difilter per tingkat, tapi payload bisa
+        // dibuat langsung — jadwal berisi grup milik tingkat lain akan
+        // mengacaukan halaman rundown dan tablet juri.
+        foreach ([
+            ['groupId', CompetitionGroup::class],
+            ['roundId', CompetitionRound::class],
+        ] as [$prop, $model]) {
+            $id = (int) $this->$prop;
+            if ($id !== 0 && ! $model::where('eventner_id', $this->eventner->id)
+                ->where('competition_category_id', $categoryId)
+                ->whereKey($id)->exists()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function save()
@@ -116,7 +159,7 @@ class Index extends Component
         $this->validate($this->rules(), $this->messages());
 
         if (!$this->relasiSah()) {
-            $this->addError('categoryId', 'Tingkat/grup/babak/venue tidak valid untuk event ini.');
+            $this->addError('categoryId', 'Tingkat/grup/babak/venue tidak valid untuk tingkat ini.');
             return;
         }
 
@@ -145,6 +188,12 @@ class Index extends Component
         }
 
         $this->reset(['editingId', 'title', 'tanggal', 'categoryId', 'groupId', 'roundId', 'venueId', 'startTime', 'endTime']);
+    }
+
+    /** Tingkat berganti: grup/babak milik tingkat lama tak boleh tersisa di form. */
+    public function updatedCategoryId(): void
+    {
+        $this->reset(['groupId', 'roundId']);
     }
 
     public function edit($id)

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Livewire\Eventner\Schedule\Index;
 use App\Models\CompetitionCategory;
 use App\Models\CompetitionGroup;
+use App\Models\CompetitionRound;
 use App\Models\Eventner;
 use App\Models\EventnerVenue;
 use App\Models\EventSchedule;
@@ -102,6 +103,51 @@ class EventScheduleTest extends TestCase
         Livewire::actingAs($this->user)
             ->test(Index::class)
             ->set('categoryId', (string) $levelLain->id)
+            ->set('startTime', '08:00')
+            ->call('save')
+            ->assertHasErrors('categoryId');
+
+        $this->assertSame(0, EventSchedule::count());
+    }
+
+    /**
+     * Grup & babak milik TINGKAT LAIN ditolak, bukan cuma milik event lain.
+     *
+     * Keluhan yang dilaporkan: dropdown Grup/Babak diisi se-event, jadi
+     * tingkat yang belum punya grup memperlihatkan grup milik tingkat tetangga
+     * — dan jadwalnya bisa tersimpan mengikat grup yang salah.
+     */
+    public function test_grup_babak_tingkat_lain_ditolak()
+    {
+        $tingkatLain = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'parent_id' => $this->level->parent_id,
+        ]);
+        $grupLain = CompetitionGroup::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $tingkatLain->id,
+            'name' => 'Grup Milik Tingkat Lain',
+        ]);
+        $babakLain = CompetitionRound::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $tingkatLain->id,
+            'name' => 'Babak Milik Tingkat Lain',
+        ]);
+
+        // Dropdown tingkat ini tak boleh memperlihatkan grup/babak tetangganya.
+        $component = Livewire::actingAs($this->user)
+            ->test(Index::class)
+            ->set('categoryId', (string) $this->level->id);
+
+        $this->assertNull($component->get('groups')->firstWhere('id', $grupLain->id));
+        $this->assertNull($component->get('rounds')->firstWhere('id', $babakLain->id));
+
+        // …dan payload langsung pun ditolak.
+        Livewire::actingAs($this->user)
+            ->test(Index::class)
+            ->set('categoryId', (string) $this->level->id)
+            ->set('groupId', (string) $grupLain->id)
+            ->set('roundId', (string) $babakLain->id)
             ->set('startTime', '08:00')
             ->call('save')
             ->assertHasErrors('categoryId');
