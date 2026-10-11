@@ -21,6 +21,9 @@ Route::get('judges/kartu-panitia', [App\Http\Controllers\Eventner\PanitiaCardCon
 Route::get('judges/{judge}/format-pdf/{competitionCategoryId?}', [App\Http\Controllers\Eventner\FormatNilaiController::class, 'downloadPdfByJudge'])->name('eventner.judges.format-pdf');
 Route::get('venues', App\Livewire\Eventner\Venue\Index::class)->name('eventner.venues.index');
 Route::get('competition-categories', App\Livewire\Eventner\CompetitionCategory\Index::class)->name('eventner.competition-categories.index');
+// Atur satu tingkat lomba (Grup & Juri, Seri, Babak) di halamannya sendiri —
+// pengganti modal tiga-seksi yang menumpuk.
+Route::get('competition-categories/{category}', App\Livewire\Eventner\CompetitionCategory\Show::class)->name('eventner.competition-categories.show');
 Route::get('participants', App\Livewire\Eventner\Participant\Index::class)->name('eventner.participants.index');
 // Meja daftar ulang — hadir, grup, seri, nomor undian dalam satu layar.
 Route::get('daftar-ulang', App\Livewire\Eventner\DaftarUlang\Index::class)->name('eventner.daftar-ulang.index');

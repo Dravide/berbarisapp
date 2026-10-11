@@ -1,0 +1,521 @@
+<title>Atur Kategori Lomba — Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: dokumen spesifikasi — tiap layar satu slide, wireframe kiri, anotasi kanan. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --amber:#b45309; --amber-soft:#fef3c7;
+  --green:#15803d; --green-soft:#dcfce7;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --amber:#fbbf24; --amber-soft:#3a2b08;
+    --green:#4ade80; --green-soft:#0c2a18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --amber:#fbbf24; --amber-soft:#3a2b08;
+  --green:#4ade80; --green-soft:#0c2a18;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:clamp(28px,5vw,56px)}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:70ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap}
+.chip b{color:var(--ink);font-weight:600}
+
+/* Slide */
+.slide{margin-top:clamp(36px,6vw,64px)}
+.slide-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.slide-head h2{font-size:20px;font-weight:700}
+.mode-tag{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.slide-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:900px){.slide-grid{grid-template-columns:1fr}}
+
+/* Bingkai layar admin */
+.screen{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:10px;box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.screen-inner{
+  border-radius:8px;border:1px solid var(--line);
+  background:var(--panel-2);overflow:hidden;position:relative;
+  font-size:11px;display:flex;flex-direction:column;min-height:340px;
+}
+.screen-cap{font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 4px 2px;display:flex;justify-content:space-between;gap:8px}
+
+/* Anotasi */
+.notes{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.notes h3{font-size:14px;margin-bottom:8px}
+.notes ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.notes li{font-size:13.5px;color:var(--muted)}
+.notes li b{color:var(--ink);font-weight:600}
+.notes code{background:var(--panel-2);border:1px solid var(--line-soft);padding:1px 5px;border-radius:5px}
+
+table.mini{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+table.mini th{font-family:var(--mono);font-weight:500;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;color:var(--muted);text-align:left;padding:4px 8px;border-bottom:1px solid var(--line)}
+table.mini td{padding:5px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table.mini tr:last-child td{border-bottom:0}
+
+/* Elemen wireframe umum */
+.wf{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+.ph{background:var(--ph-fill);border:1px solid var(--ph-line);border-radius:6px}
+.crumb{display:flex;gap:5px;align-items:center;font-size:9px;opacity:.6;padding:8px 14px 0}
+.crumb i{font-style:normal}
+.tablerow{display:flex;align-items:center;gap:8px;padding:6px 14px;border-bottom:1px solid var(--line-soft)}
+.tablerow:last-child{border-bottom:0}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:8.5px;font-weight:600;padding:2px 7px;border-radius:999px;border:1px solid var(--ph-line);background:var(--ph-fill);color:var(--muted);white-space:nowrap}
+.badge.blue{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.badge.warn{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+.badge.green{background:var(--green-soft);color:var(--green);border-color:transparent}
+.btnw{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--accent);color:var(--accent);background:transparent;white-space:nowrap}
+.btnw.solid{background:var(--accent);color:#fff}
+.btnw.ghost{border-color:var(--ph-line);color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:600;padding:4px 12px;border-radius:999px;border:1px solid var(--ph-line);color:var(--muted);background:transparent}
+.pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.field{height:22px;border:1px solid var(--ph-line);border-radius:6px;background:var(--panel)}
+.dim{color:var(--muted)}
+.ck{width:10px;height:10px;border:1.5px solid var(--ph-line);border-radius:3px;flex:none;display:inline-block}
+.ck.on{background:var(--accent);border-color:var(--accent);position:relative}
+.ck.on::after{content:"";position:absolute;inset:2px 3px 3px 2px;border:1.5px solid #fff;border-top:0;border-left:0;transform:rotate(40deg) translateY(-1px)}
+.modal{position:absolute;inset:0;background:rgba(10,12,18,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
+.modal-box{background:var(--panel);border:1px solid var(--line);border-radius:10px;width:100%;max-width:340px;box-shadow:0 8px 30px rgba(0,0,0,.18)}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--line-soft);font-weight:700;font-size:11px}
+.modal-bd{padding:12px 14px;display:grid;gap:8px}
+.modal-ft{display:flex;justify-content:flex-end;gap:8px;padding:9px 14px;border-top:1px solid var(--line-soft)}
+.x{font-size:12px;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Berbaris App — Spesifikasi &amp; Wireframe</p>
+  <h1>Atur Kategori Lomba</h1>
+  <p class="lede">Restrukturisasi halaman <code>/eventner/competition-categories</code>: daftar yang lega, form kategori jadi modal ringan, dan atur Grup &amp; Juri / Seri / Babak pindah ke <b>halaman detail per tingkat</b> dengan tab — menggantikan modal tiga-seksi yang menumpuk. Tujuan UI/UX: satu layar satu tugas, lebih sedikit round-trip, lebih cepat.</p>
+  <div class="meta">
+    <span class="chip">Daftar <b>full-width</b>, form jadi modal</span>
+    <span class="chip">Atur → <b>/competition-categories/{id}</b>, tab <b>?tab=</b></span>
+    <span class="chip">Modal tiga-seksi <b>dihapus</b></span>
+    <span class="chip">Performa <b>quick wins</b> (tanpa ubah arsitektur)</span>
+  </div>
+
+  <!-- ============ SLIDE 1 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>1 · Daftar — full-width, tombol Atur</h2><span class="mode-tag">/eventner/competition-categories</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="crumb"><i>Home</i> › <i>Kategori Tingkat Lomba</i></div>
+          <div class="wf" style="padding:10px 14px;gap:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <b>Struktur Jenis &amp; Tingkat Lomba</b>
+              <span class="btnw solid">＋ Tambah</span>
+            </div>
+            <div class="ph" style="padding:7px 10px;display:flex;align-items:center;gap:8px">
+              <span class="dim">⠿</span><span class="pill on" style="padding:2px 9px;font-size:8.5px">▾</span>
+              <div style="flex:1">
+                <b style="color:var(--accent)">LOBB</b>
+                <div class="dim" style="font-size:8.5px">3 tingkat lomba</div>
+              </div>
+              <span class="btnw ghost">✎</span><span class="btnw ghost">🗑</span>
+            </div>
+            <div style="margin-left:16px;display:grid;gap:6px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="dim">⠿</span>
+                <div style="flex:1">
+                  <b>SMP / MTs - U15</b>
+                  <div class="dim" style="font-size:8.5px">12 peserta · 14 Mar 2026 · Dery, Ujang</div>
+                </div>
+                <span class="btnw ghost">✎</span><span class="btnw ghost">🗑</span>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px;margin-left:18px;align-items:center">
+                <span class="badge">Max 3 pasukan/sekolah</span>
+                <span class="badge green">Rp 150.000</span>
+                <span class="badge warn"><span>📍</span> GOR BKI</span>
+                <span class="badge blue">Grup A · 8</span>
+                <span class="badge blue">Grup B · 4</span>
+                <span class="badge">Final · 6 finalis</span>
+                <span class="btnw">⚙ Atur</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span class="dim">⠿</span>
+                <div style="flex:1">
+                  <b>SMA / MA - U17</b>
+                  <div class="dim" style="font-size:8.5px">8 peserta · belum ada juri</div>
+                </div>
+                <span class="btnw ghost">✎</span><span class="btnw ghost">🗑</span>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:4px;margin-left:18px;align-items:center">
+                <span class="badge">Max 3 pasukan/sekolah</span>
+                <span class="badge">Gratis</span>
+                <span class="badge warn">Belum ada juri</span>
+                <span class="btnw">⚙ Atur</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Daftar kini lebar penuh — panel form kanan dihapus</span><span>Atur = link halaman detail</span></div>
+      </div>
+      <div class="notes">
+        <h3>Perubahan &amp; alasan</h3>
+        <ul>
+          <li><b>Panel form kanan (col-lg-4) dihapus.</b> Ia menempati ⅓ layar 24 jam sehari meski tak dipakai; daftar jadi sempit.</li>
+          <li>Tombol <b>＋ Tambah</b> di header kartu membuka modal form (slide 2); ikon ✎ juga membuka modal yang sama terisi.</li>
+          <li><b>Atur</b> kini link ke halaman detail <code>competition-categories/{id}</code> — bukan modal 3-seksi.</li>
+          <li>Badge grup/babak/juri tetap di baris — keadaan tetap terbaca tanpa klik.</li>
+          <li>Performa: jumlah peserta dibaca lewat <code>withCount</code> (satu query), menghapus N+1 per baris.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 2 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>2 · Modal form Kategori</h2><span class="mode-tag">showCategoryForm</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="wf" style="padding:10px 14px">
+            <div class="dim" style="font-size:9px">… daftar seperti slide 1 …</div>
+          </div>
+          <div class="modal">
+            <div class="modal-box">
+              <div class="modal-hd"><span>Tambah Kategori</span><span class="x">✕</span></div>
+              <div class="modal-bd">
+                <div>
+                  <div class="dim" style="font-size:9px">Jenis Lomba (Parent)</div>
+                  <div class="field" style="margin-top:3px"></div>
+                  <div class="dim" style="font-size:8px;margin-top:2px">Pilih "Tidak ada" untuk jenis baru; pilih jenis untuk menambah tingkat.</div>
+                </div>
+                <div>
+                  <div class="dim" style="font-size:9px">Nama Tingkat Lomba</div>
+                  <div class="field" style="margin-top:3px"></div>
+                </div>
+                <div style="display:flex;gap:6px">
+                  <div style="flex:1"><div class="dim" style="font-size:9px">Tanggal</div><div class="field" style="margin-top:3px"></div></div>
+                  <div style="flex:1"><div class="dim" style="font-size:9px">Tempat</div><div class="field" style="margin-top:3px"></div></div>
+                </div>
+                <div style="display:flex;gap:6px">
+                  <div style="flex:1"><div class="dim" style="font-size:9px">Kuota</div><div class="field" style="margin-top:3px"></div></div>
+                  <div style="flex:1"><div class="dim" style="font-size:9px">Max/sekolah</div><div class="field" style="margin-top:3px"></div></div>
+                  <div style="flex:1"><div class="dim" style="font-size:9px">Biaya</div><div class="field" style="margin-top:3px"></div></div>
+                </div>
+              </div>
+              <div class="modal-ft">
+                <span class="btnw ghost">Batal</span>
+                <span class="btnw solid">＋ Tambahkan</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Hand-rolled, pola yang sama dengan modal lain</span><span>Field tingkat muncul setelah parent dipilih</span></div>
+      </div>
+      <div class="notes">
+        <h3>Perubahan &amp; alasan</h3>
+        <ul>
+          <li>Form pindah ke modal — <b>tanpa form</b> di layar, daftar full-width; dengan form, fokus perhatian satu hal.</li>
+          <li>Mekanisme persis pola <code>$showModal</code>/<code>openModal()</code> ala halaman Peserta — konsisten dengan komponen lain.</li>
+          <li>Batal &amp; ✕ menutup tanpa menyimpan; simpan menutup modal + toast.</li>
+          <li>Validasi &amp; guard tenant <code>save()</code> tidak berubah.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 3 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>3 · Detail — tab Grup &amp; Juri</h2><span class="mode-tag">/competition-categories/{id}?tab=grup</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="crumb"><i>Home</i> › <i>Kategori Lomba</i> › <b>SMP / MTs - U15</b></div>
+          <div class="wf" style="padding:10px 14px;gap:9px">
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px">
+              <b style="font-size:13px">SMP / MTs - U15</b>
+              <span class="badge blue">LOBB</span>
+              <span class="badge">12 peserta</span>
+              <span class="badge">📍 GOR BKI</span>
+              <span class="badge green">Rp 150.000</span>
+              <span class="badge">12 / 24 kuota</span>
+              <span class="badge blue">Juri: Dery, Ujang</span>
+            </div>
+            <div style="display:flex;gap:6px">
+              <span class="pill on">Grup &amp; Juri</span>
+              <span class="pill">Seri</span>
+              <span class="pill">Babak</span>
+            </div>
+            <div class="ph" style="padding:8px 12px;display:grid;gap:7px">
+              <div style="display:flex;gap:6px;align-items:center">
+                <div style="flex:1"><div class="dim" style="font-size:8.5px">Nama Grup</div><div class="field" style="margin-top:2px"></div></div>
+                <div style="width:64px"><div class="dim" style="font-size:8.5px">Urutan</div><div class="field" style="margin-top:2px"></div></div>
+                <span class="btnw solid">＋ Tambah Grup</span>
+              </div>
+              <div style="display:flex;font-family:var(--mono);font-size:8.5px;color:var(--muted);gap:8px;padding:0 2px">
+                <span style="flex:1.2">GRUP</span><span style="width:34px">PST</span><span style="flex:2">JURI YANG MENILAI</span><span style="width:30px;text-align:right">AKSI</span>
+              </div>
+              <div class="tablerow" style="padding:6px 2px">
+                <b style="flex:1.2">Grup A</b><span style="width:34px">8</span>
+                <span style="flex:2;display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+                  <span class="ck on"></span><span class="dim" style="font-size:8.5px">Dery</span>
+                  <span class="ck on"></span><span class="dim" style="font-size:8.5px">Ujang</span>
+                </span>
+                <span style="width:30px;text-align:right"><span class="btnw ghost">✎</span><span class="btnw ghost">🗑</span></span>
+              </div>
+              <div class="tablerow" style="padding:6px 2px">
+                <b style="flex:1.2">Grup B</b><span style="width:34px">4</span>
+                <span style="flex:2;display:flex;gap:5px;align-items:center">
+                  <span class="ck on"></span><span class="dim" style="font-size:8.5px">Dery</span>
+                  <span class="ck"></span><span class="dim" style="font-size:8.5px">Ujang</span>
+                  <span class="badge warn">Belum ada juri</span>
+                </span>
+                <span style="width:30px;text-align:right"><span class="btnw ghost">✎</span><span class="btnw ghost">🗑</span></span>
+              </div>
+              <div class="tablerow" style="padding:6px 2px">
+                <b style="flex:1.2">Belum Bergrup <span class="badge" style="margin-left:3px">ungrouped</span></b><span style="width:34px">2</span>
+                <span style="flex:2;display:flex;gap:5px;align-items:center">
+                  <span class="ck"></span><span class="dim" style="font-size:8.5px">Dery</span>
+                  <span class="ck"></span><span class="dim" style="font-size:8.5px">Ujang</span>
+                </span>
+                <span style="width:30px"></span>
+              </div>
+            </div>
+            <div class="dim" style="font-size:8.5px;margin:0 2px">ℹ Lembar nilai mengikuti <b>seri</b> tiap peserta — penugasannya di sini per grup.</div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Grup + Belum Bergrup + Final = satu tabel penugasan</span><span>Tab aktif di-URL-kan</span></div>
+      </div>
+      <div class="notes">
+        <h3>Perubahan &amp; alasan</h3>
+        <ul>
+          <li><b>Halaman</b>, bukan modal: konten lega, breadcrumb kembali ke daftar, tiap tingkat punya URL sendiri.</li>
+          <li>Header fakta ringkas (peserta, tanggal, venue, biaya, kuota, juri) — panitia tak perlu ke daftar untuk konteks.</li>
+          <li>Tabel penugasan juri <b>identik logikanya</b> dengan modal lama: <code>assignmentRows</code> + centang per juri, tersimpan per klik.</li>
+          <li>Cuma satu seksi dirender per request — modal lama merender 3 tabel sekaligus di setiap render.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 4 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>4 · Detail — tab Seri</h2><span class="mode-tag">?tab=seri</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="crumb"><i>Home</i> › <i>Kategori Lomba</i> › <b>SMP / MTs - U15</b></div>
+          <div class="wf" style="padding:10px 14px;gap:9px">
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px">
+              <b style="font-size:13px">SMP / MTs - U15</b>
+              <span class="badge blue">LOBB</span>
+              <span class="badge">12 peserta</span>
+            </div>
+            <div style="display:flex;gap:6px">
+              <span class="pill">Grup &amp; Juri</span>
+              <span class="pill on">Seri</span>
+              <span class="pill">Babak</span>
+            </div>
+            <div class="ph" style="padding:8px 12px;display:grid;gap:7px">
+              <div style="display:flex;gap:6px;align-items:center">
+                <div style="flex:1"><div class="dim" style="font-size:8.5px">Nama Seri</div><div class="field" style="margin-top:2px"></div></div>
+                <div style="width:64px"><div class="dim" style="font-size:8.5px">Urutan</div><div class="field" style="margin-top:2px"></div></div>
+                <span class="btnw solid">＋ Tambah Seri</span>
+              </div>
+              <div style="display:flex;font-family:var(--mono);font-size:8.5px;color:var(--muted);gap:8px;padding:0 2px">
+                <span style="flex:1">SERI</span><span style="width:34px">PST</span><span style="flex:2">RUBRIK</span><span style="width:30px;text-align:right">AKSI</span>
+              </div>
+              <div class="tablerow" style="padding:6px 2px">
+                <b style="flex:1">Seri A</b><span style="width:34px">7</span>
+                <span style="flex:2;display:flex;gap:4px;flex-wrap:wrap">
+                  <span class="badge blue">Wajib</span><span class="badge blue">Kreasi</span>
+                </span>
+                <span style="width:30px;text-align:right"><span class="btnw ghost">✎</span><span class="btnw ghost">🗑</span></span>
+              </div>
+              <div class="tablerow" style="padding:6px 2px">
+                <b style="flex:1">Seri B</b><span style="width:34px">5</span>
+                <span style="flex:2;display:flex;gap:4px;flex-wrap:wrap">
+                  <span class="badge blue">Wajib</span><span class="dim" style="font-size:8.5px">+1</span>
+                </span>
+                <span style="width:30px;text-align:right"><span class="btnw ghost">✎</span><span class="btnw ghost">🗑</span></span>
+              </div>
+            </div>
+            <div class="dim" style="font-size:8.5px;margin:0 2px">ℹ Rubrik ditandai serinya di <b>Format Nilai</b>; tanpa tanda = berlaku semua seri.</div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Isi sama persis dengan seksi Seri modal lama</span><span>Cuma beda bingkai</span></div>
+      </div>
+      <div class="notes">
+        <h3>Perubahan &amp; alasan</h3>
+        <ul>
+          <li>Isi &amp; aturan <b>tidak berubah</b> — hanya pindah bingkai dari modal ke tab.</li>
+          <li>Query seri di-scope tingkat ini (dulu se-event lalu difilter); computed ter-refresh selektif lewat <code>unset</code>, bukan <code>$refresh</code> penuh.</li>
+          <li>Teks bantuan menyebut tab Grup &amp; Juri (dulu: "bagian Grup di atas").</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 5 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>5 · Detail — tab Babak</h2><span class="mode-tag">?tab=babak</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="crumb"><i>Home</i> › <i>Kategori Lomba</i> › <b>SMP / MTs - U15</b></div>
+          <div class="wf" style="padding:10px 14px;gap:9px">
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:5px">
+              <b style="font-size:13px">SMP / MTs - U15</b>
+              <span class="badge blue">LOBB</span>
+              <span class="badge">12 peserta</span>
+            </div>
+            <div style="display:flex;gap:6px">
+              <span class="pill">Grup &amp; Juri</span>
+              <span class="pill">Seri</span>
+              <span class="pill on">Babak</span>
+            </div>
+            <div class="ph" style="padding:8px 12px;display:grid;gap:7px">
+              <div style="display:flex;gap:6px;align-items:center">
+                <div style="flex:1.4"><div class="dim" style="font-size:8.5px">Nama Babak</div><div class="field" style="margin-top:2px"></div></div>
+                <div style="width:74px"><div class="dim" style="font-size:8.5px">Jenis</div><div class="field" style="margin-top:2px"></div></div>
+                <div style="width:52px"><div class="dim" style="font-size:8.5px">Urutan</div><div class="field" style="margin-top:2px"></div></div>
+                <span class="btnw solid">＋ Tambah</span>
+              </div>
+              <div style="display:flex;font-family:var(--mono);font-size:8.5px;color:var(--muted);gap:8px;padding:0 2px">
+                <span style="flex:1">BABAK</span><span style="width:48px">JENIS</span><span style="flex:1.4">RUBRIK</span><span style="width:40px">FINALIS</span><span style="width:78px;text-align:right">AKSI</span>
+              </div>
+              <div class="tablerow" style="padding:6px 2px">
+                <b style="flex:1">Penyisihan</b>
+                <span style="width:48px"><span class="badge">Penyisihan</span></span>
+                <span style="flex:1.4;display:flex;gap:4px"><span class="badge blue">PBB Wajib</span></span>
+                <span class="dim" style="width:40px;font-size:8.5px">semua</span>
+                <span style="width:78px;text-align:right"><span class="btnw ghost">✎</span><span class="btnw ghost">🗑</span></span>
+              </div>
+              <div class="tablerow" style="padding:6px 2px">
+                <b style="flex:1">Final</b>
+                <span style="width:48px"><span class="badge warn">Final</span></span>
+                <span style="flex:1.4;display:flex;gap:4px"><span class="dim" style="font-size:8.5px">Belum ditandai</span></span>
+                <span style="width:40px">6</span>
+                <span style="width:78px;text-align:right;white-space:nowrap">
+                  <span class="btnw" style="border-color:var(--amber);color:var(--amber)">↑ Loloskan Top-N</span>
+                  <span class="btnw ghost">✎</span><span class="btnw ghost">🗑</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Loloskan Top-N hanya di babak Final</span><span>Tabel + form satu layar penuh</span></div>
+      </div>
+      <div class="notes">
+        <h3>Perubahan &amp; alasan</h3>
+        <ul>
+          <li>Form babak + tabel babak + tombol <b>Loloskan Top-N</b> pindah utuh — aturan nilainya tidak disentuh sama sekali.</li>
+          <li>Jumlah finalis dibaca dari <code>round_registrations_count</code> (withCount), menghapus satu query COUNT per baris final.</li>
+          <li>Babak penyisihan vs final tetap diberi badge jenis berbeda.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 6 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>6 · Modal Loloskan Top-N</h2><span class="mode-tag">di halaman detail, tab Babak</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="wf" style="padding:10px 14px">
+            <div class="dim" style="font-size:9px">… tab Babak seperti slide 5 …</div>
+          </div>
+          <div class="modal">
+            <div class="modal-box" style="max-width:380px">
+              <div class="modal-hd"><span>Loloskan ke Babak Final</span><span class="x">✕</span></div>
+              <div class="modal-bd">
+                <div style="display:flex;gap:6px;align-items:flex-end">
+                  <div style="flex:1">
+                    <div class="dim" style="font-size:9px">Ambil N terbaik per grup</div>
+                    <div class="field" style="margin-top:3px"></div>
+                  </div>
+                  <span class="btnw">⟳ Terapkan</span>
+                </div>
+                <div class="dim" style="font-size:8.5px">Nilai &amp; urutan = <b>nilai akhir</b> (terpotong sanksi tingkat &amp; babak penyisihan).</div>
+                <div class="ph" style="padding:6px 9px;display:grid;gap:4px">
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <b style="font-size:9.5px">Grup A <span class="dim">(4 peserta)</span></b>
+                    <span class="dim" style="font-size:8px">centang / lepas semua</span>
+                  </div>
+                  <div style="display:flex;gap:5px;align-items:center"><span class="ck on"></span><span class="badge">#1</span><span style="font-size:9px">SMPN 1 <span class="dim">— nilai 88</span></span></div>
+                  <div style="display:flex;gap:5px;align-items:center"><span class="ck on"></span><span class="badge">#2</span><span style="font-size:9px">SMPN 3 <span class="dim">— nilai 73</span></span></div>
+                  <div style="display:flex;gap:5px;align-items:center"><span class="ck"></span><span class="badge">#3</span><span style="font-size:9px">SMPN 5 <span class="dim">— nilai 61</span> <span class="badge green">sudah finalis</span></span></div>
+                </div>
+                <div class="ph" style="padding:6px 9px;display:grid;gap:4px">
+                  <div style="display:flex;justify-content:space-between;align-items:center">
+                    <b style="font-size:9.5px">Grup B <span class="dim">(3 peserta)</span></b>
+                    <span class="dim" style="font-size:8px">centang / lepas semua</span>
+                  </div>
+                  <div style="display:flex;gap:5px;align-items:center"><span class="ck on"></span><span class="badge">#1</span><span style="font-size:9px">SMPN 2 <span class="dim">— nilai 80</span></span></div>
+                </div>
+              </div>
+              <div class="modal-ft">
+                <span class="btnw ghost">Batal</span>
+                <span class="btnw solid">↑ Loloskan</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Centang N teratas otomatis; sisanya manual</span><span>N diterapkan lewat tombol, bukan tiap ketikan</span></div>
+      </div>
+      <div class="notes">
+        <h3>Perubahan &amp; alasan</h3>
+        <ul>
+          <li>Pratinjau per grup: peringkat, nama, <b>nilai akhir</b>, tanda "sudah finalis" — sama seperti yang sudah dirapikan sebelumnya.</li>
+          <li>Kotak N kini <b>deferred + tombol Terapkan</b>: dulu <code>wire:model.live</code> menghitung ulang seluruh pratinjau (kalkulasi terberat di halaman) pada tiap ketikan.</li>
+          <li>Idempoten tetap dari UNIQUE (round, registration); simpan dua kali tak menggandakan finalis.</li>
+          <li>Modal hidup di halaman detail — Index tak lagi punya konteks babak.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RENCANA TEKNIS ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>Rencana implementasi</h2></div>
+    <div class="slide-grid" style="grid-template-columns:1fr">
+      <div class="notes">
+        <table class="mini">
+          <tr><th style="width:180px">Bagian</th><th>Rencana</th></tr>
+          <tr><td><b>Route</b></td><td><code>routes/eventner.php</code>: <code>get('competition-categories/{category}', Show::class)</code> → <code>eventner.competition-categories.show</code>. Sidebar aktif otomatis (wildcard <code>routeIs('...competition-categories.*')</code>).</td></tr>
+          <tr><td><b>Detail</b></td><td><code>App\Livewire\Eventner\CompetitionCategory\Show</code> — <code>#[Url] tab</code> (grup/seri/babak), guard tenant di <code>mount</code> + <code>boot</code>, logika Grup/Seri/Babak/Loloskan dipindah utuh dari Index dengan scope dipersempit ke satu tingkat.</td></tr>
+          <tr><td><b>Index</b></td><td>Full-width; form kategori jadi modal (<code>$showCategoryForm</code>, pola halaman Peserta); tombol Atur jadi link; dead code modal 3-seksi dihapus.</td></tr>
+          <tr><td><b>Performa</b></td><td><code>withCount('registrations')</code> menggantikan N+1; <code>qualifyTopN</code> deferred + tombol Terapkan; <code>dispatch('$refresh')</code> → <code>unset</code> computed terkait; COUNT baris final + hitung peserta/bergrup digabung 1 query.</td></tr>
+          <tr><td><b>Test</b></td><td><code>FinalQualificationTest</code> + <code>JudgeCompetitionGroupAssignmentTest</code> diarahkan ke <code>Show</code> (signature method tidak berubah); <code>TenantIsolationTest</code> + <code>EventnerVenueTest</code> tak tersentuh.</td></tr>
+          <tr><td><b>Verifikasi</b></td><td>2 file test → suite terkait → <code>php artisan test</code> penuh (baseline 1220).</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

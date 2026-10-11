@@ -89,12 +89,13 @@ class JudgeCompetitionGroupAssignmentTest extends TestCase
         $this->juriB = Judge::create(['eventner_id' => $this->eventner->id, 'name' => 'Ujang']);
     }
 
-    /** Modal dibuka pada satu tingkat — persis seperti tombol "Atur" di daftar. */
+    /** Halaman detail satu tingkat — persis seperti tombol "Atur" di daftar. */
     private function modal(int $categoryId = null)
     {
         return Livewire::actingAs($this->user)
-            ->test(\App\Livewire\Eventner\CompetitionCategory\Index::class)
-            ->call('openRoundPanel', $categoryId ?? $this->level->id);
+            ->test(\App\Livewire\Eventner\CompetitionCategory\Show::class, [
+                'category' => $categoryId ?? $this->level->id,
+            ]);
     }
 
     /** Baris penugasan yang dirender modal, sebagai [key => label]. */

@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Livewire\Eventner\CompetitionCategory\Index;
+use App\Livewire\Eventner\CompetitionCategory\Show;
 use App\Models\AssessmentCategory;
 use App\Models\AssessmentCriteria;
 use App\Models\AssessmentScore;
@@ -143,7 +143,8 @@ class FinalQualificationTest extends TestCase
 
     private function panel()
     {
-        return Livewire::test(Index::class)->call('openQualifyPanel', $this->final->id);
+        return Livewire::test(Show::class, ['category' => $this->level->id])
+            ->call('openQualifyPanel', $this->final->id);
     }
 
     public function test_usulan_mengambil_top_n_per_grup()
@@ -356,6 +357,6 @@ class FinalQualificationTest extends TestCase
         ]);
 
         $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
-        Livewire::test(Index::class)->call('openQualifyPanel', $babakLain->id);
+        Livewire::test(Show::class, ['category' => $this->level->id])->call('openQualifyPanel', $babakLain->id);
     }
 }
