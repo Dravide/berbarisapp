@@ -148,6 +148,38 @@ if (!function_exists('normalisasi_no_hp')) {
     }
 }
 
+if (!function_exists('wa_me_url')) {
+    /**
+     * Isian nomor bebas → tautan wa.me yang valid, atau null kalau kosong.
+     *
+     * wa.me menolak awalan 0 dan "+": yang diterimanya hanya format
+     * internasional "62…". Isian admin beragam ("0812…", "+62 812…",
+     * "812…"), dan membiarkannya apa adanya membuat tombol WhatsApp
+     * menaut ke alamat yang tidak pernah resolve. Satu sumber kebenaran
+     * untuk semua tautan WhatsApp platform: tombol mengapung di layout
+     * landing dan halaman Bantuan & Support.
+     *
+     * Nomor yang tidak dikenali awalannya dikembalikan sebagai digit apa
+     * adanya — filosofi sama dengan normalisasi_no_hp().
+     */
+    function wa_me_url(?string $phone): ?string
+    {
+        $digit = preg_replace('/\D+/', '', (string) $phone);
+
+        if ($digit === '') {
+            return null;
+        }
+
+        if (str_starts_with($digit, '0')) {
+            $digit = '62' . substr($digit, 1);
+        } elseif (str_starts_with($digit, '8')) {
+            $digit = '62' . $digit;
+        }
+
+        return 'https://wa.me/' . $digit;
+    }
+}
+
 if (!function_exists('qr_data_uri')) {
     /**
      * QR sebagai data-URI PNG — siap dipakai di <img src> view dompdf.

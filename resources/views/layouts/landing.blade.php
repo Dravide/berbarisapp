@@ -226,6 +226,7 @@
                         <li><a href="{{ route('privacy') }}" class="transition hover:text-secondary">Kebijakan Privasi</a></li>
                         <li><a href="{{ route('terms') }}" class="transition hover:text-secondary">Syarat &amp; Ketentuan</a></li>
                         <li><a href="{{ route('help') }}" class="transition hover:text-secondary">Bantuan &amp; Support</a></li>
+                        <li><a href="{{ route('public.eventners') }}" class="transition hover:text-secondary">Penyelenggara Event</a></li>
                     </ul>
                     @php $socials = json_decode(get_setting('landing_social_links', '{}'), true); @endphp
                     @if(!empty($socials))
@@ -246,6 +247,18 @@
     </footer>
 
     @livewireScripts
+
+    {{-- Tombol WhatsApp mengapung — kanan bawah, semua halaman ber-layout landing.
+         Nomornya satu-satunya dari setting kontak; tanpa isian, tombolnya tidak
+         dirender (tidak ada tombol yang menaut ke "wa.me/"). --}}
+    @php $waFloatUrl = wa_me_url(get_setting('landing_contact') ? (json_decode(get_setting('landing_contact'), true)['phone'] ?? '') : ''); @endphp
+    @if($waFloatUrl)
+    <a href="{{ $waFloatUrl }}" target="_blank" rel="noopener"
+       aria-label="Hubungi kami via WhatsApp"
+       class="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_4px_16px_rgba(17,24,39,0.25)] transition-transform duration-200 hover:scale-105">
+        <i class="ti ti-brand-whatsapp text-3xl"></i>
+    </a>
+    @endif
 
     {{-- Mobile menu toggle + scroll spy (vanilla JS) --}}
     <script>
