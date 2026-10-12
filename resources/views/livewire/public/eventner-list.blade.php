@@ -1,4 +1,8 @@
 <div>
+    @if($eventners->count())
+        @include('components.seo.json-ld-itemlist', ['eventners' => $eventners])
+    @endif
+
     {{-- Header --}}
     <div class="section-pad bg-surface">
         <div class="container-landing">

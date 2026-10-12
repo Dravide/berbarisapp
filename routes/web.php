@@ -7,6 +7,7 @@ Route::get('/', App\Livewire\Public\LandingPage::class)->name('landing');
 Route::get('/pricing', App\Livewire\Public\PricingPage::class)->name('pricing');
 // Daftar lengkap penyelenggara — tujuan "Lihat Semua" di section #eventners landing.
 Route::get('/eventner', App\Livewire\Public\EventnerList::class)->name('public.eventners');
+Route::get('/sitemap.xml', [App\Http\Controllers\Public\SitemapController::class, 'index'])->name('sitemap');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', App\Livewire\Auth\Login::class)->name('login');

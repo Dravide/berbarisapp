@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireframe Sitemap & JSON-LD</title>
+<style>
+:root {
+    --bg: #f7f7f5;
+    --surface: #ffffff;
+    --ink: #1a1a18;
+    --muted: #6b6b66;
+    --line: #e4e4e0;
+    --accent: #0062ff;
+    --accent-soft: #eef4ff;
+    --ok: #178a50;
+    --ok-soft: #eaf6ef;
+    --warn: #b45309;
+    --warn-soft: #fdf5e6;
+    --code-bg: #1e1e1c;
+    --code-ink: #e8e8e4;
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --bg: #141412;
+        --surface: #1e1e1c;
+        --ink: #ececea;
+        --muted: #9a9a94;
+        --line: #323230;
+        --accent: #6aa2ff;
+        --accent-soft: #1c2740;
+        --ok: #5fc48e;
+        --ok-soft: #1c2e24;
+        --warn: #e0a458;
+        --warn-soft: #322816;
+        --code-bg: #0d0d0c;
+        --code-ink: #dcdcd8;
+    }
+}
+:root[data-theme="dark"] {
+    --bg: #141412;
+    --surface: #1e1e1c;
+    --ink: #ececea;
+    --muted: #9a9a94;
+    --line: #323230;
+    --accent: #6aa2ff;
+    --accent-soft: #1c2740;
+    --ok: #5fc48e;
+    --ok-soft: #1c2e24;
+    --warn: #e0a458;
+    --warn-soft: #322816;
+    --code-bg: #0d0d0c;
+    --code-ink: #dcdcd8;
+}
+* { box-sizing: border-box; margin: 0; }
+body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+    line-height: 1.6;
+    padding: 0 16px 64px;
+}
+.wrap { max-width: 880px; margin: 0 auto; }
+header.doc { padding: 48px 0 32px; }
+.eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+}
+h1 { font-size: clamp(26px, 5vw, 36px); line-height: 1.2; letter-spacing: -0.01em; }
+.lede { color: var(--muted); font-size: 16px; max-width: 640px; margin-top: 10px; }
+.meta-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+.chip {
+    font-size: 12px;
+    padding: 4px 12px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    background: var(--surface);
+}
+.chip b { color: var(--ink); font-weight: 600; }
+nav.toc { margin: 24px 0 0; display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; }
+nav.toc a { color: var(--accent); text-decoration: none; }
+nav.toc a:hover { text-decoration: underline; }
+section.slide {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 28px 26px;
+    margin-top: 22px;
+    scroll-margin-top: 16px;
+}
+.slide-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+.slide-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 2px 10px;
+    white-space: nowrap;
+}
+h2 { font-size: 20px; line-height: 1.3; letter-spacing: -0.01em; }
+.slide p.desc { color: var(--muted); font-size: 14px; margin: 4px 0 16px; max-width: 640px; }
+h3 { font-size: 14px; margin: 18px 0 8px; }
+.notes {
+    display: grid;
+    gap: 8px;
+    margin-top: 16px;
+    font-size: 13px;
+}
+.notes .note {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: var(--accent-soft);
+}
+.notes .note.warn { background: var(--warn-soft); }
+.notes .note.ok { background: var(--ok-soft); }
+.notes .tag {
+    flex: 0 0 auto;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--accent);
+    color: #fff;
+    margin-top: 2px;
+}
+.notes .warn .tag { background: var(--warn); }
+.notes .ok .tag { background: var(--ok); }
+pre {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    overflow-x: auto;
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    white-space: pre;
+}
+pre.small { font-size: 12px; }
+table.mini { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.mini th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+}
+table.mini td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+}
+table.mini tr:last-child td { border-bottom: 0; }
+table.mini code {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 12px;
+    background: var(--code-bg);
+    color: var(--code-ink);
+    padding: 1px 6px;
+    border-radius: 5px;
+    white-space: nowrap;
+}
+.mock {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 12.5px;
+    margin-top: 12px;
+}
+.mock-bar {
+    background: var(--code-bg);
+    color: var(--code-ink);
+    padding: 6px 12px;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+}
+.mock-body { padding: 14px 16px; }
+.gate {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+}
+.gate.yes { color: var(--ok); border-color: var(--ok); background: var(--ok-soft); }
+.gate.no { color: var(--warn); border-color: var(--warn); background: var(--warn-soft); }
+.grid2 { display: grid; gap: 14px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+footer.doc { color: var(--muted); font-size: 12px; margin-top: 32px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="doc">
+    <span class="eyebrow">Wireframe · SEO Paket</span>
+    <h1>Sitemap.xml & JSON-LD Schema</h1>
+    <p class="lede">Tiga penutup: sitemap.xml dinamis (event approved + halaman statis + hall-of-fame), robots.txt menunjuk sitemap, dan JSON-LD Event dirapikan — plus ItemList di /eventner. Tidak terlihat mata pengunjung; dibaca crawler.</p>
+    <div class="meta-chips">
+        <span class="chip">Status <b>Implementasi selesai · 17 test baru lulus</b></span>
+        <span class="chip">Suite <b>1264 passed</b></span>
+        <span class="chip">Domain prod <b>berbaris.app</b></span>
+    </div>
+    <nav class="toc">
+        <a href="#sitemap">1 · Sitemap.xml</a>
+        <a href="#robots">2 · robots.txt</a>
+        <a href="#event">3 · JSON-LD Event</a>
+        <a href="#itemlist">4 · JSON-LD ItemList</a>
+        <a href="#rencana">5 · Rencana Teknis</a>
+    </nav>
+</header>
+
+<section class="slide" id="sitemap">
+    <div class="slide-head">
+        <span class="slide-num">1</span>
+        <h2>Sitemap.xml dinamis</h2>
+    </div>
+    <p class="desc">Controller satu file, tanpa library. Cache 60 menit menyimpan <b>array polos</b> — bukan Eloquent Collection (config cache menolak unserialisasi kelas).</p>
+
+<pre>GET /sitemap.xml  →  200, Content-Type: application/xml; charset=UTF-8
+
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    / (root)                    <!-- via platform_url(), host-independent -->
+    /pricing  /eventner
+    /privacy  /terms  /help
+    {event approved}
+        subdomain  →  {scheme}://{sub}.{root}/            <!-- lastmod = updated_at -->
+        path       →  {base}/event/{slug}
+    hall-of-fame/{nama-penyelenggara urlencoded}
+</urlset></pre>
+
+    <h3>Yang TIDAK masuk</h3>
+    <table class="mini">
+        <tr><th>Halaman</th><th>Alasan</th></tr>
+        <tr><td><code>/event/{slug}/participant</code>, <code>/results</code>, <code>/register</code>, …</td><td>Halaman turunan event — bukan konten mandiri; detail sudah dipetakan.</td></tr>
+        <tr><td><code>/scan/</code>, <code>/reg/</code>, <code>/juri/</code>, <code>/panitia/</code></td><td>Path ber-token = kredensial. Dilarang juga di robots.txt.</td></tr>
+        <tr><td>Event pending/draft</td><td>Belum punya halaman publik.</td></tr>
+    </table>
+    <div class="notes">
+        <div class="note ok"><span class="tag">Lulus</span><span>8 test: XML + content-type, approved masuk, pending tidak, statis masuk, token tidak, subdomain URL, turunan tidak, hall-of-fame.</span></div>
+    </div>
+</section>
+
+<section class="slide" id="robots">
+    <div class="slide-head">
+        <span class="slide-num">2</span>
+        <h2>robots.txt</h2>
+    </div>
+    <p class="desc">File statis di <code>public/</code>. Crawler hanya membaca di domain prod, jadi baris Sitemap menulis domain prod langsung.</p>
+
+<div class="mock">
+    <div class="mock-bar"><span>public/robots.txt</span><span>statis</span></div>
+    <div class="mock-body"><pre class="small">User-agent: *
+Disallow: /scan/
+Disallow: /reg/
+Disallow: /juri/
+Disallow: /panitia/
+
+Sitemap: https://berbaris.app/sitemap.xml</pre></div>
+</div>
+
+    <div class="notes">
+        <div class="note"><span class="tag">Catatan</span><span><code>/scoreboard/</code> dan <code>/champions/</code> tidak dilarang — halaman publik-by-link, dianggap layak diindeks.</span></div>
+    </div>
+</section>
+
+<section class="slide" id="event">
+    <div class="slide-head">
+        <span class="slide-num">3</span>
+        <h2>JSON-LD Event — halaman detail</h2>
+    </div>
+    <p class="desc">Dipindah dari blok inline di <code>layouts/frontend.blade.php</code> ke partial <code>components/seo/json-ld-event.blade.php</code>, lalu digerbang route-name.</p>
+
+    <div class="grid2">
+        <div>
+            <h3>Gerbang</h3>
+            <table class="mini">
+                <tr><th>Halaman</th><th>Emit</th></tr>
+                <tr><td><code>/event/{slug}</code></td><td><span class="gate yes">ya</span></td></tr>
+                <tr><td><code>{sub}.berbaris.app</code> (detail)</td><td><span class="gate yes">ya</span></td></tr>
+                <tr><td><code>/juri/{token}</code>, <code>/panitia</code>, <code>/scan</code>, <code>/scoreboard</code>, magic-link</td><td><span class="gate no">tidak</span></td></tr>
+                <tr><td><code>/event/{slug}/results</code> dll.</td><td><span class="gate no">tidak</span></td></tr>
+            </table>
+        </div>
+        <div>
+            <h3>Perbaikan isi schema</h3>
+            <table class="mini">
+                <tr><th>Kolom</th><th>Nilai</th></tr>
+                <tr><td><code>offers</code></td><td><b>baru</b> — bila <code>ticket_active</code> & harga: url tiket, price, <code>IDR</code>, InStock/SoldOut ikut <code>registration_status</code></td></tr>
+                <tr><td><code>eventStatus</code></td><td>selalu <code>EventScheduled</code> selama approved — pendaftaran tutup ≠ event batal</td></tr>
+                <tr><td><code>startDate</code>/<code>endDate</code></td><td>ISO8601 via <code>Carbon::parse</code> (string Y-m-d tidak di-cast)</td></tr>
+            </table>
+        </div>
+    </div>
+
+<pre>@if($_ev && in_array(request()->route()?->getName(),
+        ['event.detail', 'subdomain.detail']))
+    @include('components.seo.json-ld-event', ['eventner' => $_ev])
+@endif</pre>
+
+    <div class="notes">
+        <div class="note warn"><span class="tag">Jebakan</span><span>Komentar di partial <b>tidak boleh mengandung kata berawalan @</b> (mis. “…”). Blade meng-compile directive di dalam komentar PHP sebelum file dieksekusi → syntax error <code>unexpected token "endif"</code>.</span></div>
+    </div>
+</section>
+
+<section class="slide" id="itemlist">
+    <div class="slide-head">
+        <span class="slide-num">4</span>
+        <h2>JSON-LD ItemList — halaman /eventner</h2>
+    </div>
+    <p class="desc">Partial <code>components/seo/json-ld-itemlist.blade.php</code>, di-include komponen Livewire <code>public/eventner-list</code> hanya bila ada isi. Memberi Google struktur katalog: halaman ini berisi daftar event dengan URL + nama.</p>
+
+<pre><script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "itemListElement": [
+        { "@type": "ListItem", "position": 1,
+          "url": "https://pbb2026.berbaris.app/",
+          "name": "Lomba PBB se-Jawa Barat 2026" },
+        { "@type": "ListItem", "position": 2,
+          "url": "https://berbaris.app/event/{slug}",
+          "name": "…" }
+    ]
+}
+</script></pre>
+
+    <div class="notes">
+        <div class="note"><span class="tag">Catatan</span><span>Isi mengikuti paginator halaman aktif (16 per halaman). Halaman kosong tidak meng-emit apapun.</span></div>
+    </div>
+</section>
+
+<section class="slide" id="rencana">
+    <div class="slide-head">
+        <span class="slide-num">5</span>
+        <h2>Rencana Teknis — ringkasan implementasi</h2>
+    </div>
+    <table class="mini">
+        <tr><th>#</th><th>Berkas</th><th>Isi</th><th>Test</th></tr>
+        <tr><td>1</td><td><code>public/robots.txt</code></td><td>Disallow 4 path token + Sitemap berbaris.app</td><td>1 (PublicJsonLdTest)</td></tr>
+        <tr><td>2</td><td><code>app/Http/Controllers/Public/SitemapController.php</code></td><td>XML manual, cache 3600s array polos, URL host-independent (<code>platform_url</code> / subdomain inline)</td><td>8 (PublicSitemapTest)</td></tr>
+        <tr><td>3</td><td><code>routes/web.php</code></td><td><code>Route::get('/sitemap.xml', …)->name('sitemap')</code></td><td>—</td></tr>
+        <tr><td>4</td><td><code>components/seo/json-ld-event.blade.php</code></td><td>Partial Event: name/description/image/dates/location/organizer + offers tiket; komentar tanpa directive</td><td>7 (PublicJsonLdTest)</td></tr>
+        <tr><td>5</td><td><code>components/seo/json-ld-itemlist.blade.php</code></td><td>ItemList dari collection paginator</td><td>2 (PublicJsonLdTest)</td></tr>
+        <tr><td>6</td><td><code>layouts/frontend.blade.php</code></td><td>Blok inline baris 65–110 diganti include ter-gerbang route-name</td><td>—</td></tr>
+        <tr><td>7</td><td><code>livewire/public/eventner-list.blade.php</code></td><td>Include ItemList dalam <code>@if($eventners->count())</code></td><td>—</td></tr>
+    </table>
+
+    <h3>Hasil verifikasi live (berbaris.local)</h3>
+    <table class="mini">
+        <tr><th>Cek</th><th>Hasil</th></tr>
+        <tr><td><code>GET /sitemap.xml</code></td><td>200 — 6 statis + 2 event subdomain + 1 hall-of-fame (nama urlencoded)</td></tr>
+        <tr><td><code>/event/{slug}</code></td><td>ADA <code>application/ld+json</code> Event</td></tr>
+        <tr><td><code>/event/{slug}/results</code></td><td>bersih — tidak ada schema</td></tr>
+        <tr><td><code>/eventner</code></td><td>ADA ItemList</td></tr>
+    </table>
+
+    <div class="notes">
+        <div class="note ok"><span class="tag">Suite</span><span>1264 test lulus / 4423 assertion (tambah 17 baru: 8 sitemap + 9 JSON-LD).</span></div>
+        <div class="note"><span class="tag">Pasca deploy</span><span>Opsional: Rich Results Test & Search Console — butuh domain prod.</span></div>
+    </div>
+</section>
+
+<footer class="doc">doc/ · wireframe paket SEO · 2026-10-12 · gaya doc/videotron-wireframe.html</footer>
+
+</div>
+</body>
+</html>

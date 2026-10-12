@@ -1,2 +1,7 @@
 User-agent: *
-Disallow:
+Disallow: /scan/
+Disallow: /reg/
+Disallow: /juri/
+Disallow: /panitia/
+
+Sitemap: https://berbaris.app/sitemap.xml
