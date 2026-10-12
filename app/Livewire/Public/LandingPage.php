@@ -137,7 +137,7 @@ class LandingPage extends Component
         // dikurangi supaya halamannya tidak jadi katalog.
         $eventners = Eventner::approved()
             ->withCount('registrations')
-            ->orderBy('tanggal')
+            ->orderByDesc('tanggal')
             ->limit(6)
             ->get();
 
