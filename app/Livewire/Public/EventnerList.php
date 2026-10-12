@@ -38,13 +38,13 @@ class EventnerList extends Component
 
     public function render()
     {
-        // Urut tanggal pelaksanaan sama seperti landing — penyelenggara yang
-        // eventnya paling dekat tampil di depan. Hanya yang approved: kartu
-        // pending akan menautkan ke 404 (scopeApproved() dipakai semua
-        // halaman publik lain dengan alasan yang sama).
+        // Paling baru di atas: penyelenggara yang eventnya paling dekat
+        // tampil di depan. Hanya yang approved: kartu pending akan menautkan
+        // ke 404 (scopeApproved() dipakai semua halaman publik lain dengan
+        // alasan yang sama).
         $eventners = Eventner::approved()
             ->withCount('registrations')
-            ->orderBy('tanggal')
+            ->orderByDesc('tanggal')
             ->paginate(16);
 
         return view('livewire.public.eventner-list', [

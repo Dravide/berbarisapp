@@ -64,6 +64,29 @@ class PublicEventnerListTest extends TestCase
         $this->assertTrue($eventner->exists);
     }
 
+    /** Urutan terbaru dulu: tanggal pelaksanaan paling jauh (paling baru) di atas. */
+    public function test_daftar_mengurutkan_terbaru_di_atas()
+    {
+        Eventner::factory()->create([
+            'status' => 'approved',
+            'nama_event' => 'Lomba Dekat',
+            'tanggal' => now()->addDays(3)->toDateString(),
+        ]);
+        Eventner::factory()->create([
+            'status' => 'approved',
+            'nama_event' => 'Lomba Jauh',
+            'tanggal' => now()->addMonth()->toDateString(),
+        ]);
+
+        $html = $this->get('/eventner')->getContent();
+
+        $posisiJauh = strpos($html, 'Lomba Jauh');
+        $posisiDekat = strpos($html, 'Lomba Dekat');
+        $this->assertNotFalse($posisiJauh);
+        $this->assertNotFalse($posisiDekat);
+        $this->assertLessThan($posisiDekat, $posisiJauh, 'Tanggal paling baru harus tampil sebelum yang lebih dekat.');
+    }
+
     /** Pagination nyata: 16 per halaman, halaman kedua memuat sisa event. */
     public function test_daftar_memiliki_halaman_kedua()
     {
@@ -76,14 +99,15 @@ class PublicEventnerListTest extends TestCase
                 'tanggal' => now()->addDays($seq->index + 1)->toDateString(),
             ])
             ->create(['status' => 'approved']);
-
         $response = $this->get('/eventner?page=2');
 
         $response->assertStatus(200);
         // Livewire merender link pagination sebagai atribut wire:click, bukan
-        // href biasa — cukup pastikan halaman 2 memuat event yang bukan 16
-        // teratas halaman satu.
-        $this->assertStringContainsString('Lomba 17', $response->getContent());
+        // href biasa — cukup pastikan halaman 2 memuat sisa 2 event. Urutan
+        // turun: halaman 1 = Lomba 18…3, halaman 2 = Lomba 2, Lomba 1.
+        $this->assertStringContainsString('Lomba 1<', $response->getContent());
+        $this->assertStringContainsString('Lomba 2<', $response->getContent());
+        $this->assertStringNotContainsString('Lomba 17', $response->getContent());
     }
 
     /** Tombol "Lihat Semua" hanya tampil saat section-nya menyala dan ada data. */
