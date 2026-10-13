@@ -16,7 +16,7 @@
             @endforeach
         </div>
 
-        {{-- Landing hanya menampilkan enam kartu; sisanya hidup di halaman daftar. --}}
+        {{-- Landing menampilkan delapan kartu (4 atas, 4 bawah); sisanya hidup di halaman daftar. --}}
         <div class="mt-10 text-center">
             <a href="{{ route('public.eventners') }}" class="btn-ghost">
                 Lihat Semua Penyelenggara

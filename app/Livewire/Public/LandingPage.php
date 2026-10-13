@@ -131,14 +131,14 @@ class LandingPage extends Component
         // dibayar/diverifikasi admin) belum punya halaman publik sama sekali,
         // jadi kartunya akan menautkan ke 404. Sama seperti scopeApproved()
         // yang dipakai semua halaman publik lain.
-        // Enam kartu, bukan dua belas: section ini satu-satunya tempat hasil
+        // Delapan kartu (rata atas 4, bawah 4): section ini satu-satunya tempat hasil
         // event lampau muncul di laman publik, jadi event yang sudah lewat
         // tetap ditampilkan (bertanda "Terlaksana") — hanya jumlahnya yang
-        // dikurangi supaya halamannya tidak jadi katalog.
+        // dibatasi supaya halamannya tidak jadi katalog.
         $eventners = Eventner::approved()
             ->withCount('registrations')
             ->orderByDesc('tanggal')
-            ->limit(6)
+            ->limit(8)
             ->get();
 
         // Event yang menjual tiket per tempat tidak punya `eventners.ticket_price`,
