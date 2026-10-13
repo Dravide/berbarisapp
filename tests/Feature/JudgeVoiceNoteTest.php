@@ -223,7 +223,7 @@ class JudgeVoiceNoteTest extends TestCase
             ->call('selectParticipant', $otherRegistration->id);
     }
 
-    public function test_voice_notes_appear_on_event_result_detail_page()
+    public function test_voice_notes_appear_exclusively_on_magic_link_portal_page()
     {
         // Simpan note dengan rekaman audio dan teks
         JudgeNote::create([
@@ -236,15 +236,24 @@ class JudgeVoiceNoteTest extends TestCase
             'notes' => 'Catatan penting: formasi bintang sangat rapi.',
         ]);
 
+        // Voice note privat muncul di portal Magic Link pangkalan/sekolah
+        Livewire::test(\App\Livewire\Public\MagicLink\Registration::class, [
+            'token' => $this->registration->magic_token,
+        ])
+            ->assertOk()
+            ->assertSee('Evaluasi &amp; Catatan Suara Dewan Juri', false)
+            ->assertSee('Mayor Inf Budi Santoso')
+            ->assertSee('Catatan penting: formasi bintang sangat rapi.')
+            ->assertSee('09:00'); // 540s = 09:00
+
+        // Voice note TIDAK bocor ke publik di halaman rincian hasil umum
         Livewire::test(\App\Livewire\Public\EventResultDetail::class, [
             'slug' => $this->eventner->slug,
             'registration' => $this->registration->id,
         ])
             ->assertOk()
-            ->assertSee('Evaluasi &amp; Catatan Dewan Juri', false)
-            ->assertSee('Mayor Inf Budi Santoso')
-            ->assertSee('Catatan penting: formasi bintang sangat rapi.')
-            ->assertSee('09:00'); // 540s = 09:00
+            ->assertDontSee('Evaluasi &amp; Catatan Suara Dewan Juri', false)
+            ->assertDontSee('Catatan penting: formasi bintang sangat rapi.');
     }
 
     public function test_voice_notes_appear_in_eventner_scoring_panel()

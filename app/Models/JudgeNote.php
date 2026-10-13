@@ -64,7 +64,9 @@ class JudgeNote extends Model
                 return null;
             }
 
-            return asset('storage/' . $this->audio_path);
+            // Path root-relative agar portabel antar host & subdomain (entry.berbaris.local,
+            // berbaris.local) dan bebas dari kendala Mixed Content (HTTPS vs HTTP) serta CORS.
+            return '/storage/' . ltrim($this->audio_path, '/');
         });
     }
 

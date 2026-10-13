@@ -68,117 +68,26 @@
     @if($registration->danton_nama || $registration->participants->count() > 0)
         <div class="container-landing pt-6">
             <div class="surface-card p-6">
-                <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-4">
+                <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-3">
                     <i class="ti ti-users-group text-primary text-lg"></i> Susunan Pasukan
                 </h3>
 
-                <div class="flex flex-wrap gap-4">
+                <div class="flex flex-wrap items-center gap-2">
                     {{-- Danton --}}
                     @if($registration->danton_nama)
-                        <div class="flex flex-col items-center w-[88px]">
-                            @if($registration->danton_foto)
-                                <img src="{{ asset('storage/' . $registration->danton_foto) }}" alt="{{ $registration->danton_nama }}" class="h-16 w-16 rounded-2xl object-cover border-2 border-amber-400 shadow-sm">
-                            @else
-                                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 border-2 border-amber-300">
-                                    <i class="ti ti-flag text-2xl"></i>
-                                </div>
-                            @endif
-                            <span class="text-[9px] font-bold uppercase tracking-wider text-amber-600 mt-1.5">Danton</span>
-                            <span class="text-[11px] font-semibold text-deep-slate text-center leading-tight line-clamp-2">{{ $registration->danton_nama }}</span>
-                        </div>
+                        <span class="inline-flex items-center gap-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 px-3 py-1.5 text-xs font-bold text-amber-900">
+                            <i class="ti ti-flag text-amber-600 text-sm"></i>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-200/60 px-1.5 py-0.5 rounded">Danton</span>
+                            <span>{{ $registration->danton_nama }}</span>
+                        </span>
                     @endif
 
                     {{-- Anggota --}}
                     @foreach($registration->participants as $p)
-                        <div class="flex flex-col items-center w-[88px]">
-                            @if($p->foto)
-                                <img src="{{ asset('storage/' . $p->foto) }}" alt="{{ $p->nama }}" class="h-16 w-16 rounded-2xl object-cover border border-outline-variant/30 shadow-sm">
-                            @else
-                                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-container text-on-surface-variant border border-outline-variant/30">
-                                    <i class="ti ti-user text-2xl"></i>
-                                </div>
-                            @endif
-                            <span class="text-[9px] font-bold uppercase tracking-wider text-on-surface-variant mt-1.5">Anggota {{ $loop->iteration }}</span>
-                            <span class="text-[11px] font-semibold text-deep-slate text-center leading-tight line-clamp-2">{{ $p->nama }}</span>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    @endif
-
-    {{-- ========== EVALUASI & CATATAN SUARA DEWAN JURI ========== --}}
-    @if(isset($judgeNotes) && $judgeNotes->count() > 0)
-        <div class="container-landing pt-6">
-            <div class="surface-card p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 m-0">
-                        <i class="ti ti-microphone text-primary text-lg"></i> Evaluasi &amp; Catatan Dewan Juri
-                    </h3>
-                    <span class="chip bg-primary/10 text-primary py-0.5 px-2.5 text-xs font-bold leading-normal">
-                        {{ $judgeNotes->count() }} Catatan
-                    </span>
-                </div>
-
-                <div class="grid gap-4 md:grid-cols-2">
-                    @foreach($judgeNotes as $note)
-                        <div class="rounded-2xl border border-outline-variant/30 bg-surface-container-low p-4 flex flex-col justify-between"
-                             @if($note->audio_url)
-                                 x-data="noteAudioPlayer('{{ $note->audio_url }}', {{ (int) $note->duration_seconds }})"
-                             @endif>
-
-                            <div>
-                                {{-- Header Juri --}}
-                                <div class="flex items-center gap-3 mb-3">
-                                    @if($note->judge?->photo)
-                                        <img src="{{ asset('storage/' . $note->judge->photo) }}" alt="{{ $note->judge->name }}"
-                                             class="h-10 w-10 rounded-full object-cover border border-outline-variant/30 shadow-sm shrink-0">
-                                    @else
-                                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
-                                            <i class="ti ti-user text-lg"></i>
-                                        </div>
-                                    @endif
-                                    <div class="min-w-0 flex-1">
-                                        <h4 class="text-xs font-bold text-deep-slate leading-tight m-0 truncate">
-                                            {{ $note->judge?->name ?? 'Dewan Juri' }}
-                                        </h4>
-                                        <p class="text-[10px] text-on-surface-variant m-0 mt-0.5">
-                                            {{ $note->competitionRound ? 'Babak ' . $note->competitionRound->name : 'Dewan Juri Penilai' }}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {{-- Voice Note Player --}}
-                                @if($note->audio_url)
-                                    <div class="bg-white rounded-xl border border-outline-variant/30 p-2.5 mb-3 flex items-center gap-3 shadow-xs">
-                                        <button type="button" @click="togglePlay()"
-                                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-xs hover:brightness-110 active:scale-95 transition">
-                                            <i class="ti text-base" :class="isPlaying ? 'ti-player-pause' : 'ti-player-play'"></i>
-                                        </button>
-
-                                        <div class="flex-1 min-w-0">
-                                            <div class="w-full bg-slate-100 rounded-full h-1.5 cursor-pointer relative overflow-hidden"
-                                                 @click="seek($event)">
-                                                <div class="bg-primary h-1.5 rounded-full transition-all duration-100"
-                                                     :style="`width: ${progress}%`"></div>
-                                            </div>
-                                            <div class="flex justify-between text-[10px] text-slate-500 font-mono mt-1">
-                                                <span x-text="formatTime(currentTime)">00:00</span>
-                                                <span x-text="formatTime(duration)">{{ $note->formatted_duration }}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endif
-
-                                {{-- Catatan Teks --}}
-                                @if($note->notes)
-                                    <div class="rounded-xl bg-white border border-outline-variant/20 p-3 text-xs text-on-surface leading-relaxed">
-                                        <i class="ti ti-quote text-primary/40 mr-1"></i>
-                                        {{ $note->notes }}
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
+                        <span class="inline-flex items-center gap-1.5 rounded-xl bg-surface-container border border-outline-variant/30 px-3 py-1.5 text-xs font-medium text-deep-slate">
+                            <span class="text-[10px] font-bold text-on-surface-variant/70">{{ $loop->iteration }}.</span>
+                            <span>{{ $p->nama }}</span>
+                        </span>
                     @endforeach
                 </div>
             </div>
@@ -303,57 +212,5 @@
             </div>
         </div>
     @endif
-
-    <script>
-    function noteAudioPlayer(audioUrl, durationSec) {
-        return {
-            audio: null,
-            isPlaying: false,
-            currentTime: 0,
-            duration: durationSec || 0,
-            progress: 0,
-
-            init() {
-                this.audio = new Audio(audioUrl);
-                this.audio.addEventListener('timeupdate', () => {
-                    this.currentTime = Math.floor(this.audio.currentTime);
-                    const dur = this.duration || (this.audio.duration || 1);
-                    this.progress = Math.min(100, (this.audio.currentTime / dur) * 100);
-                });
-                this.audio.addEventListener('ended', () => {
-                    this.isPlaying = false;
-                    this.currentTime = 0;
-                    this.progress = 0;
-                });
-            },
-
-            togglePlay() {
-                if (!this.audio) return;
-                if (this.isPlaying) {
-                    this.audio.pause();
-                    this.isPlaying = false;
-                } else {
-                    this.audio.play();
-                    this.isPlaying = true;
-                }
-            },
-
-            seek(e) {
-                if (!this.audio) return;
-                const rect = e.currentTarget.getBoundingClientRect();
-                const pos = (e.clientX - rect.left) / rect.width;
-                const target = pos * (this.duration || this.audio.duration);
-                this.audio.currentTime = target;
-            },
-
-            formatTime(seconds) {
-                const s = Math.max(0, parseInt(seconds || 0));
-                const m = Math.floor(s / 60);
-                const sec = s % 60;
-                return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
-            }
-        };
-    }
-    </script>
 
 </div>

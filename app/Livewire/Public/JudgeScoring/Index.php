@@ -807,7 +807,7 @@ class Index extends Component
         $this->audioUpload = null;
 
         $this->dispatch('toast', message: 'Voice note evaluasi tersimpan.', type: 'success');
-        $this->dispatch('voice-note-saved');
+        $this->dispatch('voice-note-saved', note: $this->existingVoiceNote);
     }
 
     /** Hapus voice note evaluasi. */

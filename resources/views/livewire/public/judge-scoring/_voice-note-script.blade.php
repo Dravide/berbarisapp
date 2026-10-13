@@ -163,6 +163,7 @@ window.judgeVoiceRecorder = function(config, wire) {
 
         stopRecording() {
             clearInterval(this.timerInterval);
+            this.recordedDuration = this.timerSeconds;
             if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
                 this.mediaRecorder.stop();
             }
@@ -214,13 +215,26 @@ window.judgeVoiceRecorder = function(config, wire) {
         },
 
         togglePreviewPlay() {
+            if (!this.previewAudio && this.recordedBlob) {
+                this.setupPreviewAudio();
+            }
             if (!this.previewAudio) return;
+
             if (this.isPlayingPreview) {
                 this.previewAudio.pause();
                 this.isPlayingPreview = false;
             } else {
-                this.previewAudio.play();
-                this.isPlayingPreview = true;
+                const p = this.previewAudio.play();
+                if (p && typeof p.then === 'function') {
+                    p.then(() => {
+                        this.isPlayingPreview = true;
+                    }).catch(err => {
+                        console.error('Audio preview play error:', err);
+                        this.isPlayingPreview = false;
+                    });
+                } else {
+                    this.isPlayingPreview = true;
+                }
             }
         },
 
@@ -240,8 +254,17 @@ window.judgeVoiceRecorder = function(config, wire) {
                 this.savedAudio.pause();
                 this.isPlayingSaved = false;
             } else {
-                this.savedAudio.play();
-                this.isPlayingSaved = true;
+                const p = this.savedAudio.play();
+                if (p && typeof p.then === 'function') {
+                    p.then(() => {
+                        this.isPlayingSaved = true;
+                    }).catch(err => {
+                        console.error('Audio saved play error:', err);
+                        this.isPlayingSaved = false;
+                    });
+                } else {
+                    this.isPlayingSaved = true;
+                }
             }
         },
 
@@ -307,12 +330,22 @@ window.judgeVoiceRecorder = function(config, wire) {
             this.isUploading = false;
             let updated = null;
             if (event && event.detail) {
-                updated = event.detail.note || event.detail;
+                if (Array.isArray(event.detail) && event.detail.length > 0) {
+                    updated = event.detail[0].note || event.detail[0];
+                } else if (typeof event.detail === 'object') {
+                    updated = event.detail.note || event.detail;
+                }
             }
             if (!updated || !updated.audio_url) {
                 try {
-                    updated = wire ? wire.get('existingVoiceNote') : null;
-                } catch (e) {}
+                    if (wire && wire.existingVoiceNote) {
+                        updated = wire.existingVoiceNote;
+                    } else if (wire && typeof wire.get === 'function') {
+                        updated = wire.get('existingVoiceNote');
+                    }
+                } catch (e) {
+                    console.warn('Gagal membaca existingVoiceNote:', e);
+                }
             }
 
             if (updated && updated.audio_url) {
@@ -320,6 +353,12 @@ window.judgeVoiceRecorder = function(config, wire) {
                 this.savedAudioUrl = updated.audio_url;
                 this.savedDurationSeconds = updated.duration_seconds || 0;
                 this.savedDurationFormatted = updated.formatted_duration || this.formatTime(this.savedDurationSeconds);
+                this.initSavedAudio();
+            } else if (this.recordedBlob) {
+                this.state = 'saved';
+                this.savedAudioUrl = this.previewAudio ? this.previewAudio.src : URL.createObjectURL(this.recordedBlob);
+                this.savedDurationSeconds = this.recordedDuration || this.timerSeconds || 0;
+                this.savedDurationFormatted = this.formatTime(this.savedDurationSeconds);
                 this.initSavedAudio();
             }
         },

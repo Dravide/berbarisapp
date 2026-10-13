@@ -329,18 +329,105 @@
                 </div>
             @endif
 
-            {{-- Link Rincian Nilai & Evaluasi Voice Note Juri --}}
-            @if($registration->eventner && $registration->is_finalized)
-                <div class="surface-card p-5 border-t-4 border-t-primary">
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            {{-- ========== EVALUASI & CATATAN SUARA DEWAN JURI ========== --}}
+            @if($this->judgeNotes->isNotEmpty())
+                <div class="surface-card p-6">
+                    <div class="flex items-center justify-between gap-3 mb-4">
                         <div class="flex items-center gap-3">
                             <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
                                 <i class="ti ti-microphone text-xl"></i>
                             </div>
                             <div>
-                                <h3 class="font-display text-sm font-bold text-deep-slate mb-0.5">Rincian Nilai &amp; Voice Note Juri</h3>
+                                <h3 class="font-display text-sm font-bold text-deep-slate mb-0.5">Evaluasi &amp; Catatan Suara Dewan Juri</h3>
+                                <p class="text-xs text-on-surface-variant font-medium m-0">
+                                    Rekaman evaluasi suara dan catatan langsung dari dewan juri khusus untuk kontingen Anda.
+                                </p>
+                            </div>
+                        </div>
+                        <span class="chip bg-primary/10 text-primary py-0.5 px-2.5 text-xs font-bold leading-normal">
+                            {{ $this->judgeNotes->count() }} Catatan
+                        </span>
+                    </div>
+
+                    <div class="grid gap-4 md:grid-cols-2">
+                        @foreach($this->judgeNotes as $note)
+                            <div class="rounded-2xl border border-outline-variant/30 bg-surface-container-low p-4 flex flex-col justify-between"
+                                 @if($note->audio_url)
+                                     x-data="noteAudioPlayer('{{ $note->audio_url }}', {{ (int) $note->duration_seconds }})"
+                                 @endif>
+
+                                <div>
+                                    {{-- Header Juri --}}
+                                    <div class="flex items-center gap-3 mb-3">
+                                        @if($note->judge?->photo)
+                                            <img src="{{ asset('storage/' . $note->judge->photo) }}" alt="{{ $note->judge->name }}"
+                                                 class="h-10 w-10 rounded-full object-cover border border-outline-variant/30 shadow-sm shrink-0">
+                                        @else
+                                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/20 shrink-0">
+                                                <i class="ti ti-user text-lg"></i>
+                                            </div>
+                                        @endif
+                                        <div class="min-w-0 flex-1">
+                                            <h4 class="text-xs font-bold text-deep-slate leading-tight m-0 truncate">
+                                                {{ $note->judge?->name ?? 'Dewan Juri' }}
+                                            </h4>
+                                            <p class="text-[10px] text-on-surface-variant m-0 mt-0.5">
+                                                {{ $note->competitionRound ? 'Babak ' . $note->competitionRound->name : 'Dewan Juri Penilai' }}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {{-- Voice Note Player --}}
+                                    @if($note->audio_url)
+                                        <div class="bg-white rounded-xl border border-outline-variant/30 p-2.5 mb-3 flex items-center gap-3 shadow-xs">
+                                            <button type="button" @click="togglePlay()"
+                                                    class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-white shadow-xs hover:brightness-110 active:scale-95 transition cursor-pointer">
+                                                <i class="ti text-base" :class="isPlaying ? 'ti-player-pause' : 'ti-player-play'"></i>
+                                            </button>
+
+                                            <div class="flex-1 min-w-0">
+                                                <div class="w-full bg-slate-100 rounded-full h-1.5 cursor-pointer relative overflow-hidden"
+                                                     @click="seek($event)">
+                                                    <div class="bg-primary h-1.5 rounded-full transition-all duration-100"
+                                                         :style="`width: ${progress}%`"></div>
+                                                </div>
+                                                <div class="flex justify-between items-center mt-1 text-[10px] text-on-surface-variant font-mono">
+                                                    <span x-text="formatTime(currentTime)">00:00</span>
+                                                    <span>{{ $note->formatted_duration }}</span>
+                                                </div>
+                                            </div>
+
+                                            <span class="inline-flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/5 px-2 py-1 rounded-md shrink-0">
+                                                <i class="ti ti-volume"></i> Audio
+                                            </span>
+                                        </div>
+                                    @endif
+
+                                    {{-- Catatan Teks (jika ada) --}}
+                                    @if($note->notes)
+                                        <div class="bg-white/80 rounded-xl border border-outline-variant/20 p-3 text-xs text-deep-slate italic leading-relaxed">
+                                            &ldquo;{{ $note->notes }}&rdquo;
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            {{-- Link Rincian Nilai Resmi --}}
+            @if($registration->eventner && $registration->is_finalized)
+                <div class="surface-card p-5 border-t-4 border-t-primary">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+                                <i class="ti ti-chart-bar text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-display text-sm font-bold text-deep-slate mb-0.5">Rincian Nilai Resmi</h3>
                                 <p class="text-xs text-on-surface-variant font-medium leading-normal m-0">
-                                    Dengarkan rekaman evaluasi dewan juri dan rincian perolehan nilai pasukan Anda.
+                                    Lihat rekapitulasi poin dan rincian kriteria nilai dewan juri di halaman hasil resmi.
                                 </p>
                             </div>
                         </div>
@@ -1180,6 +1267,60 @@
                     @this.call('confirm');
                 }
             })
+        }
+
+        function noteAudioPlayer(audioUrl, durationSec) {
+            return {
+                audio: null,
+                isPlaying: false,
+                currentTime: 0,
+                duration: durationSec || 0,
+                progress: 0,
+
+                init() {
+                    this.audio = new Audio(audioUrl);
+                    this.audio.addEventListener('timeupdate', () => {
+                        this.currentTime = Math.floor(this.audio.currentTime);
+                        const dur = this.duration || (this.audio.duration || 1);
+                        this.progress = Math.min(100, (this.audio.currentTime / dur) * 100);
+                    });
+                    this.audio.addEventListener('ended', () => {
+                        this.isPlaying = false;
+                        this.currentTime = 0;
+                        this.progress = 0;
+                    });
+                },
+
+                togglePlay() {
+                    if (!this.audio) return;
+                    if (this.isPlaying) {
+                        this.audio.pause();
+                        this.isPlaying = false;
+                    } else {
+                        const p = this.audio.play();
+                        if (p && typeof p.then === 'function') {
+                            p.then(() => { this.isPlaying = true; }).catch(() => { this.isPlaying = false; });
+                        } else {
+                            this.isPlaying = true;
+                        }
+                    }
+                },
+
+                seek(e) {
+                    if (!this.audio) return;
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const pos = (e.clientX - rect.left) / rect.width;
+                    const target = pos * (this.duration || this.audio.duration);
+                    this.audio.currentTime = target;
+                },
+
+                formatTime(seconds) {
+                    const s = Math.max(0, parseInt(seconds || 0));
+                    const m = Math.floor(s / 60);
+                    const sec = s % 60;
+                    return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`;
+                }
+            };
         }
     </script>
     @push('scripts')

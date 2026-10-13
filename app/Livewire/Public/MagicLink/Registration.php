@@ -628,6 +628,13 @@ class Registration extends Component
             ->exists();
     }
 
+    public function getJudgeNotesProperty()
+    {
+        return \App\Models\JudgeNote::where('registration_id', $this->activeRegId)
+            ->with(['judge', 'competitionRound'])
+            ->get();
+    }
+
     public function getFinalScoresProperty()
     {
         return \App\Models\AssessmentScore::where('registration_id', $this->activeRegId)

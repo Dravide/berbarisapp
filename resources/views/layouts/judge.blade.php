@@ -47,9 +47,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family={{ str_replace(' ', '+', $fontSans) }}:{{ $sansWeight }}&family={{ str_replace(' ', '+', $fontDisplay) }}:{{ $displayWeight }}&display=swap" rel="stylesheet">
 
-    {{-- Versi di-pin persis: "@latest" membuat CDN bebas menyajikan versi
-         apa pun tanpa sepengetahuan kita. --}}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/tabler-icons.min.css">
+    {{-- Tabler Icons: sertakan berkas lokal lebih dulu agar instan dan offline-ready,
+         dengan fallback CDN versi 3.30.0 yang valid (/dist/). --}}
+    <link rel="stylesheet" href="{{ asset('templates/assets/fonts/tabler-icons/tabler-icons.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/dist/tabler-icons.min.css">
 
     <style>
         :root {
