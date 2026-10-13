@@ -8,9 +8,9 @@
      daftar, dan setiap restyling landing harus dikerjakan dua kali. --}}
 <div class="surface-card surface-card-hover group flex flex-col overflow-hidden p-0 {{ $sudahTerlaksana ? 'card-past' : '' }}" {{ $sudahTerlaksana ? 'data-past=true' : '' }}>
     {{-- Poster banner --}}
-    <a href="{{ event_url($eventner, 'detail') }}" class="card-past-media relative block aspect-[3/4] overflow-hidden bg-surface-container-high">
+    <a href="{{ event_url($eventner, 'detail') }}" class="card-past-media relative block aspect-[4/3] overflow-hidden">
         @if($eventner->poster)
-            <img src="{{ Storage::url($eventner->poster) }}" alt="{{ $eventner->nama_event }}" class="h-full w-full object-contain">
+            <img src="{{ Storage::url($eventner->poster) }}" alt="{{ $eventner->nama_event }}" class="h-full w-full object-cover">
         @else
             <div class="flex h-full w-full items-center justify-center bg-surface-container-high">
                 <span class="font-display text-4xl font-extrabold text-primary/50">
