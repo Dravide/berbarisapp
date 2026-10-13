@@ -11,6 +11,7 @@ use App\Models\CompetitionRoundRegistration;
 use App\Models\CompetitionSeries;
 use App\Models\DeductionCategory;
 use App\Models\Judge;
+use App\Models\JudgeNote;
 use App\Models\Registration;
 use App\Models\ScoreDeduction;
 use App\Services\ScoreFinalizationService;
@@ -717,6 +718,22 @@ class Index extends Component
             ->where('is_finalized', true)
             ->when($criteriaIds !== null, fn ($q) => $q->whereIn('assessment_criteria_id', $criteriaIds))
             ->exists();
+    }
+
+    /**
+     * Catatan evaluasi / Voice note dari juri yang sedang dipilih.
+     */
+    public function getActiveJudgeNoteProperty(): ?JudgeNote
+    {
+        if (! $this->selectedRegistrationId || ! $this->selectedJudgeId) {
+            return null;
+        }
+
+        return JudgeNote::where('eventner_id', $this->eventner->id)
+            ->where('registration_id', $this->selectedRegistrationId)
+            ->where('judge_id', $this->selectedJudgeId)
+            ->where('competition_round_id', $this->selectedRoundId)
+            ->first();
     }
 
     /**

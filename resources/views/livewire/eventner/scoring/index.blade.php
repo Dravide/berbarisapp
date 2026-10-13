@@ -464,6 +464,42 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Voice Note / Catatan Juri Terpilih --}}
+                    @if($activeNote = $this->activeJudgeNote)
+                        <div class="card w-100 mb-4 border-primary border-opacity-25 bg-primary bg-opacity-10">
+                            <div class="card-body py-3 px-4">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge bg-primary rounded-pill p-2">
+                                            <i class="ti ti-microphone fs-4"></i>
+                                        </span>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold text-primary">Catatan &amp; Evaluasi Juri</h6>
+                                            <small class="text-muted">
+                                                {{ $activeNote->judge?->name }}
+                                                @if($activeNote->duration_seconds > 0)
+                                                    &bull; Durasi Suara: <strong>{{ $activeNote->formatted_duration }}</strong>
+                                                @endif
+                                            </small>
+                                        </div>
+                                    </div>
+
+                                    @if($activeNote->audio_url)
+                                        <div class="d-flex align-items-center gap-2">
+                                            <audio controls style="max-height: 36px;" src="{{ $activeNote->audio_url }}"></audio>
+                                        </div>
+                                    @endif
+                                </div>
+
+                                @if($activeNote->notes)
+                                    <div class="mt-2 pt-2 border-top border-primary border-opacity-10">
+                                        <p class="mb-0 small text-dark"><i class="ti ti-quote text-primary me-1"></i>{{ $activeNote->notes }}</p>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
                 @else
                     {{-- Panel kosong tanpa penjelasan membuat tombol Simpan tampak
                          rusak. Dua sebabnya berbeda dan disebut apa adanya; keduanya

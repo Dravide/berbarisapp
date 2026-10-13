@@ -107,6 +107,14 @@ class EventResultDetail extends Component
         $totalDeduction = $deductions->sum(fn ($d) => $d->magnitude);
         $finalTotal = $grandTotal - $totalDeduction;
 
+        $judgeNotes = \App\Models\JudgeNote::where('registration_id', $this->registration->id)
+            ->where('eventner_id', $this->eventner->id)
+            ->where(function ($q) {
+                $q->whereNotNull('audio_path')->orWhereNotNull('notes');
+            })
+            ->with(['judge:id,name,photo', 'competitionRound:id,name'])
+            ->get();
+
         return view('livewire.public.event-result-detail', [
             'eventner' => $this->eventner,
             'registration' => $this->registration,
@@ -114,6 +122,7 @@ class EventResultDetail extends Component
             'judgeMap' => $judgeMap,
             'judgeScores' => $judgeScores,
             'rowsByJudge' => $rowsByJudge,
+            'judgeNotes' => $judgeNotes,
             'deductions' => $deductions,
             'grandTotal' => $grandTotal,
             'totalDeduction' => $totalDeduction,

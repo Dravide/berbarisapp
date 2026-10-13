@@ -9,14 +9,17 @@ use App\Models\CompetitionRound;
 use App\Models\CompetitionRoundRegistration;
 use App\Models\Eventner;
 use App\Models\Judge;
+use App\Models\JudgeNote;
 use App\Models\Registration;
 use App\Services\ScoreFinalizationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 
 /**
  * Penilaian juri via tablet selama lomba berlangsung.
@@ -36,6 +39,8 @@ use Livewire\Component;
 #[Title('Penilaian Juri')]
 class Index extends Component
 {
+    use WithFileUploads;
+
     #[Locked]
     public int $judgeId;
 
@@ -62,6 +67,15 @@ class Index extends Component
     public array $scores = [];
     public bool $isFinalized = false;
     public string $saveStatus = ''; // '' | 'saved' | 'error'
+
+    /** File audio voice note yang baru di-upload (temporary Livewire upload). */
+    public $audioUpload = null;
+
+    /** Catatan teks dari juri untuk peserta ini. */
+    public string $textNote = '';
+
+    /** Catatan/Voice note yang sudah tersimpan di database. */
+    public ?array $existingVoiceNote = null;
 
     /**
      * Babak penuh pada tingkat terpilih, sebelum ada peserta dipilih.
@@ -490,6 +504,35 @@ class Index extends Component
                 $this->isFinalized = true;
             }
         }
+
+        $this->loadExistingNote();
+    }
+
+    /** Muat catatan evaluasi / voice note untuk peserta aktif. */
+    private function loadExistingNote(): void
+    {
+        $roundId = $this->selectedRoundId ? (int) $this->selectedRoundId : null;
+
+        $note = JudgeNote::where('eventner_id', $this->eventnerId)
+            ->where('registration_id', $this->selectedRegistrationId)
+            ->where('judge_id', $this->judgeId)
+            ->where('competition_round_id', $roundId)
+            ->first();
+
+        if ($note) {
+            $this->existingVoiceNote = [
+                'id' => $note->id,
+                'audio_url' => $note->audio_url,
+                'duration_seconds' => $note->duration_seconds,
+                'formatted_duration' => $note->formatted_duration,
+                'notes' => $note->notes,
+            ];
+            $this->textNote = (string) ($note->notes ?? '');
+        } else {
+            $this->existingVoiceNote = null;
+            $this->textNote = '';
+        }
+        $this->audioUpload = null;
     }
 
     public function getRegistrationProperty(): Registration
@@ -705,6 +748,162 @@ class Index extends Component
         $this->isFinalized = false;
         $this->saveStatus = '';
         $this->currentCriteriaIndex = 0;
+        $this->existingVoiceNote = null;
+        $this->textNote = '';
+        $this->audioUpload = null;
+    }
+
+    /** Simpan voice note evaluasi audio juri. */
+    public function saveVoiceNote(int $duration = 0)
+    {
+        if (! $this->selectedRegistrationId) {
+            return;
+        }
+
+        // Guard IDOR: pastikan peserta sah berada di query peserta juri ini
+        $this->participantsQuery()->findOrFail($this->selectedRegistrationId);
+
+        $this->validate([
+            'audioUpload' => 'required|file|max:20480', // Maks 20MB (~12-15 menit WebM audio)
+        ]);
+
+        $roundId = $this->selectedRoundId ? (int) $this->selectedRoundId : null;
+
+        $existing = JudgeNote::where('eventner_id', $this->eventnerId)
+            ->where('registration_id', $this->selectedRegistrationId)
+            ->where('judge_id', $this->judgeId)
+            ->where('competition_round_id', $roundId)
+            ->first();
+
+        if ($existing && $existing->audio_path) {
+            Storage::disk('public')->delete($existing->audio_path);
+        }
+
+        $path = $this->audioUpload->store("voice-notes/{$this->eventnerId}", 'public');
+        $mime = $this->audioUpload->getClientMimeType() ?: 'audio/webm';
+
+        $note = JudgeNote::updateOrCreate(
+            [
+                'registration_id' => $this->selectedRegistrationId,
+                'judge_id' => $this->judgeId,
+                'competition_round_id' => $roundId,
+            ],
+            [
+                'eventner_id' => $this->eventnerId,
+                'audio_path' => $path,
+                'duration_seconds' => max(0, $duration),
+                'mime_type' => $mime,
+                'notes' => $this->textNote ?: ($existing?->notes ?? null),
+            ]
+        );
+
+        $this->existingVoiceNote = [
+            'id' => $note->id,
+            'audio_url' => $note->audio_url,
+            'duration_seconds' => $note->duration_seconds,
+            'formatted_duration' => $note->formatted_duration,
+            'notes' => $note->notes,
+        ];
+        $this->audioUpload = null;
+
+        $this->dispatch('toast', message: 'Voice note evaluasi tersimpan.', type: 'success');
+        $this->dispatch('voice-note-saved');
+    }
+
+    /** Hapus voice note evaluasi. */
+    public function deleteVoiceNote()
+    {
+        if (! $this->selectedRegistrationId) {
+            return;
+        }
+
+        $this->participantsQuery()->findOrFail($this->selectedRegistrationId);
+
+        $roundId = $this->selectedRoundId ? (int) $this->selectedRoundId : null;
+
+        $note = JudgeNote::where('eventner_id', $this->eventnerId)
+            ->where('registration_id', $this->selectedRegistrationId)
+            ->where('judge_id', $this->judgeId)
+            ->where('competition_round_id', $roundId)
+            ->first();
+
+        if ($note) {
+            if ($note->audio_path) {
+                Storage::disk('public')->delete($note->audio_path);
+            }
+
+            if (! empty($note->notes)) {
+                $note->update([
+                    'audio_path' => null,
+                    'duration_seconds' => 0,
+                    'mime_type' => null,
+                ]);
+                $this->existingVoiceNote = [
+                    'id' => $note->id,
+                    'audio_url' => null,
+                    'duration_seconds' => 0,
+                    'formatted_duration' => '00:00',
+                    'notes' => $note->notes,
+                ];
+            } else {
+                $note->delete();
+                $this->existingVoiceNote = null;
+            }
+        }
+
+        $this->audioUpload = null;
+        $this->dispatch('toast', message: 'Voice note berhasil dihapus.', type: 'info');
+        $this->dispatch('voice-note-deleted');
+    }
+
+    /** Simpan catatan teks manual jika juri ingin mengetik evaluasi. */
+    public function saveTextNote()
+    {
+        if (! $this->selectedRegistrationId) {
+            return;
+        }
+
+        $this->participantsQuery()->findOrFail($this->selectedRegistrationId);
+
+        $roundId = $this->selectedRoundId ? (int) $this->selectedRoundId : null;
+        $trimmed = trim((string) $this->textNote);
+
+        $existing = JudgeNote::where('eventner_id', $this->eventnerId)
+            ->where('registration_id', $this->selectedRegistrationId)
+            ->where('judge_id', $this->judgeId)
+            ->where('competition_round_id', $roundId)
+            ->first();
+
+        if (empty($trimmed) && (! $existing || empty($existing->audio_path))) {
+            if ($existing) {
+                $existing->delete();
+            }
+            $this->existingVoiceNote = null;
+            $this->dispatch('toast', message: 'Catatan teks dikosongkan.', type: 'info');
+            return;
+        }
+
+        $note = JudgeNote::updateOrCreate(
+            [
+                'registration_id' => $this->selectedRegistrationId,
+                'judge_id' => $this->judgeId,
+                'competition_round_id' => $roundId,
+            ],
+            [
+                'eventner_id' => $this->eventnerId,
+                'notes' => $trimmed ?: null,
+            ]
+        );
+
+        $this->existingVoiceNote = [
+            'id' => $note->id,
+            'audio_url' => $note->audio_url,
+            'duration_seconds' => $note->duration_seconds,
+            'formatted_duration' => $note->formatted_duration,
+            'notes' => $note->notes,
+        ];
+
+        $this->dispatch('toast', message: 'Catatan teks evaluasi disimpan.', type: 'success');
     }
 
     public function render()
@@ -736,11 +935,19 @@ class Index extends Component
                 ->get()
                 ->groupBy('registration_id');
 
-            $participants = $participants->map(function ($reg) use ($status) {
+            $hasNotes = JudgeNote::where('eventner_id', $this->eventnerId)
+                ->where('judge_id', $this->judgeId)
+                ->whereIn('registration_id', $participants->pluck('id'))
+                ->whereNotNull('audio_path')
+                ->pluck('registration_id')
+                ->flip();
+
+            $participants = $participants->map(function ($reg) use ($status, $hasNotes) {
                 $rows = $status->get($reg->id, collect());
                 $reg->judge_status = $rows->isEmpty()
                     ? 'belum'
                     : ($rows->every(fn ($r) => (bool) $r->is_finalized) ? 'final' : 'dinilai');
+                $reg->has_voice_note = isset($hasNotes[$reg->id]);
                 return $reg;
             });
         }

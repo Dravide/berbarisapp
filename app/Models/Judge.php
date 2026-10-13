@@ -54,6 +54,11 @@ class Judge extends Model
             ->wherePivot('scope', 'group');
     }
 
+    public function judgeNotes()
+    {
+        return $this->hasMany(JudgeNote::class);
+    }
+
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()

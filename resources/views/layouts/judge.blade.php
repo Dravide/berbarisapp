@@ -236,6 +236,7 @@
             });
         });
     </script>
+    @include('livewire.public.judge-scoring._voice-note-script')
 </body>
 
 </html>

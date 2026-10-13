@@ -221,6 +221,11 @@ class Registration extends Model
         return $this->hasMany(DeviceToken::class, 'registration_id');
     }
 
+    public function judgeNotes()
+    {
+        return $this->hasMany(JudgeNote::class);
+    }
+
     /**
      * Jawaban field buatan panitia (registration_field_values).
      *

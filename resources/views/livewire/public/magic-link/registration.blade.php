@@ -329,6 +329,31 @@
                 </div>
             @endif
 
+            {{-- Link Rincian Nilai & Evaluasi Voice Note Juri --}}
+            @if($registration->eventner && $registration->is_finalized)
+                <div class="surface-card p-5 border-t-4 border-t-primary">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary shrink-0">
+                                <i class="ti ti-microphone text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-display text-sm font-bold text-deep-slate mb-0.5">Rincian Nilai &amp; Voice Note Juri</h3>
+                                <p class="text-xs text-on-surface-variant font-medium leading-normal m-0">
+                                    Dengarkan rekaman evaluasi dewan juri dan rincian perolehan nilai pasukan Anda.
+                                </p>
+                            </div>
+                        </div>
+                        <a href="{{ event_url($registration->eventner, 'results') . '/' . $registration->id }}"
+                           target="_blank"
+                           class="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white font-bold text-xs hover:brightness-105 transition-colors shrink-0 text-decoration-none">
+                            <span>Buka Rincian Nilai</span>
+                            <i class="ti ti-external-link"></i>
+                        </a>
+                    </div>
+                </div>
+            @endif
+
             {{-- Team Tabs (if multiple registrations exist) --}}
             @if($siblingRegistrations->count() > 1)
                 <div class="flex gap-2 overflow-x-auto pb-2">

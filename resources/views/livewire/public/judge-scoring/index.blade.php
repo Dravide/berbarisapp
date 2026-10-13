@@ -9,9 +9,17 @@
 
         {{-- ========== 1. PILIH TINGKAT LOMBA ========== --}}
         @if($view === 'categories')
-            <h2 class="font-display text-sm font-bold uppercase tracking-wider text-on-surface-variant mb-3">
-                1. Pilih Tingkat Lomba
-            </h2>
+            <div class="mb-4">
+                <span class="inline-block text-[11px] font-bold uppercase tracking-wider text-primary mb-1">
+                    Langkah 1 dari 3
+                </span>
+                <h2 class="font-display text-lg font-bold text-on-surface m-0">
+                    Pilih Tingkat Lomba
+                </h2>
+                <p class="text-xs text-on-surface-variant m-0 mt-0.5">
+                    Pilih tingkat lomba yang Anda nilai untuk membuka daftar peleton dan lembar penilaian.
+                </p>
+            </div>
 
             @if($categories->isEmpty())
                 <div class="rounded-2xl border border-outline-variant/30 bg-white p-8 text-center">
@@ -26,7 +34,7 @@
                         <button type="button" wire:click="selectCategory({{ $cat->id }})"
                                 class="rounded-2xl border border-outline-variant/30 bg-white p-5 text-left shadow-sm hover:border-primary hover:shadow-md active:scale-[0.99] transition">
                             <p class="font-display text-lg font-bold text-on-surface m-0">{{ $cat->name }}</p>
-                            <p class="text-xs text-on-surface-variant mt-0.5 mb-2">{{ $cat->parent?->name ?? '—' }}</p>
+                            <p class="text-xs text-on-surface-variant mt-0.5 mb-3">{{ $cat->parent?->name ?? '—' }}</p>
                             <span class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary border border-primary/20">
                                 <i class="ti ti-users"></i> {{ $jumlahPeserta[$cat->id] ?? 0 }} peserta
                             </span>
@@ -38,12 +46,20 @@
 
         {{-- ========== 2. PESERTA (URUTAN PANGGUNG) ========== --}}
         @if($view === 'participants')
-            <div class="flex items-center justify-between mb-3">
-                <h2 class="font-display text-sm font-bold uppercase tracking-wider text-on-surface-variant m-0">
-                    2. Pilih Peserta
-                </h2>
+            <div class="flex items-center justify-between mb-4 gap-3">
+                <div>
+                    <span class="inline-block text-[11px] font-bold uppercase tracking-wider text-primary mb-1">
+                        Langkah 2 dari 3
+                    </span>
+                    <h2 class="font-display text-lg font-bold text-on-surface m-0">
+                        Pilih Peserta
+                    </h2>
+                    <p class="text-xs text-on-surface-variant m-0 mt-0.5">
+                        Pilih peleton untuk membuka lembar penilaian dan merekam evaluasi suara.
+                    </p>
+                </div>
                 <button type="button" wire:click="backToCategories"
-                        class="text-xs font-semibold text-primary hover:underline">
+                        class="shrink-0 inline-flex items-center gap-1 rounded-xl border border-outline-variant/40 bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:border-primary transition">
                     <i class="ti ti-arrow-left"></i> Ganti tingkat
                 </button>
             </div>
@@ -139,9 +155,16 @@
                                     <span class="block text-xs text-on-surface-variant truncate">Pelatih: {{ $p->nama_pelatih }}</span>
                                 @endif
                             </span>
-                            <span class="shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold {{ $badge['class'] }}">
-                                <i class="ti {{ $badge['icon'] }}"></i> {{ $badge['text'] }}
-                            </span>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                @if(!empty($p->has_voice_note))
+                                    <span class="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary" title="Voice note tersimpan">
+                                        <i class="ti ti-microphone"></i>
+                                    </span>
+                                @endif
+                                <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold {{ $badge['class'] }}">
+                                    <i class="ti {{ $badge['icon'] }}"></i> {{ $badge['text'] }}
+                                </span>
+                            </div>
                         </button>
                     @endforeach
                 </div>
@@ -160,42 +183,49 @@
                 $finalNow = (bool) $selectedRound?->isFinal();
             @endphp
 
-            <div class="flex items-center justify-between mb-3 gap-3">
+            <div class="flex flex-wrap items-center justify-between mb-4 gap-3">
                 <div class="min-w-0">
-                    <h2 class="font-display text-sm font-bold uppercase tracking-wider text-on-surface-variant m-0">
-                        3. Penilaian
-                    </h2>
-                    <p class="text-sm font-bold text-on-surface truncate m-0 mt-0.5">
-                        @if($registration->nomorUndian($selectedRound)) No. {{ $registration->nomorUndian($selectedRound) }} · @endif
-                        {{ $registration->nama_sekolah }}
-                        @if(! $finalNow && $registration->competitionSeries)
-                            <span class="ml-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary align-middle">
-                                <i class="ti ti-flag-2"></i> {{ $registration->competitionSeries->name }}
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-primary">
+                            Langkah 3 dari 3 · Penilaian
+                        </span>
+                        @if($registration->nomorUndian($selectedRound))
+                            <span class="rounded-md bg-slate-900 text-white px-2 py-0.5 text-[10px] font-mono font-bold">
+                                No. {{ $registration->nomorUndian($selectedRound) }}
                             </span>
+                        @endif
+                    </div>
+                    <h2 class="font-display text-lg font-bold text-on-surface m-0 truncate">
+                        {{ $registration->nama_sekolah }}
+                    </h2>
+                    <p class="text-xs text-on-surface-variant m-0 mt-0.5">
+                        @if($registration->nama_pelatih) Pelatih: {{ $registration->nama_pelatih }} @endif
+                        @if(! $finalNow && $registration->competitionSeries)
+                            · <span class="font-semibold text-primary">{{ $registration->competitionSeries->name }}</span>
                         @endif
                     </p>
                 </div>
 
-                <div class="flex shrink-0 items-center gap-3">
+                <div class="flex shrink-0 items-center gap-2.5">
                     {{-- Dua cara mengisi: satu kriteria per layar (maju otomatis)
                          atau semua kriteria sekaligus. Pilihan tidak mengubah
                          nilai yang sudah tersimpan. --}}
                     <div class="inline-flex rounded-xl border border-outline-variant/40 bg-white p-0.5">
                         <button type="button" wire:click="setCriteriaMode('satu-satu')"
                                 class="rounded-[10px] px-3 py-1.5 text-[11px] font-bold transition
-                                    {{ $criteriaMode === 'satu-satu' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-primary' }}">
+                                    {{ $criteriaMode === 'satu-satu' ? 'bg-primary text-white shadow-sm' : 'text-on-surface-variant hover:text-primary' }}">
                             <i class="ti ti-square-check"></i> Satu per Satu
                         </button>
                         <button type="button" wire:click="setCriteriaMode('semua')"
                                 class="rounded-[10px] px-3 py-1.5 text-[11px] font-bold transition
-                                    {{ $criteriaMode === 'semua' ? 'bg-primary text-white' : 'text-on-surface-variant hover:text-primary' }}">
+                                    {{ $criteriaMode === 'semua' ? 'bg-primary text-white shadow-sm' : 'text-on-surface-variant hover:text-primary' }}">
                             <i class="ti ti-list"></i> Semua
                         </button>
                     </div>
 
                     <button type="button" wire:click="backToParticipants"
-                            class="text-xs font-semibold text-primary hover:underline">
-                        <i class="ti ti-arrow-left"></i> Daftar peserta
+                            class="inline-flex items-center gap-1 rounded-xl border border-outline-variant/40 bg-white px-3 py-1.5 text-xs font-semibold text-primary hover:border-primary transition">
+                        <i class="ti ti-arrow-left"></i> Peserta
                     </button>
                 </div>
             </div>
@@ -211,6 +241,9 @@
                     </div>
                 </div>
             @endif
+
+            {{-- Voice Note Recorder & Catatan Juri --}}
+            @include('livewire.public.judge-scoring._voice-note-recorder')
 
             @php $flatCriteria = $this->flatCriteria; @endphp
 

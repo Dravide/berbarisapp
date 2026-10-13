@@ -1,0 +1,732 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireframe · Voice Note Catatan Juri di Tablet</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.30.0/tabler-icons.min.css">
+<style>
+:root {
+    --bg: #f8fafc;
+    --surface: #ffffff;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --primary: #0062ff;
+    --primary-soft: #eff6ff;
+    --accent: #a3e635;
+    --ok: #16a34a;
+    --ok-soft: #f0fdf4;
+    --danger: #ef4444;
+    --danger-soft: #fef2f2;
+    --warn: #f59e0b;
+    --warn-soft: #fffbeb;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        --bg: #090d16;
+        --surface: #131b2e;
+        --ink: #f1f5f9;
+        --muted: #94a3b8;
+        --line: #1e293b;
+        --primary: #38bdf8;
+        --primary-soft: #0c2d48;
+        --ok: #4ade80;
+        --ok-soft: #143823;
+        --danger: #f87171;
+        --danger-soft: #381616;
+        --warn: #fbbf24;
+        --warn-soft: #3b2d11;
+    }
+}
+:root[data-theme="dark"] {
+    --bg: #090d16;
+    --surface: #131b2e;
+    --ink: #f1f5f9;
+    --muted: #94a3b8;
+    --line: #1e293b;
+    --primary: #38bdf8;
+    --primary-soft: #0c2d48;
+    --ok: #4ade80;
+    --ok-soft: #143823;
+    --danger: #f87171;
+    --danger-soft: #381616;
+    --warn: #fbbf24;
+    --warn-soft: #3b2d11;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    padding: 0 16px 80px;
+}
+.wrap { max-width: 960px; margin: 0 auto; }
+header.doc { padding: 40px 0 24px; border-bottom: 1px solid var(--line); margin-bottom: 32px; }
+.eyebrow {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--primary);
+    background: var(--primary-soft);
+    padding: 3px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+}
+h1.title { font-size: 28px; font-weight: 800; line-height: 1.25; margin-bottom: 8px; }
+.lead { font-size: 14px; color: var(--muted); }
+
+/* TAB SWITCHER */
+.state-nav {
+    display: flex;
+    gap: 8px;
+    background: var(--surface);
+    padding: 6px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    margin-bottom: 24px;
+    overflow-x: auto;
+}
+.state-nav button {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.state-nav button.active {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0, 98, 255, 0.25);
+}
+
+/* SECTION CARD */
+.card-section {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 32px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.section-tag {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* TABLET MOCKUP FRAME */
+.tablet-frame {
+    background: var(--bg);
+    border: 2px solid var(--line);
+    border-radius: 24px;
+    padding: 16px;
+    max-width: 680px;
+    margin: 0 auto;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+}
+.tablet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 16px;
+}
+.tablet-header .event { font-size: 13px; font-weight: 800; color: var(--ink); }
+.tablet-header .judge { font-size: 12px; font-weight: 600; color: var(--muted); }
+
+.participant-bar {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+.participant-bar .name { font-size: 14px; font-weight: 800; color: var(--ink); }
+.participant-bar .no {
+    font-size: 12px;
+    font-weight: 800;
+    background: var(--primary-soft);
+    color: var(--primary);
+    padding: 4px 10px;
+    border-radius: 999px;
+}
+
+/* VOICE NOTE RECORDER BOX */
+.vn-box {
+    background: var(--surface);
+    border: 1.5px dashed var(--line);
+    border-radius: 18px;
+    padding: 20px;
+    transition: all 0.2s;
+}
+.vn-box.recording {
+    border-color: var(--danger);
+    background: var(--danger-soft);
+}
+.vn-box.saved {
+    border-color: var(--ok);
+    border-style: solid;
+    background: var(--ok-soft);
+}
+.vn-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.vn-title {
+    font-size: 13px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink);
+}
+.vn-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* BTNS */
+.btn-mic-record {
+    width: 100%;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: 14px;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(0, 98, 255, 0.2);
+}
+.btn-mic-record:hover { transform: translateY(-1px); filter: brightness(1.05); }
+
+/* RECORDING PULSE ANIMATION */
+.record-live {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 0;
+}
+.recording-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--danger);
+    background: #fff;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--danger);
+}
+.dot-blink {
+    width: 10px;
+    height: 10px;
+    background: var(--danger);
+    border-radius: 50%;
+    animation: blink 1s infinite;
+}
+@keyframes blink { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(0.8); } }
+
+/* WAVEFORM BARS */
+.waveform-bars {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 40px;
+    width: 100%;
+}
+.wave-bar {
+    width: 4px;
+    background: var(--danger);
+    border-radius: 3px;
+    animation: wave 1.2s infinite ease-in-out;
+}
+.wave-bar:nth-child(2) { animation-delay: 0.1s; }
+.wave-bar:nth-child(3) { animation-delay: 0.2s; }
+.wave-bar:nth-child(4) { animation-delay: 0.3s; }
+.wave-bar:nth-child(5) { animation-delay: 0.4s; }
+.wave-bar:nth-child(6) { animation-delay: 0.5s; }
+.wave-bar:nth-child(7) { animation-delay: 0.6s; }
+.wave-bar:nth-child(8) { animation-delay: 0.7s; }
+@keyframes wave {
+    0%, 100% { height: 8px; }
+    50% { height: 36px; }
+}
+
+.record-actions {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+.btn-stop {
+    flex: 1;
+    background: var(--danger);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+.btn-cancel {
+    background: var(--surface);
+    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+/* AUDIO PLAYER COMPONENT */
+.audio-player-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.btn-play {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+.btn-play:hover { transform: scale(1.05); }
+.audio-track { flex: 1; }
+.track-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--line);
+    border-radius: 4px;
+    position: relative;
+    cursor: pointer;
+}
+.track-progress {
+    width: 42%;
+    height: 100%;
+    background: var(--primary);
+    border-radius: 4px;
+}
+.track-time {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    margin-top: 6px;
+}
+
+/* SAVED ACTIONS */
+.saved-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+}
+.status-badge-ok {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ok);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.btn-ghost-sm {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+.btn-ghost-sm:hover { color: var(--danger); background: var(--danger-soft); }
+
+/* PUBLIC DETAIL VIEW MOCKUP */
+.public-review-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 12px;
+}
+.judge-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.judge-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 16px;
+    border: 1px solid var(--line);
+}
+.judge-info .name { font-size: 14px; font-weight: 800; color: var(--ink); }
+.judge-info .role { font-size: 11px; color: var(--muted); font-weight: 600; }
+.judge-text-quote {
+    font-size: 13px;
+    color: var(--ink);
+    background: var(--bg);
+    border-left: 3px solid var(--primary);
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-top: 12px;
+    line-height: 1.5;
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+    <header class="doc">
+        <span class="eyebrow">Wireframe &amp; Prototipe UI</span>
+        <h1 class="title">Voice Note Catatan Juri di Tablet Penilaian</h1>
+        <p class="lead">
+            Evaluasi lisan 10–12 menit (sepanjang peleton tampil di arena) oleh dewan juri via mikrofon tablet (<code>/juri/{token}</code>) dengan fitur jeda/lanjut, isolasi <code>wire:ignore</code> saat menilai kriteria, serta pemutar rekaman di halaman hasil kontingen (<code>/event/{slug}/results/{registration}</code>).
+        </p>
+    </header>
+
+    {{-- NAVIGATOR PROTOTIPE STATE --}}
+    <p style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--muted); margin-bottom: 8px;">
+        Pilih Simulasi Status di Tablet Juri:
+    </p>
+    <div class="state-nav">
+        <button type="button" class="active" onclick="switchState('idle', this)">
+            <i class="ti ti-microphone"></i> 1. Belum Merekam (Idle)
+        </button>
+        <button type="button" onclick="switchState('recording', this)">
+            <i class="ti ti-waveform"></i> 2. Sedang Merekam (Live)
+        </button>
+        <button type="button" onclick="switchState('preview', this)">
+            <i class="ti ti-player-play"></i> 3. Review Rekaman
+        </button>
+        <button type="button" onclick="switchState('saved', this)">
+            <i class="ti ti-check"></i> 4. Sudah Tersimpan
+        </button>
+    </div>
+
+    {{-- CARD 1: SIMULASI TABLET JURI --}}
+    <div class="card-section">
+        <div class="section-tag">
+            <i class="ti ti-device-tablet"></i> Layar Tablet Juri — URL: <code>https://entry.berbaris.app/juri/token-abc123</code>
+        </div>
+
+        <div class="tablet-frame">
+            <div class="tablet-header">
+                <div>
+                    <div class="event">LKBB NASIONAL JUARA 2026</div>
+                    <div class="judge">Tingkat SMA/SMK &bull; Juri: Mayor Inf Budi Santoso</div>
+                </div>
+                <span style="font-size: 11px; font-weight: 700; color: var(--ok); background: var(--ok-soft); padding: 4px 10px; border-radius: 999px;">
+                    <i class="ti ti-wifi"></i> Online
+                </span>
+            </div>
+
+            <div class="participant-bar">
+                <div>
+                    <div class="name">SMA Negeri 1 Tangerang</div>
+                    <div style="font-size: 11px; color: var(--muted);">PBB Murni &bull; Seri A</div>
+                </div>
+                <span class="no">No. 04</span>
+            </div>
+
+            {{-- KONTEN STATE RECORDER --}}
+            <div id="box-recorder" class="vn-box">
+
+                {{-- STATE 1: IDLE --}}
+                <div id="state-idle">
+                    <div class="vn-header">
+                        <div>
+                            <div class="vn-title"><i class="ti ti-microphone" style="color: var(--primary);"></i> Catatan &amp; Evaluasi Suara</div>
+                            <div class="vn-sub">Rekam suara sepanjang penampilan peleton (hingga 10–12 menit) sambil tetap menilai kriteria.</div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-mic-record" onclick="simulateStart()">
+                        <i class="ti ti-microphone text-xl"></i> Mulai Rekam Evaluasi Suara (Maks. 12 Menit)
+                    </button>
+                    <div style="text-align: center; margin-top: 10px;">
+                        <a href="javascript:void(0)" onclick="toggleTextForm()" style="font-size: 11px; color: var(--muted); text-decoration: underline;">
+                            Atau ketik catatan teks
+                        </a>
+                    </div>
+                </div>
+
+                {{-- STATE 2: RECORDING --}}
+                <div id="state-recording" style="display: none;">
+                    <div class="record-live">
+                        <div class="recording-badge">
+                            <span class="dot-blink"></span> MEREKAM AUDIO... <span id="rec-timer">05:42</span> / 12:00
+                        </div>
+
+                        <div class="waveform-bars">
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                            <div class="wave-bar"></div>
+                        </div>
+
+                        <div class="record-actions">
+                            <button type="button" class="btn-cancel" style="border-color: var(--warn); color: var(--warn);" onclick="togglePause(this)">
+                                <i class="ti ti-player-pause"></i> <span id="btn-pause-text">Jeda</span>
+                            </button>
+                            <button type="button" class="btn-stop" onclick="simulateStop()">
+                                <i class="ti ti-player-stop"></i> Selesai &amp; Simpan
+                            </button>
+                            <button type="button" class="btn-cancel" onclick="simulateCancel()">
+                                <i class="ti ti-x"></i> Batal
+                            </button>
+                        </div>
+                        <div style="font-size: 10.5px; color: var(--muted); text-align: center; margin-top: 4px;">
+                            💡 <i>Juri tetap bisa mengetuk tombol nilai di atas tanpa memutus rekaman suara (dilindungi wire:ignore).</i>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- STATE 3: PREVIEW REVIEW --}}
+                <div id="state-preview" style="display: none;">
+                    <div class="vn-header">
+                        <div class="vn-title"><i class="ti ti-player-play" style="color: var(--warn);"></i> Periksa Rekaman Suara</div>
+                        <span style="font-size: 11px; font-weight: 700; color: var(--muted);">Durasi: 09:35 Menit</span>
+                    </div>
+
+                    <div class="audio-player-card">
+                        <button type="button" class="btn-play"><i class="ti ti-player-play"></i></button>
+                        <div class="audio-track">
+                            <div class="track-bar"><div class="track-progress" style="width: 35%;"></div></div>
+                            <div class="track-time"><span>03:15</span><span>09:35</span></div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; margin-top: 14px;">
+                        <button type="button" class="btn-mic-record" style="background: var(--ok);" onclick="simulateSave()">
+                            <i class="ti ti-cloud-upload"></i> Simpan Voice Note
+                        </button>
+                        <button type="button" class="btn-cancel" onclick="simulateStart()">
+                            <i class="ti ti-refresh"></i> Rekam Ulang
+                        </button>
+                    </div>
+                </div>
+
+                {{-- STATE 4: SAVED --}}
+                <div id="state-saved" style="display: none;">
+                    <div class="vn-header">
+                        <div class="vn-title"><i class="ti ti-circle-check-filled" style="color: var(--ok);"></i> Voice Note Tersimpan</div>
+                        <span style="font-size: 11px; font-weight: 700; color: var(--ok);">09:35 Menit</span>
+                    </div>
+
+                    <div class="audio-player-card">
+                        <button type="button" class="btn-play" style="background: var(--ok);"><i class="ti ti-player-play"></i></button>
+                        <div class="audio-track">
+                            <div class="track-bar"><div class="track-progress" style="width: 0%;"></div></div>
+                            <div class="track-time"><span>0:00</span><span>09:35</span></div>
+                        </div>
+                    </div>
+
+                    <div class="saved-actions">
+                        <span class="status-badge-ok">
+                            <i class="ti ti-check"></i> Siap didengarkan pelatih &amp; panitia
+                        </span>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" class="btn-ghost-sm" onclick="simulateStart()">
+                                <i class="ti ti-refresh"></i> Rekam Ulang
+                            </button>
+                            <button type="button" class="btn-ghost-sm" style="color: var(--danger);" onclick="simulateDelete()">
+                                <i class="ti ti-trash"></i> Hapus
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- FORM TEKS TAMBAHAN (OPSIONAL) --}}
+                <div id="text-notes-area" style="display: none; margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line);">
+                    <label style="font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase;">Catatan Tambahan (Teks):</label>
+                    <textarea style="width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; font-size: 12px; margin-top: 4px; font-family: inherit; resize: vertical;" rows="2" placeholder="Tuliskan catatan singkat jika diperlukan..."></textarea>
+                </div>
+            </div>
+
+            {{-- TOMBOL FINALISASI BAWAH --}}
+            <div style="margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 12px; color: var(--muted);">Terisi: <b>18/18</b> kriteria</div>
+                <button type="button" style="background: var(--primary); color: #fff; border: none; padding: 10px 20px; border-radius: 12px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="ti ti-lock"></i> Finalisasi &amp; Peserta Berikutnya &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- CARD 2: TAMPILAN HASIL NILAI DI SISI PELATIH / PUBLIK --}}
+    <div class="card-section">
+        <div class="section-tag">
+            <i class="ti ti-browser"></i> Lembar Rincian Nilai Publik &amp; Magic Link Pelatih — URL: <code>/event/lkbb-2026/results/reg-4</code>
+        </div>
+
+        <div style="max-width: 680px; margin: 0 auto;">
+            <div style="margin-bottom: 16px;">
+                <h3 style="font-size: 18px; font-weight: 800; color: var(--ink); margin-bottom: 4px;">
+                    Rekapitulasi Penilaian &bull; SMA Negeri 1 Tangerang
+                </h3>
+                <p style="font-size: 12px; color: var(--muted);">
+                    Tingkat SMA/SMK &bull; No. Undian 04 &bull; Total Skor Akhir: <b>1.845,50</b>
+                </p>
+            </div>
+
+            <div style="background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: 20px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--line); padding-bottom: 12px;">
+                    <i class="ti ti-volume text-xl" style="color: var(--primary);"></i>
+                    <h4 style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Evaluasi &amp; Catatan Dewan Juri
+                    </h4>
+                </div>
+
+                {{-- JURI 1 --}}
+                <div class="public-review-card">
+                    <div class="judge-profile">
+                        <div class="judge-avatar"><i class="ti ti-gavel"></i></div>
+                        <div class="judge-info">
+                            <div class="name">Mayor Inf Budi Santoso</div>
+                            <div class="role">Ketua Dewan Juri &bull; Penilai PBB Murni</div>
+                        </div>
+                    </div>
+
+                    <div class="audio-player-card">
+                        <button type="button" class="btn-play"><i class="ti ti-player-play"></i></button>
+                        <div class="audio-track">
+                            <div class="track-bar"><div class="track-progress" style="width: 45%;"></div></div>
+                            <div class="track-time"><span>0:11</span><span>0:24</span></div>
+                        </div>
+                    </div>
+
+                    <div class="judge-text-quote">
+                        &ldquo;Langkah tegap dan tempo pasukan sangat konsisten. Catatan penting pada danton agar intonasi aba-aba perubahan arah lebih diperjelas di arena luas.&rdquo;
+                    </div>
+                </div>
+
+                {{-- JURI 2 --}}
+                <div class="public-review-card" style="margin-bottom: 0;">
+                    <div class="judge-profile">
+                        <div class="judge-avatar" style="background: #fdf2f8; color: #db2777;"><i class="ti ti-star"></i></div>
+                        <div class="judge-info">
+                            <div class="name">Kapten Cba Suryo Pranoto</div>
+                            <div class="role">Anggota Dewan Juri &bull; Penilai Variasi &amp; Formasi</div>
+                        </div>
+                    </div>
+
+                    <div class="audio-player-card">
+                        <button type="button" class="btn-play" style="background: #db2777;"><i class="ti ti-player-play"></i></button>
+                        <div class="audio-track">
+                            <div class="track-bar"><div class="track-progress" style="width: 0%;"></div></div>
+                            <div class="track-time"><span>0:00</span><span>0:38</span></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchState(state, btn) {
+    document.querySelectorAll('.state-nav button').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    const box = document.getElementById('box-recorder');
+    box.className = 'vn-box ' + state;
+
+    document.getElementById('state-idle').style.display = state === 'idle' ? 'block' : 'none';
+    document.getElementById('state-recording').style.display = state === 'recording' ? 'block' : 'none';
+    document.getElementById('state-preview').style.display = state === 'preview' ? 'block' : 'none';
+    document.getElementById('state-saved').style.display = state === 'saved' ? 'block' : 'none';
+}
+
+function simulateStart() {
+    switchState('recording', document.querySelectorAll('.state-nav button')[1]);
+}
+function simulateStop() {
+    switchState('preview', document.querySelectorAll('.state-nav button')[2]);
+}
+function simulateSave() {
+    switchState('saved', document.querySelectorAll('.state-nav button')[3]);
+}
+function simulateCancel() {
+    switchState('idle', document.querySelectorAll('.state-nav button')[0]);
+}
+function simulateDelete() {
+    if (confirm('Hapus voice note ini?')) {
+        switchState('idle', document.querySelectorAll('.state-nav button')[0]);
+    }
+}
+function toggleTextForm() {
+    const el = document.getElementById('text-notes-area');
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+
+</body>
+</html>
