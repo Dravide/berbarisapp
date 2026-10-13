@@ -61,7 +61,12 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <p class="mb-0 fs-3">{{ $eventner->diselenggarakan_oleh }}</p>
+                                    <p class="mb-0 fs-3 d-flex align-items-center gap-1">
+                                        {{ $eventner->diselenggarakan_oleh }}
+                                        @if($eventner->is_verified)
+                                            <i class="ti ti-discount-check text-primary fs-4" title="Penyelenggara Terverifikasi"></i>
+                                        @endif
+                                    </p>
                                 </td>
                                 <td>
                                     <span class="d-block">{{ $eventner->lokasi }}</span>

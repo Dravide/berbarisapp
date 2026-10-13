@@ -30,7 +30,12 @@
     {{-- Body --}}
     <div class="flex flex-1 flex-col p-5">
         <h3 class="card-past-title text-base font-bold leading-snug text-deep-slate transition-colors duration-200 group-hover:text-primary">{{ $eventner->nama_event }}</h3>
-        <p class="mt-1 text-xs text-on-surface-variant">{{ $eventner->diselenggarakan_oleh }}</p>
+        <p class="mt-1 flex items-center gap-1 text-xs text-on-surface-variant">
+            <span>{{ $eventner->diselenggarakan_oleh }}</span>
+            @if($eventner->is_verified)
+                <x-verified-badge size="xs" />
+            @endif
+        </p>
 
         <div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-outline-variant/50 pt-3 text-xs text-on-surface-variant">
             @if($eventner->tanggal)

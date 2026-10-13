@@ -72,7 +72,11 @@
     <link href="https://fonts.googleapis.com/css2?family={{ str_replace(' ', '+', $fontSans) }}:{{ $sansWeight }}&family={{ str_replace(' ', '+', $fontDisplay) }}:{{ $displayWeight }}&display=swap" rel="stylesheet">
 
     {{-- Tabler Icons (konsisten dgn app) --}}
+    <link rel="stylesheet" href="{{ asset('templates/assets/fonts/tabler-icons/tabler-icons.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+    <style>
+        .ti-rosette-discount-check:before { content: "\f1f8"; }
+    </style>
 
     {{-- Tailwind v4 build (landing tokens) --}}
     @vite(['resources/css/landing.css', 'resources/js/app.js'])

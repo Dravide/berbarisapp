@@ -17,6 +17,23 @@
     {{-- Grid penyelenggara --}}
     <div class="pb-20">
         <div class="container-landing">
+            {{-- Filter Tabs --}}
+            <div class="mb-8 flex items-center justify-center gap-2">
+                <button type="button"
+                        wire:click="setFilter('all')"
+                        class="inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold transition-colors {{ $filter === 'all' ? 'bg-primary text-white shadow-sm' : 'bg-surface-container-high text-on-surface-variant hover:text-deep-slate' }}">
+                    <span>Semua Penyelenggara</span>
+                    <span class="rounded-full px-1.5 py-0.5 text-[10px] {{ $filter === 'all' ? 'bg-white/20 text-white' : 'bg-black/5 text-on-surface-variant' }}">{{ $counts['all'] ?? 0 }}</span>
+                </button>
+                <button type="button"
+                        wire:click="setFilter('verified')"
+                        class="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-colors {{ $filter === 'verified' ? 'bg-primary text-white shadow-sm' : 'bg-surface-container-high text-on-surface-variant hover:text-deep-slate' }}">
+                    <x-verified-badge size="xs" class="{{ $filter === 'verified' ? '!text-white' : 'text-primary' }}" />
+                    <span>Terverifikasi</span>
+                    <span class="rounded-full px-1.5 py-0.5 text-[10px] {{ $filter === 'verified' ? 'bg-white/20 text-white' : 'bg-black/5 text-on-surface-variant' }}">{{ $counts['verified'] ?? 0 }}</span>
+                </button>
+            </div>
+
             @if($eventners->count() > 0)
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
                 @foreach($eventners as $eventner)

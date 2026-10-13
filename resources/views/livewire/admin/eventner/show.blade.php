@@ -24,6 +24,12 @@
                                 @else
                                     <span class="badge bg-danger-subtle text-danger fs-2">Pendaftaran Tutup</span>
                                 @endif
+                                @if($eventner->is_verified)
+                                    <span class="badge bg-primary-subtle text-primary fs-2"><i class="ti ti-discount-check me-1"></i>Penyelenggara Terverifikasi</span>
+                                    @if($eventner->verifiedBy)
+                                        <span class="text-muted fs-2">oleh {{ $eventner->verifiedBy->name }} &bull; {{ $eventner->verified_at?->format('d M Y H:i') }}</span>
+                                    @endif
+                                @endif
                             </div>
                             @if($eventner->status === 'rejected' && $eventner->rejection_reason)
                                 <div class="alert alert-danger py-2 px-3 mb-2 fs-2">Alasan penolakan: {{ $eventner->rejection_reason }}</div>
@@ -186,10 +192,15 @@
                                             <p class="mb-0 text-muted mt-2">No Logo</p>
                                         </div>
                                     @endif
-                                    <div class="mt-3">
+                                    <div class="mt-3 d-flex flex-column gap-2">
                                         <a href="{{ event_url($eventner, 'detail') }}" target="_blank" class="btn btn-sm btn-outline-primary">
                                             <i class="ti ti-external-link"></i> Lihat Laman Publik
                                         </a>
+                                        <button wire:click="toggleVerification"
+                                                class="btn btn-sm {{ $eventner->is_verified ? 'btn-outline-danger' : 'btn-outline-success' }}">
+                                            <i class="ti {{ $eventner->is_verified ? 'ti-circle-x' : 'ti-discount-check' }} me-1"></i>
+                                            {{ $eventner->is_verified ? 'Cabut Verifikasi' : 'Verifikasi Penyelenggara' }}
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="col-md-8">

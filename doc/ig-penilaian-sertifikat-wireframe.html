@@ -1,0 +1,625 @@
+<title>Penilaian dan Sertifikat Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: dokumen spesifikasi — tiap slide satu baris, wireframe 4:5 di kiri, anotasi di kanan. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --lime:#a3e635; --lime-ink:#2c4703;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --lime:#b6f24e; --lime-ink:#16250a;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --lime:#b6f24e; --lime-ink:#16250a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{
+  max-width:1180px;margin-inline:auto;
+  padding-inline:clamp(16px,4vw,40px);
+  padding-block:clamp(28px,5vw,56px);
+}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 10px;
+}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:64ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{
+  font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap;
+}
+button.toggle{
+  font-family:var(--mono);font-size:12px;padding:7px 14px;border-radius:999px;
+  border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);
+  cursor:pointer;white-space:nowrap;
+}
+button.toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.toggle[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.spec{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-top:28px;
+}
+.spec > div{background:var(--panel);padding:16px 18px}
+.spec dt{
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;
+}
+.spec dd{margin:0;font-size:14px;line-height:1.5}
+.swatches{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.sw{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.sw i{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.15);display:block}
+
+.slide{
+  margin-top:clamp(32px,5vw,56px);
+  display:grid;grid-template-columns:minmax(0,460px) minmax(0,1fr);
+  gap:clamp(20px,3vw,44px);align-items:start;
+}
+@media (max-width:860px){ .slide{grid-template-columns:minmax(0,1fr)} }
+.slide-head{grid-column:1/-1}
+.slide-head h2{font-size:clamp(19px,2.2vw,23px);font-weight:700}
+.slide-head .num{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase}
+.slide-head .goal{color:var(--muted);font-size:14px;margin-top:6px;max-width:70ch}
+
+.frame{
+  position:relative;aspect-ratio:4/5;width:100%;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  overflow:hidden;container-type:inline-size;--u:0.0926cqw;
+}
+@media (max-width:860px){ .frame{max-width:440px} }
+.f-in{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  padding:calc(80*var(--u));gap:calc(32*var(--u));
+}
+.safe{
+  position:absolute;inset:calc(80*var(--u));
+  border:1px dashed var(--accent);border-radius:calc(8*var(--u));
+  opacity:0;transition:opacity .15s;pointer-events:none;z-index:5;
+}
+.safe::after{
+  content:"margin 80 px";position:absolute;top:calc(-18*var(--u));left:0;
+  font-family:var(--mono);font-size:10px;color:var(--accent);
+}
+.guides .safe{opacity:.6}
+
+.ph{
+  border:1px dashed var(--ph-line);background:var(--ph-fill);
+  border-radius:calc(8*var(--u));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;text-align:center;flex:none;
+}
+.ph span{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);line-height:1.3}
+.ph span em{display:block;font-style:normal;opacity:.75;font-size:9px}
+.icon{width:calc(84*var(--u));height:calc(84*var(--u))}
+.grow{flex:1 1 auto;min-height:0}
+.stack{
+  flex:1 1 auto;min-height:0;display:flex;flex-direction:column;
+  justify-content:space-evenly;gap:calc(30*var(--u));
+}
+.ind{display:flex;gap:calc(28*var(--u));align-items:flex-start;flex:0 0 auto}
+.ind > div{min-width:0}
+
+.eyeb{font-family:var(--mono);font-size:calc(28*var(--u));letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}
+.h-big{font-size:calc(84*var(--u));font-weight:700;line-height:1.05;letter-spacing:-.02em}
+.h-sm{font-size:calc(52*var(--u));font-weight:700;line-height:1.12}
+.sub{font-size:calc(38*var(--u));color:var(--muted);line-height:1.35}
+.tiny{font-size:calc(28*var(--u));color:var(--muted);line-height:1.35}
+.rt{font-size:calc(34*var(--u));font-weight:600;line-height:1.22}
+.rs{font-size:calc(28*var(--u));color:var(--muted);line-height:1.35}
+.desc{font-size:calc(30*var(--u));color:var(--muted);line-height:1.35;flex:0 0 auto}
+.tight .rt{font-size:calc(32*var(--u))}
+.tight .rs{font-size:calc(26*var(--u))}
+.tinym{font-family:var(--mono);font-size:calc(28*var(--u));color:var(--muted)}
+.pill{
+  background:var(--lime);color:var(--lime-ink);border-radius:999px;
+  height:calc(96*var(--u));display:flex;align-items:center;justify-content:center;
+  font-weight:600;font-size:calc(34*var(--u));padding-inline:calc(48*var(--u));
+}
+.row{display:flex;align-items:flex-end;justify-content:space-between;gap:calc(24*var(--u))}
+
+/* Dua kartu berdampingan — dipakai slide grup vs seri */
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:calc(28*var(--u));flex:0 0 auto;align-items:start}
+.pair.center{margin-block:auto}
+.pcard{
+  border:1px solid var(--line);border-radius:calc(16*var(--u));
+  background:var(--panel-2);padding:calc(36*var(--u));
+  display:flex;flex-direction:column;gap:calc(24*var(--u));min-width:0;
+}
+.pcard.hot{border-color:var(--lime);background:var(--accent-soft)}
+.pcard .pt{font-size:calc(56*var(--u));font-weight:700;line-height:1.08}
+.pcard .pl{font-size:calc(30*var(--u));color:var(--muted);line-height:1.35}
+.pcard ul{margin:0;padding-left:calc(34*var(--u));display:flex;flex-direction:column;gap:calc(20*var(--u))}
+.pcard li{font-size:calc(34*var(--u));line-height:1.3}
+
+/* Tumpukan chip — dipakai slide penugasan juri */
+.chips{display:flex;flex-wrap:wrap;gap:calc(18*var(--u));flex:0 0 auto}
+.chip2{
+  border:1px solid var(--line);border-radius:999px;
+  padding:calc(14*var(--u)) calc(28*var(--u));
+  font-size:calc(28*var(--u));background:var(--panel-2);white-space:nowrap;
+}
+
+.notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.notes li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;align-items:baseline}
+.notes .n{font-family:var(--mono);font-size:11px;color:var(--accent);border-top:1px solid var(--accent);padding-top:4px}
+.notes b{font-weight:600;font-size:14.5px}
+.notes .dim{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px;white-space:nowrap}
+.notes p{font-size:13.5px;color:var(--muted);margin-top:2px;line-height:1.5}
+.notes code{color:var(--ink)}
+
+.rules{margin-top:clamp(40px,6vw,72px);border-top:1px solid var(--line);padding-top:clamp(24px,3vw,36px)}
+.rules h2{font-size:clamp(19px,2.2vw,23px)}
+.rules .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;margin-top:20px}
+.rules ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--muted)}
+.rules ul strong{color:var(--ink);font-weight:600}
+.caption-card{
+  border:1px solid var(--line);border-radius:var(--r);background:var(--panel-2);
+  padding:20px 22px;margin-top:20px;font-size:14px;line-height:1.65;white-space:pre-wrap;
+}
+.caption-card .lbl{
+  display:block;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:10px;white-space:normal;
+}
+.caption-card.dim{color:var(--muted)}
+footer{
+  margin-top:clamp(32px,5vw,56px);border-top:1px solid var(--line);padding-top:20px;
+  font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em;
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">BERBARIS APP — Post peluncuran #3</p>
+    <h1>Wireframe carousel 6 slide</h1>
+    <p class="lede">Post ketiga masuk ke bagian yang paling sering ditanya panitia: cara menyusun rubrik penilaian, cara membagi peserta jadi grup dan seri, cara juri dibagi tugasnya, dan cara sertifikat dibuat otomatis. Tiap butir ditulis penuh dua sampai tiga baris, dan tiap slide ditutup satu paragraf yang menjelaskan bagian yang paling sering disalahpahami. Caption siap tempel ada di bagian bawah. Ukuran dan aturan produksinya sama dengan post #1 dan #2.</p>
+    <div class="meta">
+      <span class="chip">1080 × 1350 px · 4:5</span>
+      <span class="chip">6 slide</span>
+      <span class="chip">margin aman 80 px</span>
+      <span class="chip">maks 4 butir per slide</span>
+      <button class="toggle" id="gt" type="button" aria-pressed="false">Tampilkan garis margin</button>
+    </div>
+  </header>
+
+  <dl class="spec">
+    <div>
+      <dt>Kanvas</dt>
+      <dd>1080 × 1350 px (4:5). Semua ukuran di wireframe ini dalam px kanvas.</dd>
+    </div>
+    <div>
+      <dt>Skala teks</dt>
+      <dd>Judul 52 · Butir 34 · Keterangan 28 · Penutup 30 · <em>minimum 26</em></dd>
+    </div>
+    <div>
+      <dt>Warna</dt>
+      <dd class="swatches">
+        <span class="sw"><i style="background:#0062ff"></i>#0062FF</span>
+        <span class="sw"><i style="background:#a3e635"></i>#A3E635</span>
+        <span class="sw"><i style="background:#111827"></i>#111827</span>
+        <span class="sw"><i style="background:#f8f9fa"></i>#F8F9FA</span>
+      </dd>
+    </div>
+    <div>
+      <dt>Struktur butir</dt>
+      <dd>Ikon 84 × 84 · judul 34 px · keterangan 2–3 baris 28 px · jarak antar butir 30 px · ditutup satu paragraf 30 px</dd>
+    </div>
+  </dl>
+
+  <!-- ============ SLIDE 1 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 1 / 6</p>
+      <h2>Cover — sebut topiknya dengan istilah panitia</h2>
+      <p class="goal">Slide ini menyebut dua topik sekaligus, jadi carousel-nya terasa punya isi, bukan sekali lewat.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="ph" style="width:calc(120*var(--u));height:calc(120*var(--u))">
+          <span>LOGO<em>120 × 120</em></span>
+        </div>
+        <div class="grow"></div>
+        <p class="h-big">Grup, seri, dan sertifikat yang bikin sendiri.</p>
+        <p class="sub">Bagian yang paling sering ditanya panitia.</p>
+        <p class="desc">Enam slide soal penilaian. Ini yang biasanya bikin panitia kerja lembur setelah lomba selesai.</p>
+        <div class="grow"></div>
+        <div class="row">
+          <span class="tinym" style="font-size:calc(26*var(--u))">@barisapp</span>
+          <span class="tinym" style="font-size:calc(26*var(--u))">geser →</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Judul</b><span class="dim">84 px · maks 3 baris</span><p>"Grup, seri, dan sertifikat yang bikin sendiri" — tiga kata pertama adalah istilah yang dipakai panitia sehari-hari, jadi mereka langsung merasa ini untuk mereka. Kata "sendiri" di akhir menandakan bahwa semuanya bisa diatur, bukan dikunci sistem.</p></div></li>
+      <li><span class="n">02</span><div><b>Subjudul</b><span class="dim">38 px · 1 baris</span><p>Menjelaskan kenapa carousel ini ada, bukan mengulang judul. Kalau subjudul ini masih bisa dipakai untuk post lain, berarti terlalu umum.</p></div></li>
+      <li><span class="n">03</span><div><b>Paragraf penutup</b><span class="dim">30 px · 2 baris</span><p>"Setelah lomba selesai" itu yang membedakan post ini dari post #2. Post #2 soal hari-H, post ini soal kerjaan yang tersisa sesudahnya. Kalimat ini yang membuat orang merasa carousel-nya punya alasan sendiri.</p></div></li>
+      <li><span class="n">04</span><div><b>Latar</b><span class="dim">1080 × 1350</span><p>Pakai latar yang berbeda dari post #1 dan #2 supaya tiga post tidak terlihat seperti satu post yang diulang.</p></div></li>
+      <li><span class="n">05</span><div><b>Penanda carousel</b><span class="dim">26 px · kanan bawah</span><p>Wajib: tanpa ini orang berhenti di slide 1 dan mengira sudah selesai.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 2 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 2 / 6</p>
+      <h2>Format penilaian disusun sendiri</h2>
+      <p class="goal">Sebelum masuk ke grup dan seri, jelaskan dulu bahan bakunya: rubriknya sendiri. Slide ini yang menjelaskan bahwa sistem tidak memaksa satu format.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <p class="eyeb">Format nilai</p>
+        <p class="h-sm">Rubriknya kamu yang tentukan.</p>
+        <div class="stack">
+          <div class="ind"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Bertingkat tiga lapis</p>
+            <p class="rs">Kategori, lalu sub-kategori, lalu kriterianya — sama seperti format penilaian resmi.</p>
+          </div></div>
+          <div class="ind"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Bobot dan opsi skor</p>
+            <p class="rs">Tiap kriteria punya bobot dan pilihan skornya sendiri. Nilai berpecahan seperti 8,2 tersimpan apa adanya.</p>
+          </div></div>
+          <div class="ind"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Pengurangan nilai</p>
+            <p class="rs">Untuk pelanggaran di luar skor. Dihitung terpisah, jadi nilai aslinya tetap utuh.</p>
+          </div></div>
+          <div class="ind"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Impor dari Excel</p>
+            <p class="rs">Susun di Excel kalau lebih cepat. Semua baris tampil dulu sebagai pratinjau, dan yang bermasalah ditandai.</p>
+          </div></div>
+        </div>
+        <p class="desc">Rubrik yang sudah jadi bisa digandakan ke tingkat lomba lain, jadi tidak perlu menyusun ulang dari nol.</p>
+        <div class="row"><span class="tinym" style="font-size:calc(26*var(--u))">2 / 6</span></div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Tiga lapis</b><span class="dim">keterangan 3 baris</span><p>Fakta bahwa rubriknya bertingkat tiga lapis itu penting bagi panitia PBB, karena format resmi mereka memang berlapis. Jangan disederhanakan jadi "kriteria saja" — justru kedalaman itu yang menunjukkan sistemnya mengerti lomba mereka.</p></div></li>
+      <li><span class="n">02</span><div><b>Nilai berpecahan</b><span class="dim">—</span><p>Menyebut "8,2 tersimpan apa adanya" menjawab kekhawatiran yang sangat spesifik: banyak sistem lama membulatkan nilai ke bilangan bulat, dan panitia yang pernah kena tahu betapa repotnya. Satu contoh angka lebih meyakinkan daripada kalimat "nilai presisi".</p></div></li>
+      <li><span class="n">03</span><div><b>Pengurangan nilai dipisah</b><span class="dim">—</span><p>Sebut "dihitung terpisah" karena itu intinya: nilai asli tidak ditimpa, pengurangannya bisa dilihat sendiri. Kalau tidak dijelaskan, orang mengira ini sekadar kolom nilai minus.</p></div></li>
+      <li><span class="n">04</span><div><b>Pratinjau impor</b><span class="dim">—</span><p>Yang meyakinkan bukan "bisa impor Excel", tapi bahwa baris yang bermasalah ditampilkan satu per satu sebelum apa pun tersimpan. Sebut "pratinjau", bukan "impor" — kata itu yang membawa rasa aman.</p></div></li>
+      <li><span class="n">05</span><div><b>Paragraf penutup soal menggandakan</b><span class="dim">30 px · 2 baris</span><p>Rubrik bisa digandakan ke tingkat lain dan disalin antar tingkat. Ini detail yang tidak cukup kuat untuk jadi butir keempat, tapi kalau dihapus, panitia yang punya lima tingkat lomba harus menyusun lima kali. Simpan di paragraf penutup.</p></div></li>
+      <li><span class="n">06</span><div><b>Batas rubrik terhadap seri</b><span class="dim">—</span><p>Rubrik terikat pada seri peserta, dan sekali ada nilai masuk, rubriknya tidak bisa dipindah ke seri lain. Jangan dijelaskan di slide — cukup di caption kalau ada yang bertanya.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 3 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 3 / 6</p>
+      <h2>Grup dan seri itu dua hal berbeda</h2>
+      <p class="goal">Inti post ini. Banyak yang menyangka grup dan seri sama, lalu bingung kenapa juaranya salah. Slide ini yang menyelesaikannya.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <p class="eyeb">Grup &amp; seri</p>
+        <p class="h-sm" style="font-size:calc(46*var(--u))">Dua sumbu, dua tugas berbeda.</p>
+        <div class="pair center">
+          <div class="pcard hot">
+            <div>
+              <p class="pt">Grup</p>
+              <p class="pl">Tempat juara dihitung. Nomor undian dan daftar jurinya ikut grup.</p>
+            </div>
+            <ul>
+              <li>Nomor undian</li>
+              <li>Tabel peringkat</li>
+              <li>Siapa yang menilai</li>
+            </ul>
+          </div>
+          <div class="pcard">
+            <div>
+              <p class="pt">Seri</p>
+              <p class="pl">Tempat lembar nilai disiapkan. Rubriknya ikut peserta, bukan ikut grup.</p>
+            </div>
+            <ul>
+              <li>Rubrik penilaian</li>
+              <li>Ikut peserta</li>
+              <li>Bisa beda dalam satu grup</li>
+            </ul>
+          </div>
+        </div>
+        <p class="desc">Dua pasukan di grup yang sama tetap boleh tampil di seri berbeda, dan satu seri boleh tersebar di beberapa grup. Karena juara dihitung dari grup, bukan dari seri.</p>
+        <div class="row"><span class="tinym" style="font-size:calc(26*var(--u))">3 / 6</span></div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Label kartu</b><span class="dim">40 px · keterangan 2 baris 26 px</span><p>Satu kata besar + dua baris yang menyebut tugasnya. Keterangannya sengaja menyebut <em>kenapa</em> masing-masing ada — "tempat juara dihitung" dan "tempat lembar nilai disiapkan" — karena itulah perbedaan yang bikin orang salah paham selama ini.</p></div></li>
+      <li><span class="n">02</span><div><b>Kartu grup bergaris lime</b><span class="dim">—</span><p>Grup yang diwarnai karena dari situlah juara dihitung. Lime di carousel ini tetap berarti "yang paling menentukan". Kalau kartu seri ikut diwarnai, perbedaannya justru hilang.</p></div></li>
+      <li><span class="n">03</span><div><b>Tiga butir per kartu</b><span class="dim">28 px · poin</span><p>Tepat tiga. Kalau ditambah, kartunya jadi tidak seimbang dan perbedaannya kabur. Detail keempat dan kelima sudah diserap ke paragraf penutup.</p></div></li>
+      <li><span class="n">04</span><div><b>Paragraf penutup</b><span class="dim">30 px · 3 baris</span><p>Ini contoh nyata yang membuat perbedaannya masuk akal, plus satu kalimat yang menutup pertanyaannya: juara dihitung dari grup. Jangan dihapus demi ruang — tanpa contoh, slide ini jadi dua kotak yang isinya mirip.</p></div></li>
+      <li><span class="n">05</span><div><b>Jangan tambah baris "juri tidak ikut seri"</b><span class="dim">—</span><p>Itu isi slide 4, dan sengaja ditahan supaya ada alasan menggeser. Menaruhnya di sini membuat slide berikutnya terasa mengulang.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 4 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 4 / 6</p>
+      <h2>Juri ditugaskan ke grup</h2>
+      <p class="goal">Lanjutan slide 3, dan jawaban atas pertanyaan berikutnya: "juri seri apa?" — jawabannya, juri tidak diikat ke seri.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <p class="eyeb">Penugasan</p>
+        <p class="h-sm">Juri terikat grup, bukan peserta.</p>
+        <div class="chips">
+          <span class="chip2">Satu grup</span>
+          <span class="chip2">Babak final</span>
+          <span class="chip2">Belum bergrup</span>
+          <span class="chip2">Seluruh tingkat</span>
+        </div>
+        <div class="stack">
+          <div class="ind"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Peserta pindah grup?</p>
+            <p class="rs">Juri mengikuti grup, bukan pesertanya. Tidak ada daftar juri yang perlu diperbarui.</p>
+          </div></div>
+          <div class="ind"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Rubrik dibagi antar juri</p>
+            <p class="rs">Satu juri bisa memegang beberapa lembar, dan satu lembar bisa dinilai beberapa juri sekaligus.</p>
+          </div></div>
+          <div class="ind"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Juri final tidak ikut penyisihan</p>
+            <p class="rs">Babak final punya lingkupnya sendiri, jadi juri yang hanya menilai final tidak muncul di babak sebelumnya.</p>
+          </div></div>
+        </div>
+        <p class="desc">Juri mengikuti grup, bukan peserta. Pasukan yang pindah grup otomatis dinilai juri grup barunya — tidak ada daftar yang perlu diurus manual.</p>
+        <div class="row"><span class="tinym" style="font-size:calc(26*var(--u))">4 / 6</span></div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Empat lingkup penugasan</b><span class="dim">chip · 28 px · tinggi ± 84</span><p>Ditulis sebagai chip, bukan kalimat, karena isinya cuma nama pilihan yang ada di layar. Nama persisnya harus sama dengan yang dilihat panitia di dashboard — "Belum bergrup" dan "Seluruh tingkat", bukan terjemahan bebas.</p></div></li>
+      <li><span class="n">02</span><div><b>"Peserta pindah grup?"</b><span class="dim">keterangan 2 baris</span><p>Sengaja ditulis sebagai pertanyaan. Ini kekhawatiran yang muncul sendiri di kepala panitia, dan menjawabnya lebih meyakinkan daripada memuji fiturnya. Jawabannya harus konsisten dengan paragraf penutup: juri mengikuti <em>grup</em>, jadi pindah grup berarti pindah ke daftar juri grup baru — bukan pindah ke daftar juri yang sama.</p></div></li>
+      <li><span class="n">03</span><div><b>Rubrik dibagi antar juri</b><span class="dim">—</span><p>Di dashboard, mencentang juri pada sebuah rubrik berarti juri itu hanya menilai rubrik tersebut. Di slide cukup disebut arah baiknya saja — rincian bahwa centang itu membatasi, bukan menambah, masuk caption.</p></div></li>
+      <li><span class="n">04</span><div><b>Butir ketiga soal babak</b><span class="dim">—</span><p>"Babak final" sudah muncul sebagai chip, jadi butir ketiga menjelaskan akibatnya, bukan mengulang namanya. Kalau ruangnya sempit, butir ini yang pertama dipotong — bukan butir pertama atau kedua.</p></div></li>
+      <li><span class="n">05</span><div><b>Jangan sebut "juri seri"</b><span class="dim">—</span><p>Istilah itu tidak ada di aplikasi, dan memakainya justru menanam salah paham yang mau dibereskan slide ini. Kalau ada yang bertanya di komentar, jawab bahwa juri selalu diikat ke grup.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 5 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 5 / 6</p>
+      <h2>Sertifikat: templat sendiri, isi otomatis</h2>
+      <p class="goal">Setelah nilai selesai, ini yang ditunggu peserta. Perlihatkan bahwa desainnya bukan milik kami.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <p class="eyeb">Sertifikat</p>
+        <p class="h-sm">Desainnya punya panitia.</p>
+        <div class="stack">
+          <div class="ind"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Unggah templat sendiri</p>
+            <p class="rs">Pakai PNG atau JPG apa pun — desain dari sekolah, EO, atau desainer lepas.</p>
+          </div></div>
+          <div class="ind"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Teks ditaruh seret-lepas</p>
+            <p class="rs">Posisi, ukuran, warna, dan perataan diatur dengan menyeret. Tidak ada koordinat yang perlu dihitung.</p>
+          </div></div>
+          <div class="ind"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Pratinjau nama asli</p>
+            <p class="rs">Pilih satu sekolah, lihat hasil jadinya. Ini yang menjawab keraguan "nanti namanya mepet atau tidak".</p>
+          </div></div>
+          <div class="ind"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Tanda tangan dan stempel</p>
+            <p class="rs">Gambar atau QR, dan bisa diganti kapan saja tanpa perlu mengubah templatnya.</p>
+          </div></div>
+        </div>
+        <p class="desc">Templatnya bisa dipakai ulang di event berikutnya, jadi menyiapkan sertifikat tahun depan tinggal ganti isinya.</p>
+        <div class="row"><span class="tinym" style="font-size:calc(26*var(--u))">5 / 6</span></div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Templat sendiri</b><span class="dim">keterangan 3 baris</span><p>Ini pembeda yang harus paling dulu terbaca. Sertifikat orang lain selalu terlihat seperti sertifikat template; yang ini tidak. Menyebut "desainer lepas" sekaligus memberi tahu bahwa tidak ada batasan pada desainnya.</p></div></li>
+      <li><span class="n">02</span><div><b>Seret-lepas</b><span class="dim">—</span><p>Kalau ada tangkapan layar editor dengan kotak teks sedang dipindah, taruh di butir kedua sebagai gambar 84 px. Itu butir yang paling perlu dilihat, bukan dibaca. Kalimat "tidak ada rumus koordinat" ada untuk membedakan dari editor yang minta angka x dan y.</p></div></li>
+      <li><span class="n">03</span><div><b>Pratinjau nama asli</b><span class="dim">—</span><p>Menyebut bahwa pratinjaunya memakai nama sekolah sungguhan — bukan teks contoh — menjawab keraguan "nanti hasilnya mepet atau tidak". Kutipan itu sengaja ditulis apa adanya, karena itu kalimat yang benar-benar diucapkan panitia.</p></div></li>
+      <li><span class="n">04</span><div><b>Tanda tangan dan stempel</b><span class="dim">—</span><p>"Bisa diganti tanpa mengubah templat" itu intinya: banyak panitia mengira ganti tanda tangan berarti mengunggah ulang desainnya. Satu kalimat itu menghapus satu langkah kerja yang mereka takutkan.</p></div></li>
+      <li><span class="n">05</span><div><b>Paragraf penutup soal pakai ulang</b><span class="dim">30 px · 2 baris</span><p>Yang dijual di sini bukan fiturnya, tapi bahwa kerja tahun depan lebih ringan. Ini juga satu-satunya bagian slide yang menyebut manfaat jangka panjang, jadi jangan digabung ke butir mana pun.</p></div></li>
+      <li><span class="n">06</span><div><b>Jangan sebut alat desain</b><span class="dim">—</span><p>Cukup "posisi, ukuran, warna, perataan". Istilah teknis editor tidak menambah apa pun bagi panitia dan bikin butirnya panjang.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 6 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 6 / 6</p>
+      <h2>Yang tercetak otomatis + penutup</h2>
+      <p class="goal">Tunjukkan bahwa nama, juara, dan peringkat masuk sendiri — inilah bagian yang menghemat kerja panitia. Nomor slide dihapus.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <p class="eyeb">Isi otomatis</p>
+        <p class="h-sm" style="font-size:calc(46*var(--u))">Empat belas isian masuk sendiri.</p>
+        <div class="stack tight" style="flex:0 0 auto">
+          <div class="ind"><div class="ph icon" style="width:calc(72*var(--u));height:calc(72*var(--u))"><span>IKON</span></div><div>
+            <p class="rt">Juara &amp; peringkat</p>
+            <p class="rs">Ikut hasil hitungan sistem, termasuk tiebreak. Tidak ada yang diketik ulang dari rekap nilai.</p>
+          </div></div>
+          <div class="ind"><div class="ph icon" style="width:calc(72*var(--u));height:calc(72*var(--u))"><span>IKON</span></div><div>
+            <p class="rt">Nama sekolah &amp; pelatih</p>
+            <p class="rs">Plus isian pendaftaran buatan sendiri, seperti "Asal Kabupaten" atau nama pelatih.</p>
+          </div></div>
+          <div class="ind"><div class="ph icon" style="width:calc(72*var(--u));height:calc(72*var(--u))"><span>IKON</span></div><div>
+            <p class="rt">QR menuju halaman event</p>
+            <p class="rs">Sertifikatnya bisa diverifikasi siapa saja yang memindai kode di sudutnya.</p>
+          </div></div>
+        </div>
+        <p class="desc">Peserta bisa mengunduh sertifikatnya sendiri lewat tautan, dan panitia bisa mengunduh sekaligus per mata lomba.</p>
+        <div class="grow"></div>
+        <div class="pill" style="align-self:flex-start">Coba di berbaris.app</div>
+        <p class="tinym" style="font-size:calc(34*var(--u))">berbaris.app</p>
+        <div class="row">
+          <span class="tinym" style="font-size:calc(26*var(--u))">@barisapp</span>
+          <span class="tinym" style="font-size:calc(26*var(--u))">link di bio</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Angka 14 harus benar</b><span class="dim">—</span><p>Jumlah isian bawaan harus dihitung ulang tepat sebelum digambar. Kalau ada yang ditambah atau dibuang, angkanya ikut berubah — jangan dibiarkan menebak. Ini satu-satunya angka di carousel yang bisa ditagih di komentar.</p></div></li>
+      <li><span class="n">02</span><div><b>Juara &amp; peringkat</b><span class="dim">keterangan 2 baris</span><p>"Tidak ada yang diketik ulang" adalah keluhan aslinya: panitia menyalin nama juara dari rekap nilai ke desain sertifikat satu per satu. Menyebut tiebreak sekaligus menunjukkan hasilnya bukan cuma urutan angka mentah.</p></div></li>
+      <li><span class="n">03</span><div><b>Isian pendaftaran sendiri</b><span class="dim">—</span><p>"Asal Kabupaten" atau isian buatan panitia bisa dipakai sebagai isian sertifikat. Ini yang membuat sertifikat terasa dibuat untuk event mereka, bukan dipinjam. Sebut satu contoh konkret, jangan tulis "isian kustom" saja.</p></div></li>
+      <li><span class="n">04</span><div><b>QR verifikasi</b><span class="dim">—</span><p>Ditulis sebagai "bisa diverifikasi", bukan "anti palsu". Yang bisa dijanjikan cuma bahwa QR-nya menuju halaman event — jangan melebihkan, karena itu klaim yang gampang dibantah.</p></div></li>
+      <li><span class="n">05</span><div><b>Paragraf penutup soal unduhan</b><span class="dim">30 px · 2 baris</span><p>Dua jalur unduh: peserta sendiri lewat tautan, dan panitia sekaligus per mata lomba. Ini pertanyaan pertama yang muncul setelah "sertifikatnya jadi" — jadi dijawab di slide, bukan ditahan untuk caption.</p></div></li>
+      <li><span class="n">06</span><div><b>Ajakan tanpa durasi uji coba</b><span class="dim">tinggi 96 · lime</span><p>Teksnya "Coba di berbaris.app", bukan "Coba gratis 3 hari". Durasi uji coba harus dipastikan dulu ada di aplikasinya sebelum dicetak, dan sama persis dengan post #2 supaya konsisten.</p></div></li>
+      <li><span class="n">07</span><div><b>Tanpa nomor slide</b><span class="dim">—</span><p>Kata terakhir di mata penonton sebaiknya ajakan.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ ATURAN ============ -->
+  <section class="rules">
+    <h2>Aturan produksi</h2>
+    <div class="cols">
+      <ul>
+        <li><strong>Istilah harus sama dengan dashboard.</strong> "Belum bergrup", "Babak final", "Seluruh tingkat" ditulis persis seperti yang dilihat panitia. Istilah karangan sendiri membuat orang tidak menemukan menunya.</li>
+        <li><strong>Maksimal empat butir per slide.</strong> Karena tiap keterangan kini dua sampai tiga baris, lima butir tidak akan muat tanpa turun ke 24 px — dan 24 px tidak terbaca di feed.</li>
+        <li><strong>Satu kelompok kerja per slide.</strong> Rubrik di slide 2, pembagiannya di slide 3 dan 4, hasilnya di slide 5 dan 6.</li>
+        <li><strong>Angka dalam slide harus bisa dibuktikan.</strong> "Empat belas isian", "tiga lapis rubrik", dan contoh "8,2" harus cocok dengan yang ada di aplikasi saat digambar.</li>
+      </ul>
+      <ul>
+        <li><strong>Tiap slide ditutup satu paragraf 30 px.</strong> Isinya bagian yang paling sering disalahpahami — contoh nyata, atau jawaban atas keraguan yang belum diucapkan. Kalau paragraf itu cuma mengulang butir di atasnya, hapus.</li>
+        <li><strong>Teks terkecil 26 px</strong> — hanya untuk keterangan di slide tiga-butir dan chip. Sisanya 28 px.</li>
+        <li><strong>Lime hanya di slide 3</strong> (kartu Grup) dan pil CTA di slide 6. Slide lain tanpa lime.</li>
+        <li><strong>Tangkapan layar menang atas ikon.</strong> Kalau ada gambar editor sertifikat atau layar penugasan juri, gambar itu menggantikan ikonnya, bukan ditambahkan di sampingnya.</li>
+        <li><strong>Ukuran, palet, margin, ekspor</strong> sama dengan post #1 dan #2 — 80 px, 1080 × 1350, sRGB, di bawah 1 MB per slide.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="rules">
+    <h2>Yang tidak masuk slide — masuk caption</h2>
+    <div class="cols">
+      <ul>
+        <li><strong>Rubrik terikat seri.</strong> Sekali ada nilai masuk, rubrik tidak bisa dipindah ke seri lain. Ini aturan yang benar, tapi terlalu teknis untuk satu baris.</li>
+        <li><strong>Mencentang juri itu membatasi.</strong> Mencentang juri pada sebuah rubrik berarti juri itu hanya menilai rubrik tersebut — bukan menambah juri lain.</li>
+        <li><strong>Rubrik bisa disalin antar tingkat</strong> dan digandakan, termasuk ke tingkat lomba yang belum punya rubrik.</li>
+      </ul>
+      <ul>
+        <li><strong>Isian sertifikat bisa ditambah</strong> dari pertanyaan pendaftaran buatan panitia, jadi tidak terbatas pada empat belas bawaan.</li>
+        <li><strong>Peserta mengunduh sendiri</strong> lewat tautan yang sama dengan yang dipakai untuk mendaftar.</li>
+        <li><strong>Juri tidak punya akun seri.</strong> Kalau ada yang bertanya "juri seri apa", jawabannya: juri selalu diikat ke grup.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="rules">
+    <h2>Tangkapan layar yang perlu diambil</h2>
+    <div class="cols">
+      <ul>
+        <li><strong>Editor sertifikat</strong> — templat terbuka dengan beberapa kotak teks sudah terpasang. Paling kuat untuk slide 5.</li>
+        <li><strong>Hasil sertifikat jadi</strong> — satu PDF dengan nama dan juara terisi. Bukan templat kosong.</li>
+        <li><strong>Layar penugasan juri</strong> — daftar grup dengan nama juri tercentang.</li>
+      </ul>
+      <ul>
+        <li><strong>Format penilaian</strong> — daftar kriteria dengan bobot dan opsi skor terisi.</li>
+        <li><strong>Pratinjau impor Excel</strong> — tabel pratinjau dengan satu baris bermasalah, supaya terlihat ada pemeriksaannya.</li>
+        <li><strong>Pengaturan grup &amp; seri</strong> — satu tingkat dengan daftar grup dan seri berdampingan.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ CAPTION ============ -->
+  <section class="rules">
+    <h2>Caption siap tempel</h2>
+    <div class="cols">
+      <div>
+        <div class="caption-card">Susun lomba berbulan-bulan, tapi bagian penilaian yang bikin lembur? Di sinilah biasanya panitia keteteran — dan di situlah post ini fokus.
+
+Swipe 6 slide, ini yang bisa diatur sendiri di Berbaris:
+
+📋 Rubriknya kamu yang tentukan. Bertingkat seperti format resmi — kategori, sub, lalu kriteria. Nilai berpecahan seperti 8,2 tersimpan apa adanya, nggak dibulatkan.
+
+🏆 Grup dan seri itu dua hal berbeda. Grup = tempat juara dihitung. Seri = tempat lembar nilai disiapkan. Dua pasukan di grup yang sama boleh tampil di seri berbeda — juara tetap dihitung dari grup.
+
+👨‍⚖️ Juri diikat ke grup, bukan ke peserta. Peserta pindah grup, jurinya otomatis ikut. Nggak ada daftar yang harus diurus ulang.
+
+🎓 Sertifikat pakai desainmu sendiri. Unggah desain sekolah/EO, taruh teksnya seret-lepas, nama dan gelar juara terisi otomatis — termasuk isian buatanmu seperti "Asal Kabupaten".
+
+Peserta mengunduh sendiri lewat tautan. Panitia bisa unduh sekaligus per mata lomba.
+
+Coba di berbaris.app — link di bio.</div>
+
+        <div class="caption-card dim">Komentar terpin (jawab FAQ yang sudah diantisipasi):
+
+FYI: rubrik mengikuti seri peserta, juri mengikuti grup. Kalau ada nilai yang sudah masuk, rubrik nggak bisa dipindah seri lain — tapi bisa digandakan ke tingkat lomba lain biar nggak susun dari nol.</div>
+      </div>
+      <ul>
+        <li><strong>Hook dua baris pertama</strong> yang diputus di "…selengkapnya" — orang jarang membaca lebih jauh sebelum membuka post. Kata "lembur" dan "keteteran" memilih audiensnya: panitia, bukan peserta.</li>
+        <li><strong>Angka "14 isian otomatis" sengaja tidak masuk caption.</strong> Jumlah isian bawaan harus dihitung ulang tepat sebelum digambar (lihat catatan slide 6). Kalau yakin angkanya, tambahkan ke butir 🎓.</li>
+        <li><strong>Komentar terpin menjawab tiga catatan caption dokumen sekaligus</strong> — rubrik terikat seri, rubrik bisa digandakan, dan "juri ikut grup". Tiga hal yang sengaja ditahan dari slide, ditampung di satu tempat.</li>
+        <li><strong>Versi story (2 kalimat), pakai slide 3 saja:</strong> "Grup = tempat juara dihitung. Seri = tempat lembar nilai disiapkan. Campur dua-duanya, juaranya bisa salah."</li>
+        <li><strong>CTA caption sama dengan slide 6</strong> — "Coba di berbaris.app", tanpa durasi uji coba.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>BERBARIS APP · wireframe post peluncuran #3 · kanvas 1080 × 1350</footer>
+</div>
+
+<script>
+(function(){
+  var btn = document.getElementById('gt');
+  if(!btn) return;
+  var root = document.documentElement;
+  function apply(on){
+    root.classList.toggle('guides', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.textContent = on ? 'Sembunyikan garis margin' : 'Tampilkan garis margin';
+  }
+  var saved = false;
+  try { saved = localStorage.getItem('wireframe.guides') === '1'; } catch(e){}
+  apply(saved);
+  btn.addEventListener('click', function(){
+    var on = !root.classList.contains('guides');
+    apply(on);
+    try { localStorage.setItem('wireframe.guides', on ? '1' : '0'); } catch(e){}
+  });
+})();
+</script>

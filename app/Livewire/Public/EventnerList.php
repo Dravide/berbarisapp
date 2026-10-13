@@ -24,6 +24,18 @@ class EventnerList extends Component
 
     public $favicon = null;
 
+    public $filter = 'all';
+
+    protected $queryString = [
+        'filter' => ['except' => 'all'],
+    ];
+
+    public function setFilter(string $filter): void
+    {
+        $this->filter = in_array($filter, ['all', 'verified'], true) ? $filter : 'all';
+        $this->resetPage();
+    }
+
     public function mount()
     {
         $this->logoPath = Setting::get('logo_dark')
@@ -42,13 +54,20 @@ class EventnerList extends Component
         // tampil di depan. Hanya yang approved: kartu pending akan menautkan
         // ke 404 (scopeApproved() dipakai semua halaman publik lain dengan
         // alasan yang sama).
+        $counts = [
+            'all' => Eventner::approved()->count(),
+            'verified' => Eventner::approved()->verified()->count(),
+        ];
+
         $eventners = Eventner::approved()
+            ->when($this->filter === 'verified', fn ($q) => $q->verified())
             ->withCount('registrations')
             ->orderByDesc('tanggal')
             ->paginate(16);
 
         return view('livewire.public.eventner-list', [
             'eventners' => $eventners,
+            'counts' => $counts,
         ])
             ->layout('layouts.landing', [
                 'logoPath' => $this->logoPath,

@@ -50,8 +50,14 @@
                     <h1 class="font-display text-2xl font-extrabold tracking-tight text-deep-slate leading-tight sm:text-3xl">
                         {{ $eventner->nama_event }}
                     </h1>
-                    <p class="mt-2 text-sm text-on-surface-variant">
-                        Diselenggarakan oleh <span class="font-semibold text-deep-slate">{{ $eventner->diselenggarakan_oleh }}</span>
+                    <p class="mt-2 text-sm text-on-surface-variant flex items-center gap-1.5 flex-wrap">
+                        <span>Diselenggarakan oleh</span>
+                        <span class="font-semibold text-deep-slate inline-flex items-center gap-1">
+                            {{ $eventner->diselenggarakan_oleh }}
+                            @if($eventner->is_verified)
+                                <x-verified-badge size="sm" />
+                            @endif
+                        </span>
                     </p>
                     {{-- Tautan sosial: satu pill netral untuk semua (dulu tiga warna
                          brand berbeda — pink/hitam/hijau — R-29 palet menyebar). --}}

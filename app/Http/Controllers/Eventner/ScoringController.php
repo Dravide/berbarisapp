@@ -10,6 +10,7 @@ use App\Models\CompetitionGroup;
 use App\Models\CompetitionRound;
 use App\Models\CompetitionRoundRegistration;
 use App\Models\DeductionCategory;
+use App\Models\EventnerSignature;
 use App\Models\Judge;
 use App\Models\Registration;
 use App\Models\ScoreDeduction;
@@ -426,6 +427,104 @@ class ScoringController extends Controller
 
         $name = str_replace(['/', '\\'], '-', $category->name);
         return $pdf->download('Rekap_Nilai_' . $name . '.pdf');
+    }
+
+    public function downloadBeritaAcaraPdf(Request $request)
+    {
+        $eventner = Auth::user()->eventner;
+        if (!$eventner) {
+            abort(403, 'Anda bukan Eventner yang sah.');
+        }
+
+        $categoryId = $request->query('category_id');
+        if (!$categoryId) {
+            abort(400, 'Category ID diperlukan.');
+        }
+
+        $category = CompetitionCategory::where('eventner_id', $eventner->id)->find($categoryId);
+        if (!$category) {
+            abort(404, 'Kategori lomba tidak ditemukan.');
+        }
+
+        $rekap = (new ScoreRecapBuilder)->build($eventner, (int) $category->id);
+
+        $judges = Judge::where('eventner_id', $eventner->id)
+            ->whereHas('competitionCategories', function ($q) use ($categoryId) {
+                $q->where('competition_category_id', $categoryId);
+            })
+            ->with('assessmentCategories')
+            ->get();
+
+        if ($judges->isEmpty()) {
+            $judges = Judge::where('eventner_id', $eventner->id)
+                ->with('assessmentCategories')
+                ->get();
+        }
+
+        $activeSignature = EventnerSignature::where('eventner_id', $eventner->id)->latest()->first();
+
+        // Ratakan seksi untuk Berita Acara & Lampiran Rekap Resmi
+        $flatSections = [];
+        if ($rekap['hasRounds']) {
+            foreach ($rekap['sections'] as $roundSec) {
+                $roundLabel = $roundSec['label'] ?? '';
+                foreach ($roundSec['groups'] ?? [] as $grp) {
+                    $flatSections[] = [
+                        'title' => trim(($roundLabel ? $roundLabel . ' — ' : '') . ($grp['label'] ?? '')),
+                        'rows' => $grp['data'] ?? [],
+                    ];
+                }
+            }
+        } else {
+            foreach ($rekap['sections'] as $grp) {
+                $flatSections[] = [
+                    'title' => $grp['label'] ?? $category->name,
+                    'rows' => $grp['data'] ?? [],
+                ];
+            }
+        }
+
+        // Rangkum podium 3 besar per bagian untuk diktum keputusan Berita Acara
+        $podiums = [];
+        foreach ($flatSections as $section) {
+            $topRows = collect($section['rows'] ?? [])
+                ->filter(fn ($r) => in_array($r['rank'] ?? 0, [1, 2, 3], true))
+                ->sortBy('rank')
+                ->values();
+
+            if ($topRows->isNotEmpty()) {
+                $podiums[] = [
+                    'title' => $section['title'] ?: ($category->full_name ?? $category->name),
+                    'rows' => $topRows,
+                ];
+            }
+        }
+
+        if (empty($podiums)) {
+            $podiums[] = [
+                'title' => $category->full_name ?? $category->name,
+                'rows' => collect(),
+            ];
+        }
+
+        $pdf = Pdf::loadView('eventner.scoring.pdf_berita_acara', [
+            'eventner' => $eventner,
+            'category' => $category,
+            'judges' => $judges,
+            'sections' => $flatSections,
+            'podiums' => $podiums,
+            'signature' => $activeSignature,
+            'hasRounds' => $rekap['hasRounds'],
+            'rounds' => $rekap['rounds'],
+        ])
+            ->setPaper('a4', 'portrait')
+            ->setOption('margin-top', '10mm')
+            ->setOption('margin-bottom', '10mm')
+            ->setOption('margin-left', '10mm')
+            ->setOption('margin-right', '10mm');
+
+        $name = str_replace(['/', '\\'], '-', $category->name);
+        return $pdf->download('Berita_Acara_' . $name . '.pdf');
     }
 
     public function downloadParticipantPdf(Request $request)

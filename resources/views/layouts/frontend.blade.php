@@ -116,8 +116,10 @@
     <link href="https://fonts.googleapis.com/css2?family={{ str_replace(' ', '+', $fontSans) }}:{{ $sansWeight }}&family={{ str_replace(' ', '+', $fontDisplay) }}:{{ $displayWeight }}&display=swap" rel="stylesheet">
 
     {{-- Tabler Icons --}}
+    <link rel="stylesheet" href="{{ asset('templates/assets/fonts/tabler-icons/tabler-icons.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
     <style>
+        .ti-rosette-discount-check:before { content: "\f1f8"; }
         :root {
             --event-primary: {{ $primaryColor }};
             --event-accent: {{ $accentColor }};
@@ -167,10 +169,19 @@
                 $platformLogo = get_setting('logo_dark') ? Storage::url(get_setting('logo_dark')) : null;
             @endphp
             <a href="{{ url('/') }}" class="flex items-center gap-2 text-decoration-none">
-                @isset($eventner?->logo_event)
-                    <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt="{{ $eventner->nama_event }}" class="h-9 w-9 rounded-lg object-cover">
-                    <span class="font-display text-base font-bold text-deep-slate tracking-tight">
-                        {{ $eventner?->nama_event }}
+                @if($eventner)
+                    @if($eventner->logo_event)
+                        <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt="{{ $eventner->nama_event }}" class="h-9 w-9 rounded-lg object-cover">
+                    @else
+                        <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                            <i class="ti ti-calendar-event text-lg"></i>
+                        </div>
+                    @endif
+                    <span class="font-display text-base font-bold text-deep-slate tracking-tight inline-flex items-center gap-1">
+                        <span class="truncate max-w-[200px] sm:max-w-none">{{ $eventner->nama_event }}</span>
+                        @if($eventner->is_verified)
+                            <x-verified-badge size="xs" />
+                        @endif
                     </span>
                 @else
                     @if($platformLogo && is_string($platformLogo))
@@ -180,7 +191,7 @@
                             {{ get_setting('site_title', 'Berbaris App') }}
                         </span>
                     @endif
-                @endisset
+                @endif
             </a>
 
             {{-- Desktop navigation --}}

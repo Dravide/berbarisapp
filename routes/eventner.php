@@ -66,6 +66,7 @@ Route::get('score-recap', App\Livewire\Eventner\ScoreRecap\Index::class)->name('
 // dalam satu berkas. Terpisah dari scoring/pdf-participant yang mencetak SATU
 // peserta untuk dipegang juri/pelatih.
 Route::get('score-recap/pdf', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadRecapPdf'])->name('eventner.score-recap.pdf');
+Route::get('score-recap/berita-acara-pdf', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadBeritaAcaraPdf'])->name('eventner.score-recap.berita-acara-pdf');
 Route::get('scoring/csv', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadCsv'])->name('eventner.scoring.csv');
 Route::get('scoring/pdf-participant', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadParticipantPdf'])->name('eventner.scoring.pdf-participant');
 // Perbandingan nilai antar juri. Didaftarkan SEBELUM baris `scoring` supaya

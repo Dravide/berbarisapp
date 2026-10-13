@@ -1,0 +1,477 @@
+<title>Post Perkenalan Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: dokumen spesifikasi — tiap slide satu baris, wireframe 4:5 di kiri, anotasi di kanan. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --lime:#a3e635; --lime-ink:#2c4703;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --lime:#b6f24e; --lime-ink:#16250a;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --lime:#b6f24e; --lime-ink:#16250a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{
+  max-width:1180px;margin-inline:auto;
+  padding-inline:clamp(16px,4vw,40px);
+  padding-block:clamp(28px,5vw,56px);
+}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 10px;
+}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:64ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{
+  font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap;
+}
+button.toggle{
+  font-family:var(--mono);font-size:12px;padding:7px 14px;border-radius:999px;
+  border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);
+  cursor:pointer;white-space:nowrap;
+}
+button.toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.toggle[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.spec{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-top:28px;
+}
+.spec > div{background:var(--panel);padding:16px 18px}
+.spec dt{
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;
+}
+.spec dd{margin:0;font-size:14px;line-height:1.5}
+.swatches{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.sw{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.sw i{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.15);display:block}
+
+.slide{
+  margin-top:clamp(32px,5vw,56px);
+  display:grid;grid-template-columns:minmax(0,460px) minmax(0,1fr);
+  gap:clamp(20px,3vw,44px);align-items:start;
+}
+@media (max-width:860px){ .slide{grid-template-columns:minmax(0,1fr)} }
+.slide-head{grid-column:1/-1}
+.slide-head h2{font-size:clamp(19px,2.2vw,23px);font-weight:700}
+.slide-head .num{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase}
+.slide-head .goal{color:var(--muted);font-size:14px;margin-top:6px;max-width:70ch}
+
+.frame{
+  position:relative;aspect-ratio:4/5;width:100%;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  overflow:hidden;container-type:inline-size;--u:0.0926cqw;
+}
+@media (max-width:860px){ .frame{max-width:440px} }
+.f-in{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  padding:calc(80*var(--u));gap:calc(32*var(--u));
+}
+.safe{
+  position:absolute;inset:calc(80*var(--u));
+  border:1px dashed var(--accent);border-radius:calc(8*var(--u));
+  opacity:0;transition:opacity .15s;pointer-events:none;z-index:5;
+}
+.safe::after{
+  content:"margin 80 px";position:absolute;top:calc(-18*var(--u));left:0;
+  font-family:var(--mono);font-size:10px;color:var(--accent);
+}
+.guides .safe{opacity:.6}
+
+.ph{
+  border:1px dashed var(--ph-line);background:var(--ph-fill);
+  border-radius:calc(8*var(--u));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;text-align:center;flex:none;
+}
+.ph span{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);line-height:1.3}
+.ph span em{display:block;font-style:normal;opacity:.75;font-size:9px}
+.icon{width:calc(84*var(--u));height:calc(84*var(--u))}
+.grow{flex:1 1 auto;min-height:0}
+.stack{
+  flex:1 1 auto;min-height:0;display:flex;flex-direction:column;
+  justify-content:space-evenly;gap:calc(30*var(--u));
+}
+.ind{display:flex;gap:calc(28*var(--u));align-items:center;flex:0 0 auto}
+.ind > div{min-width:0}
+.ind.top{align-items:flex-start}
+
+.eyeb{font-family:var(--mono);font-size:calc(28*var(--u));letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}
+.h-big{font-size:calc(84*var(--u));font-weight:700;line-height:1.05;letter-spacing:-.02em}
+.h-mid{font-size:calc(62*var(--u));font-weight:700;line-height:1.1;letter-spacing:-.01em}
+.h-sm{font-size:calc(52*var(--u));font-weight:700;line-height:1.12}
+.sub{font-size:calc(38*var(--u));color:var(--muted);line-height:1.45}
+.para{font-size:calc(28*var(--u));color:var(--muted);line-height:1.45}
+.tiny{font-size:calc(28*var(--u));color:var(--muted)}
+.rt{font-size:calc(34*var(--u));font-weight:600;line-height:1.22}
+.rs{font-size:calc(28*var(--u));color:var(--muted);line-height:1.35}
+.tinym{font-family:var(--mono);font-size:calc(28*var(--u));color:var(--muted)}
+.pill{
+  background:var(--lime);color:var(--lime-ink);border-radius:999px;
+  height:calc(96*var(--u));display:flex;align-items:center;justify-content:center;
+  font-weight:600;font-size:calc(34*var(--u));padding-inline:calc(48*var(--u));
+}
+.row{display:flex;align-items:flex-end;justify-content:space-between;gap:calc(24*var(--u))}
+
+/* Empat segmen pengguna — 2 × 2, tanpa ikon supaya terbaca cepat */
+.segs{display:grid;grid-template-columns:1fr 1fr;gap:calc(28*var(--u));flex:0 0 auto;align-content:start}
+.seg{
+  border:1px solid var(--line);border-radius:calc(16*var(--u));
+  background:var(--panel-2);padding:calc(28*var(--u));
+  display:flex;flex-direction:column;gap:calc(12*var(--u));min-width:0;
+}
+.seg .st{font-size:calc(34*var(--u));font-weight:700;line-height:1.18}
+.seg .ss{font-size:calc(26*var(--u));color:var(--muted);line-height:1.35}
+
+.notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.notes li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;align-items:baseline}
+.notes .n{font-family:var(--mono);font-size:11px;color:var(--accent);border-top:1px solid var(--accent);padding-top:4px}
+.notes b{font-weight:600;font-size:14.5px}
+.notes .dim{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px;white-space:nowrap}
+.notes p{font-size:13.5px;color:var(--muted);margin-top:2px;line-height:1.5}
+.notes code{color:var(--ink)}
+
+.rules{margin-top:clamp(40px,6vw,72px);border-top:1px solid var(--line);padding-top:clamp(24px,3vw,36px)}
+.rules h2{font-size:clamp(19px,2.2vw,23px)}
+.rules .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;margin-top:20px}
+.rules ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--muted)}
+.rules ul strong{color:var(--ink);font-weight:600}
+footer{
+  margin-top:clamp(32px,5vw,56px);border-top:1px solid var(--line);padding-top:20px;
+  font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em;
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">BERBARIS APP — Post peluncuran #1</p>
+    <h1>Wireframe carousel 5 slide</h1>
+    <p class="lede">Post pertama hanya memperkenalkan: apa ini, kenapa dibuat, dan untuk siapa. Tidak ada daftar fitur dan tidak ada harga — keduanya punya post sendiri. Teks tiap butir ditulis penuh dua sampai tiga baris, sesuai ruang yang tersedia di kanvas.</p>
+    <div class="meta">
+      <span class="chip">1080 × 1350 px · 4:5</span>
+      <span class="chip">5 slide</span>
+      <span class="chip">margin aman 80 px</span>
+      <span class="chip">tanpa daftar fitur</span>
+      <span class="chip">tanpa harga</span>
+      <button class="toggle" id="gt" type="button" aria-pressed="false">Tampilkan garis margin</button>
+    </div>
+  </header>
+
+  <dl class="spec">
+    <div>
+      <dt>Kanvas</dt>
+      <dd>1080 × 1350 px (4:5). Semua ukuran di wireframe ini dalam px kanvas.</dd>
+    </div>
+    <div>
+      <dt>Skala teks</dt>
+      <dd>Judul 84 · Sub 38 · Butir 34 · Keterangan 28 · <em>minimum 26</em></dd>
+    </div>
+    <div>
+      <dt>Warna</dt>
+      <dd class="swatches">
+        <span class="sw"><i style="background:#0062ff"></i>#0062FF</span>
+        <span class="sw"><i style="background:#a3e635"></i>#A3E635</span>
+        <span class="sw"><i style="background:#111827"></i>#111827</span>
+        <span class="sw"><i style="background:#f8f9fa"></i>#F8F9FA</span>
+      </dd>
+    </div>
+    <div>
+      <dt>Panjang teks</dt>
+      <dd>Keterangan butir maks 3 baris · keterangan segmen maks 3 baris · paragraf pengantar maks 2 baris</dd>
+    </div>
+  </dl>
+
+  <!-- ============ SLIDE 1 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 1 / 5</p>
+      <h2>Cover — sebut namanya, sebut pekerjaannya</h2>
+      <p class="goal">Kalau orang cuma melihat slide ini, mereka tetap harus tahu ini aplikasi apa. Tidak ada fitur, tidak ada janji, cuma perkenalan.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <p class="eyeb">Post 1 — Perkenalan</p>
+        <div class="ph" style="width:calc(120*var(--u));height:calc(120*var(--u))">
+          <span>LOGO<em>120 × 120</em></span>
+        </div>
+        <div class="grow"></div>
+        <p class="h-big">Perkenalkan, BERBARIS APP.</p>
+        <p class="sub">Platform untuk mengelola perlombaan.</p>
+        <p class="para">Dibuat oleh orang yang pernah berdiri di sisi panitia, bukan yang cuma membayangkan bagaimana rasanya.</p>
+        <div class="grow"></div>
+        <div class="row">
+          <span class="tinym" style="font-size:calc(26*var(--u))">@barisapp</span>
+          <span class="tinym" style="font-size:calc(26*var(--u))">geser →</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Label atas</b><span class="dim">28 px · mono · uppercase</span><p>"Post 1 — Perkenalan" memberi tahu ini bagian dari rangkaian, dan sekaligus membatasi harapan: di sini belum ada isi.</p></div></li>
+      <li><span class="n">02</span><div><b>Logo</b><span class="dim">120 × 120 · 80 dari tepi</span><p>Posisi ini dipertahankan di semua slide dan semua post, supaya feed terlihat satu seri.</p></div></li>
+      <li><span class="n">03</span><div><b>Judul</b><span class="dim">84 px · 1 baris</span><p>Kalau akun sudah pernah posting, ganti kalimatnya — kata "perkenalkan" tidak boleh dipakai dua kali.</p></div></li>
+      <li><span class="n">04</span><div><b>Subjudul</b><span class="dim">38 px · 1 baris</span><p>Menjawab "ini aplikasi apa" tanpa satu pun nama fitur.</p></div></li>
+      <li><span class="n">05</span><div><b>Paragraf pembuka</b><span class="dim">28 px · 2 baris</span><p>Asal-usulnya, bukan keunggulannya. Ini yang membuat slide 2 (masalah) terasa menyambung, bukan tiba-tiba mengeluh.</p></div></li>
+      <li><span class="n">06</span><div><b>Penanda carousel</b><span class="dim">26 px · kiri &amp; kanan bawah</span><p>"geser →" wajib. Tanpa itu orang mengira sudah selesai di slide ini.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 2 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 2 / 5</p>
+      <h2>Kenapa kami membuatnya</h2>
+      <p class="goal">Alasan aplikasi ini ada. Nama produk sengaja tidak muncul di slide ini — kalau muncul, tugasnya berubah jadi jualan padahal seharusnya bikin orang mengangguk dulu.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <p class="eyeb">Kenapa</p>
+        <p class="h-mid">Satu hari lomba, kerja berhari-hari.</p>
+        <div class="stack">
+          <div class="ind top"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Kertas penilaian hilang</p>
+            <p class="rs">Basah kena hujan, tertukar antar meja juri, atau tertinggal di sekolah.</p>
+          </div></div>
+          <div class="ind top"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Rekap juara molor</p>
+            <p class="rs">Peserta dan pelatih menunggu berjam-jam sementara panitia menjumlahkan angka.</p>
+          </div></div>
+          <div class="ind top"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Hitung manual gampang salah</p>
+            <p class="rs">Satu angka keliru dan juara jadi sengketa yang tidak bisa dibuktikan.</p>
+          </div></div>
+        </div>
+        <p class="para">Bukan karena panitianya kurang teliti. Alat kerjanya yang memang belum ada.</p>
+        <div class="row"><span class="tinym" style="font-size:calc(26*var(--u))">2 / 5</span></div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Judul</b><span class="dim">62 px · maks 2 baris</span><p>Ditulis dari sisi panitia, bukan dari sisi produk. "Kerja berhari-hari" yang mereka kenali sendiri.</p></div></li>
+      <li><span class="n">02</span><div><b>Tiga baris masalah</b><span class="dim">ikon 84 · keterangan 2–3 baris</span><p>Tepat tiga, dan semuanya soal penilaian dan perhitungan juara — di situlah capeknya paling besar. Masalah pendaftaran sengaja tidak masuk supaya slide ini satu arah.</p></div></li>
+      <li><span class="n">03</span><div><b>Kalimat penutup</b><span class="dim">28 px · 1 baris</span><p>Membela panitia, bukan menyalahkan mereka. Ini yang membuat slide terasa ditulis orang dalam, bukan orang yang menawarkan jasa.</p></div></li>
+      <li><span class="n">04</span><div><b>Tanpa angka</b><span class="dim">—</span><p>Jangan menambah "90% panitia mengaku…" kecuali ada datanya. Keluhan seperti ini cukup dikenali tanpa statistik.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 3 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 3 / 5</p>
+      <h2>Apa itu BERBARIS APP</h2>
+      <p class="goal">Jawaban tiga baris. Ini pengganti daftar fitur — kalau di sini muncul nama menu, post ini berubah jadi post fitur, dan post fitur sudah punya tempatnya sendiri.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <p class="eyeb">Apa itu</p>
+        <p class="h-sm">Satu tempat untuk seluruh perlombaan.</p>
+        <div class="stack">
+          <div class="ind top"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Dari daftar sampai juara</p>
+            <p class="rs">Peserta mendaftar lewat tautan yang dikirim ke email, juri menilai dari ponsel masing-masing, dan juara dihitung begitu nilai terakhir masuk.</p>
+          </div></div>
+          <div class="ind top"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Untuk lomba apa pun</p>
+            <p class="rs">Kategori bisa dibuat bertingkat, jadi bukan cuma PBB — pramuka, olahraga, seni, sampai lomba akademik juga bisa.</p>
+          </div></div>
+          <div class="ind top"><div class="ph icon"><span>IKON</span></div><div>
+            <p class="rt">Penonton punya halamannya</p>
+            <p class="rs">Ada halaman event dan papan skor yang bisa dibuka siapa saja yang punya tautannya.</p>
+          </div></div>
+        </div>
+        <p class="para">Yang belum kami sebut di sini memang ditahan dulu. Isinya ada di post berikutnya.</p>
+        <div class="row"><span class="tinym" style="font-size:calc(26*var(--u))">3 / 5</span></div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Butir pertama = satu alur</b><span class="dim">—</span><p>Benar-benar berurutan, jadi kata "sampai" dan urutan daftar → nilai → juara di situ tepat. Butir dua dan tiga bukan langkah, jadi jangan diberi nomor 1-2-3.</p></div></li>
+      <li><span class="n">02</span><div><b>Bukan hanya PBB</b><span class="dim">—</span><p>Ini yang paling sering disalahpahami orang dari nama "baris". Satu baris ini membuka pintu untuk pramuka, olahraga, seni, dan akademik.</p></div></li>
+      <li><span class="n">03</span><div><b>Kalimat terakhir menahan diri</b><span class="dim">28 px · 2 baris</span><p>Sengaja menyebut bahwa sesuatu belum diceritakan. Rasa penasaran yang terkendali jauh lebih kuat daripada daftar yang langsung habis di satu slide.</p></div></li>
+      <li><span class="n">04</span><div><b>Batas keras</b><span class="dim">—</span><p>Kalau salah satu keterangan butuh contoh, itu tanda butirnya harus dibuang, bukan diberi contoh.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 4 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 4 / 5</p>
+      <h2>Untuk siapa</h2>
+      <p class="goal">Empat segmen yang cara menyelenggarakan lombanya berbeda. Tanpa ikon, supaya terbaca lebih cepat daripada slide sebelumnya.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <p class="eyeb">Untuk siapa</p>
+        <p class="h-sm">Yang menyelenggarakan lomba.</p>
+        <div class="segs">
+          <div class="seg">
+            <p class="st">Sekolah &amp; OSIS</p>
+            <p class="ss">Lomba PBB dan paskibra antar sekolah, atau kegiatan tahunan sekolah sendiri.</p>
+          </div>
+          <div class="seg">
+            <p class="st">Pramuka</p>
+            <p class="ss">Lomba keterampilan tingkat kwarcab dan kwaran dengan peserta dari banyak gudep.</p>
+          </div>
+          <div class="seg">
+            <p class="st">Universitas</p>
+            <p class="ss">UKM, dies natalis, atau lomba antar fakultas yang pesertanya puluhan tim.</p>
+          </div>
+          <div class="seg">
+            <p class="st">EO &amp; pemerintah daerah</p>
+            <p class="ss">Event kabupaten sampai provinsi yang harus rapi karena disaksikan banyak pihak.</p>
+          </div>
+        </div>
+        <p class="para">Kalau kamu pernah jadi panitia salah satunya, kamu mungkin tahu rasa capek yang kami maksud di slide sebelumnya.</p>
+        <div class="grow"></div>
+        <div class="row"><span class="tinym" style="font-size:calc(26*var(--u))">4 / 5</span></div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Empat kotak 2 × 2</b><span class="dim">kartu ± 460 × 250 · jarak 28</span><p>Judul 34 px + sampai tiga baris contoh 26 px. Disengaja lebih kecil dari slide lain supaya keempatnya masih terbaca sekaligus tanpa menyempitkan tepi.</p></div></li>
+      <li><span class="n">02</span><div><b>Contoh, bukan daftar</b><span class="dim">—</span><p>Baris kedua menyebut jenis lombanya, bukan jenis penggunanya. "Peserta dari banyak gudep" lebih menempel di kepala daripada "organisasi kepramukaan".</p></div></li>
+      <li><span class="n">03</span><div><b>Kalimat penutup menyambung ke slide 2</b><span class="dim">28 px · 2 baris</span><p>Menghubungkan "untuk siapa" kembali ke "kenapa ada". Tanpa ini, slide 4 jadi daftar yang berdiri sendiri.</p></div></li>
+      <li><span class="n">04</span><div><b>Kalau ada yang tahu di sini</b><span class="dim">—</span><p>Kalau sudah ada event nyata yang memakai aplikasi ini, ganti salah satu kotak dengan nama event itu — satu nama nyata lebih kuat daripada empat contoh.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 5 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 5 / 5</p>
+      <h2>Penutup — serahkan ke post berikutnya</h2>
+      <p class="goal">Post perkenalan tidak menjual apa pun. Yang diminta cuma ikut, karena caranya baru dibahas di post setelah ini.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="grow"></div>
+        <p class="eyeb">Selanjutnya</p>
+        <p class="h-big" style="font-size:calc(76*var(--u))">Itu baru perkenalannya.</p>
+        <p class="sub">Post berikutnya menunjukkan isinya satu per satu. Setelah itu kami bahas bagian penilaian dan sertifikat, yang biasanya paling bikin panitia kerja lembur.</p>
+        <p class="para">Belum ada yang bisa dicoba hari ini. Kalau kamu sedang menyiapkan lomba, tulis di komentar — kami baca semuanya.</p>
+        <div class="grow"></div>
+        <div class="pill" style="align-self:flex-start">Ikuti supaya tidak ketinggalan</div>
+        <p class="tinym" style="font-size:calc(34*var(--u))">berbaris.app</p>
+        <div class="row">
+          <span class="tinym" style="font-size:calc(26*var(--u))">@barisapp</span>
+          <span class="tinym" style="font-size:calc(26*var(--u))">link di bio</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Tanpa tangkapan layar</b><span class="dim">—</span><p>Slide ini sengaja dikosongkan dari gambar. Produknya belum dijelaskan, jadi memperlihatkan layarnya di sini hanya mengundang pertanyaan yang belum dijawab.</p></div></li>
+      <li><span class="n">02</span><div><b>Subjudul menyebut dua post berikutnya</b><span class="dim">38 px · 3 baris</span><p>Kalimat "penilaian dan sertifikat" sengaja dipakai, karena itu bagian yang paling dirasakan panitia. Pastikan post #3 benar-benar ada sebelum post ini tayang.</p></div></li>
+      <li><span class="n">03</span><div><b>Mengundang komentar</b><span class="dim">28 px · 2 baris</span><p>Post perkenalan tidak punya ajakan beli, jadi satu-satunya aksi yang masuk akal adalah bercerita. Ini juga mengisi kolom komentar dengan pertanyaan nyata.</p></div></li>
+      <li><span class="n">04</span><div><b>Ajakan ikut, bukan bayar</b><span class="dim">tinggi 96 · lime</span><p>"Ikuti" lebih ringan daripada "coba gratis". Harga dan pendaftaran baru pantas muncul setelah orang tahu ini aplikasi apa.</p></div></li>
+      <li><span class="n">05</span><div><b>Tanpa nomor slide</b><span class="dim">—</span><p>Slide terakhir berhenti di ajakan, bukan di "5 / 5".</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ ATURAN ============ -->
+  <section class="rules">
+    <h2>Aturan khusus post perkenalan</h2>
+    <div class="cols">
+      <ul>
+        <li><strong>Tidak ada daftar fitur.</strong> Nama menu, jumlah menu, dan rincian kemampuan semuanya milik post #2. Kalau satu nama fitur menyelip di sini, potong.</li>
+        <li><strong>Tidak ada harga.</strong> Harga punya post sendiri. Menyebutnya di perkenalan membuat orang menilai sebelum tahu.</li>
+        <li><strong>Tidak ada tangkapan layar.</strong> Aplikasinya belum dijelaskan, jadi layarnya belum punya konteks — berlaku untuk kelima slide.</li>
+        <li><strong>Tidak ada angka yang belum terbukti.</strong> Jumlah pengguna, jumlah event, jumlah peserta: hanya dipakai kalau benar-benar ada dan bisa disebutkan sumbernya.</li>
+      </ul>
+      <ul>
+        <li><strong>Satu slide, satu jawaban.</strong> Slide 1 "apa ini", slide 2 "kenapa ada", slide 3 "apa isinya secara garis besar", slide 4 "untuk siapa", slide 5 "lalu apa".</li>
+        <li><strong>Nama produk muncul di slide 1 dan 3 saja.</strong> Slide 2, 4, dan 5 harus bisa dibaca tanpa nama produk dan tetap masuk akal.</li>
+        <li><strong>Keterangan butir maksimal 3 baris.</strong> Lebih dari itu, butirnya yang dibelah jadi dua — bukan barisnya yang ditambah.</li>
+        <li><strong>Lime hanya di pil ajakan slide 5.</strong> Post ini post cerita, bukan post aksi; satu-satunya aksi di sini adalah mengikuti akun.</li>
+        <li><strong>Ukuran, palet, margin, ekspor</strong> sama dengan post lain — 80 px, 1080 × 1350, sRGB, di bawah 1 MB per slide.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="rules">
+    <h2>Yang perlu disiapkan</h2>
+    <div class="cols">
+      <ul>
+        <li><strong>Logo resolusi tinggi</strong> dengan latar transparan — slide 1 dan 5.</li>
+        <li><strong>Foto suasana lomba</strong> untuk latar slide 1. Kalau memakai foto FORBASI Cianjur, pastikan izin panitia sudah ada.</li>
+        <li><strong>Handle Instagram resmi</strong> yang benar, dipakai konsisten di semua slide.</li>
+      </ul>
+      <ul>
+        <li><strong>Keputusan:</strong> apakah akun ini benar-benar baru? Kalau sudah pernah posting, kata "Perkenalkan" di slide 1 harus diganti.</li>
+        <li><strong>Rangkaian post:</strong> siapkan #2 (fitur) dan #3 (penilaian &amp; sertifikat) lebih dulu, supaya dua kalimat penunjuk di slide 5 menunjuk sesuatu yang nyata.</li>
+        <li><strong>Cerita asal-usul:</strong> paragraf pembuka slide 1 dan seluruh slide 2 mengandaikan ada satu pengalaman lomba yang memicunya. Ganti dengan kejadian sebenarnya, atau potong.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>BERBARIS APP · wireframe post peluncuran #1 (perkenalan) · kanvas 1080 × 1350</footer>
+</div>
+
+<script>
+(function(){
+  var btn = document.getElementById('gt');
+  if(!btn) return;
+  var root = document.documentElement;
+  function apply(on){
+    root.classList.toggle('guides', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.textContent = on ? 'Sembunyikan garis margin' : 'Tampilkan garis margin';
+  }
+  var saved = false;
+  try { saved = localStorage.getItem('wireframe.guides') === '1'; } catch(e){}
+  apply(saved);
+  btn.addEventListener('click', function(){
+    var on = !root.classList.contains('guides');
+    apply(on);
+    try { localStorage.setItem('wireframe.guides', on ? '1' : '0'); } catch(e){}
+  });
+})();
+</script>

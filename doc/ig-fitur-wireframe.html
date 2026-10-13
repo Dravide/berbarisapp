@@ -1,0 +1,700 @@
+<title>Fitur Carousel Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: dokumen spesifikasi — tiap slide satu baris, wireframe 4:5 di kiri, anotasi di kanan. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --lime:#a3e635; --lime-ink:#2c4703;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --lime:#b6f24e; --lime-ink:#16250a;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --lime:#b6f24e; --lime-ink:#16250a;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{
+  max-width:1180px;
+  margin-inline:auto;
+  padding-inline:clamp(16px,4vw,40px);
+  padding-block:clamp(28px,5vw,56px);
+}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 10px;
+}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:64ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{
+  font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap;
+}
+button.toggle{
+  font-family:var(--mono);font-size:12px;padding:7px 14px;border-radius:999px;
+  border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);
+  cursor:pointer;white-space:nowrap;
+}
+button.toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.toggle[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.spec{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-top:28px;
+}
+.spec > div{background:var(--panel);padding:16px 18px}
+.spec dt{
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;
+}
+.spec dd{margin:0;font-size:14px;line-height:1.5}
+.swatches{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.sw{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.sw i{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.15);display:block}
+
+.slide{
+  margin-top:clamp(32px,5vw,56px);
+  display:grid;
+  grid-template-columns:minmax(0,460px) minmax(0,1fr);
+  gap:clamp(20px,3vw,44px);
+  align-items:start;
+}
+@media (max-width:860px){ .slide{grid-template-columns:minmax(0,1fr)} }
+.slide-head{grid-column:1/-1}
+.slide-head h2{font-size:clamp(19px,2.2vw,23px);font-weight:700}
+.slide-head .num{
+  font-family:var(--mono);font-size:12px;color:var(--accent);
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.slide-head .goal{color:var(--muted);font-size:14px;margin-top:6px;max-width:70ch}
+
+.frame{
+  position:relative;
+  aspect-ratio:4/5;
+  width:100%;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  overflow:hidden;
+  container-type:inline-size;
+  --u:0.0926cqw; /* 1 px desain (kanvas 1080) */
+}
+@media (max-width:860px){ .frame{max-width:440px} }
+.f-in{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  padding:calc(80*var(--u));
+  gap:calc(32*var(--u));
+}
+.safe{
+  position:absolute;inset:calc(80*var(--u));
+  border:1px dashed var(--accent);border-radius:calc(8*var(--u));
+  opacity:0;transition:opacity .15s;pointer-events:none;z-index:5;
+}
+.safe::after{
+  content:"margin 80 px";position:absolute;top:calc(-18*var(--u));left:0;
+  font-family:var(--mono);font-size:10px;color:var(--accent);
+}
+.guides .safe{opacity:.6}
+
+.grow{flex:1 1 auto;min-height:0}
+.row{display:flex;align-items:flex-end;justify-content:space-between;gap:calc(24*var(--u))}
+.hrow{display:flex;align-items:baseline;justify-content:space-between;gap:calc(24*var(--u));flex:0 0 auto}
+
+.eyeb{font-family:var(--mono);font-size:calc(28*var(--u));letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}
+.h-big{font-size:calc(84*var(--u));font-weight:700;line-height:1.05;letter-spacing:-.02em}
+.h-sm{font-size:calc(52*var(--u));font-weight:700;line-height:1.12;text-wrap:balance}
+.sub{font-size:calc(38*var(--u));color:var(--muted);line-height:1.35}
+.desc{font-size:calc(30*var(--u));color:var(--muted);line-height:1.35;flex:0 0 auto}
+.tinym{font-family:var(--mono);font-size:calc(28*var(--u));color:var(--muted)}
+.pill{
+  background:var(--lime);color:var(--lime-ink);
+  border-radius:999px;height:calc(96*var(--u));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:600;font-size:calc(34*var(--u));
+  padding-inline:calc(48*var(--u));
+}
+
+/* Slot tangkapan layar — mengisi seluruh sisa tinggi slide */
+.ph{
+  border:1px dashed var(--ph-line);background:var(--ph-fill);
+  border-radius:calc(8*var(--u));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;text-align:center;flex:none;
+}
+.shotwrap{
+  flex:1 1 auto;min-height:0;
+  display:flex;justify-content:center;gap:calc(28*var(--u));
+}
+.shot{
+  border:1px dashed var(--ph-line);background:var(--ph-fill);
+  border-radius:calc(16*var(--u));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:calc(6*var(--u));text-align:center;
+  flex:1 1 0;width:100%;height:100%;min-width:0;
+}
+.ph span,.shot span{
+  font-family:var(--mono);font-size:10px;letter-spacing:.04em;
+  color:var(--muted);line-height:1.3;
+}
+.ph span em,.shot span em{display:block;font-style:normal;opacity:.75;font-size:9px}
+
+/* Deret butir sisa — untuk slide penutup isi */
+.chips{
+  flex:1 1 auto;min-height:0;
+  display:flex;flex-wrap:wrap;gap:calc(16*var(--u));
+  align-content:flex-start;
+}
+.chipfx{
+  border:1px solid var(--line);border-radius:999px;
+  padding:calc(14*var(--u)) calc(28*var(--u));
+  font-size:calc(26*var(--u));color:var(--muted);
+  background:var(--panel-2);line-height:1.2;
+}
+
+.notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.notes li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;align-items:baseline}
+.notes .n{
+  font-family:var(--mono);font-size:11px;color:var(--accent);
+  border-top:1px solid var(--accent);padding-top:4px;
+}
+.notes b{font-weight:600;font-size:14.5px}
+.notes .dim{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px;white-space:nowrap}
+.notes p{font-size:13.5px;color:var(--muted);margin-top:2px;line-height:1.5}
+.notes code{color:var(--ink)}
+
+.rules{
+  margin-top:clamp(40px,6vw,72px);
+  border-top:1px solid var(--line);padding-top:clamp(24px,3vw,36px);
+}
+.rules h2{font-size:clamp(19px,2.2vw,23px)}
+.rules .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;margin-top:20px}
+.rules ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--muted)}
+.rules ul strong{color:var(--ink);font-weight:600}
+footer{
+  margin-top:clamp(32px,5vw,56px);border-top:1px solid var(--line);padding-top:20px;
+  font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em;
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">BERBARIS APP — Post peluncuran #2</p>
+    <h1>Wireframe carousel 13 slide</h1>
+    <p class="lede">Post kedua menjelaskan isi aplikasi. Satu slide satu fitur, dan tiap slide punya slot tangkapan layar yang mengambil sekitar dua pertiga tinggi kanvas — jadi gambarnya benar-benar terlihat di feed, bukan sekadar tempelan kecil. Ukuran, palet, dan margin sama dengan post #1 supaya feed tetap satu gaya.</p>
+    <div class="meta">
+      <span class="chip">1080 × 1350 px · 4:5</span>
+      <span class="chip">13 slide</span>
+      <span class="chip">1 slide = 1 fitur</span>
+      <span class="chip">10 tangkapan layar</span>
+      <span class="chip">margin aman 80 px</span>
+      <button class="toggle" id="gt" type="button" aria-pressed="false">Tampilkan garis margin</button>
+    </div>
+  </header>
+
+  <dl class="spec">
+    <div>
+      <dt>Kanvas</dt>
+      <dd>1080 × 1350 px (4:5). Semua ukuran di wireframe ini dalam px kanvas.</dd>
+    </div>
+    <div>
+      <dt>Skala teks</dt>
+      <dd>Judul 52 · Keterangan 30 · Label 28 · Chip sisa 26 · <em>minimum 26</em></dd>
+    </div>
+    <div>
+      <dt>Slot gambar</dt>
+      <dd>Satu slot 920 × 830 · dua slot berdampingan 2 × 450 × 830 · selalu potongan layar, bukan ponsel utuh</dd>
+    </div>
+    <div>
+      <dt>Susunan slide</dt>
+      <dd>Label + nomor → judul 1–2 baris → keterangan 2 baris → tangkapan layar mengisi sisa</dd>
+    </div>
+  </dl>
+
+  <!-- ============ SLIDE 1 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 1 / 13</p>
+      <h2>Cover — janjikan isi, sebut aturannya</h2>
+      <p class="goal">Slide ini cuma boleh dibaca dua detik. Yang perlu tersampaikan: isinya akan diperlihatkan, satu per satu, lengkap dengan layarnya.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="ph" style="width:calc(120*var(--u));height:calc(120*var(--u))">
+          <span>LOGO<em>120 × 120</em></span>
+        </div>
+        <div class="grow"></div>
+        <p class="h-big">Spill isinya.</p>
+        <p class="sub">Sepuluh tampilan asli, apa adanya.</p>
+        <div class="grow"></div>
+        <div class="row">
+          <span class="tinym" style="font-size:calc(26*var(--u))">@barisapp</span>
+          <span class="tinym" style="font-size:calc(26*var(--u))">geser →</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Latar</b><span class="dim">1080 × 1350</span><p>Sama dengan cover post #1, boleh warna berbeda. Foto boleh, asal tidak ramai di belakang teks.</p></div></li>
+      <li><span class="n">02</span><div><b>Logo</b><span class="dim">120 × 120 · 80 dari tepi</span><p>Posisi identik dengan post #1 supaya feed terlihat satu seri.</p></div></li>
+      <li><span class="n">03</span><div><b>Judul</b><span class="dim">84 px · maks 2 baris</span><p>Yang ditawarkan di sini bukan daftar fitur, tapi buktinya. Karena itu kalimatnya mengajak melihat, bukan mengumumkan aturan carousel.</p></div></li>
+      <li><span class="n">04</span><div><b>Angka "sepuluh"</b><span class="dim">38 px · 1–2 baris</span><p>Harus sama dengan jumlah slide fitur. Kalau nanti dipangkas jadi delapan, ganti angkanya — jangan biarkan tidak cocok.</p></div></li>
+      <li><span class="n">05</span><div><b>Penanda carousel</b><span class="dim">26 px · kanan bawah</span><p>Carousel ini paling panjang dari seri, jadi "geser →" wajib.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 2 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 2 / 13</p>
+      <h2>Landing page event</h2>
+      <p class="goal">Fitur pertama yang dilihat peserta, jadi paling pantas diberi ruang penuh. Sekaligus contoh pertama carousel: satu fitur, satu layar.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Halaman</span><span class="tinym" style="font-size:calc(26*var(--u))">2 / 13</span></div>
+        <p class="h-sm">Halaman event, tanpa bikin dari nol.</p>
+        <p class="desc">Pilih tema, pasang logo dan poster. Alamatnya otomatis: <span style="font-family:var(--mono)">nama-event.berbaris.app</span>.</p>
+        <div class="shotwrap">
+          <div class="shot"><span>TANGKAPAN LAYAR<em>920 × 830 · potongan halaman event</em></span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Potongan layar, bukan ponsel utuh</b><span class="dim">920 × 830</span><p>Ambil bagian atas halaman event sampai kategori lombanya — sisanya dipotong. Ponsel utuh 9 : 19,5 hanya dapat 187 px lebar di sini, dan di feed tinggal 71 px — tidak terbaca.</p></div></li>
+      <li><span class="n">02</span><div><b>Isi tangkapan layarnya</b><span class="dim">—</span><p>Tema sudah dipasang, poster terisi, dan kategori lombanya sudah tampil. Screenshot dengan data kosong membuat halaman terlihat belum jadi.</p></div></li>
+      <li><span class="n">03</span><div><b>Subdomain ditulis apa adanya</b><span class="dim">mono · dalam kalimat</span><p>Bentuk URL-nya sendiri sudah menjelaskan fiturnya. Kalau barisnya jadi tiga baris, pindahkan bagian URL ke caption.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 3 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 3 / 13</p>
+      <h2>Kategori lomba bertingkat</h2>
+      <p class="goal">Yang paling sering ditanya panitia: kuota dan biaya per kategori. Ditampilkan sebagai tabel, jadi sekilas langsung terbaca.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Pendaftaran</span><span class="tinym" style="font-size:calc(26*var(--u))">3 / 13</span></div>
+        <p class="h-sm">Kategori bertingkat, kuota dan biaya sendiri.</p>
+        <p class="desc">Tingkat, sub-kategori, jumlah peserta yang diterima, sampai biaya pendaftaran per kategori.</p>
+        <div class="shotwrap">
+          <div class="shot"><span>TANGKAPAN LAYAR<em>920 × 830 · layar lebar · daftar kategori</em></span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Slot layar lebar</b><span class="dim">920 × 830 · rasio ± 1,11 : 1</span><p>Kalau tangkapan layarnya aslinya 16 : 10, potong atas-bawahnya sampai mendekati 1,11 : 1. Jangan diregangkan.</p></div></li>
+      <li><span class="n">02</span><div><b>Yang harus terlihat</b><span class="dim">—</span><p>Minimal tiga baris kategori dengan angka kuota dan biaya yang berbeda-beda. Perbedaan angkanya itu buktinya, bukan nama kategorinya.</p></div></li>
+      <li><span class="n">03</span><div><b>Slide paling mudah dipangkas</b><span class="dim">—</span><p>Kalau carousel dirasa terlalu panjang, buang slide ini dan pindahkan butirnya ke slide "sisanya". Kategori bertingkat mudah dijelaskan di caption.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 4 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 4 / 13</p>
+      <h2>Daftar tanpa bikin akun</h2>
+      <p class="goal">Dua layar karena alurnya memang dua langkah: tautan di email, lalu isian pendaftaran. Kalau hanya satu layar, bagian "tanpa akun" tidak kelihatan.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Pendaftaran</span><span class="tinym" style="font-size:calc(26*var(--u))">4 / 13</span></div>
+        <p class="h-sm">Peserta tidak perlu bikin akun.</p>
+        <p class="desc">Cukup klik tautan yang dikirim ke email. Tidak ada kata sandi yang harus diingat, tidak ada aplikasi yang perlu dipasang.</p>
+        <div class="shotwrap">
+          <div class="shot"><span>EMAIL<em>450 × 830</em></span></div>
+          <div class="shot"><span>FORMULIR<em>450 × 830</em></span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Dua slot berdampingan</b><span class="dim">2 × 450 · jarak 28 px</span><p>Muat di lebar 920 px. Kalau salah satu tangkapan layarnya lebih panjang, tinggi keduanya disamakan — jangan biarkan berbeda.</p></div></li>
+      <li><span class="n">02</span><div><b>Yang harus terlihat</b><span class="dim">—</span><p>Di layar kiri: email berisi tautan pendaftaran. Di layar kanan: isian pendaftaran dengan kolom unggah berkas. Dua-duanya tanpa halaman login di antaranya — itu inti fiturnya.</p></div></li>
+      <li><span class="n">03</span><div><b>Jangan tambah kalimat "aman"</b><span class="dim">—</span><p>Menyebut "tanpa akun" sering memicu kekhawatiran soal keamanan. Tidak perlu dijawab di slide; kalau ada yang bertanya, jawab di komentar.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 5 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 5 / 13</p>
+      <h2>Format penilaian disusun sendiri</h2>
+      <p class="goal">Ini yang membedakan dari aplikasi lomba yang kriterianya dikunci. Yang ditampilkan bukan daftar kriterianya, tapi tempat menyusunnya.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Penilaian</span><span class="tinym" style="font-size:calc(26*var(--u))">5 / 13</span></div>
+        <p class="h-sm">Kriteria dan bobot, kamu yang tentukan.</p>
+        <p class="desc">Susun kriteria dan opsinya sendiri, atau impor dari Excel lalu periksa dulu sebelum dipakai.</p>
+        <div class="shotwrap">
+          <div class="shot"><span>TANGKAPAN LAYAR<em>920 × 830 · layar lebar · penyusun rubrik</em></span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Yang harus terlihat</b><span class="dim">—</span><p>Beberapa kriteria dengan bobot yang sudah terisi dan opsinya tampak. Jangan ambil layar kosong — justru isi rubriknya yang jadi bukti.</p></div></li>
+      <li><span class="n">02</span><div><b>Privat data</b><span class="dim">—</span><p>Kalau memakai rubrik dari event nyata, pastikan tidak ada nama sekolah atau peserta yang terbaca. Ganti dengan data contoh kalau perlu.</p></div></li>
+      <li><span class="n">03</span><div><b>Impor Excel disebut sambil lalu</b><span class="dim">—</span><p>Kalimatnya cukup "atau impor dari Excel". Rincian bahwa hasil impor ditampilkan sebagai pratinjau masuk caption, bukan slide.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 6 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 6 / 13</p>
+      <h2>Juri menilai dari ponselnya</h2>
+      <p class="goal">Pembeda terkuat di seluruh carousel. Slide ini yang paling menentukan orang mau lanjut menggeser atau tidak.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Penilaian</span><span class="tinym" style="font-size:calc(26*var(--u))">6 / 13</span></div>
+        <p class="h-sm">Juri menilai dari HP-nya sendiri.</p>
+        <p class="desc">Tanpa install, tanpa login. Cukup buka tautan yang dibagikan panitia, dan nilai langsung masuk.</p>
+        <div class="shotwrap">
+          <div class="shot"><span>TANGKAPAN LAYAR<em>920 × 830 · layar penilaian juri</em></span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Tangkapan layar yang paling penting</b><span class="dim">920 × 830</span><p>Ambil potongan form penilaian yang sedang diisi — pisahkan dari kerangka halaman supaya tiap barisnya besar. Screenshot layar kosong tidak membuktikan apa pun, dan ponsel utuh terlalu kecil untuk terbaca.</p></div></li>
+      <li><span class="n">02</span><div><b>Boleh ditandai</b><span class="dim">—</span><p>Satu penanda kecil di dekat slot (garis atau titik lime) boleh, untuk menunjuk bagian "tanpa login". Jangan bentangkan penanda di slide lain.</p></div></li>
+      <li><span class="n">03</span><div><b>Jangan jelaskan aturan penugasan</b><span class="dim">—</span><p>Juri dikurung per grup dan rubriknya ikut seri peserta — itu detail teknis yang membuat butirnya tidak terbaca sekilas. Masuk caption, atau tahan untuk post #3.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 7 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 7 / 13</p>
+      <h2>Juara terhitung sendiri</h2>
+      <p class="goal">Melanjutkan slide sebelumnya: nilai masuk, hasilnya langsung terlihat. Screenshot-nya harus berupa hasil jadi, bukan formulir.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Penilaian</span><span class="tinym" style="font-size:calc(26*var(--u))">7 / 13</span></div>
+        <p class="h-sm">Nilai terakhir masuk, peringkat langsung jadi.</p>
+        <p class="desc">Tiebreak dihitung sistem, dan papan skor bisa dibuka siapa saja yang punya tautannya.</p>
+        <div class="shotwrap">
+          <div class="shot"><span>TANGKAPAN LAYAR<em>920 × 830 · layar lebar · tabel peringkat</em></span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Yang harus terlihat</b><span class="dim">—</span><p>Tabel peringkat dengan nilai terisi penuh dan kolom juara sudah berisi. Kalau angkanya masih kosong, jangan dipakai — slide ini justru soal hasil yang sudah jadi.</p></div></li>
+      <li><span class="n">02</span><div><b>Ambil dari sisi panitia</b><span class="dim">—</span><p>Tampilan dalam dashboard lebih meyakinkan daripada papan skor publik, karena di situ terlihat kolom-kolom nilainya.</p></div></li>
+      <li><span class="n">03</span><div><b>Papan skor digabung ke sini</b><span class="dim">—</span><p>Tidak jadi slide sendiri karena keduanya sama-sama "hasil akhir yang dilihat orang". Menjadikannya slide terpisah akan terasa mengulang.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 8 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 8 / 13</p>
+      <h2>Rekap nilai jadi PDF</h2>
+      <p class="goal">Bukti bahwa datanya bisa keluar dari aplikasi. Banyak panitia menolak sistem tertutup karena takut tidak bisa mencetak apa pun.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Penilaian</span><span class="tinym" style="font-size:calc(26*var(--u))">8 / 13</span></div>
+        <p class="h-sm">Rekap nilai, siap dicetak atau dibagikan.</p>
+        <p class="desc">Diunduh per peserta dan per tingkat lomba, lengkap dengan tanda tangan.</p>
+        <div class="shotwrap">
+          <div class="shot"><span>TANGKAPAN LAYAR<em>920 × 830 · layar lebar · halaman PDF hasil</em></span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Ambil dari dalam PDF</b><span class="dim">—</span><p>Tangkap halaman hasil yang sudah berisi tabel nilai, bukan pratinjau kosong atau layar unduhan. Kalau perlu, buka PDF-nya lalu tangkap layar di situ.</p></div></li>
+      <li><span class="n">02</span><div><b>Slide paling mudah dipangkas</b><span class="dim">—</span><p>Kalau carousel dipendekkan, ini kandidat kedua setelah slide kategori. Cukup pindahkan "rekap nilai PDF" ke slide "sisanya".</p></div></li>
+      <li><span class="n">03</span><div><b>Nama panitia di PDF</b><span class="dim">—</span><p>Kalau ada nama dan tanda tangan, pastikan pakai nama contoh — bukan orang sungguhan yang tidak memberi izin.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 9 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 9 / 13</p>
+      <h2>Voting penonton lewat QRIS</h2>
+      <p class="goal">Ganti kelompok dari penilaian ke pemasukan. Slide ini yang paling cepat menarik perhatian pengurus, karena menyangkut dana event.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Uang masuk</span><span class="tinym" style="font-size:calc(26*var(--u))">9 / 13</span></div>
+        <p class="h-sm">Penonton ikut memilih, bayar lewat QRIS.</p>
+        <p class="desc">Harga dan jadwalnya kamu yang atur. Bisa ditambah paket vote booster dengan bonus.</p>
+        <div class="shotwrap">
+          <div class="shot"><span>TANGKAPAN LAYAR<em>920 × 830 · halaman voting</em></span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Warna</b><span class="dim">—</span><p>Satu-satunya bagian carousel yang boleh memakai lime pada penanda, karena isinya memang soal transaksi. Selain slide 9, 10, dan pil CTA, tetap biru dan abu.</p></div></li>
+      <li><span class="n">02</span><div><b>Jangan klaim pencairan</b><span class="dim">—</span><p>Godaan terbesar di slide ini adalah menambah "dana langsung masuk rekeningmu". Jangan, kecuali pencairan otomatis benar-benar sudah jalan — kalau tidak, ini klaim yang akan ditagih.</p></div></li>
+      <li><span class="n">03</span><div><b>Yang harus terlihat</b><span class="dim">—</span><p>Halaman voting dengan pilihan peserta dan tombol bayarnya. Bukan halaman struk.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 10 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 10 / 13</p>
+      <h2>Tiket event lewat QRIS</h2>
+      <p class="goal">Masih di kelompok pemasukan. Dua layar karena yang perlu dibuktikan ada dua: tiketnya, dan cara memindainya.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Uang masuk</span><span class="tinym" style="font-size:calc(26*var(--u))">10 / 13</span></div>
+        <p class="h-sm">Tiket dijual online, masuk tinggal scan.</p>
+        <p class="desc">Satu tiket untuk satu gerbang, kuotanya dihitung per tempat. Dijual lewat QRIS, dipindai pakai QR atau PIN.</p>
+        <div class="shotwrap">
+          <div class="shot"><span>TIKET<em>450 × 830</em></span></div>
+          <div class="shot"><span>PEMINDAI<em>450 × 830</em></span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Kunci privasi</b><span class="dim">—</span><p>Kode QR di tiket harus yang sudah tidak berlaku, atau dibuat khusus untuk tangkapan layar ini. Jangan sampai tiket asli yang masih aktif ikut tersebar.</p></div></li>
+      <li><span class="n">02</span><div><b>Kuota per tempat disebut</b><span class="dim">—</span><p>Fakta bahwa tiket dijual per gerbang dan kuotanya dihitung per venue itu kuat, tapi terlalu panjang untuk satu baris. Cukup disinggung di keterangan, rincinya di caption.</p></div></li>
+      <li><span class="n">03</span><div><b>Yang harus terlihat</b><span class="dim">—</span><p>Di kiri: tiket lengkap dengan kode QR dan nama gerbangnya. Di kanan: layar pemindai saat berhasil membaca tiket.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 11 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 11 / 13</p>
+      <h2>Overlay livestream untuk OBS</h2>
+      <p class="goal">Fitur terakhir, dan yang paling sulit dibayangkan orang dari tulisan saja. Karena itu tangkapan layarnya harus dari dalam OBS Studio, bukan halaman mentahnya.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Panggung</span><span class="tinym" style="font-size:calc(26*var(--u))">11 / 13</span></div>
+        <p class="h-sm">Tampilan livestream, siap dipakai di OBS.</p>
+        <p class="desc">Mode vote, kegiatan, dan greenscreen. Dipasang di OBS tanpa perlu menyusun tata letak dari awal.</p>
+        <div class="shotwrap">
+          <div class="shot"><span>TANGKAPAN LAYAR<em>920 × 830 · layar lebar · pratinjau di OBS Studio</em></span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Harus dari dalam OBS</b><span class="dim">—</span><p>Ambil pratinjau di OBS Studio yang menunjukkan overlay terpasang — termasuk panel sumber di bawahnya. Halaman mentah overlay tidak menjelaskan apa pun karena tampak seperti halaman web biasa.</p></div></li>
+      <li><span class="n">02</span><div><b>Kalau tidak bisa diambil</b><span class="dim">—</span><p>Lebih baik slide ini dibuang dan butirnya dipindahkan ke slide "sisanya", daripada menampilkan tangkapan layar yang tidak menjelaskan fungsinya.</p></div></li>
+      <li><span class="n">03</span><div><b>Nomor tidak genap sepuluh</b><span class="dim">—</span><p>Kalau slide ini dibuang, jumlah fitur jadi sembilan dan angka di cover harus diganti.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 12 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 12 / 13</p>
+      <h2>Sisanya — tanpa slide sendiri</h2>
+      <p class="goal">Menutup daftar dengan jujur: masih ada fitur lain, tapi tidak cukup penting untuk masing-masing satu slide. Chip-nya sengaja tanpa ikon supaya tidak bersaing dengan sepuluh slide sebelumnya.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Sisanya</span><span class="tinym" style="font-size:calc(26*var(--u))">12 / 13</span></div>
+        <p class="h-sm">Masih ada lagi, semuanya sudah jalan.</p>
+        <p class="desc">Tidak dibuatkan slide sendiri karena cukup dijelaskan satu baris.</p>
+        <div class="chips">
+          <span class="chipfx">Isian pendaftaran kustom</span>
+          <span class="chipfx">Verifikasi &amp; daftar ulang</span>
+          <span class="chipfx">Undian spin</span>
+          <span class="chipfx">Galeri event</span>
+          <span class="chipfx">FAQ</span>
+          <span class="chipfx">Sponsor</span>
+          <span class="chipfx">Tenant</span>
+          <span class="chipfx">Rundown &amp; juknis</span>
+          <span class="chipfx">Notifikasi email</span>
+          <span class="chipfx">Log aktivitas</span>
+          <span class="chipfx">Keuangan event</span>
+          <span class="chipfx">Tanda tangan digital</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Tanpa tangkapan layar</b><span class="dim">—</span><p>Disengaja. Slide ini soal jumlah, bukan soal tampilan. Memberi gambar justru membuatnya bersaing dengan sepuluh slide sebelumnya.</p></div></li>
+      <li><span class="n">02</span><div><b>Chip yang dibuang masuk sini</b><span class="dim">26 px · mono tidak dipakai</span><p>Kalau slide 3 atau 8 dipangkas, chip-nya ditambahkan ke deret ini — bukan dihapus. Ini yang membuat carousel bisa dipendekkan tanpa kehilangan isi.</p></div></li>
+      <li><span class="n">03</span><div><b>Jangan lebih dari 14 chip</b><span class="dim">—</span><p>Lebih dari itu mulai terlihat seperti daftar menu, dan justru mengesankan aplikasinya berantakan.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 13 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 13 / 13</p>
+      <h2>Penutup — serahkan ke post berikutnya</h2>
+      <p class="goal">Nomor slide dihapus karena kata terakhir sebaiknya ajakan, bukan "13 / 13". Tidak ada tangkapan layar di sini, karena isinya sudah habis di slide sebelumnya.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="grow"></div>
+        <p class="eyeb">Selanjutnya</p>
+        <p class="h-sm" style="font-size:calc(72*var(--u))">Itu isinya.</p>
+        <p class="sub">Post berikutnya membahas bagian penilaian dan sertifikat lebih dalam — bagian yang paling sering bikin panitia kerja lembur.</p>
+        <p class="desc">Kalau kamu sedang menyiapkan lomba, tulis di komentar bagian mana yang paling bikin repot. Kami baca semuanya.</p>
+        <div class="grow"></div>
+        <div class="pill" style="align-self:flex-start">Coba di berbaris.app</div>
+        <p class="tinym" style="font-size:calc(34*var(--u))">berbaris.app</p>
+        <div class="row">
+          <span class="tinym" style="font-size:calc(26*var(--u))">@barisapp</span>
+          <span class="tinym" style="font-size:calc(26*var(--u))">link di bio</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Ajakan tanpa angka</b><span class="dim">tinggi 96 · lime</span><p>Teksnya "Coba di berbaris.app", bukan "Coba gratis 3 hari". Durasi uji coba harus dipastikan dulu ada di aplikasinya sebelum dicetak — kalau tidak, ini klaim yang akan ditagih di komentar pertama.</p></div></li>
+      <li><span class="n">02</span><div><b>Subjudul menunjuk post #3</b><span class="dim">38 px · 3 baris</span><p>Sebut "penilaian dan sertifikat" karena itu bagian yang paling dirasakan panitia. Pastikan post #3 benar-benar tayang setelah post ini.</p></div></li>
+      <li><span class="n">03</span><div><b>Tanpa nomor slide</b><span class="dim">—</span><p>Slide terakhir berhenti di ajakan. Nomor dihapus supaya tidak terkesan menutup daftar setelah sepuluh fitur.</p></div></li>
+      <li><span class="n">04</span><div><b>Alamat apa adanya</b><span class="dim">34 px · mono</span><p>Supaya masih terbaca kalau bio tidak dibuka.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ ATURAN ============ -->
+  <section class="rules">
+    <h2>Aturan produksi</h2>
+    <div class="cols">
+      <ul>
+        <li><strong>Satu fitur satu slide.</strong> Kalau satu slide butuh dua judul, berarti ada dua fitur — pisahkan, atau gabungkan salah satunya ke slide "sisanya".</li>
+        <li><strong>Satu tangkapan layar per fitur.</strong> Kecuali dua fitur yang alurnya memang dua langkah (slide 4 dan 10), dan itu pun maksimal dua layar.</li>
+        <li><strong>Tangkapan layar bukan hiasan.</strong> Kalau gambarnya tidak bisa menjelaskan fiturnya, ganti gambarnya — jangan ditambal dengan teks.</li>
+        <li><strong>Judul maksimal 8 kata.</strong> Keterangan dua baris, bukan satu paragraf.</li>
+      </ul>
+      <ul>
+        <li><strong>Teks terkecil 26 px</strong> — hanya untuk chip di slide "sisanya" dan nomor slide. Judul 52, keterangan 30.</li>
+        <li><strong>Lime hanya di slide 9, 10, dan pil CTA.</strong> Slide lain tetap biru dan abu.</li>
+        <li><strong>Klaim harus bisa dibuktikan.</strong> Jumlah fitur di cover harus sama dengan jumlah slide; jangan menambah angka yang belum tentu benar.</li>
+        <li><strong>Ukuran, palet, margin, ekspor</strong> sama dengan post #1 — 80 px, 1080 × 1350, sRGB, di bawah 1 MB per slide.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="rules">
+    <h2>Tangkapan layar yang perlu diambil</h2>
+    <div class="cols">
+      <ul>
+        <li><strong>Slide 2</strong> — halaman event di ponsel, tema dan poster sudah terpasang.</li>
+        <li><strong>Slide 3</strong> — daftar kategori dengan kuota dan biaya terisi.</li>
+        <li><strong>Slide 4</strong> — email berisi tautan, dan formulir pendaftaran dengan unggah berkas.</li>
+        <li><strong>Slide 5</strong> — penyusun rubrik dengan kriteria dan bobot terisi.</li>
+        <li><strong>Slide 6</strong> — layar penilaian juri yang sedang diisi di ponsel.</li>
+      </ul>
+      <ul>
+        <li><strong>Slide 7</strong> — tabel peringkat yang sudah berisi juara.</li>
+        <li><strong>Slide 8</strong> — halaman PDF rekap nilai yang sudah jadi.</li>
+        <li><strong>Slide 9</strong> — halaman voting penonton dengan tombol bayar.</li>
+        <li><strong>Slide 10</strong> — tiket berkode QR, dan layar pemindai saat berhasil.</li>
+        <li><strong>Slide 11</strong> — pratinjau overlay di dalam OBS Studio.</li>
+      </ul>
+    </div>
+    <div class="cols" style="margin-top:22px">
+      <ul>
+        <li><strong>Semua tangkapan layar pakai data contoh</strong> — nama sekolah, peserta, dan panitia diganti. Kode QR tiket harus yang sudah tidak berlaku.</li>
+        <li><strong>Jangan pakai tampilan kosong.</strong> Layar yang belum terisi membuat aplikasinya terlihat belum jadi, bukan terlihat rapi.</li>
+      </ul>
+      <ul>
+        <li><strong>Simpan versi mentahnya</strong> di satu folder per slide, supaya kalau ada yang perlu diganti tidak perlu menangkap ulang semuanya.</li>
+        <li><strong>Kalau carousel dipendekkan:</strong> buang slide 3 dan 8 dulu (kandidat terkuat), pindahkan butirnya ke slide 12, lalu ganti angka di cover.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>BERBARIS APP · wireframe post peluncuran #2 (isi aplikasi) · kanvas 1080 × 1350</footer>
+</div>
+
+<script>
+(function(){
+  var btn = document.getElementById('gt');
+  if(!btn) return;
+  var root = document.documentElement;
+  function apply(on){
+    root.classList.toggle('guides', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.textContent = on ? 'Sembunyikan garis margin' : 'Tampilkan garis margin';
+  }
+  var saved = false;
+  try { saved = localStorage.getItem('wireframe.guides') === '1'; } catch(e){}
+  apply(saved);
+  btn.addEventListener('click', function(){
+    var on = !root.classList.contains('guides');
+    apply(on);
+    try { localStorage.setItem('wireframe.guides', on ? '1' : '0'); } catch(e){}
+  });
+})();
+</script>

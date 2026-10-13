@@ -37,6 +37,7 @@
   @livewireStyles
   
   <style>
+    .ti-rosette-discount-check:before { content: "\f1f8"; }
     /* --- Logo Custom CSS --- */
     /* Standard Theme Switching for Full Logos */
     html[data-bs-theme="light"] .light-logo { display: none !important; }

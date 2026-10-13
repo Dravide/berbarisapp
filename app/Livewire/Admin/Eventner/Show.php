@@ -315,6 +315,31 @@ class Show extends Component
         return $modules;
     }
 
+    public function toggleVerification()
+    {
+        abort_unless(auth()->user()?->role === 'Admin', 403);
+
+        $this->eventner = Eventner::findOrFail($this->eventnerId);
+
+        if ($this->eventner->is_verified) {
+            $this->eventner->update([
+                'is_verified' => false,
+                'verified_at' => null,
+                'verified_by' => null,
+            ]);
+            session()->flash('success', 'Status verifikasi penyelenggara telah dicabut.');
+        } else {
+            $this->eventner->update([
+                'is_verified' => true,
+                'verified_at' => now(),
+                'verified_by' => auth()->id(),
+            ]);
+            session()->flash('success', 'Penyelenggara berhasil diverifikasi.');
+        }
+
+        $this->loadData();
+    }
+
     public function render()
     {
         return view('livewire.admin.eventner.show')

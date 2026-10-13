@@ -13,6 +13,9 @@ class Eventner extends Model
     protected $fillable = [
         'user_id',
         'status',
+        'is_verified',
+        'verified_at',
+        'verified_by',
         'approved_at',
         'approved_by',
         'rejected_at',
@@ -81,6 +84,8 @@ class Eventner extends Model
         'rejected_at' => 'datetime',
         'trial_ends_at' => 'datetime',
         'registration_paid_at' => 'datetime',
+        'is_verified' => 'boolean',
+        'verified_at' => 'datetime',
     ];
 
     protected static function boot()
@@ -207,6 +212,16 @@ class Eventner extends Model
     public function scopeApproved($query)
     {
         return $query->where('status', 'approved');
+    }
+
+    public function scopeVerified($query)
+    {
+        return $query->where('is_verified', true);
+    }
+
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
 
     public function competitionCategories()

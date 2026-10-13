@@ -16,6 +16,111 @@
             <p class="mt-2.5 text-xs font-medium text-white/80 md:text-sm max-w-xl">
                 Setiap vote sangat berarti untuk menentukan juara terfavorit di event <strong class="text-secondary font-semibold">{{ $eventner->nama_event }}</strong>.
             </p>
+
+            {{-- Countdown Timer Voting --}}
+            @if($eventner->vote_active && $eventner->vote_start && \Carbon\Carbon::parse($eventner->vote_start)->isFuture())
+                <div class="mt-5 w-full max-w-md mx-auto"
+                     x-data="{
+                        target: new Date('{{ \Carbon\Carbon::parse($eventner->vote_start)->toIso8601String() }}').getTime(),
+                        days: '00', hours: '00', minutes: '00', seconds: '00',
+                        refreshed: false,
+                        init() {
+                            this.update();
+                            setInterval(() => this.update(), 1000);
+                        },
+                        update() {
+                            const diff = this.target - Date.now();
+                            if (diff <= 0) {
+                                this.days = '00'; this.hours = '00'; this.minutes = '00'; this.seconds = '00';
+                                if (!this.refreshed) {
+                                    this.refreshed = true;
+                                    $wire.$refresh();
+                                }
+                                return;
+                            }
+                            this.days = String(Math.floor(diff / 86400000)).padStart(2, '0');
+                            this.hours = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
+                            this.minutes = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+                            this.seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+                        }
+                     }">
+                    <span class="mb-2.5 block text-center text-[11px] font-semibold uppercase tracking-wider text-white/80">
+                        <i class="ti ti-clock-play me-1"></i> Voting Dimulai Dalam
+                    </span>
+                    <div class="grid grid-cols-4 gap-2 sm:gap-3 max-w-[280px] sm:max-w-[320px] mx-auto">
+                        <div class="flex flex-col bg-white/15 backdrop-blur-md border border-white/20 rounded-xl p-2 sm:p-2.5 items-center justify-center">
+                            <span class="font-display text-lg sm:text-2xl font-extrabold text-white leading-tight" x-text="days">00</span>
+                            <span class="text-[9px] sm:text-[10px] text-white/80 uppercase font-semibold tracking-wider mt-0.5">Hari</span>
+                        </div>
+                        <div class="flex flex-col bg-white/15 backdrop-blur-md border border-white/20 rounded-xl p-2 sm:p-2.5 items-center justify-center">
+                            <span class="font-display text-lg sm:text-2xl font-extrabold text-white leading-tight" x-text="hours">00</span>
+                            <span class="text-[9px] sm:text-[10px] text-white/80 uppercase font-semibold tracking-wider mt-0.5">Jam</span>
+                        </div>
+                        <div class="flex flex-col bg-white/15 backdrop-blur-md border border-white/20 rounded-xl p-2 sm:p-2.5 items-center justify-center">
+                            <span class="font-display text-lg sm:text-2xl font-extrabold text-white leading-tight" x-text="minutes">00</span>
+                            <span class="text-[9px] sm:text-[10px] text-white/80 uppercase font-semibold tracking-wider mt-0.5">Menit</span>
+                        </div>
+                        <div class="flex flex-col bg-white/15 backdrop-blur-md border border-white/20 rounded-xl p-2 sm:p-2.5 items-center justify-center">
+                            <span class="font-display text-lg sm:text-2xl font-extrabold text-white leading-tight" x-text="seconds">00</span>
+                            <span class="text-[9px] sm:text-[10px] text-white/80 uppercase font-semibold tracking-wider mt-0.5">Detik</span>
+                        </div>
+                    </div>
+                    <p class="mt-2 text-[11px] text-white/70">
+                        Mulai: {{ \Carbon\Carbon::parse($eventner->vote_start)->translatedFormat('l, d F Y · H:i') }} WIB
+                    </p>
+                </div>
+            @elseif($eventner->vote_active && $eventner->vote_end && \Carbon\Carbon::parse($eventner->vote_end)->isFuture())
+                <div class="mt-5 w-full max-w-md mx-auto"
+                     x-data="{
+                        target: new Date('{{ \Carbon\Carbon::parse($eventner->vote_end)->toIso8601String() }}').getTime(),
+                        days: '00', hours: '00', minutes: '00', seconds: '00',
+                        refreshed: false,
+                        init() {
+                            this.update();
+                            setInterval(() => this.update(), 1000);
+                        },
+                        update() {
+                            const diff = this.target - Date.now();
+                            if (diff <= 0) {
+                                this.days = '00'; this.hours = '00'; this.minutes = '00'; this.seconds = '00';
+                                if (!this.refreshed) {
+                                    this.refreshed = true;
+                                    $wire.$refresh();
+                                }
+                                return;
+                            }
+                            this.days = String(Math.floor(diff / 86400000)).padStart(2, '0');
+                            this.hours = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
+                            this.minutes = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+                            this.seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+                        }
+                     }">
+                    <span class="mb-2.5 block text-center text-[11px] font-semibold uppercase tracking-wider text-white/80">
+                        <i class="ti ti-clock-hour-4 me-1"></i> Voting Berakhir Dalam
+                    </span>
+                    <div class="grid grid-cols-4 gap-2 sm:gap-3 max-w-[280px] sm:max-w-[320px] mx-auto">
+                        <div class="flex flex-col bg-white/15 backdrop-blur-md border border-white/20 rounded-xl p-2 sm:p-2.5 items-center justify-center">
+                            <span class="font-display text-lg sm:text-2xl font-extrabold text-white leading-tight" x-text="days">00</span>
+                            <span class="text-[9px] sm:text-[10px] text-white/80 uppercase font-semibold tracking-wider mt-0.5">Hari</span>
+                        </div>
+                        <div class="flex flex-col bg-white/15 backdrop-blur-md border border-white/20 rounded-xl p-2 sm:p-2.5 items-center justify-center">
+                            <span class="font-display text-lg sm:text-2xl font-extrabold text-white leading-tight" x-text="hours">00</span>
+                            <span class="text-[9px] sm:text-[10px] text-white/80 uppercase font-semibold tracking-wider mt-0.5">Jam</span>
+                        </div>
+                        <div class="flex flex-col bg-white/15 backdrop-blur-md border border-white/20 rounded-xl p-2 sm:p-2.5 items-center justify-center">
+                            <span class="font-display text-lg sm:text-2xl font-extrabold text-white leading-tight" x-text="minutes">00</span>
+                            <span class="text-[9px] sm:text-[10px] text-white/80 uppercase font-semibold tracking-wider mt-0.5">Menit</span>
+                        </div>
+                        <div class="flex flex-col bg-white/15 backdrop-blur-md border border-white/20 rounded-xl p-2 sm:p-2.5 items-center justify-center">
+                            <span class="font-display text-lg sm:text-2xl font-extrabold text-white leading-tight" x-text="seconds">00</span>
+                            <span class="text-[9px] sm:text-[10px] text-white/80 uppercase font-semibold tracking-wider mt-0.5">Detik</span>
+                        </div>
+                    </div>
+                    <p class="mt-2 text-[11px] text-white/70">
+                        Hingga {{ \Carbon\Carbon::parse($eventner->vote_end)->translatedFormat('l, d F Y · H:i') }} WIB
+                    </p>
+                </div>
+            @endif
             <div class="mt-4">
                 <a href="{{ event_url($eventner, 'detail') }}" class="btn-ghost !border-white/20 !text-white hover:!bg-white/10 text-xs py-2 px-4 leading-normal inline-flex items-center gap-1.5 text-decoration-none">
                     <i class="ti ti-arrow-left"></i> Kembali Ke Detail Event
@@ -195,6 +300,45 @@
                             <h3 class="font-display text-lg font-bold text-on-primary mb-1">Voting Belum Dibuka</h3>
                             <p class="text-sm text-on-primary/80">Voting akan dimulai pada:</p>
                             <p class="text-lg font-bold mt-2" style="color: #ffffff;">{{ \Carbon\Carbon::parse($eventner->vote_start)->translatedFormat('l, d M Y - H:i') }} WIB</p>
+                            @if(\Carbon\Carbon::parse($eventner->vote_start)->isFuture())
+                                <div class="mt-4 grid grid-cols-4 gap-2 max-w-[280px] mx-auto"
+                                     x-data="{
+                                        target: new Date('{{ \Carbon\Carbon::parse($eventner->vote_start)->toIso8601String() }}').getTime(),
+                                        days: '00', hours: '00', minutes: '00', seconds: '00',
+                                        init() {
+                                            this.update();
+                                            setInterval(() => this.update(), 1000);
+                                        },
+                                        update() {
+                                            const diff = this.target - Date.now();
+                                            if (diff <= 0) {
+                                                location.reload();
+                                                return;
+                                            }
+                                            this.days = String(Math.floor(diff / 86400000)).padStart(2, '0');
+                                            this.hours = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
+                                            this.minutes = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+                                            this.seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+                                        }
+                                     }">
+                                    <div class="rounded-lg bg-white/15 p-1.5 text-center">
+                                        <span class="block text-base font-extrabold leading-tight text-white" x-text="days">00</span>
+                                        <span class="text-[8px] font-semibold uppercase text-white/80">Hari</span>
+                                    </div>
+                                    <div class="rounded-lg bg-white/15 p-1.5 text-center">
+                                        <span class="block text-base font-extrabold leading-tight text-white" x-text="hours">00</span>
+                                        <span class="text-[8px] font-semibold uppercase text-white/80">Jam</span>
+                                    </div>
+                                    <div class="rounded-lg bg-white/15 p-1.5 text-center">
+                                        <span class="block text-base font-extrabold leading-tight text-white" x-text="minutes">00</span>
+                                        <span class="text-[8px] font-semibold uppercase text-white/80">Menit</span>
+                                    </div>
+                                    <div class="rounded-lg bg-white/15 p-1.5 text-center">
+                                        <span class="block text-base font-extrabold leading-tight text-white" x-text="seconds">00</span>
+                                        <span class="text-[8px] font-semibold uppercase text-white/80">Detik</span>
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                         <div class="p-6 text-center">
                             <p class="text-sm text-on-surface-variant mb-6 leading-relaxed">Tim Anda sudah terdaftar dalam kategori di bawah. Voting baru bisa dilakukan setelah jadwal dibuka.</p>
@@ -386,11 +530,17 @@
                 <div class="{{ $eventner->vote_active ? 'lg:col-span-8' : 'lg:col-span-12' }}">
                     @if($view == 'categories')
                         {{-- VIEW A: Categories selection --}}
-                        <div class="mb-6">
-                            <h2 class="font-display text-lg font-bold text-deep-slate inline-flex items-center gap-2">
+                        <div class="mb-6 flex items-center justify-between flex-wrap gap-3">
+                            <h2 class="font-display text-lg font-bold text-deep-slate inline-flex items-center gap-2 m-0">
                                 <i class="ti ti-medal text-primary text-xl"></i>
                                 Pilih Kategori Lomba
                             </h2>
+                            @if($eventner->vote_active && $eventner->vote_end && \Carbon\Carbon::parse($eventner->vote_end)->isFuture())
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-full border border-outline-variant/40">
+                                    <i class="ti ti-clock-hour-4 text-primary"></i>
+                                    <span>Batas Vote: <strong class="text-deep-slate">{{ \Carbon\Carbon::parse($eventner->vote_end)->translatedFormat('d M Y, H:i') }} WIB</strong></span>
+                                </span>
+                            @endif
                         </div>
 
                         <div class="grid gap-4 grid-cols-2 md:grid-cols-3">
@@ -451,15 +601,23 @@
                             }
                         @endphp
 
-                        <div class="flex items-center gap-3 mb-6">
-                            <button wire:click="backToCategories" class="flex h-10 w-10 items-center justify-center rounded-xl border border-outline-variant/60 bg-white hover:bg-primary/5 transition text-on-surface-variant cursor-pointer">
-                                <i class="ti ti-arrow-left text-lg"></i>
-                            </button>
-                            <nav class="text-sm font-medium text-on-surface-variant flex items-center gap-1.5">
-                                <span>Kategori</span>
-                                <span class="text-outline-variant">/</span>
-                                <strong class="text-primary font-bold">{{ $selectedCategory?->full_name }}</strong>
-                            </nav>
+                        <div class="flex items-center justify-between flex-wrap gap-3 mb-6">
+                            <div class="flex items-center gap-3">
+                                <button wire:click="backToCategories" class="flex h-10 w-10 items-center justify-center rounded-xl border border-outline-variant/60 bg-white hover:bg-primary/5 transition text-on-surface-variant cursor-pointer">
+                                    <i class="ti ti-arrow-left text-lg"></i>
+                                </button>
+                                <nav class="text-sm font-medium text-on-surface-variant flex items-center gap-1.5">
+                                    <span>Kategori</span>
+                                    <span class="text-outline-variant">/</span>
+                                    <strong class="text-primary font-bold">{{ $selectedCategory?->full_name }}</strong>
+                                </nav>
+                            </div>
+                            @if($eventner->vote_active && $eventner->vote_end && \Carbon\Carbon::parse($eventner->vote_end)->isFuture())
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-on-surface-variant bg-surface-container-low px-3 py-1.5 rounded-full border border-outline-variant/40">
+                                    <i class="ti ti-clock-hour-4 text-primary"></i>
+                                    <span>Batas Vote: <strong class="text-deep-slate">{{ \Carbon\Carbon::parse($eventner->vote_end)->translatedFormat('d M Y, H:i') }} WIB</strong></span>
+                                </span>
+                            @endif
                         </div>
 
                         {{-- ========== VOTE LEADERBOARD PODIUM (Juara 1-3) ========== --}}

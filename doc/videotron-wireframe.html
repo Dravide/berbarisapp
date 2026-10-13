@@ -1,0 +1,375 @@
+<title>Videotron Display Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: dokumen spesifikasi — tiap mode satu slide, wireframe 16:9 di kiri, anotasi di kanan. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --amber:#b45309; --amber-soft:#fef3c7;
+  --green:#15803d; --green-soft:#dcfce7;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --amber:#fbbf24; --amber-soft:#3a2b08;
+    --green:#4ade80; --green-soft:#0c2a18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --amber:#fbbf24; --amber-soft:#3a2b08;
+  --green:#4ade80; --green-soft:#0c2a18;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:clamp(28px,5vw,56px)}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:70ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap}
+.chip b{color:var(--ink);font-weight:600}
+
+/* Slide */
+.slide{margin-top:clamp(36px,6vw,64px)}
+.slide-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.slide-head h2{font-size:20px;font-weight:700}
+.mode-tag{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.slide-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:900px){.slide-grid{grid-template-columns:1fr}}
+
+/* Bingkai layar videotron 16:9 */
+.tv{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:10px;box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.tv-inner{
+  aspect-ratio:16/9;border-radius:8px;border:1px solid var(--line);
+  background:#0a0d1a;color:#fff;overflow:hidden;position:relative;
+  font-size:11px;display:flex;flex-direction:column;
+}
+.tv-light .tv-inner{background:#f1f5f9;color:#191c1d}
+.wf{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+.ph{background:var(--ph-fill);border:1px solid var(--ph-line);border-radius:6px}
+.tv-cap{font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 4px 2px;display:flex;justify-content:space-between;gap:8px}
+
+/* Anotasi */
+.notes{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.notes h3{font-size:14px;margin-bottom:8px}
+.notes ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.notes li{font-size:13.5px;color:var(--muted)}
+.notes li b{color:var(--ink);font-weight:600}
+.notes code{background:var(--panel-2);border:1px solid var(--line-soft);padding:1px 5px;border-radius:5px}
+
+/* Tabel ringkas di anotasi */
+table.mini{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+table.mini th{font-family:var(--mono);font-weight:500;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;color:var(--muted);text-align:left;padding:4px 8px;border-bottom:1px solid var(--line)}
+table.mini td{padding:5px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table.mini tr:last-child td{border-bottom:0}
+
+/* Elemen wireframe umum (di dalam tv-inner) */
+.tv .hd{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.07);flex:none}
+.tv .logo{width:22px;height:22px;border-radius:6px}
+.tv .tt{font-weight:700;font-size:12px}
+.tv .sub{font-size:9px;opacity:.45}
+.tv .clock{margin-left:auto;font-family:var(--mono);font-size:11px;opacity:.7}
+.tv .live{display:inline-flex;align-items:center;gap:4px;font-size:8.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:rgba(239,68,68,.14);color:#f87171}
+.tv .live i{width:5px;height:5px;border-radius:99px;background:#ef4444;display:inline-block}
+.tv .ft{margin-top:auto;display:flex;align-items:center;gap:10px;padding:6px 14px;border-top:1px solid rgba(255,255,255,.07);font-size:9px;opacity:.5;flex:none}
+.marq{flex:1;white-space:nowrap;overflow:hidden}
+.big{font-weight:800;letter-spacing:-.02em}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.row{display:flex;align-items:center;gap:8px}
+.rank{width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex:none}
+.r1{background:#f59e0b;color:#231a02}
+.r2{background:#94a3b8;color:#101418}
+.r3{background:#38bdf8;color:#06202e}
+.rn{background:rgba(255,255,255,.06);color:rgba(255,255,255,.55)}
+.bar{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,rgba(112,156,255,.14),transparent)}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Berbaris App — Spesifikasi &amp; Wireframe</p>
+  <h1>Videotron Display</h1>
+  <p class="lede">Layar big-screen di venue yang ditampilkan <b>langsung</b> — bukan overlay OBS yang dikomposit di atas video. Satu URL per event, beberapa mode konten, bisa dikendalikan lewat parameter URL atau diputar otomatis (loop) tanpa operator. Dirancang untuk jarak pandang jauh: tipografi besar, kontras tinggi, satu ide per layar.</p>
+  <div class="meta">
+    <span class="chip">URL <b>/event/{slug}/videotron</b> · subdomain <b>/videotron</b></span>
+    <span class="chip">Layar <b>16:9, fit-to-screen</b></span>
+    <span class="chip">Refresh <b>wire:poll 15–30 dtk</b></span>
+    <span class="chip">Tanpa <b>migrasi DB baru</b></span>
+  </div>
+
+  <!-- ============ MODE 1: WELCOME ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>1 · Welcome (default)</h2><span class="mode-tag">?mode=welcome</span></div>
+    <div class="slide-grid">
+      <div class="tv tv-light">
+        <div class="tv-inner">
+          <div class="wf" style="align-items:center;justify-content:center;gap:14px;text-align:center">
+            <div class="ph" style="width:84px;height:84px;border-radius:20px;background:#fff;border-color:#c2c6d9"></div>
+            <div>
+              <div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);font-weight:700">Selamat Datang</div>
+              <div class="big" style="font-size:26px;color:#191c1d">FESTIVAL SENI SMA 2026</div>
+              <div style="font-size:10px;color:#737687">Gedung Konvensi Jakarta · 12 Juli 2026</div>
+            </div>
+            <div class="num" style="font-size:15px;color:#191c1d">09:41:26</div>
+          </div>
+          <div class="ft" style="border-top:1px solid #c2c6d9;background:#fff">
+            <div class="marq">Dipersembahkan oleh <b>PT Maju Berkah</b> &nbsp;✦&nbsp; Media Partner <b>Harian Kita</b></div>
+          </div>
+        </div>
+        <div class="tv-cap"><span>Idle di sela-sela sesi / sebelum event mulai</span><span>Terang, ramah venue</span></div>
+      </div>
+      <div class="notes">
+        <h3>Isi</h3>
+        <ul>
+          <li>Logo + nama event + venue/tanggal dari <code>eventners</code>.</li>
+          <li>Jam berjalan (sudah ada pola Alpine <code>clock</code> di overlay).</li>
+          <li>Marquee bawah: sponsor &amp; medpart dari <code>landing_partners</code> (platform) + <code>sponsors</code> (event) — gabung, tanpa duplikat.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODE 2: DRAWING ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>2 · Urutan Tampil (Drawing)</h2><span class="mode-tag">?mode=drawing</span></div>
+    <div class="slide-grid">
+      <div class="tv">
+        <div class="tv-inner">
+          <div class="hd">
+            <span class="live"><i></i>Berlangsung</span>
+            <div><div class="tt">Urutan Tampil</div><div class="sub">Tingkat: Tari Tradisional — Grup A</div></div>
+            <div class="num clock">17 kontingen</div>
+          </div>
+          <div style="flex:1;padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;align-content:start">
+            <!-- 6 baris contoh; kolom kanan 2 -->
+            <div class="row ph" style="background:var(--accent-soft);border-color:var(--accent);padding:5px 8px"><span class="rank r1">4</span><b style="flex:1;color:var(--ink)">SMA Negeri 1 Semarang</b><span class="num" style="color:var(--muted)">berikutnya</span></div>
+            <div class="row" style="padding:5px 8px"><span class="rank rn">5</span><span style="flex:1;opacity:.75">MTs Persis Tarogong</span></div>
+            <div class="row" style="padding:5px 8px"><span class="rank rn">6</span><span style="flex:1;opacity:.75">SMA Cendana Karawaci</span></div>
+            <div class="row" style="padding:5px 8px"><span class="rank rn">7</span><span style="flex:1;opacity:.75">SMK Bina Karya</span></div>
+            <div class="row" style="padding:5px 8px"><span class="rank rn">8</span><span style="flex:1;opacity:.75">SMA Krakatau Steel</span></div>
+            <div class="row" style="padding:5px 8px"><span class="rank rn">9</span><span style="flex:1;opacity:.75">MA Al Hikmah</span></div>
+          </div>
+          <div class="ft"><div class="marq">Selesai: 1 SMA Harapan Bangsa &nbsp;·&nbsp; 2 SMA Tunas Bangsa &nbsp;·&nbsp; 3 SMP Nusantara</div></div>
+        </div>
+        <div class="tv-cap"><span>Saat lomba berjalan — peserta tahu kapan giliran</span><span>Highlight baris berikutnya</span></div>
+      </div>
+      <div class="notes">
+        <h3>Isi</h3>
+        <ul>
+          <li>Skop per <b>tingkat + grup</b> lewat URL (<code>?category=</code>, <code>?group=</code>) — sama seperti overlay per kategori.</li>
+          <li>Data: <code>registrations</code> urut <code>urutan_tampil</code> (pol <code>Drawing\Results</code>); 3 selesai → footer.</li>
+          <li>Operator menandai posisi lewat halaman drawing yang sudah ada; videotron hanya membaca.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODE 3: VOTE ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>3 · Klasemen Vote</h2><span class="mode-tag">?mode=vote</span></div>
+    <div class="slide-grid">
+      <div class="tv">
+        <div class="tv-inner">
+          <div class="hd">
+            <span class="live"><i></i>Live</span>
+            <div><div class="tt">Klasemen Vote</div><div class="sub">Seluruh tingkat</div></div>
+            <div class="num clock">Total 12.480 ♥</div>
+          </div>
+          <div style="flex:1;display:flex;gap:12px;padding:10px 14px;min-height:0">
+            <!-- Podium kiri -->
+            <div style="flex:1.2;display:flex;align-items:flex-end;justify-content:center;gap:10px">
+              <div style="text-align:center;flex:1"><div class="ph" style="width:44px;height:44px;border-radius:99px;margin:0 auto 4px"></div><div style="font-size:9px;opacity:.7;line-height:1.2">SMA Tunas<br>Bangsa</div><div class="num" style="color:#94a3b8;font-weight:700">2.140</div><div class="ph" style="height:52px;border-top:2px solid #94a3b8;margin-top:3px;border-bottom:0"></div></div>
+              <div style="text-align:center;flex:1"><div class="ph" style="width:58px;height:58px;border-radius:99px;margin:0 auto 4px;border-width:2px"></div><div style="font-size:10px;font-weight:700;line-height:1.2">SMA Harapan<br>Bangsa</div><div class="num" style="color:#f59e0b;font-weight:700">3.862</div><div class="ph" style="height:80px;border-top:2px solid #f59e0b;margin-top:3px;border-bottom:0"></div></div>
+              <div style="text-align:center;flex:1"><div class="ph" style="width:44px;height:44px;border-radius:99px;margin:0 auto 4px"></div><div style="font-size:9px;opacity:.7;line-height:1.2">SMP<br>Nusantara</div><div class="num" style="color:#38bdf8;font-weight:700">1.905</div><div class="ph" style="height:40px;border-top:2px solid #38bdf8;margin-top:3px;border-bottom:0"></div></div>
+            </div>
+            <!-- Rank 4+ kanan -->
+            <div style="flex:1;display:flex;flex-direction:column;gap:5px;justify-content:center">
+              <div class="row" style="position:relative;padding:5px 8px;border:1px solid rgba(255,255,255,.06);border-radius:8px"><span class="bar" style="width:62%"></span><span class="rank rn">4</span><span style="flex:1;font-size:10px;opacity:.8">SMA Cendana Karawaci</span><span class="num">1.204</span></div>
+              <div class="row" style="position:relative;padding:5px 8px;border:1px solid rgba(255,255,255,.06);border-radius:8px"><span class="bar" style="width:48%"></span><span class="rank rn">5</span><span style="flex:1;font-size:10px;opacity:.8">SMK Bina Karya</span><span class="num">934</span></div>
+              <div class="row" style="position:relative;padding:5px 8px;border:1px solid rgba(255,255,255,.06);border-radius:8px"><span class="bar" style="width:31%"></span><span class="rank rn">6</span><span style="flex:1;font-size:10px;opacity:.8">MTs Persis Tarogong</span><span class="num">611</span></div>
+            </div>
+          </div>
+          <div class="ft"><div class="marq">Vote via QR di tiket Anda — 1 suara = 1 dukungan</div><span>Powered by Berbaris</span></div>
+        </div>
+        <div class="tv-cap"><span>Saat periode voting dibuka</span><span>Data & poling sama dengan overlay vote</span></div>
+      </div>
+      <div class="notes">
+        <h3>Isi</h3>
+        <ul>
+          <li>Top 10 <code>registrations</code> + <code>voteTransactions</code> PAID — salin <code>loadVoteData()</code>.</li>
+          <li>Opsional <code>?category=</code> untuk skop satu tingkat (podium kategori).</li>
+          <li>Footer: ajakan vote; bisa tampilkan QR statis (generate <code>chillerlan/php-qrcode</code>, sudah ada).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODE 4: CHAMPION ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>4 · Pengumuman Juara</h2><span class="mode-tag">?mode=champion</span></div>
+    <div class="slide-grid">
+      <div class="tv">
+        <div class="tv-inner">
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center">
+            <div style="font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:#f59e0b;font-weight:700">🏆 Kategori Juara · Tari Tradisional</div>
+            <div class="big" style="font-size:30px">JUARA UTAMA</div>
+            <div class="ph" style="width:64px;height:64px;border-radius:99px"></div>
+            <div class="big" style="font-size:20px">SMA Harapan Bangsa</div>
+            <div class="num" style="font-size:12px;opacity:.55">Nilai Final 94.25</div>
+          </div>
+          <div style="display:flex;gap:8px;padding:0 14px 12px">
+            <div class="ph" style="flex:1;padding:6px;text-align:center"><span class="rank r2" style="margin:0 auto 3px">2</span><div style="font-size:9px;opacity:.75">SMA Tunas Bangsa</div></div>
+            <div class="ph" style="flex:1;padding:6px;text-align:center"><span class="rank r3" style="margin:0 auto 3px">3</span><div style="font-size:9px;opacity:.75">SMP Nusantara</div></div>
+          </div>
+          <div class="ft"><div class="marq">Rekap lengkap: hasil.berbaris.app</div></div>
+        </div>
+        <div class="tv-cap"><span>Momen puncak — satu kategori per layar</span><span>Gelar dari rankTitles, sama dgn /hasil</span></div>
+      </div>
+      <div class="notes">
+        <h3>Isi</h3>
+        <ul>
+          <li>Pakai hasil <code>ChampionCalculator</code> (sumber sama dengan <code>/champions</code>, sudah ter-cache).</li>
+          <li>URL: <code>?championCategory=</code> pilih kategori; operator buka satu tab per kategori atau pakai mode loop.</li>
+          <li>Hanya kategori <code>is_public</code> yang tampil.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODE 5: RUNDOWN ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>5 · Rundown / Agenda</h2><span class="mode-tag">?mode=rundown</span></div>
+    <div class="slide-grid">
+      <div class="tv">
+        <div class="tv-inner">
+          <div class="hd"><div><div class="tt">Agenda Hari Ini</div><div class="sub">Sabtu, 12 Juli 2026</div></div><div class="clock">09:41</div></div>
+          <div style="flex:1;padding:10px 14px;display:flex;flex-direction:column;gap:5px;justify-content:center">
+            <div class="row" style="opacity:.45"><span class="num" style="width:64px">08.00</span><span style="flex:1">Registrasi &amp; technical meeting</span><span>✓</span></div>
+            <div class="row" style="background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:6px 8px;color:var(--ink)"><span class="num" style="width:64px;font-weight:700">09.00</span><b style="flex:1">Babak Penyisihan — Tari Tradisional</b><span class="live" style="flex:none"><i></i>Sekarang</span></div>
+            <div class="row"><span class="num" style="width:64px;opacity:.75">13.00</span><span style="flex:1;opacity:.75">Istirahat &amp; ishoma</span></div>
+            <div class="row"><span class="num" style="width:64px;opacity:.75">14.00</span><span style="flex:1;opacity:.75">Babak Final + pembagian nilai</span></div>
+            <div class="row"><span class="num" style="width:64px;opacity:.75">17.00</span><span style="flex:1;opacity:.75">Pengumuman juara &amp; penutupan</span></div>
+          </div>
+          <div class="ft"><div class="marq">Lokasi panggung: Ballroom A</div></div>
+        </div>
+        <div class="tv-cap"><span>Sesi transisi / antar babak</span><span>Baris aktif auto dari jam</span></div>
+      </div>
+      <div class="notes">
+        <h3>Isi</h3>
+        <ul>
+          <li>Data <code>eventRundowns</code> (title, start_time) — sudah ada relasinya.</li>
+          <li>Baris <b>Sekarang</b> ditentukan dari jam server vs <code>start_time</code>; tanpa input operator.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODE 6: SPONSOR ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>6 · Sponsor</h2><span class="mode-tag">?mode=sponsor</span></div>
+    <div class="slide-grid">
+      <div class="tv tv-light">
+        <div class="tv-inner">
+          <div style="flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px 20px;place-content:center">
+            <div class="ph" style="height:74px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700">PT Maju Berkah</div>
+            <div class="ph" style="height:74px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700">Bank Sejahtera</div>
+            <div class="ph" style="height:74px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700">Harian Kita</div>
+            <div class="ph" style="height:74px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700">Logo Sponsor 4</div>
+            <div class="ph" style="height:74px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700">Logo Medpart 1</div>
+            <div class="ph" style="height:74px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:700">Logo Medpart 2</div>
+          </div>
+          <div class="ft" style="border-top:1px solid #c2c6d9"><div class="marq">Terima kasih kepada seluruh sponsor &amp; media partner</div></div>
+        </div>
+        <div class="tv-cap"><span>Sesi sponsor — kewajiban kontrak sponsor</span><span>Logo asli dari storage</span></div>
+      </div>
+      <div class="notes">
+        <h3>Isi</h3>
+        <ul>
+          <li>Grid logo: <code>landing_partners</code> + <code>sponsors</code> event, aktif, urut <code>sort_order</code>.</li>
+          <li>Tanpa logo → tampil nama; section kosong → fallback ke welcome.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MODE 7: LOOP + PANEL ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>7 · Auto-loop &amp; Panel kendali</h2><span class="mode-tag">?mode=loop</span></div>
+    <div class="slide-grid">
+      <div class="tv">
+        <div class="tv-inner">
+          <div class="hd"><span class="live"><i></i>Loop</span><div><div class="tt">FESTIVAL SENI SMA 2026</div></div><div class="num clock">09:41</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px">
+            <div style="font-size:9px;letter-spacing:.18em;text-transform:uppercase;opacity:.4">Sedang menampilkan</div>
+            <div class="big" style="font-size:18px">Klasemen Vote <span class="num" style="opacity:.5">(2/6)</span></div>
+            <div style="display:flex;gap:5px;margin-top:6px">
+              <span class="ph" style="width:26px;height:4px;opacity:.35"></span>
+              <span class="ph" style="width:26px;height:4px;background:var(--accent);border-color:var(--accent)"></span>
+              <span class="ph" style="width:26px;height:4px"></span>
+              <span class="ph" style="width:26px;height:4px"></span>
+              <span class="ph" style="width:26px;height:4px"></span>
+              <span class="ph" style="width:26px;height:4px"></span>
+            </div>
+            <div class="num" style="font-size:9px;opacity:.4">ganti otomatis 30 dtk</div>
+          </div>
+          <div class="ft"><div class="marq">FESTIVAL SENI SMA 2026 &nbsp;✦&nbsp; venue, jam, sponsor…</div></div>
+        </div>
+        <div class="tv-cap"><span>TV venue tanpa operator — putar semua mode</span><span>Urutan &amp; durasi via setting</span></div>
+      </div>
+      <div class="notes">
+        <h3>Panel kendali</h3>
+        <ul>
+          <li>Kartu baru di <code>/eventner/livestream</code>: daftar URL videotron + tombol salin (pola URL preview yang sudah ada).</li>
+          <li>Mode loop: urutan mode + durasi disimpan di <code>settings</code> (<code>videotron_{slug}</code>), default 30 dtk, welcome→vote→rundown→sponsor.</li>
+          <li>Mode tunggal = tautan langsung per mode (seperti preset overlay).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RENCANA TEKNIS ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>Rencana implementasi</h2></div>
+    <div class="slide-grid" style="grid-template-columns:1fr">
+      <div class="notes">
+        <table class="mini">
+          <tr><th style="width:180px">Bagian</th><th>Rencana</th></tr>
+          <tr><td><b>Route</b></td><td><code>web.php</code>: <code>get('/event/{slug}/videotron', VideotronDisplay::class)</code> → <code>event.videotron</code>; <code>subdomain.php</code>: <code>get('/videotron', ...)</code> → <code>subdomain.videotron</code>.</td></tr>
+          <tr><td><b>Layout</b></td><td><code>layouts.videotron</code> — turun pola <code>layouts.livestream</code> (1920×1080 + scale fit, font & warna tema event, noindex), tapi <b>tanpa</b> asumsi chroma key: latar gelap/terang penuh.</td></tr>
+          <tr><td><b>Komponen</b></td><td><code>App\Livewire\Public\VideotronDisplay</code> — <code>#[Layout('layouts.videotron')]</code>, queryString <code>mode, category, group, championCategory</code>; satu metode <code>refreshData()</code> di-<code>wire:poll.15s</code> (vote) / 30s (lainnya).</td></tr>
+          <tr><td><b>Mode</b></td><td><code>welcome, drawing, vote, champion, rundown, sponsor, loop</code> — konstanta <code>allowedModes</code>, fallback <code>welcome</code>.</td></tr>
+          <tr><td><b>Data</b></td><td>Semua sumber sudah ada: <code>registrations.urutan_tampil</code>, <code>voteTransactions</code>, <code>ChampionCalculator</code> (+cache 300 dtk), <code>eventRundowns</code>, <code>landing_partners</code> + <code>sponsors</code>. <b>Tidak ada migrasi baru.</b></td></tr>
+          <tr><td><b>Loop setting</b></td><td><code>Setting::set('videotron_{eventner_id}', json_encode([urutan mode, durasi]))</code> — diatur dari panel eventner.</td></tr>
+          <tr><td><b>Panel</b></td><td>Kartu "Videotron" di <code>livestream/manage.blade.php</code>: URL per mode + salin, satu form kecil urutan/durasi loop.</td></tr>
+          <tr><td><b>Test</b></td><td><code>tests/Feature/VideotronDisplayTest.php</code>: tiap mode render datanya; mode invalid → welcome; champion hanya <code>is_public</code>; route terlarang untuk tamu bila event draft; sponsor kosong → fallback welcome.</td></tr>
+          <tr><td><b>Urutan kerja</b></td><td>1) Komponen + layout + route, 2) mode welcome/drawing/vote, 3) champion/rundown/sponsor, 4) loop + panel, 5) test + suite penuh.</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
