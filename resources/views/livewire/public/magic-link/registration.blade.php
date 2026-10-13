@@ -9,101 +9,105 @@
         </style>
     @endpush
 
-    {{-- ========== COVER BANNER / FALLBACK GRADIENT ========== --}}
-    <div class="container-landing pt-6">
-        @if($registration->eventner->header_banner)
-            <div class="relative w-full aspect-[21/9] md:aspect-[3/1] rounded-2xl overflow-hidden shadow-md border border-outline-variant/30 bg-black/5">
-                <img src="{{ asset('storage/' . $registration->eventner->header_banner) }}" alt="Banner {{ $registration->eventner->nama_event }}" class="w-full h-full object-cover">
-            </div>
-        @else
-            <div class="relative overflow-hidden bg-gradient-to-br from-primary via-[#0053da] to-tertiary rounded-2xl h-36 md:h-48">
-                {{-- Decorative light orbs --}}
-                <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
-                <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
-            </div>
-        @endif
-    </div>
-
-    {{-- ========== HEADER INFO BLOCK ========== --}}
-    <div class="container-landing pt-6">
-        <div class="grid gap-6 md:grid-cols-3 items-center">
-            {{-- Logo & Title --}}
-            <div class="md:col-span-2 flex items-start gap-4">
-                @if($registration->eventner->logo_event)
-                    <img src="{{ asset('storage/' . $registration->eventner->logo_event) }}" class="h-16 w-16 md:h-20 md:w-20 rounded-2xl object-cover shadow-sm border border-outline-variant/30 shrink-0" alt="{{ $registration->eventner->nama_event }}">
-                @else
-                    <div class="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-outline-variant/30 shrink-0">
-                        <i class="ti ti-calendar-event text-3xl"></i>
-                    </div>
-                @endif
-                <div class="min-w-0">
-                    <span class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/20 mb-2">
-                        <i class="ti ti-link"></i>
-                        Portal Pendaftaran Mandiri
-                    </span>
-                    <h1 class="font-display text-2xl font-extrabold tracking-tight text-deep-slate leading-tight sm:text-3xl">
-                        Kelola Pendaftaran Kontingen
-                    </h1>
-                    <p class="mt-2 text-sm font-semibold text-on-surface-variant">
-                        Event: <span class="text-primary font-bold">{{ $registration->eventner->nama_event }}</span>
-                    </p>
-                </div>
-            </div>
-
-            {{-- School Details Box --}}
-            <div class="md:col-span-1">
-                <div class="surface-card p-4 border border-outline-variant/40 bg-white text-xs font-semibold">
-                    <div class="flex justify-between items-center mb-2 pb-2 border-b border-outline-variant/30">
-                        <span class="text-on-surface-variant">{{ $this->labelSumber('nama_sekolah') ?? 'Sekolah' }}</span>
-                        <span class="text-deep-slate font-bold text-right truncate max-w-[150px]">{{ $registration->display_name }}</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="text-on-surface-variant">{{ $this->labelSumber('npsn') ?? \App\Models\RegistrationField::SECTIONS['umum'] }}</span>
-                        <span class="text-deep-slate font-bold font-mono text-right">{{ $registration->npsn }}</span>
-                    </div>
+    {{-- ========== BANNER (JIKA ADA DARI PENYELENGGARA) ========== --}}
+    @if($registration->eventner->header_banner)
+        <div class="container-landing pt-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="relative w-full aspect-[21/9] md:aspect-[3/1] rounded-2xl overflow-hidden shadow-xs border border-outline-variant/30 bg-black/5">
+                    <img src="{{ asset('storage/' . $registration->eventner->header_banner) }}" alt="Banner {{ $registration->eventner->nama_event }}" class="w-full h-full object-cover">
                 </div>
             </div>
         </div>
-    </div>
+    @endif
 
-    {{-- ========== SHARE LINK BAR ========== --}}
-    <div class="container-landing pt-4">
+    {{-- ========== HEADER PORTAL KONTINGEN ========== --}}
+    <div class="container-landing pt-6">
         <div class="max-w-4xl mx-auto">
-            <div class="surface-card p-3 flex items-center justify-between gap-3 border border-outline-variant/30">
-                <div class="flex items-center gap-2 min-w-0 flex-1">
-                    <i class="ti ti-link text-primary shrink-0"></i>
-                    <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider hidden sm:inline">Link Portal:</span>
-                    <input type="text" value="{{ $portalUrl }}" readonly class="w-full bg-transparent border-0 text-sm font-mono text-deep-slate outline-none truncate min-w-0" onclick="this.select()">
+            <div class="surface-card p-5 md:p-6">
+                {{-- Baris 1: Identitas & Status --}}
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-outline-variant/30">
+                    <div class="flex items-center gap-3.5 min-w-0">
+                        @if($registration->logo_sekolah)
+                            <img src="{{ asset('storage/' . $registration->logo_sekolah) }}" alt="{{ $registration->nama_sekolah }}" class="h-12 w-12 rounded-xl object-cover border border-outline-variant/30 shrink-0 shadow-xs">
+                        @elseif($registration->eventner->logo_event)
+                            <img src="{{ asset('storage/' . $registration->eventner->logo_event) }}" alt="{{ $registration->eventner->nama_event }}" class="h-12 w-12 rounded-xl object-cover border border-outline-variant/30 shrink-0 shadow-xs">
+                        @else
+                            <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shrink-0">
+                                <i class="ti ti-school text-2xl"></i>
+                            </div>
+                        @endif
+                        <div class="min-w-0">
+                            <span class="text-[11px] font-bold uppercase tracking-wider text-primary block">Portal Kontingen</span>
+                            <h1 class="font-display text-lg sm:text-xl font-bold text-deep-slate m-0 truncate leading-tight">
+                                {{ $registration->display_name }}
+                            </h1>
+                            <p class="text-xs text-on-surface-variant font-medium m-0 mt-0.5">
+                                Event: <strong class="text-deep-slate">{{ $registration->eventner->nama_event }}</strong>
+                                &middot; {{ $registration->competitionCategory->full_name }}
+                            </p>
+                        </div>
+                    </div>
+
+                    {{-- Status Badge --}}
+                    @php
+                        $statusConfig = [
+                            'booking' => ['bg-amber-500/10 text-amber-700 border-amber-500/30', 'ti-clock', 'Booking Slot'],
+                            'confirmed' => ['bg-blue-500/10 text-blue-700 border-blue-500/30', 'ti-send', 'Menunggu Verifikasi'],
+                            'Terverifikasi' => ['bg-emerald-500/10 text-emerald-700 border-emerald-500/30', 'ti-circle-check', 'Terverifikasi'],
+                            'Ditolak' => ['bg-red-500/10 text-red-700 border-red-500/30', 'ti-alert-triangle', 'Perlu Revisi'],
+                        ];
+                        $sc = $statusConfig[$registration->status_berkas] ?? $statusConfig['booking'];
+                    @endphp
+                    <div class="shrink-0 self-start sm:self-center">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border {{ $sc[0] }}">
+                            <i class="ti {{ $sc[1] }} text-sm"></i>
+                            <span>{{ $sc[2] }}</span>
+                        </span>
+                    </div>
                 </div>
-                <div x-data="{ copied: false }">
-                    <button type="button" x-on:click="navigator.clipboard.writeText('{{ $portalUrl }}').then(() => { copied = true; setTimeout(() => copied = false, 2000); })" class="btn-secondary py-1.5 px-3 text-xs font-bold leading-none whitespace-nowrap flex items-center gap-1.5">
-                        <template x-if="!copied"><i class="ti ti-copy"></i></template>
-                        <template x-if="copied"><i class="ti ti-check"></i></template>
-                        <span x-text="copied ? 'Tersalin' : 'Salin'">Salin</span>
-                    </button>
+
+                {{-- Baris 2: Link Akses & NPSN --}}
+                <div class="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div class="flex items-center gap-2 min-w-0 flex-1 bg-surface-container-low px-3 py-2 rounded-xl border border-outline-variant/30">
+                        <i class="ti ti-link text-primary shrink-0"></i>
+                        <span class="text-[11px] font-bold text-on-surface-variant shrink-0">Link Portal:</span>
+                        <input type="text" value="{{ $portalUrl }}" readonly class="w-full bg-transparent border-0 text-xs font-mono text-deep-slate outline-none truncate" onclick="this.select()">
+                        <div x-data="{ copied: false }" class="shrink-0">
+                            <button type="button" x-on:click="navigator.clipboard.writeText('{{ $portalUrl }}').then(() => { copied = true; setTimeout(() => copied = false, 2000); })" class="btn-ghost py-1 px-2.5 text-[11px] font-bold leading-normal inline-flex items-center gap-1 cursor-pointer">
+                                <i class="ti" :class="copied ? 'ti-check' : 'ti-copy'"></i>
+                                <span x-text="copied ? 'Tersalin' : 'Salin'">Salin</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    @if($registration->npsn)
+                        <div class="shrink-0 text-on-surface-variant font-medium text-xs sm:text-right">
+                            NPSN: <strong class="font-mono text-deep-slate">{{ $registration->npsn }}</strong>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
 
     {{-- ========== MAIN CONTENT PORTAL ========== --}}
-    <div class="container-landing py-8">
-        <div class="max-w-4xl mx-auto flex flex-col gap-6">
+    <div class="container-landing py-6">
+        <div class="max-w-4xl mx-auto flex flex-col gap-5">
 
             {{-- Flash Messages --}}
             @if(session()->has('success'))
-                <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 text-sm font-semibold flex items-center justify-between">
+                <div class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs font-semibold flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <i class="ti ti-circle-check text-lg"></i>
+                        <i class="ti ti-circle-check text-base"></i>
                         <span>{{ session('success') }}</span>
                     </div>
                 </div>
             @endif
 
             @if(session()->has('error'))
-                <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-sm font-semibold flex items-center justify-between">
+                <div class="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-xs font-semibold flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <i class="ti ti-alert-circle text-lg"></i>
+                        <i class="ti ti-alert-circle text-base"></i>
                         <span>{{ session('error') }}</span>
                     </div>
                 </div>
@@ -111,46 +115,11 @@
 
             {{-- Booking mode banner --}}
             @if(($registration->eventner->registration_status ?? 'open') == 'booking')
-                <div class="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-600 text-xs font-semibold flex gap-2.5 leading-normal">
-                    <i class="ti ti-info-circle text-lg shrink-0 mt-0.5"></i>
-                    <div>
-                        <p class="font-bold text-blue-800 m-0">Mode Booking Aktif</p>
-                        <p class="text-on-surface-variant font-medium mt-1 mb-0">
-                            Saat ini pendaftaran hanya diperbolehkan untuk memesan slot (Booking). Pengisian data pasukan akan dibuka oleh panitia setelah masa pendaftaran resmi dibuka.
-                        </p>
-                    </div>
+                <div class="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-900 text-xs font-medium flex items-center gap-2">
+                    <i class="ti ti-info-circle text-base text-blue-600 shrink-0"></i>
+                    <span>Mode Booking Aktif: slot telah dipesan. Pengisian dan verifikasi lengkap data pasukan dibuka oleh panitia setelah masa booking selesai.</span>
                 </div>
             @endif
-
-            {{-- Status Badge Card --}}
-            @php
-                $statusConfig = [
-                    'booking' => ['bg-amber-500/10', 'text-amber-600', 'border-amber-500/20', 'ti-clock', 'Booking'],
-                    'confirmed' => ['bg-blue-500/10', 'text-blue-600', 'border-blue-500/20', 'ti-send', 'Menunggu Verifikasi'],
-                    'Terverifikasi' => ['bg-emerald-500/10', 'text-emerald-600', 'border-emerald-500/20', 'ti-circle-check', 'Terverifikasi'],
-                    'Ditolak' => ['bg-red-500/10', 'text-red-600', 'border-red-500/20', 'ti-alert-triangle', 'Ditolak — Perlu Revisi'],
-                ];
-                $sc = $statusConfig[$registration->status_berkas] ?? $statusConfig['booking'];
-            @endphp
-            <div class="surface-card p-5 border {{ $sc[2] }} flex items-center gap-4">
-                <div class="flex h-12 w-12 items-center justify-center rounded-full {{ $sc[0] }} {{ $sc[1] }} shrink-0">
-                    <i class="ti {{ $sc[3] }} text-2xl"></i>
-                </div>
-                <div>
-                    <h3 class="font-display text-base font-bold text-deep-slate leading-tight mb-1">{{ $sc[4] }}</h3>
-                    <p class="text-xs text-on-surface-variant leading-relaxed m-0 font-medium">
-                        @if($registration->status_berkas === 'booking')
-                            Slot Anda sudah dipesan. Siapkan data dan berkas pasukan sebelum pengisian dibuka oleh panitia.
-                        @elseif($registration->status_berkas === 'confirmed')
-                            Data telah dikirim ke panitia. Menunggu verifikasi.
-                        @elseif($registration->status_berkas === 'Terverifikasi')
-                            Pendaftaran Anda telah disetujui panitia. Sampai jumpa di hari perlombaan!
-                        @elseif($registration->status_berkas === 'Ditolak')
-                            Ada berkas/data yang perlu diperbaiki. Silakan revisi dan kirim ulang.
-                        @endif
-                    </p>
-                </div>
-            </div>
 
             {{-- Verified Only: Score & Vote Recap --}}
             @if($registration->status_berkas === 'Terverifikasi')
@@ -1202,17 +1171,17 @@
 
                         {{-- Action Buttons --}}
                         @if(!$isLocked)
-                            <div class="flex flex-wrap gap-3 justify-center mt-8">
-                                <button type="submit" class="btn-ghost py-3.5 px-6 font-bold text-sm inline-flex items-center gap-1.5 cursor-pointer shadow-sm">
-                                    <i class="ti ti-save"></i> Simpan Draft
+                            <div class="flex flex-wrap gap-3 justify-center mt-6">
+                                <button type="submit" class="btn-ghost py-2.5 px-5 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer">
+                                    <i class="ti ti-device-floppy"></i> Simpan Draft
                                 </button>
 
                                 @if($registration->status_berkas === 'booking' && ($regStatus === 'open' || !$registration->eventner->technical_meeting || now()->gte($registration->eventner->technical_meeting)))
-                                    <button type="button" onclick="confirmAction()" class="btn-primary !bg-emerald-500 hover:!bg-emerald-600 !text-white border-none py-3.5 px-6 font-bold text-sm inline-flex items-center gap-1.5 cursor-pointer shadow-md hover:shadow-lg">
+                                    <button type="button" onclick="confirmAction()" class="btn-primary !bg-emerald-600 hover:!bg-emerald-700 !text-white border-none py-2.5 px-5 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-xs">
                                         <i class="ti ti-circle-check"></i> Konfirmasi &amp; Kirim
                                     </button>
                                 @elseif($registration->status_berkas !== 'booking')
-                                    <button type="button" onclick="confirmFinalization()" class="btn-primary py-3.5 px-6 font-bold text-sm inline-flex items-center gap-1.5 cursor-pointer shadow-md hover:shadow-lg">
+                                    <button type="button" onclick="confirmFinalization()" class="btn-primary py-2.5 px-5 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-xs">
                                         <i class="ti ti-send"></i> Finalisasi Data
                                     </button>
                                 @endif

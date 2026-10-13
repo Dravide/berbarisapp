@@ -1,80 +1,89 @@
 <div class="min-h-screen bg-surface">
 
-    {{-- ========== COVER BANNER / FALLBACK GRADIENT ========== --}}
-    <div class="container-landing pt-6">
-        @if($eventner->header_banner)
-            <div class="relative w-full aspect-[21/9] md:aspect-[3/1] rounded-2xl overflow-hidden shadow-md border border-outline-variant/30 bg-black/5">
+    {{-- ========== BANNER (JIKA ADA DARI PENYELENGGARA) ========== --}}
+    @if($eventner->header_banner)
+        <div class="container-landing pt-6">
+            <div class="relative w-full aspect-[21/9] md:aspect-[3/1] rounded-2xl overflow-hidden shadow-xs border border-outline-variant/30 bg-black/5">
                 <img src="{{ asset('storage/' . $eventner->header_banner) }}" alt="Banner {{ $eventner->nama_event }}" class="w-full h-full object-cover">
             </div>
-        @else
-            <div class="relative overflow-hidden bg-gradient-to-br from-primary via-[#0053da] to-tertiary rounded-2xl h-36 md:h-48">
-                {{-- Decorative light orbs --}}
-                <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
-                <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
-            </div>
-        @endif
-    </div>
+        </div>
+    @endif
 
     {{-- ========== HEADER INFO BLOCK ========== --}}
     <div class="container-landing pt-6">
-        <div class="flex items-start gap-4">
-            @if($eventner->logo_event)
-                <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="h-16 w-16 md:h-20 md:w-20 rounded-2xl object-cover shadow-sm border border-outline-variant/30 shrink-0" alt="{{ $eventner->nama_event }}">
-            @else
-                <div class="flex h-16 w-16 md:h-20 md:w-20 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-outline-variant/30 shrink-0">
-                    <i class="ti ti-calendar-event text-3xl"></i>
+        <div class="surface-card p-5 md:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-4 min-w-0">
+                @if($eventner->logo_event)
+                    <img src="{{ asset('storage/' . $eventner->logo_event) }}" class="h-14 w-14 rounded-xl object-cover border border-outline-variant/40 shrink-0 shadow-xs" alt="{{ $eventner->nama_event }}">
+                @else
+                    <div class="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 shrink-0">
+                        <i class="ti ti-flag-filled text-2xl"></i>
+                    </div>
+                @endif
+                <div class="min-w-0">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-primary block mb-0.5">
+                        Pendaftaran Kontingen
+                    </span>
+                    <h1 class="font-display text-xl sm:text-2xl font-bold text-deep-slate leading-tight m-0 truncate">
+                        {{ $eventner->nama_event }}
+                    </h1>
+                    <div class="flex flex-wrap items-center gap-3 mt-1 text-xs text-on-surface-variant font-medium">
+                        @if($eventner->tanggal_mulai)
+                            <span class="inline-flex items-center gap-1">
+                                <i class="ti ti-calendar text-primary"></i>
+                                {{ \Carbon\Carbon::parse($eventner->tanggal_mulai)->translatedFormat('d M Y') }}
+                            </span>
+                        @endif
+                        @if($eventner->lokasi)
+                            <span class="inline-flex items-center gap-1">
+                                <i class="ti ti-map-pin text-primary"></i>
+                                {{ $eventner->lokasi }}
+                            </span>
+                        @endif
+                    </div>
                 </div>
-            @endif
-            <div class="min-w-0">
-                <span class="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary border border-primary/20 mb-2">
-                    <i class="ti ti-edit"></i>
-                    Pendaftaran Kompetisi
-                </span>
-                <h1 class="font-display text-2xl font-extrabold tracking-tight text-deep-slate leading-tight sm:text-3xl">
-                    Booking Slot Pasukan
-                </h1>
-                <p class="mt-2 text-sm font-semibold text-on-surface-variant">
-                    Event: <span class="text-primary font-bold">{{ $eventner->nama_event }}</span>
-                </p>
+            </div>
+
+            <div class="shrink-0">
+                <a href="{{ event_url($eventner, 'detail') }}" class="btn-ghost py-2 px-3.5 text-xs font-semibold leading-normal inline-flex items-center gap-1.5 text-decoration-none">
+                    <i class="ti ti-arrow-left"></i> Informasi Event
+                </a>
             </div>
         </div>
     </div>
 
     {{-- ========== FLASH MESSAGES ========== --}}
     @if(session('error'))
-        <div class="container-landing pt-6">
-            <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-sm font-semibold flex items-center gap-2">
-                <i class="ti ti-alert-circle text-lg"></i>
-                {{ session('error') }}
+        <div class="container-landing pt-4">
+            <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-xs font-semibold flex items-center gap-2">
+                <i class="ti ti-alert-circle text-base"></i>
+                <span>{{ session('error') }}</span>
             </div>
         </div>
     @endif
 
     {{-- ========== PROGRESS STEPPER ========== --}}
-    <div class="container-landing pt-8 pb-4">
-        <div class="flex items-center justify-center gap-2 max-w-xl mx-auto flex-wrap">
-            @for($i = 1; $i <= 3; $i++)
-                <div class="flex items-center gap-2">
-                    <div class="h-9 w-9 rounded-full flex items-center justify-center font-bold text-sm border transition-all duration-300 {{ $step >= $i ? 'bg-primary text-white border-primary shadow-sm' : 'bg-surface-container text-on-surface-variant border-outline-variant/30' }}">
-                        @if($step > $i)
-                            <i class="ti ti-check text-base"></i>
-                        @else
-                            {{ $i }}
-                        @endif
+    @if(($eventner->registration_status ?? 'open') != 'closed')
+        <div class="container-landing pt-5 pb-2">
+            <div class="max-w-3xl mx-auto grid grid-cols-3 gap-3">
+                @php
+                    $steps = [
+                        1 => ['label' => '1. Kategori Lomba', 'desc' => 'Pilih tingkat & cabang'],
+                        2 => ['label' => '2. Data Kontingen', 'desc' => 'Identitas pangkalan'],
+                        3 => ['label' => '3. Konfirmasi', 'desc' => 'Ringkasan & booking'],
+                    ];
+                @endphp
+                @foreach($steps as $idx => $s)
+                    <div class="flex flex-col gap-1.5">
+                        <div class="h-1 rounded-full {{ $step >= $idx ? 'bg-primary' : 'bg-outline-variant/30' }} transition-colors"></div>
+                        <span class="text-xs font-bold {{ $step >= $idx ? 'text-deep-slate' : 'text-on-surface-variant/60' }} truncate text-center sm:text-left">
+                            {{ $s['label'] }}
+                        </span>
                     </div>
-                    <span class="text-xs font-bold transition-all duration-300 {{ $step >= $i ? 'text-deep-slate' : 'text-on-surface-variant' }}">
-                        @if($i == 1) Pilih Kategori
-                        @elseif($i == 2) Data Sekolah
-                        @else Konfirmasi
-                        @endif
-                    </span>
-                </div>
-                @if($i < 3)
-                    <div class="w-10 h-0.5 shrink-0 rounded transition-all duration-300 {{ $step > $i ? 'bg-primary' : 'bg-outline-variant/30' }}"></div>
-                @endif
-            @endfor
+                @endforeach
+            </div>
         </div>
-    </div>
+    @endif
 
     {{-- ========== MAIN CONTENT FORM ========== --}}
     <div class="container-landing py-6">
@@ -82,28 +91,28 @@
 
             {{-- 1. CLOSED REGISTRATION STATE --}}
             @if(($eventner->registration_status ?? 'open') == 'closed')
-                <div class="surface-card p-8 md:p-12 text-center flex flex-col items-center">
-                    <div class="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 text-red-500 border border-red-500/20 mb-6">
-                        <i class="ti ti-lock text-3xl"></i>
+                <div class="surface-card p-8 md:p-10 text-center flex flex-col items-center">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-red-500/10 text-red-500 border border-red-500/20 mb-4">
+                        <i class="ti ti-lock text-2xl"></i>
                     </div>
-                    <h2 class="font-display text-xl font-bold text-deep-slate mb-3">Pendaftaran Ditutup</h2>
-                    <p class="text-sm text-on-surface-variant leading-relaxed max-w-lg mb-8">
-                        Mohon maaf, pendaftaran slot kontingen untuk event <strong>{{ $eventner->nama_event }}</strong> saat ini telah ditutup secara resmi oleh panitia.
+                    <h2 class="font-display text-lg font-bold text-deep-slate mb-2">Pendaftaran Ditutup</h2>
+                    <p class="text-xs text-on-surface-variant leading-relaxed max-w-md mb-6 font-medium">
+                        Pendaftaran slot kontingen untuk event <strong>{{ $eventner->nama_event }}</strong> saat ini telah ditutup oleh panitia penyelenggara.
                     </p>
-                    <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                        <a href="{{ event_url($eventner, 'detail') }}" class="btn-primary py-3 px-6 text-sm font-bold text-center text-decoration-none">
+                    <div class="flex flex-wrap items-center justify-center gap-2">
+                        <a href="{{ event_url($eventner, 'detail') }}" class="btn-secondary py-2 px-4 text-xs font-bold text-decoration-none">
                             Kembali Ke Event
                         </a>
-                        <a href="{{ event_url($eventner, 'participant') }}" class="btn-ghost py-3 px-6 text-sm font-bold text-center text-decoration-none">
+                        <a href="{{ event_url($eventner, 'participant') }}" class="btn-ghost py-2 px-4 text-xs font-bold text-decoration-none">
                             Lihat Daftar Peserta
                         </a>
                     </div>
 
                     @if($eventner->link_whatsapp)
-                        <div class="mt-8 pt-6 border-t border-outline-variant/30 w-full">
-                            <span class="text-xs text-on-surface-variant block mb-2">Ada pertanyaan terkait pendaftaran?</span>
+                        <div class="mt-6 pt-5 border-t border-outline-variant/30 w-full max-w-sm">
+                            <span class="text-xs text-on-surface-variant block mb-1.5">Ada pertanyaan terkait pendaftaran?</span>
                             @php $waNumber = preg_replace('/[^0-9]/', '', $eventner->link_whatsapp); @endphp
-                            <a href="https://wa.me/{{ $waNumber }}" target="_blank" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1 text-decoration-none transition">
+                            <a href="https://wa.me/{{ $waNumber }}" target="_blank" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 inline-flex items-center gap-1 text-decoration-none">
                                 <i class="ti ti-brand-whatsapp text-sm"></i> Hubungi Panitia (WhatsApp)
                             </a>
                         </div>
@@ -114,136 +123,139 @@
                 {{-- STEP 1: Pilih Kategori --}}
                 @if($step === 1)
                     <div class="surface-card overflow-hidden">
-                        <div class="bg-surface-container px-6 py-4 border-b border-outline-variant/40">
-                            <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">
-                                <i class="ti ti-list text-primary"></i>
-                                Pilih Kategori Lomba
-                            </h3>
+                        <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40 flex items-center justify-between">
+                            <div>
+                                <h3 class="font-display text-sm font-bold text-deep-slate inline-flex items-center gap-2 m-0">
+                                    <i class="ti ti-list text-primary"></i> Pilih Kategori Lomba
+                                </h3>
+                                <p class="text-xs text-on-surface-variant font-medium m-0 mt-0.5">
+                                    Pilih tingkat terlebih dahulu, lalu centang lomba yang ingin diikuti.
+                                </p>
+                            </div>
                         </div>
-                        <div class="p-6">
+
+                        <div class="p-5 md:p-6">
                             @error('selectedCategories')
-                                <div class="p-3.5 rounded-lg bg-red-500/10 border border-red-500/20 text-red-600 text-xs font-semibold mb-4 leading-normal">
+                                <div class="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-xs font-semibold mb-4 leading-normal">
                                     {{ $message }}
                                 </div>
                             @enderror
-
-                            <p class="text-sm text-on-surface-variant mb-2">Pilih tingkat terlebih dahulu, lalu pilih lomba di bawah tingkat tersebut.</p>
 
                             @php
                                 $lockedTingkat = $this->lockedTingkat();
                                 $grouped = $categories->groupBy('name');
                             @endphp
 
-                            @foreach($grouped as $tingkatName => $cats)
-                                @php
-                                    $isLocked = $lockedTingkat !== null && $tingkatName !== $lockedTingkat;
-                                @endphp
-                                <div class="mb-6 last:mb-0 {{ $isLocked ? 'opacity-40 pointer-events-none' : '' }}">
-                                    <h4 class="font-display text-sm font-bold text-deep-slate mb-3 flex items-center gap-2">
-                                        <span class="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-primary/10 text-primary text-xs font-bold">
-                                            {{ substr($tingkatName, 0, 4) }}
-                                        </span>
-                                        {{ $tingkatName }}
-                                        @if($isLocked)
-                                            <span class="text-[10px] font-semibold text-on-surface-variant ml-1">(terkunci)</span>
-                                        @endif
-                                    </h4>
+                            <div class="space-y-6">
+                                @foreach($grouped as $tingkatName => $cats)
+                                    @php
+                                        $isLocked = $lockedTingkat !== null && $tingkatName !== $lockedTingkat;
+                                    @endphp
+                                    <div class="{{ $isLocked ? 'opacity-40 pointer-events-none' : '' }}">
+                                        <div class="flex items-center gap-2 mb-3">
+                                            <span class="inline-flex items-center justify-center h-6 w-6 rounded-md bg-primary/10 text-primary text-xs font-bold">
+                                                <i class="ti ti-medal text-xs"></i>
+                                            </span>
+                                            <h4 class="font-display text-xs font-bold text-deep-slate uppercase tracking-wider m-0">
+                                                Tingkat {{ $tingkatName }}
+                                            </h4>
+                                            @if($isLocked)
+                                                <span class="text-[10px] font-semibold text-on-surface-variant bg-surface-container px-2 py-0.5 rounded ml-1">(terkunci)</span>
+                                            @endif
+                                        </div>
 
-                                    <div class="flex flex-col gap-2 ml-9">
-                                        @foreach($cats as $cat)
-                                            @php
-                                                $isFull = $cat->kuota && $cat->registrations_count >= $cat->kuota;
-                                                $maxPerSchool = $cat->max_registrations_per_school ?? 1;
-                                                $checked = in_array($cat->id, $selectedCategories);
-                                                $disabled = $isFull || ($isLocked && !$checked);
-                                            @endphp
-                                            <div class="border rounded-xl p-3.5 transition-all duration-200 {{ $checked ? 'border-primary bg-primary/5 shadow-sm' : 'border-outline-variant/50' }} {{ $disabled ? 'opacity-50' : '' }}">
-                                                <div class="flex items-start gap-3">
-                                                    <input type="checkbox" wire:click="toggleCategory({{ $cat->id }})" id="cat_{{ $cat->id }}"
-                                                        {{ $isFull ? 'disabled' : '' }}
-                                                        {{ $disabled ? 'disabled' : '' }}
-                                                        {{ $checked ? 'checked' : '' }}
-                                                        class="mt-1 h-5 w-5 accent-primary shrink-0 cursor-pointer rounded">
+                                        <div class="space-y-2.5">
+                                            @foreach($cats as $cat)
+                                                @php
+                                                    $isFull = $cat->kuota && $cat->registrations_count >= $cat->kuota;
+                                                    $maxPerSchool = $cat->max_registrations_per_school ?? 1;
+                                                    $checked = in_array($cat->id, $selectedCategories);
+                                                    $disabled = $isFull || ($isLocked && !$checked);
+                                                @endphp
+                                                <div class="border rounded-xl p-4 transition-all {{ $checked ? 'border-primary bg-primary/[0.03] shadow-xs' : 'border-outline-variant/40 bg-white' }} {{ $disabled ? 'opacity-50' : '' }}">
+                                                    <div class="flex items-start gap-3">
+                                                        <input type="checkbox" wire:click="toggleCategory({{ $cat->id }})" id="cat_{{ $cat->id }}"
+                                                            {{ $isFull ? 'disabled' : '' }}
+                                                            {{ $disabled ? 'disabled' : '' }}
+                                                            {{ $checked ? 'checked' : '' }}
+                                                            class="mt-1 h-4 w-4 accent-primary shrink-0 cursor-pointer rounded">
 
-                                                    <div class="flex-1 min-w-0">
-                                                        <label for="cat_{{ $cat->id }}" class="text-sm font-bold text-deep-slate cursor-pointer block leading-tight">
-                                                            {{ $cat->parent?->name }}
-                                                            <span class="font-normal text-on-surface-variant">—</span>
-                                                            {{ $cat->name }}
-                                                        </label>
+                                                        <div class="flex-1 min-w-0">
+                                                            <label for="cat_{{ $cat->id }}" class="text-sm font-bold text-deep-slate cursor-pointer block leading-tight">
+                                                                {{ $cat->parent?->name }}
+                                                                <span class="font-normal text-on-surface-variant">—</span>
+                                                                {{ $cat->name }}
+                                                            </label>
 
-                                                        <div class="flex flex-wrap gap-2 mt-2">
-                                                            <span class="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary border border-primary/20">
-                                                                <i class="ti ti-users"></i> {{ $cat->registrations_count }} / {{ $cat->kuota ?? '∞' }} Pasukan
-                                                            </span>
-                                                            <span class="inline-flex items-center gap-1 rounded-md bg-[#5a7d00]/10 px-2 py-0.5 text-[10px] font-bold text-[#5a7d00] border border-[#5a7d00]/20">
-                                                                Maks {{ $maxPerSchool }} per Sekolah
-                                                            </span>
-                                                            @if($cat->registration_fee)
-                                                                <span class="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 border border-emerald-500/20">
-                                                                Rp {{ number_format($cat->registration_fee, 0, ',', '.') }}/pasukan
+                                                            <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                                                                <span class="inline-flex items-center gap-1 rounded-md bg-surface-container px-2 py-0.5 text-[10px] font-semibold text-deep-slate border border-outline-variant/30">
+                                                                    <i class="ti ti-users text-on-surface-variant"></i> Kuota: {{ $cat->registrations_count }} / {{ $cat->kuota ?? '∞' }} Pasukan
                                                                 </span>
-                                                            @else
-                                                                <span class="inline-flex items-center gap-1 rounded-md bg-surface-container px-2 py-0.5 text-[10px] font-bold text-on-surface-variant border">
-                                                                Gratis
+
+                                                                <span class="inline-flex items-center gap-1 rounded-md bg-surface-container px-2 py-0.5 text-[10px] font-semibold text-deep-slate border border-outline-variant/30">
+                                                                    Maks. {{ $maxPerSchool }} per Sekolah
                                                                 </span>
-                                                            @endif
-                                                            @if($isFull)
-                                                                <span class="inline-flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-600 border border-red-500/20">Kuota Penuh</span>
+
+                                                                @if($cat->registration_fee)
+                                                                    <span class="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 border border-emerald-500/20">
+                                                                        Rp {{ number_format($cat->registration_fee, 0, ',', '.') }}/pasukan
+                                                                    </span>
+                                                                @else
+                                                                    <span class="inline-flex items-center gap-1 rounded-md bg-surface-container px-2 py-0.5 text-[10px] font-bold text-on-surface-variant border border-outline-variant/30">
+                                                                        Gratis
+                                                                    </span>
+                                                                @endif
+
+                                                                @if($isFull)
+                                                                    <span class="inline-flex items-center gap-1 rounded-md bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-600 border border-red-500/20">
+                                                                        Kuota Penuh
+                                                                    </span>
+                                                                @endif
+                                                            </div>
+
+                                                            {{-- Multi-Pasukan Team Count --}}
+                                                            @if($checked && $maxPerSchool > 1)
+                                                                <div class="mt-3 pt-3 border-t border-outline-variant/30 flex items-center gap-2">
+                                                                    <span class="text-xs text-on-surface-variant font-medium">Jumlah Pasukan:</span>
+                                                                    <div class="flex items-center gap-1">
+                                                                        @for($i = 1; $i <= $maxPerSchool; $i++)
+                                                                            <button type="button" wire:click="setTeamCount({{ $cat->id }}, {{ $i }})"
+                                                                                class="h-7 w-8 text-xs font-bold rounded-lg transition cursor-pointer border {{ ($teamCounts[$cat->id] ?? 1) == $i ? 'bg-primary text-white border-primary shadow-xs' : 'bg-surface-container text-deep-slate border-outline-variant/30 hover:border-primary/50' }}">
+                                                                                {{ $i }}
+                                                                            </button>
+                                                                        @endfor
+                                                                    </div>
+                                                                </div>
                                                             @endif
                                                         </div>
-
-                                                        {{-- Team Count Multi-Pasukan --}}
-                                                        @if($checked && $maxPerSchool > 1)
-                                                            <div class="mt-4 flex items-center gap-2 bg-white border border-outline-variant/40 rounded-lg p-2 max-w-sm">
-                                                                <span class="text-xs text-on-surface-variant font-bold shrink-0">Jumlah Pasukan:</span>
-                                                                <div class="flex gap-1.5 ml-auto">
-                                                                    @for($i = 1; $i <= $maxPerSchool; $i++)
-                                                                        <button type="button" wire:click="setTeamCount({{ $cat->id }}, {{ $i }})" class="h-8 w-10 text-xs font-bold rounded transition cursor-pointer {{ ($teamCounts[$cat->id] ?? 1) == $i ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-primary hover:bg-primary/5' }}">
-                                                                            {{ $i }}
-                                                                        </button>
-                                                                    @endfor
-                                                                </div>
-                                                            </div>
-                                                        @endif
                                                     </div>
                                                 </div>
-                                            </div>
-                                        @endforeach
+                                            @endforeach
+                                        </div>
                                     </div>
-                                </div>
-                            @endforeach
+                                @endforeach
+                            </div>
 
                             @if($categories->isEmpty())
-                                <div class="text-center py-8 text-sm font-semibold text-on-surface-variant">
+                                <div class="text-center py-8 text-xs font-semibold text-on-surface-variant">
                                     Belum ada kategori lomba yang tersedia saat ini.
                                 </div>
                             @endif
 
-                            {{-- Selected summary --}}
-                            @if(count($selectedCategories) > 0)
-                                <div class="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-xl">
-                                    <span class="text-xs font-bold text-primary uppercase tracking-wider block mb-2">
-                                        <i class="ti ti-check-circle"></i> {{ count($selectedCategories) }} Kategori Dipilih
-                                    </span>
-                                    <div class="flex flex-wrap gap-2">
-                                        @foreach($selectedCategories as $scId)
-                                            @php $sc = $categories->firstWhere('id', $scId); @endphp
-                                            @if($sc)
-                                                <span class="inline-flex items-center gap-1 rounded-full bg-primary/10 border border-primary/20 px-3 py-1 text-xs font-bold text-primary">
-                                                    {{ $sc->full_name }}
-                                                    @if(($sc->max_registrations_per_school ?? 1) > 1)
-                                                        <span class="text-[10px] opacity-75">({{ $teamCounts[$sc->id] ?? 1 }} pasukan)</span>
-                                                    @endif
-                                                </span>
-                                            @endif
-                                        @endforeach
-                                    </div>
+                            {{-- Bottom Action Row --}}
+                            <div class="flex items-center justify-between mt-8 border-t border-outline-variant/30 pt-5">
+                                <div>
+                                    @if(count($selectedCategories) > 0)
+                                        <span class="text-xs font-bold text-deep-slate">
+                                            {{ count($selectedCategories) }} kategori dipilih
+                                        </span>
+                                    @else
+                                        <span class="text-xs text-on-surface-variant font-medium italic">
+                                            Pilih minimal satu kategori
+                                        </span>
+                                    @endif
                                 </div>
-                            @endif
-
-                            <div class="text-right mt-6 border-t border-outline-variant/30 pt-6">
-                                <button wire:click="nextStep" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 cursor-pointer">
+                                <button wire:click="nextStep" class="btn-secondary py-2.5 px-5 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer">
                                     Lanjutkan <i class="ti ti-arrow-right"></i>
                                 </button>
                             </div>
@@ -254,36 +266,34 @@
                 {{-- STEP 2: Data Sekolah --}}
                 @if($step === 2)
                     <div class="surface-card overflow-hidden">
-                        <div class="bg-surface-container px-6 py-4 border-b border-outline-variant/40">
-                            <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">
-                                <i class="ti ti-school text-primary"></i>
-                                Data Sekolah &amp; Akun
+                        <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40">
+                            <h3 class="font-display text-sm font-bold text-deep-slate inline-flex items-center gap-2 m-0">
+                                <i class="ti ti-school text-primary"></i> Data Sekolah &amp; Kontak Penanggung Jawab
                             </h3>
-                        </div>
-                        <div class="p-6">
-                            <p class="text-sm text-on-surface-variant mb-5" style="margin-top: 0;">
-                                Isi data di bawah ini. Field yang bertanda <span class="text-red-500 font-bold">*</span> wajib diisi.
-                                Berkas unggahan dilengkapi setelah booking, dari link yang dikirim ke email Anda.
+                            <p class="text-xs text-on-surface-variant font-medium m-0 mt-0.5">
+                                Field bertanda <span class="text-red-500 font-bold">*</span> wajib diisi. Berkas persyaratan diunggah dari portal kontingen setelah pendaftaran.
                             </p>
+                        </div>
 
-                            <div class="grid gap-5 md:grid-cols-2">
+                        <div class="p-5 md:p-6">
+                            <div class="grid gap-4 sm:grid-cols-2">
                                 @foreach($this->fields as $field)
                                     @php
                                         $namaField = 'fieldValues.' . $field->field_key;
                                         $nilai = $this->nilaiField($field);
                                         $id = 'field_' . $field->field_key;
                                     @endphp
-                                    <div class="{{ in_array($field->type, ['textarea'], true) ? 'md:col-span-2' : '' }}">
-                                        <label for="{{ $id }}" class="text-sm font-bold text-deep-slate block mb-1.5">
+                                    <div class="{{ in_array($field->type, ['textarea'], true) ? 'sm:col-span-2' : '' }}">
+                                        <label for="{{ $id }}" class="text-xs font-bold text-deep-slate block mb-1">
                                             {{ $field->label }}
                                             @if($field->is_required) <span class="text-red-500">*</span> @endif
                                         </label>
 
                                         @if($field->type === 'textarea')
                                             <textarea id="{{ $id }}" rows="3" wire:model="{{ $namaField }}"
-                                                placeholder="{{ $field->help_text }}" class="field-input w-full"></textarea>
+                                                placeholder="{{ $field->help_text }}" class="field-input w-full text-xs"></textarea>
                                         @elseif($field->type === 'select')
-                                            <select id="{{ $id }}" wire:model="{{ $namaField }}" class="field-input w-full">
+                                            <select id="{{ $id }}" wire:model="{{ $namaField }}" class="field-input w-full text-xs">
                                                 <option value="">— Pilih {{ $field->label }} —</option>
                                                 @foreach($field->options ?? [] as $opsi)
                                                     <option value="{{ $opsi['value'] }}">{{ $opsi['label'] ?? $opsi['value'] }}</option>
@@ -292,15 +302,15 @@
                                         @elseif($field->type === 'wilayah')
                                             @include('livewire.public.partials._wilayah-field', [
                                                 'field' => $field,
-                                                'kelas' => 'field-input w-full',
+                                                'kelas' => 'field-input w-full text-xs',
                                             ])
                                         @elseif($field->type === 'date')
-                                            <input type="date" id="{{ $id }}" wire:model="{{ $namaField }}" class="field-input w-full">
+                                            <input type="date" id="{{ $id }}" wire:model="{{ $namaField }}" class="field-input w-full text-xs">
                                         @elseif($field->type === 'number')
-                                            <input type="number" id="{{ $id }}" wire:model="{{ $namaField }}" class="field-input w-full">
+                                            <input type="number" id="{{ $id }}" wire:model="{{ $namaField }}" class="field-input w-full text-xs">
                                         @else
                                             <input type="text" id="{{ $id }}" wire:model="{{ $namaField }}"
-                                                placeholder="{{ $field->help_text }}" class="field-input w-full">
+                                                placeholder="{{ $field->help_text }}" class="field-input w-full text-xs">
                                         @endif
 
                                         @if($field->help_text && $field->type !== 'text')
@@ -311,11 +321,11 @@
                                 @endforeach
                             </div>
 
-                            <div class="flex justify-between items-center mt-8 border-t border-outline-variant/30 pt-6">
-                                <button wire:click="prevStep" class="btn-ghost py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 cursor-pointer">
+                            <div class="flex justify-between items-center mt-8 border-t border-outline-variant/30 pt-5">
+                                <button wire:click="prevStep" class="btn-ghost py-2.5 px-4 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer">
                                     <i class="ti ti-arrow-left"></i> Kembali
                                 </button>
-                                <button wire:click="nextStep" class="btn-primary py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 cursor-pointer">
+                                <button wire:click="nextStep" class="btn-secondary py-2.5 px-5 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer">
                                     Lanjutkan <i class="ti ti-arrow-right"></i>
                                 </button>
                             </div>
@@ -326,58 +336,70 @@
                 {{-- STEP 3: Review & Submit --}}
                 @if($step === 3)
                     <div class="surface-card overflow-hidden">
-                        <div class="bg-surface-container px-6 py-4 border-b border-outline-variant/40">
-                            <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">
-                                <i class="ti ti-checkbox text-primary"></i>
-                                Konfirmasi Booking Slot
+                        <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40">
+                            <h3 class="font-display text-sm font-bold text-deep-slate inline-flex items-center gap-2 m-0">
+                                <i class="ti ti-checkbox text-primary"></i> Konfirmasi Booking Slot
                             </h3>
+                            <p class="text-xs text-on-surface-variant font-medium m-0 mt-0.5">
+                                Periksa kembali rincian data sebelum mengirimkan pendaftaran.
+                            </p>
                         </div>
-                        <div class="p-6">
-                            {{-- School Info --}}
-                            <h4 class="font-display text-sm font-bold text-deep-slate mb-3 inline-flex items-center gap-1.5">
-                                <i class="ti ti-school text-primary"></i> Data Sekolah
-                            </h4>
-                            <div class="bg-surface-container-low border border-outline-variant/40 rounded-xl p-4 mb-6">
-                                <div class="grid gap-4 sm:grid-cols-2 text-sm leading-normal">
-                                    @foreach($this->fields as $field)
-                                        @php $nilai = $this->nilaiField($field); @endphp
-                                        <div>
-                                            <span class="text-xs text-on-surface-variant font-medium block">{{ $field->label }}</span>
-                                            @if($nilai !== '')
-                                                @if($field->type === 'select')
-                                                    @php
-                                                        $opsiTerpilih = collect($field->options ?? [])->firstWhere('value', $nilai);
-                                                    @endphp
-                                                    <p class="font-bold text-deep-slate m-0">{{ $opsiTerpilih['label'] ?? $nilai }}</p>
-                                                @elseif($field->type === 'wilayah')
-                                                    <p class="font-bold text-deep-slate m-0">{{ \App\Services\WilayahService::nama($nilai) }}</p>
+
+                        <div class="p-5 md:p-6 space-y-5">
+                            {{-- Data Sekolah Summary --}}
+                            <div>
+                                <h4 class="font-display text-xs font-bold text-deep-slate uppercase tracking-wider mb-2.5 inline-flex items-center gap-1.5">
+                                    <i class="ti ti-school text-primary"></i> Data Sekolah
+                                </h4>
+                                <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-4">
+                                    <div class="grid gap-3 sm:grid-cols-2 text-xs leading-normal">
+                                        @foreach($this->fields as $field)
+                                            @php $nilai = $this->nilaiField($field); @endphp
+                                            <div>
+                                                <span class="text-[11px] text-on-surface-variant font-medium block">{{ $field->label }}</span>
+                                                @if($nilai !== '')
+                                                    @if($field->type === 'select')
+                                                        @php
+                                                            $opsiTerpilih = collect($field->options ?? [])->firstWhere('value', $nilai);
+                                                        @endphp
+                                                        <p class="font-bold text-deep-slate m-0 mt-0.5">{{ $opsiTerpilih['label'] ?? $nilai }}</p>
+                                                    @elseif($field->type === 'wilayah')
+                                                        <p class="font-bold text-deep-slate m-0 mt-0.5">{{ \App\Services\WilayahService::nama($nilai) }}</p>
+                                                    @else
+                                                        <p class="font-bold text-deep-slate m-0 mt-0.5">{{ $nilai }}</p>
+                                                    @endif
                                                 @else
-                                                    <p class="font-bold text-deep-slate m-0">{{ $nilai }}</p>
+                                                    <p class="text-on-surface-variant m-0 mt-0.5">&mdash;</p>
                                                 @endif
-                                            @else
-                                                <p class="text-on-surface-variant m-0">&mdash;</p>
-                                            @endif
-                                        </div>
-                                    @endforeach
+                                            </div>
+                                        @endforeach
+                                    </div>
                                 </div>
                             </div>
 
-                            {{-- Kategori selection --}}
-                            <h4 class="font-display text-sm font-bold text-deep-slate mb-3 inline-flex items-center gap-1.5">
-                                <i class="ti ti-medal text-primary"></i> Kategori Pilihan
-                            </h4>
-                            <div class="bg-surface-container-low border border-outline-variant/40 rounded-xl p-4 mb-6 space-y-2">
-                                @foreach($selectedCategories as $scId)
-                                    @php $scCat = $categories->firstWhere('id', (int) $scId); @endphp
-                                    @if($scCat)
-                                        <div class="flex items-center justify-between text-sm">
-                                            <span class="font-bold text-deep-slate">{{ $scCat->full_name }}</span>
-                                            <span class="chip py-1 px-3 bg-primary/10 font-bold text-xs">
-                                                {{ $teamCounts[$scCat->id] ?? 1 }} pasukan
-                                            </span>
-                                        </div>
-                                    @endif
-                                @endforeach
+                            {{-- Kategori Selection Summary --}}
+                            <div>
+                                <h4 class="font-display text-xs font-bold text-deep-slate uppercase tracking-wider mb-2.5 inline-flex items-center gap-1.5">
+                                    <i class="ti ti-medal text-primary"></i> Kategori Lomba Dipilih
+                                </h4>
+                                <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl divide-y divide-outline-variant/20 overflow-hidden">
+                                    @foreach($selectedCategories as $scId)
+                                        @php $scCat = $categories->firstWhere('id', (int) $scId); @endphp
+                                        @if($scCat)
+                                            <div class="p-3.5 flex items-center justify-between text-xs">
+                                                <div>
+                                                    <span class="font-bold text-deep-slate block">{{ $scCat->full_name }}</span>
+                                                    <span class="text-[10px] text-on-surface-variant font-medium">
+                                                        Biaya: {{ $scCat->registration_fee ? 'Rp ' . number_format($scCat->registration_fee, 0, ',', '.') . '/pasukan' : 'Gratis' }}
+                                                    </span>
+                                                </div>
+                                                <span class="chip py-0.5 px-2 bg-primary/10 font-bold text-[11px]">
+                                                    {{ $teamCounts[$scCat->id] ?? 1 }} pasukan
+                                                </span>
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
                             </div>
 
                             {{-- Fee Summary --}}
@@ -394,42 +416,38 @@
                             @endphp
 
                             @if($hasFee)
-                                <div class="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 mb-6 flex gap-3 text-xs leading-normal">
-                                    <i class="ti ti-wallet text-emerald-500 text-lg shrink-0 mt-0.5"></i>
+                                <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-4 flex items-center justify-between">
                                     <div>
-                                        <p class="font-bold text-emerald-700 m-0">Ringkasan Biaya Pendaftaran</p>
-                                        <p class="text-on-surface-variant font-medium mt-1 mb-0">
-                                            Total biaya pendaftaran: <strong class="text-deep-slate">Rp {{ number_format($totalFee, 0, ',', '.') }}</strong>
-                                        </p>
-                                        <p class="text-on-surface-variant font-medium mt-0.5 mb-0">
-                                            Pembayaran akan dikonfirmasi setelah Anda upload bukti transfer melalui dashboard kontingen.
+                                        <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block">Total Estimasi Biaya</span>
+                                        <p class="text-[11px] text-on-surface-variant font-medium m-0 mt-0.5">
+                                            Pembayaran dilakukan melalui portal kontingen setelah booking.
                                         </p>
                                     </div>
+                                    <span class="font-display font-extrabold text-lg text-deep-slate">
+                                        Rp {{ number_format($totalFee, 0, ',', '.') }}
+                                    </span>
                                 </div>
                             @endif
 
-                            {{-- Informational Warning Box --}}
-                            <div class="bg-amber-500/5 border border-amber-500/20 rounded-xl p-4 mb-6 flex gap-3 text-xs leading-normal">
-                                <i class="ti ti-info-circle text-amber-500 text-lg shrink-0 mt-0.5"></i>
-                                <div>
-                                    <p class="font-bold text-amber-800 m-0">Status Pendaftaran: Booking</p>
-                                    <p class="text-on-surface-variant font-medium mt-1 mb-0">
-                                        Pendaftaran Anda akan berstatus <strong>Booking</strong>. Setelah Technical Meeting, Anda dapat mengonfirmasi berkas dan melengkapi rincian anggota pasukan melalui link yang kami kirimkan ke WhatsApp/Email.
-                                    </p>
-                                </div>
+                            {{-- Informational Notice --}}
+                            <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 text-xs text-on-surface-variant leading-relaxed font-medium">
+                                <span class="font-bold text-deep-slate block mb-1">
+                                    <i class="ti ti-info-circle text-primary"></i> Informasi Selanjutnya:
+                                </span>
+                                Setelah menekan tombol booking, Anda akan langsung diarahkan ke <strong>Portal Kontingen</strong> untuk menyimpan data pasukan, nomor kontak, serta mengunggah berkas persyaratan.
                             </div>
 
                             {{-- Action buttons --}}
-                            <div class="flex justify-between items-center border-t border-outline-variant/30 pt-6">
-                                <button wire:click="prevStep" class="btn-ghost py-3 px-6 font-bold text-sm inline-flex items-center gap-1.5 cursor-pointer">
+                            <div class="flex justify-between items-center border-t border-outline-variant/30 pt-5">
+                                <button wire:click="prevStep" class="btn-ghost py-2.5 px-4 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer">
                                     <i class="ti ti-arrow-left"></i> Kembali
                                 </button>
-                                <button wire:click="submit" class="btn-primary !bg-emerald-500 hover:!bg-emerald-600 !text-white border-none py-3.5 px-6 font-bold text-sm inline-flex items-center gap-1.5 cursor-pointer shadow-md hover:shadow-lg disabled:opacity-60" wire:loading.attr="disabled">
+                                <button wire:click="submit" class="btn-secondary py-2.5 px-6 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-60" wire:loading.attr="disabled">
                                     <span wire:loading.remove wire:target="submit">
-                                        <i class="ti ti-circle-check text-base"></i> Booking Sekarang
+                                        <i class="ti ti-circle-check text-sm"></i> Booking Sekarang
                                     </span>
                                     <span wire:loading wire:target="submit" class="inline-flex items-center gap-2">
-                                        <span class="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                        <span class="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                                         Memproses...
                                     </span>
                                 </button>
