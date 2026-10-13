@@ -41,20 +41,114 @@ class ChampionCategoryController extends Controller
         $data = $this->pdfData($request);
         $eventner = $data['eventner'];
         $competitionCategory = $data['competitionCategory'];
+        $competitionGroup = $data['competitionGroup'];
 
-        $judges = \App\Models\Judge::where('eventner_id', $eventner->id)
-            ->when($competitionCategory, function ($q) use ($competitionCategory) {
-                $q->whereHas('competitionCategories', function ($sq) use ($competitionCategory) {
-                    $sq->where('competition_category_id', $competitionCategory->id);
-                });
-            })
-            ->with('assessmentCategories')
-            ->get();
+        if ($competitionCategory) {
+            $catIds = collect([$competitionCategory->id]);
+            if ($competitionCategory->parent_id) {
+                $catIds->push($competitionCategory->parent_id);
+            }
+            $childIds = CompetitionCategory::where('parent_id', $competitionCategory->id)->pluck('id');
+            $allCategoryIds = $catIds->merge($childIds)->unique()->values();
 
-        if ($judges->isEmpty()) {
+            // 1. Pivot penugasan grup/tingkat (competition_group_judge)
+            $groupJudgeIds = \Illuminate\Support\Facades\DB::table('competition_group_judge')
+                ->whereIn('competition_category_id', $allCategoryIds)
+                ->when($competitionGroup, fn ($q) => $q->where(function ($sq) use ($competitionGroup) {
+                    $sq->where('competition_group_id', $competitionGroup->id)->orWhereNull('competition_group_id');
+                }))
+                ->pluck('judge_id');
+
+            // 2. Juri yang telah memasukkan nilai untuk peserta di kategori ini
+            $scoringJudgeIds = \App\Models\AssessmentScore::where('eventner_id', $eventner->id)
+                ->whereHas('registration', function ($q) use ($allCategoryIds, $competitionGroup) {
+                    $q->whereIn('competition_category_id', $allCategoryIds)
+                        ->when($competitionGroup, fn ($sq) => $sq->where('competition_group_id', $competitionGroup->id));
+                })
+                ->pluck('judge_id');
+
+            // 3. Juri yang terkait rubrik penilaian kategori ini
+            $rubricJudgeIds = \Illuminate\Support\Facades\DB::table('assessment_category_judge')
+                ->whereIn('assessment_category_id', function ($q) use ($allCategoryIds, $eventner) {
+                    $q->select('id')->from('assessment_categories')
+                        ->where('eventner_id', $eventner->id)
+                        ->whereIn('competition_category_id', $allCategoryIds);
+                })
+                ->pluck('judge_id');
+
+            // 4. Kategori juara yang tampil untuk tingkat ini: subkategori -> rubrik -> juri
+            $championCatRubricIds = collect($data['championCategories'] ?? [])
+                ->flatMap(fn ($c) => $c->assessmentSubCategories->pluck('assessment_category_id'))
+                ->unique()
+                ->filter();
+
+            $championJudgeIds = \Illuminate\Support\Facades\DB::table('assessment_category_judge')
+                ->whereIn('assessment_category_id', $championCatRubricIds)
+                ->pluck('judge_id');
+
+            // 5. Pivot lama competition_category_judge jika ada
+            $legacyCatJudgeIds = \Illuminate\Support\Facades\DB::table('competition_category_judge')
+                ->whereIn('competition_category_id', $allCategoryIds)
+                ->pluck('judge_id');
+
+            $assignedJudgeIds = collect()
+                ->merge($groupJudgeIds)
+                ->merge($scoringJudgeIds)
+                ->merge($rubricJudgeIds)
+                ->merge($championJudgeIds)
+                ->merge($legacyCatJudgeIds)
+                ->filter()
+                ->unique()
+                ->values();
+
+            $judges = \App\Models\Judge::where('eventner_id', $eventner->id)
+                ->whereIn('id', $assignedJudgeIds)
+                ->with(['assessmentCategories' => function ($q) use ($allCategoryIds) {
+                    $q->where(function ($sq) use ($allCategoryIds) {
+                        $sq->whereIn('competition_category_id', $allCategoryIds)
+                            ->orWhereNull('competition_category_id');
+                    });
+                }])
+                ->orderBy('name')
+                ->get();
+
+            $groupAssignments = \Illuminate\Support\Facades\DB::table('competition_group_judge as cgj')
+                ->leftJoin('competition_groups as cg', 'cg.id', '=', 'cgj.competition_group_id')
+                ->whereIn('cgj.competition_category_id', $allCategoryIds)
+                ->whereIn('cgj.judge_id', $assignedJudgeIds)
+                ->get(['cgj.judge_id', 'cgj.scope', 'cg.name as group_name'])
+                ->groupBy('judge_id');
+
+            $judges->each(function ($judge) use ($groupAssignments) {
+                $rubrics = $judge->assessmentCategories->pluck('name')->filter()->values();
+                $groups = collect($groupAssignments->get($judge->id, []))->map(function ($row) {
+                    return match ($row->scope) {
+                        'group' => 'Grup ' . ($row->group_name ?: '-'),
+                        'final' => 'Babak Final',
+                        'ungrouped' => 'Reguler',
+                        'level' => 'Tingkat',
+                        default => null,
+                    };
+                })->filter()->unique()->values();
+
+                $labels = $rubrics->isNotEmpty() ? $rubrics : $groups;
+                $judge->assignment_display = $labels->isNotEmpty()
+                    ? $labels->join(', ')
+                    : 'Dewan Juri Penilai';
+            });
+        } else {
+            // Jika seluruh tingkat (tanpa filter), sertakan seluruh juri eventner
             $judges = \App\Models\Judge::where('eventner_id', $eventner->id)
                 ->with('assessmentCategories')
+                ->orderBy('name')
                 ->get();
+
+            $judges->each(function ($judge) {
+                $rubrics = $judge->assessmentCategories->pluck('name')->filter()->values();
+                $judge->assignment_display = $rubrics->isNotEmpty()
+                    ? $rubrics->join(', ')
+                    : 'Dewan Juri Umum';
+            });
         }
 
         $activeSignature = \App\Models\EventnerSignature::where('eventner_id', $eventner->id)->latest()->first();

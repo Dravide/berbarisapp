@@ -253,7 +253,7 @@
                     <td class="num">{{ $idx + 1 }}</td>
                     <td class="nama">{{ $judge->name }}</td>
                     <td>
-                        {{ $judge->assessmentCategories->pluck('name')->join(', ') ?: 'Dewan Juri Umum' }}
+                        {{ $judge->assignment_display ?? ($judge->assessmentCategories->pluck('name')->join(', ') ?: 'Dewan Juri Penilai') }}
                     </td>
                     <td class="num" style="height: 24px; color: #94a3b8;">
                         ( .......................... )

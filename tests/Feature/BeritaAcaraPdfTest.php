@@ -120,4 +120,89 @@ class BeritaAcaraPdfTest extends TestCase
         $response->assertHeader('content-type', 'application/pdf');
         $this->assertStringContainsString('Berita_Acara_Juara_', $response->headers->get('content-disposition'));
     }
+
+    public function test_berita_acara_pdf_only_includes_judges_assigned_to_the_category()
+    {
+        $this->actingAs($this->user);
+
+        $otherCategory = CompetitionCategory::factory()->create([
+            'eventner_id' => $this->eventner->id,
+            'name' => 'Tingkat SMP',
+        ]);
+
+        $judgeA = Judge::create([
+            'eventner_id' => $this->eventner->id,
+            'name' => 'Juri Khusus SMA',
+            'phone' => '08111111111',
+            'is_active' => true,
+        ]);
+
+        $judgeB = Judge::create([
+            'eventner_id' => $this->eventner->id,
+            'name' => 'Juri Khusus SMP',
+            'phone' => '08222222222',
+            'is_active' => true,
+        ]);
+
+        $judgeC = Judge::create([
+            'eventner_id' => $this->eventner->id,
+            'name' => 'Juri Rubrik SMA',
+            'phone' => '08333333333',
+            'is_active' => true,
+        ]);
+
+        // Assign judgeA to category SMA via competition_group_judge
+        \Illuminate\Support\Facades\DB::table('competition_group_judge')->insert([
+            'competition_category_id' => $this->category->id,
+            'competition_group_id' => null,
+            'judge_id' => $judgeA->id,
+            'scope' => 'level',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Assign judgeB to otherCategory SMP
+        \Illuminate\Support\Facades\DB::table('competition_group_judge')->insert([
+            'competition_category_id' => $otherCategory->id,
+            'competition_group_id' => null,
+            'judge_id' => $judgeB->id,
+            'scope' => 'level',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Assign judgeC to rubric in category SMA
+        $rubric = \App\Models\AssessmentCategory::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->category->id,
+            'name' => 'PBB Murni SMA',
+        ]);
+        \Illuminate\Support\Facades\DB::table('assessment_category_judge')->insert([
+            'assessment_category_id' => $rubric->id,
+            'judge_id' => $judgeC->id,
+        ]);
+
+        $response = $this->get(route('eventner.champion-categories.berita-acara-pdf', [
+            'competition_category_id' => $this->category->id,
+        ]));
+
+        $response->assertOk();
+        $pdfContent = $response->getContent();
+
+        // Check if judge names are in decompressed streams or PDF
+        preg_match_all('/stream\r?\n(.*?)\r?\nendstream/s', $pdfContent, $matches);
+        $allText = $pdfContent;
+        foreach ($matches[1] as $stream) {
+            $dec = @gzuncompress($stream);
+            if ($dec) {
+                $allText .= $dec;
+            }
+        }
+
+        // Clean out null bytes for comparison
+        $cleanText = str_replace("\x00", '', $allText);
+        $this->assertStringContainsString('Juri Khusus SMA', $cleanText);
+        $this->assertStringContainsString('Juri Rubrik SMA', $cleanText);
+        $this->assertStringNotContainsString('Juri Khusus SMP', $cleanText);
+    }
 }
