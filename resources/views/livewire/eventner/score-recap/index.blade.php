@@ -27,10 +27,6 @@
                 <h5 class="card-title fw-semibold mb-0">Rekapitulasi Nilai per Kategori</h5>
                 @if($selectedCategoryId)
                     <div class="d-flex gap-2 flex-wrap">
-                        <a href="{{ route('eventner.score-recap.berita-acara-pdf', ['category_id' => $selectedCategoryId]) }}"
-                           class="btn btn-sm btn-primary" target="_blank">
-                            <i class="ti ti-certificate me-1"></i> Berita Acara Juri (PDF)
-                        </a>
                         <a href="{{ route('eventner.score-recap.pdf', ['category_id' => $selectedCategoryId]) }}"
                            class="btn btn-sm btn-danger" target="_blank">
                             <i class="ti ti-file-type-pdf me-1"></i> Unduh Rekap Keseluruhan (PDF)

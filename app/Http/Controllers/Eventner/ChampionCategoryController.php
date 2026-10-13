@@ -36,6 +36,46 @@ class ChampionCategoryController extends Controller
         return $pdf->download('Rekap_Juara_' . $catName . '.pdf');
     }
 
+    public function downloadBeritaAcaraPdf(Request $request)
+    {
+        $data = $this->pdfData($request);
+        $eventner = $data['eventner'];
+        $competitionCategory = $data['competitionCategory'];
+
+        $judges = \App\Models\Judge::where('eventner_id', $eventner->id)
+            ->when($competitionCategory, function ($q) use ($competitionCategory) {
+                $q->whereHas('competitionCategories', function ($sq) use ($competitionCategory) {
+                    $sq->where('competition_category_id', $competitionCategory->id);
+                });
+            })
+            ->with('assessmentCategories')
+            ->get();
+
+        if ($judges->isEmpty()) {
+            $judges = \App\Models\Judge::where('eventner_id', $eventner->id)
+                ->with('assessmentCategories')
+                ->get();
+        }
+
+        $activeSignature = \App\Models\EventnerSignature::where('eventner_id', $eventner->id)->latest()->first();
+
+        $data['judges'] = $judges;
+        $data['signature'] = $activeSignature;
+
+        $pdf = Pdf::loadView('eventner.champion-category.pdf_berita_acara', $data)
+            ->setPaper('a4', 'portrait')
+            ->setOption('margin-top', '10mm')
+            ->setOption('margin-bottom', '10mm')
+            ->setOption('margin-left', '8mm')
+            ->setOption('margin-right', '8mm');
+
+        $catName = $competitionCategory
+            ? str_replace(['/', '\\'], '-', $competitionCategory->name)
+            : 'Semua';
+
+        return $pdf->download('Berita_Acara_Juara_' . $catName . '.pdf');
+    }
+
     /**
      * Data untuk view eventner.champion-category.pdf_ranking.
      *

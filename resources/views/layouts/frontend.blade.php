@@ -179,9 +179,6 @@
                     @endif
                     <span class="font-display text-base font-bold text-deep-slate tracking-tight inline-flex items-center gap-1">
                         <span class="truncate max-w-[200px] sm:max-w-none">{{ $eventner->nama_event }}</span>
-                        @if($eventner->is_verified)
-                            <x-verified-badge size="xs" />
-                        @endif
                     </span>
                 @else
                     @if($platformLogo && is_string($platformLogo))

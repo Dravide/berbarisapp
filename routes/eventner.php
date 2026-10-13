@@ -66,7 +66,11 @@ Route::get('score-recap', App\Livewire\Eventner\ScoreRecap\Index::class)->name('
 // dalam satu berkas. Terpisah dari scoring/pdf-participant yang mencetak SATU
 // peserta untuk dipegang juri/pelatih.
 Route::get('score-recap/pdf', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadRecapPdf'])->name('eventner.score-recap.pdf');
-Route::get('score-recap/berita-acara-pdf', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadBeritaAcaraPdf'])->name('eventner.score-recap.berita-acara-pdf');
+Route::get('score-recap/berita-acara-pdf', function (\Illuminate\Http\Request $request) {
+    return redirect()->route('eventner.champion-categories.berita-acara-pdf', array_filter([
+        'competition_category_id' => $request->query('category_id'),
+    ]));
+})->name('eventner.score-recap.berita-acara-pdf');
 Route::get('scoring/csv', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadCsv'])->name('eventner.scoring.csv');
 Route::get('scoring/pdf-participant', [App\Http\Controllers\Eventner\ScoringController::class, 'downloadParticipantPdf'])->name('eventner.scoring.pdf-participant');
 // Perbandingan nilai antar juri. Didaftarkan SEBELUM baris `scoring` supaya
@@ -75,6 +79,7 @@ Route::get('scoring/perbandingan', App\Livewire\Eventner\Scoring\Perbandingan::c
 Route::get('scoring', App\Livewire\Eventner\Scoring\Index::class)->name('eventner.scoring.index');
 Route::get('champion-categories', App\Livewire\Eventner\ChampionCategory\Index::class)->name('eventner.champion-categories.index');
 Route::get('champion-categories/pdf', [App\Http\Controllers\Eventner\ChampionCategoryController::class, 'downloadPdf'])->name('eventner.champion-categories.pdf');
+Route::get('champion-categories/berita-acara-pdf', [App\Http\Controllers\Eventner\ChampionCategoryController::class, 'downloadBeritaAcaraPdf'])->name('eventner.champion-categories.berita-acara-pdf');
 Route::get('tickets', App\Livewire\Eventner\Ticket\Index::class)->name('eventner.tickets.index');
 Route::get('tickets/csv', [App\Http\Controllers\Eventner\TicketController::class, 'downloadCsv'])->name('eventner.tickets.csv');
 Route::get('tickets/settings', App\Livewire\Eventner\Ticket\Settings::class)->name('eventner.tickets.settings');

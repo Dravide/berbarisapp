@@ -51,6 +51,15 @@
                     @endif
                 </div>
                 <div class="d-flex gap-2">
+                    <a href="{{ route('eventner.champion-categories.berita-acara-pdf', array_filter([
+                            'competition_category_id' => $selectedCompetitionCategoryId,
+                            'competition_round_id' => $selectedRound?->id,
+                            'competition_group_id' => $selectedGroup?->id,
+                       ])) }}"
+                       class="btn btn-sm btn-primary px-3 fw-semibold" target="_blank"
+                       title="Cetak Berita Acara Dewan Juri penetapan kategori juara resmi">
+                        <i class="ti ti-certificate me-1"></i> Berita Acara Juri (PDF)
+                    </a>
                     <a href="{{ route('eventner.champion-categories.pdf', array_filter([
                             'competition_category_id' => $selectedCompetitionCategoryId,
                             'competition_round_id' => $selectedRound?->id,

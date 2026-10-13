@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\ChampionCategory;
 use App\Models\CompetitionCategory;
 use App\Models\Eventner;
 use App\Models\Judge;
@@ -44,8 +45,8 @@ class BeritaAcaraPdfTest extends TestCase
 
     public function test_guest_cannot_download_berita_acara_pdf()
     {
-        $response = $this->get(route('eventner.score-recap.berita-acara-pdf', [
-            'category_id' => $this->category->id,
+        $response = $this->get(route('eventner.champion-categories.berita-acara-pdf', [
+            'competition_category_id' => $this->category->id,
         ]));
 
         $response->assertRedirect(route('login'));
@@ -59,23 +60,27 @@ class BeritaAcaraPdfTest extends TestCase
         $this->actingAs($otherUser);
 
         // Accessing category owned by another eventner
+        $response = $this->get(route('eventner.champion-categories.berita-acara-pdf', [
+            'competition_category_id' => $this->category->id,
+        ]));
+
+        $response->assertOk(); // Generates PDF for otherUser's eventner (empty data) without leaking another's
+    }
+
+    public function test_legacy_score_recap_berita_acara_redirects()
+    {
+        $this->actingAs($this->user);
+
         $response = $this->get(route('eventner.score-recap.berita-acara-pdf', [
             'category_id' => $this->category->id,
         ]));
 
-        $response->assertNotFound();
+        $response->assertRedirect(route('eventner.champion-categories.berita-acara-pdf', [
+            'competition_category_id' => $this->category->id,
+        ]));
     }
 
-    public function test_missing_category_id_returns_bad_request()
-    {
-        $this->actingAs($this->user);
-
-        $response = $this->get(route('eventner.score-recap.berita-acara-pdf'));
-
-        $response->assertStatus(400);
-    }
-
-    public function test_owner_can_download_berita_acara_pdf()
+    public function test_owner_can_download_berita_acara_with_champion_categories()
     {
         $this->actingAs($this->user);
 
@@ -85,6 +90,14 @@ class BeritaAcaraPdfTest extends TestCase
             'name' => 'Mayor Inf Budi Santoso',
             'phone' => '081234567890',
             'is_active' => true,
+        ]);
+
+        // Create champion category
+        $champCat = ChampionCategory::create([
+            'eventner_id' => $this->eventner->id,
+            'name' => 'Juara Umum Utama',
+            'quantity' => 3,
+            'is_public' => true,
         ]);
 
         // Create participant
@@ -99,12 +112,12 @@ class BeritaAcaraPdfTest extends TestCase
             'nisn' => '1234567890',
         ]);
 
-        $response = $this->get(route('eventner.score-recap.berita-acara-pdf', [
-            'category_id' => $this->category->id,
+        $response = $this->get(route('eventner.champion-categories.berita-acara-pdf', [
+            'competition_category_id' => $this->category->id,
         ]));
 
         $response->assertOk();
         $response->assertHeader('content-type', 'application/pdf');
-        $this->assertStringContainsString('Berita_Acara_', $response->headers->get('content-disposition'));
+        $this->assertStringContainsString('Berita_Acara_Juara_', $response->headers->get('content-disposition'));
     }
 }
