@@ -7,11 +7,18 @@
                 <img src="{{ asset('storage/' . $eventner->header_banner) }}" alt="Banner {{ $eventner->nama_event }}" class="w-full h-full object-cover">
             </div>
         @elseif($eventner->poster)
-            {{-- Fallback: pakai poster A4 — masih bisa diklik buka asli --}}
+            {{-- Fallback: pakai poster A4 — klik untuk perbesar / zoom --}}
             <div class="relative w-full aspect-[21/9] md:aspect-[3/1] rounded-2xl overflow-hidden border border-outline-variant/30 bg-black/5 shadow-[0_1px_3px_rgba(17,24,39,0.07)]">
-                <a href="{{ asset('storage/' . $eventner->poster) }}" target="_blank">
-                    <img src="{{ asset('storage/' . $eventner->poster) }}" alt="Poster {{ $eventner->nama_event }}" class="w-full h-full object-cover">
-                </a>
+                <button type="button"
+                        @click="$dispatch('open-poster-zoom', { src: '{{ asset('storage/' . $eventner->poster) }}', title: 'Poster {{ addslashes($eventner->nama_event) }}' })"
+                        class="w-full h-full block text-left group focus:outline-none relative cursor-zoom-in"
+                        title="Klik untuk memperbesar poster">
+                    <img src="{{ asset('storage/' . $eventner->poster) }}" alt="Poster {{ $eventner->nama_event }}" class="w-full h-full object-cover group-hover:scale-[1.01] transition-transform duration-200">
+                    <div class="absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-lg bg-slate-900/80 backdrop-blur-sm px-3 py-1.5 text-xs font-semibold text-white shadow-sm opacity-90 group-hover:opacity-100 transition-opacity">
+                        <i class="ti ti-zoom-in text-sm"></i>
+                        <span>Perbesar Poster</span>
+                    </div>
+                </button>
             </div>
         @else
             {{-- Tanpa aset visual: kanvas netral polos. Dulu gradien biru-ke-sian
@@ -517,21 +524,48 @@
                  dari layar — tanpa batas ini bagian bawahnya terpotong dan tak
                  bisa dijangkau selama menempel. --}}
             <div class="flex flex-col gap-5 self-start lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
-                {{-- Poster Acara Card — small, sidebar, klik buka ViewerJS --}}
+                {{-- Poster Acara Card — small, sidebar, klik perbesar/zoom gambar --}}
                 @if($eventner->poster)
                     <div class="surface-card p-5">
-                        <h3 class="font-display text-sm font-bold text-deep-slate mb-3">
-                            Poster Acara
-                        </h3>
+                        <div class="flex items-center justify-between mb-3">
+                            <h3 class="font-display text-sm font-bold text-deep-slate m-0">
+                                Poster Acara
+                            </h3>
+                            <button type="button"
+                                    @click="$dispatch('open-poster-zoom', { src: '{{ asset('storage/' . $eventner->poster) }}', title: 'Poster {{ addslashes($eventner->nama_event) }}' })"
+                                    class="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors focus:outline-none"
+                                    title="Perbesar Poster">
+                                <i class="ti ti-zoom-in text-sm"></i>
+                                <span>Zoom</span>
+                            </button>
+                        </div>
                         <div class="flex justify-center">
-                            <a href="{{ asset('storage/' . $eventner->poster) }}" target="_blank">
+                            <button type="button"
+                                    @click="$dispatch('open-poster-zoom', { src: '{{ asset('storage/' . $eventner->poster) }}', title: 'Poster {{ addslashes($eventner->nama_event) }}' })"
+                                    class="group relative block w-full rounded-lg overflow-hidden border border-outline-variant/30 focus:outline-none focus:ring-2 focus:ring-primary/40 text-left bg-surface-container-low cursor-zoom-in"
+                                    title="Klik untuk zoom poster">
                                 <img src="{{ asset('storage/' . $eventner->poster) }}" alt="Poster {{ $eventner->nama_event }}"
-                                     class="w-full h-auto rounded-lg border border-outline-variant/30 object-contain hover:opacity-90 transition-opacity"
+                                     class="w-full h-auto object-contain transition-transform duration-200 group-hover:scale-[1.02]"
                                      style="max-height: 280px;"
                                      loading="lazy">
+                                <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5 text-white text-xs font-semibold backdrop-blur-[1px]">
+                                    <i class="ti ti-zoom-in text-base"></i>
+                                    <span>Klik untuk Zoom</span>
+                                </div>
+                            </button>
+                        </div>
+                        <div class="flex items-center justify-between mt-2.5 pt-2 border-t border-outline-variant/30 text-[11px]">
+                            <button type="button"
+                                    @click="$dispatch('open-poster-zoom', { src: '{{ asset('storage/' . $eventner->poster) }}', title: 'Poster {{ addslashes($eventner->nama_event) }}' })"
+                                    class="text-on-surface-variant hover:text-primary font-medium inline-flex items-center gap-1 transition-colors">
+                                <i class="ti ti-zoom-in text-xs"></i>
+                                <span>Perbesar tampilan</span>
+                            </button>
+                            <a href="{{ asset('storage/' . $eventner->poster) }}" target="_blank" class="text-on-surface-variant hover:text-deep-slate transition-colors text-decoration-none inline-flex items-center gap-1" title="Buka gambar di tab baru">
+                                <span>Tab baru</span>
+                                <i class="ti ti-external-link text-[10px]"></i>
                             </a>
                         </div>
-                        <p class="text-[10px] text-on-surface-variant font-medium text-center mt-2">Klik untuk lihat full</p>
                     </div>
                 @endif
 
@@ -703,30 +737,301 @@
         </div>
     @endif
 
+    {{-- ========== POSTER ZOOM MODAL (LIGHTBOX) ========== --}}
+    @if($eventner->poster)
+        <div x-data="posterZoomViewer()"
+             x-show="isOpen"
+             x-cloak
+             @open-poster-zoom.window="open($event.detail)"
+             @keydown.escape.window="close()"
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-50 flex flex-col justify-between overflow-hidden bg-slate-950/92 backdrop-blur-md select-none"
+             role="dialog"
+             aria-modal="true"
+             aria-label="Penampil Zoom Poster Acara">
+
+            {{-- Top Bar --}}
+            <div class="relative z-20 flex items-center justify-between px-4 py-3 bg-gradient-to-b from-black/80 via-black/40 to-transparent">
+                <div class="flex items-center gap-2 min-w-0 pr-4">
+                    <i class="ti ti-photo text-white/70 text-lg shrink-0"></i>
+                    <h4 class="text-sm font-semibold text-white/95 truncate m-0" x-text="title"></h4>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <a :href="src"
+                       target="_blank"
+                       class="p-2 rounded-lg text-white/75 hover:text-white hover:bg-white/10 transition-colors text-decoration-none inline-flex items-center justify-center"
+                       title="Buka gambar di tab baru">
+                        <i class="ti ti-external-link text-lg"></i>
+                    </a>
+                    <button type="button"
+                            @click="close()"
+                            class="p-2 rounded-lg text-white/75 hover:text-white hover:bg-white/10 transition-colors inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-white/30"
+                            title="Tutup (Esc)"
+                            aria-label="Tutup penampil poster">
+                        <i class="ti ti-x text-xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Main Viewport --}}
+            <div class="flex-1 relative w-full h-full flex items-center justify-center overflow-hidden touch-none"
+                 @click.self="close()"
+                 @wheel.prevent="handleWheel($event)">
+
+                <img :src="src"
+                     :alt="title"
+                     draggable="false"
+                     @dblclick="toggleZoom($event)"
+                     @mousedown="startDrag($event)"
+                     @touchstart="handleTouchStart($event)"
+                     @touchmove.prevent="handleTouchMove($event)"
+                     @touchend="handleTouchEnd($event)"
+                     :style="imageStyle"
+                     class="max-h-[82vh] max-w-[90vw] object-contain select-none rounded shadow-2xl origin-center" />
+            </div>
+
+            {{-- Bottom Controls Toolbar --}}
+            <div class="relative z-20 pb-5 px-4 flex flex-col items-center gap-2 pointer-events-none">
+                <div class="pointer-events-auto inline-flex items-center gap-1 rounded-full bg-slate-900/90 border border-white/15 px-3 py-1.5 shadow-2xl backdrop-blur-md text-white">
+                    <button type="button"
+                            @click.stop="zoomOut()"
+                            :disabled="scale <= minScale"
+                            class="p-1.5 rounded-full hover:bg-white/15 disabled:opacity-35 disabled:hover:bg-transparent transition-colors inline-flex items-center justify-center focus:outline-none"
+                            title="Perkecil (Zoom Out)"
+                            aria-label="Perkecil">
+                        <i class="ti ti-zoom-out text-base"></i>
+                    </button>
+
+                    <button type="button"
+                            @click.stop="resetZoom()"
+                            class="px-2.5 py-1 text-xs font-mono font-semibold hover:bg-white/15 rounded-full transition-colors focus:outline-none"
+                            title="Klik untuk reset ukuran (100%)"
+                            aria-label="Reset zoom">
+                        <span x-text="Math.round(scale * 100) + '%'"></span>
+                    </button>
+
+                    <button type="button"
+                            @click.stop="zoomIn()"
+                            :disabled="scale >= maxScale"
+                            class="p-1.5 rounded-full hover:bg-white/15 disabled:opacity-35 disabled:hover:bg-transparent transition-colors inline-flex items-center justify-center focus:outline-none"
+                            title="Perbesar (Zoom In)"
+                            aria-label="Perbesar">
+                        <i class="ti ti-zoom-in text-base"></i>
+                    </button>
+
+                    <span class="h-4 w-px bg-white/20 mx-0.5"></span>
+
+                    <button type="button"
+                            @click.stop="resetZoom()"
+                            class="p-1.5 rounded-full hover:bg-white/15 transition-colors inline-flex items-center justify-center focus:outline-none"
+                            title="Reset Ukuran (1x)"
+                            aria-label="Reset ukuran">
+                        <i class="ti ti-rotate text-base"></i>
+                    </button>
+
+                    <a :href="src"
+                       download
+                       class="p-1.5 rounded-full hover:bg-white/15 text-white text-decoration-none transition-colors inline-flex items-center justify-center focus:outline-none"
+                       title="Unduh Poster"
+                       aria-label="Unduh poster">
+                        <i class="ti ti-download text-base"></i>
+                    </a>
+                </div>
+
+                <p class="text-[11px] text-white/60 text-center font-medium drop-shadow m-0 hidden sm:block">
+                    Scroll mouse atau dobel-klik untuk zoom &bull; Tarik untuk geser saat diperbesar &bull; Esc untuk tutup
+                </p>
+                <p class="text-[10px] text-white/60 text-center font-medium drop-shadow m-0 sm:hidden">
+                    Cubit (pinch) untuk zoom &bull; Geser untuk navigasi &bull; Tutup via tombol &times;
+                </p>
+            </div>
+        </div>
+    @endif
+
 </div>
 
-{{-- Countdown Timer Alpine Component Definition --}}
+{{-- Alpine Component Definitions --}}
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('countdown', (targetDate) => ({
-        days: '00', hours: '00', minutes: '00', seconds: '00',
-        init() {
-            this.update();
-            setInterval(() => this.update(), 1000);
-        },
-        update() {
-            const target = new Date(targetDate).getTime();
-            const now = Date.now();
-            const diff = target - now;
-            if (diff <= 0) {
-                this.days = '00'; this.hours = '00'; this.minutes = '00'; this.seconds = '00';
-                return;
-            }
-            this.days = String(Math.floor(diff / 86400000)).padStart(2, '0');
-            this.hours = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
-            this.minutes = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
-            this.seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+(function() {
+    function registerAlpineComponents() {
+        if (!window.Alpine) return;
+
+        if (!window.Alpine._hasCountdownData) {
+            window.Alpine._hasCountdownData = true;
+            Alpine.data('countdown', (targetDate) => ({
+                days: '00', hours: '00', minutes: '00', seconds: '00',
+                init() {
+                    this.update();
+                    setInterval(() => this.update(), 1000);
+                },
+                update() {
+                    const target = new Date(targetDate).getTime();
+                    const now = Date.now();
+                    const diff = target - now;
+                    if (diff <= 0) {
+                        this.days = '00'; this.hours = '00'; this.minutes = '00'; this.seconds = '00';
+                        return;
+                    }
+                    this.days = String(Math.floor(diff / 86400000)).padStart(2, '0');
+                    this.hours = String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
+                    this.minutes = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+                    this.seconds = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+                }
+            }));
         }
-    }));
-});
+
+        if (!window.Alpine._hasPosterZoomViewer) {
+            window.Alpine._hasPosterZoomViewer = true;
+            Alpine.data('posterZoomViewer', () => ({
+                isOpen: false,
+                src: '',
+                title: '',
+                scale: 1,
+                minScale: 1,
+                maxScale: 4,
+                translateX: 0,
+                translateY: 0,
+                isDragging: false,
+                startX: 0,
+                startY: 0,
+                lastTouchDist: 0,
+                touchStartScale: 1,
+
+                init() {
+                    window.addEventListener('mousemove', (e) => this.onDrag(e));
+                    window.addEventListener('mouseup', () => this.stopDrag());
+                },
+
+                get imageStyle() {
+                    const transform = `translate3d(${this.translateX}px, ${this.translateY}px, 0) scale(${this.scale})`;
+                    const cursor = this.scale > 1 ? (this.isDragging ? 'grabbing' : 'grab') : 'zoom-in';
+                    const transition = this.isDragging ? 'none' : 'transform 0.15s ease-out';
+                    return `transform: ${transform}; cursor: ${cursor}; transition: ${transition};`;
+                },
+
+                open(detail) {
+                    if (!detail || !detail.src) return;
+                    this.src = detail.src;
+                    this.title = detail.title || 'Poster Acara';
+                    this.resetZoom();
+                    this.isOpen = true;
+                    document.body.classList.add('overflow-hidden');
+                },
+
+                close() {
+                    this.isOpen = false;
+                    document.body.classList.remove('overflow-hidden');
+                    setTimeout(() => this.resetZoom(), 200);
+                },
+
+                setScale(newScale) {
+                    const target = Math.min(this.maxScale, Math.max(this.minScale, Number(newScale.toFixed(2))));
+                    this.scale = target;
+                    if (this.scale <= 1) {
+                        this.translateX = 0;
+                        this.translateY = 0;
+                    }
+                },
+
+                zoomIn() {
+                    this.setScale(this.scale + 0.5);
+                },
+
+                zoomOut() {
+                    this.setScale(this.scale - 0.5);
+                },
+
+                resetZoom() {
+                    this.scale = 1;
+                    this.translateX = 0;
+                    this.translateY = 0;
+                    this.isDragging = false;
+                },
+
+                toggleZoom(e) {
+                    if (this.scale <= 1) {
+                        this.setScale(2.5);
+                    } else {
+                        this.resetZoom();
+                    }
+                },
+
+                handleWheel(e) {
+                    const delta = e.deltaY < 0 ? 0.25 : -0.25;
+                    this.setScale(this.scale + delta);
+                },
+
+                startDrag(e) {
+                    if (this.scale <= 1 || e.button !== 0) return;
+                    this.isDragging = true;
+                    this.startX = e.clientX - this.translateX;
+                    this.startY = e.clientY - this.translateY;
+                },
+
+                onDrag(e) {
+                    if (!this.isDragging || this.scale <= 1) return;
+                    this.translateX = e.clientX - this.startX;
+                    this.translateY = e.clientY - this.startY;
+                },
+
+                stopDrag() {
+                    this.isDragging = false;
+                },
+
+                handleTouchStart(e) {
+                    if (e.touches.length === 1 && this.scale > 1) {
+                        this.isDragging = true;
+                        this.startX = e.touches[0].clientX - this.translateX;
+                        this.startY = e.touches[0].clientY - this.translateY;
+                    } else if (e.touches.length === 2) {
+                        this.isDragging = false;
+                        this.lastTouchDist = Math.hypot(
+                            e.touches[0].clientX - e.touches[1].clientX,
+                            e.touches[0].clientY - e.touches[1].clientY
+                        );
+                        this.touchStartScale = this.scale;
+                    }
+                },
+
+                handleTouchMove(e) {
+                    if (e.touches.length === 1 && this.isDragging && this.scale > 1) {
+                        this.translateX = e.touches[0].clientX - this.startX;
+                        this.translateY = e.touches[0].clientY - this.startY;
+                    } else if (e.touches.length === 2 && this.lastTouchDist > 0) {
+                        const currentDist = Math.hypot(
+                            e.touches[0].clientX - e.touches[1].clientX,
+                            e.touches[0].clientY - e.touches[1].clientY
+                        );
+                        const ratio = currentDist / this.lastTouchDist;
+                        this.setScale(this.touchStartScale * ratio);
+                    }
+                },
+
+                handleTouchEnd(e) {
+                    if (e.touches.length === 0) {
+                        this.isDragging = false;
+                        this.lastTouchDist = 0;
+                        if (this.scale <= 1) this.resetZoom();
+                    } else if (e.touches.length === 1 && this.scale > 1) {
+                        this.isDragging = true;
+                        this.startX = e.touches[0].clientX - this.translateX;
+                        this.startY = e.touches[0].clientY - this.translateY;
+                        this.lastTouchDist = 0;
+                    }
+                }
+            }));
+        }
+    }
+
+    if (window.Alpine) {
+        registerAlpineComponents();
+    } else {
+        document.addEventListener('alpine:init', registerAlpineComponents);
+    }
+})();
 </script>
