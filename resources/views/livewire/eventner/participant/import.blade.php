@@ -74,6 +74,24 @@
                                 </small>
                             </div>
 
+                            <div class="card bg-light border-0 p-3 mb-3">
+                                <div class="form-check form-switch mb-1">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="importDirectHardcopy1" wire:model.live="directHardcopyVerify">
+                                    <label class="form-check-label fw-bold text-dark" for="importDirectHardcopy1">
+                                        <i class="ti ti-shield-check text-success me-1"></i> Tandai seluruh pendaftar yang diimpor sebagai Terverifikasi Berkas Fisik (Hardcopy)
+                                    </label>
+                                </div>
+                                <div class="text-muted small ps-4">
+                                    Pendaftar langsung disetujui (Terverifikasi &amp; Finalized) tanpa perlu upload berkas digital di portal.
+                                </div>
+                                @if($directHardcopyVerify)
+                                    <div class="mt-2 ps-4">
+                                        <label class="form-label small fw-semibold text-muted mb-1">Catatan Verifikasi (Opsional):</label>
+                                        <input type="text" class="form-control form-control-sm" wire:model="verificationNotes" placeholder="Contoh: Berkas fisik diserahkan saat TM">
+                                    </div>
+                                @endif
+                            </div>
+
                             <div class="d-flex gap-2 align-items-center">
                                 <button type="button" class="btn btn-primary" wire:click="uploadExcel" wire:loading.attr="disabled">
                                     <i class="ti ti-file-text me-1"></i> Unggah &amp; Pratinjau
@@ -97,6 +115,13 @@
                                 <div class="col-auto"><span class="badge bg-warning text-dark">{{ $previewMeta['duplikat'] ?? 0 }} duplikat dilewati</span></div>
                                 <div class="col-auto"><span class="badge bg-danger">{{ $previewMeta['error'] ?? 0 }} bermasalah</span></div>
                                 <div class="col-auto"><span class="badge bg-secondary">{{ $previewMeta['targetName'] ?? '-' }}</span></div>
+                                @if($directHardcopyVerify)
+                                    <div class="col-auto">
+                                        <span class="badge bg-success-subtle text-success border border-success">
+                                            <i class="ti ti-shield-check me-1"></i> Mode Hardcopy Aktif
+                                        </span>
+                                    </div>
+                                @endif
                                 @if(!empty($previewMeta['kolomDiabaikan']))
                                     <div class="col-auto">
                                         <span class="badge bg-light text-dark border"
@@ -129,7 +154,13 @@
                                                 <td>{{ $row['pelatih'] }}</td>
                                                 <td>
                                                     @if($row['status'] === 'baru')
-                                                        <span class="badge bg-primary">Baru</span>
+                                                        @if($directHardcopyVerify)
+                                                            <span class="badge bg-success" title="Akan diverifikasi berkas fisik (hardcopy)">
+                                                                <i class="ti ti-shield-check me-1"></i>Hardcopy
+                                                            </span>
+                                                        @else
+                                                            <span class="badge bg-primary">Baru</span>
+                                                        @endif
                                                     @elseif($row['status'] === 'duplikat')
                                                         <span class="badge bg-warning text-dark" title="{{ $row['catatan'] }}">Duplikat</span>
                                                     @else
@@ -142,6 +173,24 @@
                                         @endforelse
                                     </tbody>
                                 </table>
+                            </div>
+
+                            <div class="card bg-light border-0 p-3 mt-3 mb-2">
+                                <div class="form-check form-switch mb-1">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="importDirectHardcopy2" wire:model.live="directHardcopyVerify">
+                                    <label class="form-check-label fw-bold text-dark" for="importDirectHardcopy2">
+                                        <i class="ti ti-shield-check text-success me-1"></i> Tandai seluruh pendaftar yang diimpor sebagai Terverifikasi Berkas Fisik (Hardcopy)
+                                    </label>
+                                </div>
+                                <div class="text-muted small ps-4">
+                                    Pendaftar langsung disetujui (Terverifikasi &amp; Finalized) tanpa perlu upload berkas digital di portal.
+                                </div>
+                                @if($directHardcopyVerify)
+                                    <div class="mt-2 ps-4">
+                                        <label class="form-label small fw-semibold text-muted mb-1">Catatan Verifikasi (Opsional):</label>
+                                        <input type="text" class="form-control form-control-sm" wire:model="verificationNotes" placeholder="Contoh: Berkas fisik diserahkan saat TM">
+                                    </div>
+                                @endif
                             </div>
 
                             <div class="mt-3 d-flex gap-2 align-items-center">

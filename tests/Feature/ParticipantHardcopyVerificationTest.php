@@ -201,6 +201,9 @@ class ParticipantHardcopyVerificationTest extends TestCase
         $response->assertSee('Terverifikasi (Hardcopy)');
         $response->assertSee('Berkas Fisik (Hardcopy) Terverifikasi di Meja Panitia');
         $response->assertSee('Diperiksa fisik di meja panitia');
+        $response->assertDontSee('Belum ada berkas diunggah.');
+        $response->assertDontSee('Daftar Pasukan (0 Anggota)');
+        $response->assertDontSee('Unduh Formulir Pendaftaran');
 
         // 2. Cek download formulir PDF
         $pdfResponse = $this->get(route('magic.link.formulir', $reg->magic_token));

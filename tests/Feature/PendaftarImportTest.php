@@ -121,6 +121,7 @@ class PendaftarImportTest extends TestCase
             'npsn' => '12345678',
             'label_pasukan' => 'Pasukan A',
             'status_berkas' => 'Menunggu',
+            'verification_method' => 'digital',
         ]);
 
         // magic_token diisi hook creating model, bukan komponen.
@@ -128,6 +129,49 @@ class PendaftarImportTest extends TestCase
         $this->assertNotEmpty($reg->magic_token);
         $this->assertNotEmpty($reg->qr_token);
         $this->assertFalse((bool) $reg->is_finalized);
+    }
+
+    public function test_konfirmasi_dengan_opsi_hardcopy_menjadikan_seluruh_pendaftar_terverifikasi_hardcopy()
+    {
+        [$user, $eventner, , $child] = $this->setUpEventner();
+
+        $this->komponen($user, $child->id, $this->makeXlsx([
+            $this->baris('SMP Negeri 1 Hardcopy', '11223344', 'Pasukan A'),
+            $this->baris('SMP Negeri 2 Hardcopy', '55667788', 'Pasukan B'),
+        ]))
+            ->set('directHardcopyVerify', true)
+            ->set('verificationNotes', 'Berkas fisik diserahkan saat TM')
+            ->call('confirmImport')
+            ->assertSet('showImportModal', false);
+
+        $this->assertDatabaseCount('registrations', 2);
+
+        $this->assertDatabaseHas('registrations', [
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $child->id,
+            'nama_sekolah' => 'SMP Negeri 1 Hardcopy',
+            'status_berkas' => 'Terverifikasi',
+            'is_finalized' => 1,
+            'verification_method' => 'hardcopy',
+            'verified_by' => $user->id,
+            'verification_notes' => 'Berkas fisik diserahkan saat TM',
+        ]);
+
+        $this->assertDatabaseHas('registrations', [
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $child->id,
+            'nama_sekolah' => 'SMP Negeri 2 Hardcopy',
+            'status_berkas' => 'Terverifikasi',
+            'is_finalized' => 1,
+            'verification_method' => 'hardcopy',
+            'verified_by' => $user->id,
+            'verification_notes' => 'Berkas fisik diserahkan saat TM',
+        ]);
+
+        foreach (Registration::all() as $reg) {
+            $this->assertNotNull($reg->verified_at);
+            $this->assertTrue($reg->is_hardcopy_verified);
+        }
     }
 
     // ── Duplikat ───────────────────────────────────────────────────────

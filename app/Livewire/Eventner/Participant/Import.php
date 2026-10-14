@@ -48,6 +48,11 @@ class Import extends Component
 
     public string $fileName = '';
 
+    /** Opsi verifikasi langsung sebagai berkas fisik (hardcopy) tanpa perlu softcopy digital. */
+    public bool $directHardcopyVerify = false;
+
+    public string $verificationNotes = 'Diverifikasi via Import Berkas Fisik (Hardcopy)';
+
     /**
      * Alasan berkas ditolak, bila ada.
      *
@@ -94,6 +99,8 @@ class Import extends Component
     public function openImportModal($categoryId = null)
     {
         $this->resetPreview();
+        $this->directHardcopyVerify = false;
+        $this->verificationNotes = 'Diverifikasi via Import Berkas Fisik (Hardcopy)';
 
         $this->activeTab = $this->normalizeTab($categoryId ?? $this->activeTab);
 
@@ -110,6 +117,8 @@ class Import extends Component
         $this->resetPreview();
         $this->showImportModal = false;
         $this->file = null;
+        $this->directHardcopyVerify = false;
+        $this->verificationNotes = 'Diverifikasi via Import Berkas Fisik (Hardcopy)';
     }
 
     /**
@@ -336,6 +345,8 @@ class Import extends Component
 
                     $duplikat[$kunci] = true;
 
+                    $isHardcopy = $this->directHardcopyVerify;
+
                     Registration::create([
                         ...$data,
                         'eventner_id' => $eventner->id,
@@ -343,7 +354,14 @@ class Import extends Component
                         'label_pasukan' => ($label = trim((string) ($row['data']['label_pasukan'] ?? ''))) !== ''
                             ? strip_tags($label)
                             : null,
-                        'status_berkas' => 'Menunggu',
+                        'status_berkas' => $isHardcopy ? 'Terverifikasi' : 'Menunggu',
+                        'is_finalized' => $isHardcopy ? true : false,
+                        'verification_method' => $isHardcopy ? 'hardcopy' : 'digital',
+                        'verified_at' => $isHardcopy ? now() : null,
+                        'verified_by' => $isHardcopy ? auth()->id() : null,
+                        'verification_notes' => $isHardcopy
+                            ? (trim($this->verificationNotes) !== '' ? strip_tags(trim($this->verificationNotes)) : 'Diverifikasi via Import Berkas Fisik (Hardcopy)')
+                            : null,
                     ]);
 
                     $tersimpan++;
@@ -353,11 +371,15 @@ class Import extends Component
             return $this->tolak('Gagal menyimpan import: '.$e->getMessage());
         }
 
+        $wasHardcopy = $this->directHardcopyVerify;
         $this->resetPreview();
         $this->showImportModal = false;
         $this->file = null;
+        $this->directHardcopyVerify = false;
+        $this->verificationNotes = 'Diverifikasi via Import Berkas Fisik (Hardcopy)';
 
-        $message = "Import berhasil: {$tersimpan} pendaftar baru"
+        $statusSuffix = $wasHardcopy ? ' dan diverifikasi sebagai berkas fisik (hardcopy)' : '';
+        $message = "Import berhasil: {$tersimpan} pendaftar baru{$statusSuffix}"
             .($terlewat > 0 ? ", {$terlewat} dilewati karena sudah terdaftar." : '.');
 
         $this->dispatch('import:done', message: $message);

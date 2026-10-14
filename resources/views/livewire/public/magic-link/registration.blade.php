@@ -585,52 +585,152 @@
 
             {{-- Form Area --}}
             @if($registration->status_berkas === 'Terverifikasi')
-                {{-- Verified Data Table View (Locked/Read Only) --}}
-                <div class="surface-card overflow-hidden">
-                    <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40">
-                        <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">
-                            <i class="ti ti-shield-check text-emerald-600"></i> Data Pendaftaran Terverifikasi
-                        </h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm border-collapse text-left">
-                            <tbody class="divide-y divide-outline-variant/30">
-                                <tr>
-                                    <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold w-1/3">Kategori Lomba</th>
-                                    <td class="px-5 py-3.5 text-deep-slate font-bold">{{ $registration->competitionCategory->full_name }}</td>
-                                </tr>
-                                <tr>
-                                    <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">{{ $this->labelSumber('nama_sekolah') ?? 'Nama Sekolah' }}</th>
-                                    <td class="px-5 py-3.5 text-deep-slate font-bold">{{ $registration->display_name }}</td>
-                                </tr>
-                                <tr>
-                                    <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">{{ \App\Models\RegistrationField::SECTIONS['pelatih'] }}</th>
-                                    <td class="px-5 py-3.5">
-                                        <div class="flex items-center gap-3">
-                                            @if($registration->foto_pelatih)
-                                                <img src="{{ asset('storage/' . $registration->foto_pelatih) }}" class="h-11 w-11 rounded-lg object-cover border border-outline-variant/30 shadow-sm shrink-0">
+                @if($registration->verification_method === 'hardcopy')
+                    {{-- Hardcopy Verified View: Bersih, ringkas, tanpa baris berkas digital & tabel kosong --}}
+                    <div class="surface-card overflow-hidden">
+                        <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40 flex flex-wrap items-center justify-between gap-2">
+                            <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-0">
+                                <i class="ti ti-shield-check text-emerald-600"></i> Status Pendaftaran: Terverifikasi (Hardcopy)
+                            </h3>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-700 border border-emerald-500/30">
+                                <i class="ti ti-file-check"></i> Berkas Fisik Sah
+                            </span>
+                        </div>
+                        <div class="p-5 sm:p-6 space-y-5">
+                            {{-- Ringkasan Data Utama Pendaftaran --}}
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                                <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30">
+                                    <span class="text-xs text-on-surface-variant block mb-1 font-semibold">Kategori Lomba</span>
+                                    <strong class="text-deep-slate text-sm font-bold">{{ $registration->competitionCategory->full_name }}</strong>
+                                </div>
+                                <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30">
+                                    <span class="text-xs text-on-surface-variant block mb-1 font-semibold">Sekolah / Kontingen</span>
+                                    <strong class="text-deep-slate text-sm font-bold">{{ $registration->display_name }}</strong>
+                                    @if($registration->npsn)
+                                        <span class="text-xs text-on-surface-variant block mt-0.5 font-mono">NPSN: {{ $registration->npsn }}</span>
+                                    @endif
+                                </div>
+                                <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30">
+                                    <span class="text-xs text-on-surface-variant block mb-1 font-semibold">Pelatih / Penanggung Jawab</span>
+                                    <strong class="text-deep-slate text-sm font-bold">{{ $registration->nama_pelatih ?: '-' }}</strong>
+                                    @if($registration->no_hp)
+                                        <span class="text-xs text-on-surface-variant block mt-0.5">No. HP / WA: {{ $registration->no_hp }}</span>
+                                    @endif
+                                </div>
+                                <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30">
+                                    <span class="text-xs text-on-surface-variant block mb-1 font-semibold">Verifikasi Sekretariat</span>
+                                    <div class="text-xs text-emerald-700 font-bold flex items-center gap-1.5">
+                                        <i class="ti ti-circle-check"></i> Berkas Fisik (Hardcopy) Terverifikasi di Meja Panitia
+                                    </div>
+                                    @if($registration->verification_notes)
+                                        <span class="text-xs text-on-surface-variant block mt-1 italic">
+                                            Catatan: "{{ $registration->verification_notes }}"
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Danton: Hanya tampil jika diisi --}}
+                            @if($registration->danton_nama)
+                                <div class="p-4 rounded-xl bg-surface-container-low border border-outline-variant/30">
+                                    <span class="text-xs text-on-surface-variant block mb-2 font-bold uppercase tracking-wider">Komandan Pasukan (Danton)</span>
+                                    <div class="flex items-center gap-3">
+                                        @if($registration->danton_foto)
+                                            <img src="{{ asset('storage/' . $registration->danton_foto) }}" class="h-10 w-10 rounded-lg object-cover border border-outline-variant/30">
+                                        @endif
+                                        <div>
+                                            <strong class="text-deep-slate block text-sm">{{ $registration->danton_nama }}</strong>
+                                            @if($registration->danton_nisn)
+                                                <span class="text-xs text-on-surface-variant">NISN: {{ $registration->danton_nisn }}</span>
                                             @endif
-                                            <div>
-                                                <div class="font-bold text-deep-slate leading-tight mb-0.5">{{ $registration->nama_pelatih }}</div>
-                                                <span class="text-xs text-on-surface-variant block">{{ $this->labelSumber('no_hp') ?? 'No. HP' }}: {{ $registration->no_hp }}</span>
-                                            </div>
                                         </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">Berkas Persyaratan</th>
-                                    <td class="px-5 py-3.5">
-                                        @if($registration->verification_method === 'hardcopy')
-                                            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 text-xs font-semibold">
-                                                <i class="ti ti-shield-check text-sm"></i>
-                                                <span>Berkas Fisik (Hardcopy) Terverifikasi di Meja Panitia</span>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Daftar Pasukan: Hanya tampil jika ada data anggota pasukan --}}
+                            @if($registration->participants->isNotEmpty())
+                                @php
+                                    $grupPeserta = $this->groupFields->first();
+                                    $subNama = $grupPeserta?->subField('nama');
+                                    $subNisn = $grupPeserta?->subField('nisn');
+                                @endphp
+                                <div class="border border-outline-variant/40 rounded-xl overflow-hidden">
+                                    <div class="bg-surface-container px-4 py-2.5 border-b border-outline-variant/40">
+                                        <h4 class="font-display text-xs font-bold text-deep-slate inline-flex items-center gap-1.5 mb-0">
+                                            <i class="ti ti-users-group"></i> {{ $grupPeserta?->label ?? 'Daftar Pasukan' }} ({{ $registration->participants->count() }} Anggota)
+                                        </h4>
+                                    </div>
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-xs border-collapse text-left">
+                                            <thead class="bg-surface-container-low border-b border-outline-variant/30 font-bold text-deep-slate">
+                                                <tr>
+                                                    <th class="px-4 py-2 text-center w-10">No</th>
+                                                    <th class="px-4 py-2">{{ $subNama['label'] ?? 'Nama Lengkap' }}</th>
+                                                    <th class="px-4 py-2 w-36">{{ $subNisn['label'] ?? 'NISN' }}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-outline-variant/30">
+                                                @foreach($registration->participants as $index => $p)
+                                                    <tr>
+                                                        <td class="px-4 py-2.5 text-center text-on-surface-variant font-medium">{{ $index + 1 }}</td>
+                                                        <td class="px-4 py-2.5 font-bold text-deep-slate">{{ $p->nama }}</td>
+                                                        <td class="px-4 py-2.5 text-on-surface-variant font-medium">{{ $p->nisn ?: '-' }}</td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Kartu Status Sah --}}
+                            <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                                <div class="text-sm font-bold text-emerald-800 flex items-center gap-2">
+                                    <i class="ti ti-shield-check text-base"></i> DATA TERVERIFIKASI BERKAS FISIK (HARDCOPY)
+                                </div>
+                                <p class="text-xs text-emerald-700/90 mt-1 mb-0">
+                                    Data pendaftaran resmi dan berkas fisik telah diserahkan serta diverifikasi langsung di meja panitia. Formulir dan berkas fisik sah tersimpan di sekretariat panitia.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                @else
+                    {{-- Verified Data Table View (Locked/Read Only untuk Digital Track) --}}
+                    <div class="surface-card overflow-hidden">
+                        <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40">
+                            <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">
+                                <i class="ti ti-shield-check text-emerald-600"></i> Data Pendaftaran Terverifikasi
+                            </h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm border-collapse text-left">
+                                <tbody class="divide-y divide-outline-variant/30">
+                                    <tr>
+                                        <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold w-1/3">Kategori Lomba</th>
+                                        <td class="px-5 py-3.5 text-deep-slate font-bold">{{ $registration->competitionCategory->full_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">{{ $this->labelSumber('nama_sekolah') ?? 'Nama Sekolah' }}</th>
+                                        <td class="px-5 py-3.5 text-deep-slate font-bold">{{ $registration->display_name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">{{ \App\Models\RegistrationField::SECTIONS['pelatih'] }}</th>
+                                        <td class="px-5 py-3.5">
+                                            <div class="flex items-center gap-3">
+                                                @if($registration->foto_pelatih)
+                                                    <img src="{{ asset('storage/' . $registration->foto_pelatih) }}" class="h-11 w-11 rounded-lg object-cover border border-outline-variant/30 shadow-sm shrink-0">
+                                                @endif
+                                                <div>
+                                                    <div class="font-bold text-deep-slate leading-tight mb-0.5">{{ $registration->nama_pelatih }}</div>
+                                                    <span class="text-xs text-on-surface-variant block">{{ $this->labelSumber('no_hp') ?? 'No. HP' }}: {{ $registration->no_hp }}</span>
+                                                </div>
                                             </div>
-                                            @if($registration->verification_notes)
-                                                <span class="block text-[11px] text-on-surface-variant mt-1 italic">
-                                                    Catatan: {{ $registration->verification_notes }}
-                                                </span>
-                                            @endif
-                                        @else
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">Berkas Persyaratan</th>
+                                        <td class="px-5 py-3.5">
                                             @php $berkasAda = $this->berkasFields->filter(fn ($b) => $b['path']); @endphp
                                             @if($berkasAda->isEmpty())
                                                 <span class="text-xs text-on-surface-variant italic">Belum ada berkas diunggah.</span>
@@ -643,105 +743,95 @@
                                                     @endforeach
                                                 </div>
                                             @endif
-                                        @endif
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">{{ \App\Models\RegistrationField::SECTIONS['danton'] }}</th>
-                                    <td class="px-5 py-3.5">
-                                        <div class="flex items-center gap-3">
-                                            @if($registration->danton_foto)
-                                                <img src="{{ asset('storage/' . $registration->danton_foto) }}" class="h-11 w-11 rounded-lg object-cover border border-outline-variant/30 shadow-sm shrink-0">
-                                            @endif
-                                            <div>
-                                                <div class="font-bold text-deep-slate leading-tight mb-0.5">{{ $registration->danton_nama }}</div>
-                                                <span class="text-xs text-on-surface-variant block">{{ $this->barisField('danton_nisn')?->label ?? 'NISN' }}: {{ $registration->danton_nisn ?: '-' }}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                                @foreach($this->textFields as $field)
-                                    @php $nilaiTampil = $this->nilaiField($field); @endphp
-                                    {{-- Kartu pelatih & danton di atas sudah menampilkan
-                                         section-nya; di sini hanya isian umum. Berkas
-                                         sudah punya barisnya sendiri di atas. --}}
-                                    @continue($field->isFile() || $field->section !== 'umum')
-                                    @continue($nilaiTampil === '')
-                                    <tr wire:key="ro-{{ $field->id }}">
-                                        <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">{{ $field->label }}</th>
-                                        <td class="px-5 py-3.5 text-deep-slate font-medium">
-                                            @if($field->type === 'select')
-                                                {{ collect($field->options ?? [])->firstWhere('value', $nilaiTampil)['label'] ?? $nilaiTampil }}
-                                            @elseif($field->type === 'wilayah')
-                                                {{ \App\Services\WilayahService::nama($nilaiTampil) }}
-                                            @else
-                                                {{ $nilaiTampil }}
-                                            @endif
                                         </td>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-
-                    @php
-                        $grupPeserta = $this->groupFields->first();
-                        $subNama = $grupPeserta?->subField('nama');
-                        $subNisn = $grupPeserta?->subField('nisn');
-                    @endphp
-                    <div class="bg-surface-container px-5 py-3 border-t border-b border-outline-variant/40">
-                        <h3 class="font-display text-sm font-bold text-deep-slate inline-flex items-center gap-1.5 mb-0">
-                            <i class="ti ti-users-group"></i> {{ $grupPeserta?->label ?? 'Daftar Pasukan' }} ({{ $registration->participants->count() }} Anggota)
-                        </h3>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-xs border-collapse text-left">
-                            <thead class="bg-surface-container-low border-b border-outline-variant/30 font-bold text-deep-slate">
-                                <tr>
-                                    <th class="px-5 py-2.5 text-center w-12">No</th>
-                                    <th class="px-5 py-2.5 w-16">{{ $grupPeserta?->subField('foto')['label'] ?? 'Foto' }}</th>
-                                    <th class="px-5 py-2.5">{{ $subNama['label'] ?? 'Nama Lengkap' }}</th>
-                                    <th class="px-5 py-2.5 w-40">{{ $subNisn['label'] ?? 'NISN' }}</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-outline-variant/30">
-                                @foreach($registration->participants as $index => $p)
                                     <tr>
-                                        <td class="px-5 py-3 text-center text-on-surface-variant font-medium">{{ $index + 1 }}</td>
-                                        <td class="px-5 py-3">
-                                            @if($p->foto)
-                                                <img src="{{ asset('storage/' . $p->foto) }}" class="h-9 w-9 rounded object-cover border border-outline-variant/30 shadow-sm">
-                                            @else
-                                                <div class="flex h-9 w-9 items-center justify-center rounded bg-outline-variant/20 text-on-surface-variant border border-outline-variant/30">
-                                                    <i class="ti ti-user text-sm"></i>
+                                        <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">{{ \App\Models\RegistrationField::SECTIONS['danton'] }}</th>
+                                        <td class="px-5 py-3.5">
+                                            <div class="flex items-center gap-3">
+                                                @if($registration->danton_foto)
+                                                    <img src="{{ asset('storage/' . $registration->danton_foto) }}" class="h-11 w-11 rounded-lg object-cover border border-outline-variant/30 shadow-sm shrink-0">
+                                                @endif
+                                                <div>
+                                                    <div class="font-bold text-deep-slate leading-tight mb-0.5">{{ $registration->danton_nama }}</div>
+                                                    <span class="text-xs text-on-surface-variant block">{{ $this->barisField('danton_nisn')?->label ?? 'NISN' }}: {{ $registration->danton_nisn ?: '-' }}</span>
                                                 </div>
-                                            @endif
+                                            </div>
                                         </td>
-                                        <td class="px-5 py-3 font-bold text-deep-slate text-sm">{{ $p->nama }}</td>
-                                        <td class="px-5 py-3 text-on-surface-variant font-medium">{{ $p->nisn ?: '-' }}</td>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                                    @foreach($this->textFields as $field)
+                                        @php $nilaiTampil = $this->nilaiField($field); @endphp
+                                        @continue($field->isFile() || $field->section !== 'umum')
+                                        @continue($nilaiTampil === '')
+                                        <tr wire:key="ro-{{ $field->id }}">
+                                            <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">{{ $field->label }}</th>
+                                            <td class="px-5 py-3.5 text-deep-slate font-medium">
+                                                @if($field->type === 'select')
+                                                    {{ collect($field->options ?? [])->firstWhere('value', $nilaiTampil)['label'] ?? $nilaiTampil }}
+                                                @elseif($field->type === 'wilayah')
+                                                    {{ \App\Services\WilayahService::nama($nilaiTampil) }}
+                                                @else
+                                                    {{ $nilaiTampil }}
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
 
-                <div class="text-center mt-8">
-                    @if($registration->verification_method === 'hardcopy')
-                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-6 py-2.5 text-sm font-bold text-emerald-600 border border-emerald-500/25">
-                            <i class="ti ti-shield-check"></i> DATA TERVERIFIKASI BERKAS FISIK (HARDCOPY)
-                        </span>
-                        <p class="text-xs font-semibold text-on-surface-variant mt-2 leading-normal">Data di atas adalah data resmi yang disetujui langsung melalui pemeriksaan berkas fisik (hardcopy) di meja panitia.</p>
-                    @else
+                        @php
+                            $grupPeserta = $this->groupFields->first();
+                            $subNama = $grupPeserta?->subField('nama');
+                            $subNisn = $grupPeserta?->subField('nisn');
+                        @endphp
+                        <div class="bg-surface-container px-5 py-3 border-t border-b border-outline-variant/40">
+                            <h3 class="font-display text-sm font-bold text-deep-slate inline-flex items-center gap-1.5 mb-0">
+                                <i class="ti ti-users-group"></i> {{ $grupPeserta?->label ?? 'Daftar Pasukan' }} ({{ $registration->participants->count() }} Anggota)
+                            </h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-xs border-collapse text-left">
+                                <thead class="bg-surface-container-low border-b border-outline-variant/30 font-bold text-deep-slate">
+                                    <tr>
+                                        <th class="px-5 py-2.5 text-center w-12">No</th>
+                                        <th class="px-5 py-2.5 w-16">{{ $grupPeserta?->subField('foto')['label'] ?? 'Foto' }}</th>
+                                        <th class="px-5 py-2.5">{{ $subNama['label'] ?? 'Nama Lengkap' }}</th>
+                                        <th class="px-5 py-2.5 w-40">{{ $subNisn['label'] ?? 'NISN' }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-outline-variant/30">
+                                    @foreach($registration->participants as $index => $p)
+                                        <tr>
+                                            <td class="px-5 py-3 text-center text-on-surface-variant font-medium">{{ $index + 1 }}</td>
+                                            <td class="px-5 py-3">
+                                                @if($p->foto)
+                                                    <img src="{{ asset('storage/' . $p->foto) }}" class="h-9 w-9 rounded object-cover border border-outline-variant/30 shadow-sm">
+                                                @else
+                                                    <div class="flex h-9 w-9 items-center justify-center rounded bg-outline-variant/20 text-on-surface-variant border border-outline-variant/30">
+                                                        <i class="ti ti-user text-sm"></i>
+                                                    </div>
+                                                @endif
+                                            </td>
+                                            <td class="px-5 py-3 font-bold text-deep-slate text-sm">{{ $p->nama }}</td>
+                                            <td class="px-5 py-3 text-on-surface-variant font-medium">{{ $p->nisn ?: '-' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-8">
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-6 py-2.5 text-sm font-bold text-emerald-600 border border-emerald-500/25">
                             <i class="ti ti-circle-check-filled"></i> DATA TERVERIFIKASI PANITIA
                         </span>
                         <p class="text-xs font-semibold text-on-surface-variant mt-2 leading-normal">Data di atas adalah data resmi yang dikunci dan akan digunakan pada saat perlombaan.</p>
-                    @endif
-                    <a href="{{ route('magic.link.formulir', $registration->magic_token) }}" target="_blank" class="btn-primary inline-flex items-center justify-center gap-1.5 mt-4 px-6 py-3 font-bold text-sm cursor-pointer">
-                        <i class="ti ti-file-download"></i> Unduh Formulir Pendaftaran
-                    </a>
-                </div>
+                        <a href="{{ route('magic.link.formulir', $registration->magic_token) }}" target="_blank" class="btn-primary inline-flex items-center justify-center gap-1.5 mt-4 px-6 py-3 font-bold text-sm cursor-pointer">
+                            <i class="ti ti-file-download"></i> Unduh Formulir Pendaftaran
+                        </a>
+                    </div>
+                @endif
             @else
 
                 {{-- FORM VIEW: (for non-verified/booking/rejected states) --}}
