@@ -294,7 +294,7 @@
     </table>
 
     {{-- Pengurangan Detail --}}
-    @if($deductionCategories->isNotEmpty() && $totalDeduction < 0)
+    @if(($deductionCategories->isNotEmpty() || (isset($manualDeductions) && $manualDeductions->isNotEmpty())) && $totalDeduction < 0)
         <table class="cat-head" style="margin-top:14px;">
             <tr>
                 <td class="cat-name" style="background:#c0392b;">Rincian Pengurangan Nilai</td>
@@ -396,6 +396,33 @@
                     @endif
                 @endif
             @endforeach
+        @endif
+
+        {{-- 3. Pengurangan Manual / Khusus --}}
+        @if(isset($manualDeductions) && $manualDeductions->isNotEmpty())
+            <table class="krit">
+                <thead>
+                    <tr>
+                        <th style="color:#c0392b;">Pengurangan Manual / Sanksi Lapangan</th>
+                        <th style="width:80px; text-align:center;">Pengurangan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($manualDeductions as $mDed)
+                        <tr>
+                            <td class="cn">
+                                {{ $mDed->label }}
+                                @if($mDed->assessmentCategory)
+                                    <span style="color:#2563eb; font-size:7.5px;">({{ $mDed->assessmentCategory->name }})</span>
+                                @else
+                                    <span style="color:#6b7280; font-size:7.5px;">(Nilai Akhir)</span>
+                                @endif
+                            </td>
+                            <td class="sv" style="color:#c0392b; background:#fdf2f2;">-{{ $mDed->magnitude }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         @endif
     @endif
 

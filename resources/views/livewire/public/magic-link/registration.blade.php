@@ -187,12 +187,17 @@
                                     <span class="font-bold text-xs">TOTAL KESELURUHAN</span>
                                     <span class="font-extrabold text-sm">{{ \App\Support\ScoreOptions::format($totalAllJudges) }}</span>
                                 </div>
-                                @php $totalDeduction = (float) $deductions->sum('amount'); @endphp
+                                @php $totalDeduction = (float) $deductions->sum(fn ($d) => $d->magnitude); @endphp
                                 @if($deductions->isNotEmpty())
                                     @foreach($deductions as $deduction)
                                         <div class="flex justify-between text-xs font-semibold text-red-600 mb-1 ml-5 mt-2">
-                                            <span>Pengurangan {{ $deduction->deductionCriteria?->name ?? 'Nilai' }}</span>
-                                            <span>-{{ \App\Support\ScoreOptions::format(abs((float) $deduction->amount)) }}</span>
+                                            <span>
+                                                Pengurangan {{ $deduction->label }}
+                                                @if($deduction->assessmentCategory)
+                                                    <span class="text-[10px] text-primary">({{ $deduction->assessmentCategory->name }})</span>
+                                                @endif
+                                            </span>
+                                            <span>-{{ \App\Support\ScoreOptions::format($deduction->magnitude) }}</span>
                                         </div>
                                     @endforeach
                                     <div class="flex justify-between text-xs font-bold text-deep-slate ml-5 mt-2 border-t border-outline-variant/30 pt-1.5">

@@ -153,6 +153,16 @@ class ScoringController extends Controller
             $deductionByCat = [];
             $totalDeduction = 0;
             foreach ($participantDeductions as $d) {
+                // Pengurangan manual (tanpa kriteria master)
+                if ($d->deduction_criteria_id === null) {
+                    $amt = $d->magnitude;
+                    if ($d->assessment_category_id !== null) {
+                        $deductionByCat[$d->assessment_category_id] = ($deductionByCat[$d->assessment_category_id] ?? 0) - $amt;
+                    }
+                    $totalDeduction -= $amt;
+                    continue;
+                }
+
                 // Pengurangan tingkat tidak mengisi kolom kategori mana pun —
                 // nilainya hanya masuk total.
                 if (isset($levelDeductionCriteriaIds[$d->deduction_criteria_id])) {
@@ -552,7 +562,17 @@ class ScoringController extends Controller
 
         $scoreDeductions = ScoreDeduction::where('eventner_id', $eventner->id)
             ->where('registration_id', $registrationId)
-            ->whereIn('deduction_criteria_id', $allowedDeductionCriteriaIds)
+            ->where(function ($q) use ($allowedDeductionCriteriaIds, $roundId) {
+                $q->whereIn('deduction_criteria_id', $allowedDeductionCriteriaIds)
+                    ->orWhere(function ($sq) use ($roundId) {
+                        $sq->whereNull('deduction_criteria_id')
+                            ->when(
+                                $roundId !== null,
+                                fn ($ssq) => $ssq->where(fn ($w) => $w->where('competition_round_id', $roundId)->orWhereNull('competition_round_id'))
+                            );
+                    });
+            })
+            ->with(['deductionCriteria', 'assessmentCategory'])
             ->get();
 
         // Petakan deduction_criteria_id => assessment_category_id. Pengurangan
@@ -569,9 +589,19 @@ class ScoringController extends Controller
         // Akumulasikan pengurangan
         $categoryDeductions = [];
         $totalDeduction = 0;
+        $manualDeductions = collect();
         foreach ($scoreDeductions as $d) {
             // Magnitude: tanda di DB tidak dipercaya, selalu dikurangkan.
             $amt = -$d->magnitude;
+
+            if ($d->deduction_criteria_id === null) {
+                if ($d->assessment_category_id !== null) {
+                    $categoryDeductions[$d->assessment_category_id] = ($categoryDeductions[$d->assessment_category_id] ?? 0) + $amt;
+                }
+                $totalDeduction += $amt;
+                $manualDeductions->push($d);
+                continue;
+            }
 
             $aid = $critToAssessment[$d->deduction_criteria_id] ?? null;
             if ($aid !== null) {
@@ -604,7 +634,8 @@ class ScoringController extends Controller
             'judgeScores' => $judgeScores,
             'judgeCategoryTotals' => $judgeCategoryTotals,
             'deductionCategories' => $deductionCategories,
-            'scoreDeductions' => $scoreDeductions->keyBy('deduction_criteria_id'),
+            'scoreDeductions' => $scoreDeductions->whereNotNull('deduction_criteria_id')->keyBy('deduction_criteria_id'),
+            'manualDeductions' => $manualDeductions,
             'totalDeduction' => $totalDeduction,
             'finalScore' => $grandTotal + $totalDeduction,
         ];

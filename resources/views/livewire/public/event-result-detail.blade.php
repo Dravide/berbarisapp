@@ -202,7 +202,12 @@
                         <div class="space-y-1.5">
                             @foreach($deductions as $d)
                                 <div class="flex items-center justify-between text-xs">
-                                    <span class="text-on-surface-variant">{{ $d->note ?: 'Potongan nilai' }}</span>
+                                    <span class="text-on-surface-variant">
+                                        {{ $d->label }}
+                                        @if($d->assessmentCategory)
+                                            <span class="text-[10px] text-primary font-medium">({{ $d->assessmentCategory->name }})</span>
+                                        @endif
+                                    </span>
                                     <span class="font-semibold text-red-500">-{{ \App\Support\ScoreOptions::format($d->magnitude) }}</span>
                                 </div>
                             @endforeach

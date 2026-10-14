@@ -73,6 +73,7 @@ class Index extends Component
 
     // Deduction support
     public $deductions = []; // [deduction_criteria_id => amount]
+    public $manualDeductions = []; // [['id' => null, 'note' => '', 'amount' => '', 'assessment_category_id' => '']]
     public $deductionCategories = [];
     public $globalDeductionCategories = [];
     public $deductionSaveStatus = '';
@@ -203,6 +204,7 @@ class Index extends Component
         // Bersihkan state penilaian agar tidak terbawa antar mode
         $this->scores = [];
         $this->deductions = [];
+        $this->manualDeductions = [];
         $this->saveStatus = '';
         $this->deductionSaveStatus = '';
         $this->isFinalized = false;
@@ -664,6 +666,7 @@ class Index extends Component
         $this->judges = [];
         $this->isFinalized = false;
         $this->deductions = [];
+        $this->manualDeductions = [];
         $this->deductionCategories = [];
         $this->deductionSaveStatus = '';
     }
@@ -702,7 +705,7 @@ class Index extends Component
      */
     private function hasFinalizedScores(): bool
     {
-        if (!$this->selectedRegistrationId || !$this->selectedJudgeId) {
+        if (!$this->selectedRegistrationId) {
             return false;
         }
 
@@ -714,7 +717,7 @@ class Index extends Component
 
         return AssessmentScore::where('registration_id', $this->selectedRegistrationId)
             ->where('eventner_id', $this->eventner->id)
-            ->where('judge_id', $this->selectedJudgeId)
+            ->when($this->selectedJudgeId, fn ($q) => $q->where('judge_id', $this->selectedJudgeId))
             ->where('is_finalized', true)
             ->when($criteriaIds !== null, fn ($q) => $q->whereIn('assessment_criteria_id', $criteriaIds))
             ->exists();
@@ -1276,6 +1279,28 @@ class Index extends Component
             return;
         }
 
+        // Muat pengurangan manual (tanpa kriteria master)
+        $this->manualDeductions = [];
+        $manualRecords = ScoreDeduction::where('registration_id', $this->selectedRegistrationId)
+            ->where('eventner_id', $this->eventner->id)
+            ->whereNull('deduction_criteria_id')
+            ->when($roundId, function ($q) use ($roundId) {
+                $q->where(function ($sq) use ($roundId) {
+                    $sq->where('competition_round_id', $roundId)
+                        ->orWhereNull('competition_round_id');
+                });
+            })
+            ->get();
+
+        foreach ($manualRecords as $m) {
+            $this->manualDeductions[] = [
+                'id' => $m->id,
+                'note' => $m->note,
+                'amount' => (float) $m->amount,
+                'assessment_category_id' => $m->assessment_category_id ? (string) $m->assessment_category_id : '',
+            ];
+        }
+
         // Hanya baris yang kriterianya masih berlaku di babak ini. Baris di
         // luar cakupan sengaja tidak dimuat: kalau ia masuk $this->deductions,
         // NILAI AKHIR di layar ikut terpotong sanksi babak lain — persis
@@ -1295,6 +1320,44 @@ class Index extends Component
         foreach ($existingDeductions as $deduction) {
             $this->deductions[$deduction->deduction_criteria_id] = $deduction->amount;
         }
+    }
+
+    public function addManualDeduction(): void
+    {
+        if ($this->hasFinalizedScores()) {
+            $this->gagal('Nilai sudah difinalisasi dan dikunci — pengurangan tidak bisa diubah lagi.');
+            return;
+        }
+
+        $this->manualDeductions[] = [
+            'id' => null,
+            'note' => '',
+            'amount' => '',
+            'assessment_category_id' => '',
+        ];
+    }
+
+    public function removeManualDeduction(int $index): void
+    {
+        if ($this->hasFinalizedScores()) {
+            $this->gagal('Nilai sudah difinalisasi dan dikunci — pengurangan tidak bisa diubah lagi.');
+            return;
+        }
+
+        if (! isset($this->manualDeductions[$index])) {
+            return;
+        }
+
+        $item = $this->manualDeductions[$index];
+        if (! empty($item['id'])) {
+            ScoreDeduction::where('id', $item['id'])
+                ->where('eventner_id', $this->eventner->id)
+                ->where('registration_id', $this->selectedRegistrationId)
+                ->delete();
+        }
+
+        unset($this->manualDeductions[$index]);
+        $this->manualDeductions = array_values($this->manualDeductions);
     }
 
     /**
@@ -1337,6 +1400,37 @@ class Index extends Component
             return;
         }
 
+        // Validasi pengurangan manual terlebih dahulu
+        $validatedManuals = [];
+        foreach ($this->manualDeductions as $idx => $m) {
+            $amount = trim((string) ($m['amount'] ?? ''));
+            $note = trim((string) ($m['note'] ?? ''));
+
+            if ($amount === '' && $note === '') {
+                continue;
+            }
+
+            if ($note === '') {
+                $this->deductionSaveStatus = 'error';
+                $this->gagal('Keterangan pelanggaran untuk pengurangan manual baris #' . ($idx + 1) . ' wajib diisi.');
+                return;
+            }
+
+            if (! is_numeric($amount) || (float) $amount <= 0) {
+                $this->deductionSaveStatus = 'error';
+                $this->gagal('Nominal pengurangan manual baris #' . ($idx + 1) . ' harus berupa angka lebih besar dari 0.');
+                return;
+            }
+
+            $validatedManuals[] = [
+                'idx' => $idx,
+                'id' => $m['id'] ?? null,
+                'note' => $note,
+                'amount' => (float) $amount,
+                'assessment_category_id' => ! empty($m['assessment_category_id']) ? (int) $m['assessment_category_id'] : null,
+            ];
+        }
+
         // Cakupan babak dijaga di sini juga: properti $deductions bisa memuat
         // sisa state babak sebelumnya, dan tanpa pagar ini baris babak lain
         // ikut ditulis (atau dihapus) dari layar babak ini.
@@ -1368,6 +1462,55 @@ class Index extends Component
             );
         }
 
+        // Simpan baris pengurangan manual
+        $roundId = $this->selectedRoundId ? (int) $this->selectedRoundId : null;
+        $currentManualIds = [];
+
+        foreach ($validatedManuals as $vm) {
+            if (! empty($vm['id'])) {
+                $record = ScoreDeduction::where('id', $vm['id'])
+                    ->where('eventner_id', $this->eventner->id)
+                    ->where('registration_id', $this->selectedRegistrationId)
+                    ->first();
+
+                if ($record) {
+                    $record->update([
+                        'assessment_category_id' => $vm['assessment_category_id'],
+                        'competition_round_id' => $roundId,
+                        'amount' => $vm['amount'],
+                        'note' => $vm['note'],
+                    ]);
+                    $currentManualIds[] = $record->id;
+                    continue;
+                }
+            }
+
+            $record = ScoreDeduction::create([
+                'registration_id' => $this->selectedRegistrationId,
+                'eventner_id' => $this->eventner->id,
+                'deduction_criteria_id' => null,
+                'assessment_category_id' => $vm['assessment_category_id'],
+                'competition_round_id' => $roundId,
+                'amount' => $vm['amount'],
+                'note' => $vm['note'],
+            ]);
+
+            $currentManualIds[] = $record->id;
+            $this->manualDeductions[$vm['idx']]['id'] = $record->id;
+        }
+
+        // Hapus baris manual yang telah dihapus di form
+        ScoreDeduction::where('registration_id', $this->selectedRegistrationId)
+            ->where('eventner_id', $this->eventner->id)
+            ->whereNull('deduction_criteria_id')
+            ->when(
+                $roundId !== null,
+                fn ($q) => $q->where('competition_round_id', $roundId),
+                fn ($q) => $q->whereNull('competition_round_id')
+            )
+            ->whereNotIn('id', $currentManualIds)
+            ->delete();
+
         $this->deductionSaveStatus = 'saved';
     }
 
@@ -1394,6 +1537,7 @@ class Index extends Component
                     'categories' => $this->eventner->competitionCategories()
                         ->whereNotNull('parent_id')->with('parent')->get()->loadCount('registrations'),
                     'assessmentCategories' => collect(),
+                    'allParticipantAssessmentCategories' => collect(),
                     'judgeTotals' => collect(),
                     'totalDeductions' => 0,
                     'totalDeductionsKategori' => 0,
@@ -1452,7 +1596,17 @@ class Index extends Component
             $participants = $query->get();
         }
 
+        $allParticipantAssessmentCategories = collect();
         if ($this->view === 'scoring' && $this->selectedRegistration) {
+            // Rubrik lengkap peserta terpilih (tanpa filter juri), dipakai
+            // untuk daftar target pengurangan per-kategori dan opsi sanksi manual.
+            $allParticipantAssessmentCategories = AssessmentCategory::rubrikUntukPeserta(
+                $this->eventner->id,
+                $this->selectedRegistration->competition_category_id ?? null,
+                $this->selectedRegistration->competition_series_id,
+                $this->selectedRoundId ? (int) $this->selectedRoundId : null,
+            )->get();
+
             // Rubrik yang ditampilkan = tingkat peserta ini, SERINYA, babak
             // yang sedang dibuka, dan centangan juri yang sedang dipilih.
             //
@@ -1465,13 +1619,15 @@ class Index extends Component
             // hanya menyajikan kolom yang memang tak boleh ia isi. Sebelum
             // jurinya dipilih ($selectedJudgeId null) penyaringnya mati, jadi
             // panitia tetap melihat seluruh lembar lebih dulu.
-            $assessmentCategories = AssessmentCategory::rubrikUntukPeserta(
-                $this->eventner->id,
-                $this->selectedRegistration->competition_category_id ?? null,
-                $this->selectedRegistration->competition_series_id,
-                $this->selectedRoundId ? (int) $this->selectedRoundId : null,
-                $this->selectedJudgeId ? (int) $this->selectedJudgeId : null,
-            )->get();
+            $assessmentCategories = $this->selectedJudgeId
+                ? AssessmentCategory::rubrikUntukPeserta(
+                    $this->eventner->id,
+                    $this->selectedRegistration->competition_category_id ?? null,
+                    $this->selectedRegistration->competition_series_id,
+                    $this->selectedRoundId ? (int) $this->selectedRoundId : null,
+                    (int) $this->selectedJudgeId,
+                )->get()
+                : $allParticipantAssessmentCategories;
         }
 
         // Bobot kriteria per id. Nilai harus dikalikan bobot saat dijumlah —
@@ -1564,6 +1720,19 @@ class Index extends Component
                     $totalDeductionsKategori += abs((float) $amount);
                 }
             }
+
+            foreach ($this->manualDeductions as $m) {
+                $amt = (float) ($m['amount'] ?? 0);
+                if ($amt <= 0) {
+                    continue;
+                }
+
+                if (! empty($m['assessment_category_id'])) {
+                    $totalDeductionsKategori += $amt;
+                } else {
+                    $totalDeductionsGlobal += $amt;
+                }
+            }
         }
 
         $totalDeductions = $totalDeductionsKategori + $totalDeductionsGlobal;
@@ -1615,6 +1784,7 @@ class Index extends Component
             'finalistCount' => $this->finalistIds()->count(),
             'categories' => $this->eventner->competitionCategories()->whereNotNull('parent_id')->with('parent')->get()->loadCount('registrations'),
             'assessmentCategories' => $assessmentCategories,
+            'allParticipantAssessmentCategories' => $allParticipantAssessmentCategories,
             'judgeTotals' => $judgeTotals,
             'totalDeductions' => $totalDeductions,
             'totalDeductionsKategori' => $totalDeductionsKategori,

@@ -324,6 +324,7 @@ class ScoreRecapBuilder
                     $globalCriteriaIds,
                     $this->deductionTargetMap($eventner, $assessmentCategories),
                     $assessmentCategories,
+                    $roundId,
                 ),
             ];
         }
@@ -388,7 +389,7 @@ class ScoreRecapBuilder
      * Peringkat selalu dihitung di dalam kumpulan yang dikirim — itulah yang
      * membuat Grup A dan Grup B punya peringkat sendiri-sendiri.
      */
-    private function rankRows($participants, $allScores, $allDeductions, array $globalCriteriaIds, array $critToAssessment, $assessmentCategories): array
+    private function rankRows($participants, $allScores, $allDeductions, array $globalCriteriaIds, array $critToAssessment, $assessmentCategories, ?int $roundId = null): array
     {
         $data = [];
         foreach ($participants as $participant) {
@@ -408,6 +409,22 @@ class ScoreRecapBuilder
             $deductionByCat = [];
             $globalDeduction = 0;
             foreach ($participantDeductions as $d) {
+                // Saring babak jika pengurangan ini spesifik untuk babak tertentu
+                if ($roundId !== null && $d->competition_round_id !== null && (int) $d->competition_round_id !== (int) $roundId) {
+                    continue;
+                }
+
+                // 1. Pengurangan manual (deduction_criteria_id IS NULL)
+                if ($d->deduction_criteria_id === null) {
+                    if ($d->assessment_category_id !== null) {
+                        $deductionByCat[$d->assessment_category_id] = ($deductionByCat[$d->assessment_category_id] ?? 0) - $d->magnitude;
+                    } else {
+                        $globalDeduction += $d->magnitude;
+                    }
+                    continue;
+                }
+
+                // 2. Pengurangan kriteria preset
                 // Magnitude: tanda di DB tidak dipercaya, selalu dikurangkan.
                 if (isset($globalCriteriaIds[$d->deduction_criteria_id])) {
                     $globalDeduction += $d->magnitude;

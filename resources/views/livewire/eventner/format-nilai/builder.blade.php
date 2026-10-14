@@ -484,6 +484,11 @@
                                 diperhitungkan sebagai pemecah nilai sama.
                             </p>
 
+                            <div class="alert alert-info py-2 px-3 fs-2 d-flex align-items-center gap-2 mb-3">
+                                <i class="ti ti-info-circle fs-5 flex-shrink-0"></i>
+                                <span><strong>Tips:</strong> Kriteria di sini adalah opsi baku (preset). Pengurangan nilai manual (ad-hoc) untuk pelanggaran khusus dapat diinput langsung oleh operator di <strong>Meja Scoring</strong>.</span>
+                            </div>
+
                             @if(session()->has('error'))
                                 <div class="alert alert-danger py-2 fs-2"><i class="ti ti-alert-circle me-1"></i> {{ session('error') }}</div>
                             @endif
@@ -656,6 +661,7 @@
                     <p class="fs-2 mb-0">Isi opsi nilai secara manual dengan pemisah koma (,). Kustomisasi ini membebaskan penilaian Anda, misal: <br><code>1, 2, 3, 4, 5</code> atau <br><code>50, 60, 70, 80, 90, 100</code>.</p>
                     <hr class="my-2">
                     <p class="fs-2 mb-0 text-danger"><i class="ti ti-minus-circle me-1"></i> Pengurangan di dalam kategori hanya memotong kolom kategori itu. Pengurangan yang berlaku untuk seluruh kategori di tingkat lomba ini diatur sebagai <strong>Pengurangan Nilai Tingkat</strong> di bagian bawah.</p>
+                    <p class="fs-2 mb-0 mt-2 text-muted"><i class="ti ti-edit me-1"></i> <strong>Pengurangan Manual (Ad-hoc):</strong> Pelanggaran lapangan di luar kriteria baku dapat langsung diinput oleh operator di Meja Scoring dengan nominal dan target bebas.</p>
                 </div>
             </div>
 

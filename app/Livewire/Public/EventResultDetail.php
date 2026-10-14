@@ -97,6 +97,7 @@ class EventResultDetail extends Component
         // sanksi tingkat lain tidak ikut memotong rincian nilainya.
         $deductions = DeductionCategory::applicableToLevel(
             ScoreDeduction::where('registration_id', $this->registration->id)
+                ->with(['deductionCriteria', 'assessmentCategory'])
                 ->orderBy('amount')
                 ->get(),
             $this->registration->competition_category_id,

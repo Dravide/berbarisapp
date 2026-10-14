@@ -757,11 +757,11 @@
                             @endif
 
                             {{-- ========== PENGURANGAN NILAI ========== --}}
-                            @if(count($deductionCategories) > 0 || count($globalDeductionCategories) > 0)
+                            @if(count($deductionCategories) > 0 || count($globalDeductionCategories) > 0 || count($manualDeductions) > 0 || !$isFinalized)
                                 <div class="border border-danger rounded p-3 mb-4">
                                     <p class="text-danger small fw-semibold text-uppercase mb-3"><i class="ti ti-minus-circle me-1"></i> Pengurangan Nilai (per Kategori)</p>
                                     @php $dedByAssessment = $deductionCategories->groupBy('assessment_category_id'); @endphp
-                                    @foreach($assessmentCategories as $ac)
+                                    @foreach($allParticipantAssessmentCategories as $ac)
                                         @php $deds = $dedByAssessment->get($ac->id, collect()); @endphp
                                         @if($deds->isNotEmpty())
                                             @foreach($deds as $deductionCat)
@@ -824,6 +824,72 @@
                                             @endforeach
                                         </div>
                                     @endif
+
+                                    {{-- Pengurangan Manual (Ad-hoc) --}}
+                                    <div class="border-top pt-3 mt-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <p class="text-danger small fw-semibold text-uppercase mb-0">
+                                                <i class="ti ti-edit me-1"></i> Pengurangan Manual
+                                            </p>
+                                            @if(!$isFinalized)
+                                                <button type="button"
+                                                        wire:click="addManualDeduction"
+                                                        class="btn btn-sm btn-outline-danger py-0 px-2 fs-2">
+                                                    <i class="ti ti-plus me-1"></i> Tambah
+                                                </button>
+                                            @endif
+                                        </div>
+
+                                        @if(empty($manualDeductions))
+                                            <p class="text-muted small mb-2 fst-italic">Belum ada pengurangan manual.</p>
+                                        @else
+                                            <div class="d-flex flex-column gap-2 mb-3">
+                                                @foreach($manualDeductions as $mIndex => $manual)
+                                                    <div class="p-2 bg-light rounded border border-light-subtle" wire:key="manual-ded-{{ $mIndex }}">
+                                                        <div class="mb-1">
+                                                            <label class="form-label text-muted fs-2 mb-0">Target Pengurangan</label>
+                                                            <select wire:model.live="manualDeductions.{{ $mIndex }}.assessment_category_id"
+                                                                    class="form-select form-select-sm py-1"
+                                                                    {{ $isFinalized ? 'disabled' : '' }}>
+                                                                <option value="">Nilai Akhir (Global / Memotong Total Skor)</option>
+                                                                @foreach($allParticipantAssessmentCategories as $cat)
+                                                                    <option value="{{ $cat->id }}">Kategori: {{ $cat->name }}</option>
+                                                                @endforeach
+                                                            </select>
+                                                        </div>
+                                                        <div class="row g-1">
+                                                            <div class="col-7">
+                                                                <input type="text"
+                                                                       wire:model="manualDeductions.{{ $mIndex }}.note"
+                                                                       placeholder="Keterangan / Alasan..."
+                                                                       class="form-control form-control-sm py-1"
+                                                                       {{ $isFinalized ? 'disabled' : '' }}>
+                                                            </div>
+                                                            <div class="col-3">
+                                                                <input type="number"
+                                                                       step="any"
+                                                                       min="0"
+                                                                       wire:model.live.debounce.300ms="manualDeductions.{{ $mIndex }}.amount"
+                                                                       placeholder="Poin"
+                                                                       class="form-control form-control-sm py-1 text-end fw-semibold text-danger"
+                                                                       {{ $isFinalized ? 'disabled' : '' }}>
+                                                            </div>
+                                                            <div class="col-2 text-end">
+                                                                @if(!$isFinalized)
+                                                                    <button type="button"
+                                                                            wire:click="removeManualDeduction({{ $mIndex }})"
+                                                                            class="btn btn-sm btn-outline-danger py-1 px-2 w-100"
+                                                                            title="Hapus baris">
+                                                                        <i class="ti ti-trash"></i>
+                                                                    </button>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    </div>
 
                                     {{-- Deduction summary --}}
                                     <div class="d-flex justify-content-between align-items-center pt-2 border-top">

@@ -661,7 +661,9 @@ class Registration extends Component
 
     public function getScoreDeductionsProperty()
     {
-        return \App\Models\ScoreDeduction::where('registration_id', $this->activeRegId)->get();
+        return \App\Models\ScoreDeduction::where('registration_id', $this->activeRegId)
+            ->with(['deductionCriteria', 'assessmentCategory'])
+            ->get();
     }
 
     public function getScoreJudgesProperty()

@@ -128,9 +128,14 @@ class DeductionCategory extends Model
      */
     public static function applicableToLevel(iterable $deductions, $levelId, array $levelMap)
     {
-        return collect($deductions)->reject(fn ($d) => array_key_exists($d->deduction_criteria_id, $levelMap)
-            && (string) $levelMap[$d->deduction_criteria_id] !== (string) $levelId
-        )->values();
+        return collect($deductions)->reject(function ($d) use ($levelId, $levelMap) {
+            if ($d->deduction_criteria_id === null) {
+                return false;
+            }
+
+            return array_key_exists($d->deduction_criteria_id, $levelMap)
+                && (string) $levelMap[$d->deduction_criteria_id] !== (string) $levelId;
+        })->values();
     }
 
     /**
@@ -185,9 +190,14 @@ class DeductionCategory extends Model
             return collect($deductions);
         }
 
-        return collect($deductions)->reject(fn ($d) => ($roundMap[$d->deduction_criteria_id] ?? null) !== null
-            && (int) $roundMap[$d->deduction_criteria_id] !== $roundId
-        )->values();
+        return collect($deductions)->reject(function ($d) use ($roundMap, $roundId) {
+            if ($d->deduction_criteria_id === null) {
+                return $d->competition_round_id !== null && (int) $d->competition_round_id !== $roundId;
+            }
+
+            return ($roundMap[$d->deduction_criteria_id] ?? null) !== null
+                && (int) $roundMap[$d->deduction_criteria_id] !== $roundId;
+        })->values();
     }
 
     public function criterias()

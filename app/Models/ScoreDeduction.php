@@ -10,6 +10,8 @@ class ScoreDeduction extends Model
         'eventner_id',
         'registration_id',
         'deduction_criteria_id',
+        'assessment_category_id',
+        'competition_round_id',
         'amount',
         'note',
     ];
@@ -33,6 +35,16 @@ class ScoreDeduction extends Model
         return abs((float) $this->amount);
     }
 
+    public function getIsManualAttribute(): bool
+    {
+        return $this->deduction_criteria_id === null;
+    }
+
+    public function getLabelAttribute(): string
+    {
+        return $this->deductionCriteria?->name ?: ($this->note ?: 'Pengurangan Nilai');
+    }
+
     public function eventner()
     {
         return $this->belongsTo(Eventner::class);
@@ -46,5 +58,15 @@ class ScoreDeduction extends Model
     public function deductionCriteria()
     {
         return $this->belongsTo(DeductionCriteria::class);
+    }
+
+    public function assessmentCategory()
+    {
+        return $this->belongsTo(AssessmentCategory::class);
+    }
+
+    public function competitionRound()
+    {
+        return $this->belongsTo(CompetitionRound::class);
     }
 }
