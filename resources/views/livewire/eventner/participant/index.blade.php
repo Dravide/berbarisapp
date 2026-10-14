@@ -221,7 +221,11 @@
                                             @elseif($reg->status_berkas === 'confirmed' || $reg->status_berkas === 'Menunggu')
                                                 <span class="badge bg-warning rounded-3 fw-semibold">Menunggu Verifikasi</span>
                                             @elseif($reg->status_berkas === 'Terverifikasi')
-                                                <span class="badge bg-success rounded-3 fw-semibold">Terverifikasi</span>
+                                                @if($reg->verification_method === 'hardcopy')
+                                                    <span class="badge bg-success rounded-3 fw-semibold" title="Diverifikasi via berkas fisik di meja panitia"><i class="ti ti-file-check me-1"></i>Terverifikasi (Hardcopy)</span>
+                                                @else
+                                                    <span class="badge bg-success rounded-3 fw-semibold">Terverifikasi</span>
+                                                @endif
                                             @elseif($reg->status_berkas === 'dibatalkan')
                                                 <span class="badge bg-dark rounded-3 fw-semibold">Dibatalkan</span>
                                             @elseif($reg->status_berkas === 'Ditolak')
@@ -378,6 +382,25 @@
                                 @error('jumlah_pasukan') <span class="text-danger fs-2">{{ $message }}</span> @enderror
                                 <small class="text-muted">Semua pasukan akan masuk dalam 1 Magic Link.</small>
                             </div>
+                            <div class="col-12 mt-3">
+                                <div class="card border border-primary-subtle bg-primary-subtle bg-opacity-10 rounded-3 p-3 mb-0">
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="directHardcopyVerifySwitch" wire:model.live="directHardcopyVerify">
+                                        <label class="form-check-label fw-bold text-dark" for="directHardcopyVerifySwitch">
+                                            <i class="ti ti-file-check text-primary me-1"></i> Verifikasi Berkas Fisik (Hardcopy) Langsung
+                                        </label>
+                                    </div>
+                                    <small class="text-muted d-block mb-2">
+                                        Aktifkan jika berkas fisik/hardcopy pendaftaran sudah diterima dan diperiksa lengkap oleh panitia di sekretariat. Pendaftar akan langsung berstatus <strong>Terverifikasi</strong> tanpa mewajibkan unggah berkas digital di portal.
+                                    </small>
+                                    @if($directHardcopyVerify)
+                                        <div class="mt-2">
+                                            <label class="form-label small fw-semibold text-dark">Catatan Petugas Verifikasi (Opsional):</label>
+                                            <input type="text" class="form-control form-control-sm" wire:model="verificationNotes" placeholder="Contoh: Berkas formulir basah & surat tugas asli diserahkan ke sekretariat">
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
                             @endif
                         </div>
                     </div>
@@ -419,12 +442,25 @@
 
                 {{-- Body: Checklist-style verification --}}
                 <div class="modal-body p-0">
-                    @if(!$selectedRegistration->is_finalized)
+                    @if($selectedRegistration->is_hardcopy_verified)
+                        <div class="alert alert-success m-4 mb-0 rounded-3 border-0 d-flex align-items-center gap-3 shadow-sm">
+                            <i class="ti ti-shield-check fs-8 text-success"></i>
+                            <div>
+                                <h6 class="fw-bold mb-0">Pendaftaran Terverifikasi via Berkas Fisik (Hardcopy)</h6>
+                                <p class="mb-0 small">
+                                    Berkas persyaratan fisik telah diterima dan disahkan langsung oleh panitia di sekretariat.
+                                    @if($selectedRegistration->verification_notes)
+                                        <br><span class="fst-italic text-dark mt-1 d-inline-block">Catatan: "{{ $selectedRegistration->verification_notes }}"</span>
+                                    @endif
+                                </p>
+                            </div>
+                        </div>
+                    @elseif(!$selectedRegistration->is_finalized)
                         <div class="alert alert-warning m-4 mb-0 rounded-3 border-0 d-flex align-items-center gap-3 shadow-sm">
                             <i class="ti ti-alert-triangle fs-8 text-warning"></i>
                             <div>
-                                <h6 class="fw-bold mb-0">Data Belum Difinalisasi</h6>
-                                <p class="mb-0 small">Sekolah belum menekan tombol "Finalisasi" pada portal. Data mungkin masih berubah.</p>
+                                <h6 class="fw-bold mb-0">Data Belum Difinalisasi via Portal</h6>
+                                <p class="mb-0 small">Sekolah belum menekan tombol "Finalisasi" pada portal. Jika sekolah menyerahkan berkas fisik langsung di meja panitia, gunakan tombol <strong>"ACC Berkas Fisik (Hardcopy)"</strong> di bawah.</p>
                             </div>
                         </div>
                     @endif
@@ -654,7 +690,11 @@
                         @elseif($selectedRegistration->status_berkas === 'confirmed' || $selectedRegistration->status_berkas === 'Menunggu')
                             <span class="badge bg-warning rounded-pill px-3 py-1 ms-2 fw-bold">Menunggu Verifikasi</span>
                         @elseif($selectedRegistration->status_berkas === 'Terverifikasi')
-                            <span class="badge bg-success rounded-pill px-3 py-1 ms-2 fw-bold">Sudah ACC</span>
+                            @if($selectedRegistration->verification_method === 'hardcopy')
+                                <span class="badge bg-success rounded-pill px-3 py-1 ms-2 fw-bold"><i class="ti ti-file-check me-1"></i>Terverifikasi (Hardcopy)</span>
+                            @else
+                                <span class="badge bg-success rounded-pill px-3 py-1 ms-2 fw-bold">Sudah ACC</span>
+                            @endif
                         @elseif($selectedRegistration->status_berkas === 'dibatalkan')
                             <span class="badge bg-dark rounded-pill px-3 py-1 ms-2 fw-bold">Dibatalkan</span>
                         @elseif($selectedRegistration->status_berkas === 'Ditolak')
@@ -663,13 +703,18 @@
                             <span class="badge bg-light text-muted rounded-pill px-3 py-1 ms-2 fw-bold">{{ $selectedRegistration->status_berkas }}</span>
                         @endif
                     </div>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 flex-wrap justify-content-end">
                         <button type="button" class="btn btn-light px-4 rounded-pill fw-semibold" wire:click="closeVerifyModal">
                             <i class="ti ti-x me-1"></i>Tutup
                         </button>
                         <button type="button" class="btn btn-danger px-4 rounded-pill fw-semibold" wire:click="verifyStatus('Ditolak')" wire:confirm="Yakin ingin MENOLAK berkas pendaftaran ini?" @if(!$selectedRegistration->is_finalized) disabled title="Data masih draft" @endif>
                             <i class="ti ti-x me-1"></i> Tolak
                         </button>
+                        @if($selectedRegistration->status_berkas !== 'Terverifikasi')
+                            <button type="button" class="btn btn-outline-success px-4 rounded-pill fw-semibold shadow-xs" wire:click="verifyHardcopy" wire:confirm="Verifikasi dan ACC pendaftaran ini melalui berkas fisik (Hardcopy) tanpa syarat unggah softcopy digital?">
+                                <i class="ti ti-file-check me-1"></i> ACC Berkas Fisik (Hardcopy)
+                            </button>
+                        @endif
                         <button type="button" class="btn btn-success px-4 rounded-pill fw-semibold shadow-sm" wire:click="verifyStatus('Terverifikasi')" wire:confirm="Nyatakan semua data & berkas sudah LENGKAP dan BENAR?" @if(!$selectedRegistration->is_finalized) disabled title="Data masih draft" @endif>
                             <i class="ti ti-check me-1"></i> Verifikasi / ACC
                         </button>

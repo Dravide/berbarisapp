@@ -50,10 +50,15 @@
 
                     {{-- Status Badge --}}
                     @php
+                        $isHardcopy = $registration->verification_method === 'hardcopy';
                         $statusConfig = [
                             'booking' => ['bg-amber-500/10 text-amber-700 border-amber-500/30', 'ti-clock', 'Booking Slot'],
                             'confirmed' => ['bg-blue-500/10 text-blue-700 border-blue-500/30', 'ti-send', 'Menunggu Verifikasi'],
-                            'Terverifikasi' => ['bg-emerald-500/10 text-emerald-700 border-emerald-500/30', 'ti-circle-check', 'Terverifikasi'],
+                            'Terverifikasi' => [
+                                'bg-emerald-500/10 text-emerald-700 border-emerald-500/30',
+                                $isHardcopy ? 'ti-shield-check' : 'ti-circle-check',
+                                $isHardcopy ? 'Terverifikasi (Hardcopy)' : 'Terverifikasi'
+                            ],
                             'Ditolak' => ['bg-red-500/10 text-red-700 border-red-500/30', 'ti-alert-triangle', 'Perlu Revisi'],
                         ];
                         $sc = $statusConfig[$registration->status_berkas] ?? $statusConfig['booking'];
@@ -615,17 +620,29 @@
                                 <tr>
                                     <th class="px-5 py-3.5 bg-surface-container-low text-on-surface-variant font-bold">Berkas Persyaratan</th>
                                     <td class="px-5 py-3.5">
-                                        @php $berkasAda = $this->berkasFields->filter(fn ($b) => $b['path']); @endphp
-                                        @if($berkasAda->isEmpty())
-                                            <span class="text-xs text-on-surface-variant italic">Belum ada berkas diunggah.</span>
-                                        @else
-                                            <div class="flex flex-wrap gap-2">
-                                                @foreach($berkasAda as $berkas)
-                                                    <a href="{{ $berkas['url'] }}" target="_blank" class="btn-ghost py-1.5 px-3 text-xs leading-normal font-bold inline-flex items-center gap-1 text-decoration-none">
-                                                        <i class="ti {{ $berkas['field']->type === 'image' ? 'ti-photo' : 'ti-file-text' }}"></i> {{ $berkas['field']->label }}
-                                                    </a>
-                                                @endforeach
+                                        @if($registration->verification_method === 'hardcopy')
+                                            <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 text-xs font-semibold">
+                                                <i class="ti ti-shield-check text-sm"></i>
+                                                <span>Berkas Fisik (Hardcopy) Terverifikasi di Meja Panitia</span>
                                             </div>
+                                            @if($registration->verification_notes)
+                                                <span class="block text-[11px] text-on-surface-variant mt-1 italic">
+                                                    Catatan: {{ $registration->verification_notes }}
+                                                </span>
+                                            @endif
+                                        @else
+                                            @php $berkasAda = $this->berkasFields->filter(fn ($b) => $b['path']); @endphp
+                                            @if($berkasAda->isEmpty())
+                                                <span class="text-xs text-on-surface-variant italic">Belum ada berkas diunggah.</span>
+                                            @else
+                                                <div class="flex flex-wrap gap-2">
+                                                    @foreach($berkasAda as $berkas)
+                                                        <a href="{{ $berkas['url'] }}" target="_blank" class="btn-ghost py-1.5 px-3 text-xs leading-normal font-bold inline-flex items-center gap-1 text-decoration-none">
+                                                            <i class="ti {{ $berkas['field']->type === 'image' ? 'ti-photo' : 'ti-file-text' }}"></i> {{ $berkas['field']->label }}
+                                                        </a>
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                         @endif
                                     </td>
                                 </tr>
@@ -710,10 +727,17 @@
                 </div>
 
                 <div class="text-center mt-8">
-                    <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-6 py-2.5 text-sm font-bold text-emerald-600 border border-emerald-500/25">
-                        <i class="ti ti-circle-check-filled"></i> DATA TERVERIFIKASI PANITIA
-                    </span>
-                    <p class="text-xs font-semibold text-on-surface-variant mt-2 leading-normal">Data di atas adalah data resmi yang dikunci dan akan digunakan pada saat perlombaan.</p>
+                    @if($registration->verification_method === 'hardcopy')
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-6 py-2.5 text-sm font-bold text-emerald-600 border border-emerald-500/25">
+                            <i class="ti ti-shield-check"></i> DATA TERVERIFIKASI BERKAS FISIK (HARDCOPY)
+                        </span>
+                        <p class="text-xs font-semibold text-on-surface-variant mt-2 leading-normal">Data di atas adalah data resmi yang disetujui langsung melalui pemeriksaan berkas fisik (hardcopy) di meja panitia.</p>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-6 py-2.5 text-sm font-bold text-emerald-600 border border-emerald-500/25">
+                            <i class="ti ti-circle-check-filled"></i> DATA TERVERIFIKASI PANITIA
+                        </span>
+                        <p class="text-xs font-semibold text-on-surface-variant mt-2 leading-normal">Data di atas adalah data resmi yang dikunci dan akan digunakan pada saat perlombaan.</p>
+                    @endif
                     <a href="{{ route('magic.link.formulir', $registration->magic_token) }}" target="_blank" class="btn-primary inline-flex items-center justify-center gap-1.5 mt-4 px-6 py-3 font-bold text-sm cursor-pointer">
                         <i class="ti ti-file-download"></i> Unduh Formulir Pendaftaran
                     </a>

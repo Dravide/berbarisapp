@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Eventner\Participant;
 
+use App\Livewire\Concerns\MelaporKePengguna;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -16,6 +17,8 @@ use Illuminate\Validation\Rule;
 #[Layout('layouts.admin')]
 class Index extends Component
 {
+    use MelaporKePengguna;
+
     public $activeTab = '';
     public $categories = [];
     public $search = '';
@@ -32,10 +35,13 @@ class Index extends Component
     public $nama_pelatih = '';
     public $no_hp = '';
     public $school_email = '';
+    public $directHardcopyVerify = false;
+    public $verificationNotes = '';
 
     // Verification modal
     public $showVerifyModal = false;
-    public $selectedRegistration = null;
+    public ?Registration $selectedRegistration = null;
+    public ?int $selectedRegistrationId = null;
 
     // Swap pasukan modal
     public $showSwapModal = false;
@@ -130,6 +136,8 @@ class Index extends Component
         $this->school_email = '';
         $this->competition_category_id = '';
         $this->jumlah_pasukan = 1;
+        $this->directHardcopyVerify = false;
+        $this->verificationNotes = '';
     }
 
     /**
@@ -243,12 +251,22 @@ class Index extends Component
                     'eventner_id' => $eventner->id,
                     'nama_sekolah' => strip_tags($this->nama_sekolah) . $suffix,
                     'competition_category_id' => $this->competition_category_id,
-                    'status_berkas' => 'Menunggu',
+                    'status_berkas' => $this->directHardcopyVerify ? 'Terverifikasi' : 'Menunggu',
+                    'is_finalized' => $this->directHardcopyVerify ? true : false,
+                    'verification_method' => $this->directHardcopyVerify ? 'hardcopy' : 'digital',
+                    'verified_at' => $this->directHardcopyVerify ? now() : null,
+                    'verified_by' => $this->directHardcopyVerify ? auth()->id() : null,
+                    'verification_notes' => $this->directHardcopyVerify && $this->verificationNotes !== ''
+                        ? strip_tags((string) $this->verificationNotes)
+                        : null,
                 ]);
             }
 
             $label = $this->jumlah_pasukan > 1 ? "{$this->jumlah_pasukan} pasukan" : 'pasukan';
-            session()->flash('success', "Sekolah pendaftar berhasil ditambahkan ({$label}) & Magic Link telah dibuat.");
+            $msgSuccess = $this->directHardcopyVerify
+                ? "Sekolah pendaftar berhasil ditambahkan ({$label}), status Terverifikasi (Hardcopy) & Magic Link aktif."
+                : "Sekolah pendaftar berhasil ditambahkan ({$label}) & Magic Link telah dibuat.";
+            session()->flash('success', $msgSuccess);
         }
 
         $this->closeModal();
@@ -292,9 +310,11 @@ class Index extends Component
     public function openVerifyModal($id)
     {
         $eventner = auth()->user()->eventner;
+        $this->selectedRegistrationId = (int) $id;
         $this->selectedRegistration = Registration::with(['participants', 'fieldValues'])
             ->where('eventner_id', $eventner->id)
             ->findOrFail($id);
+        $this->verificationNotes = $this->selectedRegistration->verification_notes ?? '';
 
         $this->showVerifyModal = true;
     }
@@ -303,6 +323,8 @@ class Index extends Component
     {
         $this->showVerifyModal = false;
         $this->selectedRegistration = null;
+        $this->selectedRegistrationId = null;
+        $this->verificationNotes = '';
     }
 
     /**
@@ -398,25 +420,65 @@ class Index extends Component
 
     public function verifyStatus($status)
     {
+        if (! $this->selectedRegistration && $this->selectedRegistrationId) {
+            $eventner = auth()->user()->eventner;
+            $this->selectedRegistration = Registration::where('eventner_id', $eventner->id)->find($this->selectedRegistrationId);
+        }
+
         if (!$this->selectedRegistration) return;
 
-        // Draft (belum difinalisasi sekolah) tidak boleh diverifikasi
+        // Draft (belum difinalisasi sekolah) tidak boleh diverifikasi via alur digital
         if (!$this->selectedRegistration->is_finalized) {
-            session()->flash('error', 'Pendaftaran ' . $this->selectedRegistration->display_name . ' masih draft. Sekolah belum menekan tombol "Finalisasi" pada portal.');
+            $msg = 'Pendaftaran ' . $this->selectedRegistration->display_name . ' masih draft. Sekolah belum menekan tombol "Finalisasi" pada portal.';
+            session()->flash('error', $msg);
+            $this->gagal($msg);
             $this->closeVerifyModal();
             return;
         }
 
         $updateData = ['status_berkas' => $status];
-        
+
         // Jika ditolak, kembalikan status finalized ke false agar bisa diperbaiki
         if ($status === 'Ditolak') {
             $updateData['is_finalized'] = false;
         }
 
+        if ($status === 'Terverifikasi') {
+            $updateData['verified_at'] = now();
+            $updateData['verified_by'] = auth()->id();
+        }
+
         $this->selectedRegistration->update($updateData);
 
-        session()->flash('success', 'Status pendaftaran ' . $this->selectedRegistration->display_name . ' berhasil diubah menjadi ' . $status . '.');
+        $msgSuccess = 'Status pendaftaran ' . $this->selectedRegistration->display_name . ' berhasil diubah menjadi ' . $status . '.';
+        session()->flash('success', $msgSuccess);
+        $this->toast($msgSuccess);
+        $this->closeVerifyModal();
+    }
+
+    public function verifyHardcopy(?string $notes = null)
+    {
+        if (! $this->selectedRegistration && $this->selectedRegistrationId) {
+            $eventner = auth()->user()->eventner;
+            $this->selectedRegistration = Registration::where('eventner_id', $eventner->id)->find($this->selectedRegistrationId);
+        }
+
+        if (!$this->selectedRegistration) return;
+
+        $catatan = $notes !== null ? $notes : $this->verificationNotes;
+
+        $this->selectedRegistration->update([
+            'status_berkas' => 'Terverifikasi',
+            'is_finalized' => true,
+            'verification_method' => 'hardcopy',
+            'verified_at' => now(),
+            'verified_by' => auth()->id(),
+            'verification_notes' => $catatan !== '' ? strip_tags((string) $catatan) : 'Diverifikasi langsung via berkas fisik (hardcopy) di meja panitia.',
+        ]);
+
+        $msgSuccess = 'Pendaftaran ' . $this->selectedRegistration->display_name . ' berhasil diverifikasi via berkas fisik (Hardcopy).';
+        session()->flash('success', $msgSuccess);
+        $this->toast($msgSuccess);
         $this->closeVerifyModal();
     }
 

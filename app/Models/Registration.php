@@ -45,6 +45,10 @@ class Registration extends Model
         'payment_bank_account_id',
         'payment_verified_at',
         'payment_verified_by',
+        'verification_method',
+        'verified_at',
+        'verified_by',
+        'verification_notes',
     ];
 
     protected function casts(): array
@@ -53,6 +57,7 @@ class Registration extends Model
             'total_fee' => 'decimal:2',
             'payment_verified_at' => 'datetime',
             'daftar_ulang_at' => 'datetime',
+            'verified_at' => 'datetime',
         ];
     }
 
@@ -214,6 +219,21 @@ class Registration extends Model
     public function paymentVerifiedBy()
     {
         return $this->belongsTo(User::class, 'payment_verified_by');
+    }
+
+    public function verifiedBy()
+    {
+        return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function isHardcopyVerified(): bool
+    {
+        return $this->verification_method === 'hardcopy' && $this->status_berkas === 'Terverifikasi';
+    }
+
+    public function getIsHardcopyVerifiedAttribute(): bool
+    {
+        return $this->isHardcopyVerified();
     }
 
     public function deviceTokens()
