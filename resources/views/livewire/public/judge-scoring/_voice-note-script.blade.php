@@ -76,9 +76,55 @@ window.judgeVoiceRecorder = function(config, wire) {
             if (this.savedAudio) this.savedAudio.pause();
             if (this.previewAudio) this.previewAudio.pause();
 
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--color-primary').trim() || '#0062ff';
+
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                alert('Perekaman mikrofon tidak didukung di browser ini atau koneksi belum aman (HTTPS). Pastikan browser mendukung MediaRecorder.');
+                if (window.Swal) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Mikrofon Tidak Didukung',
+                        text: 'Perekaman mikrofon tidak didukung di browser ini atau koneksi belum aman (HTTPS). Pastikan browser mendukung MediaRecorder.',
+                        confirmButtonText: 'Tutup',
+                        confirmButtonColor: primaryColor,
+                    });
+                } else {
+                    alert('Perekaman mikrofon tidak didukung di browser ini atau koneksi belum aman (HTTPS). Pastikan browser mendukung MediaRecorder.');
+                }
                 return;
+            }
+
+            // Konfirmasi SweetAlert2 sebelum mikrofon aktif
+            if (window.Swal) {
+                let swalTitle = 'Mulai Rekam Evaluasi Suara?';
+                let swalText = 'Perekaman suara akan dimulai sepanjang peleton tampil (maks. 12 menit). Juri dapat berbicara mengevaluasi sambil tetap mengisi nilai kriteria di bawah.';
+                let confirmText = '<i class="ti ti-microphone me-1"></i> Mulai Merekam';
+
+                if (this.state === 'saved') {
+                    swalTitle = 'Rekam Ulang Evaluasi Suara?';
+                    swalText = 'Rekaman suara yang tersimpan sebelumnya akan digantikan dengan rekaman baru ini.';
+                    confirmText = '<i class="ti ti-refresh me-1"></i> Ya, Rekam Ulang';
+                } else if (this.state === 'preview') {
+                    swalTitle = 'Rekam Ulang Suara?';
+                    swalText = 'Pratinjau rekaman saat ini akan dibatalkan dan rekaman baru akan dimulai.';
+                    confirmText = '<i class="ti ti-refresh me-1"></i> Ya, Rekam Ulang';
+                }
+
+                const result = await Swal.fire({
+                    title: swalTitle,
+                    text: swalText,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: confirmText,
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: primaryColor,
+                    cancelButtonColor: '#6c757d',
+                    reverseButtons: true,
+                    focusConfirm: true,
+                });
+
+                if (!result.isConfirmed) {
+                    return;
+                }
             }
 
             try {
@@ -138,7 +184,17 @@ window.judgeVoiceRecorder = function(config, wire) {
 
             } catch (err) {
                 console.error('Gagal akses mikrofon:', err);
-                alert('Tidak dapat mengakses mikrofon (' + (err.message || err.name) + '). Pastikan Anda telah memberikan izin akses mikrofon pada browser tablet ini.');
+                if (window.Swal) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Akses Mikrofon Gagal',
+                        text: 'Tidak dapat mengakses mikrofon (' + (err.message || err.name) + '). Pastikan Anda telah memberikan izin akses mikrofon pada browser tablet ini.',
+                        confirmButtonText: 'Mengerti',
+                        confirmButtonColor: primaryColor,
+                    });
+                } else {
+                    alert('Tidak dapat mengakses mikrofon (' + (err.message || err.name) + '). Pastikan Anda telah memberikan izin akses mikrofon pada browser tablet ini.');
+                }
             }
         },
 
@@ -170,7 +226,26 @@ window.judgeVoiceRecorder = function(config, wire) {
             this.state = 'preview';
         },
 
-        cancelRecording() {
+        async cancelRecording() {
+            if ((this.state === 'recording' || this.state === 'paused') && this.timerSeconds > 3) {
+                if (window.Swal) {
+                    const res = await Swal.fire({
+                        title: 'Batalkan Rekaman?',
+                        text: 'Proses perekaman yang sedang berjalan akan dihentikan dan dibuang.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Ya, Batalkan',
+                        cancelButtonText: 'Lanjut Merekam',
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        reverseButtons: true,
+                    });
+                    if (!res.isConfirmed) return;
+                } else if (!confirm('Batalkan rekaman yang sedang berjalan?')) {
+                    return;
+                }
+            }
+
             clearInterval(this.timerInterval);
             if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
                 this.mediaRecorder.stop();
@@ -289,7 +364,16 @@ window.judgeVoiceRecorder = function(config, wire) {
 
             // Upload temporary file ke Livewire component via wire proxy
             if (!wire || !wire.upload) {
-                alert('Komponen penilaian tidak siap. Muat ulang halaman.');
+                if (window.Swal) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Komponen Tidak Siap',
+                        text: 'Komponen penilaian tidak siap. Silakan muat ulang halaman.',
+                        confirmButtonText: 'Tutup',
+                    });
+                } else {
+                    alert('Komponen penilaian tidak siap. Muat ulang halaman.');
+                }
                 this.isUploading = false;
                 return;
             }
@@ -300,7 +384,16 @@ window.judgeVoiceRecorder = function(config, wire) {
                 },
                 (error) => {
                     console.error('Upload voice note gagal:', error);
-                    alert('Gagal mengunggah rekaman. Periksa koneksi internet Anda.');
+                    if (window.Swal) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Upload Gagal',
+                            text: 'Gagal mengunggah rekaman. Periksa koneksi internet Anda lalu coba lagi.',
+                            confirmButtonText: 'Tutup',
+                        });
+                    } else {
+                        alert('Gagal mengunggah rekaman. Periksa koneksi internet Anda.');
+                    }
                     this.isUploading = false;
                 },
                 (event) => {
@@ -315,14 +408,29 @@ window.judgeVoiceRecorder = function(config, wire) {
             wire.saveTextNote();
         },
 
-        confirmDelete() {
-            if (confirm('Hapus voice note ini? Rekaman yang sudah dihapus tidak dapat dipulihkan.')) {
-                if (this.savedAudio) {
-                    this.savedAudio.pause();
-                }
-                if (wire) {
-                    wire.deleteVoiceNote();
-                }
+        async confirmDelete() {
+            if (window.Swal) {
+                const res = await Swal.fire({
+                    title: 'Hapus Voice Note?',
+                    text: 'Rekaman evaluasi suara yang sudah dihapus tidak dapat dipulihkan.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="ti ti-trash me-1"></i> Ya, Hapus',
+                    cancelButtonText: 'Batal',
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    reverseButtons: true,
+                });
+                if (!res.isConfirmed) return;
+            } else if (!confirm('Hapus voice note ini? Rekaman yang sudah dihapus tidak dapat dipulihkan.')) {
+                return;
+            }
+
+            if (this.savedAudio) {
+                this.savedAudio.pause();
+            }
+            if (wire) {
+                wire.deleteVoiceNote();
             }
         },
 
