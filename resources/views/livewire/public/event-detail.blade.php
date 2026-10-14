@@ -778,47 +778,54 @@
                 </div>
             </div>
 
-            {{-- Main Viewport --}}
-            <div class="flex-1 relative w-full h-full flex items-center justify-center overflow-hidden touch-none"
-                 @click.self="close()"
-                 @wheel.prevent="handleWheel($event)">
+            {{-- Main Scrollable Viewport --}}
+            <div x-ref="viewport"
+                 class="flex-1 w-full h-full overflow-y-auto overflow-x-auto overscroll-contain select-none focus:outline-none"
+                 :class="cursorClass"
+                 tabindex="0"
+                 @mousedown="startPan($event)"
+                 @mousemove.window="onPan($event)"
+                 @mouseup.window="stopPan()"
+                 @wheel="handleWheel($event)"
+                 @click="handleBackdropClick($event)">
 
-                <img :src="src"
-                     :alt="title"
-                     draggable="false"
-                     @dblclick="toggleZoom($event)"
-                     @mousedown="startDrag($event)"
-                     @touchstart="handleTouchStart($event)"
-                     @touchmove.prevent="handleTouchMove($event)"
-                     @touchend="handleTouchEnd($event)"
-                     :style="imageStyle"
-                     class="max-h-[82vh] max-w-[90vw] object-contain select-none rounded shadow-2xl origin-center" />
+                <div x-ref="wrapper"
+                     class="min-h-full min-w-full flex justify-center p-4 md:p-8"
+                     :class="mode === 'fit-screen' ? 'items-center' : 'items-start'">
+
+                    <img :src="src"
+                         :alt="title"
+                         draggable="false"
+                         @dblclick.stop="toggleFit()"
+                         :style="imageStyle"
+                         :class="imageClass"
+                         class="select-none rounded shadow-2xl transition-[width,max-width] duration-150" />
+                </div>
             </div>
 
             {{-- Bottom Controls Toolbar --}}
-            <div class="relative z-20 pb-5 px-4 flex flex-col items-center gap-2 pointer-events-none">
+            <div class="relative z-20 pb-4 px-4 flex flex-col items-center gap-2 pointer-events-none">
                 <div class="pointer-events-auto inline-flex items-center gap-1 rounded-full bg-slate-900/90 border border-white/15 px-3 py-1.5 shadow-2xl backdrop-blur-md text-white">
                     <button type="button"
                             @click.stop="zoomOut()"
-                            :disabled="scale <= minScale"
-                            class="p-1.5 rounded-full hover:bg-white/15 disabled:opacity-35 disabled:hover:bg-transparent transition-colors inline-flex items-center justify-center focus:outline-none"
+                            class="p-1.5 rounded-full hover:bg-white/15 transition-colors inline-flex items-center justify-center focus:outline-none"
                             title="Perkecil (Zoom Out)"
                             aria-label="Perkecil">
                         <i class="ti ti-zoom-out text-base"></i>
                     </button>
 
                     <button type="button"
-                            @click.stop="resetZoom()"
-                            class="px-2.5 py-1 text-xs font-mono font-semibold hover:bg-white/15 rounded-full transition-colors focus:outline-none"
-                            title="Klik untuk reset ukuran (100%)"
-                            aria-label="Reset zoom">
-                        <span x-text="Math.round(scale * 100) + '%'"></span>
+                            @click.stop="toggleFit()"
+                            class="px-2.5 py-1 text-xs font-semibold hover:bg-white/15 rounded-full transition-colors focus:outline-none inline-flex items-center gap-1"
+                            :title="mode === 'fit-screen' ? 'Klik untuk Mode Baca (Lebar Penuh & Scroll)' : 'Klik untuk Pas Layar'"
+                            aria-label="Ganti mode tampilan">
+                        <i :class="mode === 'fit-screen' ? 'ti ti-arrows-vertical' : 'ti ti-arrows-maximize'" class="text-xs"></i>
+                        <span x-text="modeText"></span>
                     </button>
 
                     <button type="button"
                             @click.stop="zoomIn()"
-                            :disabled="scale >= maxScale"
-                            class="p-1.5 rounded-full hover:bg-white/15 disabled:opacity-35 disabled:hover:bg-transparent transition-colors inline-flex items-center justify-center focus:outline-none"
+                            class="p-1.5 rounded-full hover:bg-white/15 transition-colors inline-flex items-center justify-center focus:outline-none"
                             title="Perbesar (Zoom In)"
                             aria-label="Perbesar">
                         <i class="ti ti-zoom-in text-base"></i>
@@ -829,7 +836,7 @@
                     <button type="button"
                             @click.stop="resetZoom()"
                             class="p-1.5 rounded-full hover:bg-white/15 transition-colors inline-flex items-center justify-center focus:outline-none"
-                            title="Reset Ukuran (1x)"
+                            title="Reset Ukuran dan Posisi"
                             aria-label="Reset ukuran">
                         <i class="ti ti-rotate text-base"></i>
                     </button>
@@ -837,17 +844,17 @@
                     <a :href="src"
                        download
                        class="p-1.5 rounded-full hover:bg-white/15 text-white text-decoration-none transition-colors inline-flex items-center justify-center focus:outline-none"
-                       title="Unduh Poster"
+                       title="Unduh Poster Asli"
                        aria-label="Unduh poster">
                         <i class="ti ti-download text-base"></i>
                     </a>
                 </div>
 
-                <p class="text-[11px] text-white/60 text-center font-medium drop-shadow m-0 hidden sm:block">
-                    Scroll mouse atau dobel-klik untuk zoom &bull; Tarik untuk geser saat diperbesar &bull; Esc untuk tutup
+                <p class="text-[11px] text-white/70 text-center font-medium drop-shadow m-0 hidden sm:block">
+                    Scroll mouse untuk geser ke atas/bawah &bull; Tarik gambar untuk pan &bull; Dobel-klik untuk ganti mode &bull; Esc untuk tutup
                 </p>
-                <p class="text-[10px] text-white/60 text-center font-medium drop-shadow m-0 sm:hidden">
-                    Cubit (pinch) untuk zoom &bull; Geser untuk navigasi &bull; Tutup via tombol &times;
+                <p class="text-[10px] text-white/70 text-center font-medium drop-shadow m-0 sm:hidden">
+                    Geser atas/bawah untuk membaca &bull; Dobel-ketuk untuk ganti ukuran &bull; Tutup via &times;
                 </p>
             </div>
         </div>
@@ -891,137 +898,187 @@
                 isOpen: false,
                 src: '',
                 title: '',
+                mode: 'fit-width',
                 scale: 1,
-                minScale: 1,
-                maxScale: 4,
-                translateX: 0,
-                translateY: 0,
-                isDragging: false,
+                isTall: true,
+                isPanning: false,
+                hasMoved: false,
                 startX: 0,
                 startY: 0,
-                lastTouchDist: 0,
-                touchStartScale: 1,
-
-                init() {
-                    window.addEventListener('mousemove', (e) => this.onDrag(e));
-                    window.addEventListener('mouseup', () => this.stopDrag());
-                },
+                scrollLeftStart: 0,
+                scrollTopStart: 0,
+                baseWidth: 768,
 
                 get imageStyle() {
-                    const transform = `translate3d(${this.translateX}px, ${this.translateY}px, 0) scale(${this.scale})`;
-                    const cursor = this.scale > 1 ? (this.isDragging ? 'grabbing' : 'grab') : 'zoom-in';
-                    const transition = this.isDragging ? 'none' : 'transform 0.15s ease-out';
-                    return `transform: ${transform}; cursor: ${cursor}; transition: ${transition};`;
+                    if (this.mode === 'custom') {
+                        const width = Math.round(this.baseWidth * this.scale);
+                        return `width: ${width}px; max-width: none; height: auto;`;
+                    }
+                    return '';
+                },
+
+                get imageClass() {
+                    if (this.mode === 'fit-screen') {
+                        return 'max-h-[calc(100vh-8.5rem)] max-w-[92vw] w-auto h-auto object-contain';
+                    }
+                    if (this.mode === 'fit-width') {
+                        return 'w-full max-w-2xl md:max-w-3xl h-auto object-contain';
+                    }
+                    return 'h-auto object-contain';
+                },
+
+                get modeText() {
+                    if (this.mode === 'fit-screen') return 'Pas Layar';
+                    if (this.mode === 'fit-width') return 'Lebar Penuh';
+                    return Math.round(this.scale * 100) + '%';
+                },
+
+                get cursorClass() {
+                    if (this.isPanning) return 'cursor-grabbing';
+                    if (this.mode === 'fit-screen') return 'cursor-zoom-in';
+                    return 'cursor-grab';
                 },
 
                 open(detail) {
                     if (!detail || !detail.src) return;
                     this.src = detail.src;
                     this.title = detail.title || 'Poster Acara';
-                    this.resetZoom();
+                    this.mode = 'fit-width';
+                    this.scale = 1;
+                    this.isPanning = false;
+                    this.hasMoved = false;
                     this.isOpen = true;
                     document.body.classList.add('overflow-hidden');
+
+                    const img = new Image();
+                    img.onload = () => {
+                        this.isTall = img.naturalHeight > img.naturalWidth;
+                        if (!this.isTall) {
+                            this.mode = 'fit-screen';
+                        } else {
+                            this.mode = 'fit-width';
+                        }
+                        this.$nextTick(() => {
+                            if (this.$refs.viewport) {
+                                this.$refs.viewport.scrollTop = 0;
+                                this.$refs.viewport.scrollLeft = 0;
+                            }
+                        });
+                    };
+                    img.src = this.src;
+
+                    this.$nextTick(() => {
+                        if (this.$refs.viewport) {
+                            this.$refs.viewport.scrollTop = 0;
+                            this.$refs.viewport.scrollLeft = 0;
+                        }
+                    });
                 },
 
                 close() {
                     this.isOpen = false;
                     document.body.classList.remove('overflow-hidden');
-                    setTimeout(() => this.resetZoom(), 200);
                 },
 
-                setScale(newScale) {
-                    const target = Math.min(this.maxScale, Math.max(this.minScale, Number(newScale.toFixed(2))));
-                    this.scale = target;
-                    if (this.scale <= 1) {
-                        this.translateX = 0;
-                        this.translateY = 0;
+                resetZoom() {
+                    this.mode = this.isTall ? 'fit-width' : 'fit-screen';
+                    this.scale = 1;
+                    this.$nextTick(() => {
+                        if (this.$refs.viewport) {
+                            this.$refs.viewport.scrollTop = 0;
+                            this.$refs.viewport.scrollLeft = 0;
+                        }
+                    });
+                },
+
+                setMode(newMode) {
+                    this.mode = newMode;
+                    this.scale = 1;
+                },
+
+                toggleFit() {
+                    if (this.mode === 'fit-width') {
+                        this.setMode('fit-screen');
+                    } else {
+                        this.setMode('fit-width');
                     }
                 },
 
                 zoomIn() {
-                    this.setScale(this.scale + 0.5);
+                    if (this.mode === 'fit-screen') {
+                        this.mode = 'fit-width';
+                        this.scale = 1;
+                    } else if (this.mode === 'fit-width') {
+                        this.mode = 'custom';
+                        this.scale = 1.25;
+                    } else {
+                        this.scale = Math.min(3.0, +(this.scale + 0.25).toFixed(2));
+                    }
                 },
 
                 zoomOut() {
-                    this.setScale(this.scale - 0.5);
-                },
-
-                resetZoom() {
-                    this.scale = 1;
-                    this.translateX = 0;
-                    this.translateY = 0;
-                    this.isDragging = false;
-                },
-
-                toggleZoom(e) {
-                    if (this.scale <= 1) {
-                        this.setScale(2.5);
+                    if (this.mode === 'fit-width') {
+                        this.mode = 'fit-screen';
+                        this.scale = 1;
+                    } else if (this.mode === 'custom') {
+                        if (this.scale <= 1.0) {
+                            this.mode = 'fit-screen';
+                            this.scale = 1;
+                        } else {
+                            this.scale = Math.max(0.4, +(this.scale - 0.25).toFixed(2));
+                        }
                     } else {
-                        this.resetZoom();
+                        this.mode = 'custom';
+                        this.scale = 0.75;
                     }
                 },
 
                 handleWheel(e) {
-                    const delta = e.deltaY < 0 ? 0.25 : -0.25;
-                    this.setScale(this.scale + delta);
+                    if (e.ctrlKey || e.metaKey) {
+                        e.preventDefault();
+                        if (e.deltaY < 0) {
+                            this.zoomIn();
+                        } else {
+                            this.zoomOut();
+                        }
+                    }
+                    // Tanpa tombol Ctrl: biarkan scroll native peramban berjalan ke atas/bawah secara alami
                 },
 
-                startDrag(e) {
-                    if (this.scale <= 1 || e.button !== 0) return;
-                    this.isDragging = true;
-                    this.startX = e.clientX - this.translateX;
-                    this.startY = e.clientY - this.translateY;
-                },
-
-                onDrag(e) {
-                    if (!this.isDragging || this.scale <= 1) return;
-                    this.translateX = e.clientX - this.startX;
-                    this.translateY = e.clientY - this.startY;
-                },
-
-                stopDrag() {
-                    this.isDragging = false;
-                },
-
-                handleTouchStart(e) {
-                    if (e.touches.length === 1 && this.scale > 1) {
-                        this.isDragging = true;
-                        this.startX = e.touches[0].clientX - this.translateX;
-                        this.startY = e.touches[0].clientY - this.translateY;
-                    } else if (e.touches.length === 2) {
-                        this.isDragging = false;
-                        this.lastTouchDist = Math.hypot(
-                            e.touches[0].clientX - e.touches[1].clientX,
-                            e.touches[0].clientY - e.touches[1].clientY
-                        );
-                        this.touchStartScale = this.scale;
+                startPan(e) {
+                    if (e.button !== 0 || e.target.closest('button, a')) return;
+                    this.isPanning = true;
+                    this.hasMoved = false;
+                    this.startX = e.clientX;
+                    this.startY = e.clientY;
+                    if (this.$refs.viewport) {
+                        this.scrollLeftStart = this.$refs.viewport.scrollLeft;
+                        this.scrollTopStart = this.$refs.viewport.scrollTop;
                     }
                 },
 
-                handleTouchMove(e) {
-                    if (e.touches.length === 1 && this.isDragging && this.scale > 1) {
-                        this.translateX = e.touches[0].clientX - this.startX;
-                        this.translateY = e.touches[0].clientY - this.startY;
-                    } else if (e.touches.length === 2 && this.lastTouchDist > 0) {
-                        const currentDist = Math.hypot(
-                            e.touches[0].clientX - e.touches[1].clientX,
-                            e.touches[0].clientY - e.touches[1].clientY
-                        );
-                        const ratio = currentDist / this.lastTouchDist;
-                        this.setScale(this.touchStartScale * ratio);
+                onPan(e) {
+                    if (!this.isPanning || !this.$refs.viewport) return;
+                    const dx = e.clientX - this.startX;
+                    const dy = e.clientY - this.startY;
+                    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+                        this.hasMoved = true;
                     }
+                    this.$refs.viewport.scrollLeft = this.scrollLeftStart - dx;
+                    this.$refs.viewport.scrollTop = this.scrollTopStart - dy;
                 },
 
-                handleTouchEnd(e) {
-                    if (e.touches.length === 0) {
-                        this.isDragging = false;
-                        this.lastTouchDist = 0;
-                        if (this.scale <= 1) this.resetZoom();
-                    } else if (e.touches.length === 1 && this.scale > 1) {
-                        this.isDragging = true;
-                        this.startX = e.touches[0].clientX - this.translateX;
-                        this.startY = e.touches[0].clientY - this.translateY;
-                        this.lastTouchDist = 0;
+                stopPan() {
+                    this.isPanning = false;
+                },
+
+                handleBackdropClick(e) {
+                    if (this.hasMoved) {
+                        this.hasMoved = false;
+                        return;
+                    }
+                    if (e.target === this.$refs.viewport || e.target === this.$refs.wrapper) {
+                        this.close();
                     }
                 }
             }));
