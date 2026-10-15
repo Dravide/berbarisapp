@@ -502,6 +502,15 @@
             </a>
           </li>
           <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.documents.*') ? 'active' : '' }}"
+              href="{{ route('eventner.documents.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-file-download"></i>
+              </span>
+              <span class="hide-menu">Juknis &amp; Dokumen</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('eventner.faq.*') ? 'active' : '' }}"
               href="{{ route('eventner.faq.index') }}" aria-expanded="false">
               <span>

@@ -410,6 +410,45 @@
                     </div>
                 </div>
 
+                {{-- Juknis & Dokumen unggahan panitia --}}
+                @php $documents = \App\Models\EventDocument::where('eventner_id', $eventner->id)->orderBy('sort_order')->orderBy('id')->get(); @endphp
+
+                @if($documents->isNotEmpty())
+                    <div class="surface-card p-6">
+                        <h3 class="font-display text-lg font-bold text-deep-slate mb-4">
+                            Juknis &amp; Dokumen
+                        </h3>
+                        <div class="flex flex-col gap-2">
+                            @foreach($documents as $d)
+                                {{-- Seluruh baris adalah tautan: target klik besar,
+                                     tidak perlu membidik tombol kecil di layar HP. --}}
+                                <a href="{{ event_url($eventner, 'documents.download', ['document' => $d->id]) }}"
+                                   title="Unduh {{ $d->title }}"
+                                   class="group flex items-start gap-3 rounded-xl border border-outline-variant/30 p-3 text-decoration-none hover:border-primary/40 transition">
+                                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-container-low text-on-surface-variant border border-outline-variant/40">
+                                        <i class="ti {{ $d->ikon }} text-xl"></i>
+                                    </span>
+                                    <span class="min-w-0 flex-1">
+                                        <span class="block text-sm font-bold text-deep-slate">
+                                            {{ $d->title }}
+                                            @if($d->is_primary)
+                                                <span class="ms-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">Utama</span>
+                                            @endif
+                                        </span>
+                                        @if($d->description)
+                                            <span class="mt-0.5 block text-xs leading-relaxed text-on-surface-variant">{{ $d->description }}</span>
+                                        @endif
+                                        <span class="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">
+                                            {{ $d->extension }} &middot; {{ $d->ukuran_terbaca }}
+                                        </span>
+                                    </span>
+                                    <i class="ti ti-download shrink-0 text-lg text-primary transition"></i>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Galeri Foto --}}
                 @php $galleries = \App\Models\EventGallery::where('eventner_id', $eventner->id)->orderBy('sort_order')->latest()->get(); @endphp
 

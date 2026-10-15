@@ -399,6 +399,11 @@ class Eventner extends Model
         return $this->hasMany(EventGallery::class);
     }
 
+    public function documents()
+    {
+        return $this->hasMany(EventDocument::class)->orderBy('sort_order');
+    }
+
     public function voteBoosters()
     {
         return $this->hasMany(VoteBooster::class);
@@ -598,6 +603,7 @@ class Eventner extends Model
                 'overlay' => '/overlay',
                 'videotron' => '/videotron',
                 'juknis' => '/juknis',
+                'documents.download' => '/dokumen',
             ];
             $path = $paths[$route] ?? '/';
 
@@ -617,6 +623,12 @@ class Eventner extends Model
             if ($route === 'ticket.pdf' && !empty($params['orderCode'])) {
                 $path .= '/' . rawurlencode($params['orderCode']) . '/pdf';
                 unset($params['orderCode']);
+            }
+
+            // Unduh dokumen unggahan panitia: /dokumen/{document}
+            if ($route === 'documents.download' && !empty($params['document'])) {
+                $path .= '/' . rawurlencode($params['document']);
+                unset($params['document']);
             }
 
             $nonPathParams = $params;

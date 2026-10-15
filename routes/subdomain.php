@@ -30,4 +30,7 @@ Route::get('/hasil-drawing', App\Livewire\Eventner\Drawing\Results::class)->name
 Route::get('/overlay', App\Livewire\Public\LivestreamOverlay::class)->name('subdomain.overlay');
 Route::get('/videotron', App\Livewire\Public\VideotronDisplay::class)->name('subdomain.videotron');
 Route::get('/juknis', [App\Http\Controllers\Public\PublicJuknisController::class, 'downloadJuknis'])->name('subdomain.juknis');
+// Unduh dokumen unggahan panitia di host subdomain — event_url() menyusun
+// /dokumen/{id} untuk event ber-subdomain, jadi tanpa baris ini tautannya 404.
+Route::get('/dokumen/{document}', [App\Http\Controllers\Public\PublicJuknisController::class, 'downloadDocumentFromSubdomain'])->name('subdomain.documents.download');
 Route::get('/scan/{token}', App\Livewire\Public\Checkin\Scan::class)->name('subdomain.checkin.scan');

@@ -79,3 +79,8 @@ Route::middleware(['auth:web'])->group(function () {
 
 // Juknis Download
 Route::get('/event/{slug}/juknis', [App\Http\Controllers\Public\PublicJuknisController::class, 'downloadJuknis'])->name('event.juknis');
+
+// Unduh dokumen unggahan panitia. Lewat controller, bukan asset('storage/...'),
+// karena .doc/.xlsx harus diunduh sebagai lampiran — URL storage langsung akan
+// dirender browser dan gagal.
+Route::get('/event/{slug}/dokumen/{document}', [App\Http\Controllers\Public\PublicJuknisController::class, 'downloadDocument'])->name('event.documents.download');

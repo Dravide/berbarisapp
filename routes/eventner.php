@@ -94,6 +94,7 @@ Route::get('schedule', App\Livewire\Eventner\Schedule\Index::class)->name('event
 Route::get('livestream', App\Livewire\Eventner\Livestream\Manage::class)->name('eventner.livestream.index');
 Route::get('faq', App\Livewire\Eventner\Faq\Index::class)->name('eventner.faq.index');
 Route::get('gallery', App\Livewire\Eventner\Gallery\Index::class)->name('eventner.gallery.index');
+Route::get('documents', App\Livewire\Eventner\Document\Index::class)->name('eventner.documents.index');
 Route::get('sponsors', App\Livewire\Eventner\Sponsor\Index::class)->name('eventner.sponsors.index');
 Route::get('tenants', App\Livewire\Eventner\Tenant\Index::class)->name('eventner.tenants.index');
 Route::get('finance', App\Livewire\Eventner\FinanceDashboard::class)->name('eventner.finance.index');
