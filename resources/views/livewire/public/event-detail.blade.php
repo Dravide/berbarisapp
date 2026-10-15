@@ -728,8 +728,20 @@
 
 
     {{-- ========== FLOATING REGISTER CTA (Fixed Bottom) ========== --}}
+    {{--
+        Di bawah md, CTA ini duduk di ATAS bottom-nav mobile, bukan di
+        belakangnya. Sebelumnya ia `bottom-6` — 1.5rem dari dasar layar —
+        sementara nav-nya `h-16` (4rem) dan sama-sama z-40; karena nav
+        dirender belakangan di DOM, tumpukan z yang seri membuat nav menang
+        dan tombolnya tertutup. `4.25rem` = tinggi nav (4rem) + 0.25rem
+        celah, ditambah safe-area yang juga dinaikkan nav-nya — pola yang
+        sama dengan form vote di event-vote.blade.php.
+
+        Dari md ke atas nav-nya `md:hidden`, jadi jarak aslinya (bottom-6)
+        dipakai kembali.
+    --}}
     @if(($eventner->registration_status ?? 'open') != 'closed')
-        <div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-sm w-[calc(100%-2rem)]">
+        <div class="fixed bottom-[calc(4.25rem_+_env(safe-area-inset-bottom))] md:bottom-6 left-1/2 -translate-x-1/2 z-40 max-w-sm w-[calc(100%-2rem)]">
             <a href="{{ event_url($eventner, 'register') }}" class="btn-primary py-3.5 px-6 font-bold text-sm w-full text-center inline-flex justify-center text-decoration-none">
                 <i class="ti ti-clipboard-list text-base"></i>
                 {{ ($eventner->registration_status ?? 'open') == 'booking' ? 'Booking Slot Sekarang' : 'Daftar Sekarang' }}
