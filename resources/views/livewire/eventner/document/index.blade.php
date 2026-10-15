@@ -34,7 +34,7 @@
                     </form>
                 @else
                     <h5 class="card-title fw-semibold mb-4">Unggah Dokumen</h5>
-                    <form wire:submit="upload">
+                    <form wire:submit="unggahDokumen">
                         <div class="mb-3">
                             <label class="form-label">Judul</label>
                             <input class="form-control" wire:model="title" placeholder="mis. Juknis PBB Umum" required>
@@ -47,8 +47,21 @@
                             <div class="form-text">PDF, Word, Excel, atau gambar. Maksimal 10 MB.</div>
                             @error('newFile')<span class="text-danger small">{{ $message }}</span>@enderror
                             <div wire:loading wire:target="newFile" class="text-info small mt-1">Mengunggah...</div>
+                            {{--
+                                Berkas non-gambar tak punya pratinjau, jadi tanpa
+                                baris ini panitia yang memilih PDF tidak dapat
+                                bukti apa pun bahwa berkasnya sudah terunggah ke
+                                livewire-tmp — layar tampak persis seperti sebelum
+                                memilih berkas.
+                            --}}
                             @if($newFile && in_array(strtolower($newFile->getClientOriginalExtension()), ['jpg','jpeg','png']))
                                 <img src="{{ $newFile->temporaryUrl() }}" class="img-fluid rounded mt-2" style="max-height: 150px;" alt="Pratinjau berkas">
+                            @elseif($newFile)
+                                <div class="d-flex align-items-center gap-2 mt-2 text-success small">
+                                    <i class="ti ti-circle-check"></i>
+                                    <span class="text-truncate" title="{{ $newFile->getClientOriginalName() }}">{{ $newFile->getClientOriginalName() }}</span>
+                                    <span class="text-muted">({{ number_format($newFile->getSize() / 1024, 0, ',', '.') }} KB) siap diunggah</span>
+                                </div>
                             @endif
                         </div>
                         <div class="mb-3">
@@ -71,6 +84,13 @@
                                accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
                         @error('replacementFile')<span class="text-danger small">{{ $message }}</span>@enderror
                         <div wire:loading wire:target="replacementFile" class="text-info small mb-2">Mengunggah...</div>
+                        @if($replacementFile)
+                            <div class="d-flex align-items-center gap-2 mb-2 text-success small">
+                                <i class="ti ti-circle-check"></i>
+                                <span class="text-truncate" title="{{ $replacementFile->getClientOriginalName() }}">{{ $replacementFile->getClientOriginalName() }}</span>
+                                <span class="text-muted">({{ number_format($replacementFile->getSize() / 1024, 0, ',', '.') }} KB) siap disimpan</span>
+                            </div>
+                        @endif
                         <div class="d-flex gap-2">
                             <button type="button" class="btn btn-secondary btn-sm" wire:click="batalkanGantiBerkas">Batal</button>
                             <button class="btn btn-primary btn-sm" wire:loading.attr="disabled" wire:target="replacementFile">Simpan Berkas</button>

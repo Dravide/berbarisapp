@@ -48,7 +48,7 @@ class EventDocumentTest extends TestCase
             ->set('title', 'Juknis PBB Umum')
             ->set('description', 'Aturan dasar PBB.')
             ->set('newFile', UploadedFile::fake()->create('juknis-pbb.pdf', 500, 'application/pdf'))
-            ->call('upload')
+            ->call('unggahDokumen')
             ->assertHasNoErrors();
 
         $doc = EventDocument::where('eventner_id', $eventner->id)->firstOrFail();
@@ -90,6 +90,29 @@ class EventDocumentTest extends TestCase
             ->assertSee('Unggah Dokumen');
     }
 
+    /**
+     * Berkas non-gambar tidak punya pratinjau, jadi satu-satunya bukti bahwa
+     * berkasnya sudah mendarat di livewire-tmp adalah baris nama + ukuran ini.
+     * Tanpa itu layar tampak persis seperti sebelum berkas dipilih.
+     */
+    public function test_berkas_bukan_gambar_ditandai_siap_diunggah()
+    {
+        Storage::fake('public');
+        [$user] = $this->panitia();
+
+        $komponen = Livewire::actingAs($user)->test(Index::class);
+
+        $komponen->set('newFile', UploadedFile::fake()->create('juknis-pbb.pdf', 500, 'application/pdf'))
+            ->assertSee('juknis-pbb.pdf')
+            ->assertSee('siap diunggah')
+            ->assertDontSee('Pratinjau berkas');
+
+        // Gambar tetap memakai pratinjau, bukan baris penanda.
+        $komponen->set('newFile', UploadedFile::fake()->image('poster.jpg'))
+            ->assertSee('Pratinjau berkas')
+            ->assertDontSee('siap diunggah');
+    }
+
     public function test_halaman_panel_dapat_dibuka_panitia()
     {
         [$user] = $this->panitia();
@@ -108,11 +131,11 @@ class EventDocumentTest extends TestCase
 
         $komponen->set('title', 'Juknis A')
             ->set('newFile', UploadedFile::fake()->create('a.pdf', 100, 'application/pdf'))
-            ->call('upload');
+            ->call('unggahDokumen');
 
         $komponen->set('title', 'Juknis B')
             ->set('newFile', UploadedFile::fake()->create('b.pdf', 100, 'application/pdf'))
-            ->call('upload');
+            ->call('unggahDokumen');
 
         $this->assertSame(
             1,
@@ -129,7 +152,7 @@ class EventDocumentTest extends TestCase
         Livewire::actingAs($user)->test(Index::class)
             ->set('title', 'Berkas Berbahaya')
             ->set('newFile', UploadedFile::fake()->create('virus.exe', 10, 'application/x-msdownload'))
-            ->call('upload')
+            ->call('unggahDokumen')
             ->assertHasErrors(['newFile']);
 
         $this->assertSame(0, EventDocument::count());
@@ -143,7 +166,7 @@ class EventDocumentTest extends TestCase
         Livewire::actingAs($user)->test(Index::class)
             ->set('title', 'Terlalu Besar')
             ->set('newFile', UploadedFile::fake()->create('besar.pdf', 11000, 'application/pdf'))
-            ->call('upload')
+            ->call('unggahDokumen')
             ->assertHasErrors(['newFile']);
 
         $this->assertSame(0, EventDocument::count());

@@ -11,7 +11,14 @@
         <div class="col-lg-4">
             <div class="card"><div class="card-body">
                 <h5 class="card-title fw-semibold mb-3">Upload Foto</h5>
-                <form wire:submit="upload" wire:confirm="Unggah foto ini?">
+                {{-- Tanpa `wire:confirm`: layouts/admin.blade.php menimpa
+                     window.confirm dan melanjutkan aksinya dengan
+                     `dispatchEvent(new MouseEvent('click'))`. Klik sintetis di
+                     elemen <form> tidak pernah memicu submit, jadi konfirmasi
+                     di sini membuat unggahan batal diam-diam tanpa satu pun
+                     permintaan ke server. Foto sudah tampil pratinjaunya
+                     sebelum diunggah, dan bisa dihapus setelahnya. --}}
+                <form wire:submit="unggahFoto">
                     <div class="mb-3">
                         <input type="file" wire:model="newImage" class="form-control" accept="image/*">
                         @error('newImage')<span class="text-danger small">{{ $message }}</span>@enderror

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Eventner\Gallery;
 
+use App\Livewire\Concerns\MelaporKePengguna;
 use App\Models\EventGallery;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
@@ -12,12 +13,21 @@ use Illuminate\Support\Facades\Storage;
 #[Layout('layouts.admin')]
 class Index extends Component
 {
+    use MelaporKePengguna;
     use WithFileUploads;
 
     public $newImage;
     public $caption = '';
 
-    public function upload()
+    /**
+     * Sengaja BUKAN `upload()`: `upload` adalah alias bawaan Livewire
+     * (`aliases.upload = "$upload"` di dist/livewire.js) dan proxy `$wire`
+     * memeriksa alias SEBELUM method komponen. Method bernama `upload` karena
+     * itu tak pernah terpanggil dari `wire:submit="upload"` — Livewire malah
+     * menjalankan magic $upload dengan argumen kosong, yang melempar
+     * "Cannot read properties of undefined (reading 'name')" di browser.
+     */
+    public function unggahFoto()
     {
         $this->validate(['newImage' => 'required|image|max:5120']);
 
@@ -31,7 +41,7 @@ class Index extends Component
         ]);
 
         $this->reset(['newImage', 'caption']);
-        session()->flash('success', 'Foto berhasil diunggah.');
+        $this->toast('Foto berhasil diunggah.');
     }
 
     public function delete($id)
@@ -41,7 +51,7 @@ class Index extends Component
             Storage::disk('public')->delete($gal->image);
         }
         $gal->delete();
-        session()->flash('success', 'Foto dihapus.');
+        $this->toast('Foto dihapus.');
     }
 
     public function render()

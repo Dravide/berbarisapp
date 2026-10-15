@@ -49,7 +49,15 @@ class Index extends Component
         return EventDocument::where('eventner_id', $this->eventnerId())->findOrFail($id);
     }
 
-    public function upload()
+    /**
+     * Sengaja BUKAN `upload()`: `upload` adalah alias bawaan Livewire
+     * (`aliases.upload = "$upload"` di dist/livewire.js) dan proxy `$wire`
+     * memeriksa alias SEBELUM method komponen. Method bernama `upload` karena
+     * itu tak pernah terpanggil dari `wire:submit="upload"` — Livewire malah
+     * menjalankan magic $upload dengan argumen kosong, yang melempar
+     * "Cannot read properties of undefined (reading 'name')" di browser.
+     */
+    public function unggahDokumen()
     {
         $this->validate([
             'title' => 'required|string|max:255',
