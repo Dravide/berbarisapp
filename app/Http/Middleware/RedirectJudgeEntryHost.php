@@ -30,8 +30,12 @@ class RedirectJudgeEntryHost
 
         $token = $request->route('token');
 
+        $isVoice = $request->routeIs('*.voice*')
+            || str_ends_with($request->getPathInfo(), '/voice')
+            || str_starts_with($request->getPathInfo(), '/voice-note');
+
         $target = $token
-            ? "{$scheme}://{$entryHost}/juri/" . rawurlencode($token)
+            ? "{$scheme}://{$entryHost}/juri/" . rawurlencode($token) . ($isVoice ? '/voice' : '')
             : "{$scheme}://{$entryHost}" . $request->getRequestUri();
 
         return redirect()->away($target, Response::HTTP_MOVED_PERMANENTLY);

@@ -89,6 +89,24 @@ if (!function_exists('judge_entry_url')) {
     }
 }
 
+if (!function_exists('judge_voice_entry_url')) {
+    /**
+     * URL absolut halaman khusus entry voice note juri di host entry milik platform.
+     */
+    function judge_voice_entry_url(string $token): string
+    {
+        $scheme = parse_url((string) config('app.entry_host'), PHP_URL_SCHEME)
+            ?: parse_url((string) config('app.url'), PHP_URL_SCHEME)
+            ?: 'http';
+
+        if ($scheme === 'http' && ! app()->environment(['local', 'testing'])) {
+            $scheme = 'https';
+        }
+
+        return $scheme . '://' . judge_entry_host() . '/juri/' . rawurlencode($token) . '/voice';
+    }
+}
+
 if (!function_exists('panitia_entry_url')) {
     /**
      * URL absolut halaman entry nilai panitia di host entry milik platform.

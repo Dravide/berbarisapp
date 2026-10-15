@@ -68,6 +68,9 @@ class Index extends Component
     public bool $isFinalized = false;
     public string $saveStatus = ''; // '' | 'saved' | 'error'
 
+    /** Mode khusus entry voice note tanpa nilai angka kriteria. */
+    public bool $isVoiceOnly = false;
+
     /** File audio voice note yang baru di-upload (temporary Livewire upload). */
     public $audioUpload = null;
 
@@ -116,6 +119,13 @@ class Index extends Component
 
         $this->judgeId = $judge->id;
         $this->eventnerId = $judge->eventner_id;
+
+        $isVoicePath = request()->routeIs('*.voice*')
+            || str_ends_with(request()->getPathInfo(), '/voice')
+            || str_starts_with(request()->getPathInfo(), '/voice-note')
+            || request()->query('mode') === 'voice';
+
+        $this->isVoiceOnly = $isVoicePath;
     }
 
     public function getJudgeProperty(): Judge
@@ -131,6 +141,17 @@ class Index extends Component
     /** Kategori lomba yang ditugaskan ke juri ini (inversi loadJudges di dashboard). */
     public function getCategoriesProperty()
     {
+        if ($this->isVoiceOnly) {
+            $assigned = $this->assignedLevelIds();
+
+            return \App\Models\CompetitionCategory::where('eventner_id', $this->eventnerId)
+                ->whereNotNull('parent_id')
+                ->when(! empty($assigned), fn ($q) => $q->whereIn('id', $assigned))
+                ->with('parent')
+                ->withCount('registrations')
+                ->get();
+        }
+
         return \App\Models\CompetitionCategory::where('eventner_id', $this->eventnerId)
             ->whereNotNull('parent_id')
             ->where(function ($q) {
@@ -225,6 +246,18 @@ class Index extends Component
             $query->whereIn('id', CompetitionRoundRegistration::where('eventner_id', $this->eventnerId)
                 ->where('competition_round_id', $round->id)
                 ->pluck('registration_id'));
+        }
+
+        // Dalam mode voice note tanpa penugasan grup spesifik, dapat menilai seluruh peserta tingkat ini.
+        if ($this->isVoiceOnly) {
+            $hasAssignment = DB::table('competition_group_judge')
+                ->where('judge_id', $this->judgeId)
+                ->where('competition_category_id', $competitionCategoryId)
+                ->exists();
+
+            if (! $hasAssignment) {
+                return $query->count();
+            }
         }
 
         // Rubrik global = juri menilai seluruh tingkat, tanpa saringan grup.
@@ -404,6 +437,18 @@ class Index extends Component
                 ->pluck('registration_id'));
         }
 
+        // Dalam mode voice note tanpa penugasan grup spesifik, dapat menilai seluruh peserta tingkat ini.
+        if ($this->isVoiceOnly) {
+            $hasAssignment = DB::table('competition_group_judge')
+                ->where('judge_id', $this->judgeId)
+                ->where('competition_category_id', (int) $this->selectedCategoryId)
+                ->exists();
+
+            if (! $hasAssignment) {
+                return $query;
+            }
+        }
+
         // Rubrik global berlaku untuk semua tingkat — juri seperti ini menilai
         // seluruh peserta, tak peduli grupnya.
         if ($this->hasGlobalRubric()) {
@@ -447,7 +492,9 @@ class Index extends Component
         $this->selectedRegistrationId = $registration->id;
         $this->view = 'scoring';
         $this->loadCriteria();
-        $this->jumpToFirstUnfilled();
+        if (! $this->isVoiceOnly) {
+            $this->jumpToFirstUnfilled();
+        }
     }
 
     /** Muat kriteria yang boleh dinilai + nilai yang sudah tersimpan. */
@@ -490,18 +537,20 @@ class Index extends Component
         $this->isFinalized = false;
         $this->saveStatus = '';
 
-        $existing = AssessmentScore::where('registration_id', $registration->id)
-            ->where('eventner_id', $this->eventnerId)
-            ->where('judge_id', $this->judgeId)
-            // Babak lain punya barisnya sendiri — memuat semuanya membuat
-            // penanda "terkunci" dan daftar nilai bercampur antar babak.
-            ->whereIn('assessment_criteria_id', $this->allowedCriteriaIds)
-            ->get();
+        if (! empty($this->allowedCriteriaIds)) {
+            $existing = AssessmentScore::where('registration_id', $registration->id)
+                ->where('eventner_id', $this->eventnerId)
+                ->where('judge_id', $this->judgeId)
+                // Babak lain punya barisnya sendiri — memuat semuanya membuat
+                // penanda "terkunci" dan daftar nilai bercampur antar babak.
+                ->whereIn('assessment_criteria_id', $this->allowedCriteriaIds)
+                ->get();
 
-        foreach ($existing as $score) {
-            $this->scores[$score->assessment_criteria_id] = $score->score;
-            if ($score->is_finalized) {
-                $this->isFinalized = true;
+            foreach ($existing as $score) {
+                $this->scores[$score->assessment_criteria_id] = $score->score;
+                if ($score->is_finalized) {
+                    $this->isFinalized = true;
+                }
             }
         }
 
@@ -611,6 +660,77 @@ class Index extends Component
         }
 
         $this->currentCriteriaIndex = max(0, count($this->flatCriteria) - 1);
+    }
+
+    /**
+     * Beralih antara mode penilaian angka dan mode khusus evaluasi voice note.
+     */
+    public function toggleVoiceOnlyMode(): void
+    {
+        $this->isVoiceOnly = ! $this->isVoiceOnly;
+
+        if ($this->view === 'scoring' && $this->selectedRegistrationId) {
+            $this->loadCriteria();
+            if (! $this->isVoiceOnly) {
+                $this->jumpToFirstUnfilled();
+            }
+        }
+    }
+
+    /**
+     * Daftar peserta tingkat terpilih yang sudah diurutkan sesuai urutan tampil/undian.
+     */
+    public function getSortedParticipantsProperty()
+    {
+        if (! $this->selectedCategoryId) {
+            return collect();
+        }
+
+        return $this->participantsQuery()
+            ->with(['competitionCategory', 'competitionSeries', 'roundRegistrations'])
+            ->get()
+            ->sortBy([
+                fn ($a, $b) => ($a->nomorUndian($this->activeRound) ?? PHP_INT_MAX)
+                    <=> ($b->nomorUndian($this->activeRound) ?? PHP_INT_MAX),
+                fn ($a, $b) => strcmp($a->nama_sekolah ?? '', $b->nama_sekolah ?? ''),
+            ])
+            ->values();
+    }
+
+    public function getHasNextParticipantProperty(): bool
+    {
+        $list = $this->sortedParticipants;
+        $currentIndex = $list->search(fn ($p) => $p->id === $this->selectedRegistrationId);
+
+        return $currentIndex !== false && isset($list[$currentIndex + 1]);
+    }
+
+    public function getHasPrevParticipantProperty(): bool
+    {
+        $list = $this->sortedParticipants;
+        $currentIndex = $list->search(fn ($p) => $p->id === $this->selectedRegistrationId);
+
+        return $currentIndex !== false && $currentIndex > 0;
+    }
+
+    public function nextParticipant(): void
+    {
+        $list = $this->sortedParticipants;
+        $currentIndex = $list->search(fn ($p) => $p->id === $this->selectedRegistrationId);
+
+        if ($currentIndex !== false && isset($list[$currentIndex + 1])) {
+            $this->selectParticipant($list[$currentIndex + 1]->id);
+        }
+    }
+
+    public function prevParticipant(): void
+    {
+        $list = $this->sortedParticipants;
+        $currentIndex = $list->search(fn ($p) => $p->id === $this->selectedRegistrationId);
+
+        if ($currentIndex !== false && $currentIndex > 0 && isset($list[$currentIndex - 1])) {
+            $this->selectParticipant($list[$currentIndex - 1]->id);
+        }
     }
 
     /**
@@ -911,22 +1031,7 @@ class Index extends Component
         $participants = collect();
 
         if ($this->selectedCategoryId) {
-            $participants = $this->participantsQuery()
-                ->with(['competitionCategory', 'competitionSeries', 'roundRegistrations'])
-                ->get()
-                // Urutan panggung (hasil undian) dulu; yang belum diundian di bawah.
-                //
-                // Nomor undiannya diambil per babak: babak final punya undian
-                // sendiri, jadi mengurut dari registrations.urutan_tampil akan
-                // menyusun finalis dengan nomor fase grupnya. Relasi
-                // roundRegistrations sudah dimuat di atas, jadi ini tidak
-                // menambah query.
-                ->sortBy([
-                    fn ($a, $b) => ($a->nomorUndian($this->activeRound) ?? PHP_INT_MAX)
-                        <=> ($b->nomorUndian($this->activeRound) ?? PHP_INT_MAX),
-                    fn ($a, $b) => strcmp($a->nama_sekolah ?? '', $b->nama_sekolah ?? ''),
-                ])
-                ->values();
+            $participants = $this->sortedParticipants;
 
             // Status penilaian juri ini per peserta.
             $status = AssessmentScore::where('eventner_id', $this->eventnerId)
@@ -935,19 +1040,23 @@ class Index extends Component
                 ->get()
                 ->groupBy('registration_id');
 
-            $hasNotes = JudgeNote::where('eventner_id', $this->eventnerId)
+            $notes = JudgeNote::where('eventner_id', $this->eventnerId)
                 ->where('judge_id', $this->judgeId)
                 ->whereIn('registration_id', $participants->pluck('id'))
-                ->whereNotNull('audio_path')
-                ->pluck('registration_id')
-                ->flip();
+                ->get()
+                ->keyBy('registration_id');
 
-            $participants = $participants->map(function ($reg) use ($status, $hasNotes) {
+            $participants = $participants->map(function ($reg) use ($status, $notes) {
                 $rows = $status->get($reg->id, collect());
                 $reg->judge_status = $rows->isEmpty()
                     ? 'belum'
                     : ($rows->every(fn ($r) => (bool) $r->is_finalized) ? 'final' : 'dinilai');
-                $reg->has_voice_note = isset($hasNotes[$reg->id]);
+
+                $note = $notes->get($reg->id);
+                $reg->has_voice_note = $note && ! empty($note->audio_path);
+                $reg->has_text_note = $note && ! empty($note->notes);
+                $reg->voice_duration_formatted = $note?->formatted_duration ?? null;
+
                 return $reg;
             });
         }
@@ -961,9 +1070,11 @@ class Index extends Component
             'rounds' => $this->availableRounds,
             'selectedRoundId' => $this->selectedRoundId,
             'selectedRound' => $this->activeRound,
+            'isVoiceOnly' => $this->isVoiceOnly,
         ])->layoutData([
             'eventner' => $this->eventner,
             'judge' => $this->judge,
-        ])->title('Penilaian Juri - ' . $this->eventner->nama_event);
+            'isVoiceOnly' => $this->isVoiceOnly,
+        ])->title(($this->isVoiceOnly ? 'Evaluasi Voice Note - ' : 'Penilaian Juri - ') . $this->eventner->nama_event);
     }
 }

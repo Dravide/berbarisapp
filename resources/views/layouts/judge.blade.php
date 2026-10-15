@@ -112,12 +112,20 @@
             @endif
 
             <span class="min-w-0 flex-1">
-                <span class="block text-[10px] font-bold uppercase tracking-wider text-primary leading-none">Penilaian Juri</span>
+                @if($isVoiceOnly ?? false)
+                    <span class="block text-[10px] font-bold uppercase tracking-wider text-emerald-600 leading-none">
+                        <i class="ti ti-microphone"></i> Evaluasi Voice Note
+                    </span>
+                @else
+                    <span class="block text-[10px] font-bold uppercase tracking-wider text-primary leading-none">Penilaian Juri</span>
+                @endif
                 <span class="mt-0.5 block truncate font-display text-sm font-bold text-on-surface">{{ $eventner?->nama_event }}</span>
             </span>
 
             <span class="shrink-0 text-right">
-                <span class="block text-[10px] uppercase tracking-wider text-on-surface-variant leading-none">Juri</span>
+                <span class="block text-[10px] uppercase tracking-wider text-on-surface-variant leading-none">
+                    {{ ($isVoiceOnly ?? false) ? 'Juri Evaluasi' : 'Juri' }}
+                </span>
                 <span class="mt-0.5 block max-w-[9rem] truncate text-sm font-bold text-on-surface">{{ $judge?->name }}</span>
             </span>
 

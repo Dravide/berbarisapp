@@ -203,6 +203,62 @@ class JudgeAccessCardTest extends TestCase
             ->assertSee(route('eventner.judges.kartu-akses', $this->judge->id), false);
     }
 
+    /**
+     * Kartu juga menerangkan cara masuk mode voice note: alamat khusus yang
+     * membuka lembar yang sama tanpa rubrik nilai angka.
+     */
+    public function test_kartu_memuat_keterangan_voice_note()
+    {
+        $html = $this->renderCard();
+
+        $this->assertStringContainsString('Evaluasi Voice Note', $html);
+        $this->assertStringContainsString('Tanpa Nilai Angka', $html);
+        $this->assertStringContainsString('perekam suara', $html);
+
+        // Alamat mode voice note dari helper, bukan dirangkai di blade.
+        $this->assertStringContainsString(
+            judge_voice_entry_url($this->judge->access_token),
+            $html
+        );
+        $this->assertStringContainsString(
+            'entry.berbaris.test/juri/' . $this->judge->access_token . '/voice',
+            $html
+        );
+    }
+
+    /** Alamat voice note tidak menggantikan alamat penilaian biasa — keduanya tercetak. */
+    public function test_kartu_memuat_kedua_alamat_penilaian_dan_voice()
+    {
+        $html = $this->renderCard();
+
+        $this->assertStringContainsString(judge_entry_url($this->judge->access_token), $html);
+        $this->assertStringContainsString(judge_voice_entry_url($this->judge->access_token), $html);
+    }
+
+    /**
+     * Satu juri tetap 2 halaman setelah blok keterangan voice note ditambahkan.
+     *
+     * Lembar 1 sudah hampir penuh, dan blok baru menambah tinggi di bawahnya.
+     * Kalau meluber, lembar 2 (QR) terdorong ke halaman 3 dan pasangan
+     * "lembar 1 menutup lembar 2" yang diinstruksikan di kartu jadi salah —
+     * tanpa terlihat dari tes HTML, karena tes HTML tidak menghitung halaman.
+     */
+    public function test_kartu_satu_juri_tetap_dua_halaman()
+    {
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('eventner.judge.pdf_kartu_akses', [
+            'eventner' => $this->eventner,
+            'judges' => Judge::where('eventner_id', $this->eventner->id)
+                ->with('assessmentCategories.competitionCategory.parent')
+                ->get(),
+        ])->setPaper('a4', 'portrait');
+
+        $isi = $pdf->output();
+
+        preg_match_all('#/Type\s*/Page[^s]#', $isi, $cocok);
+
+        $this->assertCount(2, $cocok[0], 'Kartu satu juri harus tepat 2 halaman (identitas + QR).');
+    }
+
     /** Render view kartu langsung — dompdf tidak perlu jalan untuk cek isi. */
     private function renderCard(): string
     {

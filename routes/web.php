@@ -40,7 +40,10 @@ Route::get('/event/{slug}/drawing-results', App\Livewire\Eventner\Drawing\Result
 // link/QR yang sudah dicetak tetap bekerja — di-redirect 301 ke host entry.
 Route::middleware(App\Http\Middleware\RedirectJudgeEntryHost::class)->group(function () {
     Route::get('/juri/{token}', App\Livewire\Public\JudgeScoring\Index::class)->name('judge.scoring.legacy');
+    Route::get('/juri/{token}/voice', App\Livewire\Public\JudgeScoring\Index::class)->name('judge.scoring.voice.legacy');
+    Route::get('/voice-note/{token}', App\Livewire\Public\JudgeScoring\Index::class)->name('judge.voice.legacy');
     Route::get('/event/{slug}/juri/{token}', App\Livewire\Public\JudgeScoring\Index::class)->name('judge.scoring.legacy.slug');
+    Route::get('/event/{slug}/juri/{token}/voice', App\Livewire\Public\JudgeScoring\Index::class)->name('judge.scoring.voice.legacy.slug');
 });
 
 Route::get('/reg/{token}', App\Livewire\Public\MagicLink\Registration::class)->name('magic.link');

@@ -26,6 +26,8 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/juri/{token}', Index::class)->name('judge.scoring');
+Route::get('/juri/{token}/voice', Index::class)->name('judge.scoring.voice');
+Route::get('/voice-note/{token}', Index::class)->name('judge.voice');
 
 // Throttle lebih ketat dari grup entry (120/menit): halaman ini punya gerbang
 // PIN, jadi laju percobaan tebakan harus dibatasi. Tiap ketukan nilai tetap

@@ -46,11 +46,17 @@
 
         $url = judge_entry_url($judge->access_token);
 
+        // Alamat mode voice note: lembar penilaian yang sama, tetapi tanpa
+        // rubrik nilai angka — hanya perekam suara + catatan teks. Dicetak di
+        // kartu supaya juri yang diminta memberi komentar lisan tahu caranya
+        // tanpa perlu bertanya ke panitia.
+        $voiceUrl = judge_voice_entry_url($judge->access_token);
+
         // QR harus PNG — dompdf membuang SVG diam-diam. Helper qr_data_uri
         // memaksa outputInterface (nama properti yang benar di v6).
         $qrImage = qr_data_uri($url, 12);
 
-        return compact('judge', 'rubrik', 'levelNames', 'venueNames', 'url', 'qrImage');
+        return compact('judge', 'rubrik', 'levelNames', 'venueNames', 'url', 'voiceUrl', 'qrImage');
     });
 @endphp
 <!DOCTYPE html>
@@ -114,6 +120,13 @@
         .tenang { margin-top: 10px; border: 1px solid #bee5eb; background: #eef9fa; border-radius: 4px; padding: 10px 12px; page-break-inside: avoid; }
         .tenang .t { font-weight: bold; color: #0c7b8a; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
         .tenang p { margin: 0; font-size: 9px; color: #0b5f6b; line-height: 1.5; }
+
+        /* CATATAN VOICE NOTE */
+        .suara { margin-top: 10px; border: 1px solid #c3e6cb; background: #eef9f0; border-radius: 4px; padding: 10px 12px; page-break-inside: avoid; }
+        .suara .t { font-weight: bold; color: #1e7e34; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .suara p { margin: 0 0 5px; font-size: 9px; color: #1b5e20; line-height: 1.5; }
+        .suara p:last-child { margin-bottom: 0; }
+        .suara .alamat { font-family: monospace; font-size: 8px; color: #1b5e20; word-break: break-all; background: #fff; border: 1px solid #c3e6cb; border-radius: 3px; padding: 4px 6px; display: block; margin-top: 3px; }
 
         /* FOOTER */
         .foot { margin-top: 18px; padding-top: 6px; border-top: 1px solid #ddd; text-align: center; font-size: 7px; color: #aaa; }
@@ -260,6 +273,28 @@
             Kartu ini milik juri yang namanya tercantum di atas dan tidak bisa dipindahkan
             ke orang lain. Bila nama pada lembar 2 bukan nama Anda, jangan dipakai &mdash;
             tukar dengan panitia.
+        </p>
+    </div>
+
+    {{-- Lembar penilaian yang sama juga tersedia dalam mode voice note: tanpa
+         rubrik nilai angka, hanya perekam suara + catatan teks per peleton.
+         Alamatnya berbeda dari QR di lembar 2, jadi dicetak apa adanya di sini. --}}
+    <div class="suara">
+        <div class="t">Evaluasi Voice Note &mdash; Tanpa Nilai Angka</div>
+        <p>
+            Bila Anda ditugaskan memberi komentar lisan (bukan menilai angka), buka alamat di bawah
+            ini di tablet. Halamannya sama seperti lembar penilaian, tetapi seluruh tombol nilai
+            dan finalisasi disembunyikan &mdash; yang tersedia hanya perekam suara dan catatan
+            teks untuk tiap peleton.
+        </p>
+        <p>
+            Cara membuka:
+            <span class="alamat">{{ $voiceUrl }}</span>
+        </p>
+        <p>
+            Di halaman penilaian biasa pun ada tombol <strong>Voice Note</strong> di sudut kanan atas
+            untuk berpindah ke mode ini dan kembali lagi kapan saja. Rekaman yang sudah disimpan
+            tidak hilang saat berpindah mode.
         </p>
     </div>
 
