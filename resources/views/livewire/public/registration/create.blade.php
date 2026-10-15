@@ -196,13 +196,15 @@
                                                                     Maks. {{ $maxPerSchool }} per Sekolah
                                                                 </span>
 
+                                                                {{-- Halaman ini menampilkan SATU harga: yang ditagih hari
+                                                                     ini. Label "mulai dari" tidak dipakai di sini — pendaftar
+                                                                     sedang memilih apa yang akan dibayarnya sekarang, dan
+                                                                     angka lain di sebelahnya cuma membingungkan. "mulai
+                                                                     dari" hanya ada di kartu tingkat halaman detail event. --}}
                                                                 @php $biayaKini = $cat->biayaPada(); @endphp
                                                                 @if($biayaKini !== null && $biayaKini > 0)
                                                                     <span class="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 border border-emerald-500/20">
                                                                         Rp {{ number_format($biayaKini, 0, ',', '.') }}/pasukan
-                                                                        @if($cat->biayaTerendah() < $biayaKini)
-                                                                           &middot; mulai dari Rp {{ number_format($cat->biayaTerendah(), 0, ',', '.') }}
-                                                                        @endif
                                                                     </span>
                                                                 @else
                                                                     <span class="inline-flex items-center gap-1 rounded-md bg-surface-container px-2 py-0.5 text-[10px] font-bold text-on-surface-variant border border-outline-variant/30">

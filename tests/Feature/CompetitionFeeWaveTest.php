@@ -367,6 +367,11 @@ class CompetitionFeeWaveTest extends TestCase
      * Ini janji yang paling gampang patah: kalau blade memakai kolom mentah
      * sementara submit() memakai resolver, layar menulis Rp 200.000 dan
      * tagihannya Rp 125.000.
+     *
+     * Gelombang murah di MASA DEPAN sengaja ikut dibuat supaya tes ini benar-
+     * benar menjaga sesuatu: dengan gelombang itu `biayaTerendah()` lebih
+     * kecil dari harga yang berlaku, jadi blade lama (yang menempelkan
+     * "mulai dari" di sini) akan menampilkan angka kedua dan tes gagal.
      */
     public function test_keranjang_booking_menampilkan_harga_gelombang_yang_berlaku()
     {
@@ -379,10 +384,25 @@ class CompetitionFeeWaveTest extends TestCase
             'amount' => 125000,
         ]);
 
+        CompetitionFeeWave::create([
+            'eventner_id' => $this->eventner->id,
+            'competition_category_id' => $this->tingkat->id,
+            'name' => 'Gelombang 2',
+            'starts_on' => now()->addDays(5)->toDateString(),
+            'ends_on' => now()->addDays(20)->toDateString(),
+            'amount' => 100000,
+        ]);
+
         $this->form()
             ->call('toggleCategory', $this->tingkat->id)
             ->assertSee('Rp 125.000', false)
-            ->assertDontSee('Rp 200.000', false);
+            ->assertDontSee('Rp 200.000', false)
+            // Halaman pendaftaran menampilkan SATU harga: yang ditagih hari
+            // ini. "mulai dari" hanya milik kartu tingkat di halaman detail
+            // event — di sini ia membuat pendaftar membaca dua angka dan
+            // menebak mana yang akan dibayarnya.
+            ->assertDontSee('mulai dari', false)
+            ->assertDontSee('Rp 100.000', false);
     }
 
     /** Gelombang berharga 0 berarti gratis pada rentangnya, bukan "tanpa gelombang". */
