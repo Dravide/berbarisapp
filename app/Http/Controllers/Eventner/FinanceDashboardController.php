@@ -53,8 +53,14 @@ class FinanceDashboardController extends Controller
                 ->where('payment_status', 'paid')
                 ->sum('total_fee');
 
-            $potentialRevenue = $cat->registration_fee
-                ? (float) $cat->registration_fee * Registration::where('competition_category_id', $cat->id)
+            // Potensi = harga yang berlaku hari ini × pendaftar yang belum
+            // lunas. Lewat resolver, sama seperti FinanceDashboard: kalau
+            // penagih memakai gelombang dan rekap ini memakai kolom mentah,
+            // angka potensi yang tampil bukan angka yang akan ditagih.
+            $biayaKini = $cat->biayaPada();
+
+            $potentialRevenue = $biayaKini
+                ? (float) $biayaKini * Registration::where('competition_category_id', $cat->id)
                     ->whereIn('payment_status', ['unpaid', 'pending_verification'])
                     ->count()
                 : 0;
@@ -62,7 +68,7 @@ class FinanceDashboardController extends Controller
             $categoryBreakdown[] = [
                 'id' => $cat->id,
                 'name' => $cat->full_name,
-                'fee' => $cat->registration_fee,
+                'fee' => $biayaKini,
                 'paid_count' => (int) $cat->total_paid,
                 'pending_count' => (int) $cat->total_pending,
                 'unpaid_count' => (int) $cat->total_unpaid,

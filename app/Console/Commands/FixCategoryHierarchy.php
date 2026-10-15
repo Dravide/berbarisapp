@@ -43,6 +43,19 @@ class FixCategoryHierarchy extends Command
                     'sort_order' => $parent->sort_order,
                 ]);
 
+                // Gelombang harga ikut turun ke anak. Tanpa ini, perbaikan
+                // hierarki diam-diam membuang gelombang induk dan tingkat
+                // bergelombang mendadak kembali ke harga biasa.
+                foreach ($parent->gelombang as $gelombang) {
+                    $child->gelombang()->create([
+                        'eventner_id' => $parent->eventner_id,
+                        'name' => $gelombang->name,
+                        'starts_on' => $gelombang->starts_on,
+                        'ends_on' => $gelombang->ends_on,
+                        'amount' => $gelombang->amount,
+                    ]);
+                }
+
                 // Pindahkan semua registration parent → child baru
                 $moved = Registration::where('eventner_id', $parent->eventner_id)
                     ->where('competition_category_id', $parent->id)

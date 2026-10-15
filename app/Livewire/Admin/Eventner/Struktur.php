@@ -32,11 +32,12 @@ class Struktur extends Component
             ->where('eventner_id', $this->eventnerId)
             ->whereNull('parent_id')
             ->with([
-                'children' => fn ($q) => $q->withCount('registrations')->orderBy('sort_order')->orderBy('id'),
+                'children' => fn ($q) => $q->with('gelombang')->withCount('registrations')->orderBy('sort_order')->orderBy('id'),
                 'venue',
                 'groups',
                 'rounds',
                 'series',
+                'gelombang',
             ])
             ->withCount('registrations')
             ->orderBy('sort_order')

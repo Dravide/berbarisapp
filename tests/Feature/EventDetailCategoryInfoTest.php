@@ -154,4 +154,30 @@ class EventDetailCategoryInfoTest extends TestCase
             ->assertSee('PBB Kreasi', false)
             ->assertSee('0 / 5 Pasukan', false);
     }
+
+    /**
+     * Tingkat bergelombang: kartu menulis harga yang berlaku hari ini, dan
+     * menyebut "mulai dari" bila ada gelombang yang lebih murah nanti.
+     *
+     * Kartu ini yang dibaca pendaftar sebelum memutuskan; kalau angkanya
+     * diambil dari kolom mentah, yang tampil bukan yang ditagih.
+     */
+    public function test_kartu_tingkat_bergelombang_menulis_harga_berlaku_dan_mulai_dari()
+    {
+        ['eventner' => $eventner, 'tingkat' => $tingkat] = $this->eventLengkap();
+
+        \App\Models\CompetitionFeeWave::create([
+            'eventner_id' => $eventner->id,
+            'competition_category_id' => $tingkat->id,
+            'name' => 'Gelombang 1',
+            'starts_on' => now()->addDays(3)->toDateString(),
+            'ends_on' => now()->addDays(20)->toDateString(),
+            'amount' => 100000,
+        ]);
+
+        $this->get("/event/{$eventner->slug}")
+            ->assertStatus(200)
+            ->assertSee('Rp 150.000', false)
+            ->assertSee('mulai dari Rp 100.000', false);
+    }
 }

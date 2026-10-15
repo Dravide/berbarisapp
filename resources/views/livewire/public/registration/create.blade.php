@@ -196,9 +196,13 @@
                                                                     Maks. {{ $maxPerSchool }} per Sekolah
                                                                 </span>
 
-                                                                @if($cat->registration_fee)
+                                                                @php $biayaKini = $cat->biayaPada(); @endphp
+                                                                @if($biayaKini !== null && $biayaKini > 0)
                                                                     <span class="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-600 border border-emerald-500/20">
-                                                                        Rp {{ number_format($cat->registration_fee, 0, ',', '.') }}/pasukan
+                                                                        Rp {{ number_format($biayaKini, 0, ',', '.') }}/pasukan
+                                                                        @if($cat->biayaTerendah() < $biayaKini)
+                                                                           &middot; mulai dari Rp {{ number_format($cat->biayaTerendah(), 0, ',', '.') }}
+                                                                        @endif
                                                                     </span>
                                                                 @else
                                                                     <span class="inline-flex items-center gap-1 rounded-md bg-surface-container px-2 py-0.5 text-[10px] font-bold text-on-surface-variant border border-outline-variant/30">
@@ -390,7 +394,7 @@
                                                 <div>
                                                     <span class="font-bold text-deep-slate block">{{ $scCat->full_name }}</span>
                                                     <span class="text-[10px] text-on-surface-variant font-medium">
-                                                        Biaya: {{ $scCat->registration_fee ? 'Rp ' . number_format($scCat->registration_fee, 0, ',', '.') . '/pasukan' : 'Gratis' }}
+                                                        Biaya: {{ $scCat->biayaPada() ? 'Rp ' . number_format($scCat->biayaPada(), 0, ',', '.') . '/pasukan' : 'Gratis' }}
                                                     </span>
                                                 </div>
                                                 <span class="chip py-0.5 px-2 bg-primary/10 font-bold text-[11px]">
@@ -408,8 +412,8 @@
                                 $hasFee = false;
                                 foreach($selectedCategories as $scId) {
                                     $scCat = $categories->firstWhere('id', (int) $scId);
-                                    if ($scCat && $scCat->registration_fee) {
-                                        $totalFee += $scCat->registration_fee * ($teamCounts[$scCat->id] ?? 1);
+                                    if ($scCat && $scCat->biayaPada() > 0) {
+                                        $totalFee += $scCat->biayaPada() * ($teamCounts[$scCat->id] ?? 1);
                                         $hasFee = true;
                                     }
                                 }

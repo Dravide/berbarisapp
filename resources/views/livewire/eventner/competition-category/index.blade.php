@@ -108,8 +108,13 @@
                                                                  satu tombol "Atur" menuju halaman detail tingkat. --}}
                                                             <div class="d-flex flex-wrap align-items-center gap-1 mt-1 ms-4 ps-3">
                                                                 <span class="badge bg-light-info text-info">Max {{ $child->max_registrations_per_school ?? 1 }} pasukan/sekolah</span>
-                                                                @if($child->registration_fee)
-                                                                    <span class="badge bg-success-subtle text-success">Rp {{ number_format($child->registration_fee, 0, ',', '.') }}</span>
+                                                                @if($child->punyaBiaya())
+                                                                    <span class="badge bg-success-subtle text-success">
+                                                                        Rp {{ number_format($child->biayaPada(), 0, ',', '.') }}
+                                                                        @if($child->gelombang_count)
+                                                                            &middot; {{ $child->gelombang_count }} gelombang
+                                                                        @endif
+                                                                    </span>
                                                                 @else
                                                                     <span class="badge bg-light text-muted border">Gratis</span>
                                                                 @endif
@@ -264,12 +269,15 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label class="form-label">Biaya Pendaftaran <span class="text-muted">(Opsional)</span></label>
+                                    <label class="form-label">Biaya Pendaftaran di Luar Gelombang <span class="text-muted">(Opsional)</span></label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
                                         <input type="number" class="form-control" wire:model="registration_fee" placeholder="0" min="0" step="5000">
                                     </div>
-                                    <small class="form-text text-muted">Kosongkan atau isi 0 jika pendaftaran gratis untuk kategori ini.</small>
+                                    <small class="form-text text-muted">
+                                        Dipakai bila tanggal pendaftaran di luar semua gelombang. Kosongkan atau isi 0 bila gratis.
+                                        Atur harga per rentang tanggal lewat tombol <i class="ti ti-settings"></i> Atur &rarr; tab Gelombang.
+                                    </small>
                                     @error('registration_fee') <span class="text-danger fs-2 d-block mt-1">{{ $message }}</span> @enderror
                                 </div>
                             @endif

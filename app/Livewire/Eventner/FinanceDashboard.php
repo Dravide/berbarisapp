@@ -103,6 +103,7 @@ class FinanceDashboard extends Component
     {
         $categories = $this->eventner->competitionCategories()
             ->whereNotNull('parent_id')
+            ->with('gelombang')
             ->withCount(['registrations as total_paid' => fn($q) => $q->where('payment_status', 'paid')])
             ->withCount(['registrations as total_pending' => fn($q) => $q->where('payment_status', 'pending_verification')])
             ->withCount(['registrations as total_unpaid' => fn($q) => $q->where('payment_status', 'unpaid')])
@@ -114,8 +115,14 @@ class FinanceDashboard extends Component
                 ->where('payment_status', 'paid')
                 ->sum('total_fee');
 
-            $potentialRevenue = $cat->registration_fee
-                ? (float) $cat->registration_fee * Registration::where('competition_category_id', $cat->id)
+            // Potensi = harga yang berlaku hari ini × pendaftar yang belum
+            // lunas. Memakai resolver, bukan kolom mentah: kalau penagih
+            // memakai gelombang dan layar ini memakai kolom, angka potensi
+            // yang ditampilkan bukan angka yang akan ditagih.
+            $biayaKini = $cat->biayaPada();
+
+            $potentialRevenue = $biayaKini
+                ? (float) $biayaKini * Registration::where('competition_category_id', $cat->id)
                     ->whereIn('payment_status', ['unpaid', 'pending_verification'])
                     ->count()
                 : 0;
@@ -123,7 +130,7 @@ class FinanceDashboard extends Component
             $this->categoryBreakdown[] = [
                 'id' => $cat->id,
                 'name' => $cat->full_name,
-                'fee' => $cat->registration_fee,
+                'fee' => $biayaKini,
                 'paid_count' => (int) $cat->total_paid,
                 'pending_count' => (int) $cat->total_pending,
                 'unpaid_count' => (int) $cat->total_unpaid,

@@ -36,8 +36,16 @@
                 @if($category->venue)
                     <span class="badge bg-light-warning text-warning"><i class="ti ti-map-pin"></i> {{ $category->venue->name }}</span>
                 @endif
-                @if($category->registration_fee)
-                    <span class="badge bg-success-subtle text-success">Rp {{ number_format($category->registration_fee, 0, ',', '.') }}</span>
+                @if($category->punyaBiaya())
+                    <span class="badge bg-success-subtle text-success">
+                        @php $biayaKini = $category->biayaPada(); @endphp
+                        Rp {{ number_format($biayaKini, 0, ',', '.') }}
+                        @if($category->gelombang->isNotEmpty())
+                            · {{ $category->gelombang->count() }} gelombang
+                        @endif
+                    </span>
+                @else
+                    <span class="badge bg-light text-muted border">Gratis</span>
                 @endif
                 @if($category->kuota)
                     <span class="badge bg-light-info text-info">{{ $pesertaCount }} / {{ $category->kuota }} kuota</span>
@@ -66,6 +74,11 @@
         <li class="nav-item">
             <button type="button" class="nav-link {{ $tab === 'babak' ? 'active' : '' }}" wire:click="pilihTab('babak')">
                 <i class="ti ti-flag me-1"></i> Babak
+            </button>
+        </li>
+        <li class="nav-item">
+            <button type="button" class="nav-link {{ $tab === 'gelombang' ? 'active' : '' }}" wire:click="pilihTab('gelombang')">
+                <i class="ti ti-clock-dollar me-1"></i> Gelombang
             </button>
         </li>
     </ul>
@@ -379,6 +392,120 @@
                     Rubrik ditandai babaknya di <strong>Format Nilai</strong>. Tanpa tanda babak, rubrik
                     dianggap berlaku untuk semua babak.
                 </div>
+            </div>
+        </div>
+    @elseif($tab === 'gelombang')
+        <div class="card w-100">
+            <div class="card-body p-4">
+                <h6 class="fw-semibold mb-2"><i class="ti ti-clock-dollar me-1"></i>Gelombang Harga</h6>
+                <p class="text-muted fs-2">
+                    Bagi biaya pendaftaran jadi beberapa rentang tanggal. Harga yang ditagih adalah harga
+                    gelombang yang <strong>mencakup tanggal pendaftaran</strong>; di luar semua gelombang,
+                    harga biasa yang dipakai. Gelombang tidak boleh tumpang tindih tanggalnya.
+                </p>
+
+                <div class="alert alert-light border fs-2 py-2 mb-3">
+                    Harga biasa (di luar gelombang):
+                    <strong>
+                        @php $biayaBiasa = $category->registration_fee; @endphp
+                        @if($biayaBiasa !== null)
+                            Rp {{ number_format($biayaBiasa, 0, ',', '.') }}
+                        @else
+                            Gratis
+                        @endif
+                    </strong>
+                    @if($category->gelombang->isEmpty())
+                        &mdash; belum ada gelombang, jadi pendaftar selalu dikenai angka ini.
+                    @endif
+                </div>
+
+                @if($this->feeWavesByCategory->isEmpty())
+                    <p class="text-muted fs-2"><i>Belum ada gelombang. Semua pendaftar dikenai harga biasa.</i></p>
+                @else
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Gelombang</th>
+                                    <th>Mulai</th>
+                                    <th>Sampai</th>
+                                    <th>Harga</th>
+                                    <th class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($this->feeWavesByCategory as $wave)
+                                    @php $berlaku = $wave->mencakup(now()); @endphp
+                                    <tr class="{{ $berlaku ? 'table-success' : '' }}">
+                                        <td class="fw-semibold">
+                                            {{ $wave->name }}
+                                            @if($berlaku)
+                                                {{-- Penanda status sungguhan: harga inilah yang
+                                                     ditagih hari ini (R-31). --}}
+                                                <span class="badge bg-success-subtle text-success ms-1">Berlaku sekarang</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $wave->starts_on->translatedFormat('d M Y') }}</td>
+                                        <td>{{ $wave->ends_on->translatedFormat('d M Y') }}</td>
+                                        <td class="fw-bold">Rp {{ number_format($wave->amount, 0, ',', '.') }}</td>
+                                        <td class="text-end">
+                                            <button class="btn btn-sm btn-outline-primary p-1 me-1" wire:click="editWave({{ $wave->id }})" title="Edit gelombang">
+                                                <i class="ti ti-edit fs-4"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger p-1" wire:click="deleteWave({{ $wave->id }})"
+                                                wire:confirm="Hapus gelombang {{ $wave->name }}? Tagihan pendaftar yang sudah masuk tidak ikut berubah." title="Hapus gelombang">
+                                                <i class="ti ti-trash fs-4"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+
+                <div class="row g-2 align-items-end mt-2">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Nama Gelombang</label>
+                        <input type="text" class="form-control" wire:model="waveName" placeholder="Gelombang 1">
+                        @error('waveName') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Mulai</label>
+                        <input type="date" class="form-control" wire:model="waveStartsOn">
+                        @error('waveStartsOn') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label fw-semibold">Sampai</label>
+                        <input type="date" class="form-control" wire:model="waveEndsOn">
+                        @error('waveEndsOn') <span class="text-danger fs-2">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Harga</label>
+                        <div class="input-group">
+                            <span class="input-group-text">Rp</span>
+                            <input type="number" class="form-control" wire:model="waveAmount" placeholder="0" min="0" step="5000">
+                        </div>
+                        @error('waveAmount') <span class="text-danger fs-2 d-block">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-primary w-100" wire:click="saveWave">
+                            <i class="ti ti-{{ $editingWaveId ? 'device-floppy' : 'plus' }}"></i>
+                            {{ $editingWaveId ? 'Simpan' : 'Tambah' }}
+                        </button>
+                    </div>
+                </div>
+
+                <small class="form-text text-muted fs-2 d-block mt-2">
+                    Kedua tanggal ikut dihitung: gelombang yang berakhir 31 Okt masih berlaku pada 31 Okt.
+                    Gelombang berikutnya boleh mulai 1 Nov.
+                </small>
+
+                @if($editingWaveId)
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-sm btn-light" wire:click="resetWaveForm">Batal edit</button>
+                    </div>
+                @endif
             </div>
         </div>
     @endif

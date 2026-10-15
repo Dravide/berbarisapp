@@ -414,7 +414,12 @@ class Create extends Component
             }
 
             for ($i = 0; $i < $toCreate; $i++) {
-                $feeAmount = $cat->registration_fee;
+                // Harga yang ditagih = gelombang yang berlaku hari ini, atau
+                // harga biasa bila di luar semua gelombang. Bukan kolom
+                // `registration_fee` mentah — kalau penagih memakai kolom
+                // sementara layar memakai resolver, pendaftar melihat angka
+                // yang berbeda dari yang ditagih.
+                $feeAmount = $cat->biayaPada();
                 $reg = Registration::create([
                     'eventner_id' => $this->eventner->id,
                     'competition_category_id' => $cat->id,
@@ -512,7 +517,7 @@ class Create extends Component
     {
         $categories = $this->eventner->competitionCategories()
             ->selectable()
-            ->with('parent')
+            ->with('parent', 'gelombang')
             ->withCount('registrations')
             ->get();
 

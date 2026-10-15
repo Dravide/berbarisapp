@@ -55,11 +55,24 @@
             @endif
         </span>
 
+        @php
+            // Harga yang ditagih hari ini + angka termurah yang mungkin
+            // didapat. Bila ada gelombang yang lebih murah nanti, kartu
+            // menyebut "mulai dari" supaya pendaftar tahu ada harga lebih
+            // rendah tanpa perlu tabel gelombang penuh di sini.
+            $biayaKini = $category->biayaPada();
+            $biayaTermurah = $category->biayaTerendah();
+        @endphp
         <span class="inline-flex items-center gap-1">
-            @if($category->registration_fee)
+            @if($biayaKini !== null && $biayaKini > 0)
                 <i class="ti ti-cash"></i>
-                <span class="text-deep-slate">Rp {{ number_format((float) $category->registration_fee, 0, ',', '.') }}</span>
+                <span class="text-deep-slate">Rp {{ number_format($biayaKini, 0, ',', '.') }}</span>
                 <span class="text-on-surface-variant/70">/ pasukan</span>
+                @if($biayaTermurah !== null && $biayaTermurah < $biayaKini)
+                    <span class="text-on-surface-variant/70">
+                        &middot; mulai dari Rp {{ number_format($biayaTermurah, 0, ',', '.') }}
+                    </span>
+                @endif
             @else
                 <i class="ti ti-cash text-[#5a7d00]"></i>
                 <span class="text-[#5a7d00]">Gratis</span>

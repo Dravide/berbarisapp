@@ -60,7 +60,18 @@ class EventResource extends JsonResource
                     'name' => $c->full_name,
                     'parent_id' => $c->parent_id,
                     'kuota' => $c->kuota,
+                    // Kolom mentah tetap ada: kontrak API lama tidak boleh
+                    // patah. Klien baru memakai `fee_saat_ini`, yang sama
+                    // dengan angka yang benar-benar ditagih hari ini.
                     'registration_fee' => $c->registration_fee,
+                    'fee_saat_ini' => $c->biayaPada(),
+                    'fee_terendah' => $c->biayaTerendah(),
+                    'fee_waves' => $c->gelombang->map(fn ($g) => [
+                        'name' => $g->name,
+                        'starts_on' => $g->starts_on->toDateString(),
+                        'ends_on' => $g->ends_on->toDateString(),
+                        'amount' => (float) $g->amount,
+                    ])->values(),
                     'total_peserta' => $c->registrations_count ?? $c->registrations()->count(),
                 ]);
             }),

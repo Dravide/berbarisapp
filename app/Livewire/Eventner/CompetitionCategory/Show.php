@@ -5,6 +5,7 @@ namespace App\Livewire\Eventner\CompetitionCategory;
 use Livewire\Component;
 use App\Models\AssessmentCategory;
 use App\Models\CompetitionCategory;
+use App\Models\CompetitionFeeWave;
 use App\Models\CompetitionGroup;
 use App\Models\CompetitionRound;
 use App\Models\CompetitionRoundRegistration;
@@ -24,11 +25,17 @@ use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 
 /**
- * Halaman atur satu tingkat lomba: Grup & Juri, Seri, dan Babak.
+ * Halaman atur satu tingkat lomba: Grup & Juri, Seri, Babak, dan Gelombang
+ * harga.
  *
  * Menggantikan modal "Atur Babak, Grup & Seri" yang menumpuk tiga bagian
  * dalam satu gulungan — kini tiap bagian jadi tab di halamannya sendiri,
  * dan kategorinya tidak lagi dilacak lewat tiga ID panel sekaligus.
+ *
+ * Gelombang harga ikut ke sini, bukan ke modal Tambah/Edit Kategori: modal
+ * itu harus bisa menyimpan tingkat yang belum punya id, sedangkan gelombang
+ * menempel pada id tingkat. Halaman ini juga sudah jadi tempat kerja
+ * per-tingkat, jadi tidak ada modal ketiga yang perlu diingat panitia.
  */
 #[Layout('layouts.admin')]
 class Show extends Component
@@ -41,7 +48,7 @@ class Show extends Component
 
     /** Tab yang terbuka. Di-URL-kan supaya bisa di-bookmark (?tab=babak). */
     #[Url(history: true)]
-    public string $tab = 'grup'; // grup | seri | babak
+    public string $tab = 'grup'; // grup | seri | babak | gelombang
 
     public $groupName = '';
     public $groupSortOrder = '';
@@ -55,6 +62,12 @@ class Show extends Component
     public $roundType = CompetitionRound::TYPE_PRELIMINARY;
     public $roundSortOrder = '';
     public $editingRoundId = null;
+
+    public $waveName = '';
+    public $waveStartsOn = '';
+    public $waveEndsOn = '';
+    public $waveAmount = '';
+    public $editingWaveId = null;
 
     /** Babak final yang sedang dibuka panel "Loloskan Top-N". */
     public $qualifyRoundId = null;
@@ -97,7 +110,7 @@ class Show extends Component
 
     public function pilihTab(string $tab)
     {
-        if (in_array($tab, ['grup', 'seri', 'babak'], true)) {
+        if (in_array($tab, ['grup', 'seri', 'babak', 'gelombang'], true)) {
             $this->tab = $tab;
         }
     }
@@ -142,6 +155,13 @@ class Show extends Component
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
+    }
+
+    /** Gelombang harga tingkat ini, terurut tanggal, dengan penanda "berlaku hari ini". */
+    #[Computed]
+    public function feeWavesByCategory()
+    {
+        return $this->category->gelombang()->get();
     }
 
     /**
@@ -358,6 +378,11 @@ class Show extends Component
         return CompetitionSeries::where('eventner_id', $this->eventnerId)->findOrFail($id);
     }
 
+    private function findOwnWave($id): CompetitionFeeWave
+    {
+        return CompetitionFeeWave::where('eventner_id', $this->eventnerId)->findOrFail($id);
+    }
+
     // ── Grup ───────────────────────────────────────────────────────────
 
     public function saveGroup()
@@ -499,6 +524,97 @@ class Show extends Component
     public function resetSeriesForm()
     {
         $this->reset(['seriesName', 'seriesSortOrder', 'editingSeriesId']);
+    }
+
+    // ── Gelombang harga ────────────────────────────────────────────────
+
+    public function saveWave()
+    {
+        $category = $this->category;
+
+        $this->validate([
+            'waveName' => [
+                'required', 'string', 'max:255',
+                // Nama gelombang hanya perlu unik per tingkat — dua tingkat
+                // boleh sama-sama punya "Gelombang 1" dengan harga berbeda.
+                Rule::unique('competition_fee_waves', 'name')
+                    ->where('competition_category_id', $category->id)
+                    ->where('eventner_id', $this->eventnerId)
+                    ->ignore($this->editingWaveId),
+            ],
+            'waveStartsOn' => 'required|date',
+            'waveEndsOn' => 'required|date|after_or_equal:waveStartsOn',
+            'waveAmount' => 'required|numeric|min:0',
+        ], [], [
+            'waveName' => 'Nama Gelombang',
+            'waveStartsOn' => 'Tanggal Mulai',
+            'waveEndsOn' => 'Tanggal Selesai',
+            'waveAmount' => 'Harga',
+        ]);
+
+        // Tumpang tindih dicegah di sini, bukan ditengahi dengan "yang terbaru
+        // menang": dua gelombang yang beririsan berarti harga yang ditagih
+        // bergantung urutan baris, dan panitia tidak punya cara melihatnya.
+        $alasan = $category->alasanGelombangBentrok(
+            $this->waveStartsOn,
+            $this->waveEndsOn,
+            $this->editingWaveId
+        );
+
+        if ($alasan) {
+            $this->gagal($alasan);
+            return;
+        }
+
+        $data = [
+            'name' => strip_tags($this->waveName),
+            'starts_on' => $this->waveStartsOn,
+            'ends_on' => $this->waveEndsOn,
+            'amount' => $this->waveAmount,
+        ];
+
+        if ($this->editingWaveId) {
+            $this->findOwnWave($this->editingWaveId)->update($data);
+            $this->toast('Gelombang berhasil diperbarui.');
+        } else {
+            CompetitionFeeWave::create(array_merge($data, [
+                'eventner_id' => $this->eventnerId,
+                'competition_category_id' => $category->id,
+            ]));
+            $this->toast('Gelombang baru berhasil ditambahkan.');
+        }
+
+        $this->resetWaveForm();
+        unset($this->feeWavesByCategory, $this->category);
+    }
+
+    public function editWave($id)
+    {
+        $wave = $this->findOwnWave($id);
+        $this->editingWaveId = $wave->id;
+        $this->waveName = $wave->name;
+        $this->waveStartsOn = $wave->starts_on->toDateString();
+        $this->waveEndsOn = $wave->ends_on->toDateString();
+        $this->waveAmount = (string) (float) $wave->amount;
+    }
+
+    public function deleteWave($id)
+    {
+        $wave = $this->findOwnWave($id);
+
+        // Pendaftar yang sudah masuk TIDAK tersentuh: biaya yang mereka bayar
+        // tersimpan di registrations.total_fee saat booking, dan tidak ada
+        // satu pun tempat yang membaca ulang harga kategori setelah itu.
+        // Menghapus gelombang hanya mengubah harga bagi yang mendaftar sesudahnya.
+        $wave->delete();
+        $this->toast('Gelombang dihapus. Tagihan pendaftar yang sudah masuk tidak ikut berubah.');
+
+        unset($this->feeWavesByCategory, $this->category);
+    }
+
+    public function resetWaveForm()
+    {
+        $this->reset(['waveName', 'waveStartsOn', 'waveEndsOn', 'waveAmount', 'editingWaveId']);
     }
 
     // ── Babak ──────────────────────────────────────────────────────────

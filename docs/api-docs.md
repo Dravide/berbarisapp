@@ -50,6 +50,16 @@ GET /events?search=&lokasi=&page=1
           "parent_id": null,
           "kuota": 20,
           "registration_fee": "150000.00",
+          "fee_saat_ini": 125000,
+          "fee_terendah": 100000,
+          "fee_waves": [
+            {
+              "name": "Gelombang 1",
+              "starts_on": "2026-10-01",
+              "ends_on": "2026-10-31",
+              "amount": 125000
+            }
+          ],
           "total_peserta": 15
         }
       ]
@@ -76,6 +86,10 @@ GET /events/{slug}
 **Response (200):** Sama struktur dengan item di atas.
 
 > **`scoring_code`:** `null` kalau event belum punya kode scoring (scoreboard belum aktif). App menangani `null` → "Scoreboard belum tersedia".
+
+> **`registration_fee` (di dalam `categories`):** biaya **dasar** tingkat lomba, apa adanya sebagai string (`"150000.00"`). Ini kolom mentah dan **bukan** angka yang ditagih. Pakai `fee_saat_ini`.
+>
+> **`fee_saat_ini` / `fee_terendah` / `fee_waves[]`:** biaya pendaftaran bisa diatur per rentang tanggal ("gelombang"). `fee_saat_ini` = harga yang berlaku **hari ini** (gelombang yang mencakup hari ini; kalau di luar semua gelombang, `registration_fee`). `fee_terendah` = angka termurah yang mungkin didapat, untuk label "mulai dari". `fee_waves[]` = daftar gelombangnya (`name`, `starts_on`, `ends_on` inklusif dua ujung, `amount`). Ketiganya `null` untuk kategori gratis. `fee_saat_ini` selalu sama dengan `total_fee` yang ditulis saat pendaftaran dibuat.
 
 **Response (404):**
 ```json
@@ -105,6 +119,16 @@ GET /events/{slug}/categories
       "kuota": null,
       "max_registrations_per_school": 2,
       "registration_fee": "0.00",
+      "fee_saat_ini": 125000,
+      "fee_terendah": 100000,
+      "fee_waves": [
+        {
+          "name": "Gelombang 1",
+          "starts_on": "2026-10-01",
+          "ends_on": "2026-10-31",
+          "amount": 125000
+        }
+      ],
       "sort_order": 1,
       "registrations_count": 5,
       "parent": null,

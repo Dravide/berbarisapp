@@ -38,9 +38,11 @@ class EventnerHelp
                     'Isi jumlah anggota minimal/maksimal, biaya pendaftaran, dan batas jumlah kontingen bila perlu.',
                     'Ubah urutan tampil dengan drag & drop pada daftar.',
                     'Tentukan tanggal pelaksanaan per tingkat bila jadwalnya berbeda.',
+                    'Buka halaman detail sebuah tingkat untuk mengatur harga per Gelombang (rentang tanggal).',
                 ],
                 'tips' => [
                     'Kategori yang tampil di halaman publik pendaftaran adalah kategori bertanda aktif.',
+                    'Harga Gelombang hanya berlaku pada rentang tanggalnya — di luar itu biaya pendaftaran biasa yang dipakai. Rentang yang bertabrakan ditolak saat disimpan.',
                 ],
             ],
 

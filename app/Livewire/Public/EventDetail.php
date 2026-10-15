@@ -48,6 +48,11 @@ class EventDetail extends Component
                 'competitionCategories.children.judges',
                 'competitionCategories.children.venue',
                 'competitionCategories.children.registrations',
+                // Kartu tingkat menanyakan harga yang berlaku hari ini lewat
+                // biayaPada(); tanpa gelombang yang sudah dimuat, tiap kartu
+                // menembak querynya sendiri.
+                'competitionCategories.gelombang',
+                'competitionCategories.children.gelombang',
             ])->approved()->where('slug', $slug)->firstOrFail();
         }
 

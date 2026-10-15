@@ -34,7 +34,7 @@ class EventController extends Controller
         $event = Eventner::where('slug', $slug)
             ->where('status', 'approved')
             ->with(['competitionCategories' => function ($q) {
-                $q->whereNotNull('parent_id')->with('parent');
+                $q->whereNotNull('parent_id')->with('parent', 'gelombang');
             }])
             ->firstOrFail();
 
@@ -49,10 +49,25 @@ class EventController extends Controller
 
         $categories = $event->competitionCategories()
             ->whereNotNull('parent_id')
-            ->with('parent')
+            ->with('parent', 'gelombang')
             ->withCount('registrations')
             ->orderBy('sort_order')
-            ->get();
+            ->get()
+            // Bentuk lama dipertahankan apa adanya (klien lama membaca
+            // `registration_fee`), lalu ditambahi angka yang benar-benar
+            // ditagih hari ini beserta daftar gelombangnya.
+            ->map(function ($c) {
+                return array_merge($c->toArray(), [
+                    'fee_saat_ini' => $c->biayaPada(),
+                    'fee_terendah' => $c->biayaTerendah(),
+                    'fee_waves' => $c->gelombang->map(fn ($g) => [
+                        'name' => $g->name,
+                        'starts_on' => $g->starts_on->toDateString(),
+                        'ends_on' => $g->ends_on->toDateString(),
+                        'amount' => (float) $g->amount,
+                    ])->values(),
+                ]);
+            });
 
         return response()->json(['data' => $categories]);
     }

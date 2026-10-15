@@ -48,7 +48,7 @@
                     </div>
                     <div class="text-muted fs-2 mt-1">
                         @if($level->tanggal_pelaksanaan) Pelaksanaan: {{ $level->tanggal_pelaksanaan }} &bull; @endif
-                        @if($level->registration_fee !== null) Biaya: Rp {{ number_format($level->registration_fee, 0, ',', '.') }} &bull; @endif
+                        @if($level->punyaBiaya()) Biaya: Rp {{ number_format($level->biayaPada(), 0, ',', '.') }} &bull; @endif
                         Kuota: {{ $level->kuota ?: 'tanpa batas' }}
                     </div>
 

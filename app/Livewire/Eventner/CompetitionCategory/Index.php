@@ -77,7 +77,7 @@ class Index extends Component
     {
         return CompetitionCategory::whereNull('parent_id')
             ->where('eventner_id', $this->eventnerId)
-            ->with(['children' => fn($q) => $q->with('judges', 'venue')->withCount('registrations')->orderBy('sort_order')])
+            ->with(['children' => fn($q) => $q->with('judges', 'venue', 'gelombang')->withCount('registrations', 'gelombang')->orderBy('sort_order')])
             ->orderBy('sort_order')
             ->get();
     }
@@ -88,8 +88,8 @@ class Index extends Component
         return CompetitionCategory::whereNotNull('parent_id')
             ->where('eventner_id', $this->eventnerId)
             ->whereDoesntHave('parent', fn($q) => $q->where('eventner_id', $this->eventnerId))
-            ->with('judges', 'venue')
-            ->withCount('registrations')
+            ->with('judges', 'venue', 'gelombang')
+            ->withCount('registrations', 'gelombang')
             ->orderBy('sort_order')
             ->get();
     }
