@@ -216,6 +216,15 @@
               <span class="hide-menu">Tempat Lomba</span>
             </a>
           </li>
+          <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.documents.*') ? 'active' : '' }}"
+              href="{{ route('eventner.documents.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-file-download"></i>
+              </span>
+              <span class="hide-menu">Juknis &amp; Dokumen</span>
+            </a>
+          </li>
 
           {{-- ============================================ --}}
           {{-- PESERTA --}}
@@ -499,15 +508,6 @@
               </span>
               <span class="hide-menu">Activity Log</span>
               @if($ev && !$ev->canAccessFeature('activity_log')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
-            </a>
-          </li>
-          <li class="sidebar-item">
-            <a class="sidebar-link {{ request()->routeIs('eventner.documents.*') ? 'active' : '' }}"
-              href="{{ route('eventner.documents.index') }}" aria-expanded="false">
-              <span>
-                <i class="ti ti-file-download"></i>
-              </span>
-              <span class="hide-menu">Juknis &amp; Dokumen</span>
             </a>
           </li>
           <li class="sidebar-item">
