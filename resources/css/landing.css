@@ -162,6 +162,141 @@
     .field-input {
         @apply rounded-md border border-cool-gray/40 bg-surface-container-lowest px-4 py-2.5 text-sm text-on-surface transition focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/15;
     }
+
+    /* ---------------------------------------------------------------------
+       Miniatur fitur (#features) — digambar kode, nol aset gambar.
+
+       `--u` = 1 px desain pada kanvas acuan 360 px. Dideklarasikan di ANAK
+       `.feat-mini`, bukan di `.feat-mini` sendiri: `cqw` menilik container
+       terdekat dan sebuah elemen tidak bisa menanyai dirinya sendiri — pola
+       yang sama dipakai `.phone` di doc/landing-wireframe.html. Karena itu
+       padding dan gap di sini memakai px tetap.
+
+       `--u` di-cap 1.15 px. Kartu unggulan (±600 px) hampir dua kali kanvas
+       acuan; tanpa cap, bar 11 unit jadi 37 px — lebih tebal dari judul
+       kartunya. Efek sampingnya bagus: kartu padat (--u ≈ 1.10) dan kartu
+       unggulan (1.15) menggambar miniatur pada skala yang sama, jadi
+       tingginya nyaris seragam dan rangkanya cukup diberi tinggi tetap
+       (h-[240px] md:h-[280px]) alih-alih rasio — rangka proporsional akan
+       menyisakan separuh kotak kosong di kartu yang lebar.
+
+       Bentuk dan alasan tiap miniatur: doc/landing-fitur-wireframe.html.
+       --------------------------------------------------------------------- */
+    .feat-mini {
+        @apply flex flex-col justify-center gap-[7px] overflow-hidden px-[15px] py-[13px] mb-4 rounded-xl border border-outline-variant/60 bg-surface-container-low;
+        container-type: inline-size;
+        /* Tinggi dipatok, bukan rasio. Rangka 16:10 di kartu yang menganga
+           selebar 600 px akan menyisakan separuh kotak kosong begitu miniatur
+           dibatasi skala `--u`-nya; tinggi tetap membuat kartu unggulan dan
+           kartu padat sama rapi tanpa satu pun kelas responsif di Blade. */
+        height: 240px;
+    }
+    @media (min-width: 768px) { .feat-mini { height: 280px; } }
+    .feat-mini > * { --u: min(0.2778cqw, 1.15px); }
+
+    /* Bar tumbuh ke samping, tidak pernah ke bawah: `flex: 0 1 auto` + lebar
+       100% membuatnya mengisi sisa baris, tapi tetap tidak melar di dalam
+       kolom (flex-col) seperti kalau memakai `flex-grow: 1`. */
+    .feat-bar {
+        @apply min-w-0 rounded-[3px] bg-surface-container-high;
+        flex: 0 1 auto;
+        width: 100%;
+        height: calc(6 * var(--u));
+    }
+    .feat-bar-title { @apply bg-outline-variant; height: calc(11 * var(--u)); }
+    /* Baris yang sedang ditunggu semua orang: dibedakan lewat ketebalan,
+       bukan warna — papan peringkat sudah punya penanda sendiri. */
+    .feat-bar-lg { height: calc(13 * var(--u)); }
+    .feat-bar-sm { height: calc(4 * var(--u)); }
+
+    .feat-pill {
+        @apply inline-flex shrink-0 items-center self-start rounded-full border border-outline-variant/70 bg-surface-container-lowest font-semibold text-on-surface-variant;
+        height: calc(13 * var(--u));
+        padding-inline: calc(7 * var(--u));
+        font-size: calc(8 * var(--u));
+        line-height: 1;
+    }
+    /* Di dalam baris, pill ikut rata-tengah — `self-start` di atas hanya
+       untuk pill yang berdiri di dalam kolom. */
+    .feat-mrow .feat-pill,
+    .feat-card-row .feat-pill { align-self: center; }
+    .feat-pill-lime { @apply border-transparent bg-secondary text-[#2c4703]; }
+    .feat-pill-accent { @apply border-primary/40 bg-primary/10 text-primary; }
+
+    .feat-card {
+        @apply flex flex-col gap-[8px] rounded-[10px] border border-outline-variant/70 bg-surface-container-lowest p-[10px];
+    }
+    /* Varian kartu yang isinya satu baris. Didefinisikan SESUDAH
+       `.feat-card` supaya `flex-direction` miliknya yang menang (keduanya
+       selektor satu kelas — yang belakangan menang). */
+    .feat-card-row { @apply flex-row items-center gap-[9px]; }
+    /* Baris aktif — sama artinya dengan baris yang sedang disentuh di produk. */
+    .feat-card-hi { @apply border-primary/50 ring-1 ring-primary/15 ring-inset; }
+
+    /* Baris isi miniatur — satu baris = satu peserta/nilai/peringkat. */
+    .feat-mrow { @apply flex items-center gap-[7px]; }
+    /* Kolom di dalam baris: blok teks di samping avatar/QR. */
+    .feat-mcol { @apply flex min-w-0 flex-1 flex-col gap-[5px]; }
+    /* Mendorong elemen ke ujung kanan baris tanpa spacer kosong. */
+    .feat-end { @apply ml-auto; }
+
+    .feat-av { @apply shrink-0 rounded-full bg-outline-variant; width: calc(16 * var(--u)); height: calc(16 * var(--u)); }
+    .feat-sq { @apply shrink-0 rounded-[5px] bg-surface-container-high; width: calc(20 * var(--u)); height: calc(20 * var(--u)); }
+    .feat-tick { @apply shrink-0 rounded-full bg-secondary; width: calc(13 * var(--u)); height: calc(13 * var(--u)); }
+    .feat-numbox {
+        @apply shrink-0 rounded-[4px] border border-outline-variant/70 bg-surface-container-low;
+        width: calc(28 * var(--u)); height: calc(18 * var(--u));
+    }
+    /* `width` dari style/inline kelas = panjang perolehan; sisa baris dibiarkan
+       kosong supaya beda panjang antar baris terbaca sebagai peringkat. */
+    .feat-ballot { @apply min-w-0 rounded-full bg-surface-container-high; flex: 0 1 auto; width: 100%; height: calc(8 * var(--u)); }
+
+    .feat-perf { @apply border-t border-dashed border-outline-variant/70; margin-block: calc(2 * var(--u)); }
+    .feat-sign { @apply flex-1 border-t border-outline-variant/70; padding-top: calc(5 * var(--u)); }
+    .feat-seal {
+        @apply shrink-0 rounded-full border-solid border-primary/40;
+        width: calc(30 * var(--u)); height: calc(30 * var(--u)); border-width: calc(2 * var(--u));
+    }
+    .feat-rk {
+        @apply flex shrink-0 items-center justify-center rounded-[4px] bg-surface-container-high font-semibold text-on-surface-variant;
+        width: calc(17 * var(--u)); height: calc(17 * var(--u)); font-size: calc(8 * var(--u));
+    }
+    .feat-qr {
+        @apply shrink-0 rounded-[6px];
+        width: calc(52 * var(--u)); height: calc(52 * var(--u));
+        background:
+            repeating-linear-gradient(90deg, #c2c6d9 0 calc(4 * var(--u)), transparent calc(4 * var(--u)) calc(8 * var(--u))),
+            repeating-linear-gradient(0deg, #c2c6d9 0 calc(4 * var(--u)), transparent calc(4 * var(--u)) calc(8 * var(--u)));
+        opacity: .5;
+    }
+
+    /* Overlay siaran — satu-satunya miniatur berlatar gelap: overlay memang
+       hanya terpakai di atas video, dan video selalu gelap. */
+    .feat-stage { @apply relative w-full overflow-hidden rounded-[10px] bg-deep-slate; flex: 1 1 auto; min-height: calc(78 * var(--u)); }
+    .feat-lw { position: absolute; left: 6%; right: 6%; bottom: 10%; display: flex; align-items: center; gap: calc(9 * var(--u)); }
+    .feat-lw-nm { @apply flex-1 rounded-[4px] bg-[#e7eaef]/90; height: calc(15 * var(--u)); }
+    .feat-lw-sc { @apply shrink-0 rounded-[4px] bg-secondary; width: calc(56 * var(--u)); height: calc(15 * var(--u)); }
+
+    /* Dinding logo sponsor + peta stan. Tiga kolom di kartu sempit, enam
+       kolom begitu containernya lapang — inilah gunanya container query:
+       satu markup yang sama dipakai di tiga lebar kartu berbeda. */
+    .feat-wall { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .feat-logobox { @apply flex items-center justify-center rounded-[6px] border border-outline-variant/70; aspect-ratio: 3 / 2; }
+    .feat-logobox-hi { @apply border-primary/50 ring-1 ring-primary/15 ring-inset; }
+    .feat-logobox i { @apply block rounded-[3px] bg-surface-container-high; width: 46%; height: calc(9 * var(--u)); }
+    @container (min-width: 480px) {
+        .feat-wall { grid-template-columns: repeat(6, 1fr); }
+    }
+
+    /* Nomor undian. Bukan persegi seperti di wireframe: kotak 3×3 persegi
+       tidak muat di rangka setinggi 240 px — tingginya dipatok, lebarnya
+       ikut kolom. */
+    .feat-g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .feat-cellnum {
+        @apply flex items-center justify-center rounded-[7px] border border-outline-variant/70 font-semibold text-on-surface-variant;
+        height: calc(26 * var(--u)); font-size: calc(12 * var(--u));
+    }
+    .feat-cellnum-sel { @apply border-primary/50 text-primary ring-1 ring-primary/15 ring-inset; }
 }
 
 /* =========================================================================

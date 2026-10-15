@@ -139,11 +139,33 @@
                         ['contact', 'Kontak', 'faq'],
                     ];
                     $navTampil = fn (string $gate) => ($sectionsActive[$gate] ?? true) && ($sectionsRender[$gate] ?? true);
+
+                    // Halaman ini benar-benar punya section ber-anchor. Hanya
+                    // LandingPage yang mengirim `sectionsActive`/`sectionsRender`
+                    // (dan `diLamanDepan`); /pricing, /fitur, /help, /privacy,
+                    // /terms, dan /eventner memakai layout yang sama tapi tidak
+                    // punya #hero/#features/… sama sekali. Sebelum ini default
+                    // `[]` membuat semua gerbang lolos `?? true` di atas dan
+                    // sembilan anchor mati dirender di halaman-halaman itu —
+                    // termasuk enam di footer.
+                    //
+                    // Default `false` (bukan `true`) justru yang aman: halaman
+                    // yang lupa meneruskan flag ini mendapat tautan berprefiks
+                    // absolute yang tetap bekerja — mendarat di beranda pada
+                    // section yang dituju — bukan anchor mati yang diam-diam
+                    // tidak melakukan apa pun. LandingPage meneruskan `true`
+                    // eksplisit, jadi laman depan tidak berubah satu byte pun.
+                    //
+                    // Sengaja TIDAK disimpulkan dari `empty($sectionsRender)`:
+                    // sentinel "kosong" itu rapuh — landing yang seluruh
+                    // section-nya mati akan ikut dianggap bukan laman depan.
+                    $diLamanDepan = $diLamanDepan ?? false;
+                    $prefiksNav = $diLamanDepan ? '' : url('/');
                 @endphp
                 <nav class="hidden items-center gap-8 lg:flex" id="landing-desktop-nav">
                     @foreach($navItems as [$id, $label, $gate])
                         @if($id === 'hero' || $navTampil($gate))
-                            <a href="#{{ $id }}" data-nav="{{ $id }}"
+                            <a href="{{ $prefiksNav }}#{{ $id }}" data-nav="{{ $id }}"
                                class="text-sm font-medium transition-colors duration-200 text-on-surface-variant hover:text-primary">
                                 {{ $label }}
                             </a>
@@ -171,7 +193,7 @@
             <nav class="container-landing flex flex-col gap-1 py-4">
                 @foreach($navItems as [$id, $label, $gate])
                     @if($id === 'hero' || $navTampil($gate))
-                        <a href="#{{ $id }}" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">{{ $label }}</a>
+                        <a href="{{ $prefiksNav }}#{{ $id }}" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">{{ $label }}</a>
                     @endif
                 @endforeach
                 <div class="mt-2 flex flex-col gap-2 border-t border-outline-variant/40 pt-3">
@@ -211,12 +233,13 @@
                 <div>
                     <h4 class="mb-4 font-display text-sm font-semibold uppercase tracking-wider text-white">Navigasi</h4>
                     <ul class="space-y-2.5 text-sm">
-                        <li><a href="#hero" class="transition hover:text-secondary">Beranda</a></li>
-                        <li><a href="#features" class="transition hover:text-secondary">Fitur</a></li>
-                        <li><a href="#pricing" class="transition hover:text-secondary">Harga</a></li>
-                        <li><a href="#eventners" class="transition hover:text-secondary">Event</a></li>
-                        <li><a href="#team" class="transition hover:text-secondary">Tim</a></li>
-                        <li><a href="#faq" class="transition hover:text-secondary">FAQ</a></li>
+                        <li><a href="{{ $prefiksNav }}#hero" class="transition hover:text-secondary">Beranda</a></li>
+                        <li><a href="{{ $prefiksNav }}#features" class="transition hover:text-secondary">Fitur</a></li>
+                        <li><a href="{{ route('public.features') }}" class="transition hover:text-secondary">Semua Fitur</a></li>
+                        <li><a href="{{ $prefiksNav }}#pricing" class="transition hover:text-secondary">Harga</a></li>
+                        <li><a href="{{ $prefiksNav }}#eventners" class="transition hover:text-secondary">Event</a></li>
+                        <li><a href="{{ $prefiksNav }}#team" class="transition hover:text-secondary">Tim</a></li>
+                        <li><a href="{{ $prefiksNav }}#faq" class="transition hover:text-secondary">FAQ</a></li>
                     </ul>
                 </div>
 
@@ -226,7 +249,7 @@
                 <div>
                     <h4 class="mb-4 font-display text-sm font-semibold uppercase tracking-wider text-white">Kontak</h4>
                     <ul class="space-y-2.5 text-sm">
-                        <li><a href="#contact" class="transition hover:text-secondary">Hubungi Kami</a></li>
+                        <li><a href="{{ $prefiksNav }}#contact" class="transition hover:text-secondary">Hubungi Kami</a></li>
                         <li><a href="{{ route('privacy') }}" class="transition hover:text-secondary">Kebijakan Privasi</a></li>
                         <li><a href="{{ route('terms') }}" class="transition hover:text-secondary">Syarat &amp; Ketentuan</a></li>
                         <li><a href="{{ route('help') }}" class="transition hover:text-secondary">Bantuan &amp; Support</a></li>

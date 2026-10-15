@@ -3,23 +3,48 @@
     $title = $data['title'] ?? 'Fitur Lengkap untuk Event Sukses';
     $items = $data['items'] ?? [
         ['icon' => 'icon3.png', 'title' => 'Manajemen Pendaftaran', 'description' => 'Kelola pendaftaran peserta secara digital dengan verifikasi otomatis dan tracking status real-time.'],
-        ['icon' => 'icon6.png', 'title' => 'E-Tiket & Pembayaran', 'description' => 'Jual tiket event secara online dengan integrasi gateway pembayaran dan QR code check-in.'],
-        ['icon' => 'icon5.png', 'title' => 'Voting Online', 'description' => 'Fitur voting online terintegrasi dengan pembayaran digital untuk penghargaan favorit penonton.'],
         ['icon' => 'icon4.png', 'title' => 'Penilaian Juri Digital', 'description' => 'Sistem penilaian digital dengan format kustom, perhitungan otomatis, dan rekap nilai instan.'],
+        ['icon' => 'icon5.png', 'title' => 'Voting Online', 'description' => 'Fitur voting online terintegrasi dengan pembayaran digital untuk penghargaan favorit penonton.'],
+        ['icon' => 'icon6.png', 'title' => 'E-Tiket & Check-in QR', 'description' => 'Jual tiket event secara online dengan integrasi gateway pembayaran dan QR code check-in.'],
         ['icon' => 'icon7.png', 'title' => 'Live Scoreboard', 'description' => 'Papan skor real-time yang bisa dipancarkan ke layar proyektor untuk transparansi penilaian.'],
         ['icon' => 'icon8.png', 'title' => 'Drawing & Undian', 'description' => 'Sistem undian digital untuk menentukan urutan tampil peserta dengan animasi menarik.'],
+        ['icon' => 'icon9.png', 'title' => 'Sertifikat Digital', 'description' => 'Cetak sertifikat peserta dan juara otomatis lengkap dengan tanda tangan digital penyelenggara.'],
+        ['icon' => 'icon10.png', 'title' => 'Livestream Overlay', 'description' => 'Overlay skor dan nama peserta untuk siaran langsung di YouTube maupun Facebook.'],
+        ['icon' => 'icon11.png', 'title' => 'Sponsor & Tenant', 'description' => 'Kelola sponsor, stan tenant, dan peta lokasi venue dalam satu halaman publik event.'],
     ];
+
+    // Ikon dipilih dari arti fiturnya. Tiga entri terakhir sempat hilang dan
+    // membuat Sertifikat/Livestream/Sponsor semuanya jatuh ke `ti-star` yang
+    // sama; `icon7` juga dulu `ti-scoreboard`, yang tidak ada glifnya di font
+    // Tabler lokal yang dipakai halaman ini — hasilnya ikon kosong begitu
+    // CDN gagal dimuat. `ti-podium` ada di font lokal maupun CDN.
     $iconMap = [
-        // Ikon dipilih dari isi fiturnya: pendaftaran = form, tiket = tiket,
-        // voting = bintang, penilaian = penghargaan, skor = papan, undian =
-        // nomor urut.
-        'icon3.png' => 'ti-forms',
-        'icon4.png' => 'ti-award',
-        'icon5.png' => 'ti-star',
-        'icon6.png' => 'ti-ticket',
-        'icon7.png' => 'ti-scoreboard',
-        'icon8.png' => 'ti-list-numbers',
+        'icon3.png' => 'ti-forms',          // pendaftaran = formulir
+        'icon4.png' => 'ti-award',          // penilaian = penghargaan
+        'icon5.png' => 'ti-star',           // voting = bintang
+        'icon6.png' => 'ti-ticket',         // tiket = tiket
+        'icon7.png' => 'ti-podium',         // skor = podium
+        'icon8.png' => 'ti-list-numbers',   // undian = nomor urut
+        'icon9.png' => 'ti-certificate',    // sertifikat
+        'icon10.png' => 'ti-broadcast',     // overlay siaran
+        'icon11.png' => 'ti-building-store', // sponsor & tenant = stan
     ];
+
+    // Unggulan ditandai per ITEM (`featured`), bukan per indeks: indeks
+    // bergeser tiap admin menghapus satu baris (removeFeatureItem memanggil
+    // array_values), jadi penanda berbasis indeks akan menunjuk item yang
+    // salah setelah satu penghapusan. Dibandingkan lewat KUNCI indeks, bukan
+    // lewat isi item: dua item bisa saja punya judul+deskripsi+ikon identik
+    // (admin menduplikasi), dan pencocokan isi akan membuang yang salah.
+    // Data lama belum punya kunci ini sama sekali — kalau tidak ada yang
+    // ditandai, dua item pertama yang jadi unggulan, sehingga halaman depan
+    // membaik tanpa admin menyentuh apa pun.
+    $featuredKeys = collect($items)->filter(fn ($i) => !empty($i['featured']))->keys()->take(2);
+    if ($featuredKeys->isEmpty()) {
+        $featuredKeys = collect($items)->keys()->take(2);
+    }
+    $compactKeys  = collect($items)->keys()->diff($featuredKeys);
+    $compactCount = $compactKeys->count();
 
     // Poin dari section "Tentang" yang dibuang. Dulu tiga blok ceklis
     // tersendiri beberapa layar di bawah section ini dan mengulang hal yang
@@ -49,20 +74,67 @@
             @endif
         </div>
 
-        <div class="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            @foreach($items as $index => $item)
-            <div class="surface-card surface-card-hover group p-7" wire:key="feature-{{ $index }}">
-                <div class="mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    @if(!empty($item['icon_custom']))
-                        <img src="{{ Storage::url($item['icon_custom']) }}" alt="{{ $item['title'] ?? '' }}" class="h-7 w-7 object-contain">
-                    @else
-                        <i class="ti {{ $iconMap[$item['icon'] ?? ''] ?? 'ti-star' }} text-2xl"></i>
-                    @endif
+        {{-- Bento enam kolom: unggulan 3+3, padat 2+2+2, kartu terakhir yang
+             sendirian melebar penuh (6). Kelas span ditulis LITERAL di tiap
+             cabang — Tailwind memindai berkas dan tidak pernah menjalankan
+             Blade, jadi kelas yang dirakit dari variabel tidak masuk CSS
+             hasil build (pelajaran yang sudah dibayar di komponen harga). --}}
+        <div class="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-6">
+            @foreach($featuredKeys as $index)
+            @php $item = $items[$index] ?? []; @endphp
+            <div class="surface-card surface-card-hover p-6 sm:col-span-2 lg:col-span-3" wire:key="feature-{{ $index }}">
+                <div class="mb-4 flex items-start justify-between gap-3">
+                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        @if(!empty($item['icon_custom']))
+                            <img src="{{ Storage::url($item['icon_custom']) }}" alt="{{ $item['title'] ?? '' }}" class="h-6 w-6 object-contain">
+                        @else
+                            <i class="ti {{ $iconMap[$item['icon'] ?? ''] ?? 'ti-star' }} text-xl"></i>
+                        @endif
+                    </div>
+                    <span class="chip">Paling dipakai</span>
                 </div>
+
+                <x-landing.feature-miniature :item="$item" />
+
                 <h3 class="text-lg font-bold text-deep-slate">{{ $item['title'] ?? '' }}</h3>
                 <p class="mt-2 text-sm leading-relaxed text-on-surface-variant">{{ $item['description'] ?? '' }}</p>
             </div>
             @endforeach
+
+            @foreach($compactKeys as $index)
+            @php
+                $item = $items[$index] ?? [];
+                // Sisa kartu padat yang habis dibagi tiga menyisakan satu:
+                // yang terakhir melebar penuh, bukan menggantung separuh baris.
+                $sendiri = $loop->last && $compactCount % 3 === 1;
+            @endphp
+            @if($sendiri)
+            <div class="surface-card surface-card-hover p-6 sm:col-span-2 lg:col-span-6" wire:key="feature-{{ $index }}">
+            @else
+            <div class="surface-card surface-card-hover p-6 sm:col-span-1 lg:col-span-2" wire:key="feature-{{ $index }}">
+            @endif
+                <div class="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    @if(!empty($item['icon_custom']))
+                        <img src="{{ Storage::url($item['icon_custom']) }}" alt="{{ $item['title'] ?? '' }}" class="h-6 w-6 object-contain">
+                    @else
+                        <i class="ti {{ $iconMap[$item['icon'] ?? ''] ?? 'ti-star' }} text-xl"></i>
+                    @endif
+                </div>
+
+                <x-landing.feature-miniature :item="$item" />
+
+                <h3 class="text-lg font-bold text-deep-slate">{{ $item['title'] ?? '' }}</h3>
+                <p class="mt-2 text-sm leading-relaxed text-on-surface-variant">{{ $item['description'] ?? '' }}</p>
+            </div>
+            @endforeach
+        </div>
+
+        {{-- Landing cuma memuat sembilan fitur; sisanya hidup di /fitur. --}}
+        <div class="mt-10 text-center">
+            <a href="{{ route('public.features') }}" class="btn-ghost">
+                Lihat Semua Fitur
+                <i class="ti ti-arrow-right"></i>
+            </a>
         </div>
     </div>
 </section>

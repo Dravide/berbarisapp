@@ -52,7 +52,7 @@ class PublicSitemapTest extends TestCase
     {
         $xml = $this->get('/sitemap.xml')->getContent();
 
-        foreach (['pricing', 'eventner', 'privacy', 'terms', 'help'] as $path) {
+        foreach (['pricing', 'fitur', 'eventner', 'privacy', 'terms', 'help'] as $path) {
             $this->assertStringContainsString('<loc>' . platform_url($path) . '</loc>', $xml);
         }
     }

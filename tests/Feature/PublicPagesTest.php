@@ -188,6 +188,47 @@ class PublicPagesTest extends TestCase
         $this->assertStringNotContainsString('Terlaksana', $html);
     }
 
+    /**
+     * Kebocoran yang sama di SELURUH dokumen, bukan hanya header.
+     *
+     * `layouts/landing.blade.php` menulis `$sectionsActive = $sectionsActive ?? []`
+     * dan `$sectionsRender = $sectionsRender ?? []`; hanya LandingPage yang
+     * mengirim keduanya. Di lima halaman lain default `[]` membuat gerbang
+     * `?? true` lolos untuk SEMUA section, jadi sembilan anchor `#hero…#contact`
+     * dirender padahal tak satu pun section-nya ada — dan enam di antaranya
+     * duduk di footer, di luar jangkauan tes header di atas.
+     *
+     * `/fitur` sengaja TIDAK ada di daftar ini: ia memang punya anchor `#g-…`,
+     * tapi ke section yang benar-benar ada di halaman itu sendiri. Invariannya
+     * "nol anchor mati", bukan "nol anchor" — bentuknya dijaga di
+     * PublicFeaturesPageTest::test_setiap_chip_kategori_punya_section.
+     */
+    public function test_halaman_non_landing_tidak_punya_tautan_anchor()
+    {
+        foreach (['/pricing', '/help', '/privacy', '/terms', '/eventner'] as $path) {
+            $this->assertStringNotContainsString(
+                'href="#',
+                $this->get($path)->getContent(),
+                "Halaman {$path} memakai layout landing tapi masih punya tautan anchor mati."
+            );
+        }
+    }
+
+    /**
+     * Perbaikannya tidak boleh dilakukan dengan cara meratakan footer: di
+     * laman depan, footer memang harus masih melompat ke section-nya.
+     */
+    public function test_footer_landing_masih_menaut_ke_section()
+    {
+        Eventner::factory(3)->create(['status' => 'approved']);
+
+        $html = $this->get('/')->getContent();
+        $footer = substr($html, strpos($html, '<footer'));
+
+        $this->assertStringContainsString('href="#features"', $footer);
+        $this->assertStringContainsString('href="#contact"', $footer);
+    }
+
     /** Potongan markup <section id="eventners"> dari HTML halaman landing. */
     private function penyelenggaraSection(string $html): string
     {

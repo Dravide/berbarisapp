@@ -136,7 +136,13 @@
 
                     <div class="mt-8">
                         @if($plan['is_contact'])
-                            <a href="{{ $plan['contact_url'] ?: '#contact' }}" target="_blank" rel="noopener"
+                            {{-- Dulu `?: '#contact'`. id="contact" hidup di
+                                 components/landing/faq.blade.php, yang landing-only —
+                                 jadi di /pricing tombol ini menuju halaman yang sama
+                                 sekali. /help memuat kanal kontak yang sama, jadi
+                                 syaratnya bisa dihapus: tautan selalu ada. --}}
+                            <a href="{{ $plan['contact_url'] ?: route('help') }}"
+                                @if($plan['contact_url']) target="_blank" rel="noopener" @endif
                                 class="{{ $rekomendasi ? 'btn-primary' : 'btn-ghost' }} w-full justify-center">
                                 <i class="ti ti-message-circle"></i> Hubungi Admin
                             </a>

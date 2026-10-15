@@ -196,6 +196,11 @@ class LandingPage extends Component
                 'favicon' => $this->favicon,
                 'sectionsActive' => $this->sectionsActive,
                 'sectionsRender' => $sectionsRender,
+                // Eksplisit, walau defaultnya juga true: layout memakai
+                // ketiadaan variabel ini sebagai penanda "bukan laman depan"
+                // dan memberi prefiks url('/') pada sembilan tautan nav.
+                // Ditulis di sini supaya pembaca tidak perlu menebak.
+                'diLamanDepan' => true,
             ])
             ->title(app_name());
     }

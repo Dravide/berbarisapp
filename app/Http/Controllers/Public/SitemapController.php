@@ -42,6 +42,7 @@ class SitemapController extends Controller
         $urls = [
             ['loc' => platform_url('/')],
             ['loc' => platform_url('pricing')],
+            ['loc' => platform_url('fitur')],
             ['loc' => platform_url('eventner')],
             ['loc' => platform_url('privacy')],
             ['loc' => platform_url('terms')],

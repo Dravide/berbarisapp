@@ -1,0 +1,922 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wireframe miniatur fitur landing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;600;700&amp;display=swap">
+<style>
+/* Layout: dokumen spesifikasi halaman — tiap topik satu baris, mockup di kiri, anotasi di kanan.
+   Kosakata mockup disalin dari landing-wireframe.html supaya dua dokumen ini sebentuk:
+   .frame/.chrome/.mock/.bar/.pill/.card/.grid3, container-type + --u. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --lime:#a3e635; --lime-ink:#2c4703;
+  --warn:#c2410c; --warn-soft:#fff1e8;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --lime:#b6f24e; --lime-ink:#16250a;
+    --warn:#ff9a6b; --warn-soft:#2e2018;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --lime:#b6f24e; --lime-ink:#16250a;
+  --warn:#ff9a6b; --warn-soft:#2e2018;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{
+  max-width:1180px;
+  margin-inline:auto;
+  padding-inline:clamp(16px,4vw,40px);
+  padding-block:clamp(28px,5vw,56px);
+}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 10px;
+}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:64ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{
+  font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap;
+}
+button.toggle{
+  font-family:var(--mono);font-size:12px;padding:7px 14px;border-radius:999px;
+  border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);
+  cursor:pointer;white-space:nowrap;
+}
+button.toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.toggle[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.spec{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-top:28px;
+}
+.spec > div{background:var(--panel);padding:16px 18px}
+.spec dt{
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;
+}
+.spec dd{margin:0;font-size:14px;line-height:1.5}
+.swatches{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.sw{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.sw i{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.15);display:block}
+
+/* ---------- tumpukan blok sebelum / sesudah ---------- */
+.stack-pair{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:clamp(20px,3vw,36px);margin-top:clamp(28px,4vw,44px);
+}
+.stack h3{font-size:15px;font-weight:600;margin-bottom:12px}
+.stack h3 .sub{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:400;margin-left:8px}
+.blks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.blk{
+  display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:center;
+  border:1px solid var(--line);border-radius:8px;background:var(--panel);
+  padding:8px 11px;font-size:13px;
+}
+.blk .no{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.blk .nm{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.blk .nm em{font-family:var(--sans);font-style:normal;color:var(--muted);margin-left:8px;font-size:12px}
+.blk .tag{
+  font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted);white-space:nowrap;
+}
+.blk.bad{border-color:var(--warn);background:var(--warn-soft)}
+.blk.bad .tag{border-color:var(--warn);color:var(--warn)}
+.blk.keep{border-color:var(--accent);background:var(--accent-soft)}
+.blk.keep .tag{border-color:var(--accent);color:var(--accent)}
+.blk.big{border-color:var(--accent)}
+.blk.big .tag{border-color:var(--accent);color:var(--accent)}
+
+/* ---------- slide ---------- */
+.slide{
+  margin-top:clamp(32px,5vw,56px);
+  display:grid;
+  grid-template-columns:minmax(0,560px) minmax(0,1fr);
+  gap:clamp(20px,3vw,44px);
+  align-items:start;
+}
+@media (max-width:900px){ .slide{grid-template-columns:minmax(0,1fr)} }
+.slide-head{grid-column:1/-1}
+.slide-head h2{font-size:clamp(19px,2.2vw,23px);font-weight:700}
+.slide-head .num{
+  font-family:var(--mono);font-size:12px;color:var(--accent);
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.slide-head .goal{color:var(--muted);font-size:14px;margin-top:6px;max-width:70ch}
+/* Slide miniatur: mockup kiri, catatan kanan — sama seperti dokumen landing. */
+.slide.wide{grid-template-columns:minmax(0,460px) minmax(0,1fr)}
+
+/* Mockup halaman: lebar 1180 px desain, tinggi mengikuti isi. */
+.frame{
+  position:relative;
+  width:100%;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  overflow:hidden;
+  container-type:inline-size;
+  --u:0.0847cqw; /* 1 px desain (lebar 1180) */
+}
+.frame > .chrome{
+  display:flex;align-items:center;gap:calc(8*var(--u));
+  padding:calc(14*var(--u)) calc(20*var(--u));
+  border-bottom:1px solid var(--line-soft);background:var(--panel-2);
+}
+.chrome .dot{width:calc(10*var(--u));height:calc(10*var(--u));border-radius:50%;background:var(--ph-line)}
+.chrome .url{
+  flex:1;height:calc(20*var(--u));border-radius:999px;background:var(--ph-fill);
+  display:flex;align-items:center;padding-inline:calc(12*var(--u));
+  font-family:var(--mono);font-size:calc(11*var(--u));color:var(--muted);
+}
+.mock{
+  display:flex;flex-direction:column;gap:calc(22*var(--u));
+  padding:calc(34*var(--u)) calc(40*var(--u)) calc(42*var(--u));
+}
+.mock.tight{gap:calc(14*var(--u))}
+.bar{background:var(--ph-fill);border-radius:calc(4*var(--u));height:calc(11*var(--u))}
+.bar.t{height:calc(24*var(--u));background:var(--ph-line)}
+.bar.h{height:calc(30*var(--u));background:linear-gradient(90deg,var(--ph-line),var(--ph-fill))}
+.bar.s{height:calc(8*var(--u))}
+.bar.acc{background:var(--accent);height:calc(26*var(--u));border-radius:calc(7*var(--u))}
+.bar.lim{background:var(--lime);height:calc(26*var(--u));border-radius:calc(7*var(--u))}
+.w100{width:100%}.w80{width:80%}.w70{width:70%}.w60{width:60%}.w50{width:50%}.w40{width:40%}.w30{width:30%}
+.cx{align-items:center;text-align:center}
+.row{display:flex;gap:calc(14*var(--u));align-items:center}
+.row.g{flex:1}
+.col{display:flex;flex-direction:column;gap:calc(10*var(--u))}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:calc(14*var(--u))}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(14*var(--u))}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:calc(14*var(--u))}
+.card{
+  border:1px solid var(--line);border-radius:calc(9*var(--u));
+  padding:calc(16*var(--u));display:flex;flex-direction:column;gap:calc(9*var(--u));
+}
+.card.hi{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent-soft)}
+.card.dark{background:#14181f;border-color:#14181f}
+.card.dark .bar{background:#2b3138}
+.thumb{
+  background:var(--ph-fill);border-radius:calc(6*var(--u));
+  aspect-ratio:4/3;width:100%;
+}
+.pill{
+  font-family:var(--mono);font-size:calc(10*var(--u));color:var(--muted);
+  border:1px solid var(--line);border-radius:999px;padding:calc(3*var(--u)) calc(9*var(--u));
+  white-space:nowrap;align-self:flex-start;
+}
+.pill.acc{border-color:var(--accent);color:var(--accent)}
+.pill.warn{border-color:var(--warn);color:var(--warn)}
+.pill.lim{border-color:var(--lime);color:var(--lime-ink);background:var(--lime)}
+/* Badge ikon di kartu fitur: kotak 44 px + glif. */
+.badge{
+  width:calc(44*var(--u));height:calc(44*var(--u));border-radius:calc(11*var(--u));
+  background:var(--accent-soft);flex:none;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:calc(16*var(--u));color:var(--accent);
+}
+.ghost{
+  position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:
+    repeating-linear-gradient(to right, transparent 0, transparent calc(1180*var(--u)/12 - 1px), color-mix(in srgb, var(--accent) 12%, transparent) calc(1180*var(--u)/12));
+  opacity:0;transition:opacity .15s;
+}
+.wrap[data-grid="on"] .ghost{opacity:1}
+
+/* Grid bento: 6 kolom di lg. Kelas span ditulis literal di Blade juga. */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:calc(16*var(--u))}
+.bento > .cell{grid-column:span 3;display:flex;flex-direction:column;gap:calc(10*var(--u))}
+.bento > .cell.s1{grid-column:span 1}
+.bento > .cell.s2{grid-column:span 2}
+.bento > .cell.s6{grid-column:span 6}
+/* Kisi padat 3 kolom di dalam mockup (server merender 3 per baris). */
+.dense{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(16*var(--u))}
+.dense > .cell{display:flex;flex-direction:column;gap:calc(9*var(--u))}
+
+/* ---------- kosakata miniatur (dipakai aturan Blade) ----------
+   Miniatur digambar di kanvas 360 px: 1 unit `--u` = 1 px desain pada lebar
+   360. `--u` dipasang di ANAK `.mini`, bukan di `.mini` sendiri — `cqw`
+   menilik container terdekat dan sebuah elemen tidak bisa menanyai dirinya
+   sendiri; alasan yang sama ditulis di landing-wireframe.html untuk
+   `.phone`. Padding dan gap `.mini` memakai px tetap karena di dokumen ini
+   lebarnya sudah tetap, sedangkan di Blade keduanya ikut `var(--u)`.
+   Kosakata halaman di atasnya ber-`--u` 1180, jadi semua kelas miniatur
+   yang bertabrakan nama (.bar/.pill/.card/.row) di-scope ke `.mini`. */
+.mini{container-type:inline-size;display:flex;flex-direction:column;gap:8px;padding:14px 16px 16px}
+.mini > *{--u:0.2778cqw}
+.mini.center{justify-content:center;flex:1}
+.mini .bar{height:calc(6*var(--u))}
+.mini .bar.s{height:calc(4*var(--u))}
+.mini .bar.t{height:calc(11*var(--u));background:var(--ph-line)}
+.mini .bar.h{height:calc(11*var(--u))}
+.mini .pill{font-size:calc(9*var(--u));padding:calc(1.5*var(--u)) calc(7*var(--u))}
+/* `.pill` membawa align-self:flex-start; di dalam baris ia harus ikut
+   rata-tengah, tapi di dalam kolom tetap rata-kiri. */
+.mini .mrow .pill{align-self:center}
+.mini .card{padding:calc(9*var(--u));gap:calc(7*var(--u));border-radius:calc(7*var(--u))}
+.mini .grid2,.mini .grid3,.mini .grid4{gap:calc(6*var(--u))}
+.mini .row{gap:calc(7*var(--u))}
+.mrow{display:flex;align-items:center;gap:calc(7*var(--u))}
+.mrow .bar{flex:1}
+.mrow.grow{flex:1}
+.av{width:calc(16*var(--u));height:calc(16*var(--u));border-radius:50%;background:var(--ph-line);flex:none}
+.sq{width:calc(20*var(--u));height:calc(20*var(--u));border-radius:calc(5*var(--u));background:var(--ph-fill);flex:none}
+.tick{width:calc(13*var(--u));height:calc(13*var(--u));border-radius:50%;background:var(--lime);flex:none}
+.numbox{width:calc(28*var(--u));height:calc(18*var(--u));border-radius:calc(4*var(--u));border:1px solid var(--line);background:var(--panel-2);flex:none}
+.ballot{height:calc(8*var(--u));border-radius:999px;background:var(--ph-fill)}
+.qr{
+  width:calc(52*var(--u));height:calc(52*var(--u));border-radius:calc(6*var(--u));flex:none;
+  background:
+    repeating-linear-gradient(90deg,var(--ph-line) 0 calc(4*var(--u)),transparent calc(4*var(--u)) calc(8*var(--u))),
+    repeating-linear-gradient(0deg,var(--ph-line) 0 calc(4*var(--u)),transparent calc(4*var(--u)) calc(8*var(--u)));
+  opacity:.5;
+}
+.perf{border-top:1px dashed var(--line);margin-block:calc(2*var(--u))}
+.seal{width:calc(32*var(--u));height:calc(32*var(--u));border-radius:50%;border:calc(2*var(--u)) solid var(--accent);flex:none;opacity:.45}
+.sign{flex:1;border-top:1px solid var(--line);padding-top:calc(5*var(--u))}
+.rk{
+  width:calc(17*var(--u));height:calc(17*var(--u));border-radius:calc(4*var(--u));
+  background:var(--ph-fill);flex:none;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:calc(9*var(--u));color:var(--muted);
+}
+.stage{
+  background:#14181f;border-radius:calc(9*var(--u));aspect-ratio:16/9;position:relative;
+  overflow:hidden;flex:none;width:100%;
+}
+.stage .lw{position:absolute;left:calc(22*var(--u));right:calc(22*var(--u));bottom:calc(20*var(--u));display:flex;gap:calc(10*var(--u));align-items:center}
+.stage .lw .nm{background:#e7eaef;height:calc(15*var(--u));border-radius:calc(4*var(--u));flex:1;opacity:.88}
+.stage .lw .sc{background:var(--lime);height:calc(15*var(--u));width:calc(58*var(--u));border-radius:calc(4*var(--u));flex:none}
+.logobox{
+  aspect-ratio:3/2;border:1px solid var(--line);border-radius:calc(6*var(--u));
+  display:flex;align-items:center;justify-content:center;
+}
+.logobox.hi{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent-soft)}
+.logobox i{width:46%;height:calc(9*var(--u));border-radius:calc(3*var(--u));background:var(--ph-fill);display:block}
+.cellnum{
+  border:1px solid var(--line);border-radius:calc(7*var(--u));aspect-ratio:1;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:calc(13*var(--u));color:var(--muted);
+}
+.cellnum.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent-soft);color:var(--accent)}
+/* Ponsel: skala dipasang di lapis dalam supaya container terdekatnya .phone. */
+.phone{
+  max-width:280px;margin-inline:auto;border:1px solid var(--line);
+  border-radius:18px;background:var(--panel);overflow:hidden;
+  container-type:inline-size;width:100%;
+}
+.phone > *{--u:0.256cqw}
+
+.notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.notes li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;align-items:baseline}
+.notes .n{
+  font-family:var(--mono);font-size:11px;color:var(--accent);
+  border-top:1px solid var(--accent);padding-top:4px;
+}
+.notes b{font-weight:600;font-size:14.5px}
+.notes .dim{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px;white-space:nowrap}
+.notes p{font-size:13.5px;color:var(--muted);margin-top:2px;line-height:1.5}
+.notes code{color:var(--ink)}
+
+.rules{
+  margin-top:clamp(40px,6vw,72px);
+  border-top:1px solid var(--line);padding-top:clamp(24px,3vw,36px);
+}
+.rules h2{font-size:clamp(19px,2.2vw,23px)}
+.rules .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;margin-top:20px}
+.rules ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--muted)}
+.rules ul strong{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;margin-top:18px;font-size:13.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+th{
+  font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);font-weight:400;border-bottom-color:var(--line);
+}
+td:first-child{font-family:var(--mono);font-size:12.5px;white-space:nowrap;color:var(--ink)}
+td:last-child{color:var(--muted)}
+footer{
+  margin-top:clamp(32px,5vw,56px);border-top:1px solid var(--line);padding-top:20px;
+  font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em;
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+
+<div class="wrap" data-grid="off">
+
+  <header>
+    <p class="eyebrow">BERBARIS APP — Section #features</p>
+    <h1>Wireframe miniatur fitur di landing</h1>
+    <p class="lede">Section "Fitur Lengkap untuk Event Sukses" memampangkan sembilan kartu yang isinya cuma ikon, judul, dan dua baris kalimat — sembilan kali berturut-turut, tanpa satu pun yang memperlihatkan produknya. Wireframe ini menggambar susunan penggantinya: dua kartu unggulan besar, sisanya kartu padat, dan setiap kartu membawa miniatur layar fiturnya sendiri yang digambar CSS — bukan tangkapan layar, bukan aset.</p>
+    <div class="meta">
+      <span class="chip">1180 px · desktop</span>
+      <span class="chip">9 kartu seragam → 2 + 7 buku</span>
+      <span class="chip">miniatur digambar kode, 0 aset</span>
+      <span class="chip">3 temuan ikon ikut dibetulkan</span>
+      <button class="toggle" id="tg" type="button" aria-pressed="false">Tampilkan kolom 12</button>
+    </div>
+  </header>
+
+  <dl class="spec">
+    <div>
+      <dt>Kanvas</dt>
+      <dd>Kolom desktop 1180 px, gutter 16–40 px. Yang digambar halaman, bukan slide.</dd>
+    </div>
+    <div>
+      <dt>Warna</dt>
+      <dd>
+        <span class="swatches">
+          <span class="sw"><i style="background:#f8f9fa"></i>surface</span>
+          <span class="sw"><i style="background:#ffffff"></i>putih kartu</span>
+          <span class="sw"><i style="background:#111827"></i>deep-slate</span>
+          <span class="sw"><i style="background:#0062ff"></i>primary</span>
+          <span class="sw"><i style="background:#a3e635"></i>lime</span>
+        </span>
+        Warna aksen di miniatur cuma dua: <code>primary</code> dan <code>lime</code>. Lime dipakai <strong>satu kali</strong> saja per miniatur, sebagai penanda hasil/status — bukan hiasan.
+      </dd>
+    </div>
+    <div>
+      <dt>Sumber isi</dt>
+      <dd>Satu kunci setting, <code>landing_features</code>: judul + array <code>items</code>. Tiap item kini punya <code>featured</code> opsional (boolean). Miniatur dipilih dari <code>icon</code> item, bukan dari judulnya.</dd>
+    </div>
+    <div>
+      <dt>Ukuran miniatur</dt>
+      <dd>Container query, bukan breakpoint: <code>--u</code> dipasang di pembungkus ber-<code>container-type:inline-size</code>, anaknya memakai <code>calc(n*var(--u))</code>. Satu markup, tiga ukuran (kartu besar, kartu padat, kartu penutup) — tetap proporsional tanpa satu kelas responsif pun.</dd>
+    </div>
+  </dl>
+
+  <!-- ============ SEBELUM / SESUDAH ============ -->
+  <div class="stack-pair">
+    <div class="stack">
+      <h3>Sebelum <span class="sub">9 kartu · satu bentuk</span></h3>
+      <ul class="blks">
+        <li class="blk"><span class="no">01</span><span class="nm">badge + judul + 2 baris</span><span class="tag">×9</span></li>
+        <li class="blk bad"><span class="no">02</span><span class="nm">tidak ada yang memperlihatkan produk</span><span class="tag">masalah</span></li>
+        <li class="blk bad"><span class="no">03</span><span class="nm">tidak ada yang menonjol</span><span class="tag">masalah</span></li>
+        <li class="blk bad"><span class="no">04</span><span class="nm">icon9–icon11 → ti-star</span><span class="tag">bug</span></li>
+        <li class="blk bad"><span class="no">05</span><span class="nm">ti-scoreboard tiada di font lokal</span><span class="tag">bug</span></li>
+      </ul>
+    </div>
+    <div class="stack">
+      <h3>Sesudah <span class="sub">2 unggulan + 7 padat</span></h3>
+      <ul class="blks">
+        <li class="blk big"><span class="no">01</span><span class="nm">Miniatur layar <em>tiap fitur</em></span><span class="tag">2 besar</span></li>
+        <li class="blk keep"><span class="no">02</span><span class="nm">7 kartu padat 3 kolom</span><span class="tag">bento</span></li>
+        <li class="blk keep"><span class="no">03</span><span class="nm">Penanda <code>featured</code> per item</span><span class="tag">dipilih admin</span></li>
+        <li class="blk keep"><span class="no">04</span><span class="nm">iconMap lengkap 9 entri</span><span class="tag">beres</span></li>
+        <li class="blk keep"><span class="no">05</span><span class="nm">ti-podium menggantikan ti-scoreboard</span><span class="tag">beres</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE: SEBELUM ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Sebelum · #features</p>
+      <h2>Sembilan kartu yang sama, sembilan kali</h2>
+      <p class="goal">Yang membedakan satu kartu dari yang lain cuma ikonnya. Tidak ada yang memberi tahu pengunjung seperti apa bentuk produknya — padahal inilah satu-satunya section yang tugasnya menjual fitur.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/#features</span></div>
+      <div class="mock cx">
+        <span class="pill acc">Fitur</span>
+        <div class="bar h w50"></div>
+        <div class="row" style="justify-content:center">
+          <span class="pill">100+ Event Sukses</span>
+          <span class="pill">Keamanan Terjamin</span>
+          <span class="pill">Support Responsif</span>
+          <span class="pill">Dapat Dikustomisasi</span>
+        </div>
+        <div class="grid3" style="margin-top:calc(16*var(--u))">
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(44*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(44*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(44*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(44*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(44*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(44*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(44*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(44*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(44*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Sembilan kartu, satu bentuk</b><span class="dim">grid 3 × 3</span><p>Kartu ke-1 sampai ke-9 identik. Mata tidak punya alasan berhenti di mana pun, jadi tidak ada yang benar-benar dibaca.</p></div></li>
+      <li><span class="n">02</span><div><b>Tidak ada bukti produk</b><span class="dim">hanya prosa</span><p>"Kelola pendaftaran peserta secara digital" — pengunjung tidak tahu bentuknya tabel, daftar, atau apa. Miniatur di bawah ini menggantinya dengan contoh yang bisa dilihat.</p></div></li>
+      <li><span class="n">03</span><div><b>Sembilan item, enam ikon</b><span class="dim">temuan A</span><p><code>iconMap</code> berhenti di <code>icon8</code>. Sertifikat Digital, Livestream Overlay, dan Sponsor &amp; Tenant semuanya memperoleh <code>ti-star</code> yang sama — di produksi ini sudah terjadi sekarang, bukan kemungkinan.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE: BENTO ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Sesudah · susunan bento</p>
+      <h2>Dua besar, tujuh padat, satu melebar</h2>
+      <p class="goal">Kisi enam kolom. Dua item unggulan menempati tiga kolom masing-masing (separuh lebar), tujuh sisanya dua kolom (sepertiga). Karena sembilan bukan kelipatan tiga setelah dua diambil, kartu terakhir sendirian — dan kartu sendirian di baris terakhir dilebarkan penuh, bukan dibiarkan menggantung setengah kosong.</p>
+    </div>
+
+    <div class="frame">
+      <div class="ghost"></div>
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/#features · lg ≥ 1024 px</span></div>
+      <div class="mock tight">
+        <div class="bento">
+          <div class="cell s1" style="grid-column:span 3">
+            <span class="pill lim">Paling dipakai</span>
+            <div class="row"><span class="badge">▤</span><div class="bar t w60"></div></div>
+            <div class="card" style="aspect-ratio:16/10;padding:calc(14*var(--u))">
+              <div class="mrow"><span class="av"></span><span class="bar"></span><span class="tick"></span></div>
+              <div class="mrow"><span class="av"></span><span class="bar"></span><span class="tick"></span></div>
+              <div class="mrow"><span class="av"></span><span class="bar"></span></div>
+            </div>
+            <div class="bar w40"></div><div class="bar s"></div><div class="bar s w80"></div>
+          </div>
+          <div class="cell s1" style="grid-column:span 3">
+            <span class="pill lim">Paling dipakai</span>
+            <div class="row"><span class="badge">★</span><div class="bar t w60"></div></div>
+            <div class="card" style="aspect-ratio:16/10;padding:calc(14*var(--u))">
+              <div class="mrow"><span class="sq"></span><span class="bar t w50"></span></div>
+              <div class="mrow"><span class="bar w60"></span><span class="numbox"></span></div>
+              <div class="mrow"><span class="bar w60"></span><span class="numbox"></span></div>
+              <div class="mrow"><span class="bar"></span><span class="pill acc">Total</span></div>
+            </div>
+            <div class="bar w40"></div><div class="bar s"></div><div class="bar s w80"></div>
+          </div>
+          <div class="cell s1" style="grid-column:span 2"><div class="card" style="aspect-ratio:16/10"></div><div class="bar w60"></div><div class="bar s"></div></div>
+          <div class="cell s1" style="grid-column:span 2"><div class="card" style="aspect-ratio:16/10"></div><div class="bar w60"></div><div class="bar s"></div></div>
+          <div class="cell s1" style="grid-column:span 2"><div class="card" style="aspect-ratio:16/10"></div><div class="bar w60"></div><div class="bar s"></div></div>
+          <div class="cell s1" style="grid-column:span 2"><div class="card" style="aspect-ratio:16/10"></div><div class="bar w60"></div><div class="bar s"></div></div>
+          <div class="cell s1" style="grid-column:span 2"><div class="card" style="aspect-ratio:16/10"></div><div class="bar w60"></div><div class="bar s"></div></div>
+          <div class="cell s1" style="grid-column:span 2"><div class="card" style="aspect-ratio:16/10"></div><div class="bar w60"></div><div class="bar s"></div></div>
+          <div class="cell s1" style="grid-column:span 6">
+            <div class="card" style="aspect-ratio:40/10;flex-direction:row;align-items:center">
+              <div class="bar t w30"></div><div class="bar"></div>
+            </div>
+            <div class="bar w30"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Kelas span ditulis literal di Blade</b><span class="dim">bukan dirakit</span><p>Tailwind memindai berkas, bukan menjalankan Blade. Kelas yang dirakit dari variabel tidak pernah muncul di CSS hasil build — ini pelajaran yang sudah dibayar di komponen harga. Jadi tiap cabang <code>@if</code> menulis kelasnya sendiri.</p></div></li>
+      <li><span class="n">02</span><div><b>Kartu penutup melebar penuh</b><span class="dim">3 / 3 / 1</span><p>Tujuh kartu padat menyisakan satu di baris terakhir. Dibiarkan, separuh baris bawah kosong dan section-nya terlihat belum selesai. Aturannya: kalau sisa kartu padat habis dibagi tiga menyisakan satu, yang terakhir melebar.</p></div></li>
+      <li><span class="n">03</span><div><b>Unggulan ditandai per item</b><span class="dim">bukan per indeks</span><p>Indeks item bergeser setiap admin menghapus satu (<code>removeFeatureItem</code> memanggil <code>array_values</code>). Penanda yang disimpan sebagai indeks akan menunjuk item yang salah setelah satu penghapusan. Penanda ikut di dalam item, seperti <code>icon_custom</code> yang sudah ada.</p></div></li>
+      <li><span class="n">04</span><div><b>Kalau tidak ada yang ditandai, dua pertama</b><span class="dim">fallback</span><p>Data di produksi sekarang belum punya kunci <code>featured</code> sama sekali. Halaman depan harus langsung membaik tanpa admin menyentuh apa pun — jadi dua item pertama yang jadi unggulan, dan begitu admin menandai sendiri, pilihannya yang menang.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE: PONSEL ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Sesudah · 375 px</p>
+      <h2>Satu kolom, urutan tidak berubah</h2>
+      <p class="goal">Di bawah 640 px semuanya menumpuk satu kolom dengan urutan yang sama — unggulan tetap di atas. Yang penting di sini bukan susunannya, tapi miniatur: ukurannya ikut lebar kartu, bukan lebar layar, jadi tidak ada yang gepeng atau meluber.</p>
+    </div>
+
+    <div class="phone">
+      <div class="mock tight" style="padding:calc(16*var(--u))">
+        <div class="card">
+          <div class="row"><span class="badge">▤</span><span class="pill lim">Paling dipakai</span></div>
+          <div class="card" style="aspect-ratio:16/10">
+            <div class="mrow"><span class="av"></span><span class="bar"></span><span class="tick"></span></div>
+            <div class="mrow"><span class="av"></span><span class="bar"></span><span class="tick"></span></div>
+            <div class="mrow"><span class="av"></span><span class="bar"></span></div>
+          </div>
+          <div class="bar t w60"></div><div class="bar s"></div><div class="bar s w70"></div>
+        </div>
+        <div class="grid2">
+          <div class="card"><div class="card" style="aspect-ratio:16/10"></div><div class="bar s"></div></div>
+          <div class="card"><div class="card" style="aspect-ratio:16/10"></div><div class="bar s"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Miniatur tetap 16:10</b><span class="dim">aspect-ratio tetap</span><p>Rasio dipasang di pembungkus, jadi tinggi mengikuti lebar apa pun lebar kartunya. Tidak perlu tinggi piksel per breakpoint.</p></div></li>
+      <li><span class="n">02</span><div><b>Bukan gambar, jadi tidak ada yang diunduh</b><span class="dim">0 byte</span><p>Sembilan miniatur = nol permintaan jaringan tambahan. Di ponsel dengan sinyal buruk, section fitur tetap utuh sebelum aset apa pun sempat termuat.</p></div></li>
+      <li><span class="n">03</span><div><b>Sembilan simulasi membaca berlebihan</b><span class="dim">pilihan</span><p><code>prefers-reduced-motion</code> tidak relevan di sini justru karena tidak ada animasi sama sekali — satu-satunya gerakan di kartu adalah perubahan warna border saat hover, dan itu bawaan <code>.surface-card-hover</code>.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ MINIATUR 1 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Miniatur 1 / 9 · icon3.png · unggulan</p>
+      <h2>Manajemen Pendaftaran — meja verifikasi</h2>
+      <p class="goal">Yang paling sering dipakai panitia dan yang paling sering ditanyakan calon penyelenggara: berkas peserta masuk, diverifikasi, statusnya terlihat. Miniatur mengambil momen "sedang memeriksa daftar", bukan momen "menyimpan".</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/eventner/peserta</span></div>
+      <div class="mini">
+        <div class="mrow"><span class="bar t w40"></span><span class="pill lim">Terverifikasi</span></div>
+        <div class="mrow"><span class="av"></span><span class="bar"></span><span class="pill lim">V</span></div>
+        <div class="mrow"><span class="av"></span><span class="bar"></span><span class="pill lim">V</span></div>
+        <div class="card hi" style="flex-direction:row;align-items:center;gap:calc(10*var(--u));padding:calc(11*var(--u))">
+          <span class="av"></span><span class="bar"></span><span class="pill acc">Diperiksa</span>
+        </div>
+        <div class="mrow"><span class="av"></span><span class="bar"></span><span class="bar w30"></span></div>
+        <div class="mrow"><span class="av"></span><span class="bar w60"></span></div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Baris, bukan kartu</b><span class="dim">alasan bentuk</span><p>Pendaftaran itu daftar panjang yang digulir. Kartu-kartu besar akan memberi kesan ada banyak ruang, padahal kerjaannya justru menyisir baris demi baris.</p></div></li>
+      <li><span class="n">02</span><div><b>Satu baris ditandai</b><span class="dim">kartu bergaris primary</span><p>Tanpa satu baris yang berbeda, miniatur ini terbaca sebagai daftar biasa. Baris bergaris menyiratkan "ini yang sedang disentuh" — sama seperti baris aktif di produk sungguhan.</p></div></li>
+      <li><span class="n">03</span><div><b>Lime di satu tempat saja</b><span class="dim">aturan warna</span><p>Lime = status hasil (terverifikasi). Dipakai tiga kali di sini karena ketiganya status yang sama, tapi tidak ada warna aksen lain yang ikut masuk.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ MINIATUR 2 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Miniatur 2 / 9 · icon4.png · unggulan</p>
+      <h2>Penilaian Juri Digital — lembar nilai</h2>
+      <p class="goal">Fitur yang paling sulit diceritakan dengan kalimat: "format penilaian kustom, bobot fleksibel". Miniatur menunjukkan bentuknya langsung — peserta di atas, kriteria berbaris, kotak angka di kanan, total di bawah.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/juri/…</span></div>
+      <div class="mini">
+        <div class="mrow"><span class="sq"></span><span class="bar t w50"></span><span class="bar w20"></span></div>
+        <div class="mrow"><span class="bar w60"></span><span class="numbox"></span></div>
+        <div class="mrow"><span class="bar w60"></span><span class="numbox"></span></div>
+        <div class="mrow"><span class="bar w60"></span><span class="numbox"></span></div>
+        <div class="mrow"><span class="bar"></span><span class="pill acc">Total</span></div>
+        <div class="mrow"><span class="pill">Kirim</span></div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Kotak angka, bukan bar</b><span class="dim">satu-satunya miniatur</span><p>Ini satu-satunya miniatur yang memakai <code>.numbox</code> — nilai juri memang berupa angka yang diketik, bukan bar yang digeser. Bentuk mengikuti arti.</p></div></li>
+      <li><span class="n">02</span><div><b>Peserta di atas, total di bawah</b><span class="dim">alur baca</span><p>Sesuai urutan kerja juri di lapangan: lihat siapa yang tampil, isi kriteria, lihat totalnya.</p></div></li>
+      <li><span class="n">03</span><div><b>Layar juri, bukan layar panitia</b><span class="dim">pilihan</span><p>Juri menilai dari ponsel/tablet di tepi panggung. Menggambar layar panitia akan menjual sisi yang salah dari fitur ini.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ MINIATUR 3 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Miniatur 3 / 9 · icon5.png</p>
+      <h2>Voting Online — papan perolehan</h2>
+      <p class="goal">Voting publik hanya masuk akal kalau hasilnya kelihatan bergerak. Miniatur menggambar perolehan yang tidak rata, supaya terbaca sebagai lomba — bukan daftar tiga baris sejajar.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/event/…/vote</span></div>
+      <div class="mini">
+        <div class="mrow"><span class="bar t w40"></span><span class="pill lim">Top</span></div>
+        <div class="mrow"><span class="bar w30"></span><span class="ballot" style="width:100%"></span></div>
+        <div class="mrow"><span class="bar w30"></span><span class="ballot" style="width:64%"></span></div>
+        <div class="mrow"><span class="bar w30"></span><span class="ballot" style="width:41%"></span></div>
+        <div class="mrow"><span class="bar w30"></span><span class="ballot" style="width:22%"></span></div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Panjang ballot sengaja tidak rata</b><span class="dim">100 / 64 / 41 / 22</span><p>Empat bar sama panjang akan terbaca sebagai tabel, bukan peringkat. Ketidakrataannya yang menceritakan lomba.</p></div></li>
+      <li><span class="n">02</span><div><b>Lime di baris teratas saja</b><span class="dim">satu kali</span><p>Penanda pemimpin. Kalau semua bar diwarnai, tidak ada yang menonjol.</p></div></li>
+      <li><span class="n">03</span><div><b>Tidak ada angka</b><span class="dim">sengaja</span><p>Miniatur yang memampangkan jumlah suara palsu jadi klaim yang tidak bisa dipertahankan — dan itu persis kesalahan blok statistik yang dulu dibuang dari landing.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ MINIATUR 4 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Miniatur 4 / 9 · icon6.png</p>
+      <h2>E-Tiket &amp; Check-in QR — kartu tiket</h2>
+      <p class="goal">Bentuk kartu tiket adalah satu-satunya yang sudah dikenali semua orang, jadi tidak perlu dijelaskan. Perforasi dan kotak QR cukup untuk mengatakan "ini tiket yang dipindai di pintu".</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/event/…/ticket</span></div>
+      <div class="mini">
+        <div class="card" style="gap:calc(12*var(--u))">
+          <div class="mrow"><span class="sq"></span><span class="bar t w60"></span></div>
+          <div class="bar s w40"></div>
+          <div class="perf"></div>
+          <div class="mrow"><span class="qr"></span>
+            <div class="col" style="flex:1">
+              <span class="bar w80"></span>
+              <span class="bar w50"></span>
+              <span class="pill lim">Masuk</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Perforasi garis putus-putus</b><span class="dim">border-top dashed</span><p>Satu garis, tapi seluruh arti "tiket" bergantung padanya. Tanpa perforasi bentuknya cuma kartu biasa.</p></div></li>
+      <li><span class="n">02</span><div><b>QR digambar gradien berulang</b><span class="dim">tanpa aset</span><p>Petak-petak dari dua <code>repeating-linear-gradient</code> bersilangan, dengan opasitas diturunkan. Terbaca sebagai kode, tapi tidak berpura-pura bisa dipindai.</p></div></li>
+      <li><span class="n">03</span><div><b>Lime di baris terakhir</b><span class="dim">status</span><p>"Masuk" — satu-satunya status di kartu ini.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ MINIATUR 5 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Miniatur 5 / 9 · icon7.png</p>
+      <h2>Live Scoreboard — papan peringkat</h2>
+      <p class="goal">Papan skor yang dipancarkan ke proyektor. Nomor peringkat di kiri, bar skor di tengah, penanda di baris pertama.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/scoreboard/…</span></div>
+      <div class="mini">
+        <div class="mrow"><span class="bar t w50"></span><span class="pill lim">Live</span></div>
+        <div class="mrow"><span class="rk">1</span><span class="bar" style="height:calc(19*var(--u))"></span><span class="pill acc">Juara</span></div>
+        <div class="mrow"><span class="rk">2</span><span class="bar w80"></span><span class="bar w20"></span></div>
+        <div class="mrow"><span class="rk">3</span><span class="bar w70"></span><span class="bar w20"></span></div>
+        <div class="mrow"><span class="rk">4</span><span class="bar w60"></span><span class="bar w20"></span></div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Baris pertama lebih tebal</b><span class="dim">19 vs 11</span><p>Papan peringkat selalu punya satu baris yang sedang ditunggu semua orang. Ketebalannya yang membedakan, bukan warnanya.</p></div></li>
+      <li><span class="n">02</span><div><b>Badge "Live" di sini boleh</b><span class="dim">satu-satunya</span><p>Ini satu-satunya fitur yang datanya memang mengalir saat itu juga, jadi badge live-nya jujur. Di miniatur lain badge ini akan jadi hiasan.</p></div></li>
+      <li><span class="n">03</span><div><b>Tanpa animasi</b><span class="dim">keputusan</span><p>Kartu marketing yang bergerak sendiri menarik mata ke arah yang salah, dan menabrak preferensi tampilan sederhana.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ MINIATUR 6 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Miniatur 6 / 9 · icon8.png</p>
+      <h2>Drawing &amp; Undian — sembilan nomor</h2>
+      <p class="goal">Undian sulit digambarkan tanpa animasi, dan animasi ditolak. Jalan keluarnya: gambar hasilnya, bukan prosesnya — sembilan nomor urut dengan satu yang terpilih.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/event/…/drawing</span></div>
+      <div class="mini">
+        <div class="mrow"><span class="bar t w40"></span><span class="pill acc">Urutan tampil</span></div>
+        <div class="grid3">
+          <span class="cellnum">01</span><span class="cellnum">02</span><span class="cellnum">03</span>
+          <span class="cellnum">04</span><span class="cellnum sel">05</span><span class="cellnum">06</span>
+          <span class="cellnum">07</span><span class="cellnum">08</span><span class="cellnum">09</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Menampilkan hasil, bukan roda berputar</b><span class="dim">keputusan</span><p>Roda berputar butuh animasi untuk berarti. Kotak yang ditandai sudah cukup mengatakan "nomor ini keluar".</p></div></li>
+      <li><span class="n">02</span><div><b>Nomor dua digit</b><span class="dim">01…09</span><p>Menandai bahwa ini urutan, bukan angka acak. Produk memang menyimpan urutan sebagai nomor.</p></div></li>
+      <li><span class="n">03</span><div><b>Tanpa aksen lime</b><span class="dim">produk memang begitu</span><p>Yang terpilih ditandai garis primary. Undian belum terjadi saat halaman ini dibuka, jadi tidak ada "hasil" yang boleh diberi warna status.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ MINIATUR 7 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Miniatur 7 / 9 · icon9.png</p>
+      <h2>Sertifikat Digital — lembar tanda tangan</h2>
+      <p class="goal">Fitur yang paling abstrak di daftar. Miniatur menggambar satu lembar sertifikat: judul, badan, garis tanda tangan, segel.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/eventner/sertifikat</span></div>
+      <div class="mini">
+        <div class="card" style="aspect-ratio:16/10;justify-content:center;gap:calc(13*var(--u))">
+          <div class="bar t w50" style="align-self:center"></div>
+          <div class="bar s w30" style="align-self:center"></div>
+          <div class="bar w80" style="align-self:center;margin-top:calc(10*var(--u))"></div>
+          <div class="bar w60" style="align-self:center"></div>
+          <div class="mrow" style="margin-top:calc(14*var(--u))">
+            <span class="sign"></span><span class="seal"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Isi dirata-tengahkan</b><span class="dim">satu-satunya</span><p>Sertifikat memang dicetak rata tengah. Semua miniatur lain rata kiri karena semuanya layar kerja.</p></div></li>
+      <li><span class="n">02</span><div><b>Segel = dua lingkaran</b><span class="dim">border, bukan isi</span><p>Cukup satu <code>border-radius:50%</code> dengan border primary tipis. Lingkaran berisi akan terbaca sebagai avatar, bukan segel.</p></div></li>
+      <li><span class="n">03</span><div><b>Tidak ada nama juara</b><span class="dim">disengaja</span><p>Miniatur yang memampangkan nama orang karangan adalah klaim palsu. Baris kosong lebih jujur.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ MINIATUR 8 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Miniatur 8 / 9 · icon10.png</p>
+      <h2>Livestream Overlay — lower third</h2>
+      <p class="goal">Overlay untuk OBS di atas siaran YouTube/Facebook. Bentuknya jelas: panggung gelap 16:9, dan satu balok nama + skor di bawah.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/event/…/overlay</span></div>
+      <div class="mini">
+        <div class="stage">
+          <div class="lw"><span class="nm"></span><span class="sc"></span></div>
+        </div>
+        <div class="mrow"><span class="pill lim">OBS</span><span class="pill">16:9</span><span class="bar w40"></span></div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Satu-satunya miniatur berlatar gelap</b><span class="dim">#14181f</span><p>Overlay cuma terpakai di atas video siaran, dan video siaran selalu gelap. Latar terang akan menjual gambaran yang salah.</p></div></li>
+      <li><span class="n">02</span><div><b>Nama putih, skor lime</b><span class="dim">dua warna saja</span><p>Dua elemen, dua warna. Overlay yang ramai warna akan menutupi siarannya sendiri.</p></div></li>
+      <li><span class="n">03</span><div><b>Label OBS dan 16:9</b><span class="dim">dua pill</span><p>Menjawab pertanyaan pertama yang muncul: dipakai di mana, dan ukurannya berapa.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ MINIATUR 9 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Miniatur 9 / 9 · icon11.png · melebar penuh</p>
+      <h2>Sponsor &amp; Tenant — dinding logo</h2>
+      <p class="goal">Enam kotak logo dengan satu yang ditandai, plus satu bar peta stan di bawahnya. Karena kartunya melebar penuh, miniatur ini punya ruang paling lega — jadi dipakai untuk fitur yang isinya memang kumpulan.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/eventner/sponsor</span></div>
+      <div class="mini" style="padding:calc(24*var(--u)) calc(34*var(--u)) calc(30*var(--u))">
+        <div class="mrow"><span class="bar t w25"></span><span class="pill acc">6 sponsor</span></div>
+        <div class="grid3" style="gap:calc(10*var(--u))">
+          <span class="logobox hi"><i></i></span>
+          <span class="logobox"><i></i></span>
+          <span class="logobox"><i></i></span>
+          <span class="logobox"><i></i></span>
+          <span class="logobox"><i></i></span>
+          <span class="logobox"><i></i></span>
+        </div>
+        <div class="mrow">
+          <span class="bar w20"></span>
+          <div class="row grow" style="gap:calc(8*var(--u))">
+            <span class="sq" style="width:calc(14*var(--u));height:calc(14*var(--u))"></span>
+            <span class="sq" style="width:calc(14*var(--u));height:calc(14*var(--u))"></span>
+            <span class="sq" style="width:calc(14*var(--u));height:calc(14*var(--u))"></span>
+            <span class="sq" style="width:calc(14*var(--u));height:calc(14*var(--u))"></span>
+          </div>
+          <span class="pill lim">A-01</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Kisi 3 × 2, bukan marquee berjalan</b><span class="dim">keputusan</span><p>Logo berjalan biasanya memang dibuat bergerak. Di sini statis supaya konsisten dengan miniatur lain, dan karena kartunya sudah lebar.</p></div></li>
+      <li><span class="n">02</span><div><b>Enam kotak, satu bergaris primary</b><span class="dim">slot utama</span><p>Menandai bahwa sponsor punya urutan — ada yang utama, ada yang pendukung. Sama seperti dokumen juknis punya baris "Utama".</p></div></li>
+      <li><span class="n">03</span><div><b>Miniatur ini sengaja lebih lega</b><span class="dim">padding 24/34</span><p>Kartunya melebar penuh, jadi padding standar akan terlihat sempit. Satu miniatur boleh punya pengecualian kalau ukuran kartunya memang beda.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ PANEL ADMIN ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Pendamping · /admin/setting/landing-page</p>
+      <h2>Tab Fitur di panel admin</h2>
+      <p class="goal">Admin perlu bisa memilih mana yang unggulan, dan pemilih ikonnya perlu memuat sembilan item — bukan enam dengan label template yang tidak berhubungan.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/admin/setting/landing-page</span></div>
+      <div class="mock tight">
+        <div class="bar t w30"></div>
+        <div class="bar s w50"></div>
+        <div class="card" style="gap:calc(11*var(--u))">
+          <div class="row">
+            <div class="col" style="flex:3">
+              <span class="bar s w30"></span>
+              <div class="card" style="padding:calc(9*var(--u));flex-direction:row;align-items:center">
+                <span class="bar w80"></span><span class="pill">▾</span>
+              </div>
+            </div>
+            <div class="col" style="flex:3"><span class="bar s w30"></span><span class="bar" style="height:calc(20*var(--u))"></span></div>
+            <div class="col" style="flex:3"><span class="bar s w30"></span><span class="bar" style="height:calc(20*var(--u))"></span></div>
+            <div class="col" style="flex:1"><span class="bar s w60"></span><span class="tick"></span></div>
+            <div class="col" style="flex:1"><span class="bar s w60"></span><span class="sq"></span></div>
+          </div>
+        </div>
+        <div class="card" style="gap:calc(11*var(--u))">
+          <div class="row">
+            <div class="col" style="flex:3">
+              <span class="bar s w30"></span>
+              <div class="card" style="padding:calc(9*var(--u));flex-direction:row;align-items:center">
+                <span class="bar w80"></span><span class="pill">▾</span>
+              </div>
+            </div>
+            <div class="col" style="flex:3"><span class="bar s w30"></span><span class="bar" style="height:calc(20*var(--u))"></span></div>
+            <div class="col" style="flex:3"><span class="bar s w30"></span><span class="bar" style="height:calc(20*var(--u))"></span></div>
+            <div class="col" style="flex:1"><span class="bar s w60"></span><span class="tick"></span></div>
+            <div class="col" style="flex:1"><span class="bar s w60"></span><span class="sq"></span></div>
+          </div>
+        </div>
+        <div class="mrow"><span class="pill acc">Simpan</span><span class="bar w30"></span></div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Pemilih ikon memuat sembilan item</b><span class="dim">temuan C</span><p>Select sekarang hanya punya enam opsi dengan label template basi (<code>📊 Financial Planning</code>, <code>🔒 Security</code>, …). Item ke-7/8/9 tidak punya opsi yang mewakilinya — sekali admin menyimpan, ikonnya bisa berubah atau hilang.</p></div></li>
+      <li><span class="n">02</span><div><b>Label diganti nama fitur</b><span class="dim">bukan template</span><p>Label yang menyebut arti fiturnya (Manajemen Pendaftaran, Penilaian Juri Digital, …) membuat admin tahu ikon mana yang sedang ia pilih, tanpa harus mencoba satu per satu.</p></div></li>
+      <li><span class="n">03</span><div><b>Saklar Unggulan per item</b><span class="dim">checkbox</span><p>Dengan catatan kecil di sebelahnya bahwa maksimal dua yang tampil besar. Tanpa catatan itu, admin akan mencentang lima dan bingung kenapa cuma dua yang membesar.</p></div></li>
+      <li><span class="n">04</span><div><b>Tidak ada penghapus ikon sendiri</b><span class="dim">biarkan</span><p><code>icon_custom</code> (unggahan gambar) tetap ada dan tetap menang atas glif. Yang tidak ditambah adalah kemampuan menghapus glif — tidak ada yang meminta, dan menambahnya berarti menambah satu jalur yang bisa setengah jalan.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ RULES ============ -->
+  <section class="rules">
+    <h2>Yang dibetulkan sekalian, dan alasannya</h2>
+    <table>
+      <thead>
+        <tr><th>Temuan</th><th>Bukti</th><th>Perbaikan</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>iconMap berhenti di icon8</td>
+          <td><code>$iconMap</code> punya enam entri; <code>landing_features</code> di DB punya sembilan item (icon3–icon11).</td>
+          <td>Tiga entri baru: <code>ti-certificate</code>, <code>ti-broadcast</code>, <code>ti-building-store</code>. Sekarang tidak ada lagi yang jatuh ke <code>ti-star</code>.</td>
+        </tr>
+        <tr>
+          <td>ti-scoreboard tanpa glif</td>
+          <td>Font lokal adalah Tabler 1.112.0 (3000 ikon) dan tidak memuat <code>ti-scoreboard</code>; glifnya hanya ada di CDN 3.30.0. Kalau CDN gagal dimuat, ikon Live Scoreboard kosong.</td>
+          <td>Diganti <code>ti-podium</code>, yang ada di font lokal maupun CDN. Sudah diperiksa langsung di berkas CSS font, bukan dari ingatan.</td>
+        </tr>
+        <tr>
+          <td>Select ikon cuma enam opsi</td>
+          <td>Panel admin menawarkan icon3–icon8 dengan label template (<code>📊 Financial Planning</code> dan kawan-kawan) yang tidak berhubungan dengan arti fiturnya.</td>
+          <td>Select diisi sembilan opsi dengan label = nama fiturnya. Ini yang membuat temuan ini tidak kembali lewat jalur admin.</td>
+        </tr>
+        <tr>
+          <td>defaultFeatures() hanya enam</td>
+          <td>Default di komponen admin enam item, padahal seeder dan DB sembilan.</td>
+          <td>Disamakan jadi sembilan, judul dan deskripsi disalin dari seeder supaya default kode dan default seed tidak lagi berbeda.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="cols">
+      <ul>
+        <li><strong>Kenapa pendaftaran &amp; penilaian juri yang jadi unggulan.</strong> Dua ini yang paling sering dipakai panitia sepanjang hari-H, dan yang paling sering ditanya calon penyelenggara. Dua kartu besar adalah tempat paling mahal di section ini; isi dengan yang paling menjawab keraguan.</li>
+        <li><strong>Kenapa miniatur dipilih dari <code>icon</code>, bukan judul.</strong> Judul bisa disunting admin kapan saja. Kalau miniatur dipilih berdasarkan judul, mengganti satu kata akan mematikan miniatur kartu itu. <code>icon</code> sudah tersimpan di DB dan tidak ikut berubah saat judul disunting.</li>
+        <li><strong>Kenapa nol aset.</strong> Sembilan tangkapan layar produk belum ada dan tidak akan ada dalam waktu dekat. Miniatur kode bisa ikut berubah bersama produk, tidak pernah basi, dan tidak menambah satu pun permintaan jaringan di halaman depan.</li>
+      </ul>
+      <ul>
+        <li><strong>Data lama tidak perlu migrasi.</strong> Kunci <code>featured</code> opsional; sembilan item yang sudah ada di produksi tetap merender sembilan kartu, dan dua item pertama otomatis jadi unggulan sampai admin menandai sendiri.</li>
+        <li><strong>Indeks dalam <code>items</code> tidak stabil.</strong> <code>removeFeatureItem</code> memanggil <code>array_values</code>, jadi menandai unggulan lewat indeks akan menunjuk item yang salah setelah satu penghapusan. Karena itu penanda ikut di dalam item.</li>
+        <li><strong>Anchor <code>id="features"</code> tidak boleh hilang.</strong> Header landing menaut ke <code>#features</code> dari beberapa layout. Gerbang nav di proyek ini adalah "section benar-benar render", jadi id-nya dijaga test.</li>
+        <li><strong>Menghindari dekorasi.</strong> Tidak ada animasi, tidak ada neon, tidak ada marquee. Satu warna aksen per miniatur, lime satu kali. Ini yang membedakan miniatur dari hiasan.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>BERBARIS APP · wireframe miniatur #features · sembilan miniatur, nol aset gambar · dokumen pendamping: landing-wireframe.html</footer>
+
+</div>
+
+<script>
+(function () {
+  var wrap = document.querySelector('.wrap');
+  var pairs = [['tg', 'grid', 'Tampilkan kolom 12']];
+
+  pairs.forEach(function (p) {
+    var btn = document.getElementById(p[0]);
+    if (!btn) return;
+
+    btn.addEventListener('click', function () {
+      var on = wrap.getAttribute('data-' + p[1]) === 'on';
+      wrap.setAttribute('data-' + p[1], on ? 'off' : 'on');
+      btn.setAttribute('aria-pressed', on ? 'false' : 'true');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

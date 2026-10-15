@@ -113,6 +113,21 @@
                                     @if($activeTab === 'features')
                                     <div wire:key="tab-features">
                                         <h5 class="fw-semibold mb-3"><i class="ti ti-grid-dots me-2"></i>Fitur Section</h5>
+                                        {{-- Batas yang perlu ditulis: admin bisa menyunting
+                                             sembilan item di bawah, melihat laman depan berubah,
+                                             lalu wajar menyimpulkan ia memegang SELURUH daftar
+                                             fitur publik. /fitur menampilkan katalog penuh yang
+                                             disusun dari kode dan tidak bisa disentuh dari sini. --}}
+                                        <div class="alert alert-light border d-flex align-items-start mb-3">
+                                            <i class="ti ti-info-circle fs-6 me-2 mt-1 text-primary"></i>
+                                            <span class="fs-2">
+                                                Sembilan item di bawah adalah <strong>ringkasan untuk laman depan</strong>.
+                                                Katalog fitur lengkap ({{ \App\Support\ProductFeatures::total() }} fitur,
+                                                {{ count(\App\Support\ProductFeatures::groups()) }} kelompok) ada di halaman
+                                                <a href="{{ route('public.features') }}" target="_blank" class="fw-bold text-primary">/fitur</a>
+                                                dan disusun dari kode — tidak bisa diubah dari panel ini.
+                                            </span>
+                                        </div>
                                         <div class="mb-3">
                                             <label class="form-label">Judul Section</label>
                                             <input type="text" class="form-control" wire:model="features_title">
@@ -128,24 +143,41 @@
                                             @foreach($features_items as $i => $item)
                                             <div class="border rounded p-3 mb-2" wire:key="feat-{{ $i }}">
                                                 <div class="row">
-                                                    <div class="col-md-4 mb-2">
-                                                        <label class="form-label small">Icon Name</label>
+                                                    <div class="col-md-3 mb-2">
+                                                        {{-- Label = nama fitur sungguhan. Sebelumnya
+                                                             opsinya cuma enam dengan label template
+                                                             (📊 Financial Planning, 🔒 Security, …)
+                                                             yang tidak berhubungan dengan arti fitur,
+                                                             sehingga item ke-7/8/9 tidak punya opsi
+                                                             yang mewakilinya dan ikonnya bisa berubah
+                                                             begitu admin menyimpan. --}}
+                                                        <label class="form-label small">Fitur / Ikon</label>
                                                         <select class="form-select form-select-sm" wire:model="features_items.{{ $i }}.icon">
-                                                            <option value="icon3.png">📊 Financial Planning</option>
-                                                            <option value="icon4.png">🔒 Security</option>
-                                                            <option value="icon5.png">📋 Tax</option>
-                                                            <option value="icon6.png">📱 Offline</option>
-                                                            <option value="icon7.png">💱 Currency</option>
-                                                            <option value="icon8.png">🔗 Integration</option>
+                                                            <option value="icon3.png">Manajemen Pendaftaran</option>
+                                                            <option value="icon4.png">Penilaian Juri Digital</option>
+                                                            <option value="icon5.png">Voting Online</option>
+                                                            <option value="icon6.png">E-Tiket &amp; Check-in QR</option>
+                                                            <option value="icon7.png">Live Scoreboard</option>
+                                                            <option value="icon8.png">Drawing &amp; Undian</option>
+                                                            <option value="icon9.png">Sertifikat Digital</option>
+                                                            <option value="icon10.png">Livestream Overlay</option>
+                                                            <option value="icon11.png">Sponsor &amp; Tenant</option>
                                                         </select>
                                                     </div>
                                                     <div class="col-md-3 mb-2">
                                                         <label class="form-label small">Judul</label>
                                                         <input type="text" class="form-control form-control-sm" wire:model="features_items.{{ $i }}.title" placeholder="Nama fitur">
                                                     </div>
-                                                    <div class="col-md-4 mb-2">
+                                                    <div class="col-md-3 mb-2">
                                                         <label class="form-label small">Deskripsi</label>
                                                         <input type="text" class="form-control form-control-sm" wire:model="features_items.{{ $i }}.description" placeholder="Deskripsi singkat">
+                                                    </div>
+                                                    <div class="col-md-2 mb-2">
+                                                        <label class="form-label small">Unggulan</label>
+                                                        <div class="form-check">
+                                                            <input type="checkbox" class="form-check-input" id="feat-unggulan-{{ $i }}" wire:model="features_items.{{ $i }}.featured">
+                                                            <label class="form-check-label small" for="feat-unggulan-{{ $i }}">Tampil besar</label>
+                                                        </div>
                                                     </div>
                                                     <div class="col-md-1 d-flex align-items-end">
                                                         <button type="button" class="btn btn-sm btn-outline-danger" wire:click="removeFeatureItem({{ $i }})">
@@ -153,6 +185,7 @@
                                                         </button>
                                                     </div>
                                                 </div>
+                                                <p class="text-muted small mb-0">Maksimal 2 yang tampil besar — kalau ditandai lebih, dua teratas yang dipakai.</p>
                                             </div>
                                             @endforeach
                                         </div>

@@ -5,6 +5,9 @@ use App\Http\Controllers\AuthController;
 
 Route::get('/', App\Livewire\Public\LandingPage::class)->name('landing');
 Route::get('/pricing', App\Livewire\Public\PricingPage::class)->name('pricing');
+// Katalog fitur lengkap. Landing hanya menampilkan sembilan ringkasannya;
+// daftar penuhnya hidup di sini (pola yang sama dengan /eventner).
+Route::get('/fitur', App\Livewire\Public\FeaturesPage::class)->name('public.features');
 // Daftar lengkap penyelenggara — tujuan "Lihat Semua" di section #eventners landing.
 Route::get('/eventner', App\Livewire\Public\EventnerList::class)->name('public.eventners');
 Route::get('/sitemap.xml', [App\Http\Controllers\Public\SitemapController::class, 'index'])->name('sitemap');

@@ -235,7 +235,10 @@ class LandingPage extends Component
     // -- Feature item management --
     public function addFeatureItem()
     {
-        $this->features_items[] = ['icon' => 'icon3.png', 'title' => '', 'description' => ''];
+        // `featured` ikut sejak awal supaya bentuk datanya seragam; tanpa itu
+        // setiap pembaca harus menulis `?? false`, dan satu yang lupa akan
+        // membuat PHP mengeluh undefined key.
+        $this->features_items[] = ['icon' => 'icon3.png', 'title' => '', 'description' => '', 'featured' => false];
     }
 
     public function removeFeatureItem($index)
@@ -427,15 +430,20 @@ class LandingPage extends Component
         $this->reset(['hero_background_image', 'about_image', 'cta_image']);        session()->flash('success', 'Landing page berhasil diperbarui.');
     }
 
+    // Sembilan item — sama persis dengan LandingPageSeeder, supaya instalasi
+    // bersih dan produksi tidak lagi menyajikan daftar fitur yang berbeda.
     private function defaultFeatures(): array
     {
         return [
-            ['icon' => 'icon3.png', 'title' => 'Manajemen Pendaftaran', 'description' => 'Kelola pendaftaran peserta secara digital dengan verifikasi otomatis dan tracking status real-time.'],
-            ['icon' => 'icon4.png', 'title' => 'Penilaian Juri Digital', 'description' => 'Sistem penilaian digital dengan format kustom, perhitungan otomatis, dan rekap nilai instan.'],
-            ['icon' => 'icon5.png', 'title' => 'Voting Online', 'description' => 'Fitur voting online terintegrasi dengan pembayaran digital untuk penghargaan favorit penonton.'],
-            ['icon' => 'icon6.png', 'title' => 'E-Tiket & Pembayaran', 'description' => 'Jual tiket event secara online dengan integrasi gateway pembayaran dan QR code check-in.'],
-            ['icon' => 'icon7.png', 'title' => 'Live Scoreboard', 'description' => 'Papan skor real-time yang bisa dipancarkan ke layar proyektor untuk transparansi penilaian.'],
-            ['icon' => 'icon8.png', 'title' => 'Drawing & Undian', 'description' => 'Sistem undian digital untuk menentukan urutan tampil peserta dengan animasi menarik.'],
+            ['icon' => 'icon3.png', 'title' => 'Manajemen Pendaftaran', 'description' => 'Kelola pendaftaran peserta secara digital. Verifikasi berkas otomatis, kuota per kategori, dan tracking status real-time.'],
+            ['icon' => 'icon4.png', 'title' => 'Penilaian Juri Digital', 'description' => 'Sistem penilaian dengan format kustom, bobot kriteria fleksibel, input nilai langsung oleh juri, dan rekap otomatis.'],
+            ['icon' => 'icon5.png', 'title' => 'Voting Online', 'description' => 'Voting publik terintegrasi pembayaran digital. Dukung peserta favorit dengan aman, transparan, dan real-time.'],
+            ['icon' => 'icon6.png', 'title' => 'E-Tiket & Check-in QR', 'description' => 'Jual tiket event online. QR code check-in di pintu masuk, laporan penjualan lengkap, dan pengaturan multi-tier.'],
+            ['icon' => 'icon7.png', 'title' => 'Live Scoreboard', 'description' => 'Papan skor real-time untuk ditampilkan ke layar proyektor. Penonton bisa langsung pantau hasil penilaian.'],
+            ['icon' => 'icon8.png', 'title' => 'Drawing & Undian', 'description' => 'Sistem undian digital untuk menentukan urutan tampil. Animasi spin interaktif, hasil langsung tampil di layar.'],
+            ['icon' => 'icon9.png', 'title' => 'Sertifikat Digital', 'description' => 'Buat dan cetak sertifikat otomatis untuk juara dan peserta. Template kustom dengan data dinamis dari hasil penilaian.'],
+            ['icon' => 'icon10.png', 'title' => 'Livestream Overlay', 'description' => 'Overlay live streaming untuk tampil profesional di YouTube/Facebook. Tampilkan skor, nama peserta, dan sponsor real-time.'],
+            ['icon' => 'icon11.png', 'title' => 'Sponsor & Tenant', 'description' => 'Kelola sponsor event dan tenant stand. Tampilkan logo sponsor di overlay livestream dan halaman publik.'],
         ];
     }
 

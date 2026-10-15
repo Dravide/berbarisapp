@@ -1,0 +1,1012 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wireframe halaman /fitur — katalog fitur berkelompok</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@400;600;700&amp;display=swap">
+<style>
+/* Layout: dokumen spesifikasi halaman — tiap topik satu baris, mockup di kiri, anotasi di kanan.
+   Kosakata mockup disalin dari landing-fitur-wireframe.html supaya dua dokumen ini sebentuk:
+   .frame/.chrome/.mock/.bar/.pill/.card/.grid3, container-type + --u. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --lime:#a3e635; --lime-ink:#2c4703;
+  --warn:#c2410c; --warn-soft:#fff1e8;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --lime:#b6f24e; --lime-ink:#16250a;
+    --warn:#ff9a6b; --warn-soft:#2e2018;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --lime:#b6f24e; --lime-ink:#16250a;
+  --warn:#ff9a6b; --warn-soft:#2e2018;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{
+  max-width:1180px;
+  margin-inline:auto;
+  padding-inline:clamp(16px,4vw,40px);
+  padding-block:clamp(28px,5vw,56px);
+}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 10px;
+}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:64ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{
+  font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap;
+}
+button.toggle{
+  font-family:var(--mono);font-size:12px;padding:7px 14px;border-radius:999px;
+  border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);
+  cursor:pointer;white-space:nowrap;
+}
+button.toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.toggle[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.spec{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-top:28px;
+}
+.spec > div{background:var(--panel);padding:16px 18px}
+.spec dt{
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;
+}
+.spec dd{margin:0;font-size:14px;line-height:1.5}
+.swatches{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.sw{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.sw i{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.15);display:block}
+
+/* ---------- tumpukan blok sebelum / sesudah ---------- */
+.stack-pair{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:clamp(20px,3vw,36px);margin-top:clamp(28px,4vw,44px);
+}
+.stack h3{font-size:15px;font-weight:600;margin-bottom:12px}
+.stack h3 .sub{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:400;margin-left:8px}
+.blks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.blk{
+  display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:center;
+  border:1px solid var(--line);border-radius:8px;background:var(--panel);
+  padding:8px 11px;font-size:13px;
+}
+.blk .no{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.blk .nm{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.blk .nm em{font-family:var(--sans);font-style:normal;color:var(--muted);margin-left:8px;font-size:12px}
+.blk .tag{
+  font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:999px;
+  border:1px solid var(--line);color:var(--muted);white-space:nowrap;
+}
+.blk.bad{border-color:var(--warn);background:var(--warn-soft)}
+.blk.bad .tag{border-color:var(--warn);color:var(--warn)}
+.blk.keep{border-color:var(--accent);background:var(--accent-soft)}
+.blk.keep .tag{border-color:var(--accent);color:var(--accent)}
+.blk.big{border-color:var(--accent)}
+.blk.big .tag{border-color:var(--accent);color:var(--accent)}
+
+/* ---------- slide ---------- */
+.slide{
+  margin-top:clamp(32px,5vw,56px);
+  display:grid;
+  grid-template-columns:minmax(0,560px) minmax(0,1fr);
+  gap:clamp(20px,3vw,44px);
+  align-items:start;
+}
+@media (max-width:900px){ .slide{grid-template-columns:minmax(0,1fr)} }
+.slide-head{grid-column:1/-1}
+.slide-head h2{font-size:clamp(19px,2.2vw,23px);font-weight:700}
+.slide-head .num{
+  font-family:var(--mono);font-size:12px;color:var(--accent);
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.slide-head .goal{color:var(--muted);font-size:14px;margin-top:6px;max-width:70ch}
+/* Slide miniatur: mockup kiri, catatan kanan — sama seperti dokumen landing. */
+.slide.wide{grid-template-columns:minmax(0,460px) minmax(0,1fr)}
+
+/* Mockup halaman: lebar 1180 px desain, tinggi mengikuti isi. */
+.frame{
+  position:relative;
+  width:100%;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  overflow:hidden;
+  container-type:inline-size;
+  --u:0.0847cqw; /* 1 px desain (lebar 1180) */
+}
+.frame > .chrome{
+  display:flex;align-items:center;gap:calc(8*var(--u));
+  padding:calc(14*var(--u)) calc(20*var(--u));
+  border-bottom:1px solid var(--line-soft);background:var(--panel-2);
+}
+.chrome .dot{width:calc(10*var(--u));height:calc(10*var(--u));border-radius:50%;background:var(--ph-line)}
+.chrome .url{
+  flex:1;height:calc(20*var(--u));border-radius:999px;background:var(--ph-fill);
+  display:flex;align-items:center;padding-inline:calc(12*var(--u));
+  font-family:var(--mono);font-size:calc(11*var(--u));color:var(--muted);
+}
+.mock{
+  display:flex;flex-direction:column;gap:calc(22*var(--u));
+  padding:calc(34*var(--u)) calc(40*var(--u)) calc(42*var(--u));
+}
+.mock.tight{gap:calc(14*var(--u))}
+.bar{background:var(--ph-fill);border-radius:calc(4*var(--u));height:calc(11*var(--u))}
+.bar.t{height:calc(24*var(--u));background:var(--ph-line)}
+.bar.h{height:calc(30*var(--u));background:linear-gradient(90deg,var(--ph-line),var(--ph-fill))}
+.bar.s{height:calc(8*var(--u))}
+.bar.acc{background:var(--accent);height:calc(26*var(--u));border-radius:calc(7*var(--u))}
+.bar.lim{background:var(--lime);height:calc(26*var(--u));border-radius:calc(7*var(--u))}
+.w100{width:100%}.w80{width:80%}.w70{width:70%}.w60{width:60%}.w50{width:50%}.w40{width:40%}.w30{width:30%}
+.cx{align-items:center;text-align:center}
+.row{display:flex;gap:calc(14*var(--u));align-items:center}
+.row.g{flex:1}
+.col{display:flex;flex-direction:column;gap:calc(10*var(--u))}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:calc(14*var(--u))}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(14*var(--u))}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:calc(14*var(--u))}
+.card{
+  border:1px solid var(--line);border-radius:calc(9*var(--u));
+  padding:calc(16*var(--u));display:flex;flex-direction:column;gap:calc(9*var(--u));
+}
+.card.hi{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent-soft)}
+.card.dark{background:#14181f;border-color:#14181f}
+.card.dark .bar{background:#2b3138}
+.thumb{
+  background:var(--ph-fill);border-radius:calc(6*var(--u));
+  aspect-ratio:4/3;width:100%;
+}
+.pill{
+  font-family:var(--mono);font-size:calc(10*var(--u));color:var(--muted);
+  border:1px solid var(--line);border-radius:999px;padding:calc(3*var(--u)) calc(9*var(--u));
+  white-space:nowrap;align-self:flex-start;
+}
+.pill.acc{border-color:var(--accent);color:var(--accent)}
+.pill.warn{border-color:var(--warn);color:var(--warn)}
+.pill.lim{border-color:var(--lime);color:var(--lime-ink);background:var(--lime)}
+/* Badge ikon di kartu fitur: kotak 44 px + glif. */
+.badge{
+  width:calc(44*var(--u));height:calc(44*var(--u));border-radius:calc(11*var(--u));
+  background:var(--accent-soft);flex:none;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:calc(16*var(--u));color:var(--accent);
+}
+.ghost{
+  position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:
+    repeating-linear-gradient(to right, transparent 0, transparent calc(1180*var(--u)/12 - 1px), color-mix(in srgb, var(--accent) 12%, transparent) calc(1180*var(--u)/12));
+  opacity:0;transition:opacity .15s;
+}
+.wrap[data-grid="on"] .ghost{opacity:1}
+
+/* Baris chip kategori (anchor ke tiap kelompok). */
+.chiprow{display:flex;flex-wrap:wrap;gap:calc(8*var(--u))}
+.chiprow .pill{font-size:calc(11*var(--u));padding:calc(5*var(--u)) calc(12*var(--u))}
+/* Header halaman: judul + ringkasan + dua tombol. */
+.cta{
+  height:calc(30*var(--u));border-radius:calc(7*var(--u));width:calc(150*var(--u));flex:none;
+}
+.cta.pri{background:var(--accent)}
+.cta.gh{border:1px solid var(--line)}
+/* Kisi katalog 3 kolom — di Blade: grid-cols-1 sm:grid-cols-2 lg:grid-cols-3. */
+.cat3{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(16*var(--u))}
+.cat3 .card{padding:calc(18*var(--u));gap:calc(11*var(--u))}
+.cathead{display:flex;align-items:baseline;justify-content:space-between;gap:calc(12*var(--u))}
+
+/* ---------- kosakata miniatur (dipakai aturan Blade) ----------
+   Miniatur digambar di kanvas 360 px: 1 unit `--u` = 1 px desain pada lebar
+   360. `--u` dipasang di ANAK `.mini`, bukan di `.mini` sendiri — `cqw`
+   menilik container terdekat dan sebuah elemen tidak bisa menanyai dirinya
+   sendiri; alasan yang sama ditulis di landing-wireframe.html untuk
+   `.phone`. Padding dan gap `.mini` memakai px tetap karena di dokumen ini
+   lebarnya sudah tetap, sedangkan di Blade keduanya ikut `var(--u)`.
+   Kosakata halaman di atasnya ber-`--u` 1180, jadi semua kelas miniatur
+   yang bertabrakan nama (.bar/.pill/.card/.row) di-scope ke `.mini`. */
+.mini{container-type:inline-size;display:flex;flex-direction:column;gap:8px;padding:14px 16px 16px}
+.mini > *{--u:0.2778cqw}
+.mini.center{justify-content:center;flex:1}
+.mini .bar{height:calc(6*var(--u))}
+.mini .bar.s{height:calc(4*var(--u))}
+.mini .bar.t{height:calc(11*var(--u));background:var(--ph-line)}
+.mini .bar.h{height:calc(11*var(--u))}
+.mini .pill{font-size:calc(9*var(--u));padding:calc(1.5*var(--u)) calc(7*var(--u))}
+/* `.pill` membawa align-self:flex-start; di dalam baris ia harus ikut
+   rata-tengah, tapi di dalam kolom tetap rata-kiri. */
+.mini .mrow .pill{align-self:center}
+.mini .card{padding:calc(9*var(--u));gap:calc(7*var(--u));border-radius:calc(7*var(--u))}
+.mini .grid2,.mini .grid3,.mini .grid4{gap:calc(6*var(--u))}
+.mini .row{gap:calc(7*var(--u))}
+.mrow{display:flex;align-items:center;gap:calc(7*var(--u))}
+.mrow .bar{flex:1}
+.mrow.grow{flex:1}
+.av{width:calc(16*var(--u));height:calc(16*var(--u));border-radius:50%;background:var(--ph-line);flex:none}
+.sq{width:calc(20*var(--u));height:calc(20*var(--u));border-radius:calc(5*var(--u));background:var(--ph-fill);flex:none}
+.tick{width:calc(13*var(--u));height:calc(13*var(--u));border-radius:50%;background:var(--lime);flex:none}
+.numbox{width:calc(28*var(--u));height:calc(18*var(--u));border-radius:calc(4*var(--u));border:1px solid var(--line);background:var(--panel-2);flex:none}
+.ballot{height:calc(8*var(--u));border-radius:999px;background:var(--ph-fill)}
+.qr{
+  width:calc(52*var(--u));height:calc(52*var(--u));border-radius:calc(6*var(--u));flex:none;
+  background:
+    repeating-linear-gradient(90deg,var(--ph-line) 0 calc(4*var(--u)),transparent calc(4*var(--u)) calc(8*var(--u))),
+    repeating-linear-gradient(0deg,var(--ph-line) 0 calc(4*var(--u)),transparent calc(4*var(--u)) calc(8*var(--u)));
+  opacity:.5;
+}
+.perf{border-top:1px dashed var(--line);margin-block:calc(2*var(--u))}
+.seal{width:calc(32*var(--u));height:calc(32*var(--u));border-radius:50%;border:calc(2*var(--u)) solid var(--accent);flex:none;opacity:.45}
+.sign{flex:1;border-top:1px solid var(--line);padding-top:calc(5*var(--u))}
+.rk{
+  width:calc(17*var(--u));height:calc(17*var(--u));border-radius:calc(4*var(--u));
+  background:var(--ph-fill);flex:none;display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:calc(9*var(--u));color:var(--muted);
+}
+.stage{
+  background:#14181f;border-radius:calc(9*var(--u));aspect-ratio:16/9;position:relative;
+  overflow:hidden;flex:none;width:100%;
+}
+.stage .lw{position:absolute;left:calc(22*var(--u));right:calc(22*var(--u));bottom:calc(20*var(--u));display:flex;gap:calc(10*var(--u));align-items:center}
+.stage .lw .nm{background:#e7eaef;height:calc(15*var(--u));border-radius:calc(4*var(--u));flex:1;opacity:.88}
+.stage .lw .sc{background:var(--lime);height:calc(15*var(--u));width:calc(58*var(--u));border-radius:calc(4*var(--u));flex:none}
+.logobox{
+  aspect-ratio:3/2;border:1px solid var(--line);border-radius:calc(6*var(--u));
+  display:flex;align-items:center;justify-content:center;
+}
+.logobox.hi{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent-soft)}
+.logobox i{width:46%;height:calc(9*var(--u));border-radius:calc(3*var(--u));background:var(--ph-fill);display:block}
+.cellnum{
+  border:1px solid var(--line);border-radius:calc(7*var(--u));aspect-ratio:1;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:calc(13*var(--u));color:var(--muted);
+}
+.cellnum.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent-soft);color:var(--accent)}
+/* Titik chrome peramban: tiga bulatan + bilah alamat. Dipakai satu miniatur
+   (halaman event / magic link) untuk membedakan "layar publik" dari "panel". */
+.cdot{width:calc(10*var(--u));height:calc(10*var(--u));border-radius:50%;background:var(--ph-line);flex:none}
+/* Kolom podium: tiga batang, yang tengah paling tinggi — urutan juara. */
+.pod{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(6*var(--u));align-items:end}
+.pod span{border-radius:calc(5*var(--u)) calc(5*var(--u)) 0 0;background:var(--ph-fill);display:block}
+.pod span:nth-child(1){height:calc(26*var(--u))}
+.pod span:nth-child(2){height:calc(38*var(--u));background:var(--accent);opacity:.6}
+.pod span:nth-child(3){height:calc(20*var(--u))}
+/* Ponsel: skala dipasang di lapis dalam supaya container terdekatnya .phone. */
+.phone{
+  max-width:280px;margin-inline:auto;border:1px solid var(--line);
+  border-radius:18px;background:var(--panel);overflow:hidden;
+  container-type:inline-size;width:100%;
+}
+.phone > *{--u:0.256cqw}
+
+.notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.notes li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;align-items:baseline}
+.notes .n{
+  font-family:var(--mono);font-size:11px;color:var(--accent);
+  border-top:1px solid var(--accent);padding-top:4px;
+}
+.notes b{font-weight:600;font-size:14.5px}
+.notes .dim{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px;white-space:nowrap}
+.notes p{font-size:13.5px;color:var(--muted);margin-top:2px;line-height:1.5}
+.notes code{color:var(--ink)}
+
+.rules{
+  margin-top:clamp(40px,6vw,72px);
+  border-top:1px solid var(--line);padding-top:clamp(24px,3vw,36px);
+}
+.rules h2{font-size:clamp(19px,2.2vw,23px)}
+.rules .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;margin-top:20px}
+.rules ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--muted)}
+.rules ul strong{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;margin-top:18px;font-size:13.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+th{
+  font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--muted);font-weight:400;border-bottom-color:var(--line);
+}
+td:first-child{font-family:var(--mono);font-size:12.5px;white-space:nowrap;color:var(--ink)}
+td:last-child{color:var(--muted)}
+footer{
+  margin-top:clamp(32px,5vw,56px);border-top:1px solid var(--line);padding-top:20px;
+  font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em;
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+
+<div class="wrap" data-grid="off">
+
+  <header>
+    <p class="eyebrow">BERBARIS APP — Halaman baru: /fitur</p>
+    <h1>Katalog fitur berkelompok + miniatur</h1>
+    <p class="lede">Laman depan menjual produk ini dengan sembilan kartu. Eventner sendiri jauh lebih besar: menu aslinya punya sebelas kelompok dan sekitar empat puluh modul — Format Penilaian, Perbandingan Nilai Antar Juri, Tempat Lomba, Juknis &amp; Dokumen, Aktivitas, Dashboard Keuangan, Rekening Bank, TTD &amp; Stempel. Tidak satu pun punya halaman publik. Wireframe ini menggambar penggantinya: satu halaman <code>/fitur</code> yang mendaftar 37 fitur dalam 8 kelompok, tiap kartu membawa miniatur layar yang digambar CSS, dengan tombol masuk dari section <code>#features</code>, kolom footer, dan sitemap.</p>
+    <div class="meta">
+      <span class="chip">1180 px · desktop</span>
+      <span class="chip">9 kartu → 8 kelompok · 37 fitur</span>
+      <span class="chip">isi dari kode, bukan DB</span>
+      <span class="chip">0 kelas CSS baru</span>
+      <span class="chip">5 temuan ikut dibetulkan</span>
+      <button class="toggle" id="tg" type="button" aria-pressed="false">Tampilkan kolom 12</button>
+    </div>
+  </header>
+
+  <dl class="spec">
+    <div>
+      <dt>Kanvas</dt>
+      <dd>Kolom desktop 1180 px, gutter 16–40 px. Kartu katalog 3 kolom di <code>lg</code>, 2 di <code>sm</code>, 1 di ponsel.</dd>
+    </div>
+    <div>
+      <dt>Warna</dt>
+      <dd>
+        <span class="swatches">
+          <span class="sw"><i style="background:#f8f9fa"></i>surface</span>
+          <span class="sw"><i style="background:#ffffff"></i>putih kartu</span>
+          <span class="sw"><i style="background:#111827"></i>deep-slate</span>
+          <span class="sw"><i style="background:#0062ff"></i>primary</span>
+          <span class="sw"><i style="background:#a3e635"></i>lime</span>
+        </span>
+        Sama dengan laman depan. Warna aksen di miniatur cuma dua — <code>primary</code> dan <code>lime</code> — dan lime tetap muncul <strong>satu kali</strong> per miniatur sebagai penanda status.
+      </dd>
+    </div>
+    <div>
+      <dt>Sumber isi</dt>
+      <dd>Kelas PHP statis <code>App\Support\ProductFeatures</code> — array polos, nol I/O, nol DB. Sama pola dengan <code>App\Support\Pricing</code> yang dibaca <code>/pricing</code>. Admin <strong>tidak</strong> menyuntingnya; bukan kunci <code>Setting</code>.</dd>
+    </div>
+    <div>
+      <dt>Ukuran miniatur</dt>
+      <dd>Container query, bukan breakpoint: <code>--u</code> di anak pembungkus ber-<code>container-type:inline-size</code>. Satu markup, tiga lebar kartu — tetap proporsional tanpa satu kelas responsif pun. Tinggi rangka dipatok 240 px (280 px di ≥768 px), bukan rasio.</dd>
+    </div>
+  </dl>
+
+  <!-- ============ SEBELUM / SESUDAH ============ -->
+  <div class="stack-pair">
+    <div class="stack">
+      <h3>Sebelum <span class="sub">sembilan kartu, itu saja</span></h3>
+      <ul class="blks">
+        <li class="blk"><span class="no">01</span><span class="nm">#features — 9 judul</span><span class="tag">laman depan</span></li>
+        <li class="blk bad"><span class="no">02</span><span class="nm">Format Penilaian Kustom</span><span class="tag">tak disebut</span></li>
+        <li class="blk bad"><span class="no">03</span><span class="nm">Perbandingan Nilai Antar Juri</span><span class="tag">tak disebut</span></li>
+        <li class="blk bad"><span class="no">04</span><span class="nm">Tempat Lomba · Juknis · Keuangan</span><span class="tag">tak disebut</span></li>
+        <li class="blk bad"><span class="no">05</span><span class="nm">nav non-landing → 9 anchor mati</span><span class="tag">bug</span></li>
+      </ul>
+    </div>
+    <div class="stack">
+      <h3>Sesudah <span class="sub">8 kelompok · 37 kartu</span></h3>
+      <ul class="blks">
+        <li class="blk big"><span class="no">01</span><span class="nm">/fitur — katalog penuh</span><span class="tag">halaman baru</span></li>
+        <li class="blk keep"><span class="no">02</span><span class="nm">Miniatur per kartu</span><span class="tag">kosakata .feat-*</span></li>
+        <li class="blk keep"><span class="no">03</span><span class="nm">Chip kategori → section asli</span><span class="tag">nol anchor mati</span></li>
+        <li class="blk keep"><span class="no">04</span><span class="nm">Tombol di #features + footer + sitemap</span><span class="tag">3 jalur masuk</span></li>
+        <li class="blk keep"><span class="no">05</span><span class="nm">Setiap item menunjuk route yang ada</span><span class="tag">dijaga tes</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE: SEBELUM ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Sebelum · cerita produk hari ini</p>
+      <h2>Sembilan kartu adalah satu-satunya halaman yang menceritakan produk</h2>
+      <p class="goal">Pengunjung yang ingin tahu "apakah bisa mengatur harga vote sendiri?" atau "bisa cetak berita acara juara?" tidak punya satu pun halaman yang menjawabnya. Yang menjawab hanya menu di dalam panel — yang baru terlihat setelah mendaftar.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/#features</span></div>
+      <div class="mock">
+        <div class="col cx">
+          <div class="bar h w50" style="margin-inline:auto"></div>
+          <div class="bar w40" style="margin-inline:auto"></div>
+        </div>
+        <div class="grid3">
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(44*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(44*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(44*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(44*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(44*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="thumb" style="aspect-ratio:1;width:calc(44*var(--u))"></span><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+        </div>
+        <div class="row cx" style="justify-content:center">
+          <span class="pill warn">…dan 31 modul lain tak punya kalimat apa pun</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Sembilan fitur, bukan tiga puluh tujuh</b><span class="dim">landing_features</span><p>Sembilan kartu di laman depan adalah <em>ringkasan</em> — itu memang tugasnya. Yang tidak ada adalah katalognya.</p></div></li>
+      <li><span class="n">02</span><div><b>Modul inti tak punya kalimat publik</b><span class="dim">sidebar 11 grup</span><p>Format Penilaian, Perbandingan Nilai Antar Juri, Tempat Lomba, Juknis &amp; Dokumen, Aktivitas, Dashboard Keuangan, Rekening Bank, TTD &amp; Stempel — semuanya nyata, semuanya tak disebut di halaman mana pun.</p></div></li>
+      <li><span class="n">03</span><div><b>Dan nav-nya bocor</b><span class="dim">temuan A · B · C</span><p>Di enam halaman non-landing, seluruh nav dan seluruh kolom footer menunjuk anchor yang section-nya tidak ada di halaman itu — sembilan tautan yang kliknya tidak terjadi apa-apa. Rinciannya di tabel bawah.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE: KERANGKA HALAMAN ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Sesudah · /fitur</p>
+      <h2>Satu halaman: judul, chip kategori, lalu delapan blok</h2>
+      <p class="goal">Tidak ada animasi, tidak ada marquee, tidak ada neon — mengikuti preferensi UI proyek ini: sederhana dan rapi, tapi informasinya lengkap. Chip di bawah judul adalah anchor ke section kelompok, dan tiap section-nya benar-benar ada.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/fitur</span></div>
+      <div class="mock tight">
+        <span class="pill acc">Fitur</span>
+        <div class="bar h w60"></div>
+        <div class="bar w70"></div>
+        <div class="row">
+          <span class="cta pri"></span>
+          <span class="cta gh"></span>
+        </div>
+        <div class="chiprow" style="margin-top:calc(6*var(--u))">
+          <span class="pill acc">Pendaftaran &amp; Peserta</span>
+          <span class="pill">Hari-H &amp; Venue</span>
+          <span class="pill">Penilaian &amp; Juara</span>
+          <span class="pill">Papan Skor &amp; Siaran</span>
+          <span class="pill">Voting</span>
+          <span class="pill">Tiket</span>
+          <span class="pill">Konten</span>
+          <span class="pill">Sponsor &amp; Keuangan</span>
+        </div>
+
+        <div style="margin-top:calc(10*var(--u))" class="cathead">
+          <div class="bar t w30"></div>
+          <span class="pill">6 fitur</span>
+        </div>
+        <div class="cat3">
+          <div class="card"><span class="badge">⌘</span><div class="mini" style="border:1px solid var(--line);border-radius:calc(7*var(--u));padding:calc(9*var(--u))">
+            <div class="mrow"><span class="sq"></span><span class="bar t" style="width:50%"></span></div>
+            <div class="mrow"><span class="bar" style="width:60%"></span><span class="numbox" style="margin-left:auto"></span></div>
+            <div class="mrow"><span class="bar" style="width:55%"></span><span class="numbox" style="margin-left:auto"></span></div>
+            <div class="mrow"><span class="pill acc">Kirim</span></div>
+          </div><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="badge">⌘</span><div class="mini" style="border:1px solid var(--line);border-radius:calc(7*var(--u));padding:calc(9*var(--u))">
+            <div class="mrow"><span class="sq"></span><span class="bar t" style="width:55%"></span></div>
+            <div class="mrow"><span class="bar" style="width:45%"></span><span class="pill" style="margin-left:auto">Teks</span></div>
+            <div class="mrow"><span class="bar" style="width:50%"></span><span class="pill" style="margin-left:auto">Berkas</span></div>
+          </div><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><span class="badge">⌘</span><div class="mini" style="border:1px solid var(--line);border-radius:calc(7*var(--u));padding:calc(9*var(--u))">
+            <div class="mrow"><span class="bar s" style="width:35%"></span><span class="bar" style="width:30%"></span></div>
+            <div class="mrow" style="padding-left:calc(14*var(--u))"><span class="bar s" style="width:35%"></span><span class="bar" style="width:30%"></span></div>
+            <div class="mrow" style="padding-left:calc(28*var(--u))"><span class="bar s" style="width:35%"></span><span class="bar" style="width:30%"></span></div>
+          </div><div class="bar t w70"></div><div class="bar"></div><div class="bar w80"></div></div>
+        </div>
+
+        <div class="cathead" style="margin-top:calc(10*var(--u))">
+          <div class="bar t w25"></div>
+          <span class="pill">5 fitur</span>
+        </div>
+        <div class="cat3">
+          <div class="card"><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><div class="bar"></div><div class="bar w80"></div></div>
+          <div class="card"><div class="bar"></div><div class="bar w80"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Chip kategori adalah anchor asli</b><span class="dim">#g-pendaftaran</span><p>Tiap section kelompok diberi <code>id="g-{key}"</code> dan chip-nya menunjuk ke sana. Karena section-nya selalu dirender (katalog dari kode, bukan data), tidak ada chip yang bisa mati — aturan yang sama yang menjaga nav laman depan.</p></div></li>
+      <li><span class="n">02</span><div><b>Kartu tiga kolom, seragam</b><span class="dim">literal di Blade</span><p><code>grid-cols-1 sm:grid-cols-2 lg:grid-cols-3</code> ditulis apa adanya, bukan dirakit dari variabel: Tailwind memindai berkas dan tidak pernah menjalankan Blade, jadi kelas yang dirakit dari variabel tidak masuk CSS hasil build. Karena tiga kolom tetap, tak ada satu pun cabang <code>@if</code> yang menulis kelas.</p></div></li>
+      <li><span class="n">03</span><div><b>Kartunya tidak menautkan apa pun</b><span class="dim">sengaja</span><p>Hampir semua route fitur butuh login atau konteks event. Merender tombol <code>/eventner/format-nilai</code> ke pengunjung yang belum masuk berarti mengirimnya ke halaman login, atau 500 untuk route yang butuh parameter. Kartu cukup menampilkan ikon, judul, dan dua baris.</p></div></li>
+      <li><span class="n">04</span><div><b>Juknis ada dua makna</b><span class="dim">catatan</span><p>Kartu "Juknis &amp; Dokumen Unduhan" menunjuk dokumen unggahan panitia (<code>eventner.documents.index</code>, <code>event.documents.download</code>). PDF yang digenerate dari rubrik adalah hal lain dan tidak dikartukan sendiri.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE: G1 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Kelompok 01 · 6 fitur</p>
+      <h2>Pendaftaran &amp; Peserta</h2>
+      <p class="goal">Dari formulir publik sampai kartu akses yang dicetak untuk sekolah. Semua route di kelompok ini nyata dan sudah dipakai.</p>
+    </div>
+
+    <div class="frame">
+      <div class="mock tight">
+        <div class="grid3">
+          <div class="card"><div class="mini">
+            <span class="pill acc">Pendaftaran</span>
+            <div class="mrow"><span class="bar s" style="width:40%"></span><span class="numbox" style="margin-left:auto"></span></div>
+            <div class="mrow"><span class="bar s" style="width:40%"></span><span class="numbox" style="margin-left:auto"></span></div>
+            <div class="mrow"><span class="bar s" style="width:40%"></span><span class="numbox" style="margin-left:auto"></span></div>
+            <div class="mrow"><span class="pill lim">Kirim</span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="cdot"></span><span class="cdot"></span><span class="cdot"></span><span class="bar s"></span></div>
+            <div class="mrow"><span class="sq"></span><span class="bar t" style="width:55%"></span></div>
+            <div class="mrow"><span class="bar" style="width:45%"></span><span class="pill" style="margin-left:auto">Multi-step</span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="sq"></span><span class="bar" style="width:45%"></span><span class="pill" style="margin-left:auto">Teks</span></div>
+            <div class="mrow"><span class="sq"></span><span class="bar" style="width:50%"></span><span class="pill" style="margin-left:auto">Berkas</span></div>
+            <div class="mrow"><span class="sq"></span><span class="bar" style="width:40%"></span><span class="pill" style="margin-left:auto">Pilih</span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar s" style="width:45%"></span></div>
+            <div class="mrow" style="padding-left:calc(12*var(--u))"><span class="bar s" style="width:40%"></span></div>
+            <div class="mrow" style="padding-left:calc(24*var(--u))"><span class="bar s" style="width:35%"></span><span class="pill lim" style="margin-left:auto">Seri</span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar t" style="width:40%"></span><span class="pill lim" style="margin-left:auto">Terverifikasi</span></div>
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="pill acc">Diperiksa</span></div>
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="pill">Menunggu</span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar t" style="width:35%"></span><span class="pill acc" style="margin-left:auto">128 peserta</span></div>
+            <div class="mrow"><span class="sq"></span><span class="bar s" style="width:40%"></span><span class="pill" style="margin-left:auto">24</span></div>
+            <div class="mrow"><span class="sq"></span><span class="bar s" style="width:45%"></span><span class="pill" style="margin-left:auto">17</span></div>
+          </div></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Pendaftaran Online Multi-Step</b><span class="dim">event.register · web:33</span><p>Label + kotak isian + tombol kirim. Satu-satunya <em>form</em> di katalog, dan memang bentuknya begitu.</p></div></li>
+      <li><span class="n">02</span><div><b>Magic Link Peserta</b><span class="dim">magic.link · web:49</span><p>Tiga titik chrome + bilah alamat: ini satu-satunya layar yang dibuka peserta <em>tanpa login</em>, jadi bentuknya halaman, bukan panel. Pill "Multi-step" menandai statusnya.</p></div></li>
+      <li><span class="n">03</span><div><b>Field Pendaftaran Kustom</b><span class="dim">eventner.registration-fields.index</span><p>Pegangan kotak di kiri, bilah judul, pill tipe di kanan (<code>Teks</code>/<code>Berkas</code>/<code>Pilih</code>). Gagang = bisa diseret; itu cara membedakannya dari daftar peserta yang punya avatar.</p></div></li>
+      <li><span class="n">04</span><div><b>Kategori Lomba Bertingkat</b><span class="dim">eventner:23,26</span><p>Tiga baris dengan indentasi naik — satu-satunya miniatur yang memakai lekuk. Pill lime "Seri" menandai tingkat paling dalam, tempat penilaian benar-benar terjadi.</p></div></li>
+      <li><span class="n">05</span><div><b>Manajemen Peserta &amp; Verifikasi Berkas</b><span class="dim">eventner.participants.index</span><p>Seni yang sudah dipakai laman depan (<code>icon3.png</code>) — tiga status: pill lime <em>Terverifikasi</em>, pill biru <em>Diperiksa</em>, pill abu <em>Menunggu</em>.</p></div></li>
+      <li><span class="n">06</span><div><b>Kartu Akses Peserta &amp; Rekap Sekolah</b><span class="dim">eventner:40,41</span><p>Baris per sekolah dengan kotak identitas dan jumlah peserta di ujung kanan. Angkanya sengaja beda (128 / 24 / 17) — rekap, bukan daftar rata.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE: G2 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Kelompok 02 · 5 fitur</p>
+      <h2>Hari-H &amp; Venue</h2>
+      <p class="goal">Yang dipakai panitia sambil berdiri: meja daftar ulang, urutan tampil, rundown, jadwal, dan tempat lomba.</p>
+    </div>
+
+    <div class="frame">
+      <div class="mock tight">
+        <div class="grid3">
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar t" style="width:40%"></span><span class="pill acc" style="margin-left:auto">3 tempat</span></div>
+            <div class="mrow"><span class="sq"></span><span class="bar s" style="width:45%"></span><span class="pill">Aula</span></div>
+            <div class="mrow"><span class="sq"></span><span class="bar s" style="width:40%"></span><span class="pill">Lapangan</span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar t" style="width:45%"></span><span class="pill lim" style="margin-left:auto">Hadir</span></div>
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="tick" style="margin-left:auto"></span></div>
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="tick" style="margin-left:auto"></span></div>
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="pill" style="margin-left:auto">—</span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="grid3"><span class="cellnum">01</span><span class="cellnum">02</span><span class="cellnum sel">03</span></div>
+            <div class="bar s w40"></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="pill acc">07.30</span><span class="bar"></span></div>
+            <div class="mrow"><span class="pill acc">08.00</span><span class="bar w80"></span></div>
+            <div class="mrow"><span class="pill acc">09.15</span><span class="bar w70"></span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar s w30"></span><span class="bar s"></span><span class="pill" style="margin-left:auto">Aula</span></div>
+            <div class="mrow"><span class="bar s w30"></span><span class="bar s"></span><span class="pill" style="margin-left:auto">Aula</span></div>
+            <div class="mrow"><span class="bar s w30"></span><span class="bar s"></span><span class="pill lim" style="margin-left:auto">Final</span></div>
+          </div></div>
+          <div class="card" style="justify-content:center"><div class="bar s w70"></div><span class="pill">miniatur ke-6</span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Tempat Lomba</b><span class="dim">eventner.venues.index</span><p>Kotak peta + nama tempat + pill jumlah. Bukan baris peserta: tidak ada avatar, dan ada pill hitungan di kepala daftar.</p></div></li>
+      <li><span class="n">02</span><div><b>Meja Daftar Ulang &amp; Scan QR Kartu</b><span class="dim">eventner:29,31</span><p>Satu-satunya yang memakai <code>.feat-tick</code> — bulatan lime "sudah hadir". Kelas itu ada di CSS sejak dulu dan belum pernah dipakai satu cabang pun; di sini akhirnya terpakai. Baris ketiga sengaja <em>tanpa</em> tick, supaya terbaca sebagai daftar hadir dan bukan centang semua.</p></div></li>
+      <li><span class="n">03</span><div><b>Drawing / Undian Urutan Tampil</b><span class="dim">event.drawing.spin · web:34</span><p>Seni <code>icon8.png</code> dari laman depan. Grid nomor, satu kotak berbingkai — hasil undian, bukan roda berputarnya: animasi tidak bisa digambar di dokumen statis dan memang bukan itu yang dijanjikan.</p></div></li>
+      <li><span class="n">04</span><div><b>Rundown Acara</b><span class="dim">eventner.rundown.index</span><p>Pill jam di kiri, bilah acara di kanan, diulang. Panjang bilah mengecil ke bawah dengan sengaja — linimasa satu hari, bukan tiga baris identik.</p></div></li>
+      <li><span class="n">05</span><div><b>Jadwal Pertandingan</b><span class="dim">eventner.schedule.index</span><p>Dua lawan dalam satu baris, tempat di ujung kanan. Bedanya dari rundown: rundown punya jam, jadwal punya pasangan.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE: G3 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Kelompok 03 · 6 fitur</p>
+      <h2>Penilaian &amp; Juara</h2>
+      <p class="goal">Kelompok terbesar dan paling sering ditanya calon penyelenggara. Tiga dari enam kartunya memetakan gate berbayar.</p>
+    </div>
+
+    <div class="frame">
+      <div class="mock tight">
+        <div class="grid3">
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="sq"></span><span class="bar t" style="width:50%"></span><span class="pill acc" style="margin-left:auto">Bobot</span></div>
+            <div class="mrow"><span class="bar s" style="width:55%"></span><span class="pill" style="margin-left:auto">1–10</span></div>
+            <div class="mrow"><span class="bar s" style="width:45%"></span><span class="pill" style="margin-left:auto">1–5</span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="sq"></span><span class="bar t" style="width:45%"></span><span class="pill" style="margin-left:auto">Peserta 05</span></div>
+            <div class="mrow"><span class="bar s" style="width:55%"></span><span class="numbox" style="margin-left:auto"></span></div>
+            <div class="mrow"><span class="bar s" style="width:55%"></span><span class="numbox" style="margin-left:auto"></span></div>
+            <div class="mrow"><span class="pill lim" style="margin-left:auto">Total 87,5</span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="av"></span><span class="bar s w30"></span><span class="ballot"></span></div>
+            <div class="mrow"><span class="av"></span><span class="bar s w30"></span><span class="ballot" style="width:60%"></span></div>
+            <div class="mrow"><span class="avatar av"></span><span class="bar s w30"></span><span class="ballot" style="width:35%"></span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar t" style="width:40%"></span><span class="pill acc" style="margin-left:auto">PDF</span></div>
+            <div class="mrow"><span class="rk">1</span><span class="bar s"></span><span class="pill lim">Juara</span></div>
+            <div class="mrow"><span class="rk">2</span><span class="bar s w80"></span></div>
+            <div class="mrow"><span class="rk">3</span><span class="bar s w60"></span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar t" style="width:35%"></span><span class="pill acc" style="margin-left:auto">Berita acara</span></div>
+            <div class="pod"><span></span><span></span><span></span></div>
+            <div class="bar s w50"></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="card" style="align-items:center;text-align:center">
+              <span class="bar t" style="width:55%"></span>
+              <span class="bar s" style="width:35%"></span>
+              <span class="bar s" style="width:80%"></span>
+              <div class="mrow" style="width:100%"><span class="sign"></span><span class="seal"></span></div>
+            </div>
+          </div></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Format Penilaian Kustom</b><span class="dim">eventner.format-nilai.builder · gate format_nilai</span><p>Baris kriteria: kotak pegangan, bilah nama, pill bobot. Bilahnya rata-rata panjang karena yang membedakan baris di sini <em>range</em>-nya, bukan namanya. Satu-satunya miniatur dengan dua pill abu berdampingan.</p></div></li>
+      <li><span class="n">02</span><div><b>Input Nilai Juri via Tablet</b><span class="dim">eventner.scoring.index + entry host</span><p>Lembar nilai: peserta di kepala, kotak angka di kanan, total di bawah. Seni <code>icon4.png</code> yang sudah ada — dan memang bentuk tabletnya sama dengan bentuk layar ini.</p></div></li>
+      <li><span class="n">03</span><div><b>Perbandingan Nilai Antar Juri</b><span class="dim">eventner.scoring.perbandingan</span><p>Tiga baris, tiap baris satu juri (avatar) dengan satu batang nilai. Panjang batang <em>berbeda</em> — itulah seluruh gunanya halaman itu: melihat juri mana yang memberi lebih tinggi. Kalau batangnya rata, miniatur ini bohong.</p></div></li>
+      <li><span class="n">04</span><div><b>Rekap Nilai &amp; Cetak PDF</b><span class="dim">eventner:64,68</span><p>Papan peringkat bernomor + pill biru PDF di kepala. Bedanya dari Live Scoreboard: yang ini punya tombol cetak, bukan penanda "Live".</p></div></li>
+      <li><span class="n">05</span><div><b>Kategori Juara &amp; Berita Acara</b><span class="dim">eventner:80-82 · gate champion_categories</span><p>Podium tiga kolom — satu-satunya bentuk baru di kelompok ini selain babak penilaian. Kolom tengah paling tinggi dan berwarna: juara 1.</p></div></li>
+      <li><span class="n">06</span><div><b>Sertifikat Digital</b><span class="dim">eventner.certificate.index · gate certificate</span><p>Seni <code>icon9.png</code>. Satu-satunya miniatur rata tengah selain lembar sertifikat di laman depan — karena lembar sertifikat memang rata tengah.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE: G4 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Kelompok 04 · 4 fitur</p>
+      <h2>Papan Skor &amp; Siaran</h2>
+      <p class="goal">Yang dilihat penonton. Tiga dari empat route-nya bisa dibuka tanpa login sama sekali.</p>
+    </div>
+
+    <div class="frame">
+      <div class="mock tight">
+        <div class="grid2">
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar t" style="width:50%"></span><span class="pill lim" style="margin-left:auto">Live</span></div>
+            <div class="mrow"><span class="rk">1</span><span class="bar" style="height:calc(13*var(--u))"></span><span class="pill acc">Juara</span></div>
+            <div class="mrow"><span class="rk">2</span><span class="bar s w80"></span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="sq"></span><span class="bar t" style="width:50%"></span><span class="pill acc" style="margin-left:auto">Hall of Fame</span></div>
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="pill lim">2026</span></div>
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="pill">2025</span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="stage"><div class="lw"><span class="nm"></span><span class="sc"></span></div></div>
+            <div class="mrow"><span class="pill lim">OBS</span><span class="pill">16:9</span><span class="bar s w40"></span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="stage"><div class="lw"><span class="nm"></span><span class="sc"></span></div></div>
+            <div class="mrow"><span class="pill acc">Loop</span><span class="pill">Layar venue</span><span class="bar s w30"></span></div>
+          </div></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Live Scoreboard Publik</b><span class="dim">public.scoreboard · web:61</span><p>Seni <code>icon7.png</code>: baris pertama lebih tebal, pill lime "Live". Dibuka tanpa login, jadi kartunya pantas tampil di katalog publik.</p></div></li>
+      <li><span class="n">02</span><div><b>Pengumuman Juara &amp; Hall of Fame</b><span class="dim">public.champions · web:64,25</span><p>Baris juara per tahun dengan avatar penyelenggara. Bedanya dari papan skor: yang ini menyimpan, bukan menayangkan.</p></div></li>
+      <li><span class="n">03</span><div><b>Livestream Overlay OBS</b><span class="dim">eventner.livestream.index · gate livestream</span><p>Seni <code>icon10.png</code> — satu-satunya rangka berlatar gelap di katalog, karena overlay hanya terpakai di atas video dan video selalu gelap.</p></div></li>
+      <li><span class="n">04</span><div><b>Videotron Display Venue</b><span class="dim">event.videotron · web:70</span><p>Rangka gelap yang sama, tapi pill-nya <code>Loop</code> dan <code>Layar venue</code>, bukan <code>OBS</code> dan <code>16:9</code>. Dua kasus yang mirip memang perlu dibedakan lewat pill-nya, bukan lewat rangka baru.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE: G5 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Kelompok 05 · 4 fitur</p>
+      <h2>Voting Penonton</h2>
+      <p class="goal">Kelompok dengan gate terbanyak — empat dari empat. Harga vote diatur panitia, jadi "Pengaturan Vote" berdiri sebagai kartu sendiri, bukan diselipkan ke dalam "Voting Berbayar".</p>
+    </div>
+
+    <div class="frame">
+      <div class="mock tight">
+        <div class="grid2">
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar t" style="width:45%"></span><span class="pill lim" style="margin-left:auto">Terkini</span></div>
+            <div class="mrow"><span class="bar s w40"></span><span class="ballot" style="width:100%"></span></div>
+            <div class="mrow"><span class="bar s w40"></span><span class="ballot" style="width:60%"></span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar t" style="width:40%"></span><span class="pill acc" style="margin-left:auto">×5</span></div>
+            <div class="mrow"><span class="pill">1 vote</span><span class="ballot" style="width:30%"></span></div>
+            <div class="mrow"><span class="pill lim">Booster</span><span class="ballot" style="width:80%"></span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="ballot" style="width:45%"></span></div>
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="ballot" style="width:30%"></span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="pill lim" style="margin-left:auto">Disetujui</span></div>
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="pill" style="margin-left:auto">Menunggu</span></div>
+          </div></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Voting Berbayar</b><span class="dim">event.vote · web:28 · gate vote_settings</span><p>Seni <code>icon5.png</code>. Panjang batang sengaja tidak rata — itulah bedanya papan perolehan dari daftar biasa.</p></div></li>
+      <li><span class="n">02</span><div><b>Vote Booster</b><span class="dim">eventner.vote-booster.index · gate vote_booster</span><p>Dua baris, dua label bobot, dua panjang batang yang jauh berbeda — satu vote vs satu booster. Pill <code>×5</code> di kepala memberi artinya tanpa kalimat.</p></div></li>
+      <li><span class="n">03</span><div><b>Hasil &amp; Transaksi Voting</b><span class="dim">eventner:48-53 · gate vote_results + vote_transactions</span><p>Baris per peserta dengan batang perolehannya. Satu kartu menaungi dua kunci gate karena keduanya dua sisi layar yang sama — hasil, dan transaksi yang menghasilkannya.</p></div></li>
+      <li><span class="n">04</span><div><b>Moderasi Komentar Voting</b><span class="dim">eventner.vote-comments.index · gate vote_comments</span><p>Baris komentar dengan status di ujung kanan. Satu-satunya miniatur voting yang punya <em>dua</em> status berbeda dalam satu rangka.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE: G6 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Kelompok 06 · 2 fitur</p>
+      <h2>Tiket Event</h2>
+      <p class="goal">Kelompok terkecil. "Pengaturan Tiket" tidak jadi kartu sendiri: ia panel konfigurasi modul, bukan kemampuan yang dibeli terpisah.</p>
+    </div>
+
+    <div class="frame">
+      <div class="mock tight">
+        <div class="grid2">
+          <div class="card"><div class="mini">
+            <div class="card">
+              <div class="mrow"><span class="sq"></span><span class="bar t" style="width:60%"></span></div>
+              <span class="bar s" style="width:40%"></span>
+              <span class="perf"></span>
+              <div class="mrow"><span class="qr"></span><span style="display:flex;flex-direction:column;gap:calc(5*var(--u));flex:1;min-width:0"><span class="bar s"></span><span class="bar s w50"></span><span class="pill lim">Masuk</span></span></div>
+            </div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar t" style="width:40%"></span><span class="pill acc" style="margin-left:auto">Pintu</span></div>
+            <div class="mrow"><span class="qr" style="width:calc(38*var(--u));height:calc(38*var(--u))"></span><span class="tick"></span><span class="bar s w40"></span></div>
+            <div class="mrow"><span class="bar s w30"></span><span class="pill lim" style="margin-left:auto">Terpakai</span></div>
+          </div></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Penjualan Tiket Online</b><span class="dim">event.ticket · web:30 · gate tickets + ticket_settings</span><p>Seni <code>icon6.png</code>. Dua kunci gate menyatu di satu kartu: layar penjualan dan pengaturannya memang satu modul.</p></div></li>
+      <li><span class="n">02</span><div><b>E-Tiket QR &amp; Check-in di Pintu</b><span class="dim">event.checkin.scan · web:31-32</span><p>QR lebih kecil (38 unit, bukan 52) karena di sini QR adalah <em>yang dipindai</em>, bukan yang dicetak. Bulatan lime di sebelahnya menandai hasil pindainya terbaca.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE: G7 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Kelompok 07 · 5 fitur</p>
+      <h2>Konten &amp; Komunikasi</h2>
+      <p class="goal">Yang dibaca peserta dan yang meninggalkan jejak di panel. Semuanya tanpa gate — bagian dari paket dasar.</p>
+    </div>
+
+    <div class="frame">
+      <div class="mock tight">
+        <div class="grid3">
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="sq"></span><span class="bar s" style="width:45%"></span><span class="pill acc" style="margin-left:auto">PDF</span></div>
+            <div class="mrow"><span class="sq"></span><span class="bar s" style="width:50%"></span><span class="pill" style="margin-left:auto">DOC</span></div>
+            <div class="mrow"><span class="sq"></span><span class="bar s" style="width:40%"></span><span class="pill" style="margin-left:auto">XLS</span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar t" style="width:30%"></span><span class="pill" style="margin-left:auto">24 foto</span></div>
+            <div class="grid3"><span class="logobox"><i></i></span><span class="logobox"><i></i></span><span class="logobox"><i></i></span><span class="logobox"><i></i></span><span class="logobox"><i></i></span><span class="logobox"><i></i></span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar s" style="width:70%"></span><span class="pill acc" style="margin-left:auto">+</span></div>
+            <div class="mrow"><span class="bar s" style="width:55%"></span></div>
+            <div class="mrow"><span class="bar s" style="width:60%"></span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="pill acc">Semua</span><span class="pill">Juara</span></div>
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="pill lim" style="margin-left:auto">Terkirim</span></div>
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="pill lim" style="margin-left:auto">Terkirim</span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="bar s w30"></span></div>
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="bar s w30"></span></div>
+            <div class="mrow"><span class="av"></span><span class="bar s"></span><span class="bar s w30"></span></div>
+          </div></div>
+          <div class="card" style="justify-content:center"><div class="bar s w60"></div><span class="pill">miniatur ke-6</span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Juknis &amp; Dokumen Unduhan</b><span class="dim">eventner.documents.index · web:84,89</span><p>Baris berkas: kotak dokumen, bilah nama, pill jenisnya. Yang dikartukan adalah <em>dokumen unggahan panitia</em>; PDF yang digenerate dari rubrik adalah hal lain.</p></div></li>
+      <li><span class="n">02</span><div><b>Galeri Foto Event</b><span class="dim">eventner.gallery.index</span><p>Dinding enam kotak 3:2 — kosakata container-query yang sama dengan dinding logo sponsor. Di kartu sempit ia jadi 3 kolom, di kartu lebar 6; itu memang alasan kelas itu ada.</p></div></li>
+      <li><span class="n">03</span><div><b>FAQ Event</b><span class="dim">eventner.faq.index</span><p>Tiga baris pertanyaan, satu di antaranya memperlihatkan tombol buka. Akordeon dalam tiga bilah — tidak ada bentuk lain yang perlu.</p></div></li>
+      <li><span class="n">04</span><div><b>Kirim Notifikasi Peserta</b><span class="dim">eventner.notification.index</span><p>Dua pill sasaran di kepala, lalu baris penerima dengan status pill lime "Terkirim". Yang penting di miniatur ini bukan isinya, tapi bahwa statusnya menempel <em>per baris</em>.</p></div></li>
+      <li><span class="n">05</span><div><b>Activity Log</b><span class="dim">eventner.activity-log.index</span><p>Avatar pelaku + jejaknya + cap waktu. Tiga baris identik — log memang begitu; yang menandai dia log adalah cap waktu di ujung kanan.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE: G8 ============ -->
+  <article class="slide wide">
+    <div class="slide-head">
+      <p class="num">Kelompok 08 · 5 fitur</p>
+      <h2>Sponsor, Tenant &amp; Keuangan</h2>
+      <p class="goal">Empat modul panel yang selama ini tidak punya kalimat publik, plus satu kartu yang menjelaskan cara membayar.</p>
+    </div>
+
+    <div class="frame">
+      <div class="mock tight">
+        <div class="grid3">
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar t" style="width:25%"></span><span class="pill acc" style="margin-left:auto">6 sponsor</span></div>
+            <div class="grid3"><span class="logobox hi"><i></i></span><span class="logobox"><i></i></span><span class="logobox"><i></i></span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar t" style="width:35%"></span><span class="pill acc" style="margin-left:auto">Peta</span></div>
+            <div class="grid3"><span class="cellnum">A01</span><span class="cellnum">A02</span><span class="cellnum">B01</span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="bar t" style="width:35%"></span><span class="pill acc" style="margin-left:auto">PDF</span></div>
+            <div class="mrow"><span class="bar s w30"></span><span class="ballot" style="width:90%"></span></div>
+            <div class="mrow"><span class="bar s w30"></span><span class="ballot" style="width:55%"></span></div>
+            <div class="mrow"><span class="bar s w30"></span><span class="ballot" style="width:25%"></span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="mrow"><span class="sq"></span><span class="bar s" style="width:45%"></span><span class="pill" style="margin-left:auto">BCA</span></div>
+            <div class="mrow"><span class="sign"></span><span class="seal"></span></div>
+          </div></div>
+          <div class="card"><div class="mini">
+            <div class="grid2">
+              <div class="card"><span class="bar t" style="width:50%"></span><span class="bar s w80"></span><span class="pill">Gratis</span></div>
+              <div class="card" style="border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent-soft)"><span class="bar t" style="width:50%"></span><span class="bar s w80"></span><span class="pill acc">Berbayar</span></div>
+            </div>
+            <div class="mrow"><span class="pill lim">Sekali bayar</span><span class="bar s w40"></span></div>
+          </div></div>
+          <div class="card" style="justify-content:center"><div class="bar s w65"></div><span class="pill">miniatur ke-6</span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Sponsor &amp; Partner</b><span class="dim">eventner.sponsors.index · gate sponsors</span><p>Seni <code>icon11.png</code>. Kotak pertama berbingkai biru — slot yang disorot, seperti di halaman event.</p></div></li>
+      <li><span class="n">02</span><div><b>Tenant / Stand &amp; Peta Venue</b><span class="dim">eventner.tenants.index · gate tenants</span><p>Nomor stan di dalam sel, bukan kotak kosong: tenant punya <em>kode</em>, logo tidak. Itu satu-satunya bedanya dari dinding sponsor, dan cukup.</p></div></li>
+      <li><span class="n">03</span><div><b>Dashboard Keuangan &amp; PDF</b><span class="dim">eventner.finance.index · eventner:100-101</span><p>Diagram batang tiga baris dengan panjang menurun — pemasukan per kategori. Bentuk yang sama dengan papan perolehan, tapi tanpa nomor peringkat, karena ini besaran dan bukan ranking.</p></div></li>
+      <li><span class="n">04</span><div><b>Rekening Bank &amp; TTD/Stempel Dokumen</b><span class="dim">eventner:62-63</span><p>Satu kartu untuk dua layar pengaturan: keduanya data identitas dokumen yang muncul di invoice dan sertifikat. Garis tanda tangan + bulatan stempel adalah seni <code>icon9.png</code> yang dipakai ulang tanpa QR-nya.</p></div></li>
+      <li><span class="n">05</span><div><b>Upgrade Paket &amp; Feature Gating</b><span class="dim">eventner.billing.upgrade · web:80</span><p>Dua kartu paket berdampingan, yang berbayar berbingkai biru. Kartu ini yang menjelaskan <em>kenapa</em> sebagian fitur di atas bergembok — dan mengarahkan ke <code>/pricing</code>.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE: KEBOCORAN NAV ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Sekalian · temuan A &amp; B</p>
+      <h2>Nav di halaman non-landing adalah sembilan tautan mati</h2>
+      <p class="goal">Enam halaman memakai layout landing tapi tidak punya satu pun section ber-anchor. Sebelum ini, seluruh nav dan seluruh kolom footer tetap dirender — dan kliknya tidak terjadi apa-apa.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.local/help</span></div>
+      <div class="mock tight">
+        <div class="mrow"><span class="bar t" style="width:12%"></span><span class="pill"></span><span class="pill"></span><span class="pill"></span>
+          <span class="pill warn">href="#features" → tak ada section</span></div>
+        <div class="mrow" style="margin-top:calc(8*var(--u))">
+          <span class="pill warn">#hero</span><span class="pill warn">#features</span><span class="pill warn">#pricing</span><span class="pill warn">#eventners</span>
+        </div>
+        <div class="mrow"><span class="pill warn">#team</span><span class="pill warn">#faq</span><span class="pill warn">#contact</span><span class="pill">…dan menu mobile, sembilan lagi</span></div>
+        <div class="mrow" style="margin-top:calc(10*var(--u))"><span class="pill lim">sesudah: /#features</span><span class="pill lim">/#hero</span><span class="pill lim">/#contact</span></div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Kenapa bocor</b><span class="dim">landing.blade.php:117-118</span><p><code>$sectionsActive</code> dan <code>$sectionsRender</code> di-default <code>[]</code>. Hanya <code>LandingPage::render()</code> yang mengirim keduanya, jadi di <code>/pricing</code>, <code>/help</code>, <code>/privacy</code>, <code>/terms</code>, <code>/eventner</code> gerbang <code>$navTampil()</code> lolos untuk <em>semua</em> anchor.</p></div></li>
+      <li><span class="n">02</span><div><b>Footer tidak tercakup tes</b><span class="dim">temuan B</span><p>Tes nav yang ada memotong HTML di <code>&lt;/header&gt;</code>, sedangkan footer berada jauh di bawahnya. Perbaikan yang hanya menyentuh <code>#contact</code> akan menyisakan lima tautan rusak — jadi ada tes baru atas seluruh dokumen.</p></div></li>
+      <li><span class="n">03</span><div><b>Perbaikannya satu variabel</b><span class="dim">$diLamanDepan</span><p><code>$prefiksNav</code> berisi <code>''</code> di laman depan dan <code>url('/')</code> di halaman lain. Laman depan tidak berubah satu byte pun — outputnya tetap <code>href="#hero"</code> mentah, jadi tes nav yang lama tetap lulus; di halaman lain tautannya jadi <code>/#hero</code> dan benar-benar mendarat.</p></div></li>
+      <li><span class="n">04</span><div><b>Dua bug lain sekelas itu</b><span class="dim">temuan C · D</span><p><code>pricing.blade.php:139</code> merender tombol "Hubungi Admin" ke <code>#contact</code> yang hidup di section FAQ — landing-only, jadi di <code>/pricing</code> tombolnya menuju ketiadaan. Dan <code>feature-miniature.blade.php:11</code> memilih seni lewat <code>$item['icon']</code>, nilai DB, sehingga 37 item katalog akan jatuh ke <code>@default</code> dan tampil seragam.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ RULES ============ -->
+  <section class="rules">
+    <h2>Yang dibetulkan sekalian, dan alasannya</h2>
+    <table>
+      <thead>
+        <tr><th>Temuan</th><th>Bukti</th><th>Perbaikan</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Nav non-landing mati</td>
+          <td><code>layouts/landing.blade.php:117-118</code> default <code>[]</code>; hanya <code>LandingPage::render()</code> yang mengirim <code>sectionsActive</code>/<code>sectionsRender</code>. Lima komponen halaman lain hanya mengirim <code>logoPath</code>/<code>favicon</code>.</td>
+          <td>Variabel eksplisit <code>$diLamanDepan</code> + <code>$prefiksNav</code>. Nav desktop, nav mobile, dan enam anchor footer jadi berprefiks. <code>LandingPage</code> meneruskan <code>diLamanDepan =&gt; true</code> secara eksplisit, bukan bergantung default.</td>
+        </tr>
+        <tr>
+          <td>Footer tak tercakup tes</td>
+          <td><code>test_tautan_nav_landing_menunjuk_ke_section_yang_ada</code> memotong HTML di <code>strpos($html,'&lt;/header&gt;')</code>; footer ada di bawah potongan itu.</td>
+          <td>Tes baru atas <em>seluruh dokumen</em> untuk enam halaman non-landing: tidak boleh ada <code>href="#</code> sama sekali. Tes itu memaksa footer ikut dibereskan.</td>
+        </tr>
+        <tr>
+          <td>Tombol kontak → <code>#contact</code></td>
+          <td><code>components/landing/pricing.blade.php:139</code> → <code>$plan['contact_url'] ?: '#contact'</code>. <code>id="contact"</code> hidup di <code>faq.blade.php:45</code>, yang landing-only.</td>
+          <td>Fallback-nya jadi <code>route('help')</code>. Halaman bantuan memuat kanal kontak yang sama, dan tautannya tidak akan lapuk di halaman mana pun.</td>
+        </tr>
+        <tr>
+          <td>Miniatur dipilih dari <code>icon</code></td>
+          <td><code>feature-miniature.blade.php:11</code> — <code>$item['icon']</code>, dan kuncinya nilai DB <code>icon3.png</code>…<code>icon11.png</code>. Katalog tidak punya nilai itu.</td>
+          <td>Satu baris: <code>$kunci = $item['miniature'] ?? $item['icon'] ?? '';</code>. Sepuluh blok <code>@case</code> lama tidak disentuh, situs pemanggil di laman depan tidak berubah, dan item landing tidak punya <code>miniature</code> sehingga menyelesaikan persis seperti sekarang.</td>
+        </tr>
+        <tr>
+          <td>Layout <code>zubaz</code> punya nav serupa</td>
+          <td><code>layouts/zubaz.blade.php:88-106,154-170</code> — nav bertaut-anchor yang sama.</td>
+          <td><strong>Tidak disentuh.</strong> Tidak satu pun route memakainya (hanya <code>favicon.ico</code>-nya yang disitir). Di luar lingkup; menyentuhnya hanya menambah risiko.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="cols">
+      <ul>
+        <li><strong>Aturan katalog: satu fitur, satu route.</strong> Tiap entri wajib menunjuk nama route yang benar-benar ada (<code>Route::has()</code>), atau satu baris nyata di <code>sidebar.blade.php</code>. Tidak ada fitur aspirasional — dijaga tes, bukan disiplin manual.</li>
+        <li><strong>Kenapa kelas Support, bukan <code>config/</code>.</strong> Presedennya <code>App\Support\Pricing</code>: namespace &amp; peran sama, dibaca halaman publik, bebas dari semantik pembekuan <code>config:cache</code>, dan bisa dinavigasi IDE untuk 37 entri. Berkas config tidak memberi apa pun di sini.</li>
+        <li><strong>Kenapa bukan <code>config/eventner_features.php</code>.</strong> Berkas itu <em>config paywall</em> — dibaca <code>HasFeatureGates::canAccessFeature</code> dan logika tagihan. Kepala berkasnya sendiri menyatakan dashboard, peserta, juri, input nilai, rekap, dan scoreboard sengaja tidak terdaftar, jadi memakainya ulang akan mengunci katalog di 16 entri.</li>
+      </ul>
+      <ul>
+        <li><strong>Penjaga drift.</strong> Tiap item membawa daftar <code>gates</code>. Tes menuntut gabungan seluruh <code>gates</code> <em>sama persis</em> dengan <code>array_keys(config('eventner_features'))</code>, diuji dua arah. Mengganti nama kunci config tanpa menyentuh katalog langsung gagal berisik — itulah yang membuat pemisahan dua berkas ini aman.</li>
+        <li><strong>Nol kelas CSS baru.</strong> Setiap gagasan dinyatakan dengan menyusun primitif <code>.feat-*</code> yang sudah ada. Yang baru hanya blok <code>@case</code> di Blade. Dua batasan keras tetap dipegang: nilai turunan <code>cqw</code> tidak mendarat di anak langsung <code>.feat-mini</code>, dan kelas Tailwind ditulis literal.</li>
+        <li><strong>Menghindari dekorasi.</strong> Tidak ada animasi, tidak ada marquee, tidak ada gradien. Satu warna aksen per miniatur, lime sekali per rangka. Ini yang membedakan miniatur dari hiasan.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>BERBARIS APP · wireframe halaman /fitur · 8 kelompok, 37 fitur, 0 kelas CSS baru · dokumen pendamping: landing-fitur-wireframe.html</footer>
+
+</div>
+
+<script>
+(function () {
+  var wrap = document.querySelector('.wrap');
+  var pairs = [['tg', 'grid', 'Tampilkan kolom 12']];
+
+  pairs.forEach(function (p) {
+    var btn = document.getElementById(p[0]);
+    if (!btn) return;
+
+    btn.addEventListener('click', function () {
+      var on = wrap.getAttribute('data-' + p[1]) === 'on';
+      wrap.setAttribute('data-' + p[1], on ? 'off' : 'on');
+      btn.setAttribute('aria-pressed', on ? 'false' : 'true');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
