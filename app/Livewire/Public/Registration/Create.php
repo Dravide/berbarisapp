@@ -168,14 +168,21 @@ class Create extends Component
         $pesan = [];
 
         foreach ($this->fields as $field) {
+            $kunci = 'fieldValues.' . $field->field_key;
+
+            // Batas panjang juga milik field bawaan: "Nama Pasukan" punya
+            // batas sendiri, dan tanpa pesan ini penolakannya tampil sebagai
+            // "field values.label pasukan" mentah di mata pendaftar.
+            $pesan[$kunci . '.max'] = $field->label . ' maksimal :max karakter.';
+
             if ($field->builtin_source) {
                 continue;
             }
 
-            $pesan['fieldValues.' . $field->field_key . '.required'] = $field->label . ' wajib diisi.';
-            $pesan['fieldValues.' . $field->field_key . '.in'] = 'Pilihan ' . $field->label . ' tidak valid.';
-            $pesan['fieldValues.' . $field->field_key . '.numeric'] = $field->label . ' harus berupa angka.';
-            $pesan['fieldValues.' . $field->field_key . '.date'] = $field->label . ' harus berupa tanggal yang valid.';
+            $pesan[$kunci . '.required'] = $field->label . ' wajib diisi.';
+            $pesan[$kunci . '.in'] = 'Pilihan ' . $field->label . ' tidak valid.';
+            $pesan[$kunci . '.numeric'] = $field->label . ' harus berupa angka.';
+            $pesan[$kunci . '.date'] = $field->label . ' harus berupa tanggal yang valid.';
         }
 
         return $pesan;

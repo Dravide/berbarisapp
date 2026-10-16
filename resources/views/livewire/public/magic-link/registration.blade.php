@@ -970,7 +970,7 @@
                                                 </label>
 
                                                 @if($field->type === 'textarea')
-                                                    <textarea wire:model="{{ $kunci }}" rows="3" class="field-input w-full" placeholder="{{ $field->help_text ?: $field->label }}">{{ $nilai }}</textarea>
+                                                    <textarea wire:model="{{ $kunci }}" rows="3" maxlength="{{ $field->maxLength() }}" class="field-input w-full" placeholder="{{ $field->help_text ?: $field->label }}">{{ $nilai }}</textarea>
                                                 @elseif($field->type === 'select')
                                                     <select wire:model="{{ $kunci }}" class="field-input w-full">
                                                         <option value="">— Pilih {{ $field->label }} —</option>
@@ -985,6 +985,7 @@
                                                     ])
                                                 @else
                                                     <input type="{{ $field->type === 'number' ? 'number' : ($field->type === 'date' ? 'date' : 'text') }}"
+                                                        @if(! in_array($field->type, ['number', 'date'], true)) maxlength="{{ $field->maxLength() }}" @endif
                                                         wire:model="{{ $kunci }}" class="field-input w-full" placeholder="{{ $field->help_text ?: $field->label }}">
                                                 @endif
 

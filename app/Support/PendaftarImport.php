@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Models\CompetitionCategory;
 use App\Models\Eventner;
+use App\Models\RegistrationField;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
@@ -45,15 +46,14 @@ class PendaftarImport
     public const MAX_BARIS = 2000;
 
     /**
-     * Lebar kolom `registrations.label_pasukan` (varchar 10).
+     * Lebar isian `registrations.label_pasukan`.
      *
-     * Diperiksa di sini, bukan diserahkan ke DB: MySQL dengan sql_mode longgar
-     * memotong diam-diam, dan label yang terpotong merusak pencocokan duplikat
-     * pada import berikutnya. Modal manual tidak pernah memvalidasi ini karena
-     * tidak punya propertinya — jalur import adalah yang pertama mengisi kolom
-     * ini, jadi batasnya harus ditegakkan di sini.
+     * Tinggal alias: batasnya hidup di RegistrationField::MAX_LABEL_PASUKAN
+     * supaya form publik, portal, dan import memakai satu angka. Dua karakter
+     * terakhir disisakan untuk sufiks " A"/" B" milik pendaftar multi-pasukan,
+     * jadi nilai ini HARUS lebih kecil dari lebar kolomnya.
      */
-    public const MAX_LABEL_PASUKAN = 10;
+    public const MAX_LABEL_PASUKAN = RegistrationField::MAX_LABEL_PASUKAN;
 
     // Indeks kolom (0-based dari $sheet->toArray()).
     public const COL_NAMA_SEKOLAH = 0;
@@ -168,10 +168,6 @@ class PendaftarImport
                 'npsn' => ($untukImport || ! $field->is_required ? 'nullable' : 'required').'|string|max:20',
                 default => $field->validationRule($field->is_required),
             };
-
-            if ($field->builtin_source === 'label_pasukan') {
-                $aturan['label_pasukan'] = 'nullable|string|max:'.self::MAX_LABEL_PASUKAN;
-            }
         }
 
         if ($untukImport) {

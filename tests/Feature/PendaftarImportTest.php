@@ -261,11 +261,30 @@ class PendaftarImportTest extends TestCase
     {
         [$user, , , $child] = $this->setUpEventner();
 
+        // Satu karakter di atas batas — memakai konstantanya, bukan angka
+        // literal, supaya tes tidak ikut basi saat batasnya disesuaikan.
+        $panjang = str_repeat('A', PendaftarImport::MAX_LABEL_PASUKAN + 1);
+
         $this->komponen($user, $child->id, $this->makeXlsx([
-            $this->baris('SMP Negeri 1 Uji', '12345678', 'Pasukan Amat Panjang'),
+            $this->baris('SMP Negeri 1 Uji', '12345678', $panjang),
         ]))
             ->assertSet('previewMeta.error', 1)
             ->assertSet('previewMeta.baru', 0);
+    }
+
+    public function test_label_pasukan_sepanjang_batas_diterima()
+    {
+        [$user, $eventner, , $child] = $this->setUpEventner();
+
+        $pas = str_repeat('A', PendaftarImport::MAX_LABEL_PASUKAN);
+
+        $this->komponen($user, $child->id, $this->makeXlsx([
+            $this->baris('SMP Negeri 1 Uji', '12345678', $pas),
+        ]))->call('confirmImport');
+
+        // Tersimpan utuh: kolom `registrations.label_pasukan` cukup lebar
+        // untuk isian yang diloloskan validator.
+        $this->assertSame($pas, Registration::firstOrFail()->label_pasukan);
     }
 
     public function test_kolom_tak_dikenal_diabaikan()

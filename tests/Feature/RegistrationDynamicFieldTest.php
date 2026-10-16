@@ -158,6 +158,60 @@ class RegistrationDynamicFieldTest extends TestCase
         $this->assertSame('Pleton Garuda', $reg->label_pasukan);
     }
 
+    /**
+     * Nama pasukan sepanjang yang diloloskan validator harus benar-benar bisa
+     * ditulis. Kolomnya dulu varchar(10) sementara form mengizinkan teks biasa,
+     * jadi isian seperti "MTS ASSASSI" gagal dengan "Data too long for column
+     * 'label_pasukan'" — 500 di langkah terakhir, setelah semua diisi.
+     */
+    public function test_nama_pasukan_panjang_tersimpan_utuh()
+    {
+        $nama = 'MTS ASSALAFIYYAH ASSIROJIYYAH PASUKAN GARUDA';
+
+        $this->daftar(['label_pasukan' => $nama]);
+
+        $this->assertSame($nama, Registration::where('eventner_id', $this->eventner->id)->firstOrFail()->label_pasukan);
+    }
+
+    public function test_nama_pasukan_di_atas_batas_ditolak()
+    {
+        $this->daftar(['label_pasukan' => str_repeat('A', RegistrationField::MAX_LABEL_PASUKAN + 1)]);
+
+        $this->assertSame(0, Registration::where('eventner_id', $this->eventner->id)->count());
+    }
+
+    /**
+     * Satu sekolah, dua pasukan: nama yang diisi pendaftar masih diberi sufiks
+     * " A"/" B", jadi batas isiannya harus menyisakan ruang untuk sufiks itu.
+     */
+    public function test_nama_pasukan_sepanjang_batas_masih_muat_setelah_disufiks()
+    {
+        $this->category->update(['max_registrations_per_school' => 2]);
+
+        $komponen = Livewire::test(RegistrationCreate::class, ['slug' => $this->eventner->slug])
+            ->set('selectedCategories', [$this->category->id])
+            ->set('teamCounts', [$this->category->id => 2])
+            ->set('npsn', '12345678')
+            ->set('nama_sekolah', 'SMP Negeri 1 Uji')
+            ->set('nama_pelatih', 'Pelatih Uji')
+            ->set('no_hp', '08123456789')
+            ->set('school_email', 'uji@example.test')
+            ->set('fieldValues.label_pasukan', str_repeat('A', RegistrationField::MAX_LABEL_PASUKAN));
+
+        $komponen->call('submit');
+
+        $tersimpan = Registration::where('eventner_id', $this->eventner->id)
+            ->orderBy('label_pasukan')
+            ->pluck('label_pasukan')
+            ->all();
+
+        $this->assertCount(2, $tersimpan);
+        $this->assertSame(
+            str_repeat('A', RegistrationField::MAX_LABEL_PASUKAN) . ' A',
+            $tersimpan[0]
+        );
+    }
+
     // ── Portal magic link ───────────────────────────────────────────────
 
     private function peserta(): Registration

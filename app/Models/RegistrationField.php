@@ -37,6 +37,22 @@ class RegistrationField extends Model
     public const WILAYAH_LEVELS = ['auto', 'provinsi', 'kabupaten', 'kecamatan'];
 
     /**
+     * Batas isian "Nama Pasukan".
+     *
+     * Kolomnya `varchar(255)`, tapi dua karakter disisakan untuk sufiks " A"
+     * / " B" yang ditempel form publik saat satu sekolah mendaftarkan beberapa
+     * pasukan sekaligus (`Create::labelPasukan()`). Tanpa sisa itu, nama 255
+     * karakter yang lolos validasi masih meleset saat ditulis.
+     *
+     * Dipakai form publik, portal magic link, dan import Excel — satu angka,
+     * supaya ketiganya tidak bisa berbeda diam-diam.
+     */
+    public const MAX_LABEL_PASUKAN = 253;
+
+    /** Sufiks yang ditempel per pasukan saat satu sekolah mengirim banyak. */
+    public const SUFIKS_LABEL_PASUKAN = 2;
+
+    /**
      * Kartu tempat field dirender di portal, PDF, dan modal panitia.
      *
      * Judulnya hidup di sini, bukan sebagai literal di tiap view — supaya
@@ -457,14 +473,31 @@ class RegistrationField extends Model
             'select' => ($this->options ?: []) === []
                 ? 'string'
                 : 'in:' . implode(',', array_column($this->options, 'value')),
-            'textarea' => 'string|max:5000',
-            // Tiga tingkat digabung jadi satu string ("32 - JAWA BARAT /
-            // 32.01 - KAB. BOGOR"), jadi batas 255 milik teks biasa tidak cukup.
-            'wilayah' => 'string|max:600',
-            default => 'string|max:255',
+            default => 'string|max:' . $this->maxLength(),
         };
 
         return implode('|', $aturan);
+    }
+
+    /**
+     * Batas panjang teks satu baris untuk field ini.
+     *
+     * "Nama Pasukan" punya kolom sendiri yang lebih sempit dari 255 (menyisakan
+     * sufiks pasukan), jadi batasnya tidak boleh ikut default. Dipakai juga
+     * sebagai `maxlength` di form supaya pendaftar tidak baru tahu batasnya
+     * setelah submit.
+     */
+    public function maxLength(): int
+    {
+        return match ($this->type) {
+            'textarea' => 5000,
+            // Tiga tingkat digabung jadi satu string ("32 - JAWA BARAT /
+            // 32.01 - KAB. BOGOR"), jadi batas 255 milik teks biasa tidak cukup.
+            'wilayah' => 600,
+            default => $this->builtin_source === 'label_pasukan'
+                ? self::MAX_LABEL_PASUKAN
+                : 255,
+        };
     }
 
     /**

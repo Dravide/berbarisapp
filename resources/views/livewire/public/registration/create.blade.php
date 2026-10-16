@@ -296,7 +296,7 @@
                                         </label>
 
                                         @if($field->type === 'textarea')
-                                            <textarea id="{{ $id }}" rows="3" wire:model="{{ $namaField }}"
+                                            <textarea id="{{ $id }}" rows="3" wire:model="{{ $namaField }}" maxlength="{{ $field->maxLength() }}"
                                                 placeholder="{{ $field->help_text }}" class="field-input w-full text-xs"></textarea>
                                         @elseif($field->type === 'select')
                                             <select id="{{ $id }}" wire:model="{{ $namaField }}" class="field-input w-full text-xs">
@@ -315,7 +315,7 @@
                                         @elseif($field->type === 'number')
                                             <input type="number" id="{{ $id }}" wire:model="{{ $namaField }}" class="field-input w-full text-xs">
                                         @else
-                                            <input type="text" id="{{ $id }}" wire:model="{{ $namaField }}"
+                                            <input type="text" id="{{ $id }}" wire:model="{{ $namaField }}" maxlength="{{ $field->maxLength() }}"
                                                 placeholder="{{ $field->help_text }}" class="field-input w-full text-xs">
                                         @endif
 
