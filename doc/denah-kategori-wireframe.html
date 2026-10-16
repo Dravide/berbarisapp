@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Denah Lapangan per Kategori Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: dokumen spesifikasi — tiap layar satu slide, wireframe di kiri, anotasi di kanan. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --amber:#b45309; --amber-soft:#fef3c7;
+  --green:#15803d; --green-soft:#dcfce7;
+  --violet:#7c3aed; --violet-soft:#f3e8ff;
+  --rose:#be123c; --rose-soft:#ffe4e6;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --amber:#fbbf24; --amber-soft:#3a2b08;
+    --green:#4ade80; --green-soft:#0c2a18;
+    --violet:#c4b5fd; --violet-soft:#2a1f47;
+    --rose:#fda4af; --rose-soft:#3d0f1c;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --amber:#fbbf24; --amber-soft:#3a2b08;
+  --green:#4ade80; --green-soft:#0c2a18;
+  --violet:#c4b5fd; --violet-soft:#2a1f47;
+  --rose:#fda4af; --rose-soft:#3d0f1c;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1280px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:clamp(28px,5vw,56px)}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:78ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap}
+.chip b{color:var(--ink);font-weight:600}
+
+/* Slide */
+.slide{margin-top:clamp(36px,6vw,64px)}
+.slide-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.slide-head h2{font-size:20px;font-weight:700}
+.mode-tag{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.slide-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:940px){.slide-grid{grid-template-columns:1fr}}
+
+/* Bingkai layar admin */
+.screen{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:10px;box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.screen-inner{
+  border-radius:8px;border:1px solid var(--line);
+  background:var(--panel-2);overflow:hidden;position:relative;
+  font-size:11px;display:flex;flex-direction:column;min-height:360px;
+}
+.screen-cap{font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 4px 2px;display:flex;justify-content:space-between;gap:8px}
+
+/* Anotasi */
+.notes{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.notes h3{font-size:14px;margin-bottom:8px}
+.notes ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.notes li{font-size:13.5px;color:var(--muted)}
+.notes li b{color:var(--ink);font-weight:600}
+.notes code{background:var(--panel-2);border:1px solid var(--line-soft);padding:1px 5px;border-radius:5px}
+
+table.mini{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+table.mini th{font-family:var(--mono);font-weight:500;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;color:var(--muted);text-align:left;padding:4px 8px;border-bottom:1px solid var(--line)}
+table.mini td{padding:5px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table.mini tr:last-child td{border-bottom:0}
+
+/* Elemen wireframe umum */
+.wf{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+.ph{background:var(--ph-fill);border:1px solid var(--ph-line);border-radius:6px}
+.crumb{display:flex;gap:5px;align-items:center;font-size:9px;opacity:.6;padding:8px 14px 0}
+.crumb i{font-style:normal}
+.tablerow{display:flex;align-items:center;gap:8px;padding:6px 14px;border-bottom:1px solid var(--line-soft)}
+.tablerow:last-child{border-bottom:0}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:8.5px;font-weight:600;padding:2px 7px;border-radius:999px;border:1px solid var(--ph-line);background:var(--ph-fill);color:var(--muted);white-space:nowrap}
+.badge.blue{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.badge.warn{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+.badge.green{background:var(--green-soft);color:var(--green);border-color:transparent}
+.badge.violet{background:var(--violet-soft);color:var(--violet);border-color:transparent}
+.badge.rose{background:var(--rose-soft);color:var(--rose);border-color:transparent}
+.btnw{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--accent);color:var(--accent);background:transparent;white-space:nowrap}
+.btnw.solid{background:var(--accent);color:#fff}
+.btnw.ghost{border-color:var(--ph-line);color:var(--muted)}
+.btnw.sm{padding:2px 6px;font-size:8.5px}
+.btnw.wide{width:100%;justify-content:center}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:600;padding:4px 12px;border-radius:999px;border:1px solid var(--ph-line);color:var(--muted);background:transparent}
+.pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.field{height:22px;border:1px solid var(--ph-line);border-radius:6px;background:var(--panel)}
+.field.tall{height:14px}
+.dim{color:var(--muted)}
+.ck{width:10px;height:10px;border:1.5px solid var(--ph-line);border-radius:3px;flex:none;display:inline-block}
+.ck.on{background:var(--accent);border-color:var(--accent);position:relative}
+.ck.on::after{content:"";position:absolute;inset:2px 3px 3px 2px;border:1.5px solid #fff;border-top:0;border-left:0;transform:rotate(40deg) translateY(-1px)}
+.sw{width:10px;height:10px;border-radius:3px;border:1.5px solid;flex:none;display:inline-block}
+.modal{position:absolute;inset:0;background:rgba(10,12,18,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
+.modal-box{background:var(--panel);border:1px solid var(--line);border-radius:10px;width:100%;max-width:420px;box-shadow:0 8px 30px rgba(0,0,0,.18)}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--line-soft);font-weight:700;font-size:11px}
+.modal-bd{padding:12px 14px;display:grid;gap:8px}
+.modal-ft{display:flex;justify-content:flex-end;gap:8px;padding:9px 14px;border-top:1px solid var(--line-soft)}
+.x{font-size:12px;color:var(--muted)}
+
+/* ── Editor tiga panel ───────────────────────────────────────────── */
+.editor{display:grid;grid-template-columns:82px minmax(0,1fr) 118px;flex:1;min-height:0}
+@media(max-width:940px){.editor{grid-template-columns:1fr}.pane-l,.pane-r{display:none}}
+.pane-l{border-right:1px solid var(--line-soft);padding:6px;display:grid;gap:4px;align-content:start;background:var(--panel)}
+.pane-r{border-left:1px solid var(--line-soft);padding:7px 8px;display:grid;gap:7px;align-content:start;background:var(--panel)}
+.pane-title{font-family:var(--mono);font-size:7.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.pal-item{display:flex;align-items:center;gap:4px;font-size:8px;font-weight:600;padding:3px 4px;border:1px solid var(--ph-line);border-radius:5px;background:var(--panel-2);cursor:grab}
+.pane-c{display:flex;flex-direction:column;min-width:0;background:var(--panel-2)}
+.bar{display:flex;align-items:center;gap:5px;padding:6px 9px;border-bottom:1px solid var(--line-soft);background:var(--panel);flex-wrap:wrap}
+.bar .grow{flex:1;min-width:0}
+
+/* Kanvas denah */
+.canvas-stage{padding:10px;flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+.canvas{
+  position:relative;width:100%;max-width:600px;aspect-ratio:16/9;
+  border:1px solid var(--ph-line);border-radius:6px;overflow:hidden;
+  background:
+    linear-gradient(var(--line-soft) 1px,transparent 1px) 0 0/100% 8.3333%,
+    linear-gradient(90deg,var(--line-soft) 1px,transparent 1px) 0 0/6.25% 100%,
+    var(--panel);
+}
+.canvas.sm{max-width:100%}
+.zone{
+  position:absolute;border-radius:5px;border:1.5px solid;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  gap:1px;font-size:8px;font-weight:700;text-align:center;padding:2px;line-height:1.15;
+}
+.zone small{font-weight:500;font-size:7px;opacity:.85}
+.z-arena{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.z-dp{background:var(--rose-soft);border-color:var(--rose);color:var(--rose)}
+.z-juri{background:var(--amber-soft);border-color:var(--amber);color:var(--amber)}
+.z-tribun{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.z-jalur{background:transparent;border-color:var(--ph-line);border-style:dashed;color:var(--muted)}
+.z-sekre{background:var(--violet-soft);border-color:var(--violet);color:var(--violet)}
+.z-arah{background:transparent;border-color:var(--rose);border-style:dotted;color:var(--rose);font-size:10px}
+.z-teks{background:transparent;border-color:transparent;color:var(--ink);font-size:9px}
+.zone.sel{outline:2px solid var(--accent);outline-offset:2px;z-index:3}
+.hnd{position:absolute;width:5px;height:5px;background:var(--panel);border:1.5px solid var(--accent);border-radius:1px}
+.hnd.tl{left:-3px;top:-3px}.hnd.tr{right:-3px;top:-3px}
+.hnd.bl{left:-3px;bottom:-3px}.hnd.br{right:-3px;bottom:-3px}
+
+/* Drawer bantuan */
+.drawer{position:absolute;top:0;right:0;bottom:0;width:44%;min-width:250px;background:var(--panel);border-left:1px solid var(--line);box-shadow:-8px 0 24px rgba(0,0,0,.06);display:flex;flex-direction:column;z-index:4}
+.drawer-hd{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line-soft);font-weight:700;font-size:10px}
+.drawer-bd{padding:9px 10px;overflow:hidden;display:grid;gap:7px;align-content:start}
+.callout{font-size:8.5px;color:var(--muted);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:6px;padding:6px 9px}
+.callout b{color:var(--ink)}
+.optrow{display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--line-soft);border-radius:6px;background:var(--panel-2);font-size:8.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Berbaris App — Spesifikasi &amp; Wireframe</p>
+  <h1>Denah Lapangan per Kategori Lomba</h1>
+  <p class="lede">Panitia menggambar sendiri tata letak lapangan untuk tiap <b>tingkat lomba</b> — <b>Daerah Persiapan (DP 1–5)</b>, arena, pos penilaian, tribun, jalur masuk — sebagai kanvas yang bisa diseret bebas. <b>Denah murni gambar tata letak: tidak ada data sekolah, peserta, atau juri di dalamnya.</b> Hasilnya dipakai tiga arah: dicetak &amp; ditempel di lapangan, dibagikan ke grup WhatsApp sekolah, dan tampil di halaman publik event. Menggantikan kebiasaan mengunggah gambar denah buatan aplikasi luar lewat <code>/eventner/documents</code>.</p>
+  <div class="meta">
+    <span class="chip">Editor kanvas <b>drag &amp; drop</b> (koordinat bebas)</span>
+    <span class="chip"><b>DP 1–5</b> disusun otomatis sekali klik</span>
+    <span class="chip">Terbit ke <b>/event/{slug}/denah</b></span>
+    <span class="chip">Ekspor <b>PDF</b> &amp; <b>PNG</b></span>
+    <span class="chip">Tanpa data peserta sama sekali</span>
+    <span class="chip">Fitur baru: <code>layout</code> (paket berbayar)</span>
+  </div>
+
+  <!-- ============ SLIDE 1 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>1 · Daftar Denah</h2><span class="mode-tag">/eventner/denah</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="crumb"><i>Home</i> › <i>Denah Lapangan</i></div>
+          <div class="wf" style="padding:10px 14px;gap:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <b>Denah Lapangan</b>
+              <span class="btnw solid">＋ Buat Denah</span>
+            </div>
+            <div class="ph" style="padding:7px 10px;display:flex;align-items:center;gap:8px">
+              <span class="sw z-arena" style="width:16px;height:11px"></span>
+              <div style="flex:1">
+                <b>Denah Umum — GOR BKI</b>
+                <div class="dim" style="font-size:8.5px">Lapangan Utama · 12 zona · 40 × 22 m</div>
+              </div>
+              <span class="badge green">Terbit</span>
+              <span class="dim" style="font-size:8.5px">Diperbarui 14 Okt</span>
+              <span class="btnw">✎ Editor</span><span class="btnw ghost">👁</span>
+              <span class="btnw ghost">⬇</span><span class="btnw ghost">🗑</span>
+            </div>
+            <div class="ph" style="padding:7px 10px;display:flex;align-items:center;gap:8px">
+              <span class="sw z-dp" style="width:16px;height:11px"></span>
+              <div style="flex:1">
+                <b>LOBB — SMP / MTs U15</b>
+                <div class="dim" style="font-size:8.5px">GOR BKI · 10 zona · DP 1–5 · 40 × 22 m</div>
+              </div>
+              <span class="badge green">Terbit</span>
+              <span class="dim" style="font-size:8.5px">Diperbarui 12 Okt</span>
+              <span class="btnw">✎ Editor</span><span class="btnw ghost">👁</span>
+              <span class="btnw ghost">⬇</span><span class="btnw ghost">🗑</span>
+            </div>
+            <div class="ph" style="padding:7px 10px;display:flex;align-items:center;gap:8px">
+              <span class="sw z-dp" style="width:16px;height:11px"></span>
+              <div style="flex:1">
+                <b>LOBB — SMA / MA U17</b>
+                <div class="dim" style="font-size:8.5px">Lapangan 2 · 6 zona · DP 1–5 · belum diukur</div>
+              </div>
+              <span class="badge warn">Draf</span>
+              <span class="dim" style="font-size:8.5px">Diperbarui 9 Okt</span>
+              <span class="btnw">✎ Editor</span><span class="btnw ghost">👁</span>
+              <span class="btnw ghost">⬇</span><span class="btnw ghost">🗑</span>
+            </div>
+            <div class="dim" style="font-size:8.5px;margin:2px 2px">ℹ Satu tingkat lomba = satu denah. Denah tanpa tingkat menggambarkan lapangan secara umum dan dipakai lintas kategori.</div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Daftar rata — satu denah satu baris</span><span>Status &amp; jumlah zona terbaca tanpa membuka editor</span></div>
+      </div>
+      <div class="notes">
+        <h3>Perubahan &amp; alasan</h3>
+        <ul>
+          <li><b>Halaman baru di blok Acara</b>, tepat di bawah Tempat Lomba — denah adalah lanjutan dari venue, bukan bagian penilaian.</li>
+          <li>Tiap baris menunjukkan <b>kategori</b>, <b>jumlah zona</b>, dan <b>ukuran panggung</b>. Baris yang punya DP menyebut <b>“DP 1–5”</b> eksplisit — itu isi yang paling dicari panitia.</li>
+          <li>Badge <b>Draf / Terbit</b> menentukan apakah denah muncul di halaman publik. Belum terbit = panitia saja.</li>
+          <li><b>👁</b> membuka pratinjau read-only, <b>⬇</b> langsung mengunduh PDF tanpa membuka editor.</li>
+          <li>Jumlah zona dibaca <code>withCount</code>, bukan menghitung per baris.</li>
+          <li>Denah milik <b>tingkat lomba</b>, tapi kolomnya nullable: denah umum (tanpa tingkat) sah dibuat sekali dan dipakai lintas kategori.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 2 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>2 · Editor kanvas — keadaan kosong</h2><span class="mode-tag">/eventner/denah/{id}</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="crumb"><i>Home</i> › <i>Denah Lapangan</i> › <b>LOBB — SMP / MTs U15</b></div>
+          <div class="editor">
+            <div class="pane-l">
+              <span class="pane-title">Elemen</span>
+              <div class="pal-item"><span class="sw z-dp"></span>DP</div>
+              <div class="pal-item"><span class="sw z-arena"></span>Arena</div>
+              <div class="pal-item"><span class="sw z-juri"></span>Pos Nilai</div>
+              <div class="pal-item"><span class="sw z-tribun"></span>Tribun</div>
+              <div class="pal-item"><span class="sw z-sekre"></span>Sekretariat</div>
+              <div class="pal-item"><span class="sw z-jalur"></span>Jalur Masuk</div>
+              <div class="pal-item"><span class="sw z-arah"></span>Panah</div>
+              <div class="pal-item"><span class="sw z-teks"></span>Teks</div>
+            </div>
+            <div class="pane-c">
+              <div class="bar">
+                <b class="grow" style="font-size:9.5px">LOBB — SMP / MTs U15</b>
+                <span class="badge">16 : 9</span>
+                <span class="btnw sm ghost">↶</span><span class="btnw sm ghost">↷</span>
+                <span class="btnw sm ghost">⛶</span>
+                <span class="btnw sm">👁 Pratinjau</span>
+              </div>
+              <div class="canvas-stage">
+                <div class="canvas">
+                  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--muted);padding:14px;text-align:center">
+                    <span style="font-size:10px;font-weight:600">Kanvas masih kosong</span>
+                    <span style="font-size:8.5px">Mulai cepat: susun DP 1–5 otomatis, atau seret elemen dari kiri</span>
+                    <span class="btnw solid" style="margin-top:3px">⚡ Susun DP 1–5 otomatis</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="pane-r">
+              <span class="pane-title">Papan</span>
+              <div><div class="dim" style="font-size:7.5px">Nama papan</div><div class="field tall" style="margin-top:2px"></div></div>
+              <div><div class="dim" style="font-size:7.5px">Tempat lomba</div><div class="field tall" style="margin-top:2px"></div></div>
+              <div style="display:flex;gap:4px">
+                <div style="flex:1"><div class="dim" style="font-size:7.5px">Lebar (m)</div><div class="field tall" style="margin-top:2px"></div></div>
+                <div style="flex:1"><div class="dim" style="font-size:7.5px">Tinggi</div><div class="field tall" style="margin-top:2px"></div></div>
+              </div>
+              <div><div class="dim" style="font-size:7.5px">Gambar latar</div><div class="field tall" style="margin-top:2px"></div></div>
+              <div style="display:flex;gap:4px;align-items:center"><span class="ck on"></span><span class="dim" style="font-size:7.5px">Tampilkan kisi</span></div>
+              <div class="dim" style="font-size:7.5px">Terisi otomatis setelah zona dipilih.</div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Tiga panel: elemen · kanvas · properti</span><span>Jalan pintas DP 1–5 ditawarkan di kanvas kosong</span></div>
+      </div>
+      <div class="notes">
+        <h3>Perubahan &amp; alasan</h3>
+        <ul>
+          <li><b>Editor satu layar penuh</b> (tanpa sidebar admin) — kanvas butuh lebar, dan ini pekerjaan yang menuntut konsentrasi; sama pola dengan editor sertifikat.</li>
+          <li><b>Palet di kiri</b>: klik untuk menaruh di tengah, atau seret ke posisi mana pun. Tiap jenis punya warna tetap supaya legenda di bawah kanvas tak perlu ditulis.</li>
+          <li><b>“⚡ Susun DP 1–5 otomatis”</b> adalah jalan pintas utama — lihat slide 3. Kanvas kosong adalah <b>satu-satunya</b> tempat tombol itu muncul, jadi ia tak mengganggu setelah denah terisi.</li>
+          <li>Ukuran panggung dalam <b>meter</b> (mis. 40 × 22 m) — skalanya nyata, jadi denah bisa dicocokkan dengan lapangan sungguhan. Kanvas diskalakan ke lebar layar; <code>aspect-ratio</code> 16:9 default, berubah mengikuti lebar ÷ tinggi.</li>
+          <li><b>Gambar latar opsional</b>: unggah foto lapangan lalu zona digambar di atasnya. Ini kompromi untuk panitia yang ingin denah presisi tanpa menggambar dari nol.</li>
+          <li>Zona disimpan sebagai <b>persen</b> dari lebar/tinggi panggung, bukan piksel — denah tetap utuh di layar mana pun dan di PDF.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 3 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>3 · Denah terisi — DP 1–5 &amp; zona terpilih</h2><span class="mode-tag">klik atau seret zona</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="crumb"><i>Home</i> › <i>Denah Lapangan</i> › <b>LOBB — SMP / MTs U15</b></div>
+          <div class="editor">
+            <div class="pane-l">
+              <span class="pane-title">Elemen</span>
+              <div class="pal-item"><span class="sw z-dp"></span>DP</div>
+              <div class="pal-item"><span class="sw z-arena"></span>Arena</div>
+              <div class="pal-item"><span class="sw z-juri"></span>Pos Nilai</div>
+              <div class="pal-item"><span class="sw z-tribun"></span>Tribun</div>
+              <div class="pal-item"><span class="sw z-sekre"></span>Sekretariat</div>
+              <div class="pal-item"><span class="sw z-jalur"></span>Jalur Masuk</div>
+              <div class="pal-item"><span class="sw z-arah"></span>Panah</div>
+              <div class="pal-item"><span class="sw z-teks"></span>Teks</div>
+            </div>
+            <div class="pane-c">
+              <div class="bar">
+                <b class="grow" style="font-size:9.5px">LOBB — SMP / MTs U15</b>
+                <span class="badge">40 × 22 m</span>
+                <span class="btnw sm ghost">↶</span><span class="btnw sm ghost">↷</span>
+                <span class="btnw sm ghost">⛶</span>
+                <span class="btnw sm">👁 Pratinjau</span>
+              </div>
+              <div class="canvas-stage">
+                <div class="canvas">
+                  <div class="zone z-tribun" style="left:2%;top:2%;width:96%;height:11%"><span>Tribun Penonton</span><small>kap. 500</small></div>
+                  <div class="zone z-jalur" style="left:2%;top:16%;width:10%;height:80%"><span>Jalur<br>Masuk</span></div>
+                  <div class="zone z-arena" style="left:14%;top:16%;width:62%;height:50%"><span style="font-size:11px">ARENA UTAMA</span><small>20 × 11 m</small></div>
+                  <div class="zone z-juri" style="left:79%;top:16%;width:19%;height:25%"><span>Pos Penilaian A</span><small>3 kursi</small></div>
+                  <div class="zone z-juri" style="left:79%;top:44%;width:19%;height:22%"><span>Pos Penilaian B</span><small>3 kursi</small></div>
+                  <div class="zone z-sekre" style="left:79%;top:70%;width:19%;height:26%"><span>Sekretariat</span></div>
+                  <div class="zone z-arah" style="left:14%;top:67.5%;width:62%;height:3%"><span>◀ ◀ ◀ &nbsp; arah gerak pasukan &nbsp; ◀ ◀ ◀</span></div>
+                  <div class="zone z-dp" style="left:14%;top:72%;width:11.4%;height:24%"><span>DP 5</span></div>
+                  <div class="zone z-dp" style="left:26.4%;top:72%;width:11.4%;height:24%"><span>DP 4</span></div>
+                  <div class="zone z-dp" style="left:38.8%;top:72%;width:11.4%;height:24%"><span>DP 3</span></div>
+                  <div class="zone z-dp sel" style="left:51.2%;top:72%;width:11.4%;height:24%">
+                    <span>DP 2</span><small>kap. 1 pasukan</small>
+                    <span class="hnd tl"></span><span class="hnd tr"></span><span class="hnd bl"></span><span class="hnd br"></span>
+                  </div>
+                  <div class="zone z-dp" style="left:63.6%;top:72%;width:11.4%;height:24%"><span>DP 1</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="pane-r">
+              <span class="pane-title">DP 2</span>
+              <div><div class="dim" style="font-size:7.5px">Nama zona</div><div class="field tall" style="margin-top:2px"></div></div>
+              <div><div class="dim" style="font-size:7.5px">Jenis</div><div class="field tall" style="margin-top:2px"></div></div>
+              <div style="display:flex;gap:4px">
+                <div style="flex:1"><div class="dim" style="font-size:7.5px">Lebar (m)</div><div class="field tall" style="margin-top:2px"></div></div>
+                <div style="flex:1"><div class="dim" style="font-size:7.5px">Tinggi</div><div class="field tall" style="margin-top:2px"></div></div>
+              </div>
+              <div style="display:flex;gap:4px">
+                <div style="flex:1"><div class="dim" style="font-size:7.5px">X</div><div class="field tall" style="margin-top:2px"></div></div>
+                <div style="flex:1"><div class="dim" style="font-size:7.5px">Y</div><div class="field tall" style="margin-top:2px"></div></div>
+              </div>
+              <div><div class="dim" style="font-size:7.5px">Kapasitas</div><div class="field tall" style="margin-top:2px"></div></div>
+              <div><div class="dim" style="font-size:7.5px">Keterangan</div><div class="field tall" style="margin-top:2px"></div></div>
+              <div style="display:flex;gap:4px;justify-content:flex-end">
+                <span class="btnw sm ghost">⧉</span><span class="btnw sm ghost">🗑</span>
+              </div>
+            </div>
+          </div>
+          <div class="callout" style="margin:6px 10px 10px">Zona terpilih <b>DP 2</b> · ← → ↑ ↓ geser 0,5 m · <b>Delete</b> hapus · <b>Ctrl+D</b> duplikat · <b>Ctrl+Z</b> urungkan</div>
+        </div>
+        <div class="screen-cap"><span>DP berjajar rapi: DP 5 terjauh, DP 1 paling dekat arena</span><span>Pegangan sudut untuk mengubah ukuran</span></div>
+      </div>
+      <div class="notes">
+        <h3>Perubahan &amp; alasan</h3>
+        <ul>
+          <li><b>“Susun DP 1–5 otomatis”</b> membuat 5 zona sekaligus: berjajar rata, lebar sama, <b>terurut benar</b> — DP 5 di ujung terjauh, DP 1 paling dekat arena. Menggambar lima kotak sejajar dengan tangan itu lambat dan hampir selalu miring beberapa persen.</li>
+          <li>Penomoran <b>tidak bisa dibalik</b> oleh panitia: yang mengurutkan adalah jarak ke arena, bukan urutan penambahan. Denah dengan DP 1 di ujung jauh akan menyesatkan pasukan di lapangan.</li>
+          <li>Zona <b>Panah</b> dipakai untuk menandai arah gerak (DP 5 → DP 1 → Arena). Ia elemen bebas, bukan garis yang dipaksa — panitia yang lapangannya menyamping tetap bisa menggambar sesuai kenyataan.</li>
+          <li><b>Seret = pindah, pegang sudut = ubah ukuran.</b> Posisi ditulis ke server hanya saat seret <b>selesai</b> (<code>wire:model</code> tak dipakai — satu request per gerakan akan tersendat).</li>
+          <li>Panel kanan menyunting zona terpilih; <b>tak ada modal</b>. Yang dipilih di kanvas = yang disunting di panel — tidak ada dua sumber fokus.</li>
+          <li>Koordinat bisa diketik (<b>X / Y</b>) untuk panitia yang ingin rapi, dan tombol panah menggeser 0,5 m — menyeret dengan presisi tinggi itu menyiksa.</li>
+          <li><b>Geser/Urungkan</b> disimpan di sisi klien saja (tumpukan 20 langkah). Menyimpannya ke server berarti satu baris riwayat per ketukan panah.</li>
+          <li><b>Kapasitas</b> peringatan saja: melebihi kapasitas memberi badge kuning saat dicetak, <b>tidak memblokir</b>. Janji di atas kertas sering tak sama dengan kenyataan lapangan.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 4 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>4 · Susun DP 1–5 otomatis</h2><span class="mode-tag">modal di editor</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="wf" style="padding:10px 14px">
+            <div class="dim" style="font-size:9px">… editor seperti slide 3, dengan modal di atasnya …</div>
+          </div>
+          <div class="modal">
+            <div class="modal-box">
+              <div class="modal-hd"><span>Susun DP 1–5 Otomatis</span><span class="x">✕</span></div>
+              <div class="modal-bd">
+                <div style="display:flex;gap:6px">
+                  <div style="flex:1">
+                    <div class="dim" style="font-size:9px">Jumlah DP</div>
+                    <div class="field" style="margin-top:3px;display:flex;align-items:center;padding:0 7px;font-size:9px;font-weight:600">5</div>
+                  </div>
+                  <div style="flex:1">
+                    <div class="dim" style="font-size:9px">Kapasitas per DP</div>
+                    <div class="field" style="margin-top:3px;display:flex;align-items:center;padding:0 7px;font-size:9px;font-weight:600">1 pasukan</div>
+                  </div>
+                </div>
+                <div>
+                  <div class="dim" style="font-size:9px">Letak barisan DP</div>
+                  <div style="display:flex;gap:5px;margin-top:4px">
+                    <span class="optrow" style="flex:1"><span class="ck on"></span>Bawah arena</span>
+                    <span class="optrow" style="flex:1"><span class="ck"></span>Atas arena</span>
+                    <span class="optrow" style="flex:1"><span class="ck"></span>Samping kiri</span>
+                  </div>
+                </div>
+                <div>
+                  <div class="dim" style="font-size:9px">Tinggi tiap DP</div>
+                  <div class="field" style="margin-top:3px;display:flex;align-items:center;padding:0 7px;font-size:9px;font-weight:600">5 m</div>
+                </div>
+                <div class="ph" style="padding:6px 9px;display:grid;gap:4px">
+                  <b style="font-size:9px">Pratinjau</b>
+                  <div style="display:flex;gap:3px;align-items:flex-end">
+                    <div style="flex:2.2;height:22px;background:var(--accent-soft);border:1.5px solid var(--accent);border-radius:3px"></div>
+                    <div style="flex:1;display:grid;gap:2.5px">
+                      <div style="height:9px;background:var(--rose-soft);border:1.5px solid var(--rose);border-radius:2px"></div>
+                      <div style="height:9px;background:var(--rose-soft);border:1.5px solid var(--rose);border-radius:2px"></div>
+                    </div>
+                  </div>
+                  <div class="dim" style="font-size:8px">DP <b>baru</b> ditambahkan; DP yang sudah ada tidak dibuang — <span class="badge warn">bentrok DP 2 ditandai, bukan ditolak</span></div>
+                </div>
+                <div style="display:flex;gap:5px;align-items:center">
+                  <span class="ck on"></span><span class="dim" style="font-size:8.5px">Tambah zona Panah arah gerak</span>
+                </div>
+              </div>
+              <div class="modal-ft">
+                <span class="btnw ghost">Batal</span>
+                <span class="btnw solid">⚡ Susun</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Pratinjau mini sebelum menerapkan</span><span>Tak menghapus zona yang sudah digambar</span></div>
+      </div>
+      <div class="notes">
+        <h3>Perubahan &amp; alasan</h3>
+        <ul>
+          <li><b>Jumlah DP bisa diubah</b>, default 5. Panitia yang lapangannya sempit membuat 3; yang lombanya besar membuat 8. Mengunci di 5 memaksa mereka menggambar manual untuk kasus yang sah.</li>
+          <li><b>Letak barisan</b> tiga pilihan karena lapangan sungguhan berbeda-beda: DP di belakang arena, di depan, atau di samping. Yang dipilih hanya menentukan barisan pertamanya — setelah itu tiap DP tetap bisa diseret bebas.</li>
+          <li><b>Kapasitas per DP</b> default <b>1 pasukan</b>. Untuk lomba besar bisa dinaikkan; nilainya hanya tersimpan sebagai keterangan zona, <b>tidak terhubung ke data peserta mana pun</b>.</li>
+          <li><b>Tak menghapus apa pun.</b> Sekali klik “Susun” dua kali tidak boleh merusak gambar yang sudah rapi — DP bentrok ditandai kuning supaya panitia memutuskan sendiri.</li>
+          <li>Tombol <b>⚡ Susun</b> juga muncul di kanvas kosong tanpa modal (memakai nilai default), jadi jalur cepat tetap dua klik.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 5 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>5 · Pratinjau &amp; ekspor</h2><span class="mode-tag">modal di editor</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="wf" style="padding:10px 14px">
+            <div class="dim" style="font-size:9px">… editor seperti slide 3, dengan modal di atasnya …</div>
+          </div>
+          <div class="modal">
+            <div class="modal-box">
+              <div class="modal-hd"><span>Pratinjau Denah</span><span class="x">✕</span></div>
+              <div class="modal-bd">
+                <div class="canvas sm" style="max-width:100%">
+                  <div class="zone z-tribun" style="left:2%;top:2%;width:96%;height:11%"><span>Tribun Penonton</span></div>
+                  <div class="zone z-jalur" style="left:2%;top:16%;width:10%;height:80%"><span>Jalur<br>Masuk</span></div>
+                  <div class="zone z-arena" style="left:14%;top:16%;width:62%;height:50%"><span>ARENA UTAMA</span><small>20 × 11 m</small></div>
+                  <div class="zone z-juri" style="left:79%;top:16%;width:19%;height:25%"><span>Pos Penilaian A</span></div>
+                  <div class="zone z-juri" style="left:79%;top:44%;width:19%;height:22%"><span>Pos Penilaian B</span></div>
+                  <div class="zone z-sekre" style="left:79%;top:70%;width:19%;height:26%"><span>Sekretariat</span></div>
+                  <div class="zone z-arah" style="left:14%;top:67.5%;width:62%;height:3%"><span>◀ ◀ ◀</span></div>
+                  <div class="zone z-dp" style="left:14%;top:72%;width:11.4%;height:24%"><span>DP 5</span></div>
+                  <div class="zone z-dp" style="left:26.4%;top:72%;width:11.4%;height:24%"><span>DP 4</span></div>
+                  <div class="zone z-dp" style="left:38.8%;top:72%;width:11.4%;height:24%"><span>DP 3</span></div>
+                  <div class="zone z-dp" style="left:51.2%;top:72%;width:11.4%;height:24%"><span>DP 2</span></div>
+                  <div class="zone z-dp" style="left:63.6%;top:72%;width:11.4%;height:24%"><span>DP 1</span></div>
+                </div>
+                <div style="display:flex;gap:5px;align-items:center;padding-top:2px">
+                  <div style="flex:1"><div class="dim" style="font-size:8.5px">Terbitkan ke halaman publik</div><div class="dim" style="font-size:8px">Sekolah bisa melihat &amp; mengunduh sendiri.</div></div>
+                  <span style="width:22px;height:12px;border-radius:999px;background:var(--accent);position:relative;flex:none"><span style="position:absolute;right:1.5px;top:1.5px;width:9px;height:9px;border-radius:50%;background:#fff"></span></span>
+                </div>
+                <div style="display:flex;gap:5px;align-items:center">
+                  <span class="ck on"></span><span class="dim" style="font-size:8.5px">Sertakan ukuran meter di tiap zona</span>
+                </div>
+                <div style="display:flex;gap:5px;align-items:center">
+                  <span class="ck on"></span><span class="dim" style="font-size:8.5px">Sertakan judul &amp; nama tempat lomba</span>
+                </div>
+                <div style="display:flex;gap:5px;align-items:center">
+                  <span class="ck"></span><span class="dim" style="font-size:8.5px">Sertakan kisi latar</span>
+                </div>
+              </div>
+              <div class="modal-ft">
+                <span class="btnw ghost">🖼 PNG</span>
+                <span class="btnw ghost">⬇ PDF</span>
+                <span class="btnw solid">✓ Simpan &amp; Terbitkan</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Tiga centang = bedanya versi cetak &amp; versi layar</span><span>PNG untuk WhatsApp, PDF untuk ditempel</span></div>
+      </div>
+      <div class="notes">
+        <h3>Perubahan &amp; alasan</h3>
+        <ul>
+          <li><b>Centang, bukan dua editor terpisah.</b> Versi cetak butuh judul &amp; ukuran meter; versi yang dikirim ke WhatsApp lebih enak tanpa itu. Satu denah, tiga saklar kecil.</li>
+          <li><b>PDF</b> disusun server-side (<code>barryvdh/laravel-dompdf</code>, sudah dipakai halaman cetak lain) dari blade terpisah berukuran mm. Isinya div absolut dengan persen yang sama seperti kanvas, jadi hasil layar dan hasil cetak tak bisa menyimpang.</li>
+          <li><b>PNG</b> diambil di sisi klien (<code>html2canvas</code>). Dipakai untuk kirim WhatsApp; kalau gagal, tombol PDF tetap jalan.</li>
+          <li>Ukuran kertas PDF <b>mengikuti rasio panggung</b> (A4 lanskap untuk 16:9, A3 untuk denah besar) — denah 40 × 22 m yang dipaksa ke A4 potret jadi tak terbaca.</li>
+          <li><b>Terbit = idempoten:</b> menyimpan dua kali meng-update denah yang sama, bukan membuat salinan. Yang disimpan <code>is_published</code> + <code>published_at</code>.</li>
+          <li>Denah terbit ikut muncul di halaman publik — tidak perlu mengunggah ulang ke Juknis &amp; Dokumen.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 6 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>6 · Halaman publik</h2><span class="mode-tag">/event/{slug}/denah</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="crumb"><i>Beranda Event</i> › <i>Denah</i></div>
+          <div class="wf" style="padding:10px 14px;gap:8px">
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <span class="pill">Beranda</span><span class="pill">Peserta</span>
+              <span class="pill on">Denah</span>
+              <span class="pill">Rundown</span><span class="pill">Hasil</span><span class="pill">Tiket</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <b style="font-size:11px">Denah Lapangan</b>
+              <span class="dim" style="font-size:8.5px">LOBB 2026 · GOR BKI</span>
+            </div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap">
+              <span class="pill on" style="font-size:8.5px;padding:2px 9px">SMP / MTs U15</span>
+              <span class="pill" style="font-size:8.5px;padding:2px 9px">SMA / MA U17</span>
+              <span class="pill" style="font-size:8.5px;padding:2px 9px">Umum</span>
+            </div>
+            <div class="canvas sm" style="max-width:100%">
+              <div class="zone z-tribun" style="left:2%;top:2%;width:96%;height:11%"><span>Tribun Penonton</span></div>
+              <div class="zone z-jalur" style="left:2%;top:16%;width:10%;height:80%"><span>Jalur<br>Masuk</span></div>
+              <div class="zone z-arena" style="left:14%;top:16%;width:62%;height:50%"><span>ARENA UTAMA</span><small>20 × 11 m</small></div>
+              <div class="zone z-juri" style="left:79%;top:16%;width:19%;height:25%"><span>Pos Penilaian A</span></div>
+              <div class="zone z-juri" style="left:79%;top:44%;width:19%;height:22%"><span>Pos Penilaian B</span></div>
+              <div class="zone z-sekre" style="left:79%;top:70%;width:19%;height:26%"><span>Sekretariat</span></div>
+              <div class="zone z-arah" style="left:14%;top:67.5%;width:62%;height:3%"><span>◀ ◀ ◀</span></div>
+              <div class="zone z-dp" style="left:14%;top:72%;width:11.4%;height:24%"><span>DP 5</span></div>
+              <div class="zone z-dp" style="left:26.4%;top:72%;width:11.4%;height:24%"><span>DP 4</span></div>
+              <div class="zone z-dp" style="left:38.8%;top:72%;width:11.4%;height:24%"><span>DP 3</span></div>
+              <div class="zone z-dp" style="left:51.2%;top:72%;width:11.4%;height:24%"><span>DP 2</span></div>
+              <div class="zone z-dp" style="left:63.6%;top:72%;width:11.4%;height:24%"><span>DP 1</span></div>
+            </div>
+            <div style="display:flex;gap:5px;align-items:center">
+              <span class="btnw">⬇ Unduh PDF</span>
+              <span class="btnw ghost">Bagikan</span>
+              <span class="dim" style="font-size:8px;margin-left:auto">Diperbarui 12 Okt 2026</span>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Tab baru di halaman event, sejajar Rundown</span><span>Hanya denah <b>terbit</b> yang tampil</span></div>
+      </div>
+      <div class="notes">
+        <h3>Perubahan &amp; alasan</h3>
+        <ul>
+          <li>Route publik <code>/event/{slug}/denah</code> — satu tab baru di halaman event, polanya sama dengan <code>event.rundown</code>.</li>
+          <li><b>Tab hanya muncul kalau ada denah terbit.</b> Event tanpa denah tak mendapat tombol yang menuju halaman kosong — gerbangnya "konten benar-benar ada", bukan saklar setting.</li>
+          <li>Read-only sepenuhnya: tak ada drag, tak ada panel, <b>tak ada satu pun nama sekolah</b>. Halaman ini publik, dan denah memang tak membawa data pribadi apa pun.</li>
+          <li>Legenda warna yang sama dengan editor, jadi panitia &amp; peserta membaca denah dengan bahasa yang sama.</li>
+          <li>Tombol <b>Unduh PDF</b> menunjuk route yang sama dengan editor — satu penyusun PDF, dua pintu masuk.</li>
+          <li>Dipakai juga oleh Magic Link peserta: sekolah yang membuka tautan pribadinya melihat denah tingkatnya langsung, tanpa mencari tab.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ DATA & RENCANA ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>Skema &amp; rencana implementasi</h2></div>
+    <div class="slide-grid" style="grid-template-columns:1fr 1fr">
+      <div class="notes">
+        <h3>Skema — dua tabel, tanpa relasi ke peserta</h3>
+        <table class="mini">
+          <tr><th style="width:140px">Bagian</th><th>Isi</th></tr>
+          <tr><td><b>Tabel baru</b><br><code>competition_layouts</code></td><td><code>eventner_id</code>, <code>competition_category_id</code> <b>nullable</b> (null = denah umum), <code>eventner_venue_id</code> nullable, <code>name</code>, <code>ground_width</code>/<code>ground_height</code> (meter), <code>background_image</code> nullable, <code>is_published</code>, <code>published_at</code>, <code>sort_order</code></td></tr>
+          <tr><td><b>Tabel baru</b><br><code>layout_zones</code></td><td><code>competition_layout_id</code>, <code>name</code>, <code>type</code> enum(<code>dp</code>, <code>arena</code>, <code>pos_penilaian</code>, <code>tribun</code>, <code>sekretariat</code>, <code>jalur_masuk</code>, <code>panah</code>, <code>teks</code>), <code>x</code>/<code>y</code>/<code>w</code>/<code>h</code> <b>decimal persen</b>, <code>dp_number</code> nullable (1–8, hanya untuk <code>dp</code>), <code>capacity</code> nullable (teks bebas: “1 pasukan”, “3 kursi”), <code>note</code> nullable, <code>sort_order</code></td></tr>
+          <tr><td><b>Tidak dibuat</b></td><td><b>Tidak ada</b> <code>layout_zone_registration</code> — denah tak menyimpan peserta. Tak ada kolom <code>registration_id</code> di mana pun. Fitur ini tak menyentuh <code>registrations</code> sama sekali.</td></tr>
+          <tr><td><b>Model</b></td><td><code>CompetitionLayout</code> (<code>zones()</code>, <code>scopeTerbit()</code>, <code>susunDpOtomatis()</code>), <code>LayoutZone</code> (<code>scopeDp()</code>, <code>getUrutanDpAttribute()</code>).</td></tr>
+          <tr><td><b>Fitur</b></td><td>Key <code>layout</code> di <code>config/eventner_features.php</code> (<code>locked_free: true</code>) + entri di <code>App\Support\ProductFeatures</code> — keduanya dijaga tes drift dua arah.</td></tr>
+        </table>
+        <h3 style="margin-top:14px">Kenapa DP disimpan sebagai <code>dp_number</code></h3>
+        <ul>
+          <li>Urutan DP ditentukan <b>jarak ke arena</b>, bukan urutan penambahan. Nomor eksplisit membuat pengurutan itu tak bisa salah walau zona diseret sana-sini.</li>
+          <li>Kapasitas teks bebas, bukan angka: “1 pasukan” dan “3 kursi” sama-sama sah, dan tak ada yang menghitungnya.</li>
+        </ul>
+      </div>
+      <div class="notes">
+        <h3>Rencana teknis</h3>
+        <table class="mini">
+          <tr><th style="width:130px">Bagian</th><th>Rencana</th></tr>
+          <tr><td><b>Route</b></td><td><code>routes/eventner.php</code>: <code>get('denah')</code> → Index, <code>get('denah/{layout}')</code> → Editor, <code>get('denah/{layout}/pdf')</code>. Publik: <code>routes/web.php</code> <code>get('/event/{slug}/denah')</code>.</td></tr>
+          <tr><td><b>Komponen</b></td><td><code>Eventner\Layout\Index</code> + <code>Show</code> (<code>#[Layout('layouts.admin')]</code>; editor memakai <code>layouts.editor</code> tanpa sidebar), <code>Public\EventLayout</code> read-only.</td></tr>
+          <tr><td><b>Seret</b></td><td>Alpine + pointer events di dalam kanvas; posisi dikirim <b>sekali saat seret berakhir</b> lewat satu method. <b>Hindari nama method yang bertabrakan dengan aksi ajaib Livewire</b> — pakai nama Indonesia: <code>simpanPapan()</code>, <code>tambahZona()</code>, <code>geserZona()</code>, <code>ubahUkuranZona()</code>, <code>susunDp()</code>, bukan <code>upload</code>/<code>update</code>/<code>refresh</code>.</td></tr>
+          <tr><td><b>Modal</b></td><td>Susun DP &amp; pratinjau memakai modal hand-rolled di dalam <b>satu root</b> komponen — modal yang ditaruh setelah <code>&lt;/div&gt;</code> root tidak pernah tampil meski <code>assertSee</code> lulus.</td></tr>
+          <tr><td><b>Pesan</b></td><td>Pakai trait <code>MelaporKePengguna</code> (<code>$this->toast</code>/<code>$this->gagal</code>) — <code>session()-&gt;flash()</code> di komponen Eventner nol pembaca.</td></tr>
+          <tr><td><b>PDF</b></td><td>Blade <code>denah-cetak</code> terpisah: div absolut persen yang sama, ukuran mm mengikuti rasio panggung, legenda warna. Tanpa kisi, tanpa pegangan.</td></tr>
+          <tr><td><b>PNG</b></td><td><code>html2canvas</code> dari CDN yang sudah dipakai (jsdelivr) — gagal pun tak menghalangi PDF.</td></tr>
+          <tr><td><b>Tenant</b></td><td>Guard <code>eventner_id</code> di <code>mount()</code> <b>dan</b> <code>boot()</code> — sama pola dengan <code>CompetitionCategory\Show</code> dan <code>EventnerVenue</code>.</td></tr>
+          <tr><td><b>Test</b></td><td><code>CompetitionLayoutTest</code> (CRUD, guard tenant, denah event lain ditolak), <code>LayoutDpTest</code> (<code>susunDp()</code> idempoten, nomor DP 1 selalu terdekat arena, jumlah DP bisa diubah), <code>LayoutPdfTest</code> (PDF berisi nama zona), <code>PublicLayoutVisibilityTest</code> (draf tak tampil, tab hilang kalau tak ada denah terbit).</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="slide-grid" style="grid-template-columns:1fr">
+      <div class="notes" style="margin-top:16px">
+        <h3>Yang sengaja TIDAK dibuat</h3>
+        <ul>
+          <li><b>Tidak ada data sekolah/peserta/juri di denah.</b> Ini keputusan, bukan kekurangan: denah jadi gambar tata letak yang bisa dipublikasikan tanpa memikirkan data pribadi, dan tak ada dua daftar peserta yang bisa saling menyimpang.</li>
+          <li><b>Tidak ada papan alur hari-H</b> (memanggil pasukan dari DP ke arena). Kalau nanti dibutuhkan, ia layar terpisah yang membaca <code>urutan_tampil</code> — bukan tambahan di dalam denah.</li>
+          <li><b>Tidak ada penempatan otomatis dari grup/seri.</b> Denah itu pengaturan ruang, bukan penilaian.</li>
+          <li><b>Denah 3D / peta berskala CAD.</b> Kanvas 2D dengan ukuran meter sudah cukup untuk “di mana DP, di mana juri duduk”.</li>
+          <li><b>Editor kolaboratif realtime.</b> Satu panitia menggambar, yang lain melihat lewat tautan publik atau PDF.</li>
+          <li><b>Menggantikan Tempat Lomba.</b> Venue tetap sumber alamat, koordinat, tiket &amp; kuota; denah hanya menyebut venue-nya sebagai konteks.</li>
+          <li><b>Mengubah alur Juknis &amp; Dokumen.</b> Keduanya hidup berdampingan: dokumen untuk berkas apa adanya, denah untuk yang digambar di dalam aplikasi.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

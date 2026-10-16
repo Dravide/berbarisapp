@@ -62,6 +62,10 @@ return [
         'label' => 'Jadwal Pertandingan',
         'locked_free' => true,
     ],
+    'layout' => [
+        'label' => 'Denah Lapangan',
+        'locked_free' => true,
+    ],
     'livestream' => [
         'label' => 'Livestream Overlay',
         'locked_free' => true,

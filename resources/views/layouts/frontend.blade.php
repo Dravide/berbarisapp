@@ -197,6 +197,11 @@
                     <a href="{{ event_url($eventner, 'detail') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.detail') || request()->routeIs('subdomain.detail') ? 'text-primary bg-primary/5' : '' }}">Info</a>
                     <a href="{{ event_url($eventner, 'participant') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.participant') || request()->routeIs('subdomain.participant') ? 'text-primary bg-primary/5' : '' }}">Peserta</a>
                     <a href="{{ event_url($eventner, 'results') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.results') || request()->routeIs('subdomain.results') ? 'text-primary bg-primary/5' : '' }}">Hasil</a>
+                    @if($eventner?->hasPublishedLayout())
+                        {{-- Denah draf tak punya rute publik, jadi menu ini hanya
+                             muncul saat halamannya benar-benar ada isinya. --}}
+                        <a href="{{ event_url($eventner, 'denah') }}" class="rounded-md px-3 py-2 text-sm font-semibold text-on-surface-variant transition hover:bg-primary/5 hover:text-primary {{ request()->routeIs('event.denah') || request()->routeIs('subdomain.denah') ? 'text-primary bg-primary/5' : '' }}">Denah</a>
+                    @endif
                     {{-- Vote disembunyikan bila penyelenggara mematikannya di
                          /eventner/vote-settings — pola sama dengan Tiket. --}}
                     @if($eventner?->vote_active)
@@ -261,6 +266,9 @@
                             <li><a href="{{ event_url($eventner, 'detail') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Info Event</a></li>
                             <li><a href="{{ event_url($eventner, 'participant') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Daftar Peserta</a></li>
                             <li><a href="{{ event_url($eventner, 'results') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Hasil Perlombaan</a></li>
+                            @if($eventner?->hasPublishedLayout())
+                                <li><a href="{{ event_url($eventner, 'denah') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Denah Lapangan</a></li>
+                            @endif
                             @if($eventner?->vote_active)
                                 <li><a href="{{ event_url($eventner, 'vote') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Voting</a></li>
                             @endif
@@ -339,6 +347,10 @@
                 ['url' => event_url($eventner, 'participant'), 'label' => 'Peserta', 'icon' => 'ti-users', 'active' => request()->routeIs('event.participant') || request()->routeIs('subdomain.participant')],
                 ['url' => event_url($eventner, 'results'), 'label' => 'Hasil', 'icon' => 'ti-trophy', 'active' => request()->routeIs('event.results') || request()->routeIs('subdomain.results')],
             ];
+            // Denah hanya muncul kalau ada denah terbit.
+            if ($eventner->hasPublishedLayout()) {
+                $bottomNavItems[] = ['url' => event_url($eventner, 'denah'), 'label' => 'Denah', 'icon' => 'ti-map-2', 'active' => request()->routeIs('event.denah') || request()->routeIs('subdomain.denah')];
+            }
             // Vote mengikuti saklar /eventner/vote-settings, sama seperti Tiket.
             if ($eventner->vote_active) {
                 $bottomNavItems[] = ['url' => event_url($eventner, 'vote'), 'label' => 'Vote', 'icon' => 'ti-heart-filled', 'active' => request()->routeIs('event.vote') || request()->routeIs('subdomain.vote')];

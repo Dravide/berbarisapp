@@ -125,6 +125,14 @@ class ProductFeatures
                         'gates' => [],
                     ],
                     [
+                        'title' => 'Denah Lapangan per Kategori',
+                        'description' => 'Gambar denah lapangan di kanvas: arena, pos penilaian, tribun, sekretariat, lengkap dengan DP 1 sampai 5. Bisa diunduh PNG/PDF dan diterbitkan ke halaman publik event.',
+                        'miniature' => 'venue',
+                        'icon' => 'ti-layout-board-split',
+                        'route' => 'eventner.denah.index',
+                        'gates' => ['layout'],
+                    ],
+                    [
                         'title' => 'Meja Daftar Ulang & Scan QR Kartu',
                         'description' => 'Peserta datang, kartunya dipindai, ia langsung ditandai hadir — tanpa mencari namanya di tabel.',
                         'miniature' => 'daftar-ulang',

@@ -1,10 +1,6 @@
 <div class="min-h-screen bg-surface" x-data="{ showMobileForm: false }">
 
-    {{-- ========== HERO ========== --}}
     <div class="relative overflow-hidden bg-primary text-white py-12 md:py-16">
-        <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
-        <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
-
         <div class="container-landing relative z-10 flex flex-col items-center text-center">
             <span class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-md border border-white/10 mb-3">
                 <i class="ti ti-heart-filled text-emerald-400"></i>
@@ -13,8 +9,8 @@
             <h1 class="font-display text-2xl font-extrabold tracking-tight sm:text-3xl md:text-4xl max-w-4xl leading-tight">
                 Dukung Tim Jagoan Anda!
             </h1>
-            <p class="mt-2.5 text-xs font-medium text-white/80 md:text-sm max-w-xl">
-                Setiap vote sangat berarti untuk menentukan juara terfavorit di event <strong class="text-secondary font-semibold">{{ $eventner->nama_event }}</strong>.
+            <p class="mt-2.5 text-xs font-medium text-white md:text-sm max-w-xl">
+                Setiap vote sangat berarti untuk menentukan juara terfavorit di event <strong class="font-semibold text-white">{{ $eventner->nama_event }}</strong>.
             </p>
 
             {{-- Countdown Timer Voting --}}

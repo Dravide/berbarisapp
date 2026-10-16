@@ -16,6 +16,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', App\Livewire\Public\EventDetail::class)->name('subdomain.detail');
 Route::get('/peserta', App\Livewire\Public\EventParticipant::class)->name('subdomain.participant');
 Route::get('/rundown', App\Livewire\Public\EventRundown::class)->name('subdomain.rundown');
+// event_url() menyusun /denah untuk event ber-subdomain; tanpa baris ini
+// tautan denah di nav publik 404.
+Route::get('/denah', App\Livewire\Public\EventLayout::class)->name('subdomain.denah');
+Route::get('/denah/{layout}', App\Livewire\Public\EventLayout::class)->name('subdomain.denah.satu');
 Route::get('/hasil', App\Livewire\Public\EventResult::class)->name('subdomain.results');
 Route::get('/hasil/{registration}', App\Livewire\Public\EventResultDetail::class)->name('subdomain.results.detail');
 Route::get('/vote', App\Livewire\Public\EventVote::class)->name('subdomain.vote');

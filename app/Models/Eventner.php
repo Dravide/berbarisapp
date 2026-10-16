@@ -229,6 +229,11 @@ class Eventner extends Model
         return $this->hasMany(CompetitionCategory::class);
     }
 
+    public function competitionLayouts()
+    {
+        return $this->hasMany(CompetitionLayout::class);
+    }
+
     public function competitionGroups()
     {
         return $this->hasMany(CompetitionGroup::class);
@@ -327,6 +332,17 @@ class Eventner extends Model
         return $venues
             ->filter(fn ($venue) => $venue->ticket_price !== null || $venue->ticket_kuota !== null)
             ->values();
+    }
+
+    /**
+     * Apakah ada denah lapangan yang sudah diterbitkan?
+     *
+     * Gerbang menu Denah. Denah draf tak punya rute publik, jadi menu yang
+     * tampil karena saklar pengaturan akan menuntun peserta ke 404.
+     */
+    public function hasPublishedLayout(): bool
+    {
+        return $this->competitionLayouts()->terbit()->exists();
     }
 
     /**
@@ -604,6 +620,7 @@ class Eventner extends Model
                 'videotron' => '/videotron',
                 'juknis' => '/juknis',
                 'documents.download' => '/dokumen',
+                'denah' => '/denah',
             ];
             $path = $paths[$route] ?? '/';
 

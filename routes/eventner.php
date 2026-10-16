@@ -95,6 +95,11 @@ Route::get('livestream', App\Livewire\Eventner\Livestream\Manage::class)->name('
 Route::get('faq', App\Livewire\Eventner\Faq\Index::class)->name('eventner.faq.index');
 Route::get('gallery', App\Livewire\Eventner\Gallery\Index::class)->name('eventner.gallery.index');
 Route::get('documents', App\Livewire\Eventner\Document\Index::class)->name('eventner.documents.index');
+// Denah lapangan per kategori lomba: daftar + editor kanvas, plus PDF yang
+// dicetak dari zona yang sama supaya denah layar & kertas tak berbeda isi.
+Route::get('denah', App\Livewire\Eventner\Layout\Index::class)->name('eventner.denah.index');
+Route::get('denah/{layout}', App\Livewire\Eventner\Layout\Show::class)->name('eventner.denah.show');
+Route::get('denah/{layout}/pdf', [App\Http\Controllers\Eventner\LayoutController::class, 'cetakPdf'])->name('eventner.denah.pdf');
 Route::get('sponsors', App\Livewire\Eventner\Sponsor\Index::class)->name('eventner.sponsors.index');
 Route::get('tenants', App\Livewire\Eventner\Tenant\Index::class)->name('eventner.tenants.index');
 Route::get('finance', App\Livewire\Eventner\FinanceDashboard::class)->name('eventner.finance.index');

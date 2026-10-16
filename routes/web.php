@@ -20,6 +20,10 @@ Route::middleware('guest')->group(function () {
 Route::get('/event/{slug}', App\Livewire\Public\EventDetail::class)->name('event.detail');
 Route::get('/event/{slug}/participant', App\Livewire\Public\EventParticipant::class)->name('event.participant');
 Route::get('/event/{slug}/rundown', App\Livewire\Public\EventRundown::class)->name('event.rundown');
+// Denah lapangan yang sudah diterbitkan panitia; draf ditolak oleh komponennya.
+Route::get('/event/{slug}/denah', App\Livewire\Public\EventLayout::class)->name('event.denah');
+// Tautan langsung ke satu denah, mis. dari grup WA panitia.
+Route::get('/event/{slug}/denah/{layout}', App\Livewire\Public\EventLayout::class)->name('event.denah.satu');
 Route::get('/event/{slug}/results', App\Livewire\Public\EventResult::class)->name('event.results');
 Route::get('/event/{slug}/results/{registration}', App\Livewire\Public\EventResultDetail::class)->name('event.results.detail');
 

@@ -217,6 +217,16 @@
             </a>
           </li>
           <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('eventner.denah.*') ? 'active' : '' }}"
+              href="{{ route('eventner.denah.index') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-layout-board-split"></i>
+              </span>
+              <span class="hide-menu">Denah Lapangan</span>
+              @if($ev && !$ev->canAccessFeature('layout')) <i class="ti ti-lock text-muted ms-auto" style="font-size: 0.7rem;"></i> @endif
+            </a>
+          </li>
+          <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('eventner.documents.*') ? 'active' : '' }}"
               href="{{ route('eventner.documents.index') }}" aria-expanded="false">
               <span>

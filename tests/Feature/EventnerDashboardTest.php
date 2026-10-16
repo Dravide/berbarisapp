@@ -310,6 +310,18 @@ class EventnerDashboardTest extends TestCase
     // Penjelasan paket di header
     // ────────────────────────────────────────────────
 
+    /**
+     * Banyaknya fitur ber-locked_free — yaitu yang muncul di modal paket.
+     *
+     * Dihitung dari config, bukan dipatok angkanya: menambah fitur berbayar baru
+     * tidak seharusnya jadi tes merah. Yang dikunci tes ini adalah bahwa trial
+     * yang berjalan membuka SEMUA fitur itu, dan trial habis mengunci semuanya.
+     */
+    private function jumlahFiturTerkunci(): int
+    {
+        return collect(config('eventner_features'))->where('locked_free', true)->count();
+    }
+
     private function makePlan(string $name, array $features, array $attrs = []): SaasPlan
     {
         $plan = SaasPlan::create(array_merge([
@@ -431,7 +443,7 @@ class EventnerDashboardTest extends TestCase
 
         $this->assertSame('Gratis (masa uji coba)', $component->get('planInfo')['name']);
         $this->assertSame('Trial 5 hari lagi', $component->get('planInfo')['status']);
-        $this->assertCount(16, $component->get('planInfo')['included']);
+        $this->assertCount($this->jumlahFiturTerkunci(), $component->get('planInfo')['included']);
         $this->assertSame([], $component->get('lockedFeatures'));
 
         $component
@@ -451,7 +463,7 @@ class EventnerDashboardTest extends TestCase
         $this->assertSame('Gratis', $component->get('planInfo')['name']);
         $this->assertSame('Trial Berakhir', $component->get('planInfo')['status']);
         $this->assertSame([], $component->get('planInfo')['included']);
-        $this->assertCount(16, $component->get('lockedFeatures'));
+        $this->assertCount($this->jumlahFiturTerkunci(), $component->get('lockedFeatures'));
 
         $component
             ->assertSee('Trial Berakhir')

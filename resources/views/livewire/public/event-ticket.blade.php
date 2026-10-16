@@ -1,10 +1,6 @@
 <div class="min-h-screen bg-surface">
 
-    {{-- ========== HERO ========== --}}
     <div class="relative overflow-hidden bg-primary text-white py-12 md:py-16">
-        <div class="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
-        <div class="absolute -right-20 -bottom-20 h-64 w-64 rounded-full bg-white/5 blur-3xl"></div>
-
         <div class="container-landing relative z-10 flex flex-col items-center text-center">
             <span class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-white backdrop-blur-md border border-white/10 mb-3">
                 <i class="ti ti-ticket"></i>
@@ -13,7 +9,7 @@
             <h1 class="font-display text-2xl font-extrabold tracking-tight sm:text-3xl md:text-4xl max-w-4xl leading-tight">
                 {{ $eventner->nama_event }}
             </h1>
-            <p class="mt-2.5 text-xs font-medium text-white/80 md:text-sm max-w-xl">
+            <p class="mt-2.5 text-xs font-medium text-white md:text-sm max-w-xl">
                 Beli tiket online, bayar via QRIS otomatis, dan dapatkan QR code tiket masuk langsung di HP Anda.
             </p>
             <div class="mt-4">
