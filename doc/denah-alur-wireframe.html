@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alur Gerak Pasukan Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: dokumen spesifikasi. Tiap layar satu slide, wireframe di kiri, anotasi di kanan. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --amber:#b45309; --amber-soft:#fef3c7;
+  --green:#15803d; --green-soft:#dcfce7;
+  --violet:#7c3aed; --violet-soft:#f3e8ff;
+  --rose:#be123c; --rose-soft:#ffe4e6;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --amber:#fbbf24; --amber-soft:#3a2b08;
+    --green:#4ade80; --green-soft:#0c2a18;
+    --violet:#c4b5fd; --violet-soft:#2a1f47;
+    --rose:#fda4af; --rose-soft:#3d0f1c;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --amber:#fbbf24; --amber-soft:#3a2b08;
+  --green:#4ade80; --green-soft:#0c2a18;
+  --violet:#c4b5fd; --violet-soft:#2a1f47;
+  --rose:#fda4af; --rose-soft:#3d0f1c;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1280px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:clamp(28px,5vw,56px)}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:78ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap}
+.chip b{color:var(--ink);font-weight:600}
+
+/* Slide */
+.slide{margin-top:clamp(36px,6vw,64px)}
+.slide-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.slide-head h2{font-size:20px;font-weight:700}
+.mode-tag{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.slide-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:940px){.slide-grid{grid-template-columns:1fr}}
+
+/* Bingkai layar admin */
+.screen{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:10px;box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.screen-inner{
+  border-radius:8px;border:1px solid var(--line);
+  background:var(--panel-2);overflow:hidden;position:relative;
+  font-size:11px;display:flex;flex-direction:column;min-height:360px;
+}
+.screen-cap{font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 4px 2px;display:flex;justify-content:space-between;gap:8px}
+
+/* Anotasi */
+.notes{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.notes h3{font-size:14px;margin-bottom:8px}
+.notes ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.notes li{font-size:13.5px;color:var(--muted)}
+.notes li b{color:var(--ink);font-weight:600}
+.notes code{background:var(--panel-2);border:1px solid var(--line-soft);padding:1px 5px;border-radius:5px}
+
+table.mini{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+table.mini th{font-family:var(--mono);font-weight:500;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;color:var(--muted);text-align:left;padding:4px 8px;border-bottom:1px solid var(--line)}
+table.mini td{padding:5px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table.mini tr:last-child td{border-bottom:0}
+
+/* Elemen wireframe umum */
+.wf{position:relative;flex:1;min-height:0;display:flex;flex-direction:column}
+.ph{background:var(--ph-fill);border:1px solid var(--ph-line);border-radius:6px}
+.crumb{display:flex;gap:5px;align-items:center;font-size:9px;opacity:.6;padding:8px 14px 0}
+.crumb i{font-style:normal}
+.tablerow{display:flex;align-items:center;gap:8px;padding:6px 14px;border-bottom:1px solid var(--line-soft)}
+.tablerow:last-child{border-bottom:0}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:8.5px;font-weight:600;padding:2px 7px;border-radius:999px;border:1px solid var(--ph-line);background:var(--ph-fill);color:var(--muted);white-space:nowrap}
+.badge.blue{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.badge.warn{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+.badge.green{background:var(--green-soft);color:var(--green);border-color:transparent}
+.badge.violet{background:var(--violet-soft);color:var(--violet);border-color:transparent}
+.badge.rose{background:var(--rose-soft);color:var(--rose);border-color:transparent}
+.btnw{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;padding:3px 9px;border-radius:6px;border:1px solid var(--accent);color:var(--accent);background:transparent;white-space:nowrap}
+.btnw.solid{background:var(--accent);color:#fff}
+.btnw.ghost{border-color:var(--ph-line);color:var(--muted)}
+.btnw.sm{padding:2px 6px;font-size:8.5px}
+.btnw.wide{width:100%;justify-content:center}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:600;padding:4px 12px;border-radius:999px;border:1px solid var(--ph-line);color:var(--muted);background:transparent}
+.pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.field{height:22px;border:1px solid var(--ph-line);border-radius:6px;background:var(--panel)}
+.field.tall{height:14px}
+.dim{color:var(--muted)}
+.ck{width:10px;height:10px;border:1.5px solid var(--ph-line);border-radius:3px;flex:none;display:inline-block}
+.ck.on{background:var(--accent);border-color:var(--accent);position:relative}
+.ck.on::after{content:"";position:absolute;inset:2px 3px 3px 2px;border:1.5px solid #fff;border-top:0;border-left:0;transform:rotate(40deg) translateY(-1px)}
+.sw{width:10px;height:10px;border-radius:3px;border:1.5px solid;flex:none;display:inline-block}
+.modal{position:absolute;inset:0;background:rgba(10,12,18,.45);display:flex;align-items:center;justify-content:center;padding:16px;z-index:5}
+.modal-box{background:var(--panel);border:1px solid var(--line);border-radius:10px;width:100%;max-width:420px;box-shadow:0 8px 30px rgba(0,0,0,.18)}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--line-soft);font-weight:700;font-size:11px}
+.modal-bd{padding:12px 14px;display:grid;gap:8px}
+.modal-ft{display:flex;justify-content:flex-end;gap:8px;padding:9px 14px;border-top:1px solid var(--line-soft)}
+.x{font-size:12px;color:var(--muted)}
+
+/* Editor tiga panel */
+.editor{display:grid;grid-template-columns:82px minmax(0,1fr) 118px;flex:1;min-height:0}
+@media(max-width:940px){.editor{grid-template-columns:1fr}.pane-l,.pane-r{display:none}}
+.pane-l{border-right:1px solid var(--line-soft);padding:6px;display:grid;gap:4px;align-content:start;background:var(--panel)}
+.pane-r{border-left:1px solid var(--line-soft);padding:7px 8px;display:grid;gap:7px;align-content:start;background:var(--panel)}
+.pane-title{font-family:var(--mono);font-size:7.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+.pal-item{display:flex;align-items:center;gap:4px;font-size:8px;font-weight:600;padding:3px 4px;border:1px solid var(--ph-line);border-radius:5px;background:var(--panel-2);cursor:grab}
+.pal-item.off{opacity:.4;cursor:not-allowed}
+.pane-c{display:flex;flex-direction:column;min-width:0;background:var(--panel-2)}
+.bar{display:flex;align-items:center;gap:5px;padding:6px 9px;border-bottom:1px solid var(--line-soft);background:var(--panel);flex-wrap:wrap}
+.bar .grow{flex:1;min-width:0}
+
+/* Kanvas denah */
+.canvas-stage{padding:10px;flex:1;display:flex;align-items:center;justify-content:center;min-height:0}
+.canvas{
+  position:relative;width:100%;max-width:600px;aspect-ratio:16/9;
+  border:1px solid var(--ph-line);border-radius:6px;overflow:hidden;
+  background:
+    linear-gradient(var(--line-soft) 1px,transparent 1px) 0 0/100% 8.3333%,
+    linear-gradient(90deg,var(--line-soft) 1px,transparent 1px) 0 0/6.25% 100%,
+    var(--panel);
+}
+.canvas.sm{max-width:100%}
+.zone{
+  position:absolute;border-radius:5px;border:1.5px solid;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  gap:1px;font-size:8px;font-weight:700;text-align:center;padding:2px;line-height:1.15;
+}
+.zone small{font-weight:500;font-size:7px;opacity:.85}
+.z-arena{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.z-dp{background:var(--rose-soft);border-color:var(--rose);color:var(--rose)}
+.z-juri{background:var(--amber-soft);border-color:var(--amber);color:var(--amber)}
+.z-tribun{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.z-jalur{background:transparent;border-color:var(--ph-line);border-style:dashed;color:var(--muted)}
+.z-sekre{background:var(--violet-soft);border-color:var(--violet);color:var(--violet)}
+.z-teks{background:transparent;border-color:transparent;color:var(--ink);font-size:9px}
+.zone.sel{outline:2px solid var(--accent);outline-offset:2px;z-index:3}
+.hnd{position:absolute;width:5px;height:5px;background:var(--panel);border:1.5px solid var(--accent);border-radius:1px}
+.hnd.tl{left:-3px;top:-3px}.hnd.tr{right:-3px;top:-3px}
+.hnd.bl{left:-3px;bottom:-3px}.hnd.br{right:-3px;bottom:-3px}
+
+/* ── Alur gerak pasukan ────────────────────────────────────────────
+   Garis digambar sebagai satu polyline SVG dalam ruang persen, penanda
+   sebagai elemen HTML. Alasannya ada di slide 6. */
+.route-line{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2}
+.route-line.off{display:none}
+.pt{position:absolute;transform:translate(-50%,-50%);z-index:3;display:grid;place-items:center}
+.pt-dot{width:7px;height:7px;border-radius:2px;background:var(--panel);border:1.5px solid var(--accent)}
+.pt-start .pt-dot{width:12px;height:12px;border-radius:999px;background:var(--green);border-color:var(--green)}
+.pt-end .pt-dot{width:12px;height:12px;border-radius:999px;background:var(--rose);border-color:var(--rose)}
+.pt-aba .pt-dot{width:9px;height:9px;border-radius:2px;background:var(--amber);border-color:var(--amber);transform:rotate(45deg)}
+.pt.sel .pt-dot{outline:2px solid var(--accent);outline-offset:2px}
+.pt-tag{
+  position:absolute;left:50%;top:0;transform:translate(-50%,-170%);
+  font-size:7px;font-weight:700;padding:2px 6px;border-radius:999px;white-space:nowrap;
+  background:var(--panel);border:1px solid var(--line-soft);color:var(--muted);
+}
+.pt-aba .pt-tag{background:var(--amber-soft);color:var(--amber);border-color:transparent}
+.pt-start .pt-tag{background:var(--green-soft);color:var(--green);border-color:transparent}
+.pt-end .pt-tag{background:var(--rose-soft);color:var(--rose);border-color:transparent}
+.hdg{position:absolute;z-index:4;transform:translate(-50%,-50%)}
+.hdg svg{display:block}
+.hint{
+  position:absolute;inset:0;display:grid;place-items:center;z-index:1;
+  font-size:9px;color:var(--muted);text-align:center;padding:0 40px;
+}
+.dashed-box{position:absolute;inset:8%;border:1.5px dashed var(--ph-line);border-radius:8px;z-index:0}
+
+/* Drawer bantuan */
+.drawer{position:absolute;top:0;right:0;bottom:0;width:44%;min-width:250px;background:var(--panel);border-left:1px solid var(--line);box-shadow:-8px 0 24px rgba(0,0,0,.06);display:flex;flex-direction:column;z-index:4}
+.drawer-hd{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line-soft);font-weight:700;font-size:10px}
+.drawer-bd{padding:9px 10px;overflow:hidden;display:grid;gap:7px;align-content:start}
+.callout{font-size:8.5px;color:var(--muted);background:var(--panel-2);border:1px solid var(--line-soft);border-radius:6px;padding:6px 9px}
+.callout b{color:var(--ink)}
+.optrow{display:flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--line-soft);border-radius:6px;background:var(--panel-2);font-size:8.5px}
+
+/* Segmented control Zona / Alur */
+.seg{display:inline-flex;border:1px solid var(--ph-line);border-radius:6px;overflow:hidden}
+.seg span{font-size:9px;font-weight:600;padding:3px 10px;color:var(--muted);background:var(--panel)}
+.seg span.on{background:var(--accent);color:#fff}
+.seg span+span{border-left:1px solid var(--ph-line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Berbaris App &middot; Spesifikasi &amp; Wireframe</p>
+  <h1>Alur Gerak Pasukan</h1>
+  <p class="lede">Tambahan pada <a href="denah-kategori-wireframe.html" style="color:var(--accent)">Denah Lapangan per Kategori</a>. Di lomba baris-berbaris, denah tidak cukup menunjukkan <i>tempat</i>: panitia juga perlu menunjukkan <b>lintasan</b> yang dilalui pasukan, yaitu lurus dulu, lalu belok kanan atau kiri, sampai titik selesai. Fitur ini menambah satu <b>alur</b> yang digambar bebas di atas zona yang sudah ada. <b>Tetap tanpa data peserta</b>: alurnya menunjukkan jalan, bukan siapa yang berjalan.</p>
+  <div class="meta">
+    <span class="chip">Garis <b>polyline bebas</b>, sudut tidak dipaku 90°</span>
+    <span class="chip">Penanda <b>titik awal &amp; akhir</b></span>
+    <span class="chip">Penanda <b>titik aba-aba</b></span>
+    <span class="chip">Panah <b>arah hadap</b></span>
+    <span class="chip"><b>Satu alur</b> per denah</span>
+    <span class="chip">Digambar <b>di atas zona</b>, satu kanvas</span>
+  </div>
+
+  <!-- ============ SLIDE 1 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>1 · Editor, mode Alur, kanvas masih kosong</h2><span class="mode-tag">/eventner/denah/{id}</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="bar">
+            <span class="badge blue">Denah PBB Tingkat SD</span>
+            <span class="badge warn">Draf</span>
+            <span class="grow"></span>
+            <span class="seg"><span>Zona</span><span class="on">Alur</span></span>
+            <span class="btnw ghost sm">Ukuran Papan</span>
+            <span class="btnw sm">Terbitkan</span>
+          </div>
+          <div class="editor">
+            <div class="pane-l">
+              <span class="pane-title">Alat alur</span>
+              <span class="pal-item" style="border-color:var(--accent);color:var(--accent)">+ Titik belok</span>
+              <span class="pal-item" style="border-color:var(--amber);color:var(--amber)">◆ Aba-aba</span>
+              <span class="pal-item">↻ Arah hadap</span>
+              <span class="pal-item">⌫ Hapus titik</span>
+              <span class="pane-title" style="margin-top:4px">Zona (mati)</span>
+              <span class="pal-item off">Arena</span>
+              <span class="pal-item off">DP</span>
+              <span class="pal-item off">Pos nilai</span>
+            </div>
+            <div class="pane-c">
+              <div class="canvas-stage">
+                <div class="canvas">
+                  <div class="dashed-box"></div>
+                  <div class="zone z-arena" style="left:14%;top:16%;width:62%;height:50%">Arena Utama</div>
+                  <div class="zone z-juri" style="left:30%;top:5%;width:30%;height:8%">Pos Penilaian</div>
+                  <div class="hint">Klik di papan untuk menaruh titik pertama.<br>Klik lagi untuk titik berikutnya, garis menyambung sendiri.</div>
+                </div>
+              </div>
+            </div>
+            <div class="pane-r">
+              <span class="pane-title">Sifat alur</span>
+              <span class="dim" style="font-size:8px">Belum ada titik.</span>
+              <div class="callout">Alur digambar <b>di atas</b> zona. Zona tetap bisa dipilih lewat mode Zona.</div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Editor kanvas, mode Alur aktif</span><span>belum ada titik</span></div>
+      </div>
+      <div class="notes">
+        <h3>Keputusan &amp; alasan</h3>
+        <ul>
+          <li><b>Mode Zona / Alur dipisah.</b> Satu kanvas dipakai dua pekerjaan berbeda. Tanpa pemisah, klik di papan jadi ambigu: menambah titik alur atau memilih zona. Saklar ini yang menghilangkan ambiguitasnya.</li>
+          <li><b>Palet kiri ikut berganti.</b> Saat mode Alur, alat zona diredupkan dan tidak bisa diklik, supaya panitia tidak menaruh zona tanpa sengaja di tengah menggambar lintasan.</li>
+          <li><b>Titik pertama bebas.</b> Tidak ada titik bawaan di tengah papan, karena lintasan tiap tingkat lomba berbeda dan titik bawaan justru harus dihapus dulu.</li>
+          <li><b>Garis menyambung sendiri.</b> Panitia menaruh titik, bukan menggambar garis. Menyeret garis bebas menghasilkan kurva yang tak bisa dibaca pasukan di lapangan.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 2 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>2 · Alur terisi: lurus, belok kanan, selesai</h2><span class="mode-tag">7 titik, 3 penanda aba-aba</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="bar">
+            <span class="badge blue">Denah PBB Tingkat SD</span>
+            <span class="badge warn">Draf</span>
+            <span class="grow"></span>
+            <span class="seg"><span>Zona</span><span class="on">Alur</span></span>
+            <span class="btnw ghost sm">Ukuran Papan</span>
+            <span class="btnw sm">Terbitkan</span>
+          </div>
+          <div class="editor">
+            <div class="pane-l">
+              <span class="pane-title">Alat alur</span>
+              <span class="pal-item" style="border-color:var(--accent);color:var(--accent)">+ Titik belok</span>
+              <span class="pal-item" style="border-color:var(--amber);color:var(--amber)">◆ Aba-aba</span>
+              <span class="pal-item">↻ Arah hadap</span>
+              <span class="pal-item">⌫ Hapus titik</span>
+            </div>
+            <div class="pane-c">
+              <div class="canvas-stage">
+                <div class="canvas">
+                  <div class="zone z-arena" style="left:14%;top:16%;width:62%;height:50%">Arena Utama</div>
+                  <div class="zone z-juri" style="left:30%;top:5%;width:30%;height:8%">Pos Penilaian</div>
+                  <div class="zone z-dp" style="left:14%;top:88%;width:10%;height:8%">DP 1</div>
+                  <div class="zone z-dp" style="left:26%;top:88%;width:10%;height:8%">DP 2</div>
+                  <div class="zone z-dp" style="left:38%;top:88%;width:10%;height:8%">DP 3</div>
+
+                  <svg class="route-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                    <polyline points="12,92 12,34 58,34 58,14" fill="none" stroke="var(--accent)"
+                              stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+                              vector-effect="non-scaling-stroke"/>
+                  </svg>
+
+                  <span class="hdg" style="left:12%;top:78%"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 0 L9.5 9 L5 6.4 L0.5 9 Z" fill="var(--accent)"/></svg></span>
+                  <span class="hdg" style="left:34%;top:34%;transform:translate(-50%,-50%) rotate(90deg)"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 0 L9.5 9 L5 6.4 L0.5 9 Z" fill="var(--accent)"/></svg></span>
+                  <span class="hdg" style="left:58%;top:24%"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 0 L9.5 9 L5 6.4 L0.5 9 Z" fill="var(--accent)"/></svg></span>
+
+                  <span class="pt pt-start" style="left:12%;top:92%"><span class="pt-dot"></span><span class="pt-tag">Masuk lintasan</span></span>
+                  <span class="pt pt-aba" style="left:12%;top:52%"><span class="pt-dot"></span><span class="pt-tag">Hadap kanan</span></span>
+                  <span class="pt" style="left:12%;top:34%"><span class="pt-dot"></span></span>
+                  <span class="pt pt-aba" style="left:36%;top:34%"><span class="pt-dot"></span><span class="pt-tag">Langkah tegap</span></span>
+                  <span class="pt" style="left:58%;top:34%"><span class="pt-dot"></span></span>
+                  <span class="pt pt-aba" style="left:58%;top:24%"><span class="pt-dot"></span><span class="pt-tag">Hormat, hentikan</span></span>
+                  <span class="pt pt-end" style="left:58%;top:14%"><span class="pt-dot"></span><span class="pt-tag">Selesai</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="pane-r">
+              <span class="pane-title">Sifat alur</span>
+              <span class="dim" style="font-size:8px">Garis</span>
+              <span class="optrow"><span class="sw" style="border-color:var(--accent);background:var(--accent)"></span> Tebal 2,5</span>
+              <span class="optrow"><span class="ck on"></span> Tampilkan di publik</span>
+              <span class="dim" style="font-size:8px">Titik terpilih</span>
+              <span class="optrow">◆ Aba-aba, "Hadap kanan"</span>
+              <span class="optrow">Arah hadap 90° (kanan)</span>
+              <span class="btnw wide sm" style="margin-top:2px">Tempel ke alur</span>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Alur: naik, belok kanan, naik lagi</span><span>3 penanda aba-aba</span></div>
+      </div>
+      <div class="notes">
+        <h3>Keputusan &amp; alasan</h3>
+        <ul>
+          <li><b>Sudut bebas, bukan paku 90°.</b> Lintasan lapangan sungguhan jarang siku, terutama saat arena dipasang miring terhadap pagar. Polyline bebas menampung sudut apa pun tanpa perlu menambah preset.</li>
+          <li><b>Tiga jenis titik, satu bentuk berbeda.</b> Awal bulat hijau, akhir bulat merah, aba-aba belah ketupat kuning, belokan titik kecil biru. Bentuknya dibedakan supaya terbaca saat dicetak hitam-putih, bukan hanya dari warna.</li>
+          <li><b>Aba-aba diberi label teks.</b> "Hadap kanan" dan "Hormat, hentikan" adalah perintah yang dibacakan, jadi teksnya ikut tercetak. Warna kuning saja tidak memberi tahu perintah apa yang diberikan.</li>
+          <li><b>Arah hadap terpisah dari arah jalan.</b> Pasukan bisa berjalan ke satu arah sambil menghadap ke arah lain, dan itu justru inti penilaian PBB. Karena itu panah hadap punya sudut sendiri, bukan mengikuti garis.</li>
+          <li><b>Alur di atas zona, bukan di bawah.</b> Lintasan harus terbaca menembus arena, dan arena adalah zona terbesar. Digambar di bawah, garisnya hilang di bagian yang paling penting.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 3 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>3 · Menggeser, menambah, dan menempelkan titik</h2><span class="mode-tag">interaksi</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="bar">
+            <span class="seg"><span>Zona</span><span class="on">Alur</span></span>
+            <span class="grow"></span>
+            <span class="badge blue">Titik belok terseret</span>
+          </div>
+          <div class="editor">
+            <div class="pane-l">
+              <span class="pane-title">Alat alur</span>
+              <span class="pal-item" style="border-color:var(--accent);color:var(--accent)">+ Titik belok</span>
+              <span class="pal-item" style="border-color:var(--amber);color:var(--amber)">◆ Aba-aba</span>
+              <span class="pal-item">↻ Arah hadap</span>
+              <span class="pal-item">⌫ Hapus titik</span>
+            </div>
+            <div class="pane-c">
+              <div class="canvas-stage">
+                <div class="canvas">
+                  <div class="zone z-arena" style="left:14%;top:16%;width:62%;height:50%">Arena Utama</div>
+                  <div class="zone z-juri" style="left:30%;top:5%;width:30%;height:8%">Pos Penilaian</div>
+
+                  <svg class="route-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                    <polyline points="12,92 12,34 58,34 58,14" fill="none" stroke="var(--accent)"
+                              stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+                              vector-effect="non-scaling-stroke"/>
+                  </svg>
+
+                  <span class="pt pt-start" style="left:12%;top:92%"><span class="pt-dot"></span></span>
+                  <span class="pt pt-aba" style="left:12%;top:52%"><span class="pt-dot"></span><span class="pt-tag">Hadap kanan</span></span>
+
+                  <span class="pt sel" style="left:12%;top:34%"><span class="pt-dot"></span><span class="pt-tag">Titik belok</span></span>
+
+                  <span class="pt" style="left:30%;top:34%"><span class="pt-dot" style="width:5px;height:5px;border-style:dashed"></span></span>
+                  <span class="pt pt-end" style="left:58%;top:14%"><span class="pt-dot"></span></span>
+                  <span class="hdg" style="left:58%;top:24%"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 0 L9.5 9 L5 6.4 L0.5 9 Z" fill="var(--accent)"/></svg></span>
+                </div>
+              </div>
+            </div>
+            <div class="pane-r">
+              <span class="pane-title">Titik terpilih</span>
+              <span class="optrow">Belok, x 12 y 34</span>
+              <span class="optrow">Arah hadap 90°</span>
+              <span class="btnw wide sm">Hapus titik</span>
+              <div class="callout">Klik di <b>tengah segmen</b> untuk menyisipkan titik baru tanpa memindahkan yang lain.</div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Titik belok sedang diseret</span><span>titik putus-putus = titik sisip</span></div>
+      </div>
+      <div class="notes">
+        <h3>Keputusan &amp; alasan</h3>
+        <ul>
+          <li><b>Menyeret titik, bukan menyeret garis.</b> Titik yang diseret mengubah dua segmen sekaligus, dan hasilnya selalu berupa garis lurus. Ini yang membuat lintasan tetap rapi setelah diubah berkali-kali.</li>
+          <li><b>Titik sisip muncul di tengah segmen.</b> Menambah belokan pada lintasan yang sudah jadi adalah hal biasa, dan cara ini tidak memaksa panitia menghapus lalu menggambar ulang dari awal.</li>
+          <li><b>Aba-aba menempel ke garis.</b> Penanda aba-aba disimpan sebagai koordinat, lalu <b>diproyeksikan ke titik terdekat pada polyline</b> saat disimpan. Jadi menyeret belokan tidak meninggalkan penanda aba-aba menggantung di luar garis.</li>
+          <li><b>Menyeret penanda aba-aba menggesernya sepanjang garis.</b> Karena posisinya selalu diproyeksikan, menyeretnya ke samping otomatis meluncurkannya di sepanjang lintasan. Tidak ada gerakan yang menghasilkan posisi mustahil.</li>
+          <li><b>Hapus lewat tombol, bukan klik kanan.</b> Klik kanan tidak bekerja di tablet, dan juri serta panitia lapangan banyak memakai tablet.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 4 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>4 · Arah hadap, dan menyembunyikan alur</h2><span class="mode-tag">panel sifat alur</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="bar">
+            <span class="seg"><span>Zona</span><span class="on">Alur</span></span>
+            <span class="grow"></span>
+            <span class="pill on">Alur tampil</span>
+          </div>
+          <div class="editor">
+            <div class="pane-l">
+              <span class="pane-title">Alat alur</span>
+              <span class="pal-item" style="border-color:var(--accent);color:var(--accent)">+ Titik belok</span>
+              <span class="pal-item" style="border-color:var(--amber);color:var(--amber)">◆ Aba-aba</span>
+              <span class="pal-item" style="border-color:var(--accent);color:var(--accent)">↻ Arah hadap</span>
+              <span class="pal-item">⌫ Hapus titik</span>
+            </div>
+            <div class="pane-c">
+              <div class="canvas-stage">
+                <div class="canvas">
+                  <div class="zone z-arena" style="left:14%;top:16%;width:62%;height:50%">Arena Utama</div>
+                  <svg class="route-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                    <polyline points="12,92 12,34 58,34 58,14" fill="none" stroke="var(--accent)"
+                              stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+                              vector-effect="non-scaling-stroke"/>
+                  </svg>
+                  <span class="pt pt-start" style="left:12%;top:92%"><span class="pt-dot"></span></span>
+                  <span class="pt pt-aba sel" style="left:12%;top:52%"><span class="pt-dot"></span><span class="pt-tag">Hadap kanan</span></span>
+                  <span class="pt" style="left:12%;top:34%"><span class="pt-dot"></span></span>
+                  <span class="pt" style="left:58%;top:34%"><span class="pt-dot"></span></span>
+                  <span class="pt pt-end" style="left:58%;top:14%"><span class="pt-dot"></span></span>
+                  <span class="hdg" style="left:12%;top:52%;transform:translate(-50%,-50%) rotate(90deg) scale(1.6)"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 0 L9.5 9 L5 6.4 L0.5 9 Z" fill="var(--amber)"/></svg></span>
+                </div>
+              </div>
+            </div>
+            <div class="pane-r">
+              <span class="pane-title">Titik terpilih</span>
+              <span class="optrow">◆ Aba-aba, "Hadap kanan"</span>
+              <span class="dim" style="font-size:8px">Arah hadap</span>
+              <span class="optrow"><span class="ck on"></span> Pakai arah hadap</span>
+              <span class="optrow">Putar: 90° kanan</span>
+              <span class="dim" style="font-size:8px">Garis</span>
+              <span class="optrow"><span class="ck on"></span> Tampilkan di publik</span>
+              <span class="optrow">Tebal 2,5</span>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Titik aba-aba dengan panah hadap diperbesar</span><span>arah hadap 90°</span></div>
+      </div>
+      <div class="notes">
+        <h3>Keputusan &amp; alasan</h3>
+        <ul>
+          <li><b>Arah hadap disetel per titik, bukan per alur.</b> Satu lintasan hampir selalu berisi beberapa kali hadap: hadap kanan di satu titik, hadap depan di titik lain. Satu arah untuk seluruh alur tidak akan cukup.</li>
+          <li><b>Disimpan sebagai derajat, bukan nama arah.</b> Nama "hadap kanan" bergantung pada arah hadap sebelumnya, jadi menyimpan derajat membuat gambar tetap benar walau panitia mengubah urutannya.</li>
+          <li><b>Saklar "Tampilkan di publik" ada di tingkat alur.</b> Panitia kadang menyiapkan lintasan jauh sebelum lomba dan belum ingin peserta melihatnya, walau denahnya sudah terbit. Saklar ini memisahkan keduanya.</li>
+          <li><b>Tidak ada pengatur warna per titik.</b> Warna sudah menyatakan jenis, dan menambah warna bebas membuat penanda kehilangan artinya.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 5 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>5 · Halaman publik &amp; PDF</h2><span class="mode-tag">/event/{slug}/denah</span></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner" style="min-height:300px">
+          <div class="bar" style="justify-content:center">
+            <span class="badge blue">Denah Lapangan</span>
+            <span class="dim" style="font-size:9px">Arena, pos penilaian, dan DP tiap tingkat lomba</span>
+          </div>
+          <div class="canvas-stage" style="padding:12px">
+            <div class="canvas sm">
+              <div class="zone z-arena" style="left:14%;top:16%;width:62%;height:50%">Arena Utama</div>
+              <div class="zone z-juri" style="left:30%;top:5%;width:30%;height:8%">Pos Penilaian</div>
+              <div class="zone z-dp" style="left:14%;top:88%;width:10%;height:8%">DP 1</div>
+              <div class="zone z-dp" style="left:26%;top:88%;width:10%;height:8%">DP 2</div>
+              <div class="zone z-dp" style="left:38%;top:88%;width:10%;height:8%">DP 3</div>
+              <svg class="route-line" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                <polyline points="12,92 12,34 58,34 58,14" fill="none" stroke="var(--accent)"
+                          stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+                          vector-effect="non-scaling-stroke"/>
+              </svg>
+              <span class="hdg" style="left:12%;top:78%"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 0 L9.5 9 L5 6.4 L0.5 9 Z" fill="var(--accent)"/></svg></span>
+              <span class="hdg" style="left:34%;top:34%;transform:translate(-50%,-50%) rotate(90deg)"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 0 L9.5 9 L5 6.4 L0.5 9 Z" fill="var(--accent)"/></svg></span>
+              <span class="pt pt-start" style="left:12%;top:92%"><span class="pt-dot"></span><span class="pt-tag">Masuk lintasan</span></span>
+              <span class="pt pt-aba" style="left:12%;top:52%"><span class="pt-dot"></span><span class="pt-tag">Hadap kanan</span></span>
+              <span class="pt pt-aba" style="left:36%;top:34%"><span class="pt-dot"></span><span class="pt-tag">Langkah tegap</span></span>
+              <span class="pt pt-aba" style="left:58%;top:24%"><span class="pt-dot"></span><span class="pt-tag">Hormat, hentikan</span></span>
+              <span class="pt pt-end" style="left:58%;top:14%"><span class="pt-dot"></span><span class="pt-tag">Selesai</span></span>
+            </div>
+          </div>
+          <div class="tablerow" style="border-top:1px solid var(--line-soft);padding:7px 14px">
+            <span class="dim" style="font-size:9px">Urutan alur</span>
+            <span class="badge green">1 · Masuk lintasan</span>
+            <span class="badge warn">2 · Hadap kanan</span>
+            <span class="badge warn">3 · Langkah tegap</span>
+            <span class="badge warn">4 · Hormat, hentikan</span>
+            <span class="badge rose">5 · Selesai</span>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Halaman publik, alur di atas zona</span><span>sama di PDF</span></div>
+      </div>
+      <div class="notes">
+        <h3>Keputusan &amp; alasan</h3>
+        <ul>
+          <li><b>Kanvas yang sama dipakai tiga tempat.</b> Partial <code>denah-kanvas</code> sudah dipakai editor, publik, dan PDF. Alur digambar di partial yang sama, jadi tidak ada renderer kedua yang bisa menyimpang.</li>
+          <li><b>Daftar urutan alur ikut tampil di bawah kanvas.</b> Panitia di lapangan lebih sering mencari "perintah ketiga apa" daripada membaca gambar. Daftarnya juga jadi pengganti saat kanvas dicetak kecil.</li>
+          <li><b>Tanpa tombol putar di publik.</b> Halaman publik hanya menampilkan, tidak mengedit. Penanda aba-aba sudah terbaca sebagai daftar di bawahnya.</li>
+          <li><b>Alur yang disembunyikan hilang dari PDF juga.</b> Kalau masih tercetak di PDF padahal disembunyikan, saklarnya jadi menyesatkan.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 6 ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>Skema &amp; rencana implementasi</h2></div>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner" style="min-height:0;padding:14px 16px;display:block">
+          <h3 style="font-size:12px;margin-bottom:6px">Skema: satu kolom JSON di tabel yang sudah ada</h3>
+          <pre style="font-family:var(--mono);font-size:10.5px;line-height:1.6;margin:0;color:var(--muted);white-space:pre-wrap">competition_layouts
+  + route_points   JSON NULL    -- null = belum ada alur
+  + route_visible  BOOLEAN       -- default 1
+
+route_points = [
+  {"x":12,"y":92,"kind":"start","label":"Masuk lintasan","heading":0},
+  {"x":12,"y":34,"kind":"turn"},
+  {"x":12,"y":52,"kind":"aba_aba","label":"Hadap kanan","heading":90},
+  {"x":58,"y":34,"kind":"turn"},
+  {"x":58,"y":14,"kind":"end","label":"Selesai","heading":0}
+]
+kind    : start | turn | aba_aba | end
+heading : derajat searah jarum jam dari atas, null = tanpa panah</pre>
+        </div>
+        <div class="screen-cap"><span>Skema</span><span>tanpa tabel baru</span></div>
+      </div>
+      <div class="notes">
+        <h3>Kenapa kolom, bukan tabel baru</h3>
+        <ul>
+          <li><b>Satu alur per denah, dan selalu dibaca bersama denahnya.</b> Tidak ada satu pun query yang bertanya "titik mana saja yang ada di x=12". Karena itu tabel titik terpisah hanya menambah join untuk sesuatu yang tidak pernah dipisah.</li>
+          <li><b>Urutan titik sudah menyimpan urutan lintasan.</b> Array JSON sudah berurutan, jadi tidak perlu kolom <code>sort_order</code>.</li>
+          <li><b>Jalan keluar kalau nanti perlu banyak alur.</b> Isi JSON dipindah apa adanya ke tabel <code>layout_routes</code>, dan renderer tidak berubah karena bentuk titiknya tetap sama. Migrasinya jadi soal pemindahan baris, bukan penulisan ulang.</li>
+        </ul>
+        <h3 style="margin-top:14px">Rencana teknis</h3>
+        <table class="mini">
+          <tr><th>Berkas</th><th>Perubahan</th></tr>
+          <tr><td>migrasi baru</td><td>2 kolom di <code>competition_layouts</code></td></tr>
+          <tr><td><code>CompetitionLayout</code></td><td>cast <code>route_points</code> ke array, accessor <code>punyaAlur</code></td></tr>
+          <tr><td><code>LayoutZone::titikKeGaris()</code></td><td>proyeksi titik ke polyline, dipakai editor saat menyimpan</td></tr>
+          <tr><td><code>partials/denah-kanvas</code></td><td>polyline SVG + penanda HTML, satu blok <code>@if($layout->route_points)</code></td></tr>
+          <tr><td><code>Layout\Show</code></td><td>mode Zona/Alur, tambah/geser/hapus titik</td></tr>
+          <tr><td><code>denah-tampil</code></td><td>daftar urutan alur di bawah kanvas</td></tr>
+          <tr><td><code>pdf-cetak</code></td><td>alur ikut tercetak, dengan pengganti SVG</td></tr>
+        </table>
+        <h3 style="margin-top:14px">Risiko yang sudah terlihat</h3>
+        <ul>
+          <li><b>SVG tidak seragam skalanya.</b> Kanvas memakai persen untuk x dan y, jadi SVG-nya dipasang <code>preserveAspectRatio="none"</code>. Garis tetap lurus karena transformasinya affine, dan <code>vector-effect="non-scaling-stroke"</code> menjaga tebal garis. Tapi panah SVG ikut terdistorsi, karena itu <b>semua penanda digambar sebagai elemen HTML</b> dalam persen, bukan di dalam SVG.</li>
+          <li><b>dompdf dan SVG.</b> Dukungan SVG di dompdf terbatas dan <code>vector-effect</code> belum pasti terbaca. Penggantinya: saat mode cetak, polyline digambar sebagai rangkaian <code>div</code> tipis yang diputar per segmen. Ini sudah dibuktikan pada kanvas zona yang juga murni persen, dan tinggal satu blok CSS <code>.denah-cetak</code>.</li>
+        </ul>
+        <h3 style="margin-top:14px">Yang sengaja TIDAK dibuat</h3>
+        <ul>
+          <li><b>Data peserta di sepanjang alur.</b> Sama seperti denah: alurnya menunjukkan jalan, bukan siapa yang berjalan.</li>
+          <li><b>Preset lintasan siap pakai.</b> Tiap arena punya bentuk lintasan sendiri; preset hanya akan dihapus dan digambar ulang.</li>
+          <li><b>Lebih dari satu alur per denah.</b> Alur kedua dibuat sebagai denah terpisah, supaya tidak perlu penamaan dan legenda warna.</li>
+          <li><b>Animasi pasukan berjalan di halaman publik.</b> Halaman publik dibaca sambil berdiri di lapangan, bukan ditonton.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

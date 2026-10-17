@@ -11,7 +11,12 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * Editor denah: kanvas, daftar zona, dan panel sifat zona terpilih.
+ * Editor denah: kanvas, daftar zona, panel sifat zona terpilih, dan alur.
+ *
+ * Kanvasnya punya dua mode. Di mode Zona kotak-kotak yang diseret; di mode
+ * Alur yang diseret titik alurnya. Dua mode, bukan satu kanvas pintar, karena
+ * titik alur sering jatuh tepat di atas arena — kalau keduanya bisa diseret
+ * sekaligus, memindahkan titik alur akan selalu berarti memindahkan arena.
  *
  * Posisi dikirim SEKALI saat seret selesai, bukan tiap piksel — kalau tidak,
  * satu seretan lima detik jadi ratusan request.
@@ -30,6 +35,15 @@ class Show extends Component
     public CompetitionLayout $layout;
 
     public ?int $selectedId = null;
+
+    // ── Mode kanvas & alur ─────────────────────────────────────────────────
+    public string $mode = 'zona';
+
+    public ?int $titikTerpilih = null;
+
+    public string $titikLabel = '';
+
+    public string $titikHadap = '';
 
     // ── Sifat zona terpilih (form panel kanan) ─────────────────────────────
     public string $nama = '';
@@ -65,6 +79,8 @@ class Show extends Component
             'kapasitas' => 'nullable|string|max:64',
             'catatan' => 'nullable|string|max:255',
             'nomorDp' => 'nullable|integer|min:1|max:99',
+            'titikLabel' => 'nullable|string|max:60',
+            'titikHadap' => 'nullable|integer|min:0|max:359',
         ];
     }
 
@@ -127,6 +143,9 @@ class Show extends Component
             LayoutZone::TYPE_SEKRETARIAT => ['w' => 16, 'h' => 12, 'x' => 80, 'y' => 60],
             LayoutZone::TYPE_JALUR_MASUK => ['w' => 8, 'h' => 30, 'x' => 4, 'y' => 34],
             LayoutZone::TYPE_PANAH => ['w' => 40, 'h' => 4, 'x' => 30, 'y' => 70],
+            // Tiang bendera itu tonggak, bukan bidang: tinggi sedikit, sempit,
+            // dan ditaruh di tepi arena — bukan di tengahnya.
+            LayoutZone::TYPE_TIANG_BENDERA => ['w' => 5, 'h' => 12, 'x' => 6, 'y' => 70],
             LayoutZone::TYPE_DP => ['w' => 12, 'h' => 20, 'x' => 2, 'y' => 40],
             default => ['w' => 18, 'h' => 8, 'x' => 40, 'y' => 44],
         };
@@ -271,6 +290,241 @@ class Show extends Component
         $this->segarkan();
         $this->pilihZona($salin->id);
         $this->toast('Zona diduplikat.');
+    }
+
+    // ── Alur gerak pasukan ─────────────────────────────────────────────────
+
+    public function gantiMode(string $mode): void
+    {
+        if (! in_array($mode, ['zona', 'alur'], true)) {
+            return;
+        }
+
+        $this->mode = $mode;
+        $this->resetValidation();
+
+        if ($mode === 'zona') {
+            $this->batalPilihTitik();
+        } else {
+            $this->batalPilih();
+        }
+    }
+
+    /**
+     * Mulai alur baru dengan dua titik contoh di tepi kiri papan.
+     *
+     * Menaruhnya di kiri, bukan di tengah: alur baris-berbaris hampir selalu
+     * masuk dari sisi, dan titik di tengah kanvas langsung menimpa arena.
+     */
+    public function mulaiAlur(): void
+    {
+        if ($this->layout->punya_alur) {
+            return;
+        }
+
+        $this->simpanTitikMentah([
+            ['x' => 8.0, 'y' => 88.0, 'kind' => 'start', 'label' => 'Mulai', 'heading' => 0],
+            ['x' => 8.0, 'y' => 30.0, 'kind' => 'end', 'label' => 'Selesai', 'heading' => 0],
+        ]);
+
+        $this->mode = 'alur';
+        $this->pilihTitik(0);
+        $this->toast('Alur dibuat. Seret titiknya, atau klik garisnya untuk menyisipkan titik.');
+    }
+
+    public function hapusAlur(): void
+    {
+        $this->layout->update(['route_points' => null]);
+        $this->segarkan();
+        $this->batalPilihTitik();
+        $this->toast('Alur dihapus.', 'info');
+    }
+
+    /** Simpan titik di ujung alur — dipakai tombol "Tambah titik". */
+    public function tambahTitikAkhir(): void
+    {
+        $titik = $this->layout->alur_titik;
+
+        if ($titik === []) {
+            $this->mulaiAlur();
+
+            return;
+        }
+
+        // Digeser sedikit dari titik terakhir supaya ruasnya terlihat; titik
+        // yang menumpuk persis di atas titik sebelumnya tak bisa diseret.
+        $akhir = end($titik);
+
+        $titik[] = [
+            'x' => min(100, $akhir['x'] + 12),
+            'y' => max(0, $akhir['y'] - 12),
+            'kind' => 'turn',
+            'label' => '',
+            'heading' => null,
+        ];
+
+        $this->simpanTitikMentah($titik);
+        $this->pilihTitik(count($titik) - 1);
+        $this->toast('Titik ditambahkan di ujung alur.');
+    }
+
+    /**
+     * Sisipkan titik di tengah satu ruas.
+     *
+     * Titik baru ditaruh di titik tengah ruas itu, jadi menyisipkan tak pernah
+     * mengubah bentuk alur yang sudah digambar — panitia tinggal menyeretnya.
+     */
+    public function sisipTitik(int $ruas): void
+    {
+        $titik = $this->layout->alur_titik;
+
+        if (! isset($titik[$ruas], $titik[$ruas + 1])) {
+            return;
+        }
+
+        $a = $titik[$ruas];
+        $b = $titik[$ruas + 1];
+
+        array_splice($titik, $ruas + 1, 0, [[
+            'x' => round(($a['x'] + $b['x']) / 2, 3),
+            'y' => round(($a['y'] + $b['y']) / 2, 3),
+            'kind' => 'turn',
+            'label' => '',
+            'heading' => null,
+        ]]);
+
+        $this->simpanTitikMentah($titik);
+        $this->pilihTitik($ruas + 1);
+        $this->toast('Titik disisipkan. Seret untuk menempatkannya.');
+    }
+
+    public function pilihTitik(int $i): void
+    {
+        $titik = $this->layout->alur_titik;
+
+        if (! isset($titik[$i])) {
+            return;
+        }
+
+        $this->titikTerpilih = $i;
+        $this->titikLabel = $titik[$i]['label'];
+        $this->titikHadap = $titik[$i]['heading'] === null ? '' : (string) $titik[$i]['heading'];
+    }
+
+    public function batalPilihTitik(): void
+    {
+        $this->reset(['titikTerpilih', 'titikLabel', 'titikHadap']);
+        $this->resetValidation();
+    }
+
+    /** Dipanggil sekali di akhir seretan titik alur. */
+    public function simpanTitik(int $i, $x, $y): void
+    {
+        $titik = $this->layout->alur_titik;
+
+        if (! isset($titik[$i])) {
+            return;
+        }
+
+        $titik[$i]['x'] = $this->jepit($x);
+        $titik[$i]['y'] = $this->jepit($y);
+
+        $this->simpanTitikMentah($titik);
+    }
+
+    public function simpanSifatTitik(): void
+    {
+        if ($this->titikTerpilih === null) {
+            return;
+        }
+
+        $this->validate([
+            'titikLabel' => 'nullable|string|max:60',
+            'titikHadap' => 'nullable|integer|min:0|max:359',
+        ]);
+
+        $titik = $this->layout->alur_titik;
+        $i = $this->titikTerpilih;
+
+        if (! isset($titik[$i])) {
+            return;
+        }
+
+        $titik[$i]['label'] = trim(strip_tags($this->titikLabel));
+        $titik[$i]['heading'] = $this->titikHadap === '' ? null : (int) $this->titikHadap;
+
+        $this->simpanTitikMentah($titik);
+        $this->toast('Titik alur disimpan.');
+    }
+
+    public function ubahJenisTitik(string $jenis): void
+    {
+        if (! array_key_exists($jenis, CompetitionLayout::TITIK_JENIS) || $this->titikTerpilih === null) {
+            return;
+        }
+
+        $titik = $this->layout->alur_titik;
+        $i = $this->titikTerpilih;
+
+        if (! isset($titik[$i])) {
+            return;
+        }
+
+        $titik[$i]['kind'] = $jenis;
+
+        $this->simpanTitikMentah($titik);
+        $this->toast('Jenis titik diubah.');
+    }
+
+    public function hapusTitik(int $i): void
+    {
+        $titik = $this->layout->alur_titik;
+
+        if (! isset($titik[$i])) {
+            return;
+        }
+
+        array_splice($titik, $i, 1);
+
+        // Sisa satu titik bukan alur, dan menggambar satu titik saja di halaman
+        // publik cuma membingungkan.
+        if (count($titik) < 2) {
+            $this->layout->update(['route_points' => null]);
+            $this->segarkan();
+            $this->batalPilihTitik();
+            $this->toast('Alur dihapus karena titiknya tinggal satu.', 'info');
+
+            return;
+        }
+
+        $this->simpanTitikMentah($titik);
+        $this->batalPilihTitik();
+        $this->toast('Titik dihapus.');
+    }
+
+    public function toggleAlurPublik(): void
+    {
+        $this->layout->update(['route_visible' => ! $this->layout->route_visible]);
+        $this->segarkan();
+        $this->toast(
+            $this->layout->route_visible
+                ? 'Alur ditampilkan di halaman publik.'
+                : 'Alur disembunyikan dari halaman publik.',
+            'info',
+        );
+    }
+
+    /**
+     * Tulis ulang seluruh kolom route_points.
+     *
+     * Selalu lewat sini, bukan update() bertarget: `route_points` bertipe array,
+     * dan menuliskan satu indeksnya saja tak bisa dilacak Eloquent sebagai
+     * perubahan — titik yang digeser akan tampak tersimpan padahal tidak.
+     */
+    private function simpanTitikMentah(array $titik): void
+    {
+        $this->layout->update(['route_points' => array_values($titik)]);
+        $this->segarkan();
     }
 
     // ── Susun DP otomatis ──────────────────────────────────────────────────
@@ -441,6 +695,8 @@ class Show extends Component
             'zones' => $zones,
             'terpilih' => $terpilih,
             'tipeTersedia' => LayoutZone::TIPE_LABEL,
+            'ikonTipe' => LayoutZone::TIPE_IKON,
+            'jenisTitik' => CompetitionLayout::TITIK_JENIS,
         ])->title('Editor Denah - '.$this->layout->name);
     }
 }

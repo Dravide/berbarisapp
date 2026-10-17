@@ -80,10 +80,25 @@
              di halaman ini; panel kanan cukup 4 kolom untuk tiga field pendek. --}}
         <div class="col-lg-8">
             <div class="card"><div class="card-body p-3">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="fw-semibold mb-0">Kanvas</h6>
+                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Mode kanvas">
+                        <button type="button"
+                                class="btn {{ $mode === 'zona' ? 'btn-primary' : 'btn-outline-primary' }}"
+                                wire:click="gantiMode('zona')">
+                            <i class="ti ti-layout-grid me-1"></i> Zona
+                        </button>
+                        <button type="button"
+                                class="btn {{ $mode === 'alur' ? 'btn-primary' : 'btn-outline-primary' }}"
+                                wire:click="gantiMode('alur')">
+                            <i class="ti ti-route me-1"></i> Alur
+                        </button>
+                    </div>
                     <small class="text-muted">
-                        Seret kotak untuk memindahkan &middot; tarik sudut kanan-bawah untuk mengubah ukuran
+                        @if($mode === 'alur')
+                            Seret titik untuk memindahkannya &middot; klik garis untuk menyisipkan titik
+                        @else
+                            Seret kotak untuk memindahkan &middot; tarik sudut kanan-bawah untuk mengubah ukuran
+                        @endif
                     </small>
                 </div>
 
@@ -92,18 +107,23 @@
                     'zones' => $zones,
                     'interaktif' => true,
                     'terpilihId' => $selectedId,
+                    'terpilihTitik' => $titikTerpilih,
                     'kisi' => true,
+                    'mode' => $mode,
                 ])
             </div></div>
         </div>
 
         <div class="col-lg-4">
+            @if($mode === 'alur')
+                @include('livewire.eventner.layout.panel-alur')
+            @else
             <div class="card"><div class="card-body p-3">
                 <h6 class="fw-semibold mb-2">Tambah Zona</h6>
                 <div class="d-grid gap-1 mb-3">
                     @foreach($tipeTersedia as $kunci => $label)
                         <button class="btn btn-outline-secondary btn-sm text-start" wire:click="tambahZona('{{ $kunci }}')">
-                            <i class="ti ti-plus me-1"></i> {{ $label }}
+                            <i class="ti {{ $ikonTipe[$kunci] ?? 'ti-square' }} me-1"></i> {{ $label }}
                         </button>
                     @endforeach
                 </div>
@@ -204,6 +224,7 @@
                     </p>
                 @endif
             </div></div>
+            @endif
         </div>
     </div>
 
@@ -317,12 +338,16 @@
     //
     // Kisi latar & penanda pilihan dilepas dulu saat memotret; keduanya alat
     // kerja editor, bukan bagian dari denah yang dibagikan ke peserta.
+    //
+    // Kisinya ada di bingkai, bukan di kanvas — cari elemennya, jangan
+    // mengandaikan letaknya.
     $wire.on('unduh-denah-png', async ({ nama }) => {
         const kanvas = document.querySelector('[data-denah-editor]');
         if (!kanvas) return;
 
-        const kisi = kanvas.classList.contains('denah-kisi');
-        kanvas.classList.remove('denah-kisi', 'denah-interaktif');
+        const berkisi = kanvas.querySelectorAll('.denah-kisi');
+        berkisi.forEach((el) => el.classList.remove('denah-kisi'));
+        kanvas.classList.remove('denah-interaktif');
         kanvas.querySelectorAll('.is-terpilih').forEach((el) => el.classList.remove('is-terpilih'));
 
         try {
@@ -346,7 +371,7 @@
         } catch (e) {
             window.beToast?.('Gagal membuat PNG. Pakai unduh PDF sebagai gantinya.', 'error');
         } finally {
-            if (kisi) kanvas.classList.add('denah-kisi');
+            berkisi.forEach((el) => el.classList.add('denah-kisi'));
             kanvas.classList.add('denah-interaktif');
             $wire.dispatch('denah-refresh');
         }
@@ -375,5 +400,6 @@
         .zone-dot.z-jalur  { background: #ffe4e6; border-color: #e11d48; }
         .zone-dot.z-arah,
         .zone-dot.z-teks   { background: transparent; }
+        .zone-dot.z-bendera { background: #fecaca; border-color: #dc2626; }
     </style>
 @endonce

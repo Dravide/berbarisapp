@@ -33,6 +33,8 @@ class LayoutZone extends Model
 
     public const TYPE_PANAH = 'panah';
 
+    public const TYPE_TIANG_BENDERA = 'tiang_bendera';
+
     public const TYPE_TEKS = 'teks';
 
     /** Label + kelas warna kanvas. Kelasnya dipakai editor DAN halaman publik
@@ -45,6 +47,7 @@ class LayoutZone extends Model
         self::TYPE_SEKRETARIAT => 'Sekretariat',
         self::TYPE_JALUR_MASUK => 'Jalur Masuk',
         self::TYPE_PANAH => 'Panah',
+        self::TYPE_TIANG_BENDERA => 'Tiang Bendera',
         self::TYPE_TEKS => 'Teks',
     ];
 
@@ -56,7 +59,24 @@ class LayoutZone extends Model
         self::TYPE_SEKRETARIAT => 'z-sekre',
         self::TYPE_JALUR_MASUK => 'z-jalur',
         self::TYPE_PANAH => 'z-arah',
+        self::TYPE_TIANG_BENDERA => 'z-bendera',
         self::TYPE_TEKS => 'z-teks',
+    ];
+
+    /** Ikon Tabler per jenis, dipakai tombol Tambah Zona & daftar zona.
+     *  Isinya sengaja hanya nama yang ADA di tabler-icons.css lokal: webfont
+     *  itu yang dipakai editor & halaman publik, dan nama yang tak ada di
+     *  sana cuma menyisakan kotak kosong di tombolnya. */
+    public const TIPE_IKON = [
+        self::TYPE_DP => 'ti-layout-rows',
+        self::TYPE_ARENA => 'ti-square',
+        self::TYPE_POS_PENILAIAN => 'ti-armchair',
+        self::TYPE_TRIBUN => 'ti-building-community',
+        self::TYPE_SEKRETARIAT => 'ti-notebook',
+        self::TYPE_JALUR_MASUK => 'ti-door-enter',
+        self::TYPE_PANAH => 'ti-arrow-right',
+        self::TYPE_TIANG_BENDERA => 'ti-flag',
+        self::TYPE_TEKS => 'ti-letter-case',
     ];
 
     protected $fillable = [
@@ -102,6 +122,11 @@ class LayoutZone extends Model
     public function getKelasTipeAttribute(): string
     {
         return self::TIPE_KELAS[$this->type] ?? 'z-teks';
+    }
+
+    public function getIkonTipeAttribute(): string
+    {
+        return self::TIPE_IKON[$this->type] ?? 'ti-square';
     }
 
     /** Geometri siap tulis ke atribut style blade. */

@@ -152,6 +152,34 @@
         </div>
     @endif
 
+    @php
+        // Alur disembunyikan dari publik berarti juga disembunyikan dari kertas:
+        // lembar ini beredar di luar panitia, jadi ia ikut aturan yang sama.
+        // Nomornya ditulis manual, bukan lewat <ol>: penomoran list-item dompdf
+        // tidak selalu ikut tercetak.
+        $langkahAlur = $denah->alur_tampil ? $denah->alurLangkah() : [];
+    @endphp
+
+    @if($langkahAlur !== [])
+        <div class="keterangan">
+            <table>
+                <tr>
+                    <th style="width: 34%;">Alur Gerak Pasukan</th>
+                    <td>
+                        @foreach($langkahAlur as $langkah)
+                            <div>
+                                <strong>{{ $langkah['nomor'] }}. {{ $langkah['judul'] }}</strong>
+                                @if($langkah['hadap'] !== null)
+                                    &mdash; {{ $langkah['jenis'] }}, hadap {{ $langkah['hadap'] }}&deg;
+                                @endif
+                            </div>
+                        @endforeach
+                    </td>
+                </tr>
+            </table>
+        </div>
+    @endif
+
     <table class="ttd">
         <tr>
             <td>

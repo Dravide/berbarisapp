@@ -34,7 +34,9 @@
         @endif
     </div>
 
-    @if($denah->zones->isEmpty())
+    @php($daftarLangkah = $denah->alur_tampil ? $denah->alurLangkah() : [])
+
+    @if($denah->zones->isEmpty() && $daftarLangkah === [])
         {{-- Terjadi kalau panitia menerbitkan denah lalu menghapus semua
              zonanya. Lebih jujur mengatakan kosong daripada menampilkan
              kanvas hampa. --}}
@@ -46,6 +48,26 @@
             'interaktif' => false,
             'kisi' => false,
         ])
+    @endif
+
+    {{-- Urutan alur: peserta yang sudah hafal gambarnya tetap perlu tahu urutan
+         aba-abanya, dan itu tak terbaca dari garis di kanvas. --}}
+    @if($daftarLangkah !== [])
+        <div class="mt-4">
+            <h3 class="font-display text-xs font-bold text-on-surface mb-2">
+                <i class="ti ti-route text-primary"></i> Urutan Alur Pasukan
+            </h3>
+            <ol class="text-xs text-on-surface-variant space-y-1 mb-0 list-decimal pl-5">
+                @foreach($daftarLangkah as $langkah)
+                    <li>
+                        <span class="font-semibold text-on-surface">{{ $langkah['judul'] }}</span>
+                        @if($langkah['hadap'] !== null)
+                            <span class="text-on-surface-variant">({{ $langkah['jenis'] }}, hadap {{ $langkah['hadap'] }}&deg;)</span>
+                        @endif
+                    </li>
+                @endforeach
+            </ol>
+        </div>
     @endif
 
     {{-- Tabel keterangan: yang dibaca panitia saat mencari "DP saya yang mana"
