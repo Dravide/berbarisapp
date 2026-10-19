@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Papan Mitra Carousel Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: dokumen spesifikasi — tiap slide satu baris, wireframe 4:5 di kiri, anotasi di kanan. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --lime:#a3e635; --lime-ink:#2c4703;
+  --gold:#b8860b; --gold-soft:#fdf6e3;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --lime:#b6f24e; --lime-ink:#16250a;
+    --gold:#e2b857; --gold-soft:#2a2413;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --lime:#b6f24e; --lime-ink:#16250a;
+  --gold:#e2b857; --gold-soft:#2a2413;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{
+  max-width:1180px;
+  margin-inline:auto;
+  padding-inline:clamp(16px,4vw,40px);
+  padding-block:clamp(28px,5vw,56px);
+}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 10px;
+}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:64ch;color:var(--muted)}
+.lede strong{color:var(--ink);font-weight:600}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{
+  font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap;
+}
+.chip.warn{border-color:var(--gold);background:var(--gold-soft);color:var(--gold)}
+button.toggle{
+  font-family:var(--mono);font-size:12px;padding:7px 14px;border-radius:999px;
+  border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);
+  cursor:pointer;white-space:nowrap;
+}
+button.toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.toggle[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.spec{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-top:28px;
+}
+.spec > div{background:var(--panel);padding:16px 18px}
+.spec dt{
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;
+}
+.spec dd{margin:0;font-size:14px;line-height:1.5}
+
+.slide{
+  margin-top:clamp(32px,5vw,56px);
+  display:grid;
+  grid-template-columns:minmax(0,460px) minmax(0,1fr);
+  gap:clamp(20px,3vw,44px);
+  align-items:start;
+}
+@media (max-width:860px){ .slide{grid-template-columns:minmax(0,1fr)} }
+.slide-head{grid-column:1/-1}
+.slide-head h2{font-size:clamp(19px,2.2vw,23px);font-weight:700}
+.slide-head .num{
+  font-family:var(--mono);font-size:12px;color:var(--accent);
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.slide-head .goal{color:var(--muted);font-size:14px;margin-top:6px;max-width:70ch}
+
+.frame{
+  position:relative;
+  aspect-ratio:4/5;
+  width:100%;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  overflow:hidden;
+  container-type:inline-size;
+  --u:0.0926cqw; /* 1 px desain (kanvas 1080) */
+}
+@media (max-width:860px){ .frame{max-width:440px} }
+.f-in{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  padding:calc(80*var(--u));
+  gap:calc(32*var(--u));
+}
+.safe{
+  position:absolute;inset:calc(80*var(--u));
+  border:1px dashed var(--accent);border-radius:calc(8*var(--u));
+  opacity:0;transition:opacity .15s;pointer-events:none;z-index:5;
+}
+.safe::after{
+  content:"margin 80 px";position:absolute;top:calc(-18*var(--u));left:0;
+  font-family:var(--mono);font-size:10px;color:var(--accent);
+}
+.guides .safe{opacity:.6}
+
+.grow{flex:1 1 auto;min-height:0}
+.row{display:flex;align-items:flex-end;justify-content:space-between;gap:calc(24*var(--u))}
+.hrow{display:flex;align-items:baseline;justify-content:space-between;gap:calc(24*var(--u));flex:0 0 auto}
+
+.eyeb{font-family:var(--mono);font-size:calc(28*var(--u));letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}
+.h-big{font-size:calc(84*var(--u));font-weight:700;line-height:1.05;letter-spacing:-.02em}
+.h-sm{font-size:calc(52*var(--u));font-weight:700;line-height:1.12;text-wrap:balance}
+.sub{font-size:calc(38*var(--u));color:var(--muted);line-height:1.35}
+.desc{font-size:calc(30*var(--u));color:var(--muted);line-height:1.35;flex:0 0 auto}
+.tinym{font-family:var(--mono);font-size:calc(28*var(--u));color:var(--muted)}
+.pill{
+  background:var(--lime);color:var(--lime-ink);
+  border-radius:999px;height:calc(96*var(--u));
+  display:flex;align-items:center;justify-content:center;
+  font-weight:600;font-size:calc(34*var(--u));
+  padding-inline:calc(48*var(--u));
+}
+
+/* Slot tangkapan layar — mengisi seluruh sisa tinggi slide */
+.ph{
+  border:1px dashed var(--ph-line);background:var(--ph-fill);
+  border-radius:calc(8*var(--u));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;text-align:center;flex:none;
+}
+.shotwrap{
+  flex:1 1 auto;min-height:0;
+  display:flex;justify-content:center;gap:calc(28*var(--u));
+}
+.shot{
+  border:1px dashed var(--ph-line);background:var(--ph-fill);
+  border-radius:calc(16*var(--u));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:calc(6*var(--u));text-align:center;
+  flex:1 1 0;width:100%;height:100%;min-width:0;
+}
+.ph span,.shot span{
+  font-family:var(--mono);font-size:10px;letter-spacing:.04em;
+  color:var(--muted);line-height:1.3;
+}
+.ph span em,.shot span em{display:block;font-style:normal;opacity:.75;font-size:9px}
+
+/* ── Slot logo mitra ──────────────────────────────────────────────────────
+   Dua wujud, dan bedanya harus kelihatan dari jauh: yang sudah ada logonya
+   digambar penuh, yang belum tetap kotak bergaris putus. Kalau keduanya
+   disamakan, dokumen ini berhenti memberi tahu apa yang masih kurang. */
+.logowrap{
+  flex:1 1 auto;min-height:0;
+  display:flex;align-items:center;justify-content:center;
+  gap:calc(28*var(--u));
+}
+.logo-kotak{
+  flex:1 1 0;min-width:0;
+  aspect-ratio:1;
+  border:1px solid var(--line);
+  border-radius:calc(20*var(--u));
+  background:var(--panel-2);
+  display:flex;align-items:center;justify-content:center;
+  padding:calc(34*var(--u));
+}
+.logo-kotak img{width:100%;height:100%;object-fit:contain;display:block}
+.logo-kotak.kosong{
+  border-style:dashed;border-color:var(--ph-line);background:var(--ph-fill);
+  padding:calc(24*var(--u));
+}
+.logo-kotak.kosong span{
+  font-family:var(--mono);font-size:10px;letter-spacing:.04em;
+  color:var(--muted);text-align:center;line-height:1.35;
+}
+.logo-kotak.kosong span em{display:block;font-style:normal;opacity:.75;font-size:9px}
+.logo-satu{width:min(100%,calc(460*var(--u)));flex:0 1 auto}
+
+/* Baris data di dalam slide — dipakai untuk informasi mitra. */
+.kv{
+  flex:1 1 auto;min-height:0;
+  display:flex;flex-direction:column;gap:calc(20*var(--u));
+}
+.kv > div{
+  display:grid;grid-template-columns:calc(200*var(--u)) minmax(0,1fr);
+  gap:calc(24*var(--u));align-items:baseline;
+  padding-bottom:calc(16*var(--u));
+  border-bottom:1px solid var(--line-soft);
+}
+.kv dt,.kv .k{
+  font-family:var(--mono);font-size:calc(26*var(--u));letter-spacing:.04em;
+  color:var(--muted);text-transform:uppercase;
+}
+.kv dd,.kv .v{margin:0;font-size:calc(30*var(--u));line-height:1.3}
+
+/* Deret butir sisa — untuk slide penutup isi */
+.chips{
+  flex:1 1 auto;min-height:0;
+  display:flex;flex-wrap:wrap;gap:calc(16*var(--u));
+  align-content:flex-start;
+}
+.chipfx{
+  border:1px solid var(--line);border-radius:999px;
+  padding:calc(14*var(--u)) calc(28*var(--u));
+  font-size:calc(26*var(--u));color:var(--muted);
+  background:var(--panel-2);line-height:1.2;
+}
+
+.notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.notes li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;align-items:baseline}
+.notes .n{
+  font-family:var(--mono);font-size:11px;color:var(--accent);
+  border-top:1px solid var(--accent);padding-top:4px;
+}
+.notes b{font-weight:600;font-size:14.5px}
+.notes .dim{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px;white-space:nowrap}
+.notes p{font-size:13.5px;color:var(--muted);margin-top:2px;line-height:1.5}
+.notes code{color:var(--ink)}
+.notes .flag{color:var(--gold);font-weight:600}
+
+.rules{
+  margin-top:clamp(40px,6vw,72px);
+  border-top:1px solid var(--line);padding-top:clamp(24px,3vw,36px);
+}
+.rules h2{font-size:clamp(19px,2.2vw,23px)}
+.rules .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;margin-top:20px}
+.rules ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--muted)}
+.rules ul strong{color:var(--ink);font-weight:600}
+.rules p.lead{color:var(--muted);font-size:14px;margin-top:10px;max-width:78ch}
+
+table.data{
+  width:100%;border-collapse:collapse;margin-top:18px;font-size:13.5px;
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+}
+@media (max-width:700px){
+  table.data{display:block;overflow-x:auto;white-space:nowrap}
+}
+table.data th,table.data td{
+  border-bottom:1px solid var(--line-soft);padding:9px 12px;text-align:left;vertical-align:top;
+}
+table.data thead th{
+  background:var(--panel-2);font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted);font-weight:500;
+}
+table.data tbody tr:last-child td{border-bottom:0}
+table.data td.mono{font-family:var(--mono);font-size:12px;color:var(--muted)}
+table.data .ya{color:var(--lime-ink);font-weight:600}
+table.data .tidak{color:var(--gold);font-weight:600}
+footer{
+  margin-top:clamp(32px,5vw,56px);border-top:1px solid var(--line);padding-top:20px;
+  font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em;
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">BERBARIS APP — Papan mitra #1</p>
+    <h1>Wireframe carousel 9 slide: mitra &amp; event</h1>
+    <p class="lede">Papan mitra itu format yang diulang, bukan post sekali jadi — tiap kali ada mitra atau event baru, edisinya bertambah. Karena itu yang dibakukan di sini adalah <strong>susunannya</strong>: satu mitra satu slide, logo besar, dan baris informasi di bawahnya. Isi hari ini masih tipis, dan dokumen ini menyebut apa adanya apa yang sudah ada dan apa yang masih menunggu.</p>
+    <div class="meta">
+      <span class="chip">1080 × 1350 px · 4:5</span>
+      <span class="chip">9 slide</span>
+      <span class="chip">1 mitra = 1 slide</span>
+      <span class="chip warn">1 logo sudah ada</span>
+      <span class="chip warn">2 logo menunggu</span>
+      <span class="chip">margin aman 80 px</span>
+      <button class="toggle" id="gt" type="button" aria-pressed="false">Tampilkan garis margin</button>
+    </div>
+  </header>
+
+  <dl class="spec">
+    <div>
+      <dt>Kanvas</dt>
+      <dd>1080 × 1350 px (4:5). Semua ukuran di wireframe ini dalam px kanvas.</dd>
+    </div>
+    <div>
+      <dt>Skala teks</dt>
+      <dd>Judul 52 · Keterangan 30 · Label 28 · Chip sisa 26 · Informasi 30/26 · <em>minimum 26</em></dd>
+    </div>
+    <div>
+      <dt>Slot logo</dt>
+      <dd>Satu logo 460 × 460 · dua logo berdampingan 2 × 356 × 356 · selalu kotak sama sisi, isinya <code>object-fit: contain</code></dd>
+    </div>
+    <div>
+      <dt>Susunan slide</dt>
+      <dd>Label + nomor → judul → keterangan → logo atau tabel informasi</dd>
+    </div>
+  </dl>
+
+  <!-- ============ SLIDE 1 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 1 / 9</p>
+      <h2>Cover — papan mitra, sebut ini edisi pertama</h2>
+      <p class="goal">Cover yang menyebut "edisi pertama" mengubah kelemahan jadi janji: isinya memang baru sedikit, dan itu memang direncanakan bertambah. Jangan pasang angka jumlah mitra di sini.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="ph" style="width:calc(120*var(--u));height:calc(120*var(--u))">
+          <span>LOGO<em>120 × 120</em></span>
+        </div>
+        <div class="grow"></div>
+        <p class="h-big">Papan mitra.</p>
+        <p class="sub">Yang sudah jalan bareng kami — dan yang sedang menyusul.</p>
+        <div class="grow"></div>
+        <div class="row">
+          <span class="tinym" style="font-size:calc(26*var(--u))">@barisapp</span>
+          <span class="tinym" style="font-size:calc(26*var(--u))">geser →</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Latar</b><span class="dim">1080 × 1350</span><p>Sama dengan cover post sebelumnya, boleh warna berbeda. Foto boleh, asal tidak ramai di belakang teks.</p></div></li>
+      <li><span class="n">02</span><div><b>Tanpa angka mitra</b><span class="dim">—</span><p><span class="flag">Klaim paling berbahaya di post ini.</span> Cover post fitur boleh menulis "sepuluh tampilan" karena angkanya bisa dihitung dari aplikasinya. Di sini jumlah mitra baru satu. Menulis angka yang belum benar akan ditagih di komentar pertama, jadi angkanya tidak dipasang sama sekali.</p></div></li>
+      <li><span class="n">03</span><div><b>"Sedang menyusul" bukan basa-basi</b><span class="dim">38 px · 2 baris</span><p>Kalimat itu yang membuat edisi pertama boleh tipis. Tanpa itu, pembaca menyimpulkan aplikasinya belum dipakai siapa pun.</p></div></li>
+      <li><span class="n">04</span><div><b>Penanda carousel</b><span class="dim">26 px · kanan bawah</span><p>Wajib ada di cover — ini papan bertambah, dan yang tidak tahu isinya bisa menggeser.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 2 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 2 / 9</p>
+      <h2>Dua jenis mitra — dan bedanya nyata</h2>
+      <p class="goal">Ini slide yang menjelaskan aturan mainnya, dan sekaligus satu-satunya alasan papan ini bukan sekadar dinding logo: mitra platform dan mitra event disimpan di dua tempat berbeda, dengan masa tampil berbeda.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Aturan</span><span class="tinym" style="font-size:calc(26*var(--u))">2 / 9</span></div>
+        <p class="h-sm">Dua jenis mitra, dua masa tampil.</p>
+        <p class="desc">Yang mendukung platformnya tampil terus di laman depan. Yang mendukung satu event tampil selama event itu hidup.</p>
+        <div class="shotwrap">
+          <div class="shot"><span>MITRA PLATFORM<em>gambar: seksi laman depan</em></span></div>
+          <div class="shot"><span>MITRA EVENT<em>gambar: halaman event</em></span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Kenapa dipisah</b><span class="dim">—</span><p>Dua-duanya disebut "mitra" di percakapan sehari-hari, tapi di aplikasi ini tempatnya beda: satu dikelola admin platform, satu dikelola panitia event. Menyatukannya di satu slide membuat tampilan yang sebenarnya dua hal terlihat seperti satu.</p></div></li>
+      <li><span class="n">02</span><div><b>Yang harus terlihat</b><span class="dim">—</span><p>Kiri: seksi "Sponsor &amp; Media Partner" di laman depan dengan logo terpasang. Kanan: blok sponsor di halaman detail event.</p></div></li>
+      <li><span class="n">03</span><div><b>Jangan sebut nama menu</b><span class="dim">—</span><p>Nama menu admin seperti <code>/admin/landing-partners</code> tidak berarti apa pun bagi pembaca. Yang penting cuma siapa yang mengelolanya — itu masuk caption.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 3 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 3 / 9</p>
+      <h2>Mitra yang sudah terpasang</h2>
+      <p class="goal">Satu-satunya slide yang isinya benar-benar sudah ada hari ini. Logonya logo asli yang dikirim mitranya sendiri, dan sudah tayang di laman depan — jadi tidak ada yang perlu dikonfirmasi lagi.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Mitra platform</span><span class="tinym" style="font-size:calc(26*var(--u))">3 / 9</span></div>
+        <p class="h-sm">Dunia Paskibra</p>
+        <p class="desc">Media partner platform. Tampil di laman depan Berbaris sejak Oktober 2026.</p>
+        <div class="logowrap logo-satu">
+          <div class="logo-kotak">
+            <img src="../public/storage/landing-partners/gjER0Y10MFKthvtvuJ00spLUBhcai0LqDsEmM1ek.png" alt="Logo Dunia Paskibra">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Logo apa adanya</b><span class="dim">460 × 460</span><p>Logo yang dipakai adalah berkas yang sama dengan yang dipasang di aplikasi — 500 × 500 px, latar transparan di dalam lingkaran emas. Jangan diwarnai ulang atau diubah jadi satu warna; itu logo orang lain.</p></div></li>
+      <li><span class="n">02</span><div><b>Logonya gelap di latar putih</b><span class="dim">—</span><p>Lingkaran emasnya terbaca di latar terang maupun gelap, tapi bagian dalamnya hitam. Kalau slide ini dipasang di latar gelap, beri kotak putih di belakangnya — jangan dibiarkan tenggelam.</p></div></li>
+      <li><span class="n">03</span><div><b>Peran ditulis apa adanya</b><span class="dim">—</span><p>"Media partner", bukan "partner resmi" atau "didukung oleh". Statusnya di aplikasi memang <code>medpart</code>, dan menyebutnya lebih tinggi dari itu adalah klaim yang tidak diminta mitranya.</p></div></li>
+      <li><span class="n">04</span><div><b>Kabari dulu sebelum tayang</b><span class="dim">—</span><p>Logonya sudah publik di situs, tapi memuatnya di feed akun itu hal lain. Satu pesan singkat ke mitranya cukup — dan sekalian minta tautan akun mereka supaya bisa ditandai.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 4 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 4 / 9</p>
+      <h2>Event yang jalan di atasnya</h2>
+      <p class="goal">Papan mitra bukan cuma dinding logo — yang membuktikan platformnya dipakai adalah eventnya. Slide ini memasang satu event lengkap dengan baris datanya.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Event</span><span class="tinym" style="font-size:calc(26*var(--u))">4 / 9</span></div>
+        <p class="h-sm">Lomba PBB se-Jawa Barat 2026</p>
+        <div class="kv">
+          <div><span class="k">Penyelenggara</span><span class="v">Dinas Pendidikan Jawa Barat</span></div>
+          <div><span class="k">Tempat</span><span class="v">GOR Padjajaran, Bandung</span></div>
+          <div><span class="k">Tanggal</span><span class="v">2–4 November 2026</span></div>
+          <div><span class="k">Tingkat</span><span class="v">Provinsi</span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Tabel, bukan kalimat</b><span class="dim">30 / 26 px</span><p>Empat baris data lebih cepat dibaca sebagai daftar daripada dirangkai jadi satu paragraf. Kuncinya mono dan huruf kecil semua supaya tidak bersaing dengan isinya.</p></div></li>
+      <li><span class="n">02</span><div><b><span class="flag">Konfirmasi dulu sebelum tayang</span></b><span class="dim">—</span><p>Event ini masuk lewat seeder pengembangan, bukan lewat pendaftaran panitia sungguhan. Sebelum diposting, pastikan eventnya benar ada, tanggalnya masih berlaku, dan penyelenggaranya setuju disebut. Kalau tidak bisa dipastikan, <strong>buang slide ini</strong> dan pindahkan barisnya ke slide "sisanya".</p></div></li>
+      <li><span class="n">03</span><div><b>Jangan tampilkan jumlah pendaftar</b><span class="dim">—</span><p>Datanya ada, tapi angkanya bergerak dan slide yang diposting hari ini akan salah minggu depan. Kalau jumlahnya ingin disebut, sebut di caption dengan tanggal pengambilan datanya.</p></div></li>
+      <li><span class="n">04</span><div><b>Boleh diganti event lain</b><span class="dim">—</span><p>Kalau ada event yang panitianya sudah memberi izin dan tanggalnya lebih dekat, pakai event itu. Susunan barisnya tetap sama — itu yang dibakukan dokumen ini.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 5 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 5 / 9</p>
+      <h2>Sponsor event — masih menunggu logonya</h2>
+      <p class="goal">Dua sponsor sudah tercatat di eventnya, tapi dua-duanya belum punya berkas logo. Slot ini sengaja dibiarkan bergaris putus supaya kelihatan bahwa yang kurang adalah gambarnya, bukan datanya.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Sponsor event</span><span class="tinym" style="font-size:calc(26*var(--u))">5 / 9</span></div>
+        <p class="h-sm">Dua yang menopang lombanya.</p>
+        <p class="desc">Satu sponsor, satu media partner — keduanya di level event, bukan platform.</p>
+        <div class="logowrap">
+          <div class="logo-kotak kosong">
+            <span>LOGO SPONSOR<em>356 × 356<br>Bank Jabar</em></span>
+          </div>
+          <div class="logo-kotak kosong">
+            <span>LOGO MEDPART<em>356 × 356<br>Kopi Kenangan</em></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b><span class="flag">Jangan pasang logo tanpa berkasnya</span></b><span class="dim">—</span><p>Menuliskan nama brand dengan huruf biasa di sebelah logo mitra lain membuat satu barisnya terlihat seperti catatan kaki. Kalau logonya belum ada, lebih baik slide ini ditahan sampai dua-duanya terkumpul — atau dipecah jadi satu slide per sponsor.</p></div></li>
+      <li><span class="n">02</span><div><b>Di mana berkasnya ditaruh</b><span class="dim">—</span><p>Unggah lewat menu sponsor di dashboard event, maksimal 2 MB per berkas. Berkasnya mendarat di <code>storage/app/public/sponsors</code>, dan itulah yang dipakai aplikasi maupun slide ini.</p></div></li>
+      <li><span class="n">03</span><div><b>Nama brand apa adanya</b><span class="dim">—</span><p>Ditulis persis seperti yang tertulis di situs resminya. Jangan diterjemahkan, disingkat, atau ditambah gelar seperti "resmi" kalau perjanjiannya tidak menyebut itu.</p></div></li>
+      <li><span class="n">04</span><div><b>Bank Jabar punya tautan, Kopi Kenangan tidak</b><span class="dim">—</span><p>Yang punya tautan boleh diberi tautan di caption; yang tidak, cukup namanya. Jangan mencari-cari tautannya sendiri lalu salah menautkan ke akun orang lain.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 6 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 6 / 9</p>
+      <h2>Di mana mitranya benar-benar terlihat</h2>
+      <p class="goal">Slide yang menjawab pertanyaan calon mitra: "kalau saya masuk, logo saya muncul di mana?" Tiga tempat, tiga tangkapan layar.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Tampil di mana</span><span class="tinym" style="font-size:calc(26*var(--u))">6 / 9</span></div>
+        <p class="h-sm">Tiga tempat, satu berkas logo.</p>
+        <p class="desc">Laman depan, halaman event, dan layar besar di lokasi lomba.</p>
+        <div class="shotwrap">
+          <div class="shot"><span>LAMAN DEPAN<em>508 × 830</em></span></div>
+          <div class="shot"><span>HALAMAN EVENT<em>508 × 830</em></span></div>
+          <div class="shot"><span>VIDEOTRON<em>508 × 830</em></span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Lebar tiga, bukan dua</b><span class="dim">3 × 508 · jarak 28 px</span><p>Total 920 px pas dengan lebar isi. Kalau ada tangkapan layar yang tidak bisa dipotong jadi tinggi sama, kurangi jadi dua layar dan sebut videotron di caption — jangan tiga layar dengan tinggi berbeda-beda.</p></div></li>
+      <li><span class="n">02</span><div><b>Yang harus terlihat</b><span class="dim">—</span><p>Laman depan: seksi "Sponsor &amp; Media Partner" dengan logo terpasang. Halaman event: blok sponsor di bawah jadwal. Videotron: mode sponsor di layar besar saat logo ditampilkan penuh.</p></div></li>
+      <li><span class="n">03</span><div><b>Bedanya platform dan event ikut terlihat di sini</b><span class="dim">—</span><p>Ini satu-satunya slide di mana perbedaan slide 2 jadi konkret. Kalau tiga tangkapan layarnya berhasil diambil, slide 2 boleh dipangkas dan butirnya dipindahkan ke sini.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 7 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 7 / 9</p>
+      <h2>Layar besar di lokasi lomba</h2>
+      <p class="goal">Satu slide sendiri karena ini yang paling sering membuat pengurus tertarik: logo mitra diputar di panggung, bukan cuma terselip di halaman web yang tak banyak dibuka.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Panggung</span><span class="tinym" style="font-size:calc(26*var(--u))">7 / 9</span></div>
+        <p class="h-sm">Logo mitra ikut tampil di panggung.</p>
+        <p class="desc">Layar besar di lokasi punya mode sponsor, tempat logo mitra platform dan mitra event diputar bergantian.</p>
+        <div class="shotwrap">
+          <div class="shot"><span>TANGKAPAN LAYAR<em>920 × 830 · layar lebar · mode sponsor di videotron</em></span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Ambil dari layar sungguhan</b><span class="dim">—</span><p>Tangkap mode sponsor saat logonya sedang ditampilkan penuh — bukan saat mode kegiatan atau klasemen. Kalau layarnya tidak sempat difoto, ambil dari pratinjau di laptop; yang penting logonya terlihat besar.</p></div></li>
+      <li><span class="n">02</span><div><b>Mode sponsor menggabung dua sumber</b><span class="dim">—</span><p>Logo mitra platform dan logo sponsor event diputar dalam satu daftar. Jadi satu kali tampil di panggung, dua-duanya dapat giliran — dan itu memang jadi nilai jualnya.</p></div></li>
+      <li><span class="n">03</span><div><b>Kalau tidak bisa diambil</b><span class="dim">—</span><p>Lebih baik slide ini dibuang dan butirnya dipindahkan ke slide 6, daripada memasang gambar layar kosong. Slide yang gambarnya tidak menjelaskan apa pun akan melemahkan enam slide sebelumnya.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 8 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 8 / 9</p>
+      <h2>Cara mitra masuk — pihak yang berbeda</h2>
+      <p class="goal">Menutup celah yang paling sering jadi pertanyaan: kalau saya mau jadi mitra, saya hubungi siapa? Jawabannya bergantung pada levelnya, dan itu memang aturan yang ada di aplikasinya.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="hrow"><span class="eyeb">Cara masuk</span><span class="tinym" style="font-size:calc(26*var(--u))">8 / 9</span></div>
+        <p class="h-sm">Satu berkas logo, langsung tampil.</p>
+        <div class="kv">
+          <div><span class="k">Mitra platform</span><span class="v">Dikelola admin Berbaris</span></div>
+          <div><span class="k">Mitra event</span><span class="v">Dikelola panitia eventnya</span></div>
+          <div><span class="k">Berkas logo</span><span class="v">PNG, latar transparan, maks 2 MB</span></div>
+          <div><span class="k">Tautan</span><span class="v">Opsional, satu tautan per mitra</span></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Tidak ada alur pengajuan mandiri</b><span class="dim">—</span><p><span class="flag">Jangan menjanjikan formulir atau tombol daftar mitra.</span> Di aplikasinya memang belum ada — mitra dimasukkan oleh admin atau oleh panitia eventnya sendiri. Slide yang menawarkan alur yang tidak ada akan berakhir dengan orang menunggu balasan yang tak datang.</p></div></li>
+      <li><span class="n">02</span><div><b>Spesifikasi berkas disebut supaya tidak bolak-balik</b><span class="dim">—</span><p>PNG latar transparan dan batas 2 MB adalah dua hal yang paling sering diminta ulang. Menyebutnya di slide menghemat satu putaran percakapan per mitra.</p></div></li>
+      <li><span class="n">03</span><div><b>Kontaknya di caption, bukan di slide</b><span class="dim">—</span><p>Satu alamat surel atau tautan pesan langsung di caption sudah cukup. Di dalam slide, alamat surel berukuran 30 px sulit disalin dari tangkapan layar.</p></div></li>
+      <li><span class="n">04</span><div><b>Kalau alurnya masih dikarang, tahan slide ini</b><span class="dim">—</span><p>Slide ini baru boleh tayang kalau kontaknya benar-benar dipantau. Papan mitra yang kotak masuknya tidak dibaca lebih buruk daripada tidak ada papan sama sekali.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ SLIDE 9 ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Slide 9 / 9</p>
+      <h2>Penutup — serahkan ke edisi berikutnya</h2>
+      <p class="goal">Nomor slide dihapus karena kata terakhir sebaiknya ajakan, bukan "9 / 9". Slide ini yang menyatakan bahwa papannya akan bertambah — jadi edisi berikutnya sudah punya alasan untuk ada.</p>
+    </div>
+
+    <div class="frame">
+      <div class="safe"></div>
+      <div class="f-in">
+        <div class="grow"></div>
+        <p class="eyeb">Edisi berikutnya</p>
+        <p class="h-sm" style="font-size:calc(72*var(--u))">Papan ini bertambah.</p>
+        <p class="sub">Tiap kali ada mitra atau event baru, edisinya menyusul. Logo yang masuk hari ini akan muncul di edisi berikutnya.</p>
+        <p class="desc">Kalau kamu mengelola lomba dan ingin ikut dipasang di sini, hubungi kami. Satu berkas logo sudah cukup.</p>
+        <div class="grow"></div>
+        <div class="pill" style="align-self:flex-start">Hubungi kami</div>
+        <p class="tinym" style="font-size:calc(34*var(--u))">berbaris.app</p>
+        <div class="row">
+          <span class="tinym" style="font-size:calc(26*var(--u))">@barisapp</span>
+          <span class="tinym" style="font-size:calc(26*var(--u))">link di bio</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Pil ajakan tanpa angka</b><span class="dim">tinggi 96 · lime</span><p>Teksnya "Hubungi kami", bukan "Coba gratis 3 hari" — durasi uji coba sudah dipakai di carousel fitur, dan mengulanginya di papan mitra membuat dua post terasa sama.</p></div></li>
+      <li><span class="n">02</span><div><b>"Edisi berikutnya" itu janji</b><span class="dim">—</span><p>Kalimat ini mengikat. Kalau enam bulan lagi tidak ada edisi kedua, post ini jadi bahan tertawaan. Pastikan setidaknya ada satu mitra yang sedang dikerjakan sebelum tayang.</p></div></li>
+      <li><span class="n">03</span><div><b>Tanpa nomor slide</b><span class="dim">—</span><p>Slide terakhir berhenti di ajakan. Nomor dihapus supaya tidak terkesan menutup daftar setelah delapan slide.</p></div></li>
+      <li><span class="n">04</span><div><b>"Hubungi kami" harus punya alamat</b><span class="dim">—</span><p>Di caption: satu surel atau tautan pesan langsung, dan disebut jam berapa biasanya dibalas. Tombol yang tidak menuju ke mana-mana lebih buruk daripada tidak ada tombol.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ DATA ============ -->
+  <section class="rules">
+    <h2>Data mitra yang ada hari ini</h2>
+    <p class="lead">Diambil dari basis data aplikasi. Dua tabel mitra: <code>landing_partners</code> untuk level platform dan <code>sponsors</code> untuk level event. Kolom "logo" itu yang menentukan apakah slot di slide sudah bisa diisi.</p>
+
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Nama</th>
+          <th>Level</th>
+          <th>Peran</th>
+          <th>Logo</th>
+          <th>Tautan</th>
+          <th>Slide</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Dunia Paskibra</strong></td>
+          <td>Platform</td>
+          <td class="mono">medpart</td>
+          <td class="ya">Ada — 500 × 500 PNG</td>
+          <td class="tidak">Belum ada</td>
+          <td class="mono">3</td>
+        </tr>
+        <tr>
+          <td><strong>Bank Jabar</strong></td>
+          <td>Event</td>
+          <td class="mono">sponsor</td>
+          <td class="tidak">Belum ada</td>
+          <td class="mono">bankjabar.co.id</td>
+          <td class="mono">5</td>
+        </tr>
+        <tr>
+          <td><strong>Kopi Kenangan</strong></td>
+          <td>Event</td>
+          <td class="mono">medpart</td>
+          <td class="tidak">Belum ada</td>
+          <td class="tidak">Belum ada</td>
+          <td class="mono">5</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="cols">
+      <ul>
+        <li><strong>Baru satu dari tiga yang punya logo.</strong> Itu sebabnya papan ini dijadwalkan sebagai edisi bertambah, bukan post sekali jadi.</li>
+        <li><strong>Dunia Paskibra satu-satunya yang asli.</strong> Berkasnya diunggah lewat panel admin, dan logonya sudah tayang di laman depan.</li>
+      </ul>
+      <ul>
+        <li><strong>Dua sponsor event berasal dari seeder.</strong> Bank Jabar dan Kopi Kenangan ikut terbawa dari data contoh pengembangan, tanpa berkas logo. Ganti dengan sponsor sungguhan atau buang slide 5.</li>
+        <li><strong>Event di slide 4 juga dari seeder.</strong> Perlakukan sama: konfirmasi dulu, atau ganti dengan event yang panitianya benar-benar sudah memberi izin.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ ATURAN ============ -->
+  <section class="rules">
+    <h2>Aturan produksi</h2>
+    <div class="cols">
+      <ul>
+        <li><strong>Satu mitra satu slide.</strong> Kalau satu slide butuh dua tingkat, itu dua mitra — pisahkan, atau gabungkan salah satunya ke edisi berikutnya.</li>
+        <li><strong>Logo harus berkas aslinya.</strong> Berkasnya diambil dari yang sudah diunggah mitranya, bukan dibuat ulang atau diambil dari hasil pencarian gambar.</li>
+        <li><strong>Kalau belum ada logonya, tahan.</strong> Nama brand dengan huruf biasa di sebelah logo sungguhan membuat satu barisnya terlihat setengah jadi.</li>
+        <li><strong>Judul maksimal 8 kata.</strong> Keterangan dua baris, bukan satu paragraf.</li>
+      </ul>
+      <ul>
+        <li><strong>Jangan sebut angka mitra.</strong> Yang bisa dihitung cuma satu. Sebut jumlahnya baru kalau sudah lima ke atas, dan hitung ulang saat itu.</li>
+        <li><strong>Peran ditulis apa adanya.</strong> "Media partner" dan "sponsor" adalah dua status yang berbeda di aplikasinya. Jangan dinaikkan jadi "partner resmi".</li>
+        <li><strong>Kabari mitra sebelum tayang.</strong> Logonya sudah publik di situs, tapi feed itu tempat lain. Satu pesan singkat, sekalian minta akun mereka untuk ditandai.</li>
+        <li><strong>Ukuran, palet, margin, ekspor</strong> sama dengan post sebelumnya — 80 px, 1080 × 1350, sRGB, di bawah 1 MB per slide.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ YANG DIAMBIL ============ -->
+  <section class="rules">
+    <h2>Gambar yang perlu diambil</h2>
+    <div class="cols">
+      <ul>
+        <li><strong>Slide 2</strong> — seksi "Sponsor &amp; Media Partner" di laman depan, dan blok sponsor di halaman detail event.</li>
+        <li><strong>Slide 3</strong> — tidak perlu tangkapan layar; logonya berkas yang sudah ada.</li>
+        <li><strong>Slide 4</strong> — tidak perlu tangkapan layar; isinya baris data.</li>
+        <li><strong>Slide 5</strong> — tidak perlu tangkapan layar; menunggu dua berkas logo.</li>
+      </ul>
+      <ul>
+        <li><strong>Slide 6</strong> — tiga layar: laman depan, halaman event, dan pratinjau videotron mode sponsor.</li>
+        <li><strong>Slide 7</strong> — videotron mode sponsor saat logo ditampilkan penuh.</li>
+        <li><strong>Slide 8 &amp; 9</strong> — tidak perlu tangkapan layar; keduanya soal keterangan dan ajakan.</li>
+      </ul>
+    </div>
+    <div class="cols" style="margin-top:22px">
+      <ul>
+        <li><strong>Semua tangkapan layar pakai data contoh</strong> — nama sekolah, peserta, dan panitia diganti. Kalau memakai event sungguhan, pastikan namanya memang boleh disebut.</li>
+        <li><strong>Jangan pakai tampilan kosong.</strong> Seksi mitra yang belum terisi membuat aplikasinya terlihat belum jadi, bukan terlihat rapi.</li>
+      </ul>
+      <ul>
+        <li><strong>Simpan versi mentahnya</strong> di satu folder per slide, supaya edisi berikutnya tinggal menambah, bukan menangkap ulang semuanya.</li>
+        <li><strong>Kalau carousel dipendekkan:</strong> buang slide 7 dulu (kandidat terkuat — videotron), lalu slide 2. Susunannya menyusut jadi mitra, event, tampil di mana, penutup.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>BERBARIS APP · wireframe papan mitra edisi #1 · kanvas 1080 × 1350</footer>
+</div>
+
+<script>
+(function(){
+  var btn = document.getElementById('gt');
+  if(!btn) return;
+  var root = document.documentElement;
+  function apply(on){
+    root.classList.toggle('guides', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.textContent = on ? 'Sembunyikan garis margin' : 'Tampilkan garis margin';
+  }
+  var saved = false;
+  try { saved = localStorage.getItem('wireframe.guides') === '1'; } catch(e){}
+  apply(saved);
+  btn.addEventListener('click', function(){
+    var on = !root.classList.contains('guides');
+    apply(on);
+    try { localStorage.setItem('wireframe.guides', on ? '1' : '0'); } catch(e){}
+  });
+})();
+</script>
+
+</body>
+</html>
