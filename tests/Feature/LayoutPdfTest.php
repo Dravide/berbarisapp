@@ -133,6 +133,55 @@ class LayoutPdfTest extends TestCase
         );
     }
 
+    /**
+     * Tinggi yang dihitung controller harus jadi aturan TERAKHIR yang menyetel
+     * tinggi kanvas.
+     *
+     * Aturan berspesifisitas sama diputus oleh urutan: blok @once di partial
+     * kanvas selalu keluar sesudah gaya halaman cetaknya. Rupanya pernah begitu
+     * — tinggi 135mm dari controller kalah oleh cadangan 150mm di partial, dan
+     * setiap denah tercetak 150mm tanpa ada yang menyadari.
+     */
+    public function test_tinggi_hitung_controller_menang_atas_cadangan()
+    {
+        [$eventner] = $this->panitia();
+        $denah = CompetitionLayout::factory()->create(['eventner_id' => $eventner->id]);
+        LayoutZone::factory()->create(['competition_layout_id' => $denah->id]);
+
+        $html = $this->viewPdf($denah);
+
+        // Semua aturan yang menyetel height pada kanvas cetak.
+        preg_match_all(
+            '/\.denah-cetak \.denah-kanvas\s*\{([^}]*)\}/s',
+            $html,
+            $aturan,
+            PREG_SET_ORDER
+        );
+
+        $penyetelTinggi = array_values(array_filter(
+            $aturan,
+            fn ($a) => str_contains($a[1], 'height:')
+        ));
+
+        $this->assertCount(1, $penyetelTinggi, 'Ada lebih dari satu aturan yang menyetel tinggi kanvas cetak.');
+        $this->assertStringContainsString('height: 120mm', $penyetelTinggi[0][1]);
+    }
+
+    /** aspect-ratio milik layar harus dimatikan di kertas, dan dimatikan di
+     *  aturan yang sama dengan tingginya — kalau tidak, dompdf yang mengenal
+     *  aspect-ratio akan mengabaikan tinggi mm-nya. */
+    public function test_aspect_ratio_mati_di_kertas()
+    {
+        [$eventner] = $this->panitia();
+        $denah = CompetitionLayout::factory()->create(['eventner_id' => $eventner->id]);
+        LayoutZone::factory()->create(['competition_layout_id' => $denah->id]);
+
+        $this->assertMatchesRegularExpression(
+            '/\.denah-cetak \.denah-kanvas\s*\{[^}]*aspect-ratio:\s*auto[^}]*height:\s*120mm/s',
+            $this->viewPdf($denah)
+        );
+    }
+
     /** Denah tanpa zona tetap bisa dicetak — papan kosong, bukan error. */
     public function test_denah_tanpa_zona_tetap_bisa_dicetak()
     {

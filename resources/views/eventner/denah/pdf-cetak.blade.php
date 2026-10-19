@@ -47,8 +47,13 @@
 
         /* Dompdf tidak mengenal aspect-ratio maupun clamp(), jadi kanvasnya
            diberi tinggi tetap. Posisi zona tetap persen; itulah yang membuat
-           denah kertas ini sama isinya dengan denah di layar. */
+           denah kertas ini sama isinya dengan denah di layar.
+
+           aspect-ratio: auto wajib ikut di sini, bukan di partial-nya: kanvas
+           selalu membawa aspect-ratio dari layar, dan dompdf yang mengenalnya
+           akan mengabaikan height ini kalau aspect-ratio-nya masih hidup. */
         .denah-cetak .denah-kanvas {
+            aspect-ratio: auto;
             height: {{ $tinggiKanvas }};
             border-radius: 0;
         }

@@ -23,6 +23,9 @@ class LayoutZoneFactory extends Factory
             'y' => 16,
             'w' => 62,
             'h' => 50,
+            'width_m' => null,
+            'height_m' => null,
+            'is_locked' => false,
             'dp_number' => null,
             'capacity' => null,
             'note' => null,
@@ -38,5 +41,21 @@ class LayoutZoneFactory extends Factory
             'dp_number' => $nomor,
             'capacity' => '1 pasukan',
         ]);
+    }
+
+    /** Arena berukuran tetap: angkanya diisi, bukan disimpulkan dari papan. */
+    public function arenaMeter(float $lebar, float $tinggi): static
+    {
+        return $this->state(fn () => [
+            'type' => LayoutZone::TYPE_ARENA,
+            'width_m' => $lebar,
+            'height_m' => $tinggi,
+        ]);
+    }
+
+    /** Zona yang posisinya sudah pas dan tak boleh tergeser lagi. */
+    public function terkunci(): static
+    {
+        return $this->state(fn () => ['is_locked' => true]);
     }
 }

@@ -16,6 +16,7 @@
       $layout      CompetitionLayout
       $zones       koleksi LayoutZone (opsional; default $layout->zones)
       $interaktif  bool; editor menyeret zona, publik & PDF tidak
+      $terkunci    bool; editor boleh memilih, tapi tak boleh menggeser apa pun
       $terpilihId  int|null; zona yang sedang dipilih di editor
       $kisi        bool; tampilkan kisi latar
       $mode        'zona' | 'alur'; apa yang bisa diseret di editor
@@ -23,6 +24,7 @@
 @php
     $zones = $zones ?? $layout->zones;
     $interaktif = $interaktif ?? false;
+    $terkunci = $terkunci ?? false;
     $terpilihId = $terpilihId ?? null;
     $kisi = $kisi ?? false;
     $mode = $mode ?? 'zona';
@@ -31,39 +33,6 @@
     // Di editor alur tetap digambar walau panitia menyembunyikannya dari
     // publik; kalau tidak, tak ada lagi yang bisa disunting.
     $tampilkanAlur = $interaktif ? $layout->punya_alur : $layout->alur_tampil;
-
-    // Pita ukuran digambar di keempat tepi kanvas, jadi kanvasnya butuh bantalan
-    // selebar pitanya supaya zona tak tertimbun. Di editor bantalannya lebih
-    // lebar karena pitanya juga memuat tombol pengubah ukuran papan.
-    //
-    // Lebarnya ditulis sebagai persen di atribut style, bukan lewat variabel
-    // CSS: dompdf tak menjamin mengenal custom property, dan pita yang gagal
-    // dihitung membuat denah di kertas bergeser sejauh lebar pitanya.
-    $pita = $pita ?? true;
-    $bantalan = $pita ? ($interaktif ? 3.6 : 2.6) : 0;
-
-    // Persen tinggi ≠ persen lebar. Kanvas 16:9 butuh bantalan tegak 1,78×
-    // lipat supaya pita atas setebal pita kiri — tanpa itu, pita atas terlihat
-    // gepeng di denah memanjang dan gemuk di denah tegak.
-    $bantalanY = round($bantalan * $rasio, 3);
-
-    // Bingkai ditulis left/top/width/height eksplisit, bukan inset atau
-    // variabel CSS: dompdf tak menjamin keduanya, dan bingkai yang gagal
-    // dihitung menggeser seluruh denah sejauh lebar pitanya.
-    $bingkaiX = $bantalan;
-    $bingkaiY = $bantalanY;
-    $bingkaiW = round(100 - 2 * $bantalan, 3);
-    $bingkaiH = round(100 - 2 * $bantalanY, 3);
-
-    // Panjang pita dipatok dalam px, bukan persen: pita ukuran itu penggaris,
-    // dan lurik yang melebar mengikuti papan 60 m tak lagi terbaca sebagai
-    // lurik. Jumlah span dihitung dari perkiraan lebar terbesar kanvas; lebihnya
-    // dipangkas overflow, bukan direntangkan.
-    $lurik = [];
-    if ($pita) {
-        $jumlahLurik = (int) min(80, max(16, ceil(1100 / 14)));
-        $lurik = array_fill(0, $jumlahLurik, null);
-    }
 @endphp
 
 {{-- Sengaja TANPA wire:ignore.
@@ -73,36 +42,55 @@
      cuma memindahkan kotaknya selama seretan, lalu server mengirim posisi
      finalnya kembali lewat morph. --}}
 <div
-    class="denah-kanvas @if($interaktif) denah-interaktif @endif @if($mode === 'alur') denah-alur-mode @endif"
+    class="denah-kanvas @if($interaktif) denah-interaktif @endif @if($interaktif && $terkunci) denah-terkunci @endif @if($mode === 'alur') denah-alur-mode @endif"
     style="--rasio: {{ number_format($rasio, 4, '.', '') }};"
     @if($interaktif)
         data-denah-editor
         data-denah-mode="{{ $mode }}"
+        data-denah-terkunci="{{ $terkunci ? '1' : '0' }}"
         wire:key="kanvas-{{ $layout->id }}"
     @endif
 >
-    {{-- Zona & alur digambar di dalam bingkai, bukan langsung di kanvas.
-         Bingkai inilah yang menyusut selebar pita ukuran, jadi persen zona
-         tetap dihitung dari papan — kalau zona ditempel langsung ke kanvas,
-         denahnya bergeser sejauh lebar pitanya. --}}
+    {{-- Zona & alur digambar di dalam bingkai, bukan langsung di kanvas, supaya
+         ada satu tempat yang jelas-jelas berarti "papan". --}}
     <div
         class="denah-bingkai @if($kisi) denah-kisi @endif"
-        style="left: {{ $bingkaiX }}%; top: {{ $bingkaiY }}%; width: {{ $bingkaiW }}%; height: {{ $bingkaiH }}%;"
+        style="left: 0%; top: 0%; width: 100%; height: 100%;"
     >
     @forelse($zones as $zona)
         <div
             wire:key="zona-{{ $zona->id }}"
-            class="zone {{ $zona->kelas_tipe }} @if($terpilihId === $zona->id) is-terpilih @endif"
+            class="zone {{ $zona->kelas_tipe }} @if($terpilihId === $zona->id) is-terpilih @endif @if($zona->is_locked) is-terkunci @endif"
             style="{{ $zona->gaya }}"
             data-zona="{{ $zona->id }}"
             @if($interaktif) data-zona-nama="{{ $zona->name }}" @endif
+            @if($interaktif && $zona->is_locked) data-zona-terkunci="1" @endif
         >
             <span class="zone-label">{{ $zona->name }}</span>
+            {{-- Gembok kecil di kotaknya: kanvas penuh zona, dan gembok di
+                 daftar kiri cuma menolong kalau orangnya sedang menatap daftar.
+                 Yang sedang menarik kotak perlu tahu dari kotaknya sendiri.
+
+                 Hanya di editor: pembaca denah tak perlu tahu kotak mana yang
+                 dikunci panitia — itu urusan kerja, bukan keterangan lapangan. --}}
+            @if($interaktif && $zona->is_locked)
+                <span class="zone-gembok" title="Zona terkunci"><i class="ti ti-lock"></i></span>
+            @endif
+            @if($zona->punya_ukuran_sendiri)
+                {{-- Ukuran arena berukuran tetap ditulis di kotaknya sendiri.
+                     Dulu ukuran papan tercetak di pita tepi; pitanya dihapus,
+                     jadi kotak inilah satu-satunya ukuran yang dilihat pembaca
+                     denah — dan itu memang yang dicari orang di denah lomba. --}}
+                <span class="zone-ukur">{{ $zona->ukuranMeter($layout) }}</span>
+            @endif
             @if($zona->capacity)
                 <span class="zone-sub">{{ $zona->capacity }}</span>
             @endif
-            {{-- Pegangan ubah ukuran: sudut kanan-bawah, seukuran jari. --}}
-            @if($interaktif)
+            {{-- Pegangan ubah ukuran: sudut kanan-bawah, seukuran jari.
+                 Di denah terkunci — atau di zona yang terkunci — ia tak digambar
+                 sama sekali: pegangan yang bisa ditarik tapi tak mengubah apa
+                 pun cuma janji palsu. --}}
+            @if($interaktif && ! $terkunci && ! $zona->is_locked)
                 <span class="zona-hnd" data-hnd="1" title="Tarik untuk mengubah ukuran"></span>
             @endif
         </div>
@@ -111,6 +99,19 @@
             <div class="denah-kosong">Denah belum berisi zona.</div>
         @endunless
     @endforelse
+
+    {{-- Garis pandu: muncul selama seretan, saat kotak yang diseret sejajar
+         dengan kotak lain atau jatuh tepat di tengah papan.
+
+         Digambar di dalam bingkai, bukan di kanvas: panduannya menunjuk garis
+         di PAPAN, dan persennya persen papan.
+
+         Tak ikut terpotret PNG karena bawaannya memang tersembunyi — kelas
+         penampilnya hanya dipasang selama seretan. --}}
+    @if($interaktif && ! $terkunci)
+        <span class="pandu pandu-tegak" data-pandu="tegak"></span>
+        <span class="pandu pandu-datar" data-pandu="datar"></span>
+    @endif
 
     {{-- Alur digambar SESUDAH zona supaya berada di atasnya: garis alur yang
          tertimbun kotak arena tak terbaca justru di denah yang paling padat. --}}
@@ -147,47 +148,6 @@
         </div>
     @endif
     </div>{{-- /.denah-bingkai --}}
-
-    @if($pita)
-        {{-- Pita ukuran mengelilingi keempat tepi, pola garis polisi.
-
-             Luriknya span berselang-seling, bukan repeating-linear-gradient:
-             dompdf mengabaikan gradien sepenuhnya (terukur nol operator). Span
-             juga membuat luriknya sama besar di layar dan di kertas, karena
-             lebarnya px — bukan persen yang ikut melebar bersama papan.
-
-             Angkanya cuma sekali di tiap sisi: pita ukur yang mengulang
-             "40 × 22 m" di empat tepi justru terbaca seperti empat ukuran. --}}
-        <div class="denah-pita denah-pita-atas" style="left: 0; top: 0; width: 100%; height: {{ $bantalanY }}%;">
-            <span class="pita-lurik">@foreach($lurik as $i)<span></span>@endforeach</span>
-            <span class="pita-teks">{{ $layout->ukuran_teks }}</span>
-        </div>
-        <div class="denah-pita denah-pita-bawah" style="left: 0; bottom: 0; width: 100%; height: {{ $bantalanY }}%;">
-            <span class="pita-lurik">@foreach($lurik as $i)<span></span>@endforeach</span>
-        </div>
-        <div class="denah-pita denah-pita-kiri" style="left: 0; top: {{ $bantalanY }}%; width: {{ $bantalan }}%; height: {{ $bingkaiH }}%;">
-            <span class="pita-lurik pita-lurik-tegak">@foreach($lurik as $i)<span></span>@endforeach</span>
-            <span class="pita-teks pita-teks-tegak">{{ $layout->tinggi_teks }}</span>
-        </div>
-        <div class="denah-pita denah-pita-kanan" style="right: 0; top: {{ $bantalanY }}%; width: {{ $bantalan }}%; height: {{ $bingkaiH }}%;">
-            <span class="pita-lurik pita-lurik-tegak">@foreach($lurik as $i)<span></span>@endforeach</span>
-            <span class="pita-teks pita-teks-tegak">{{ $layout->tinggi_teks }}</span>
-        </div>
-
-        @if($interaktif)
-            {{-- Tombol ubah ukuran papan ditaruh di pita, bukan di bar atas:
-                 ukuran lapangan dan tempat mengubahnya memang satu hal.
-
-                 Tingginya disetel setinggi pitanya, bukan 22px tetap: pita
-                 atas menipis di kanvas sempit, dan tombol yang lebih tinggi
-                 dari pitanya menonjol menutupi sudut papan. --}}
-            <button type="button" class="pita-ubah" wire:click="bukaPapanModal"
-                    style="right: {{ $bantalan }}%; top: 0; height: {{ $bantalanY }}%;"
-                    title="Ubah ukuran papan">
-                <i class="ti ti-ruler-measure"></i>
-            </button>
-        @endif
-    @endif
 </div>
 
 @once
@@ -211,97 +171,14 @@
             background-size: 5% 5%;
         }
 
-        /* Bingkai = papan sesungguhnya. Posisinya ditulis dari Blade, bukan
-           dihitung di sini, supaya bantalan tegak bisa dikalikan rasio. */
+        /* Bingkai = papan sesungguhnya. Dulu ia menyusut selebar pita ukuran
+           yang mengelilingi tepi kanvas; pitanya sudah tidak ada, jadi papan
+           dan kanvas berimpit. */
         .denah-bingkai {
             position: absolute;
             box-sizing: border-box;
         }
 
-        /* ── Pita ukuran: garis polisi di keempat tepi ─────────────────────
-
-           Luriknya span berselang-seling, bukan repeating-linear-gradient:
-           dompdf mengabaikan gradien sepenuhnya. Span-nya juga dipangkas
-           overflow, jadi panjang pita tak perlu tahu lebar kanvas — sisa
-           span-nya cuma tak terlihat. */
-        .denah-kanvas .denah-pita {
-            position: absolute;
-            overflow: hidden;
-            background: #facc15;
-            border: 1px solid #1e293b;
-            box-sizing: border-box;
-            z-index: 2;
-        }
-        /* Span lurik ditata inline-block, bukan flex: dompdf baru mengenal
-           flexbox sebagian, sedangkan baris inline-block tergambar sama di
-           peramban maupun di kertas. font-size:0 menutup celah putih antar
-           span, yang di sini justru terbaca sebagai garis kedua. */
-        .denah-kanvas .pita-lurik {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            font-size: 0;
-            line-height: 0;
-            white-space: nowrap;
-        }
-        .denah-kanvas .pita-lurik > span {
-            display: inline-block;
-            width: 14px;
-            height: 100%;
-            background: #1e293b;
-        }
-        .denah-kanvas .pita-lurik-tegak { white-space: normal; }
-        .denah-kanvas .pita-lurik-tegak > span { display: block; width: 100%; height: 14px; }
-
-        /* Sisi mendatar & tegak: ukurannya ditulis dari Blade, bukan di sini.
-           Bantalan tegak = bantalan × rasio, dan rasio itu milik denahnya —
-           angka tetap di CSS akan membuat pita atas setebal pita kiri hanya
-           pada denah 1:1. */
-
-        .denah-kanvas .pita-teks {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            white-space: nowrap;
-            font-size: clamp(.5rem, 1vw, .7rem);
-            font-weight: 700;
-            color: #1e293b;
-            background: #facc15;
-            padding: 0 5px;
-            letter-spacing: .02em;
-        }
-        /* Angka di pita tegak diputar — dompdf menggambar teks berputar dengan
-           benar, terukur sebagai matriks rotasi di dalam PDF-nya. */
-        .denah-kanvas .pita-teks-tegak {
-            transform: translate(-50%, -50%) rotate(-90deg);
-        }
-
-        /* Tombol ubah ukuran papan, duduk di pita atas di sebelah kiri pita
-           kanan. Posisinya dari Blade: tepi pitanya persen-tinggi, dan itu
-           tergantung rasio denahnya.
-
-           z-index-nya di atas pita (2), tapi tetap di bawah lapis alur (4)
-           supaya tak pernah mencuri seretan titik alur. */
-        .denah-kanvas .pita-ubah {
-            position: absolute;
-            width: 26px;
-            min-height: 16px;
-            padding: 0;
-            border: 1px solid #1e293b;
-            box-sizing: border-box;
-            border-radius: 0 0 0 .35rem;
-            background: #facc15;
-            color: #1e293b;
-            font-size: .8rem;
-            line-height: 1;
-            cursor: pointer;
-            z-index: 3;
-        }
-        .denah-kanvas .pita-ubah:hover { background: #fde047; }
         .denah-kanvas .denah-kosong {
             position: absolute;
             inset: 0;
@@ -331,6 +208,10 @@
         }
         .denah-kanvas .zone-label { font-weight: 600; }
         .denah-kanvas .zone-sub { font-size: .85em; opacity: .75; }
+        /* Angka ukuran arena duduk di barisnya sendiri di bawah namanya.
+           Disamakan dengan sub-label, tapi tidak diredupkan: ukuran arena
+           justru angka yang dicari orang di denah lomba. */
+        .denah-kanvas .zone-ukur { font-size: .85em; font-weight: 600; }
 
         /* Warna per jenis: bahasa visual yang sama di editor, publik, PDF. */
         .zone.z-arena   { background: #dcfce7; border-color: #16a34a; }
@@ -340,6 +221,7 @@
         .zone.z-sekre   { background: #fae8ff; border-color: #a21caf; }
         .zone.z-jalur   { background: #ffe4e6; border-color: #e11d48; }
         .zone.z-arah    { background: transparent; border-style: dashed; border-color: #94a3b8; }
+        .zone.z-danton  { background: #fef3c7; border-color: #b45309; }
         .zone.z-teks    { background: transparent; border-color: transparent; }
 
         /* Tiang bendera: tonggak, bukan bidang. Tiangnya batang tegak di tengah,
@@ -385,6 +267,38 @@
             border-radius: 2px;
         }
 
+        /* ── Garis pandu penyelaras ────────────────────────────────────────
+
+           Muncul hanya selama seretan. Bawaannya display:none, dan kelas
+           penampilnya dilepas begitu seretan selesai — jadi tak ada panduan
+           yang tertinggal di kanvas, di halaman publik, atau di PDF.
+
+           Z-index-nya di bawah alur (4) tapi di atas zona (default): panduan
+           menunjuk tepi kotak, dan tepi itu justru ada di belakang kotaknya. */
+        .denah-kanvas .pandu {
+            position: absolute;
+            display: none;
+            pointer-events: none;
+            z-index: 3;
+            background: #e11d48;
+        }
+        .denah-kanvas .pandu.pandu-tampil { display: block; }
+        .denah-kanvas .pandu-tegak {
+            top: 0;
+            width: 1px;
+            height: 100%;
+        }
+        .denah-kanvas .pandu-datar {
+            left: 0;
+            height: 1px;
+            width: 100%;
+        }
+        /* Tepi papan juga garis yang bisa diselarasi: panduannya dibedakan
+           supaya "menempel tepi" tak terbaca sebagai "sejajar zona lain". */
+        .denah-kanvas .pandu.pandu-papan {
+            background: #2563eb;
+        }
+
         .denah-kanvas .zone.is-terpilih {
             outline: 3px solid #2563eb;
             outline-offset: 1px;
@@ -393,6 +307,31 @@
 
         .denah-interaktif .zone { cursor: grab; }
         .denah-interaktif .zone:active { cursor: grabbing; }
+
+        /* Denah terkunci tetap bisa dipilih, jadi kursor tunjuknya tetap ada;
+           yang hilang cuma kursor "bisa diseret". */
+        .denah-terkunci .zone,
+        .denah-terkunci .zone:active,
+        .denah-terkunci .alur-titik,
+        .denah-terkunci .alur-titik:active { cursor: pointer; }
+        .denah-terkunci .alur-ruas { cursor: default; }
+
+        /* Zona yang terkunci sendiri: di denah terbuka pun tak bisa diseret.
+           Kursor "grab" di atasnya akan menjanjikan seretan yang lalu ditolak
+           server — dan penolakan yang datang belakangan terasa seperti rusak. */
+        .denah-interaktif .zone.is-terkunci,
+        .denah-interaktif .zone.is-terkunci:active { cursor: pointer; }
+
+        .denah-kanvas .zone-gembok {
+            position: absolute;
+            right: 2px;
+            top: 2px;
+            font-size: 11px;
+            line-height: 1;
+            color: #475569;
+            pointer-events: none;
+            z-index: 2;
+        }
 
         .denah-kanvas .zona-hnd {
             position: absolute;
@@ -440,6 +379,43 @@
             height: 4px;
             background: #b91c1c;
             border-radius: 2px;
+        }
+
+        /* Alur mengalir: lurik putih berjalan dari titik awal ke titik akhir.
+
+           Dash putihnya lapis kedua di atas garis merahnya, bukan garisnya
+           sendiri yang diputus-putus: garis merahnya tetap utuh, jadi alur
+           masih terbaca penuh kalau animasinya dimatikan — oleh
+           prefers-reduced-motion, atau oleh peramban yang tak menjalankannya.
+
+           background-position yang dianimasikan, bukan transform: luriknya
+           harus berulang mulus, dan satu periode background-size persis sama
+           dengan satu periode gradien. Kalau keduanya tak sama, luriknya
+           tersentak tiap putaran.
+
+           Satuannya px, bukan persen — kalau luriknya ikut memanjang bersama
+           ruasnya, ruas panjang mengalir pelan dan ruas pendek berpacu, padahal
+           pasukan berjalan dengan kecepatan yang sama di seluruh alur. */
+        .denah-kanvas .alur-garis::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background-image: repeating-linear-gradient(
+                90deg,
+                rgba(255, 255, 255, .9) 0 8px,
+                transparent 8px 24px
+            );
+            background-size: 24px 100%;
+            animation: alur-mengalir .9s linear infinite;
+        }
+        @keyframes alur-mengalir {
+            from { background-position: 0 0; }
+            to   { background-position: 24px 0; }
+        }
+        /* Denah yang bergerak mengganggu pembaca yang memintanya diam. */
+        @media (prefers-reduced-motion: reduce) {
+            .denah-kanvas .alur-garis::after { animation: none; }
         }
 
         /* Titik alur. Bentuknya yang membedakan, bukan warnanya — denah ini
@@ -525,21 +501,25 @@
         .denah-alur-mode .alur-titik:active { cursor: grabbing; }
         .denah-alur-mode .alur-ruas { cursor: copy; }
 
-        /* dompdf hanya paham CSS sederhana; tak ada aspect-ratio. Tinggi
-           kanvas dipatok supaya denah di PDF tidak runtuh jadi garis tipis. */
-        .denah-cetak .denah-kanvas { aspect-ratio: auto; height: 150mm; }
+        /* Tinggi kanvas di kertas TIDAK dipatok di sini.
+
+           Sebelumnya ada aturan cadangan `height: 150mm` untuk halaman cetak,
+           dan itu justru menang atas tinggi yang dihitung controller: dua
+           aturan berspesifisitas sama, dan gaya kanvas ini selalu keluar
+           SESUDAH gaya halaman cetaknya. Akibatnya denah 40 × 22 m (135mm) dan
+           22 × 40 m (145mm) sama-sama tercetak 150mm, meluber ke halaman kedua.
+
+           Yang berhak menentukan tingginya cuma pdf-cetak, karena hanya ia yang
+           tahu ruang sisa setelah kop dan tabel keterangan. */
 
         /* Garis alur di kertas ditebalkan sedikit: 4px pada 255mm terbaca
            putus-putus oleh printer kantor. */
         .denah-cetak .denah-kanvas .alur-garis { height: 5px; top: -2.5px; }
         .denah-cetak .denah-kanvas .alur-label { font-size: 11px; }
 
-        /* Pita di kertas. clamp() tak dikenal dompdf, jadi ukuran teksnya
-           dipatok; luriknya dirapatkan sedikit karena halaman ini dibaca dari
-           jarak dekat, bukan dari seberang lapangan. */
-        .denah-cetak .denah-kanvas .pita-teks { font-size: 9px; }
-        .denah-cetak .denah-kanvas .pita-lurik > span { width: 11px; }
-        .denah-cetak .denah-kanvas .pita-lurik-tegak > span { width: 100%; height: 11px; }
+        /* Lurik alur tak perlu dilepas di sini: dompdf sudah mengabaikan
+           gradiennya sendiri (terukur — dengan dan tanpa aturan ini, PDF-nya
+           sama persis). Yang dicetak memang garis alurnya yang utuh. */
     </style>
 @endonce
 
@@ -568,18 +548,135 @@
             // nilai yang ditangkap sekali akan basi begitu panitia berpindah
             // mode atau jendelanya diubah ukurannya.
             //
-            // Yang diukur BINGKAI, bukan kanvas: kanvas punya bantalan selebar
-            // pita ukuran, dan persen zona dihitung dari papan. Mengukur kanvas
-            // membuat setiap seretan meleset sejauh lebar pitanya.
+            // Yang diukur BINGKAI, bukan kanvas: bingkailah papan sesungguhnya,
+            // dan persen zona dihitung dari papan. Keduanya kini berimpit,
+            // tapi mengukur bingkai tetap yang benar kalau kelak ada yang
+            // memakan tepi kanvas lagi.
             const batasKanvas = () => (kanvas.querySelector('.denah-bingkai') ?? kanvas).getBoundingClientRect();
             const modeAlur = () => kanvas.dataset.denahMode === 'alur';
+
+            // Dibaca tiap kali, bukan disimpan saat init — sama alasannya
+            // dengan mode: Livewire memorph kanvas di tempat, jadi kunci yang
+            // baru dinyalakan takkan terlihat oleh nilai yang ditangkap sekali.
+            const terkunci = () => kanvas.dataset.denahTerkunci === '1';
 
             let seret = null;
 
             const persen = (px, total) => Math.round((px / total) * 1000) / 10;
 
+            // ── Garis pandu penyelaras ────────────────────────────────────
+            //
+            // Saat kotak diseret, tepinya dibandingkan dengan tepi tiap kotak
+            // lain dan dengan tepi & tengah papan. Yang paling dekat dalam
+            // ambang di bawah ini "menangkap" seretannya, jadi kotak jatuh
+            // benar-benar sejajar — bukan hampir sejajar.
+            //
+            // Tanpa penangkapan, cuma ada garisnya: mata tetap yang harus
+            // menepatkan, dan denah hasilnya menyimpan selisih sepersekian
+            // persen yang tak terlihat di layar tapi berlipat jadi sentimeter
+            // begitu dicetak.
+            const AMBANG = 0.8;
+
+            /**
+             * Kandidat garis untuk satu sumbu, dari bentuk kotak lain.
+             *
+             * Tepi & tengah papan ikut jadi kandidat dan ditandai `papan`,
+             * supaya panduannya bisa diberi warna lain: "menempel tepi papan"
+             * dan "sejajar zona lain" dua hal berbeda bagi yang membaca denah.
+             */
+            const kandidat = (kotakLain, sumbu) => {
+                const daftar = [
+                    { nilai: 0, papan: true },
+                    { nilai: 50, papan: true },
+                    { nilai: 100, papan: true },
+                ];
+
+                for (const k of kotakLain) {
+                    daftar.push({ nilai: k[sumbu.mulai], papan: false });
+                    daftar.push({ nilai: k[sumbu.akhir], papan: false });
+                    daftar.push({ nilai: (k[sumbu.mulai] + k[sumbu.akhir]) / 2, papan: false });
+                }
+
+                return daftar;
+            };
+
+            /**
+             * Cari garis yang paling dekat dengan salah satu dari tiga jangkar
+             * kotak — tepi awal, tepi akhir, atau tengahnya.
+             *
+             * Ketiganya sekaligus, bukan cuma tepi: kotak selebar 60% papan
+             * yang ditaruh "di tengah" hampir tak pernah punya tepi yang jatuh
+             * di angka bulat; yang orang maksud memang tengahnya.
+             *
+             * Mengembalikan posisi baru + garis yang menangkapnya, atau null.
+             */
+            const selaras = (pos, ukuran, daftar) => {
+                let terbaik = null;
+
+                for (const jangkar of [pos, pos + ukuran, pos + ukuran / 2]) {
+                    for (const k of daftar) {
+                        const jarak = Math.abs(jangkar - k.nilai);
+
+                        if (jarak <= AMBANG && (!terbaik || jarak < terbaik.jarak)) {
+                            terbaik = {
+                                jarak,
+                                posBaru: pos + (k.nilai - jangkar),
+                                garis: k,
+                            };
+                        }
+                    }
+                }
+
+                return terbaik;
+            };
+
+            const tampilkanPandu = (tegak, datar) => {
+                const atur = (el, hasil, sumbu) => {
+                    // Dicari tiap kali, bukan disimpan saat init: elemen
+                    // panduannya tak ada di DOM selama denah terkunci, dan
+                    // Livewire memorph kanvas di tempat — referensi yang
+                    // ditangkap saat init jadi elemen yatim begitu kuncinya
+                    // dibuka, dan garisnya berhenti muncul tanpa error apa pun.
+                    if (! el) return;
+
+                    el.classList.toggle('pandu-tampil', Boolean(hasil));
+                    el.classList.toggle('pandu-papan', Boolean(hasil?.garis.papan));
+
+                    if (hasil) el.style[sumbu] = hasil.garis.nilai + '%';
+                };
+
+                atur(kanvas.querySelector('[data-pandu="tegak"]'), tegak, 'left');
+                atur(kanvas.querySelector('[data-pandu="datar"]'), datar, 'top');
+            };
+
+            const sembunyikanPandu = () => tampilkanPandu(null, null);
+
             kanvas.addEventListener('pointerdown', (e) => {
                 const batas = batasKanvas();
+
+                // Denah terkunci: memilih tetap boleh, menggeser tidak.
+                //
+                // Kuncinya sengaja tak mematikan seluruh penangan: denah yang
+                // tak bisa dipilih sama saja dengan denah yang tak bisa dibaca,
+                // dan panitia masih perlu mengintip sifat zonanya. Yang dibuang
+                // cuma seretannya — tak ada pointer capture, tak ada `seret`,
+                // jadi pointermove di bawah memang tak punya apa pun untuk
+                // digerakkan.
+                if (terkunci()) {
+                    const sasaran = e.target.closest('[data-zona], [data-alur-titik]');
+
+                    if (! sasaran) return;
+
+                    e.preventDefault();
+
+                    if (sasaran.dataset.alurTitik !== undefined) {
+                        $wire.pilihTitik(Number(sasaran.dataset.alurTitik));
+                    } else {
+                        $wire.pilihZona(Number(sasaran.dataset.zona));
+                    }
+
+                    return;
+                }
 
                 // Mode alur: titik alur lebih dulu. Zona sengaja dilewati di
                 // mode ini (lihat .denah-alur-mode di gaya) karena titik alur
@@ -619,6 +716,18 @@
                 const zona = e.target.closest('[data-zona]');
                 if (!zona) return;
 
+                // Zona terkunci sendiri: sama seperti denah terkunci, memilih
+                // tetap boleh — yang dibuang cuma seretannya. Ditolak di sini
+                // juga, bukan cuma di server, supaya kotaknya tak sempat
+                // bergerak di layar lalu melompat balik saat Livewire menolak.
+                if (zona.dataset.zonaTerkunci !== undefined) {
+                    e.preventDefault();
+                    sembunyikanPandu();
+                    $wire.pilihZona(Number(zona.dataset.zona));
+
+                    return;
+                }
+
                 e.preventDefault();
                 const kotak = zona.getBoundingClientRect();
 
@@ -634,6 +743,22 @@
                     lebar: persen(kotak.width, batas.width),
                     tinggi: persen(kotak.height, batas.height),
                     bergerak: false,
+                    // Kotak lain, dalam persen papan — bahan garis pandu.
+                    // Diukur saat seretan MULAI, bukan tiap gerakan: kotak lain
+                    // tak bergerak selama seretan ini, jadi mengukurnya lagi
+                    // tiap frame cuma memaksa layout dihitung ulang terus.
+                    lain: [...kanvas.querySelectorAll('[data-zona]')]
+                        .filter((el) => el !== zona)
+                        .map((el) => {
+                            const k = el.getBoundingClientRect();
+
+                            return {
+                                kiri: persen(k.left - batas.left, batas.width),
+                                atas: persen(k.top - batas.top, batas.height),
+                                kanan: persen(k.right - batas.left, batas.width),
+                                bawah: persen(k.bottom - batas.top, batas.height),
+                            };
+                        }),
                 };
 
                 zona.setPointerCapture?.(e.pointerId);
@@ -667,7 +792,31 @@
                     // dan panitia tak punya cara mengambilnya kembali.
                     x = Math.max(0, Math.min(100 - w, seret.kiri + dx));
                     y = Math.max(0, Math.min(100 - h, seret.atas + dy));
+
+                    // Panduan cuma saat MENGGESER. Mengubah ukuran menyentuh
+                    // satu tepi saja, dan menangkap dua tepi sekaligus pada
+                    // kotak yang sedang membesar membuat kotaknya melompat.
+                    const tegak = selaras(x, w, kandidat(seret.lain, { mulai: 'kiri', akhir: 'kanan' }));
+                    const datar = selaras(y, h, kandidat(seret.lain, { mulai: 'atas', akhir: 'bawah' }));
+
+                    // Jepitan tepi papan menang atas panduan: panduan yang
+                    // menyuruh keluar papan dibuang, bukan jepitannya. Garis
+                    // yang digambar di posisi yang ternyata tak dipakai itu
+                    // janji palsu — panitia menaruh kotaknya di situ karena
+                    // percaya garisnya.
+                    const xTerjepit = tegak ? Math.max(0, Math.min(100 - w, tegak.posBaru)) : x;
+                    const yTerjepit = datar ? Math.max(0, Math.min(100 - h, datar.posBaru)) : y;
+
+                    x = xTerjepit;
+                    y = yTerjepit;
+
+                    tampilkanPandu(
+                        tegak && xTerjepit === tegak.posBaru ? tegak : null,
+                        datar && yTerjepit === datar.posBaru ? datar : null,
+                    );
                 } else {
+                    sembunyikanPandu();
+
                     w = Math.max(2, Math.min(100 - seret.kiri, seret.lebar + dx));
                     h = Math.max(2, Math.min(100 - seret.atas, seret.tinggi + dy));
                 }
@@ -685,6 +834,7 @@
                 const s = seret;
                 seret = null;
                 document.body.classList.remove('denah-menyeret');
+                sembunyikanPandu();
 
                 if (s.mode === 'titik') {
                     if (s.bergerak) {

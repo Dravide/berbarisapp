@@ -628,4 +628,100 @@ class LayoutAlurTest extends TestCase
 
         $this->assertStringNotContainsString('<svg', $this->viewPdf($denah));
     }
+
+    // ── Animasi mengalir ───────────────────────────────────────────────────
+
+    /**
+     * Dash putihnya lapis kedua di atas garis merahnya, bukan garisnya sendiri
+     * yang diputus-putus.
+     *
+     * Kalau garisnya yang diputus-putus, alur yang animasinya dimatikan — oleh
+     * prefers-reduced-motion, atau oleh peramban yang tak menjalankannya —
+     * berubah jadi garis putus-putus yang justru terbaca sebagai jenis garis
+     * lain.
+     */
+    public function test_lurik_alur_lapis_kedua_di_atas_garis_utuh()
+    {
+        $html = $this->viewKanvas();
+
+        // Garis merahnya tetap latar penuh…
+        $this->assertMatchesRegularExpression(
+            '/\.alur-garis\s*\{[^}]*background:\s*#b91c1c/s',
+            $html
+        );
+        // …dan luriknya dipasang di pseudo-elemen, bukan di garisnya.
+        $this->assertMatchesRegularExpression(
+            '/\.alur-garis::after\s*\{[^}]*animation:\s*alur-mengalir/s',
+            $html
+        );
+    }
+
+    /** Pergerakan lewat background-position, bukan transform: luriknya harus
+     *  berulang mulus, dan transform cuma menggeser seluruh luriknya. */
+    public function test_animasi_memakai_background_position()
+    {
+        $html = $this->viewKanvas();
+
+        $this->assertMatchesRegularExpression(
+            '/@keyframes alur-mengalir\s*\{[^}]*background-position/s',
+            $html
+        );
+    }
+
+    /**
+     * Satu periode lurik harus sama dengan satu periode gradiennya.
+     *
+     * Kalau background-size-nya beda dari jarak ulang gradiennya, luriknya
+     * tersentak tiap putaran — dan itu tak terlihat di tangkapan layar mana pun,
+     * cuma di mata yang menatapnya beberapa detik.
+     */
+    public function test_periode_lurik_sama_dengan_periode_gradien()
+    {
+        $html = $this->viewKanvas();
+
+        // Gradien: putih 0–8px, bening 8–24px. Satu periode = 24px.
+        $this->assertStringContainsString('8px 24px', $html);
+        $this->assertStringContainsString('background-size: 24px 100%', $html);
+        $this->assertStringContainsString('background-position: 24px 0', $html);
+    }
+
+    /** Denah yang bergerak mengganggu pembaca yang memintanya diam. */
+    public function test_animasi_patuh_pada_prefers_reduced_motion()
+    {
+        $this->assertMatchesRegularExpression(
+            '/prefers-reduced-motion:\s*reduce[^{]*\{[^}]*\.alur-garis::after\s*\{\s*animation:\s*none/s',
+            $this->viewKanvas()
+        );
+    }
+
+    private function viewKanvas(): string
+    {
+        $denah = CompetitionLayout::factory()->beralur()->create();
+        LayoutZone::factory()->create(['competition_layout_id' => $denah->id]);
+        $denah->load('zones');
+
+        return view('partials.denah-kanvas', [
+            'layout' => $denah,
+            'interaktif' => false,
+        ])->render();
+    }
+
+    /**
+     * Di kertas tak perlu ada aturan pelepas lurik.
+     *
+     * dompdf mengabaikan gradien sepenuhnya (terukur: PDF-nya sama persis
+     * dengan dan tanpa aturan itu), jadi dash putihnya memang tak pernah
+     * tercetak. Aturan yang tak berpengaruh cuma menyesatkan pembaca
+     * berikutnya — kalau kelak dompdf mengenal gradien, tes ini yang gagal
+     * dan menyuruh memasang pelepasnya sungguhan.
+     */
+    public function test_pdf_tidak_perlu_melepas_lurik_alur()
+    {
+        // Yang dicari aturan berskop .denah-cetak; selektor umumnya memang
+        // selalu terkirim (blok @once) dan itu tak menggambar apa pun.
+        $this->assertStringNotContainsString(
+            '.denah-cetak .denah-kanvas .alur-garis::after',
+            $this->viewPdf(CompetitionLayout::factory()->beralur()->create())
+        );
+    }
 }

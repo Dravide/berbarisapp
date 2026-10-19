@@ -39,6 +39,7 @@ class CompetitionLayout extends Model
         'route_points',
         'route_visible',
         'is_published',
+        'is_locked',
         'published_at',
         'sort_order',
     ];
@@ -47,6 +48,7 @@ class CompetitionLayout extends Model
     {
         return [
             'is_published' => 'boolean',
+            'is_locked' => 'boolean',
             'route_visible' => 'boolean',
             'route_points' => 'array',
             'published_at' => 'datetime',
@@ -105,30 +107,6 @@ class CompetitionLayout extends Model
     public function sudahTerisi(): bool
     {
         return $this->zones()->exists();
-    }
-
-    /**
-     * Ukuran papan siap baca, untuk pita ukuran di tepi kanvas.
-     *
-     * Angka bulat tak diberi ",0": "40 × 22 m" lebih enak dibaca daripada
-     * "40,0 × 22,0 m", dan pita ukuran memang untuk dibaca sekilas.
-     */
-    public function getUkuranTeksAttribute(): string
-    {
-        $angka = fn ($nilai) => rtrim(rtrim(number_format((float) $nilai, 1, ',', '.'), '0'), ',');
-
-        return $angka($this->ground_width).' × '.$angka($this->ground_height).' m';
-    }
-
-    /**
-     * Tinggi papan siap baca, untuk pita ukuran di tepi kiri & kanan.
-     *
-     * Terpisah dari ukuran_teks karena pita tegak hanya memuat satu angka;
-     * "40 × 22 m" di tepi setinggi 3% papan tak terbaca.
-     */
-    public function getTinggiTeksAttribute(): string
-    {
-        return rtrim(rtrim(number_format((float) $this->ground_height, 1, ',', '.'), '0'), ',').' m';
     }
 
     // ── Alur gerak pasukan ─────────────────────────────────────────────────
@@ -268,7 +246,7 @@ class CompetitionLayout extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'is_published', 'ground_width', 'ground_height'])
+            ->logOnly(['name', 'is_published', 'is_locked', 'ground_width', 'ground_height'])
             ->logOnlyDirty()
             ->setDescriptionForEvent(fn (string $eventName) => "Denah {$this->name} telah di-{$eventName}");
     }

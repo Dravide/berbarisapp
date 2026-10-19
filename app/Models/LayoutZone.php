@@ -35,6 +35,8 @@ class LayoutZone extends Model
 
     public const TYPE_TIANG_BENDERA = 'tiang_bendera';
 
+    public const TYPE_KOTAK_DANTON = 'kotak_danton';
+
     public const TYPE_TEKS = 'teks';
 
     /** Label + kelas warna kanvas. Kelasnya dipakai editor DAN halaman publik
@@ -48,6 +50,7 @@ class LayoutZone extends Model
         self::TYPE_JALUR_MASUK => 'Jalur Masuk',
         self::TYPE_PANAH => 'Panah',
         self::TYPE_TIANG_BENDERA => 'Tiang Bendera',
+        self::TYPE_KOTAK_DANTON => 'Kotak Danton',
         self::TYPE_TEKS => 'Teks',
     ];
 
@@ -60,6 +63,7 @@ class LayoutZone extends Model
         self::TYPE_JALUR_MASUK => 'z-jalur',
         self::TYPE_PANAH => 'z-arah',
         self::TYPE_TIANG_BENDERA => 'z-bendera',
+        self::TYPE_KOTAK_DANTON => 'z-danton',
         self::TYPE_TEKS => 'z-teks',
     ];
 
@@ -76,6 +80,7 @@ class LayoutZone extends Model
         self::TYPE_JALUR_MASUK => 'ti-door-enter',
         self::TYPE_PANAH => 'ti-arrow-right',
         self::TYPE_TIANG_BENDERA => 'ti-flag',
+        self::TYPE_KOTAK_DANTON => 'ti-military-rank',
         self::TYPE_TEKS => 'ti-letter-case',
     ];
 
@@ -87,6 +92,9 @@ class LayoutZone extends Model
         'y',
         'w',
         'h',
+        'width_m',
+        'height_m',
+        'is_locked',
         'dp_number',
         'capacity',
         'note',
@@ -100,6 +108,9 @@ class LayoutZone extends Model
             'y' => 'decimal:3',
             'w' => 'decimal:3',
             'h' => 'decimal:3',
+            'width_m' => 'decimal:2',
+            'height_m' => 'decimal:2',
+            'is_locked' => 'boolean',
             'dp_number' => 'integer',
         ];
     }
@@ -136,13 +147,55 @@ class LayoutZone extends Model
             $this->x, $this->y, $this->w, $this->h);
     }
 
-    /** Ukuran zona dalam meter, dihitung dari ukuran papan. */
+    /**
+     * Ukuran zona dalam meter, siap dibaca.
+     *
+     * Ukuran sendiri menang atas hitungan dari papan. Arena yang panitianya
+     * ketik "15 × 15 m" memang 15 m, berapa pun lebar papannya — dan papannya
+     * kanvas untuk menggambar, bukan pernyataan tentang arena.
+     */
     public function ukuranMeter(CompetitionLayout $layout): string
     {
-        $lebar = round((float) $this->w / 100 * (float) $layout->ground_width, 1);
-        $tinggi = round((float) $this->h / 100 * (float) $layout->ground_height, 1);
+        [$lebar, $tinggi] = $this->meter($layout);
 
-        return ($lebar > 0 && $tinggi > 0) ? "{$lebar} × {$tinggi} m" : '';
+        return ($lebar > 0 && $tinggi > 0)
+            ? static::angka($lebar).' × '.static::angka($tinggi).' m'
+            : '';
+    }
+
+    /**
+     * Ukuran zona dalam meter: [lebar, tinggi].
+     *
+     * Satu-satunya tempat asal-usul angka ukuran ditentukan. Dipakai untuk
+     * label DAN untuk membentuk gambarnya, justru supaya keduanya tak bisa
+     * berbeda: kotak yang tertulis "15 × 15 m" tapi tergambar 18 m lebar itu
+     * denah yang berbohong.
+     *
+     * @return array{0: float, 1: float}
+     */
+    public function meter(CompetitionLayout $layout): array
+    {
+        $lebar = $this->width_m !== null
+            ? (float) $this->width_m
+            : round((float) $this->w / 100 * (float) $layout->ground_width, 2);
+
+        $tinggi = $this->height_m !== null
+            ? (float) $this->height_m
+            : round((float) $this->h / 100 * (float) $layout->ground_height, 2);
+
+        return [$lebar, $tinggi];
+    }
+
+    /** Arena ini punya ukuran meter yang diisi panitia sendiri? */
+    public function getPunyaUkuranSendiriAttribute(): bool
+    {
+        return $this->width_m !== null && $this->height_m !== null;
+    }
+
+    /** Angka meter tanpa ",0" yang menganggur: "15 m" lebih enak dibaca. */
+    public static function angka(float $nilai): string
+    {
+        return rtrim(rtrim(number_format($nilai, 2, ',', '.'), '0'), ',');
     }
 
     // ── Susun DP otomatis ──────────────────────────────────────────────

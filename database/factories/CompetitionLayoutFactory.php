@@ -24,6 +24,7 @@ class CompetitionLayoutFactory extends Factory
             'ground_height' => 22,
             'background_image' => null,
             'is_published' => false,
+            'is_locked' => false,
             'published_at' => null,
             'sort_order' => fake()->numberBetween(1, 100),
         ];
@@ -35,6 +36,12 @@ class CompetitionLayoutFactory extends Factory
             'is_published' => true,
             'published_at' => now(),
         ]);
+    }
+
+    /** Denah yang digambarnya sudah pas dan tak boleh tergeser lagi. */
+    public function terkunci(): static
+    {
+        return $this->state(fn () => ['is_locked' => true]);
     }
 
     /**

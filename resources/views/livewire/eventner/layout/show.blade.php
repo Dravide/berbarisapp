@@ -33,6 +33,11 @@
                 @else
                     <span class="badge bg-warning-subtle text-warning">Draf</span>
                 @endif
+                @if($layout->is_locked)
+                    <span class="badge bg-secondary-subtle text-secondary">
+                        <i class="ti ti-lock me-1"></i> Terkunci
+                    </span>
+                @endif
                 <span class="text-muted small">
                     @if($layout->competitionCategory)
                         {{ $layout->competitionCategory->full_name }}
@@ -59,6 +64,14 @@
                 @endif
                 <button class="btn btn-outline-secondary btn-sm" wire:click="bukaPapanModal">
                     <i class="ti ti-ruler-measure me-1"></i> Ukuran Papan
+                </button>
+                {{-- Kunci denah. Warnanya berubah, bukan cuma ikonnya: tombol
+                     yang sama sekali tak berubah rupa setelah diklik membuat
+                     panitia menekannya dua kali untuk memastikan. --}}
+                <button class="btn btn-sm {{ $layout->is_locked ? 'btn-warning' : 'btn-outline-secondary' }}"
+                        wire:click="toggleKunci">
+                    <i class="ti {{ $layout->is_locked ? 'ti-lock' : 'ti-lock-open' }} me-1"></i>
+                    {{ $layout->is_locked ? 'Buka Kunci' : 'Kunci Denah' }}
                 </button>
                 <div class="btn-group btn-group-sm">
                     <button class="btn btn-outline-primary" wire:click="unduhPng">
@@ -94,7 +107,9 @@
                         </button>
                     </div>
                     <small class="text-muted">
-                        @if($mode === 'alur')
+                        @if($layout->is_locked)
+                            Denah terkunci &middot; klik kotak untuk melihat sifatnya
+                        @elseif($mode === 'alur')
                             Seret titik untuk memindahkannya &middot; klik garis untuk menyisipkan titik
                         @else
                             Seret kotak untuk memindahkan &middot; tarik sudut kanan-bawah untuk mengubah ukuran
@@ -106,6 +121,7 @@
                     'layout' => $layout,
                     'zones' => $zones,
                     'interaktif' => true,
+                    'terkunci' => $layout->is_locked,
                     'terpilihId' => $selectedId,
                     'terpilihTitik' => $titikTerpilih,
                     'kisi' => true,
@@ -151,6 +167,12 @@
                                 <div class="d-flex align-items-center gap-2">
                                     <span class="zone-dot {{ $z->kelas_tipe }}"></span>
                                     <span class="text-truncate small">{{ $z->name }}</span>
+                                    {{-- Gembok di daftar: tanpa itu, satu-satunya
+                                         cara tahu zona mana yang terkunci adalah
+                                         memilihnya satu per satu. --}}
+                                    @if($z->is_locked)
+                                        <i class="ti ti-lock text-secondary" title="Zona terkunci"></i>
+                                    @endif
                                     @if($z->dp_number)
                                         <span class="badge bg-light text-dark ms-auto">DP {{ $z->dp_number }}</span>
                                     @endif
@@ -166,6 +188,11 @@
                     <h6 class="fw-semibold mb-2">
                         {{ $terpilih->label_tipe }}
                         <span class="badge bg-light text-dark">{{ $terpilih->name }}</span>
+                        @if($terpilih->is_locked)
+                            <span class="badge bg-secondary-subtle text-secondary">
+                                <i class="ti ti-lock me-1"></i> Terkunci
+                            </span>
+                        @endif
                     </h6>
 
                     <form wire:submit="simpanZona">
@@ -184,6 +211,25 @@
                             </div>
                         @endif
 
+                        @if($terpilih->type === \App\Models\LayoutZone::TYPE_ARENA)
+                            <div class="mb-2">
+                                <label class="form-label small mb-1">Ukuran Arena (m)</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="number" step="0.5" min="0.5" class="form-control"
+                                           wire:model="arenaLebar" placeholder="15" aria-label="Lebar arena">
+                                    <span class="input-group-text">&times;</span>
+                                    <input type="number" step="0.5" min="0.5" class="form-control"
+                                           wire:model="arenaTinggi" placeholder="15" aria-label="Tinggi arena">
+                                </div>
+                                @error('arenaLebar')<span class="text-danger small d-block">{{ $message }}</span>@enderror
+                                @error('arenaTinggi')<span class="text-danger small d-block">{{ $message }}</span>@enderror
+                                <div class="form-text">
+                                    Arena lomba biasanya berukuran tetap. Isi ukurannya, dan kotaknya di kanvas
+                                    mengikuti — biarkan kosong kalau areanya cuma digambar seadanya.
+                                </div>
+                            </div>
+                        @endif
+
                         <div class="mb-2">
                             <label class="form-label small mb-1">Kapasitas</label>
                             <input class="form-control form-control-sm" wire:model="kapasitas" placeholder="mis. 1 pasukan">
@@ -196,8 +242,13 @@
                             @error('catatan')<span class="text-danger small">{{ $message }}</span>@enderror
                         </div>
 
+                        {{-- Ukuran arena berukuran tetap sudah tertulis di kolom
+                             isiannya; mengulanginya di sini cuma jadi dua angka
+                             yang bisa berbeda di satu panel. --}}
                         <div class="mb-3 text-muted small">
-                            <i class="ti ti-ruler-measure"></i> {{ $terpilih->ukuranMeter($layout) }}<br>
+                            @if(! $terpilih->punya_ukuran_sendiri)
+                                <i class="ti ti-ruler-measure"></i> {{ $terpilih->ukuranMeter($layout) }}<br>
+                            @endif
                             <span class="text-muted">
                                 X {{ rtrim(rtrim(number_format((float) $terpilih->x, 1, ',', '.'), '0'), ',') }}%
                                 &middot; Y {{ rtrim(rtrim(number_format((float) $terpilih->y, 1, ',', '.'), '0'), ',') }}%
@@ -206,6 +257,15 @@
 
                         <div class="d-grid gap-1">
                             <button class="btn btn-primary btn-sm">Simpan Zona</button>
+                            {{-- Kunci zona. Warnanya berubah, bukan cuma ikonnya:
+                                 tombol yang sama sekali tak berubah rupa setelah
+                                 diklik membuat panitia menekannya dua kali. --}}
+                            <button type="button"
+                                    class="btn btn-sm {{ $terpilih->is_locked ? 'btn-warning' : 'btn-outline-secondary' }}"
+                                    wire:click="toggleKunciZona({{ $terpilih->id }})">
+                                <i class="ti {{ $terpilih->is_locked ? 'ti-lock' : 'ti-lock-open' }} me-1"></i>
+                                {{ $terpilih->is_locked ? 'Buka Kunci Zona' : 'Kunci Zona' }}
+                            </button>
                             <button type="button" class="btn btn-outline-secondary btn-sm" wire:click="duplikatZona({{ $terpilih->id }})">
                                 Duplikat
                             </button>
@@ -341,6 +401,11 @@
     //
     // Kisinya ada di bingkai, bukan di kanvas — cari elemennya, jangan
     // mengandaikan letaknya.
+    //
+    // Fase animasinya juga dibekukan: kanvas yang tertangkap di tengah putaran
+    // lurik menghasilkan PNG yang dash-nya jatuh di tempat acak, dan tak ada
+    // dua unduhan yang sama. Dash-nya direndam di posisi nol dulu supaya PNG-nya
+    // sama dengan yang dilihat panitia saat halaman baru dibuka.
     $wire.on('unduh-denah-png', async ({ nama }) => {
         const kanvas = document.querySelector('[data-denah-editor]');
         if (!kanvas) return;
@@ -348,6 +413,7 @@
         const berkisi = kanvas.querySelectorAll('.denah-kisi');
         berkisi.forEach((el) => el.classList.remove('denah-kisi'));
         kanvas.classList.remove('denah-interaktif');
+        kanvas.classList.add('denah-beku');
         kanvas.querySelectorAll('.is-terpilih').forEach((el) => el.classList.remove('is-terpilih'));
 
         try {
@@ -373,6 +439,7 @@
         } finally {
             berkisi.forEach((el) => el.classList.add('denah-kisi'));
             kanvas.classList.add('denah-interaktif');
+            kanvas.classList.remove('denah-beku');
             $wire.dispatch('denah-refresh');
         }
     });
@@ -401,5 +468,10 @@
         .zone-dot.z-arah,
         .zone-dot.z-teks   { background: transparent; }
         .zone-dot.z-bendera { background: #fecaca; border-color: #dc2626; }
+        .zone-dot.z-danton  { background: #fef3c7; border-color: #b45309; }
+
+        /* Denah beku: fase animasi alur dimatikan, dipakai saat memotret PNG
+           supaya luriknya jatuh di tempat yang sama tiap kali. */
+        .denah-beku .alur-garis::after { animation: none; }
     </style>
 @endonce
