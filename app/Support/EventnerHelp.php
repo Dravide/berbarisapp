@@ -365,6 +365,7 @@ class EventnerHelp
                 'intro' => 'QR yang mengarah ke halaman publik event Anda.',
                 'steps' => [
                     'QR tampil otomatis beserta URL tujuannya.',
+                    'QR Formulir Pendaftaran ikut mencetak status pendaftaran — event yang sudah ditutup tetap bisa dipindai, jadi rambu itu yang menjelaskan ke sekolah bahwa pendaftarannya berakhir.',
                     'Klik Download untuk menyimpan gambar, atau Cetak untuk langsung mencetaknya.',
                     'Salin Link untuk membagikan URL event.',
                 ],

@@ -16,11 +16,12 @@ class EventQr extends Component
 {
     public $eventner;
 
-    /** @var array<string, array{label: string, url: string, dataUri: ?string}> */
+    /** @var array<string, array{label: string, url: string, dataUri: ?string, catatan: ?string, nada: ?string}> */
     public $qrs = [];
 
     public array $icons = [
         'detail' => 'ti ti-home',
+        'register' => 'ti ti-clipboard-list',
         'ticket' => 'ti ti-ticket',
         'vote' => 'ti ti-heart',
     ];
@@ -41,6 +42,10 @@ class EventQr extends Component
                 'label' => 'Halaman Event',
                 'url' => $this->eventner->publicUrl('detail'),
             ],
+            'register' => [
+                'label' => 'Formulir Pendaftaran',
+                'url' => $this->eventner->publicUrl('register'),
+            ],
             'ticket' => [
                 'label' => 'Laman Tiket',
                 'url' => $this->eventner->publicUrl('ticket'),
@@ -56,8 +61,51 @@ class EventQr extends Component
                 'label' => $target['label'],
                 'url' => $target['url'],
                 'dataUri' => $this->renderQr($target['url'], $favicon),
-            ];
+            ] + $this->catatanStatus($key);
         }
+    }
+
+    /**
+     * Rambu di bawah QR pendaftaran.
+     *
+     * QR dicetak lalu ditempel di spanduk — ia hidup lebih lama daripada
+     * pendaftarannya. Tombol "Daftar Sekarang" di halaman event memang
+     * hilang sendiri saat status 'closed', tetapi QR ini tetap bisa dipindai
+     * dan mendaratkan sekolah di formulir yang sudah ditutup. Jadi statusnya
+     * diterangkan di sini, bukan disimpulkan sendiri oleh pemindai.
+     *
+     * Ambang batasnya dibaca dari accessor registration_status — sumber yang
+     * sama dengan halaman publik — supaya badge panitia dan QR tak berbeda.
+     */
+    private function catatanStatus(string $key): array
+    {
+        if ($key !== 'register') {
+            return [];
+        }
+
+        // tanggal_pendaftaran tidak di-cast ke datetime, jadi ia string mentah.
+        $batas = $this->eventner->tanggal_pendaftaran
+            ? \Carbon\Carbon::parse($this->eventner->tanggal_pendaftaran)->translatedFormat('d F Y, H:i')
+            : null;
+
+        return match ($this->eventner->registration_status) {
+            'open' => [
+                'catatan' => $batas
+                    ? 'Pendaftaran dibuka sampai ' . $batas . '.'
+                    : 'Pendaftaran sedang dibuka.',
+                'nada' => 'success',
+            ],
+            'booking' => [
+                'catatan' => 'Mode booking: slot dipesan dulu, pengisian data pasukan dibuka panitia setelah technical meeting.',
+                'nada' => 'info',
+            ],
+            default => [
+                'catatan' => $batas
+                    ? 'Pendaftaran sudah ditutup pada ' . $batas . '. QR ini hanya menampilkan riwayat.'
+                    : 'Pendaftaran publik ditutup: deadline pendaftaran belum ditetapkan panitia.',
+                'nada' => 'warning',
+            ],
+        };
     }
 
     /**

@@ -33,6 +33,15 @@
                     <div class="card-body text-center">
                         <p class="text-muted small mb-4">Scan QR untuk buka {{ strtolower($qr['label']) }}</p>
 
+                        {{-- Rambu status pendaftaran: QR dicetak & ditempel, jadi
+                             ia hidup lebih lama daripada masa pendaftarannya. --}}
+                        @if(!empty($qr['catatan']))
+                            <div class="alert alert-{{ $qr['nada'] ?? 'secondary' }} py-2 px-3 mb-4 text-start d-flex align-items-start gap-2">
+                                <i class="ti ti-info-circle fs-5 lh-1 flex-shrink-0"></i>
+                                <span class="small">{{ $qr['catatan'] }}</span>
+                            </div>
+                        @endif
+
                         @if($qr['dataUri'])
                             <div class="d-inline-block p-2 rounded-3 border bg-light">
                                 <div class="bg-white p-2 rounded-2 border">
