@@ -12,6 +12,7 @@ use App\Models\CompetitionRound;
 use App\Models\CompetitionSeries;
 use App\Models\DeductionCategory;
 use App\Models\DeductionCriteria;
+use App\Models\Eventner;
 use App\Models\Judge;
 use App\Models\ScoreDeduction;
 use App\Traits\FeatureGatedComponent;
@@ -1661,6 +1662,63 @@ class Builder extends Component
             ->find($id);
 
         return $ada ? (string) $ada->id : '';
+    }
+
+    // ============================================================
+    // KODE BERBAGI FORMAT (baca rubrik lintas event)
+    // ============================================================
+
+    /**
+     * Kode berbagi milik event ini, dibaca hidup dari DB.
+     *
+     * Dibaca ulang tiap render — bukan disimpan di properti — supaya kartu di
+     * panel kanan tidak pernah menampilkan kode yang sudah mati setelah panitia
+     * membuat kode baru di tab lain.
+     */
+    #[Computed]
+    public function formatShareCode()
+    {
+        return Eventner::whereKey($this->eventnerId)->value('format_share_code');
+    }
+
+    /**
+     * Sudah pernah dicabut — membedakan "belum pernah dibagikan" dari "sudah
+     * dicabut", dua kalimat yang menuntut tindakan berbeda dari panitia.
+     */
+    #[Computed]
+    public function formatShareRevoked(): bool
+    {
+        return (bool) Eventner::whereKey($this->eventnerId)->value('format_share_revoked_at');
+    }
+
+    /**
+     * Kode dibuat acak oleh SISTEM, bukan dikarang panitia: kode ini
+     * satu-satunya yang berdiri antara rubrik event ini dan siapa pun yang
+     * menebaknya. Kode lemah membuat seluruh gerbang ini jadi hiasan.
+     *
+     * Membuat kode baru mematikan kode lama seketika. Salinan yang sudah masuk
+     * ke event lain tetap utuh — yang dicabut izin membaca, bukan hasil bacanya.
+     */
+    public function buatKodeBerbagi()
+    {
+        Eventner::whereKey($this->eventnerId)->update([
+            'format_share_code' => strtoupper(\Illuminate\Support\Str::random(12)),
+            'format_share_revoked_at' => null,
+        ]);
+
+        unset($this->formatShareCode, $this->formatShareRevoked);
+        $this->toast('Kode berbagi baru dibuat. Kode lama tidak berlaku lagi.');
+    }
+
+    public function cabutKodeBerbagi()
+    {
+        Eventner::whereKey($this->eventnerId)->update([
+            'format_share_code' => null,
+            'format_share_revoked_at' => now(),
+        ]);
+
+        unset($this->formatShareCode, $this->formatShareRevoked);
+        $this->toast('Kode berbagi dicabut. Salinan yang sudah masuk ke event lain tetap utuh.');
     }
 
     // ============================================================

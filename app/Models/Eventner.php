@@ -50,6 +50,8 @@ class Eventner extends Model
         'slug',
         'drawing_code',
         'scoring_code',
+        'format_share_code',
+        'format_share_revoked_at',
         'deskripsi',
         'latitude',
         'longitude',
@@ -84,6 +86,7 @@ class Eventner extends Model
         'rejected_at' => 'datetime',
         'trial_ends_at' => 'datetime',
         'registration_paid_at' => 'datetime',
+        'format_share_revoked_at' => 'datetime',
         'is_verified' => 'boolean',
         'verified_at' => 'datetime',
     ];

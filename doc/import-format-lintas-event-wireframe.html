@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Import Format Penilaian Lintas Event — Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: dokumen spesifikasi — tiap layar satu slide, wireframe di kiri, anotasi di kanan. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --amber:#b45309; --amber-soft:#fef3c7;
+  --green:#15803d; --green-soft:#dcfce7;
+  --red:#b91c1c; --red-soft:#fee2e2;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --amber:#fbbf24; --amber-soft:#3a2b08;
+    --green:#4ade80; --green-soft:#0c2a18;
+    --red:#f87171; --red-soft:#3a1212;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --amber:#fbbf24; --amber-soft:#3a2b08;
+  --green:#4ade80; --green-soft:#0c2a18;
+  --red:#f87171; --red-soft:#3a1212;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:clamp(28px,5vw,56px)}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:70ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap}
+.chip b{color:var(--ink);font-weight:600}
+
+/* Catatan pembuka — beda dari kartu anotasi: ini peringatan ruang lingkup. */
+.scope{background:var(--amber-soft);border:1px solid var(--amber);border-radius:var(--r);padding:16px 20px;margin-top:24px}
+.scope h3{font-size:14px;color:var(--amber)}
+.scope p{margin-top:6px;font-size:13.5px;color:var(--ink)}
+
+/* Slide */
+.slide{margin-top:clamp(36px,6vw,64px)}
+.slide-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.slide-head h2{font-size:20px;font-weight:700}
+.mode-tag{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.slide-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:900px){.slide-grid{grid-template-columns:1fr}}
+
+/* Bingkai layar */
+.frame{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:10px;box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.screen{
+  border-radius:8px;border:1px solid var(--line);
+  background:var(--panel-2);overflow:hidden;position:relative;
+  font-size:12px;padding:18px;
+}
+.frame-cap{font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 4px 2px;display:flex;justify-content:space-between;gap:8px}
+
+/* Placeholder umum */
+.ph{background:var(--ph-fill);border:1px solid var(--ph-line);border-radius:6px}
+.lab{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+.row{display:flex;align-items:center;gap:8px}
+.grow{flex:1;min-width:0}
+.mt6{margin-top:6px}.mt10{margin-top:10px}.mt14{margin-top:14px}.mt20{margin-top:20px}
+
+/* Elemen form wireframe */
+.in{background:var(--panel);border:1px solid var(--ph-line);border-radius:8px;padding:9px 12px;color:var(--muted)}
+.in b{color:var(--ink);font-weight:600}
+.in-code{font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:9px 16px;font-weight:600;font-size:12px;border:1px solid transparent}
+.btn-pri{background:var(--accent);color:#fff}
+.btn-gho{border-color:var(--line);color:var(--muted)}
+.btn[disabled]{opacity:.45}
+.tag-ok{display:inline-flex;align-items:center;gap:6px;background:var(--green-soft);color:var(--green);border-radius:999px;padding:4px 12px;font-weight:600;font-size:12px}
+.tag-err{display:inline-flex;align-items:center;gap:6px;background:var(--red-soft);color:var(--red);border-radius:999px;padding:4px 12px;font-weight:600;font-size:12px}
+
+/* Menu dropdown */
+.menu{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px;display:grid;gap:2px;max-width:280px}
+.menu .mi{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;color:var(--muted)}
+.menu .mi.new{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.menu .sep{height:1px;background:var(--line-soft);margin:4px 0}
+
+/* Tabel wireframe (pola tabel Builder) */
+table.wf{width:100%;border-collapse:collapse;font-size:11.5px}
+table.wf th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+table.wf td{padding:7px 8px;border-bottom:1px solid var(--line-soft)}
+
+/* Anotasi */
+.notes{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.notes h3{font-size:14px;margin-bottom:8px}
+.notes ul{margin:0;padding-left:18px;color:var(--muted);font-size:13.5px;display:grid;gap:6px}
+.notes b{color:var(--ink)}
+.k{font-family:var(--mono);font-size:.85em;background:var(--ph-fill);border:1px solid var(--line-soft);border-radius:5px;padding:1px 6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Spesifikasi UI · berbaris.app</p>
+    <h1>Import Format Penilaian Lintas Event</h1>
+    <p class="lede">
+      Menyalin rubrik penilaian dari event milik penyelenggara <b>lain</b> ke event sendiri,
+      lewat <code>/eventner/format-nilai</code>. Tidak bisa langsung: event sumber harus
+      <b>membagikan kode</b> lebih dulu, dan kode itu yang membuka pratinjau rubriknya.
+    </p>
+    <div class="meta">
+      <span class="chip">Rute <b>/eventner/format-nilai</b></span>
+      <span class="chip">Pintu masuk <b>dropdown Unduh &amp; Import</b></span>
+      <span class="chip">Kode <b>per event sumber, bisa dicabut</b></span>
+      <span class="chip">Sifat salin <b>menambah, tidak menghapus</b></span>
+    </div>
+  </header>
+
+  <div class="scope">
+    <h3>Catatan ruang lingkup</h3>
+    <p>
+      Alur ini <b>belum ada di kode</b>. Yang tersedia sekarang: import Excel
+      (<code>eventner.format-nilai.import</code>) dan salin rubrik ke tingkat lain
+      <b>di dalam event yang sama</b> (<code>/format-nilai/copy/{categoryId}</code>) — keduanya
+      tidak pernah menyentuh data event lain. Wireframe ini menggambarkan alur yang
+      diminta, memakai pola gerbang kode yang sudah dipakai aplikasi
+      (<code>drawing_code</code>, <code>scoring_code</code>) dan cangkang modal yang sudah ada
+      (<code>#importExcelModal</code>). Nama kolom &amp; rute di bawah usulan, bukan kutipan kode.
+    </p>
+  </div>
+
+  <!-- ================= SLIDE 1 ================= -->
+  <section class="slide">
+    <div class="slide-head">
+      <h2>1 · Pintu masuk — dropdown di Builder</h2>
+      <span class="mode-tag">/eventner/format-nilai</span>
+    </div>
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen">
+            <div class="row" style="justify-content:space-between">
+              <div class="lab">Format Penilaian · Tingkat SMP</div>
+              <span class="btn btn-pri">Unduh &amp; Import ▾</span>
+            </div>
+
+            <div class="mt10" style="display:flex;justify-content:flex-end">
+              <div class="menu">
+                <span class="mi">Unduh PDF Tingkat</span>
+                <span class="mi">Unduh Per Juri / Peserta</span>
+                <div class="sep"></div>
+                <span class="mi">Unduh Template Excel</span>
+                <span class="mi">Import Excel</span>
+                <div class="sep"></div>
+                <span class="mi new">Import dari Event Lain</span>
+              </div>
+            </div>
+
+            <div class="ph mt20" style="padding:12px">
+              <div class="lab">Panel Builder (tidak berubah)</div>
+              <div class="mt6">Kategori rubrik · sub-kategori · kriteria · kelompok pengurangan</div>
+            </div>
+          </div>
+          <div class="frame-cap"><span>satu item baru di menu yang sudah ada</span><span>tanpa tab/panel baru</span></div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Kenapa di sini</h3>
+        <ul>
+          <li>Satu pintu untuk semua aksi rubrik — <b>tidak</b> menambah tab atau halaman baru.</li>
+          <li>Item disembunyikan bila event sendiri masih kosong: tidak ada yang bisa dipakai sebagai tujuan tempel.</li>
+          <li>Membuka modal kedua berdampingan dengan <code>#importExcelModal</code> — jangan menumpuk keduanya; menutup yang satu sebelum membuka yang lain.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 2 ================= -->
+  <section class="slide">
+    <div class="slide-head">
+      <h2>2 · Sisi sumber — membagikan kode</h2>
+      <span class="mode-tag">/eventner/format-nilai · panel Bagikan</span>
+    </div>
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen">
+            <div class="row" style="justify-content:space-between">
+              <b>Bagikan Format Penilaian</b>
+              <span class="lab">Aktif</span>
+            </div>
+            <p class="mt6" style="color:var(--muted)">
+              Berikan kode ini ke panitia event lain yang ingin memakai rubrik Anda.
+              Yang punya kode hanya bisa <b>melihat &amp; menyalin</b> — tidak bisa mengubah rubrik Anda.
+            </p>
+
+            <div class="lab mt14">Kode berbagi</div>
+            <div class="row mt6">
+              <div class="in in-code grow"><b>PBB26-SMP-4KQ9</b></div>
+              <span class="btn btn-gho">Salin</span>
+            </div>
+
+            <div class="row mt14">
+              <span class="btn btn-gho">Buat kode baru</span>
+              <span class="grow"></span>
+              <span class="btn btn-gho">Cabut kode</span>
+            </div>
+            <div class="mt10 lab">Dicabut = modal event lain langsung menolak kode ini, tanpa mengubah rubrik yang sudah tersalin.</div>
+          </div>
+          <div class="frame-cap"><span>panel kecil di halaman Builder</span><span>kode milik event sumber</span></div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Aturan kode</h3>
+        <ul>
+          <li>Satu kode per event, pola <code>drawing_code</code>/<code>scoring_code</code> yang sudah ada — bukan tabel baru per pasangan event.</li>
+          <li>Kode <b>tidak</b> memberi akses tulis: hanya baca rubrik + salin. Tidak ada data peserta, juri, atau nilai yang ikut terbuka.</li>
+          <li>Dibuat acak oleh sistem (bukan diarang panitia) — kode lemah adalah satu-satunya hal yang berdiri antara dua event.</li>
+          <li>Ganti kode = kode lama mati seketika; salinan yang sudah masuk ke event lain tetap utuh.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 3 ================= -->
+  <section class="slide">
+    <div class="slide-head">
+      <h2>3 · Sisi tujuan — pilih event + masukkan kode</h2>
+      <span class="mode-tag">modal · langkah 1</span>
+    </div>
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen">
+            <div class="row" style="justify-content:space-between">
+              <b>Import Format dari Event Lain</b>
+              <span class="lab">✕</span>
+            </div>
+
+            <div class="lab mt14">Event sumber</div>
+            <div class="in mt6"><b>Lomba PBB se-Jawa Barat 2026</b> <span class="lab">— pbb2026</span></div>
+            <div class="mt6 lab">Daftar berisi event yang sudah disetujui; event sendiri tidak ikut.</div>
+
+            <div class="lab mt14">Kode berbagi dari event sumber</div>
+            <div class="in in-code mt6"><b>PBB26-SMP-4KQ9</b></div>
+            <div class="mt6 lab">Minta kode ini ke panitia event sumber.</div>
+
+            <div class="row mt20">
+              <span class="btn btn-pri">Buka Pratinjau</span>
+              <span class="btn btn-gho">Batal</span>
+            </div>
+          </div>
+          <div class="frame-cap"><span>dua isian, satu tombol</span><span>pratinjau belum menyentuh DB</span></div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Cara kerja</h3>
+        <ul>
+          <li>Kode dinilai <b>saat submit</b>, bukan saat mengetik — satu tempat pesan, tidak ada kebocoran "kode ini ada".</li>
+          <li>Daftar event menampilkan nama + subdomain saja. Tanpa jumlah rubrik: jumlahnya pun bisa dibaca sebagai bocoran isi.</li>
+          <li>Salah kode = tak ada bedanya dengan event yang tidak membagikan kode; pesannya tetap dibedakan agar panitia tahu harus menelepon siapa (slide 4).</li>
+          <li>Pratinjau memakai pola yang sudah ada: hasil baca disimpan di session berkunci, <code>showPreview</code> menampilkan langkah 2.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 4 ================= -->
+  <section class="slide">
+    <div class="slide-head">
+      <h2>4 · Kode ditolak</h2>
+      <span class="mode-tag">state error</span>
+    </div>
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen">
+            <div class="lab">Kode berbagi dari event sumber</div>
+            <div class="in in-code mt6" style="border-color:var(--red)"><b style="color:var(--red)">PBB26-SMP-XXXX</b></div>
+            <div class="mt10"><span class="tag-err">✕ Kode berbagi tidak cocok dengan event sumber ini.</span></div>
+
+            <div class="mt14 lab">Pesan lain per sebab</div>
+            <div class="ph mt6" style="padding:10px 12px;display:grid;gap:6px">
+              <span>✕ Kode berbagi tidak cocok dengan event sumber ini. <span class="lab">— kode salah</span></span>
+              <span>✕ Event sumber belum membagikan formatnya. <span class="lab">— kode kosong</span></span>
+              <span>✕ Kode berbagi sudah dicabut panitia event sumber. <span class="lab">— dicabut</span></span>
+              <span>✕ Event sumber belum disetujui, formatnya belum bisa dipakai. <span class="lab">— status ≠ approved</span></span>
+            </div>
+
+            <div class="row mt14">
+              <span class="btn btn-pri">Buka Pratinjau</span>
+              <span class="grow"></span>
+              <span class="lab">percobaan tidak dibatasi</span>
+            </div>
+          </div>
+          <div class="frame-cap"><span>state error</span><span>tombol tetap aktif — hanya pesan yang berubah</span></div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Aturan pesan &amp; pembatasan</h3>
+        <ul>
+          <li>Satu sebab = satu pesan spesifik: panitia tahu harus minta kode ulang, atau menunggu event sumber disetujui.</li>
+          <li>Pesan di bawah isian, pola <code>@error</code> Livewire yang sudah dipakai modal import ini.</li>
+          <li>Tidak ada penguncian setelah N kali gagal. Kode acak 12 karakter sudah cukup; penguncian justru mengunci panitia sendiri di hari-H.</li>
+          <li>Yang <b>tidak</b> dibocorkan: nama-nama kategori rubrik, jumlah kriteria, nama juri. Semua hanya muncul setelah kode benar.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 5 ================= -->
+  <section class="slide">
+    <div class="slide-head">
+      <h2>5 · Pratinjau rubrik event sumber</h2>
+      <span class="mode-tag">modal · langkah 2</span>
+    </div>
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen">
+            <div class="tag-ok">✓ Kode diterima — rubrik dimuat, belum disalin</div>
+
+            <div class="mt10" style="display:flex;gap:6px;flex-wrap:wrap">
+              <span class="lab" style="border:1px solid var(--line);border-radius:999px;padding:4px 10px">3 kategori rubrik</span>
+              <span class="lab" style="border:1px solid var(--line);border-radius:999px;padding:4px 10px">18 kriteria</span>
+              <span class="lab" style="border:1px solid var(--line);border-radius:999px;padding:4px 10px">2 kelompok pengurangan</span>
+              <span class="lab" style="border:1px solid var(--line);border-radius:999px;padding:4px 10px">5 kriteria pengurangan</span>
+              <span class="lab" style="border:1px solid var(--line);border-radius:999px;padding:4px 10px">Lomba PBB se-Jawa Barat 2026 · SMP</span>
+            </div>
+
+            <table class="wf mt14">
+              <thead>
+                <tr><th>Kategori</th><th>Sub</th><th>Kriteria</th><th>Bobot</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><b>Ketepatan Formasi</b></td><td>2</td><td>8</td><td>1x</td></tr>
+                <tr><td><b>Ketepatan Gerakan</b></td><td>3</td><td>7</td><td>2x</td></tr>
+                <tr><td><b>Kekompakan</b></td><td>1</td><td>3</td><td>1x</td></tr>
+                <tr style="color:var(--muted)"><td>Pengurangan (global)</td><td>—</td><td>5</td><td>—</td></tr>
+              </tbody>
+            </table>
+
+            <div class="mt14 lab">Isi rubrik disalin apa adanya: nama, opsi skor, bobot, urutan.</div>
+
+            <div class="row mt20">
+              <span class="btn btn-pri">Lanjut — Pilih Tingkat Tujuan</span>
+              <span class="btn btn-gho">Batal</span>
+            </div>
+          </div>
+          <div class="frame-cap"><span>pratinjau = yang akan masuk, apa adanya</span><span>belum ada baris DB baru</span></div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Yang ditampilkan &amp; tidak</h3>
+        <ul>
+          <li>Ringkasan angka + daftar kategori saja. Kriteria per baris baru dibuka bila panitia menekannya — layar ini untuk memutuskan "pakai/tidak", bukan menyunting.</li>
+          <li>Nama event sumber selalu ikut tercetak. Rubrik yang disalin tanpa jejak asal adalah rubrik yang tak bisa ditelusuri setahun kemudian.</li>
+          <li>Tidak ada penyuntingan di langkah ini — kalau ingin diubah, ubah setelah tersimpan di event sendiri.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 6 ================= -->
+  <section class="slide">
+    <div class="slide-head">
+      <h2>6 · Pilih tingkat tujuan &amp; simpan</h2>
+      <span class="mode-tag">modal · langkah 3</span>
+    </div>
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen">
+            <div class="lab">Simpan untuk Tingkat</div>
+            <div class="in mt6"><b>SMP</b> <span class="lab">— mengikuti tingkat terpilih di halaman Builder</span></div>
+            <div class="mt6 lab">Hanya tingkat lomba milik event sendiri; induk yang punya anak tidak ditawarkan.</div>
+
+            <div class="ph mt14" style="padding:12px;background:var(--amber-soft);border-color:var(--amber)">
+              <div class="row">
+                <b style="color:var(--amber)">Perilaku: menambah, bukan mengganti</b>
+              </div>
+              <div class="mt6" style="color:var(--ink)">
+                3 kategori dari <b>Lomba PBB se-Jawa Barat 2026</b> ditambahkan ke tingkat <b>SMP</b>.
+                Rubrik yang sudah ada di tingkat ini <b>tidak dihapus</b> — kategori dengan nama sama akan
+                muncul dua kali, jadi periksa dulu sebelum menyimpan.
+              </div>
+            </div>
+
+            <div class="row mt20">
+              <span class="btn btn-pri">Simpan ke Format</span>
+              <span class="btn btn-gho">Batal</span>
+              <span class="lab">dialog konfirmasi sekali lagi</span>
+            </div>
+          </div>
+          <div class="frame-cap"><span>sama seperti import Excel: DITAMBAHKAN</span><span>wire:confirm sebelum tulis</span></div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Penulisan &amp; pengaman</h3>
+        <ul>
+          <li>Satu transaksi: kategori → sub-kategori → kriteria, ditambah kelompok pengurangan (scope kategori) — pola yang sudah dipakai <code>confirmImport()</code>.</li>
+          <li>Semua baris baru menempel ke <code>eventner_id</code> milik pengguna login. Tidak ada satu baris pun yang tetap menunjuk ke event sumber.</li>
+          <li>Tingkat tujuan divalidasi seperti <code>copyExecute()</code>: harus milik event sendiri dan bukan induk ber-anak.</li>
+          <li>Sumbernya diingat sebagai teks keterangan ("disalin dari …"), bukan kunci asing — event sumber dihapus pun, rubrik tersalin tetap hidup.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 7 ================= -->
+  <section class="slide">
+    <div class="slide-head">
+      <h2>7 · Selesai</h2>
+      <span class="mode-tag">toast + Builder tersegarkan</span>
+    </div>
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen">
+            <div class="ph" style="padding:12px;background:var(--green-soft);border-color:var(--green)">
+              <div class="row">
+                <b style="color:var(--green)">✓ 18 kriteria dari Lomba PBB se-Jawa Barat 2026 ditambahkan ke tingkat SMP.</b>
+              </div>
+              <div class="mt6 lab" style="color:var(--green)">toast kanan atas · 3 detik · modal tertutup otomatis</div>
+            </div>
+
+            <div class="mt20 lab">Panel Builder</div>
+            <table class="wf mt6">
+              <thead>
+                <tr><th>Kategori</th><th>Kriteria</th><th>Asal</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><b>Ketepatan Formasi</b></td><td>8</td><td class="lab">sendiri</td></tr>
+                <tr><td><b>Kekompakan</b></td><td>3</td><td class="lab">sendiri</td></tr>
+                <tr><td><b>Ketepatan Formasi</b> <span class="tag-ok" style="font-size:10px;padding:2px 8px">baru</span></td><td>8</td><td class="lab">PBB se-Jabar 2026</td></tr>
+                <tr><td><b>Ketepatan Gerakan</b> <span class="tag-ok" style="font-size:10px;padding:2px 8px">baru</span></td><td>7</td><td class="lab">PBB se-Jabar 2026</td></tr>
+                <tr><td><b>Kekompakan</b> <span class="tag-ok" style="font-size:10px;padding:2px 8px">baru</span></td><td>3</td><td class="lab">PBB se-Jabar 2026</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="frame-cap"><span>penanda "baru" hilang saat halaman dimuat ulang</span><span>nama ganda terlihat jelas</span></div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Setelah simpan</h3>
+        <ul>
+          <li>Builder disegarkan lewat event <code>import:done</code> yang sudah ada — toast membaca <code>event.detail || event</code> (jebakan <code>detail</code> yang sudah pernah menggigit di proyek ini).</li>
+          <li>Baris hasil salinan ditandai <b>hanya sampai halaman dimuat ulang</b>. Tidak ada kolom permanen — penanda abadi akan jadi kolom yang tak pernah dibaca lagi.</li>
+          <li>Nama kategori kembar dibiarkan apa adanya dan <b>ditampilkan</b>, bukan ditolak sistem: panitia yang tahu mana yang harus dihapus, bukan kode.</li>
+          <li>Nilai juri tidak tersentuh sama sekali; yang berpindah hanya definisi rubrik.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 8 ================= -->
+  <section class="slide">
+    <div class="slide-head">
+      <h2>8 · Keadaan tepi</h2>
+      <span class="mode-tag">yang harus tetap masuk akal</span>
+    </div>
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen">
+            <table class="wf">
+              <thead>
+                <tr><th>Keadaan</th><th>Yang terlihat</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Event sumber belum punya rubrik</td><td>Pratinjau tampil dengan angka 0 + <b>"Event sumber belum menyusun format penilaian."</b>; tombol simpan mati.</td></tr>
+                <tr><td>Event sendiri belum punya tingkat lomba</td><td>Langkah 3 kosong + <b>"Buat tingkat lomba dulu."</b> dengan tautan ke Kategori Lomba.</td></tr>
+                <tr><td>Tingkat tujuan sudah punya kategori senama</td><td>Pratinjau menandai <b>"nama sudah ada di tingkat ini"</b> per kategori — tetap boleh disimpan.</td></tr>
+                <tr><td>Kode dicabut saat pratinjau terbuka</td><td>Simpan ditolak: <b>"Kode berbagi sudah dicabut."</b> Pratinjau lama dibuang.</td></tr>
+                <tr><td>Pratinjau lama dibiarkan terbuka</td><td>Hasil baca disimpan di session berkunci &amp; kedaluwarsa; modal dibuka lagi = mulai dari langkah 1.</td></tr>
+                <tr><td>Event sumber dihapus setelah salin</td><td>Tidak ada yang rusak — rubrik salinan mandiri, keterangan asal jadi teks biasa.</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="frame-cap"><span>enam keadaan, enam kalimat</span><span>tanpa layar kosong tanpa keterangan</span></div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Aturan umum</h3>
+        <ul>
+          <li>Setiap keadaan mati harus punya kalimat + langkah berikutnya. Layar kosong tanpa keterangan adalah bug, bukan keadaan.</li>
+          <li>Yang membatalkan simpan hanya dua: kode mati, dan tidak ada apa pun untuk disalin. Sisanya peringatan yang boleh dilewati.</li>
+          <li>Tidak ada keadaan yang menuntut panitia menghubungi admin platform — semua bisa diselesaikan dua panitia sendiri.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <footer class="mt20" style="padding-bottom:40px">
+    <p class="lede">
+      Rujukan kode: <code>App\Livewire\Eventner\FormatNilai\Import</code>,
+      <code>FormatNilaiController::copyExecute()</code>,
+      <code>App\Livewire\Eventner\Drawing\Spin</code> (pola gerbang kode),
+      <code>routes/eventner.php</code>.
+    </p>
+  </footer>
+
+</div>
+</body>
+</html>

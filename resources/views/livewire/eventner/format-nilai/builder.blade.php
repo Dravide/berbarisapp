@@ -67,6 +67,17 @@
                             <i class="ti ti-file-import me-1"></i> Import Excel
                         </button>
                     </li>
+                    {{-- Disembunyikan saat event sendiri belum punya tingkat lomba:
+                         tidak ada sasaran tempel, jadi modalnya hanya akan berakhir
+                         di langkah 3 yang menolak. Lebih baik tombolnya tak ada
+                         daripada tombol yang pasti gagal. --}}
+                    @if($this->competitionCategories->isNotEmpty())
+                        <li>
+                            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#importLintasModal">
+                                <i class="ti ti-share me-1"></i> Import dari Event Lain
+                            </button>
+                        </li>
+                    @endif
                 </ul>
             </div>
 
@@ -76,6 +87,7 @@
                  komponen yang sama hidup terus; $activeTab-nya ikut berubah
                  lewat binding di bawah. --}}
             <livewire:eventner.format-nilai.import :activeTab="$activeTab" />
+            <livewire:eventner.format-nilai.import-lintas :activeTab="$activeTab" />
         </div>
     </div>
 
@@ -662,6 +674,56 @@
                     <hr class="my-2">
                     <p class="fs-2 mb-0 text-danger"><i class="ti ti-minus-circle me-1"></i> Pengurangan di dalam kategori hanya memotong kolom kategori itu. Pengurangan yang berlaku untuk seluruh kategori di tingkat lomba ini diatur sebagai <strong>Pengurangan Nilai Tingkat</strong> di bagian bawah.</p>
                     <p class="fs-2 mb-0 mt-2 text-muted"><i class="ti ti-edit me-1"></i> <strong>Pengurangan Manual (Ad-hoc):</strong> Pelanggaran lapangan di luar kriteria baku dapat langsung diinput oleh operator di Meja Scoring dengan nominal dan target bebas.</p>
+                </div>
+            </div>
+
+            {{-- Bagikan format ke event lain. Kode milik event INI — yang
+                 memegangnya bisa membaca & menyalin rubrik, tidak bisa
+                 mengubahnya. Tidak ada data peserta/juri/nilai yang ikut
+                 terbuka; yang berpindah hanya definisi rubrik. --}}
+            <div class="card w-100 mt-3">
+                <div class="card-body">
+                    <h5 class="card-title fw-semibold mb-2">
+                        <i class="ti ti-share me-1"></i> Bagikan Format Penilaian
+                    </h5>
+
+                    @if($this->formatShareCode)
+                        <p class="fs-2 text-muted mb-2">
+                            Berikan kode ini ke panitia event lain yang ingin memakai rubrik Anda. Yang punya kode
+                            hanya bisa <strong>melihat &amp; menyalin</strong> — tidak bisa mengubah rubrik Anda.
+                        </p>
+                        <div class="input-group input-group-sm mb-2">
+                            <input type="text" class="form-control font-monospace fw-semibold" value="{{ $this->formatShareCode }}" readonly onclick="this.select()">
+                            <button type="button" class="btn btn-outline-primary" onclick="navigator.clipboard.writeText('{{ $this->formatShareCode }}');this.blur();">
+                                <i class="ti ti-copy"></i> Salin
+                            </button>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" wire:click="buatKodeBerbagi">
+                                <i class="ti ti-refresh me-1"></i> Buat kode baru
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" wire:click="cabutKodeBerbagi">
+                                <i class="ti ti-ban me-1"></i> Cabut kode
+                            </button>
+                        </div>
+                        <p class="fs-2 text-muted mb-0 mt-2">
+                            Buat kode baru = kode lama mati seketika. Salinan yang sudah masuk ke event lain
+                            tetap utuh.
+                        </p>
+                    @else
+                        <p class="fs-2 text-muted mb-2">
+                            {{ $this->formatShareRevoked
+                                ? 'Kode berbagi sudah dicabut. Event lain tidak bisa lagi membaca rubrik Anda.'
+                                : 'Belum ada kode berbagi. Event lain tidak bisa membaca rubrik Anda sampai Anda membuat kodenya.' }}
+                        </p>
+                        <button type="button" class="btn btn-sm btn-primary" wire:click="buatKodeBerbagi">
+                            <i class="ti ti-key me-1"></i> Buat kode berbagi
+                        </button>
+                        <p class="fs-2 text-muted mb-0 mt-2">
+                            Kode dibuat acak oleh sistem — kode lemah adalah satu-satunya hal yang berdiri antara
+                            rubrik Anda dan siapa pun yang menebaknya.
+                        </p>
+                    @endif
                 </div>
             </div>
 
