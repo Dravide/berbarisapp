@@ -16,9 +16,9 @@ use Tests\TestCase;
 /**
  * Juknis & dokumen unggahan panitia.
  *
- * Berkas panitia disajikan lewat response()->download() (bukan asset storage),
- * dan dikurung eventner_id milik pengguna yang login — dua hal itulah yang
- * diuji di sini bersama alur unggah/hapus.
+ * Berkas panitia disajikan lewat disk (bukan asset storage) — PDF/gambar inline,
+ * Office sebagai lampiran — dan dikurung eventner_id milik pengguna yang login.
+ * Dua hal itulah yang diuji di sini bersama alur unggah/hapus.
  */
 class EventDocumentTest extends TestCase
 {
@@ -288,7 +288,43 @@ class EventDocumentTest extends TestCase
         $dengan->assertSee("/event/{$eventner->slug}/dokumen/{$doc->id}", false);
     }
 
-    public function test_unduhan_mengirim_lampiran_dan_menambah_penghitung()
+    /**
+     * PDF dan gambar dibuka browser di tab baru (pratinjau), Office tetap
+     * diunduh — dua baris berbeda harus menghasilkan penanda berbeda, kalau
+     * tidak semua baris tampak sama dan pengguna tak tahu mana yang dibuka.
+     */
+    public function test_baris_pratinjau_dan_baris_unduh_berpenanda_beda()
+    {
+        Storage::fake('public');
+        [, $eventner] = $this->panitia();
+
+        EventDocument::factory()->create([
+            'eventner_id' => $eventner->id,
+            'title' => 'Juknis PDF',
+            'file' => 'documents/a.pdf',
+            'original_name' => 'a.pdf',
+        ]);
+        EventDocument::factory()->create([
+            'eventner_id' => $eventner->id,
+            'title' => 'Rekap Excel',
+            'file' => 'documents/b.xlsx',
+            'original_name' => 'b.xlsx',
+        ]);
+
+        $respons = $this->get("/event/{$eventner->slug}");
+
+        $respons->assertOk();
+        $respons->assertSee('Buka Juknis PDF');
+        $respons->assertSee('Unduh Rekap Excel');
+        $respons->assertSee('target="_blank"', false);
+    }
+
+    /**
+     * Pratinjau = PDF disajikan inline, nama berkasnya tetap ikut supaya tab
+     * browser berjudul benar dan tombol "simpan" di penampil PDF memakai nama
+     * aslinya.
+     */
+    public function test_pdf_disajikan_inline_tanpa_menambah_penghitung()
     {
         Storage::fake('public');
         [, $eventner] = $this->panitia();
@@ -305,11 +341,89 @@ class EventDocumentTest extends TestCase
         $respons = $this->get("/event/{$eventner->slug}/dokumen/{$doc->id}");
 
         $respons->assertOk();
-        $this->assertStringContainsString(
-            'attachment',
-            $respons->headers->get('content-disposition')
-        );
+        $this->assertStringContainsString('inline', $respons->headers->get('content-disposition'));
+        $this->assertStringContainsString('application/pdf', $respons->headers->get('content-type'));
+
+        // Dilihat bukan diunduh: panitia membaca angka ini sebagai jumlah unduhan.
+        $this->assertSame(0, $doc->fresh()->download_count);
+    }
+
+    public function test_gambar_disajikan_inline_dengan_mime_gambarnya()
+    {
+        Storage::fake('public');
+        [, $eventner] = $this->panitia();
+
+        $path = UploadedFile::fake()->image('denah.png')->store('documents', 'public');
+
+        $doc = EventDocument::factory()->create([
+            'eventner_id' => $eventner->id,
+            'file' => $path,
+            'original_name' => 'denah.png',
+        ]);
+
+        $respons = $this->get("/event/{$eventner->slug}/dokumen/{$doc->id}");
+
+        $respons->assertOk();
+        $this->assertStringContainsString('inline', $respons->headers->get('content-disposition'));
+        $this->assertStringContainsString('image/png', $respons->headers->get('content-type'));
+    }
+
+    /**
+     * Office tetap lampiran: browser tak bisa merendernya, dan kalau dipaksa
+     * inline hasilnya tab kosong, bukan berkas.
+     */
+    public function test_berkas_office_tetap_lampiran_dan_menambah_penghitung()
+    {
+        Storage::fake('public');
+        [, $eventner] = $this->panitia();
+
+        $path = UploadedFile::fake()->create('rekap.xlsx', 120)->store('documents', 'public');
+
+        $doc = EventDocument::factory()->create([
+            'eventner_id' => $eventner->id,
+            'file' => $path,
+            'original_name' => 'Rekap 2026.xlsx',
+            'download_count' => 0,
+        ]);
+
+        $respons = $this->get("/event/{$eventner->slug}/dokumen/{$doc->id}");
+
+        $respons->assertOk();
+        $this->assertStringContainsString('attachment', $respons->headers->get('content-disposition'));
         $this->assertSame(1, $doc->fresh()->download_count);
+    }
+
+    /**
+     * Daftar-putih, bukan daftar-hitam Office: berkas di bawah ini dirender
+     * browser di origin yang sama dengan aplikasi, jadi SVG (yang bisa memuat
+     * skrip) harus jatuh ke jalur unduh. Kalau logikanya dibalik — "semua
+     * selain Office boleh inline" — baris ini jadi inline dan celahnya terbuka.
+     */
+    public function test_svg_dan_tipe_tak_dikenal_tetap_lampiran()
+    {
+        Storage::fake('public');
+        [, $eventner] = $this->panitia();
+
+        foreach (['gambar.svg', 'arsip.zip'] as $nama) {
+            $path = UploadedFile::fake()->create($nama, 10)->store('documents', 'public');
+
+            $doc = EventDocument::factory()->create([
+                'eventner_id' => $eventner->id,
+                'file' => $path,
+                'original_name' => $nama,
+            ]);
+
+            $this->assertFalse($doc->bisa_dipratinjau, "{$nama} tidak boleh bisa dipratinjau.");
+
+            $respons = $this->get("/event/{$eventner->slug}/dokumen/{$doc->id}");
+
+            $respons->assertOk();
+            $this->assertStringContainsString(
+                'attachment',
+                $respons->headers->get('content-disposition'),
+                "{$nama} harus tetap jadi lampiran."
+            );
+        }
     }
 
     public function test_unduhan_ditolak_kalau_berkasnya_hilang()

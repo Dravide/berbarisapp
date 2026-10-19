@@ -4,7 +4,7 @@
             <div class="row align-items-center">
                 <div class="col-9">
                     <h4 class="fw-semibold mb-8">Juknis &amp; Dokumen</h4>
-                    <p class="mb-0 text-muted small">Unggah juknis lomba, jadwal, denah, atau berkas lain. Dokumen akan tampil dan bisa diunduh di halaman publik event.</p>
+                    <p class="mb-0 text-muted small">Unggah juknis lomba, jadwal, denah, atau berkas lain. Dokumen akan tampil di halaman publik event — PDF dan gambar bisa langsung dibuka, berkas Office diunduh.</p>
                 </div>
                 <div class="col-3 text-end mb-n5"><img src="{{ asset('templates/assets/images/breadcrumb/ChatBc.png') }}" class="img-fluid mb-n4" style="max-height: 80px;"></div>
             </div>

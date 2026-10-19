@@ -46,13 +46,14 @@ class PublicJuknisController extends Controller
     }
 
     /**
-     * Unduh dokumen yang diunggah panitia sendiri.
+     * Unduh / buka dokumen yang diunggah panitia sendiri.
      *
-     * Lewat Storage::disk('public')->download(), bukan asset('storage/...'):
-     * berkas .doc dan .xlsx harus disajikan sebagai lampiran supaya browser
-     * mengunduhnya, bukan mencoba merendernya. Nama unduhannya memakai nama asli
-     * berkas (dibersihkan di model), jadi panitia melihat persis berkas yang ia
-     * unggah.
+     * Lewat disk, bukan asset('storage/...'): berkas .doc dan .xlsx harus
+     * disajikan sebagai lampiran supaya browser mengunduhnya, bukan mencoba
+     * merendernya. PDF dan gambar justru sebaliknya — panitia mengunggahnya
+     * untuk dibaca, jadi keduanya disajikan inline dan terbuka di tab baru
+     * tanpa memaksa unduh. Nama unduhannya memakai nama asli berkas (dibersihkan
+     * di model), jadi panitia melihat persis berkas yang ia unggah.
      *
      * Lewat disk, bukan storage_path(), supaya disk palsu di tes (Storage::fake)
      * tetap berlaku — path mentah akan membuat berkas uji tak pernah ketemu.
@@ -88,6 +89,20 @@ class PublicJuknisController extends Controller
 
         if (! Storage::disk('public')->exists($doc->file)) {
             abort(404, 'Berkas dokumen tidak ditemukan.');
+        }
+
+        if ($doc->bisa_dipratinjau) {
+            // Penghitung sengaja tidak dinaikkan: angka itu dibaca panitia
+            // sebagai "berapa kali berkas ini diunduh", dan pratinjau yang
+            // sekadar dilihat akan menggelembungkannya.
+            //
+            // Content-Disposition sengaja TIDAK diisi sendiri: response()
+            // menyusunnya lewat makeDisposition() yang meng-encode nama
+            // non-ASCII (RFC 5987) — string manual akan jadi header rusak
+            // begitu nama berkasnya mengandung huruf beraksen.
+            return Storage::disk('public')->response($doc->file, $doc->nama_unduhan, [
+                'Content-Type' => $doc->mime_pratinjau,
+            ]);
         }
 
         $doc->increment('download_count');

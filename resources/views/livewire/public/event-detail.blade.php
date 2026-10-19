@@ -421,9 +421,12 @@
                         <div class="flex flex-col gap-2">
                             @foreach($documents as $d)
                                 {{-- Seluruh baris adalah tautan: target klik besar,
-                                     tidak perlu membidik tombol kecil di layar HP. --}}
+                                     tidak perlu membidik tombol kecil di layar HP.
+                                     PDF & gambar terbuka di tab baru (browser
+                                     merendernya sendiri); Office tetap diunduh
+                                     karena browser tak bisa menampilkannya. --}}
                                 <a href="{{ event_url($eventner, 'documents.download', ['document' => $d->id]) }}"
-                                   title="Unduh {{ $d->title }}"
+                                   @if($d->bisa_dipratinjau) target="_blank" rel="noopener" title="Buka {{ $d->title }}" @else title="Unduh {{ $d->title }}" @endif
                                    class="group flex items-start gap-3 rounded-xl border border-outline-variant/30 p-3 text-decoration-none hover:border-primary/40 transition">
                                     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-surface-container-low text-on-surface-variant border border-outline-variant/40">
                                         <i class="ti {{ $d->ikon }} text-xl"></i>
@@ -442,7 +445,15 @@
                                             {{ $d->extension }} &middot; {{ $d->ukuran_terbaca }}
                                         </span>
                                     </span>
-                                    <i class="ti ti-download shrink-0 text-lg text-primary transition"></i>
+                                    <span class="flex shrink-0 items-center gap-1 text-primary transition">
+                                        @if($d->bisa_dipratinjau)
+                                            <i class="ti ti-eye text-lg"></i>
+                                            <span class="text-[10px] font-bold uppercase tracking-wider">Buka</span>
+                                        @else
+                                            <i class="ti ti-download text-lg"></i>
+                                            <span class="text-[10px] font-bold uppercase tracking-wider">Unduh</span>
+                                        @endif
+                                    </span>
                                 </a>
                             @endforeach
                         </div>

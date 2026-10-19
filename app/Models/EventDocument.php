@@ -50,6 +50,36 @@ class EventDocument extends Model
         return in_array($this->extension, ['jpg', 'jpeg', 'png'], true);
     }
 
+    /**
+     * PDF dan gambar raster boleh disajikan inline (dibuka browser), sisanya
+     * (doc/docx/xls/xlsx) hanya masuk akal sebagai lampiran.
+     *
+     * Sengaja daftar-putih, bukan "apa saja selain Office": berkas yang dirender
+     * browser berjalan di origin yang sama dengan aplikasi, jadi tipe yang bisa
+     * mengeksekusi skrip (svg, html) tidak boleh ikut.
+     */
+    public function getBisaDipratinjauAttribute(): bool
+    {
+        return in_array($this->extension, ['pdf', 'jpg', 'jpeg', 'png'], true);
+    }
+
+    /**
+     * Content-Type eksplisit untuk penyajian inline.
+     *
+     * Tidak memakai mimeType() disk: tebakan itu bergantung pada berkas benar-
+     * benar ada dan pada deteksi finfo, sedangkan header ini yang menentukan
+     * apakah browser merender PDF atau mengunduhnya.
+     */
+    public function getMimePratinjauAttribute(): string
+    {
+        return match ($this->extension) {
+            'pdf' => 'application/pdf',
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            default => 'application/octet-stream',
+        };
+    }
+
     public function getUrlAttribute(): string
     {
         return asset('storage/'.$this->file);
