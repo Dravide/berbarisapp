@@ -12,6 +12,13 @@
     diputar tergambar benar di dompdf maupun di peramban. Satu renderer untuk
     tiga permukaan.
 
+    Satu pengecualian, dan hanya satu: zona panah. Batang dan mata panahnya
+    memang cuma bisa digambar sebagai SVG sebaris — dan justru karena dompdf
+    membuangnya, panah itu punya dua wujud. Di peramban (termasuk PDF-nya
+    sendiri lewat html2canvas, yang menyusun ulang DOM di peramban) ia panah
+    sungguhan; di kertas ia kembali jadi pita bergaris putus dengan namanya.
+    Itu yang dipilih parameter `$cetak`, dan hanya pdf-cetak yang mengisinya.
+
     Parameter:
       $layout      CompetitionLayout
       $zones       koleksi LayoutZone (opsional; default $layout->zones)
@@ -20,6 +27,7 @@
       $terpilihId  int|null; zona yang sedang dipilih di editor
       $kisi        bool; tampilkan kisi latar
       $mode        'zona' | 'alur'; apa yang bisa diseret di editor
+      $cetak       bool; digambar untuk kertas — lihat catatan zona panah
 --}}
 @php
     $zones = $zones ?? $layout->zones;
@@ -28,6 +36,7 @@
     $terpilihId = $terpilihId ?? null;
     $kisi = $kisi ?? false;
     $mode = $mode ?? 'zona';
+    $cetak = $cetak ?? false;
     $rasio = max(0.2, min(6, (float) $layout->rasio));
 
     // Di editor alur tetap digambar walau panitia menyembunyikannya dari
@@ -42,7 +51,7 @@
      cuma memindahkan kotaknya selama seretan, lalu server mengirim posisi
      finalnya kembali lewat morph. --}}
 <div
-    class="denah-kanvas @if($interaktif) denah-interaktif @endif @if($interaktif && $terkunci) denah-terkunci @endif @if($mode === 'alur') denah-alur-mode @endif"
+    class="denah-kanvas @if($interaktif) denah-interaktif @endif @if($interaktif && $terkunci) denah-terkunci @endif @if($mode === 'alur') denah-alur-mode @endif @if($cetak) denah-kertas @endif"
     style="--rasio: {{ number_format($rasio, 4, '.', '') }};"
     @if($interaktif)
         data-denah-editor
@@ -66,6 +75,42 @@
             @if($interaktif) data-zona-nama="{{ $zona->name }}" @endif
             @if($interaktif && $zona->is_locked) data-zona-terkunci="1" @endif
         >
+            {{-- Panah: batang CSS + mata SVG sebaris.
+
+                 Batangnya div tipis seperti ruas alur — itu yang terbaca benar
+                 di semua permukaan. Matanya SVG, dan itu satu-satunya SVG di
+                 kanvas ini: segitiga mustahil digambar dari border CSS (dompdf
+                 cuma mengeluarkan satu garis lurus darinya, sama seperti pada
+                 tiang bendera).
+
+                 Karena dompdf membuang SVG, wujud di kertas dipilih lewat
+                 `$cetak`: pita bergaris putus + namanya, persis seperti dulu.
+                 Di peramban dan di PNG hasil html2canvas, matanya ikut
+                 tergambar. --}}
+            @if($zona->type === \App\Models\LayoutZone::TYPE_PANAH && ! $cetak)
+                {{-- Arah bacaannya yang dipakai: mendatar ke kanan, tegak ke
+                     bawah. Arah gerak pasukan tak tersimpan di zona ini (yang
+                     tersimpan cuma kotaknya), jadi menebak arah dari letak
+                     arena akan menebak lebih banyak daripada yang diketahui. --}}
+                @php($panahTegak = (float) $zona->w < (float) $zona->h)
+                <span class="panah{{ $panahTegak ? ' panah-tegak' : '' }}" aria-hidden="true">
+                    <span class="panah-batang"></span>
+                    {{-- Satu gambar untuk dua arah: segitiga menghadap kanan,
+                         yang diputar seperempat putaran kalau panahnya tegak.
+                         Kotaknya selalu ekstrem (62 × 3 persen), jadi ukuran
+                         matanya ditahan di CSS — `aspect-ratio: 1` plus satu
+                         sisi 100% — bukan `width:100%;height:100%` yang akan
+                         meregangkannya jadi pita bersiku. --}}
+                    <svg
+                        class="panah-mata"
+                        viewBox="0 0 1 1"
+                        xmlns="http://www.w3.org/2000/svg"
+                        focusable="false"
+                    >
+                        <path d="M0 0 1 .5 0 1Z" fill="currentColor"/>
+                    </svg>
+                </span>
+            @endif
             <span class="zone-label">{{ $zona->name }}</span>
             {{-- Gembok kecil di kotaknya: kanvas penuh zona, dan gembok di
                  daftar kiri cuma menolong kalau orangnya sedang menatap daftar.
@@ -223,6 +268,62 @@
         .zone.z-arah    { background: transparent; border-style: dashed; border-color: #94a3b8; }
         .zone.z-danton  { background: #fef3c7; border-color: #b45309; }
         .zone.z-teks    { background: transparent; border-color: transparent; }
+
+        /* ── Panah ─────────────────────────────────────────────────────────
+           Batangnya div tipis (tergambar di semua permukaan), matanya SVG
+           sebaris — satu-satunya SVG di kanvas ini.
+
+           Di peramban kotaknya dilepas: panahnya yang berbicara, dan pita
+           bergaris putus di sekeliling panah cuma jadi kerangka yang tak
+           menjelaskan apa pun. Di kertas kotak itulah panahnya, jadi aturan
+           di atas tetap berlaku apa adanya dan tak perlu ditimpa. */
+        .denah-kanvas:not(.denah-kertas) .zone.z-arah { border-color: transparent; }
+        /* Namanya disembunyikan di peramban — panahnya sudah mengatakan hal
+           yang sama — tapi tetap ada di DOM supaya pembaca layar tetap
+           mendengarnya, dan tetap tercetak utuh di kertas. */
+        .denah-kanvas:not(.denah-kertas) .zone.z-arah .zone-label {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip: rect(0 0 0 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        .denah-kanvas .panah {
+            position: absolute;
+            inset: 0;
+            color: #475569;
+        }
+        .denah-kanvas .panah-batang {
+            position: absolute;
+            background: currentColor;
+            border-radius: 1px;
+        }
+        .denah-kanvas .panah-mata {
+            position: absolute;
+            display: block;
+            aspect-ratio: 1;
+        }
+        /* Mendatar: batang dari tepi kiri ke tepi kanan, mata di ujung kanan.
+           `aspect-ratio` yang menjaga matanya tetap sama sisi — kalau
+           dilebarkan mengikuti kotak, segitiganya gepeng dan panahnya terbaca
+           sebagai pita bersiku. */
+        .denah-kanvas .panah-batang { left: 0; right: 0; top: 50%; height: 2px; margin-top: -1px; }
+        .denah-kanvas .panah-mata { right: 0; top: 0; height: 100%; width: auto; }
+        /* Tegak: batang dari tepi atas ke tepi bawah, mata diputar seperempat
+           putaran di ujung bawah. */
+        .denah-kanvas .panah-tegak .panah-batang {
+            left: 50%; right: auto; top: 0; bottom: 0;
+            width: 2px; height: auto; margin: 0 0 0 -1px;
+        }
+        .denah-kanvas .panah-tegak .panah-mata {
+            right: auto; left: 0; top: auto; bottom: 0;
+            width: 100%; height: auto;
+            transform: rotate(90deg);
+        }
 
         /* Tiang bendera: tonggak, bukan bidang. Tiangnya batang tegak di tengah,
            benderanya persegi yang di-skew supaya terbaca sebagai kain.

@@ -112,6 +112,7 @@
             'zones' => $denah->zones,
             'interaktif' => false,
             'kisi' => false,
+            'cetak' => true,
         ])
     </div>
 

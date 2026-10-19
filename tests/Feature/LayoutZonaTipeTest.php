@@ -255,6 +255,86 @@ class LayoutZonaTipeTest extends TestCase
         }
     }
 
+    // ── Panah ──────────────────────────────────────────────────────────────
+
+    /** Panah arah gerak: kotaknya bukan lagi pita bergaris putus di peramban,
+     *  tapi gambar panah. */
+    public function test_zona_panah_digambar_sebagai_panah()
+    {
+        $denah = $this->denah();
+        $this->panah($denah->id, ['w' => 62, 'h' => 3]);
+
+        $markup = $this->markup($this->viewKanvas($denah));
+
+        $this->assertStringContainsString('<svg', $markup);
+        $this->assertStringContainsString('class="panah"', $markup);
+        $this->assertStringContainsString('panah-batang', $markup);
+        $this->assertStringContainsString('panah-mata', $markup);
+    }
+
+    /** Arah bacaannya ikut bentuk kotaknya: pita mendatar → panah mendatar. */
+    public function test_panah_mendatar_untuk_kotak_yang_lebar()
+    {
+        $denah = $this->denah();
+        $this->panah($denah->id, ['w' => 62, 'h' => 3]);
+
+        $this->assertStringNotContainsString('panah-tegak', $this->markup($this->viewKanvas($denah)));
+    }
+
+    public function test_panah_tegak_untuk_kotak_yang_tinggi()
+    {
+        $denah = $this->denah();
+        $this->panah($denah->id, ['w' => 3, 'h' => 72]);
+
+        $this->assertStringContainsString('panah-tegak', $this->markup($this->viewKanvas($denah)));
+    }
+
+    /** Zona selain panah tak ikut menggambar panah. */
+    public function test_zona_bukan_panah_tak_menggambar_panah()
+    {
+        $denah = $this->denah();
+        LayoutZone::factory()->create([
+            'competition_layout_id' => $denah->id,
+            'name' => 'Arena Utama',
+        ]);
+
+        $this->assertStringNotContainsString('<svg', $this->markup($this->viewKanvas($denah)));
+    }
+
+    /**
+     * Kertas tak bisa menggambar SVG sebaris — dompdf membuangnya tanpa
+     * keluhan, dan panah yang hilang di denah tercetak lebih buruk daripada
+     * panah yang tidak sedetail di layar.
+     *
+     * Karena itu `$cetak` mengembalikan zona panah ke wujud lamanya: pita
+     * bergaris putus lengkap dengan namanya. Yang dijaga di sini justru
+     * sebaliknya dari tes di atas — bukan "panahnya ada", tapi "panahnya
+     * TIDAK dipaksakan ada" di permukaan yang tak bisa menampilkannya.
+     */
+    public function test_kanvas_kertas_menahan_panah_sebagai_pita_nama()
+    {
+        $denah = $this->denah();
+        $this->panah($denah->id, ['w' => 62, 'h' => 3]);
+
+        $markup = $this->markup($this->viewKanvas($denah, ['cetak' => true]));
+
+        $this->assertStringNotContainsString('<svg', $markup);
+        $this->assertStringNotContainsString('panah-mata', $markup);
+        $this->assertStringContainsString('Arah gerak pasukan', $markup);
+        $this->assertStringContainsString('z-arah', $markup);
+    }
+
+    private function panah(int $denahId, array $atribut = []): LayoutZone
+    {
+        return LayoutZone::factory()->create(array_merge([
+            'competition_layout_id' => $denahId,
+            'name' => 'Arah gerak pasukan',
+            'type' => LayoutZone::TYPE_PANAH,
+            'x' => 14,
+            'y' => 80,
+        ], $atribut));
+    }
+
     // ── Halaman publik & PDF ───────────────────────────────────────────────
 
     public function test_zona_ikut_di_halaman_publik()
