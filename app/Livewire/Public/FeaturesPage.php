@@ -10,9 +10,12 @@ use Livewire\Component;
 /**
  * Halaman /fitur — katalog lengkap fitur produk.
  *
- * Landing cuma menjual sembilan ringkasan. Katalog penuhnya (8 kelompok, 37
- * fitur) hidup di sini, disusun dari App\Support\ProductFeatures — kode,
- * bukan Setting, jadi admin tidak bisa mengubah halaman ini dari panel.
+ * Landing cuma menjual sembilan ringkasan. Katalog penuhnya hidup di sini,
+ * disusun dari App\Support\ProductFeatures — kode, bukan Setting, jadi admin
+ * tidak bisa mengubah halaman ini dari panel. Jumlah kelompoknya sengaja
+ * tidak ditulis di sini: satu-satunya hitungan yang boleh beredar adalah
+ * ProductFeatures::total(), dan angka yang disalin ke komentar akan basi
+ * tanpa ada yang gagal.
  *
  * Sengaja TIDAK mengirim `sectionsActive`/`sectionsRender`/`diLamanDepan` ke
  * layout: halaman ini tidak punya satu pun section #hero…#contact, dan

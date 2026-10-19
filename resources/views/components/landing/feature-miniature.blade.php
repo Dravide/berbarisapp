@@ -215,6 +215,51 @@
             <div class="feat-mrow"><span class="feat-pill feat-pill-accent">Rp45.000</span><span class="feat-bar feat-bar-sm w-1/3"></span></div>
         @break
 
+        @case('denah-kunci'){{-- Kunci dua tingkat: satu kotak zona bergembok, kotak di bawahnya masih bebas digeser. Gemboknya ditulis, bukan digambar — ikon di dalam rangka butuh ukuran sendiri yang tak dimiliki .feat-*. --}}
+            <div class="feat-card">
+                <div class="feat-mrow">
+                    <span class="feat-sq"></span>
+                    <span class="feat-bar feat-bar-sm"></span>
+                    <span class="feat-pill feat-pill-accent feat-end">Terkunci</span>
+                </div>
+                <div class="feat-mrow">
+                    <span class="feat-sq"></span>
+                    <span class="feat-bar feat-bar-sm w-2/5"></span>
+                    <span class="feat-pill feat-pill-lime feat-end">Bebas</span>
+                </div>
+            </div>
+            <div class="feat-mrow"><span class="feat-pill feat-pill-lime">Denah terkunci</span><span class="feat-bar feat-bar-sm w-1/3"></span></div>
+        @break
+
+        @case('denah-alur'){{-- Alur gerak pasukan: titik belok berderet di atas denah, disambung garis putus .feat-perf — satu-satunya elemen bergaris putus di rangka, jadi alurnya tidak tertukar dengan baris isi. --}}
+            <div class="feat-card">
+                <div class="feat-mrow">
+                    <span class="feat-sq"></span>
+                    <span class="feat-bar feat-bar-title w-2/5"></span>
+                    <span class="feat-pill feat-pill-accent feat-end">Masuk</span>
+                </div>
+                <span class="feat-perf"></span>
+                <div class="feat-mrow"><span class="feat-numbox"></span><span class="feat-bar feat-bar-sm w-1/2"></span></div>
+                <span class="feat-perf"></span>
+                <div class="feat-mrow"><span class="feat-numbox"></span><span class="feat-bar feat-bar-sm w-1/3"></span></div>
+            </div>
+        @break
+
+        @case('denah-ukur'){{-- Ukuran meter: papan dan arena masing-masing membawa angka meterannya sendiri — denah berskala saja tidak menjawab "berapa meter", dan dua ukuran itu memang dipatok terpisah. --}}
+            <div class="feat-card">
+                <div class="feat-mrow">
+                    <span class="feat-sq"></span>
+                    <span class="feat-bar feat-bar-title w-2/5"></span>
+                    <span class="feat-pill feat-pill-lime feat-end">60 × 40 m</span>
+                </div>
+                <div class="feat-mrow">
+                    <span class="feat-sq"></span>
+                    <span class="feat-bar feat-bar-sm w-3/5"></span>
+                    <span class="feat-pill feat-pill-accent feat-end">14 × 9 m</span>
+                </div>
+            </div>
+        @break
+
         @case('daftar-ulang'){{-- Meja daftar ulang: kartu dipindai, peserta ditandai hadir. Satu-satunya miniatur yang memakai .feat-tick. --}}
             <div class="feat-mrow">
                 <span class="feat-bar feat-bar-title w-2/5"></span>

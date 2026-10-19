@@ -114,7 +114,7 @@ class ProductFeatures
             [
                 'key' => 'venue',
                 'title' => 'Hari-H & Venue',
-                'description' => 'Yang dipakai panitia sambil berdiri: meja daftar ulang, urutan tampil, rundown, dan jadwal.',
+                'description' => 'Yang dipakai panitia sambil berdiri: denah lapangan, meja daftar ulang, urutan tampil, rundown, dan jadwal.',
                 'items' => [
                     [
                         'title' => 'Tempat Lomba',
@@ -126,9 +126,33 @@ class ProductFeatures
                     ],
                     [
                         'title' => 'Denah Lapangan per Kategori',
-                        'description' => 'Gambar denah lapangan di kanvas: arena, pos penilaian, tribun, sekretariat, lengkap dengan DP 1 sampai 5. Bisa diunduh PNG/PDF dan diterbitkan ke halaman publik event.',
+                        'description' => 'Gambar denah lapangan di kanvas: arena, pos penilaian, tribun, sekretariat, kotak danton, sampai DP 1–5. Kotaknya menempel tepi papan atau sejajar zona lain saat digeser, dan hasilnya bisa diunduh PNG/PDF lalu diterbitkan ke halaman publik event.',
                         'miniature' => 'venue',
                         'icon' => 'ti-layout-board-split',
+                        'route' => 'eventner.denah.index',
+                        'gates' => ['layout'],
+                    ],
+                    [
+                        'title' => 'Kunci Denah & Kunci per Zona',
+                        'description' => 'Gembok dua tingkat: kunci seluruh denah, atau kunci satu kotak saja. Arena dan pos penilaian yang sudah pas bisa dibekukan sementara DP 4 masih digeser — zona lain tetap bisa dikerjakan.',
+                        'miniature' => 'denah-kunci',
+                        'icon' => 'ti-lock',
+                        'route' => 'eventner.denah.index',
+                        'gates' => ['layout'],
+                    ],
+                    [
+                        'title' => 'Alur Gerak Pasukan',
+                        'description' => 'Gambar jalur masuk, titik belok, dan arah hadap pasukan sebagai garis alur di atas denah. Alurnya bisa ditampilkan atau disembunyikan dari halaman publik event.',
+                        'miniature' => 'denah-alur',
+                        'icon' => 'ti-route',
+                        'route' => 'eventner.denah.index',
+                        'gates' => ['layout'],
+                    ],
+                    [
+                        'title' => 'Ukuran Meter Papan & Arena',
+                        'description' => 'Isi ukuran papan yang sebenarnya dan ukuran arena yang dipatok sendiri, supaya angka di denah cocok dengan lapangan — bukan cuma gambar berskala.',
+                        'miniature' => 'denah-ukur',
+                        'icon' => 'ti-ruler-measure',
                         'route' => 'eventner.denah.index',
                         'gates' => ['layout'],
                     ],
