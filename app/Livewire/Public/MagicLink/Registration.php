@@ -765,6 +765,127 @@ class Registration extends Component
         return $championCategory->titleForRank($rank) ?? 'Juara ' . $rank;
     }
 
+    /**
+     * Baris kartu "Dokumen & Unduhan": tiga berkas yang bisa diunduh pendaftar,
+     * lengkap dengan keadaan terbuka/terkunci dan alasan tertulis.
+     *
+     * Gerbangnya sengaja disalin dari server — ParticipantController::
+     * downloadFormulir menolak 403 selama berkas belum terverifikasi,
+     * downloadInvoiceByToken 403 selama pembayaran belum lunas, dan sertifikat
+     * butuh template aktif sekaligus fitur `certificate` pada paket event.
+     * Alasannya memakai kalimat yang sama dengan pesan abort-nya, supaya
+     * pendaftar membaca syarat yang benar-benar ditegakkan — bukan tombol yang
+     * hilang tanpa keterangan.
+     *
+     * @return array<int, array{key:string,judul:string,ikon:string,cakupan:?string,
+     *                          keterangan:string,terbuka:bool,berlaku:bool,url:?string,
+     *                          tombol:string,aksen:?string,gelar:?string}>
+     */
+    #[Computed]
+    public function unduhan(): array
+    {
+        $reg = $this->registration;
+        $terverifikasi = $reg->status_berkas === 'Terverifikasi';
+        $lunas = $reg->payment_status === 'paid';
+        $gratis = $reg->payment_status === 'free';
+        $cert = $this->certificate_registrations[$this->activeRegId] ?? null;
+
+        $labelPasukan = trim((string) $reg->label_pasukan);
+        $namaPasukan = $labelPasukan !== '' ? 'Pasukan ' . $labelPasukan : $reg->nama_sekolah;
+        $jumlahAnggota = $reg->participants->count();
+        $rincianFormulir = 'Data ' . $namaPasukan
+            . ($jumlahAnggota > 0 ? ' — pelatih, danton, dan ' . $jumlahAnggota . ' anggota' : '')
+            . '.';
+
+        // Cakupan tiap berkas berbeda, dan itu pembeda yang paling mudah salah
+        // paham: formulir & sertifikat milik tab yang dibuka, invoice digabung
+        // seluruh sekolah.
+        $ruangSertifikat = $reg->eventner->canAccessFeature('certificate');
+
+        return [
+            [
+                'key' => 'formulir',
+                'judul' => 'Formulir Pendaftaran',
+                'ikon' => 'ti-file-description',
+                'cakupan' => 'Pasukan ini',
+                'keterangan' => $terverifikasi
+                    ? $rincianFormulir
+                    : 'Tersedia setelah berkas pendaftaran diverifikasi panitia.',
+                'terbuka' => $terverifikasi,
+                'berlaku' => true,
+                'url' => $terverifikasi ? route('magic.link.formulir', $reg->magic_token) : null,
+                'tombol' => 'Unduh Formulir',
+                'aksen' => null,
+                'gelar' => null,
+            ],
+            [
+                'key' => 'invoice',
+                'judul' => 'Invoice / Kwitansi',
+                'ikon' => 'ti-file-invoice',
+                'cakupan' => 'Seluruh sekolah',
+                'keterangan' => $lunas
+                    ? 'Satu berkas gabungan untuk ' . $this->jumlahPasukanLunas() . ' pasukan sekolah ini yang sudah dibayar.'
+                    : ($gratis
+                        ? 'Event ini tidak menarik biaya pendaftaran.'
+                        : 'Tersedia setelah pembayaran diverifikasi panitia.'),
+                'terbuka' => $lunas,
+                'berlaku' => !$gratis,
+                'url' => $lunas ? route('magic.link.invoice', $reg->magic_token) : null,
+                'tombol' => 'Unduh Invoice',
+                'aksen' => null,
+                'gelar' => null,
+            ],
+            [
+                'key' => 'sertifikat',
+                'judul' => $cert
+                    ? ($cert['is_champion'] ? 'Sertifikat Juara' : 'Sertifikat Peserta')
+                    : 'Sertifikat',
+                'ikon' => 'ti-certificate',
+                'cakupan' => 'Pasukan ini',
+                'keterangan' => $cert
+                    ? ($cert['is_champion']
+                        ? 'Selamat! Pasukan ini masuk jajaran juara — satu halaman per anggota.'
+                        : 'Sertifikat keikutsertaan — satu halaman per anggota.')
+                    : ($ruangSertifikat
+                        ? 'Terbit setelah panitia memasang template sertifikat.'
+                        : 'Fitur sertifikat belum aktif untuk event ini.'),
+                'terbuka' => (bool) $cert,
+                'berlaku' => $ruangSertifikat,
+                // Sertifikat diunduh per mata lomba: rute ber-parameter ini juga
+                // membuka sertifikat pasukan lain dari sekolah yang sama.
+                'url' => $cert
+                    ? route('magic.link.certificate.category', [$reg->magic_token, $cert['registration']->competition_category_id])
+                    : null,
+                'tombol' => 'Unduh Sertifikat',
+                'aksen' => $cert && $cert['is_champion'] ? 'champion' : null,
+                'gelar' => $cert['title'] ?? null,
+            ],
+        ];
+    }
+
+    /**
+     * Jumlah pasukan sekolah ini yang pembayarannya sudah lunas — angka yang
+     * sama dengan isi invoice gabungannya.
+     *
+     * Pencocokan sekolahnya mengikuti renderInvoice() apa adanya: NPSN bila
+     * ada, kalau tidak lewat nama (kolom npsn nullable sejak 2026_09_21, dan
+     * `= NULL` tak pernah cocok di MySQL).
+     */
+    private function jumlahPasukanLunas(): int
+    {
+        $reg = $this->registration;
+
+        return RegistrationModel::where('eventner_id', $reg->eventner_id)
+            ->when(
+                $reg->npsn,
+                fn ($q) => $q->where('npsn', $reg->npsn),
+                fn ($q) => $q->whereNull('npsn')->where('nama_sekolah', $reg->nama_sekolah)
+            )
+            ->where('payment_status', 'paid')
+            ->where('status_berkas', '!=', 'dibatalkan')
+            ->count();
+    }
+
     public function render()
     {
         return view('livewire.public.magic-link.registration', [

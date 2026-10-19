@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Portal Kontingen — Tab Pasukan & Unduhan Terpadu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: dokumen spesifikasi — tiap layar satu slide, wireframe di kiri, anotasi di kanan. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --amber:#b45309; --amber-soft:#fef3c7;
+  --green:#15803d; --green-soft:#dcfce7;
+  --red:#b91c1c; --red-soft:#fee2e2;
+  --slate:#64748b; --slate-soft:#f1f5f9;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --amber:#fbbf24; --amber-soft:#3a2b08;
+    --green:#4ade80; --green-soft:#0c2a18;
+    --red:#f87171; --red-soft:#3a1212;
+    --slate:#94a3b8; --slate-soft:#1c222b;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --amber:#fbbf24; --amber-soft:#3a2b08;
+  --green:#4ade80; --green-soft:#0c2a18;
+  --red:#f87171; --red-soft:#3a1212;
+  --slate:#94a3b8; --slate-soft:#1c222b;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:clamp(28px,5vw,56px)}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:74ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap}
+.chip b{color:var(--ink);font-weight:600}
+
+/* Ringkasan spesifikasi */
+.spec{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-top:28px;
+}
+.spec > div{background:var(--panel);padding:16px 18px}
+.spec dt{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.spec dd{margin:0;font-size:14px;line-height:1.5}
+.swatches{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.sw{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.sw i{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,0,0,.15);display:block}
+
+/* ---------- Sebelum / sesudah ---------- */
+.stack-pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:clamp(20px,3vw,36px);margin-top:clamp(28px,4vw,44px)}
+.stack h3{font-size:15px;font-weight:600;margin-bottom:12px}
+.stack h3 .sub{font-family:var(--mono);font-size:11px;color:var(--muted);font-weight:400;margin-left:8px}
+.blks{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.blk{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:8px 11px;font-size:13px}
+.blk .no{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.blk .nm{font-family:var(--mono);font-size:12px;color:var(--ink)}
+.blk .nm em{font-family:var(--sans);font-style:normal;color:var(--muted);margin-left:8px;font-size:12px}
+.blk .tag{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.blk.bad{border-color:var(--amber);background:var(--amber-soft)}
+.blk.bad .tag{border-color:var(--amber);color:var(--amber)}
+.blk.keep{border-color:var(--accent);background:var(--accent-soft)}
+.blk.keep .tag{border-color:var(--accent);color:var(--accent)}
+.blk.new{border-color:var(--green);background:var(--green-soft)}
+.blk.new .tag{border-color:var(--green);color:var(--green)}
+.blk.van{border-style:dashed;opacity:.65}
+.blk.van .nm{text-decoration:line-through}
+
+/* ---------- Slide ---------- */
+.slide{margin-top:clamp(36px,6vw,64px)}
+.slide-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.slide-head h2{font-size:clamp(19px,2.2vw,23px);font-weight:700}
+.slide-head .num{font-family:var(--mono);font-size:12px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}
+.mode-tag{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.goal{color:var(--muted);font-size:14px;max-width:78ch;margin-bottom:16px}
+.slide-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:940px){.slide-grid{grid-template-columns:1fr}}
+
+/* Bingkai layar */
+.frame{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.screen{border-radius:8px;border:1px solid var(--line);background:var(--surface,#f8f9fa);overflow:hidden;position:relative;font-size:12px;padding:14px}
+.screen.plain{background:var(--panel-2)}
+.frame-cap{font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 4px 2px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.hai{display:flex;gap:10px;align-items:flex-start}
+
+/* Blok kerangka halaman (mini-map) */
+.map{display:flex;flex-direction:column;gap:5px}
+.mrow{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:7px;background:var(--panel);padding:6px 9px;font-size:11.5px}
+.mrow .no{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.mrow .nm{color:var(--ink);font-weight:600}
+.mrow .side{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap}
+.mrow.tab{border-color:var(--accent);border-width:2px;background:var(--accent-soft)}
+.mrow.tab .side{color:var(--accent)}
+.mrow.doc{border-color:var(--green);border-width:2px;background:var(--green-soft)}
+.mrow.doc .side{color:var(--green)}
+.mrow.old{border-style:dashed;opacity:.55}
+.mrow.old .nm{text-decoration:line-through}
+.mrow .dl{font-family:var(--mono);font-size:9.5px;padding:1px 6px;border-radius:999px;background:var(--amber-soft);color:var(--amber);border:1px solid var(--amber);white-space:nowrap}
+.mrow .dlf{background:var(--slate-soft);color:var(--slate);border-color:var(--line)}
+.arrow{font-family:var(--mono);font-size:10px;color:var(--muted);padding-left:34px}
+
+/* Strip tab */
+.strip-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
+.strip-h .t{font-size:12.5px;font-weight:700;color:var(--ink)}
+.strip-h .c{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.tabs{display:flex;gap:8px;align-items:stretch}
+.tab{
+  flex:1 1 0;min-width:0;display:grid;gap:3px;
+  border:1.5px solid var(--line);border-radius:11px;background:var(--panel);
+  padding:9px 11px;position:relative;
+}
+.tab.on{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
+.tab .l1{display:flex;align-items:center;gap:6px;min-width:0}
+.tab .l1 b{font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap}
+.tab.on .l1 b{color:var(--accent)}
+.tab .cnt{font-family:var(--mono);font-size:9.5px;padding:1px 5px;border-radius:999px;background:var(--ph-fill);color:var(--muted);border:1px solid var(--line);white-space:nowrap}
+.tab.on .cnt{background:var(--accent);color:#fff;border-color:var(--accent)}
+.tab .l2{font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tab .dot{width:7px;height:7px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.12)}
+.dot.ok{background:#10b981}.dot.wait{background:#3b82f6}.dot.lock{background:#f59e0b}.dot.no{background:#ef4444}
+.fade{position:relative}
+.fade::after{
+  content:"";position:absolute;top:0;right:-1px;height:100%;width:34px;pointer-events:none;
+  background:linear-gradient(90deg,transparent,var(--surface,#f8f9fa));
+}
+.single-note{margin-top:9px;font-family:var(--mono);font-size:10.5px;color:var(--muted);border:1px dashed var(--line);border-radius:8px;padding:7px 9px;background:var(--panel-2)}
+
+/* Kartu dokumen & unduhan */
+.doc{background:var(--panel);border:1px solid var(--line);border-radius:13px;overflow:hidden}
+.doc-h{display:flex;align-items:center;gap:8px;padding:10px 13px;border-bottom:1px solid var(--line-soft);background:var(--panel-2)}
+.doc-h b{font-size:12.5px;font-weight:700}
+.doc-h .sub{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:auto}
+.drow{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 13px;border-bottom:1px solid var(--line-soft)}
+.drow:last-child{border-bottom:0}
+.drow.lock{background:var(--slate-soft)}
+.dico{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-family:var(--mono);font-size:10px;font-weight:600;background:var(--accent-soft);color:var(--accent);border:1px solid var(--line)}
+.drow.lock .dico{background:var(--ph-fill);color:var(--muted)}
+.drow.champ .dico{background:var(--amber-soft);color:var(--amber);border-color:var(--amber)}
+.dt{display:grid;gap:2px;min-width:0}
+.dt .t1{font-size:12.5px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.dt .t2{font-size:10.5px;color:var(--muted)}
+.dt .t2 b{color:var(--ink);font-weight:600}
+.drow.lock .dt .t1{color:var(--muted)}
+.scope{font-family:var(--mono);font-size:9.5px;padding:1px 6px;border-radius:999px;border:1px solid var(--line);background:var(--panel-2);color:var(--muted);white-space:nowrap}
+.scope.team{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.scope.school{border-color:var(--green);color:var(--green);background:var(--green-soft)}
+.champchip{font-family:var(--mono);font-size:9.5px;padding:1px 7px;border-radius:999px;border:1px solid var(--amber);background:var(--amber-soft);color:var(--amber);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:9px;padding:7px 13px;font-weight:600;font-size:11.5px;border:1px solid transparent;white-space:nowrap}
+.btn-pri{background:var(--accent);color:#fff}
+.btn-gho{border-color:var(--line);color:var(--muted);background:var(--panel)}
+.btn-off{border-color:var(--line);color:var(--muted);background:var(--ph-fill);cursor:not-allowed}
+.foot-hint{font-family:var(--mono);font-size:10px;color:var(--muted);padding:9px 13px;background:var(--panel-2);border-top:1px dashed var(--line)}
+
+/* Kartu umum */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:11px 13px;display:grid;gap:7px}
+.card .ch{font-size:12px;font-weight:700;display:flex;gap:7px;align-items:center}
+.card.acc{border-color:var(--accent);background:var(--accent-soft)}
+.pay{border-radius:10px;border:1px dashed var(--line);background:var(--panel-2);padding:10px 12px;font-size:11.5px;color:var(--muted);display:grid;gap:5px}
+.pay b{color:var(--ink)}
+.mini{display:flex;gap:6px;flex-wrap:wrap}
+.mini span{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
+.replace{border:1px dashed var(--amber);background:var(--amber-soft);border-radius:9px;padding:8px 10px;font-size:11px;color:var(--amber);font-family:var(--mono)}
+
+/* Ponsel */
+.phone{width:390px;max-width:100%;margin-inline:auto;border:1px solid var(--line);border-radius:20px;background:var(--panel);padding:8px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.phone .screen{border-radius:14px;padding:11px}
+.phone .tab{padding:8px 9px;flex:0 0 148px}
+.phone .tab .l1 b{font-size:12px}
+
+/* Anotasi */
+.notes{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.notes h3{font-size:14px;margin-bottom:10px}
+.notes ol{margin:0;padding:0;list-style:none;display:grid;gap:13px}
+.notes li{display:grid;grid-template-columns:24px minmax(0,1fr);gap:10px;align-items:baseline}
+.notes .n{font-family:var(--mono);font-size:11px;color:var(--accent);border-top:1px solid var(--accent);padding-top:3px}
+.notes b{font-weight:600;font-size:14px}
+.notes .dim{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px;white-space:nowrap}
+.notes p{font-size:13.5px;color:var(--muted);margin-top:2px;line-height:1.5}
+.notes code{color:var(--ink)}
+.notes ul.plain{margin:0;padding-left:16px;color:var(--muted);font-size:13.5px;display:grid;gap:6px}
+.k{font-family:var(--mono);font-size:.85em;background:var(--ph-fill);border:1px solid var(--line-soft);border-radius:5px;padding:1px 6px}
+
+/* Aturan penutup */
+.rules{margin-top:clamp(40px,6vw,72px);border-top:1px solid var(--line);padding-top:clamp(24px,3vw,36px)}
+.rules h2{font-size:clamp(19px,2.2vw,23px)}
+.rules h3{font-size:14px;margin-top:26px;margin-bottom:4px}
+.rules ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--muted)}
+.rules ul strong{color:var(--ink);font-weight:600}
+table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13.5px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+th{font-family:var(--mono);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:400;border-bottom-color:var(--line)}
+td:first-child{font-family:var(--mono);font-size:12.5px;white-space:nowrap;color:var(--ink)}
+td.ok{color:var(--green);font-weight:600}
+td.no{color:var(--muted)}
+footer{margin-top:clamp(32px,5vw,56px);border-top:1px solid var(--line);padding-top:20px;font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Berbaris App · Spesifikasi UI</p>
+    <h1>Portal kontingen: tab pasukan pindah ke atas, unduhan jadi satu kartu</h1>
+    <p class="lede">
+      Halaman <code>/reg/{token}</code> adalah portal satu sekolah. Kalau sekolah itu mengirim lebih dari satu
+      pasukan, seluruh pasukan berbagi satu tautan yang sama, dan halaman memuat strip tab untuk berpindah
+      pasukan. Sekarang strip itu berdiri di blok kedelapan — di bawah rekap nilai, kartu sertifikat, dan catatan
+      dewan juri — sehingga pasukan aktif sudah terlanjur tampil sebelum pendaftar tahu ada pasukan lain. Label
+      tabnya pun dibaca dari nama mata lomba, jadi dua pasukan di kategori yang sama menghasilkan dua tombol
+      berbunyi persis sama. Di sisi lain, tiga berkas yang bisa diunduh (formulir, invoice, sertifikat) tersebar
+      di tiga blok berbeda, muncul dan hilang sendiri-sendiri, dan tidak pernah bisa dipindai dalam satu pandangan.
+      Wireframe ini menggambar dua perubahan itu: strip tab sebagai pemilih utama di bawah identitas kontingen,
+      dan satu kartu <b>Dokumen &amp; Unduhan</b> yang memuat ketiganya lengkap dengan status terkunci dan alasannya.
+    </p>
+    <div class="meta">
+      <span class="chip">Rute <b>/reg/{token}</b></span>
+      <span class="chip">Komponen <b>MagicLink\Registration</b></span>
+      <span class="chip">Blok 12 → 12 · urutan berubah</span>
+      <span class="chip">Unduhan <b>3 tempat → 1 kartu</b></span>
+      <span class="chip">1 tautan = semua pasukan sekolah</span>
+      <span class="chip">Tanpa perubahan skema DB</span>
+    </div>
+  </header>
+
+  <dl class="spec">
+    <div>
+      <dt>Kanvas</dt>
+      <dd>Kolom desktop <b>896 px</b> (<code>max-w-4xl</code>) di dalam laman 1180 px, gutter 16–40 px. Slide ponsel digambar di 390 px. Bukan artboard 4:5 — yang digambar halaman, bukan slide.</dd>
+    </div>
+    <div>
+      <dt>Warna</dt>
+      <dd>
+        <span class="swatches">
+          <span class="sw"><i style="background:#f8f9fa"></i>surface</span>
+          <span class="sw"><i style="background:#ffffff"></i>panel</span>
+          <span class="sw"><i style="background:#004cca"></i>primary</span>
+          <span class="sw"><i style="background:#446900"></i>secondary</span>
+          <span class="sw"><i style="background:#b45309"></i>juara</span>
+        </span>
+        Token diambil apa adanya dari <code>DESIGN.md</code> — tidak ada warna baru yang diperkenalkan.
+      </dd>
+    </div>
+    <div>
+      <dt>Identitas pasukan</dt>
+      <dd>Judul tab dibaca dari <code>registrations.label_pasukan</code> ("A", "B", …) dan jatuh ke nomor urut bila kolomnya kosong. Baris keduanya <code>competitionCategory-&gt;full_name</code>. Nama sekolah tidak diulang — semua tab sekolah yang sama.</dd>
+    </div>
+    <div>
+      <dt>Cakupan tiap unduhan</dt>
+      <dd><b>Formulir</b> per pasukan · <b>Sertifikat</b> per pasukan, isi satu halaman per anggota · <b>Invoice</b> per sekolah (semua pasukan yang sudah dibayar digabung jadi satu PDF).</dd>
+    </div>
+    <div>
+      <dt>Yang tidak disentuh</dt>
+      <dd>Logika <code>switchRegistration()</code>, cache draft antar tab, rute unduhan, dan gerbang hak akses di server. Pekerjaan di sini murni urutan blok dan penanda keadaan.</dd>
+    </div>
+    <div>
+      <dt>Kelengkapan informasi</dt>
+      <dd>Setiap baris unduhan yang belum bisa dipakai tetap tampil dengan alasan tertulis — bukan disembunyikan sampai syaratnya terpenuhi.</dd>
+    </div>
+  </dl>
+
+  <!-- ============ SEBELUM / SESUDAH ============ -->
+  <div class="stack-pair">
+    <div class="stack">
+      <h3>Urutan blok sekarang <span class="sub">12 blok</span></h3>
+      <ol class="blks">
+        <li class="blk"><span class="no">01</span><span class="nm">Banner penyelenggara<em>opsional</em></span><span class="tag">tetap</span></li>
+        <li class="blk"><span class="no">02</span><span class="nm">Kartu identitas kontingen<em>nama, status, link portal, NPSN</em></span><span class="tag">tetap</span></li>
+        <li class="blk"><span class="no">03</span><span class="nm">Pesan flash + banner mode booking</span><span class="tag">tetap</span></li>
+        <li class="blk"><span class="no">04</span><span class="nm">Rekap nilai + rekap vote<em>khusus Terverifikasi</em></span><span class="tag">tetap</span></li>
+        <li class="blk bad"><span class="no">05</span><span class="nm">Kartu sertifikat pasukan aktif<em>+ tombol unduh</em></span><span class="tag">unduhan 1</span></li>
+        <li class="blk"><span class="no">06</span><span class="nm">Catatan suara dewan juri</span><span class="tag">tetap</span></li>
+        <li class="blk"><span class="no">07</span><span class="nm">Tautan rincian nilai resmi</span><span class="tag">tetap</span></li>
+        <li class="blk bad"><span class="no">08</span><span class="nm">Strip tab pasukan<em>di tengah halaman</em></span><span class="tag">pindah</span></li>
+        <li class="blk"><span class="no">09</span><span class="nm">Kartu kategori aktif</span><span class="tag">tetap</span></li>
+        <li class="blk bad"><span class="no">10</span><span class="nm">Pembayaran<em>+ tombol invoice</em></span><span class="tag">unduhan 2</span></li>
+        <li class="blk"><span class="no">11</span><span class="nm">Kotak info technical meeting</span><span class="tag">tetap</span></li>
+        <li class="blk bad"><span class="no">12</span><span class="nm">Form / tabel terverifikasi<em>+ tombol formulir</em></span><span class="tag">unduhan 3</span></li>
+      </ol>
+    </div>
+
+    <div class="stack">
+      <h3>Urutan blok sesudahnya <span class="sub">12 blok</span></h3>
+      <ol class="blks">
+        <li class="blk"><span class="no">01</span><span class="nm">Banner penyelenggara</span><span class="tag">tetap</span></li>
+        <li class="blk"><span class="no">02</span><span class="nm">Kartu identitas kontingen</span><span class="tag">tetap</span></li>
+        <li class="blk new"><span class="no">03</span><span class="nm">Strip tab pasukan<em>pemilih utama</em></span><span class="tag">naik</span></li>
+        <li class="blk new"><span class="no">04</span><span class="nm">Kartu dokumen &amp; unduhan<em>formulir · invoice · sertifikat</em></span><span class="tag">baru</span></li>
+        <li class="blk"><span class="no">05</span><span class="nm">Pesan flash + banner mode booking</span><span class="tag">tetap</span></li>
+        <li class="blk"><span class="no">06</span><span class="nm">Rekap nilai + rekap vote</span><span class="tag">tetap</span></li>
+        <li class="blk"><span class="no">07</span><span class="nm">Catatan suara dewan juri</span><span class="tag">tetap</span></li>
+        <li class="blk"><span class="no">08</span><span class="nm">Tautan rincian nilai resmi</span><span class="tag">tetap</span></li>
+        <li class="blk"><span class="no">09</span><span class="nm">Kartu kategori aktif</span><span class="tag">tetap</span></li>
+        <li class="blk van"><span class="no">10</span><span class="nm">Pembayaran<em>tombol invoice pindah</em></span><span class="tag">ringkas</span></li>
+        <li class="blk"><span class="no">11</span><span class="nm">Kotak info technical meeting</span><span class="tag">tetap</span></li>
+        <li class="blk van"><span class="no">12</span><span class="nm">Form / tabel terverifikasi<em>tombol formulir pindah</em></span><span class="tag">ringkas</span></li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- ============ SLIDE 1 ============ -->
+  <section class="slide">
+    <div class="slide-head">
+      <span class="num">Slide 1 / 5</span>
+      <h2>Peta halaman — strip tab naik ke blok 03</h2>
+      <span class="mode-tag">urutan blok</span>
+    </div>
+    <p class="goal">Gambaran cepat yang berubah. Kiri: susunan sekarang, dengan tiga tempat unduhan ditandai. Kanan: susunan sesudahnya — tab jadi blok ketiga, dan ketiga unduhan berkumpul di satu kartu tepat di bawahnya.</p>
+
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen plain">
+            <div class="map">
+              <div class="mrow"><span class="no">01</span><span class="nm">Banner penyelenggara</span><span class="side">opsional</span></div>
+              <div class="mrow"><span class="no">02</span><span class="nm">Identitas kontingen</span><span class="side">nama · status · link</span></div>
+              <div class="mrow"><span class="no">03</span><span class="nm">Flash + mode booking</span><span class="side"></span></div>
+              <div class="mrow"><span class="no">04</span><span class="nm">Rekap nilai + vote</span><span class="side">Terverifikasi</span></div>
+              <div class="mrow"><span class="no">05</span><span class="nm">Kartu sertifikat</span><span class="side"><span class="dl">sertifikat ↓</span></span></div>
+              <div class="mrow"><span class="no">06</span><span class="nm">Catatan dewan juri</span><span class="side"></span></div>
+              <div class="mrow"><span class="no">07</span><span class="nm">Tautan rincian nilai</span><span class="side">luar</span></div>
+              <div class="mrow old tab"><span class="no">08</span><span class="nm">Strip tab pasukan</span><span class="side">di sini sekarang</span></div>
+              <div class="mrow"><span class="no">09</span><span class="nm">Kategori aktif</span><span class="side"></span></div>
+              <div class="mrow"><span class="no">10</span><span class="nm">Pembayaran</span><span class="side"><span class="dl">invoice ↓</span></span></div>
+              <div class="mrow"><span class="no">11</span><span class="nm">Info technical meeting</span><span class="side"></span></div>
+              <div class="mrow"><span class="no">12</span><span class="nm">Form / data terverifikasi</span><span class="side"><span class="dl">formulir ↓</span></span></div>
+            </div>
+            <p class="arrow">↑ tiga unduhan tersebar di blok 05, 10, 12</p>
+          </div>
+          <div class="frame-cap"><span>sebelum</span><span>tab tampil setelah 7 blok lain</span></div>
+        </div>
+
+        <div class="frame" style="margin-top:14px">
+          <div class="screen plain">
+            <div class="map">
+              <div class="mrow"><span class="no">01</span><span class="nm">Banner penyelenggara</span><span class="side">opsional</span></div>
+              <div class="mrow"><span class="no">02</span><span class="nm">Identitas kontingen</span><span class="side">nama · status · link</span></div>
+              <div class="mrow tab"><span class="no">03</span><span class="nm">Strip tab pasukan</span><span class="side">pemilih utama</span></div>
+              <div class="mrow doc"><span class="no">04</span><span class="nm">Dokumen &amp; unduhan</span><span class="side">3 unduhan, 1 kartu</span></div>
+              <div class="mrow"><span class="no">05</span><span class="nm">Flash + mode booking</span><span class="side"></span></div>
+              <div class="mrow"><span class="no">06</span><span class="nm">Rekap nilai + vote</span><span class="side">Terverifikasi</span></div>
+              <div class="mrow"><span class="no">07</span><span class="nm">Catatan dewan juri</span><span class="side"></span></div>
+              <div class="mrow"><span class="no">08</span><span class="nm">Tautan rincian nilai</span><span class="side">luar</span></div>
+              <div class="mrow"><span class="no">09</span><span class="nm">Kategori aktif</span><span class="side"></span></div>
+              <div class="mrow"><span class="no">10</span><span class="nm">Pembayaran</span><span class="side">status saja</span></div>
+              <div class="mrow"><span class="no">11</span><span class="nm">Info technical meeting</span><span class="side"></span></div>
+              <div class="mrow"><span class="no">12</span><span class="nm">Form / data terverifikasi</span><span class="side"></span></div>
+            </div>
+          </div>
+          <div class="frame-cap"><span>sesudah</span><span>tab &amp; dokumen sebelum apa pun yang bergantung pada pasukan aktif</span></div>
+        </div>
+      </div>
+
+      <aside class="notes">
+        <h3>Alasan pindah</h3>
+        <ol>
+          <li><span class="n">01</span><div><b>Satu tautan, banyak pasukan</b><span class="dim">Create.php:440</span><p>Semua baris pasukan yang dibuat dalam satu booking memakai <code>magic_token</code> yang sama. Jadi halaman ini memang selalu berpotensi multi-pasukan, dan pemilihnya harus jadi hal pertama yang dilihat setelah identitas.</p></div></li>
+          <li><span class="n">02</span><div><b>Pasukan aktif dipilih oleh database, bukan pendaftar</b><span class="dim">Registration.php:67–72</span><p><code>mount()</code> mengambil <code>where('magic_token', $token)-&gt;firstOrFail()</code> — baris mana pun yang lebih dulu dikembalikan. Blok 04–05 sekarang bicara tentang pasukan itu tanpa satu pun penanda bahwa ia cuma satu dari beberapa.</p></div></li>
+          <li><span class="n">03</span><div><b>Tiga unduhan, tiga tempat</b><span class="dim">baris 301 · 487 · 830</span><p>Sertifikat di kartu sertifikat, invoice di dalam cabang pembayaran "sudah dibayar", formulir di ujung tabel data terverifikasi. Untuk tahu apa saja yang bisa diunduh, pendaftar harus menggulir hampir seluruh halaman.</p></div></li>
+          <li><span class="n">04</span><div><b>Invoice punya cakupan berbeda</b><span class="dim">renderInvoice · 104–112</span><p>Invoice digabung per sekolah: semua pasukan dengan NPSN sama yang sudah dibayar tercetak jadi satu PDF (<code>TOTAL (n pasukan)</code>). Ini tidak boleh tampak seperti unduhan per pasukan — karena itu ia diberi label cakupan sendiri di kartu baru.</p></div></li>
+          <li><span class="n">05</span><div><b>Terakhir: sertifikat pasukan kalah tetap terbit</b><span class="dim">Registration.php:686–757</span><p><code>certificate_registrations</code> memberi entri untuk <em>semua</em> pasukan sekolah — juara bergelar juara, sisanya PESERTA. Jadi baris sertifikat harus tetap tampil di setiap tab, bukan hanya tab pemenang.</p></div></li>
+        </ol>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 2 ============ -->
+  <section class="slide">
+    <div class="slide-head">
+      <span class="num">Slide 2 / 5</span>
+      <h2>Strip tab baru — tombol kartu, bukan pill kecil</h2>
+      <span class="mode-tag">desktop 896 px</span>
+    </div>
+    <p class="goal">Strip lama adalah deretan pill <code>text-xs</code> yang isinya nama mata lomba. Versi baru: satu baris judul kecil di atasnya, lalu tiap pasukan berupa tombol kartu dua baris dengan nomor pasukan, jumlah anggota, dan titik status berkas.</p>
+
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen">
+            <div class="card" style="margin-bottom:10px">
+              <div class="ch">Identitas kontingen <span class="chip" style="margin-left:auto">blok 02</span></div>
+              <div class="mini"><span>SMAN 1 Bandung</span><span>NPSN 20200123</span><span>Portal aktif</span></div>
+            </div>
+
+            <div class="strip-h">
+              <span class="t">Pilih pasukan</span>
+              <span class="c">3 pasukan · 1 tautan portal</span>
+            </div>
+            <div class="tabs">
+              <span class="tab on">
+                <span class="l1"><span class="dot ok"></span><b>Pasukan A</b><span class="cnt">12</span></span>
+                <span class="l2">Regu SMP — Putra</span>
+              </span>
+              <span class="tab">
+                <span class="l1"><span class="dot wait"></span><b>Pasukan B</b><span class="cnt">12</span></span>
+                <span class="l2">Regu SMP — Putra</span>
+              </span>
+              <span class="tab">
+                <span class="l1"><span class="dot lock"></span><b>Pasukan C</b><span class="cnt">—</span></span>
+                <span class="l2">Regu SMA — Putra</span>
+              </span>
+            </div>
+            <div class="single-note">Terverifikasi · menunggu verifikasi · booking — titik status mengikuti <code>status_berkas</code>, sama seperti badge di blok 02.</div>
+
+            <p class="arrow" style="padding-left:0;margin-top:12px">satu pasukan saja → strip tidak dirender, tidak ada kartu kosong:</p>
+            <div class="single-note">Sekolah ini mendaftarkan <b>1 pasukan</b> · Regu SMP — Putra. Langsung ke dokumen &amp; unduhan — tidak ada yang bisa dipilih.</div>
+          </div>
+          <div class="frame-cap"><span>strip tab, blok 03</span><span>di atas kartu dokumen</span></div>
+        </div>
+      </div>
+
+      <aside class="notes">
+        <h3>Aturan label</h3>
+        <ol>
+          <li><span class="n">01</span><div><b>Dua tab kembar di halaman sekarang</b><span class="dim">baris 429</span><p>Label tab dibaca dari <code>$sib-&gt;competitionCategory-&gt;full_name</code>. Sekolah yang mengirim dua pasukan di kategori <em>sama</em> — persis kasus yang membuat strip ini muncul — mendapat dua tombol yang bunyinya identik. Nomor pasukan wajib jadi judul.</p></div></li>
+          <li><span class="n">02</span><div><b>Sumber judul: <code>label_pasukan</code></b><span class="dim">Create.php:512–521</span><p>Sudah terisi "A"/"B"/"C" saat booking, atau nama yang diketik pendaftar; kosong kalau cuma satu pasukan. Jatuh ke nomor urut bila kosong supaya tidak pernah tampil "Pasukan ".</p></div></li>
+          <li><span class="n">03</span><div><b>Mata lomba pindah ke baris kedua</b><span class="dim">bukan dihapus</span><p>Ia pembeda nyata antar pasukan, jadi tetap ada — hanya tidak lagi menempati tempat judul. Dipotong dengan elipsis satu baris supaya strip tidak melar.</p></div></li>
+          <li><span class="n">04</span><div><b>Titik status, bukan badge penuh</b><span class="dim">hemat ruang</span><p>Warna mengikuti empat keadaan berkas yang sudah dipakai badge header. Judul lengkapnya masuk <code>aria-label</code> dan <code>title</code>, jadi pembaca layar tetap mendapat kalimat utuh.</p></div></li>
+          <li><span class="n">05</span><div><b>Semantik tab, panjang pindah tetap satu method</b><span class="dim">Accessibility</span><p><code>role="tablist"</code> + <code>role="tab"</code> + <code>aria-selected</code> + <code>aria-controls</code>, plus <code>wire:key</code> per tombol. Navigasi panah kiri/kanan opsional. <code>switchRegistration()</code> tidak berubah — cache draft antar tab (baris 304–327) tetap bekerja apa adanya.</p></div></li>
+          <li><span class="n">06</span><div><b>Satu pasukan: jangan tampilkan strip kosong</b><span class="dim">kondisi sekarang</span><p>Penjagaan <code>count() &gt; 1</code> dipertahankan. Yang ditambahkan hanya kalimat konteks "1 pasukan" — murah, dan menghapus tebak-tebakan kenapa tidak ada tombol apa pun.</p></div></li>
+        </ol>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 3 ============ -->
+  <section class="slide">
+    <div class="slide-head">
+      <span class="num">Slide 3 / 5</span>
+      <h2>Kartu Dokumen &amp; Unduhan — satu tempat, tiga berkas</h2>
+      <span class="mode-tag">semua terbuka</span>
+    </div>
+    <p class="goal">Tampilan saat pasukan ini sudah terverifikasi dan pembayarannya sudah diverifikasi panitia. Tiap baris menyebut cakupannya (pasukan ini atau seluruh sekolah), nama berkasnya, dan satu tombol unduh. Informasi gelar juara yang dulu menghuni kartu sertifikat tersendiri sekarang jadi chip di barisnya.</p>
+
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen">
+            <div class="doc">
+              <div class="doc-h"><b>Dokumen &amp; Unduhan</b><span class="sub">blok 04</span></div>
+
+              <div class="drow">
+                <span class="dico">PDF</span>
+                <span class="dt">
+                  <span class="t1">Formulir Pendaftaran <span class="scope team">pasukan ini</span></span>
+                  <span class="t2">Data pasukan <b>Pasukan A</b> · pelatih, danton, dan 12 anggota</span>
+                </span>
+                <a class="btn btn-pri" href="#">↓ Unduh</a>
+              </div>
+
+              <div class="drow">
+                <span class="dico">PDF</span>
+                <span class="dt">
+                  <span class="t1">Invoice / Kwitansi <span class="scope school">seluruh sekolah</span></span>
+                  <span class="t2">Satu berkas gabungan untuk <b>3 pasukan</b> sekolah ini yang sudah dibayar</span>
+                </span>
+                <a class="btn btn-gho" href="#">↓ Unduh</a>
+              </div>
+
+              <div class="drow champ">
+                <span class="dico">PDF</span>
+                <span class="dt">
+                  <span class="t1">Sertifikat <span class="scope team">pasukan ini</span> <span class="champchip">Juara Umum — Juara 1</span></span>
+                  <span class="t2">1 halaman per anggota + danton · gelar menyesuaikan hasil resmi</span>
+                </span>
+                <a class="btn btn-gho" href="#">↓ Unduh</a>
+              </div>
+
+              <div class="foot-hint">Berkas dibuat saat tombol ditekan — selalu versi terbaru data di server.</div>
+            </div>
+
+            <div class="replace" style="margin-top:11px">
+              Blok 05, 10, 12 lama: tiga tombol unduh yang tersebar → dipindah ke sini, kartu asalnya menyisakan status saja.
+            </div>
+          </div>
+          <div class="frame-cap"><span>Terverifikasi · pembayaran paid</span><span>3 baris, 3 tombol</span></div>
+        </div>
+      </div>
+
+      <aside class="notes">
+        <h3>Isi &amp; cakupan</h3>
+        <ol>
+          <li><span class="n">01</span><div><b>Satu baris = satu berkas, tanpa pengecualian</b><span class="dim">baris 301 · 487 · 830</span><p>Tiga tautan yang sekarang hidup di tiga blok berbeda dipindah apa adanya — rute, target <code>_blank</code>, dan gerbang di servernya tidak berubah. Yang baru hanya tempatnya berkumpul.</p></div></li>
+          <li><span class="n">02</span><div><b>Cakupan ditulis di tiap baris</b><span class="dim">pasukan ini / seluruh sekolah</span><p>Ini pembeda yang paling mudah salah paham: invoice berisi pasukan lain juga, sedangkan formulir dan sertifikat hanya milik tab yang sedang dibuka.</p></div></li>
+          <li><span class="n">03</span><div><b>Kartu sertifikat mandiri dihapus, gelarnya pindah ke baris</b><span class="dim">baris 273–309</span><p>Chip amber "Juara Umum — Juara 1" tetap tampil dengan bobot visual yang sama; yang dibuang hanya kartu pembungkusnya. Perayaan juara tidak hilang — jumlah kartu di halaman yang berkurang.</p></div></li>
+          <li><span class="n">04</span><div><b>Formulir terbuka juga untuk jalur hardcopy</b><span class="dim">celah di baris 590–697</span><p>Cabang "terverifikasi hardcopy" tidak punya tombol formulir sama sekali, padahal server mengizinkannya (<code>status_berkas = Terverifikasi</code>). Karena kartu ini satu untuk semua cabang, celah itu tertutup dengan sendirinya.</p></div></li>
+          <li><span class="n">05</span><div><b>Blok 10 &amp; 12 menyisakan statusnya</b><span class="dim">bukan dikosongkan</span><p>Kartu pembayaran tetap menampilkan "diverifikasi panitia pada {tanggal}", dan tabel data terverifikasi tetap menampilkan "DATA TERVERIFIKASI PANITIA". Hanya tombolnya yang pindah.</p></div></li>
+          <li><span class="n">06</span><div><b>Kalau tidak ada apa pun yang bisa diunduh</b><span class="dim">baris booking</span><p>Kartu tetap dirender dengan tiga baris terkunci — lihat slide berikutnya. Kartu yang hilang membuat pendaftar mengira dokumennya tidak pernah ada.</p></div></li>
+        </ol>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 4 ============ -->
+  <section class="slide">
+    <div class="slide-head">
+      <span class="num">Slide 4 / 5</span>
+      <h2>Keadaan terkunci — alasan tertulis, bukan baris yang hilang</h2>
+      <span class="mode-tag">3 keadaan</span>
+    </div>
+    <p class="goal">Tiga potret kartu yang sama di tiga kombinasi status. Baris yang belum bisa dipakai tetap tampil, diredupkan, tombolnya mati, dan alasannya ditulis persis seperti pesan dari server.</p>
+
+    <div class="slide-grid">
+      <div style="display:grid;gap:16px">
+        <!-- booking -->
+        <div class="frame">
+          <div class="screen">
+            <div class="doc">
+              <div class="doc-h"><b>Dokumen &amp; Unduhan</b><span class="sub">booking · slot dipesan</span></div>
+              <div class="drow lock">
+                <span class="dico">PDF</span>
+                <span class="dt"><span class="t1">Formulir Pendaftaran</span><span class="t2">Tersedia setelah berkas diverifikasi panitia.</span></span>
+                <span class="btn btn-off">Terkunci</span>
+              </div>
+              <div class="drow lock">
+                <span class="dico">PDF</span>
+                <span class="dt"><span class="t1">Invoice / Kwitansi</span><span class="t2">Tersedia setelah pembayaran diverifikasi panitia.</span></span>
+                <span class="btn btn-off">Terkunci</span>
+              </div>
+              <div class="drow lock">
+                <span class="dico">PDF</span>
+                <span class="dt"><span class="t1">Sertifikat</span><span class="t2">Terbit setelah penilaian dewan juri selesai dan event mengaktifkan sertifikat.</span></span>
+                <span class="btn btn-off">Terkunci</span>
+              </div>
+            </div>
+          </div>
+          <div class="frame-cap"><span>a · booking / belum dikonfirmasi</span><span>ketiganya terkunci</span></div>
+        </div>
+
+        <!-- verified unpaid -->
+        <div class="frame">
+          <div class="screen">
+            <div class="doc">
+              <div class="doc-h"><b>Dokumen &amp; Unduhan</b><span class="sub">Terverifikasi · belum bayar</span></div>
+              <div class="drow">
+                <span class="dico">PDF</span>
+                <span class="dt"><span class="t1">Formulir Pendaftaran <span class="scope team">pasukan ini</span></span><span class="t2">Data pasukan <b>Pasukan B</b> · 12 anggota</span></span>
+                <a class="btn btn-pri" href="#">↓ Unduh</a>
+              </div>
+              <div class="drow lock">
+                <span class="dico">PDF</span>
+                <span class="dt"><span class="t1">Invoice / Kwitansi</span><span class="t2">Tersedia setelah pembayaran diverifikasi panitia.</span></span>
+                <span class="btn btn-off">Terkunci</span>
+              </div>
+              <div class="drow champ">
+                <span class="dico">PDF</span>
+                <span class="dt"><span class="t1">Sertifikat <span class="scope team">pasukan ini</span> <span class="champchip">Peserta</span></span><span class="t2">Pasukan ini belum masuk jajaran juara — sertifikat keikutsertaan tetap terbit.</span></span>
+                <a class="btn btn-gho" href="#">↓ Unduh</a>
+              </div>
+            </div>
+          </div>
+          <div class="frame-cap"><span>b · berkas sah, tagihan belum lunas</span><span>hanya invoice terkunci</span></div>
+        </div>
+
+        <!-- free event -->
+        <div class="frame">
+          <div class="screen">
+            <div class="doc">
+              <div class="doc-h"><b>Dokumen &amp; Unduhan</b><span class="sub">event gratis · fitur sertifikat mati</span></div>
+              <div class="drow">
+                <span class="dico">PDF</span>
+                <span class="dt"><span class="t1">Formulir Pendaftaran <span class="scope team">pasukan ini</span></span><span class="t2">Data pasukan <b>Pasukan A</b></span></span>
+                <a class="btn btn-pri" href="#">↓ Unduh</a>
+              </div>
+              <div class="drow lock">
+                <span class="dico">PDF</span>
+                <span class="dt"><span class="t1">Invoice / Kwitansi</span><span class="t2">Event ini tidak menarik biaya pendaftaran.</span></span>
+                <span class="btn btn-off">Tidak berlaku</span>
+              </div>
+              <div class="drow lock">
+                <span class="dico">PDF</span>
+                <span class="dt"><span class="t1">Sertifikat</span><span class="t2">Fitur sertifikat belum aktif untuk event ini.</span></span>
+                <span class="btn btn-off">Terkunci</span>
+              </div>
+            </div>
+          </div>
+          <div class="frame-cap"><span>c · event gratis / di luar trial</span><span>sertifikat tidak berlaku</span></div>
+        </div>
+      </div>
+
+      <aside class="notes">
+        <h3>Aturan keadaan</h3>
+        <ol>
+          <li><span class="n">01</span><div><b>Alasan mengutip pesan server</b><span class="dim">ParticipantController:49 · 89</span><p>"Tersedia setelah berkas diverifikasi panitia." dan "Tersedia setelah pembayaran diverifikasi panitia." sama dengan kalimat pada <code>abort(403)</code>-nya. Kalau syaratnya berubah di server, satu tempat yang perlu disunting.</p></div></li>
+          <li><span class="n">02</span><div><b>Sertifikat punya dua sebab terkunci</b><span class="dim">CertificateController:388 · 396</span><p>Fitur tidak aktif untuk event (<code>canAccessFeature('certificate')</code>), atau panitia belum memasang template aktif. Dua kalimat berbeda — pendaftar tidak disuruh menebak siapa yang harus dihubungi.</p></div></li>
+          <li><span class="n">03</span><div><b>Event gratis tidak diberi tombol mati</b><span class="dim">invoice</span><p>Menulis "terkunci" untuk sesuatu yang memang tidak akan pernah ada itu menyesatkan. Barisnya diberi label "Tidak berlaku" dan alasan biaya nol.</p></div></li>
+          <li><span class="n">04</span><div><b>Perubahan status ikut memperbarui kartu</b><span class="dim">tanpa reload</span><p>Setelah <code>submit()</code> atau <code>confirm()</code> memanggil <code>loadFormData()</code>, kartu dirender ulang dari <code>registration-&gt;fresh()</code> — jadi baris yang baru terbuka langsung tampil, tidak perlu muat ulang halaman.</p></div></li>
+        </ol>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ SLIDE 5 ============ -->
+  <section class="slide">
+    <div class="slide-head">
+      <span class="num">Slide 5 / 5</span>
+      <h2>Ponsel 390 px — strip bisa digeser, kartu menumpuk</h2>
+      <span class="mode-tag">390 px</span>
+    </div>
+    <p class="goal">Sekolah membuka tautan ini dari ponsel. Tiga tombol kartu tidak muat; strip jadi deretan yang bisa digeser mendatar dengan tepi kanan yang memudar sebagai penanda, dan tombol unduh turun ke barisnya sendiri selebar kartu.</p>
+
+    <div class="slide-grid">
+      <div>
+        <div class="phone">
+          <div class="screen">
+            <div class="card" style="margin-bottom:9px;padding:9px 11px">
+              <div class="ch" style="font-size:11.5px">SMAN 1 Bandung <span class="chip" style="margin-left:auto;font-size:9.5px">Terverifikasi</span></div>
+              <div class="mini"><span style="font-size:9.5px">Regu SMP — Putra</span></div>
+            </div>
+
+            <div class="strip-h" style="margin-bottom:6px">
+              <span class="t" style="font-size:11.5px">Pilih pasukan</span>
+              <span class="c">3</span>
+            </div>
+            <div class="fade">
+              <div class="tabs" style="overflow:hidden">
+                <span class="tab on">
+                  <span class="l1"><span class="dot ok"></span><b>Pasukan A</b><span class="cnt">12</span></span>
+                  <span class="l2">Regu SMP — Putra</span>
+                </span>
+                <span class="tab">
+                  <span class="l1"><span class="dot wait"></span><b>Pasukan B</b><span class="cnt">12</span></span>
+                  <span class="l2">Regu SMP — Putra</span>
+                </span>
+                <span class="tab" style="flex:0 0 60px">
+                  <span class="l1"><span class="dot lock"></span><b>P…</b></span>
+                  <span class="l2">Regu SMA…</span>
+                </span>
+              </div>
+            </div>
+
+            <div class="doc" style="margin-top:10px">
+              <div class="doc-h" style="padding:9px 11px"><b style="font-size:11.5px">Dokumen &amp; Unduhan</b></div>
+              <div class="drow" style="grid-template-columns:30px minmax(0,1fr);padding:10px 11px;gap:9px">
+                <span class="dico" style="width:30px;height:30px">PDF</span>
+                <span class="dt">
+                  <span class="t1" style="font-size:11.5px">Formulir Pendaftaran</span>
+                  <span class="t2">pasukan ini · 12 anggota</span>
+                  <span><a class="btn btn-pri" style="margin-top:5px;width:100%;justify-content:center" href="#">↓ Unduh</a></span>
+                </span>
+              </div>
+              <div class="drow" style="grid-template-columns:30px minmax(0,1fr);padding:10px 11px;gap:9px">
+                <span class="dico" style="width:30px;height:30px">PDF</span>
+                <span class="dt">
+                  <span class="t1" style="font-size:11.5px">Invoice / Kwitansi</span>
+                  <span class="t2">seluruh sekolah · 3 pasukan</span>
+                  <span><a class="btn btn-gho" style="margin-top:5px;width:100%;justify-content:center" href="#">↓ Unduh</a></span>
+                </span>
+              </div>
+              <div class="drow lock" style="grid-template-columns:30px minmax(0,1fr);padding:10px 11px;gap:9px;border-bottom:0">
+                <span class="dico" style="width:30px;height:30px">PDF</span>
+                <span class="dt">
+                  <span class="t1" style="font-size:11.5px">Sertifikat</span>
+                  <span class="t2">Terbit setelah penilaian selesai.</span>
+                  <span><span class="btn btn-off" style="margin-top:5px;width:100%;justify-content:center">Terkunci</span></span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="notes">
+        <h3>Aturan lebar sempit</h3>
+        <ol>
+          <li><span class="n">01</span><div><b>Tombol kartu lebar tetap, digeser mendatar</b><span class="dim">bukan diperkecil</span><p>Menjejalkan tiga tombol ke 390 px membuat judul pasukan terpotong jadi satu huruf. Lebar tetap + geser mendatar menjaga labelnya utuh; tepi yang memudar menandakan masih ada tombol di sebelah kanan.</p></div></li>
+          <li><span class="n">02</span><div><b>Judul pasukan tetap satu baris</b><span class="dim">nomor dulu, mata lomba kedua</span><p>"Pasukan B" tidak pernah terpotong; yang boleh terpotong hanya nama mata lomba di baris kedua — itu urutan prioritas yang benar.</p></div></li>
+          <li><span class="n">03</span><div><b>Tombol unduh jadi selebar baris</b><span class="dim">target sentuh</span><p>Di bawah 480 px, tombol turun ke barisnya sendiri dengan tinggi ≥ 40 px. Kartu tidak berubah tinggi saat statusnya berubah.</p></div></li>
+          <li><span class="n">04</span><div><b>Strip lengket saat menggulir — opsional</b><span class="dim">satu baris CSS</span><p>Kalau dianggap perlu, strip boleh menempel di bawah navbar selama menggulir, supaya berpindah pasukan tidak perlu naik ke atas. Bukan syarat, dan tidak digambar di atas.</p></div></li>
+        </ol>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ============ RULES ============ -->
+  <section class="rules">
+    <h2>Kapan tiap baris terbuka</h2>
+    <p class="lede" style="max-width:78ch">Semua syarat di bawah ini sudah berlaku di server hari ini — tabel ini hanya memindahkannya ke permukaan supaya bisa dibaca pendaftar, bukan disembunyikan sampai terpenuhi.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Status berkas</th>
+          <th>Pembayaran</th>
+          <th>Formulir</th>
+          <th>Invoice</th>
+          <th>Sertifikat</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>booking</td><td>unpaid / free</td><td class="no">Terkunci</td><td class="no">Terkunci</td><td class="no">Terkunci</td></tr>
+        <tr><td>confirmed</td><td>unpaid</td><td class="no">Terkunci</td><td class="no">Terkunci</td><td class="no">Terkunci</td></tr>
+        <tr><td>confirmed</td><td>pending_verification</td><td class="no">Terkunci</td><td class="no">Terkunci</td><td class="no">Terkunci</td></tr>
+        <tr><td>Ditolak</td><td>apa pun</td><td class="no">Terkunci</td><td class="no">Terkunci</td><td class="no">Terkunci</td></tr>
+        <tr><td>Terverifikasi</td><td>unpaid / free</td><td class="ok">Terbuka</td><td class="no">Terkunci</td><td class="ok">Terbuka <span class="scope">bila template ada</span></td></tr>
+        <tr><td>Terverifikasi</td><td>paid</td><td class="ok">Terbuka</td><td class="ok">Terbuka</td><td class="ok">Terbuka <span class="scope">bila template ada</span></td></tr>
+      </tbody>
+    </table>
+
+    <h3>Rute &amp; cakupan — tidak ada yang berubah</h3>
+    <table>
+      <thead>
+        <tr><th>Baris</th><th>Rute</th><th>Cakupan berkas</th><th>Gerbang di server</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Formulir</td>
+          <td><code>magic.link.formulir</code></td>
+          <td>Per registrasi — nama berkas <code>Formulir_{display_name}.pdf</code></td>
+          <td><code>status_berkas === 'Terverifikasi'</code></td>
+        </tr>
+        <tr>
+          <td>Invoice</td>
+          <td><code>magic.link.invoice</code></td>
+          <td>Per sekolah — semua pasukan NPSN sama yang sudah paid, satu PDF</td>
+          <td><code>payment_status === 'paid'</code></td>
+        </tr>
+        <tr>
+          <td>Sertifikat</td>
+          <td><code>magic.link.certificate.category</code></td>
+          <td>Per pasukan &amp; mata lomba — satu halaman per anggota + danton</td>
+          <td>Fitur <code>certificate</code> aktif + template aktif</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Yang sengaja tidak dikerjakan</h3>
+    <div class="stack-pair" style="margin-top:14px">
+      <ul>
+        <li><strong>Tidak mengubah <code>switchRegistration()</code></strong> — cache draft antar tab sudah benar; ini soal tempat, bukan logika.</li>
+        <li><strong>Tidak menyentuh gerbang hak akses</strong> di ketiga controller. Kalau suatu saat tombolnya dipaksa diklik, jawabannya tetap 403 seperti sekarang.</li>
+        <li><strong>Tidak mengubah skema DB.</strong> Judul tab memakai <code>label_pasukan</code> yang sudah ada sejak booking.</li>
+        <li><strong>Tidak menghapus informasi.</strong> Gelar juara, status pembayaran, dan badge data terverifikasi tetap tampil — hanya tombol unduhnya yang berkumpul.</li>
+      </ul>
+      <ul>
+        <li><strong>Urutan tab tetap seperti sumbernya</strong> (<code>siblingRegistrations</code>, urut id). Mengurutkan ulang berdasarkan label pasukan bisa dikerjakan terpisah.</li>
+        <li><strong>Tidak ada unduhan baru.</strong> Tiga rute yang ada, tiga baris. Kalau nanti ada berkas keempat, ia cukup menambah satu baris.</li>
+        <li><strong>Halaman hasil &amp; klasemen tidak ikut berubah</strong> — tautan "Rincian Nilai Resmi" dan "Klasemen Vote" tetap tautan keluar, bukan unduhan.</li>
+        <li><strong>Bahasa tetap Indonesia</strong>, istilah mengikuti label yang sudah dipakai panitia: pasukan, berkas, terverifikasi.</li>
+      </ul>
+    </div>
+
+    <h3>Urutan pengerjaan yang disarankan</h3>
+    <div class="stack-pair" style="margin-top:14px">
+      <ul>
+        <li><strong>Langkah 1</strong> — pindahkan strip tab ke bawah kartu identitas dan ganti labelnya jadi nomor pasukan. Tambahkan kalimat "1 pasukan" untuk kasus tunggal.</li>
+        <li><strong>Langkah 2</strong> — bentuk kartu Dokumen &amp; Unduhan; pindahkan tiga tautan ke dalamnya, hapus kartu sertifikat mandiri dan kedua tombol lama.</li>
+      </ul>
+      <ul>
+        <li><strong>Langkah 3</strong> — tambahkan keadaan terkunci beserta alasannya, lalu uji pada empat kombinasi status di tabel pertama.</li>
+        <li><strong>Penjaga</strong> — <code>CertificateTest</code> sudah memanggil <code>switchRegistration()</code> lalu mencari teks sertifikat; setelah kartu sertifikat dilebur, asersi itu harus dipindah ke baris sertifikat, bukan dihapus.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>BERBARIS APP · wireframe portal kontingen (/reg/{token}) · tab pasukan pindah ke atas &amp; unduhan jadi satu kartu · kanvas 896 px / 390 px</footer>
+</div>
+</body>
+</html>

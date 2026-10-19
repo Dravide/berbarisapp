@@ -99,6 +99,114 @@
     <div class="container-landing py-6">
         <div class="max-w-4xl mx-auto flex flex-col gap-5">
 
+            {{-- ========== PEMILIH PASUKAN ==========
+                 Satu magic_token dipakai bersama semua pasukan sekolah ini.
+                 Pemilihnya duduk paling atas — sebelum kartu apa pun yang isinya
+                 bergantung pada pasukan yang sedang aktif — supaya pendaftar tahu
+                 ada pasukan lain sebelum membaca rekap nilai atau unduhan. --}}
+            @php
+                $titikStatus = [
+                    'booking' => 'bg-amber-500',
+                    'confirmed' => 'bg-blue-500',
+                    'Terverifikasi' => 'bg-emerald-500',
+                    'Ditolak' => 'bg-red-500',
+                ];
+            @endphp
+
+            @if($siblingRegistrations->count() > 1)
+                <div class="surface-card p-4 sm:p-5">
+                    <div class="flex items-baseline justify-between gap-3 mb-3">
+                        <h2 class="font-display text-sm font-bold text-deep-slate m-0">Pilih Pasukan</h2>
+                        <span class="text-[11px] font-semibold text-on-surface-variant">{{ $siblingRegistrations->count() }} pasukan &middot; satu tautan portal</span>
+                    </div>
+                    <div class="flex gap-2.5 overflow-x-auto pb-1" role="tablist" aria-label="Pilih pasukan">
+                        @foreach($siblingRegistrations as $sib)
+                            @php
+                                $tabAktif = $activeRegId == $sib->id;
+                                // Judul tab dibaca dari label_pasukan ("A", "B", …) —
+                                // nama mata lomba tidak bisa membedakan dua pasukan
+                                // sekolah yang sama di kategori yang sama.
+                                $tabLabel = trim((string) $sib->label_pasukan) !== ''
+                                    ? 'Pasukan ' . $sib->label_pasukan
+                                    : $sib->competitionCategory->full_name;
+                            @endphp
+                            <button type="button"
+                                wire:key="tab-pasukan-{{ $sib->id }}"
+                                wire:click="switchRegistration({{ $sib->id }})"
+                                role="tab"
+                                aria-selected="{{ $tabAktif ? 'true' : 'false' }}"
+                                title="{{ $sib->display_name }} — {{ $statusConfig[$sib->status_berkas][2] ?? $sib->status_berkas }}"
+                                class="flex-1 sm:flex-none min-w-[9.5rem] sm:min-w-[10.5rem] text-left rounded-xl px-3.5 py-2.5 border transition cursor-pointer {{ $tabAktif ? 'border-primary bg-primary/5 shadow-[inset_3px_0_0_var(--color-primary)]' : 'border-outline-variant/60 bg-surface-container-lowest hover:border-primary/40' }}">
+                                <span class="flex items-center gap-1.5 min-w-0">
+                                    <span class="h-1.5 w-1.5 rounded-full shrink-0 {{ $titikStatus[$sib->status_berkas] ?? 'bg-outline' }}"></span>
+                                    <span class="text-xs font-bold truncate {{ $tabAktif ? 'text-primary' : 'text-deep-slate' }}">{{ $tabLabel }}</span>
+                                    @if($sib->participants->count() > 0)
+                                        <span class="ml-auto shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-bold {{ $tabAktif ? 'bg-primary text-white' : 'bg-surface-container text-on-surface-variant' }}">{{ $sib->participants->count() }}</span>
+                                    @endif
+                                </span>
+                                <span class="mt-0.5 block text-[11px] font-medium text-on-surface-variant truncate">{{ $sib->competitionCategory->full_name }}</span>
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+            @else
+                <div class="surface-card px-4 sm:px-5 py-3.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <i class="ti ti-flag-2 text-primary"></i>
+                    <span class="text-xs font-bold text-deep-slate">1 pasukan</span>
+                    <span class="text-xs font-medium text-on-surface-variant">{{ $registration->competitionCategory->full_name }} — sekolah ini hanya mendaftarkan satu pasukan.</span>
+                </div>
+            @endif
+
+            {{-- ========== DOKUMEN & UNDUHAN ==========
+                 Tiga berkas yang dulu tersebar di kartu sertifikat, kotak
+                 pembayaran, dan tabel data terverifikasi kini satu kartu.
+                 Baris yang belum bisa dipakai tetap tampil beserta alasannya —
+                 kalimatnya sama dengan pesan abort(403) di controller, jadi yang
+                 dibaca pendaftar memang syarat yang ditegakkan server. --}}
+            <div class="surface-card overflow-hidden">
+                <div class="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-outline-variant/40 bg-surface-container-low">
+                    <h2 class="font-display text-sm font-bold text-deep-slate inline-flex items-center gap-2 m-0">
+                        <i class="ti ti-folder-open text-primary"></i> Dokumen &amp; Unduhan
+                    </h2>
+                    <span class="text-[11px] font-semibold text-on-surface-variant hidden sm:inline">Berkas dibuat saat tombol ditekan</span>
+                </div>
+                <div class="divide-y divide-outline-variant/30">
+                    @foreach($this->unduhan as $d)
+                        <div wire:key="unduhan-{{ $d['key'] }}"
+                             class="flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 {{ $d['terbuka'] ? '' : 'bg-surface-container-low' }}">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl shrink-0 {{ $d['aksen'] === 'champion' ? 'bg-amber-500/10 text-amber-600' : ($d['terbuka'] ? 'bg-primary/10 text-primary' : 'bg-surface-container text-on-surface-variant') }}">
+                                <i class="ti {{ $d['ikon'] }} text-lg"></i>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex flex-wrap items-center gap-1.5">
+                                    <span class="text-sm font-bold {{ $d['terbuka'] ? 'text-deep-slate' : 'text-on-surface-variant' }}">{{ $d['judul'] }}</span>
+                                    <span class="rounded-md border border-outline-variant/40 bg-surface-container px-2 py-0.5 text-[10px] font-bold text-on-surface-variant">{{ $d['cakupan'] }}</span>
+                                    @if($d['gelar'])
+                                        <span class="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[10px] font-bold {{ $d['aksen'] === 'champion' ? 'bg-amber-500/10 text-amber-700' : 'bg-surface-container text-on-surface-variant' }}">
+                                            <i class="ti {{ $d['aksen'] === 'champion' ? 'ti-trophy' : 'ti-user-check' }}"></i> {{ $d['gelar'] }}
+                                        </span>
+                                    @endif
+                                </div>
+                                <p class="text-xs font-medium text-on-surface-variant m-0 mt-1 leading-normal">{{ $d['keterangan'] }}</p>
+                            </div>
+                            <div class="shrink-0 w-full sm:w-auto">
+                                @if($d['terbuka'])
+                                    @php $gayaUtama = $d['aksen'] === 'champion' || $d['key'] === 'formulir'; @endphp
+                                    <a href="{{ $d['url'] }}" target="_blank"
+                                       class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs transition-colors text-decoration-none {{ $d['aksen'] === 'champion' ? 'bg-amber-500 text-white hover:brightness-105' : ($gayaUtama ? 'btn-primary cursor-pointer' : 'btn-ghost') }}">
+                                        <i class="ti ti-file-download"></i> {{ $d['tombol'] }}
+                                    </a>
+                                @else
+                                    <span class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-outline-variant/50 bg-surface-container text-on-surface-variant font-bold text-xs cursor-not-allowed">
+                                        <i class="ti ti-lock"></i> {{ $d['berlaku'] ? 'Terkunci' : 'Tidak berlaku' }}
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
             {{-- Flash Messages --}}
             @if(session()->has('success'))
                 <div class="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-xs font-semibold flex items-center justify-between">
@@ -269,45 +377,6 @@
                 </div>
             @endif
 
-            {{-- Sertifikat tab aktif: juara bergelar juara, pasukan lain PESERTA --}}
-            @if($cert = ($this->certificate_registrations[$activeRegId] ?? null))
-                @php
-                    $isChampion = $cert['is_champion'];
-                @endphp
-                <div class="surface-card overflow-hidden border-t-4 {{ $isChampion ? 'border-t-amber-400' : 'border-t-slate-300' }}">
-                    <div class="p-5 flex flex-col gap-4">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-10 w-10 items-center justify-center rounded-xl shrink-0 {{ $isChampion ? 'bg-amber-500/10 text-amber-600' : 'bg-surface-container text-on-surface-variant' }}">
-                                <i class="ti ti-certificate text-xl"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-display text-sm font-bold text-deep-slate mb-0.5">{{ $isChampion ? 'Sertifikat Juara' : 'Sertifikat Peserta' }}</h3>
-                                <p class="text-xs text-on-surface-variant font-medium leading-normal m-0">
-                                    {{ $isChampion
-                                        ? 'Selamat! Pasukan ini masuk jajaran juara. Unduh sertifikat dalam format PDF.'
-                                        : 'Unduh sertifikat keikutsertaan pasukan ini dalam format PDF.' }}
-                                </p>
-                                <div class="mt-2 flex flex-wrap items-center gap-1.5">
-                                    <span class="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-bold {{ $isChampion ? 'bg-amber-500/10 text-amber-700' : 'bg-surface-container text-on-surface-variant' }}">
-                                        <i class="ti {{ $isChampion ? 'ti-trophy' : 'ti-user-check' }}"></i> {{ $cert['title'] }}
-                                    </span>
-                                    <span class="inline-flex items-center gap-1 rounded-md bg-surface-container px-2.5 py-1 text-xs font-semibold text-deep-slate border border-outline-variant/30">
-                                        <i class="ti ti-medal"></i> {{ $registration->competitionCategory->full_name }}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex flex-col sm:flex-row sm:flex-wrap gap-2">
-                            <a href="{{ route('magic.link.certificate.category', [$registration->magic_token, $cert['registration']->competition_category_id]) }}"
-                                target="_blank"
-                                class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl text-white font-bold text-sm hover:brightness-105 transition-colors text-decoration-none {{ $isChampion ? 'bg-amber-500' : 'bg-primary' }}">
-                                <i class="ti ti-file-download"></i> Unduh Sertifikat
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            @endif
-
             {{-- ========== EVALUASI & CATATAN SUARA DEWAN JURI ========== --}}
             @if($this->judgeNotes->isNotEmpty())
                 <div class="surface-card p-6">
@@ -420,21 +489,6 @@
                 </div>
             @endif
 
-            {{-- Team Tabs (if multiple registrations exist) --}}
-            @if($siblingRegistrations->count() > 1)
-                <div class="flex gap-2 overflow-x-auto pb-2">
-                    @foreach($siblingRegistrations as $sib)
-                        <button wire:click="switchRegistration({{ $sib->id }})"
-                            class="whitespace-nowrap py-2.5 px-4 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border-none outline-none cursor-pointer {{ $activeRegId == $sib->id ? 'bg-primary text-white shadow-sm' : 'bg-surface-container text-on-surface-variant hover:text-primary' }}">
-                            <i class="ti ti-users-group"></i> {{ $sib->competitionCategory->full_name }}
-                            @if($sib->participants->count() > 0)
-                                <span class="inline-block py-0.5 px-1.5 rounded-full text-[10px] ml-1 font-bold {{ $activeRegId == $sib->id ? 'bg-white text-primary' : 'bg-outline-variant/30 text-on-surface-variant' }}">{{ $sib->participants->count() }}</span>
-                            @endif
-                        </button>
-                    @endforeach
-                </div>
-            @endif
-
             {{-- Active Category Header --}}
             <div class="surface-card overflow-hidden">
                 <div class="bg-primary/5 px-5 py-3 border-b border-outline-variant/40">
@@ -484,10 +538,7 @@
                                 <i class="ti ti-circle-check-filled"></i>
                                 <div>
                                     Pembayaran sudah diverifikasi panitia pada {{ $registration->payment_verified_at ? \Carbon\Carbon::parse($registration->payment_verified_at)->translatedFormat('d M Y H:i') : '—' }}.
-                                    <a href="{{ route('magic.link.invoice', $registration->magic_token) }}" target="_blank"
-                                        class="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition-colors">
-                                        <i class="ti ti-file-invoice"></i> Unduh Invoice (PDF)
-                                    </a>
+                                    <span class="block mt-1 text-xs font-medium text-emerald-700/90">Invoice dapat diunduh di kartu <strong>Dokumen &amp; Unduhan</strong> di atas.</span>
                                 </div>
                             </div>
                         @elseif($registration->payment_status === 'pending_verification')
@@ -826,10 +877,7 @@
                         <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-6 py-2.5 text-sm font-bold text-emerald-600 border border-emerald-500/25">
                             <i class="ti ti-circle-check-filled"></i> DATA TERVERIFIKASI PANITIA
                         </span>
-                        <p class="text-xs font-semibold text-on-surface-variant mt-2 leading-normal">Data di atas adalah data resmi yang dikunci dan akan digunakan pada saat perlombaan.</p>
-                        <a href="{{ route('magic.link.formulir', $registration->magic_token) }}" target="_blank" class="btn-primary inline-flex items-center justify-center gap-1.5 mt-4 px-6 py-3 font-bold text-sm cursor-pointer">
-                            <i class="ti ti-file-download"></i> Unduh Formulir Pendaftaran
-                        </a>
+                        <p class="text-xs font-semibold text-on-surface-variant mt-2 leading-normal">Data di atas adalah data resmi yang dikunci dan akan digunakan pada saat perlombaan. Formulir pendaftaran dapat diunduh di kartu <strong>Dokumen &amp; Unduhan</strong> di atas.</p>
                     </div>
                 @endif
             @else
