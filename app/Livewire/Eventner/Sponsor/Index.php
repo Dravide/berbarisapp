@@ -74,7 +74,7 @@ class Index extends Component
         if ($this->logo) {
             // Delete old logo
             if ($this->currentLogoPath) {
-                Storage::delete('public/' . $this->currentLogoPath);
+                Storage::disk('public')->delete($this->currentLogoPath);
             }
             $logoPath = $this->logo->store('sponsors', 'public');
         }
@@ -120,7 +120,7 @@ class Index extends Component
     {
         $sponsor = Sponsor::where('eventner_id', $this->eventnerId)->findOrFail($id);
         if ($sponsor->logo) {
-            Storage::delete('public/' . $sponsor->logo);
+            Storage::disk('public')->delete($sponsor->logo);
         }
         $sponsor->delete();
         session()->flash('success', 'Sponsor berhasil dihapus.');

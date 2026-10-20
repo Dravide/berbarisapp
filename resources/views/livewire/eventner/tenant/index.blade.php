@@ -138,7 +138,7 @@
                         <div class="mb-4">
                             <label class="form-label">Logo / Foto Tenant</label>
                             <input type="file" class="form-control" wire:model="logo" accept="image/*">
-                            @if ($logo)
+                            @if ($logo && $logo->isPreviewable())
                                 <div class="mt-2 text-center">
                                     <span class="fs-2 text-muted d-block mb-1">Preview Logo Baru:</span>
                                     <img src="{{ $logo->temporaryUrl() }}" class="object-fit-contain rounded border border-light" style="max-height: 100px;">

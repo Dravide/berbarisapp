@@ -23,7 +23,14 @@
                         <input type="file" wire:model="newImage" class="form-control" accept="image/*">
                         @error('newImage')<span class="text-danger small">{{ $message }}</span>@enderror
                         <div wire:loading wire:target="newImage" class="text-info small mt-1">Mengunggah...</div>
-                        @if($newImage)<img src="{{ $newImage->temporaryUrl() }}" class="img-fluid rounded mt-2" style="max-height: 150px;">@endif
+                        {{--
+                            `temporaryUrl()` melempar FileNotPreviewableException
+                            untuk berkas yang bukan gambar — dan itu bukan cuma
+                            soal panitia memilih PDF lewat drag-drop. Ekstensi
+                            jpg/png belum tentu benar isinya, jadi yang dijaga
+                            di sini `isPreviewable()`, bukan nama berkasnya.
+                        --}}
+                        @if($newImage && $newImage->isPreviewable())<img src="{{ $newImage->temporaryUrl() }}" class="img-fluid rounded mt-2" style="max-height: 150px;">@elseif($newImage)<div class="text-info small mt-1"><i class="ti ti-file me-1"></i>{{ $newImage->getClientOriginalName() }} siap diunggah</div>@endif
                     </div>
                     <div class="mb-3"><input class="form-control" wire:model="caption" placeholder="Keterangan (opsional)"></div>
                     <button class="btn btn-primary w-100" wire:loading.attr="disabled" wire:target="newImage"><i class="ti ti-upload me-1"></i> Upload</button>

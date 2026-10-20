@@ -190,7 +190,7 @@ class Index extends Component
 
         if ($this->photo) {
             if ($this->currentPhotoPath) {
-                Storage::delete('public/' . $this->currentPhotoPath);
+                Storage::disk('public')->delete($this->currentPhotoPath);
             }
             $photoPath = $this->photo->store('judges', 'public');
         }
@@ -402,7 +402,7 @@ class Index extends Component
     {
         $judge = Judge::where('eventner_id', $this->eventnerId)->findOrFail($id);
         if ($judge->photo) {
-            Storage::delete('public/' . $judge->photo);
+            Storage::disk('public')->delete($judge->photo);
         }
         $judge->delete();
         $this->toast('Juri berhasil dihapus.');

@@ -412,7 +412,7 @@
                         <div class="mb-3">
                             <label class="form-label">Foto Profil</label>
                             <div class="text-center mb-2">
-                                @if ($photo)
+                                @if ($photo && $photo->isPreviewable())
                                     <img src="{{ $photo->temporaryUrl() }}" alt="Preview" class="rounded-circle object-fit-cover" style="width: 80px; height: 80px;">
                                 @elseif($currentPhotoPath)
                                     <img src="{{ asset('storage/' . $currentPhotoPath) }}" alt="Current" class="rounded-circle object-fit-cover" style="width: 80px; height: 80px;">

@@ -74,7 +74,7 @@ class Index extends Component
         if ($this->logo) {
             // Delete old logo
             if ($this->currentLogoPath) {
-                Storage::delete('public/' . $this->currentLogoPath);
+                Storage::disk('public')->delete($this->currentLogoPath);
             }
             $logoPath = $this->logo->store('tenants', 'public');
         }
@@ -120,7 +120,7 @@ class Index extends Component
     {
         $tenant = Tenant::where('eventner_id', $this->eventnerId)->findOrFail($id);
         if ($tenant->logo) {
-            Storage::delete('public/' . $tenant->logo);
+            Storage::disk('public')->delete($tenant->logo);
         }
         $tenant->delete();
         session()->flash('success', 'Tenant berhasil dihapus.');
