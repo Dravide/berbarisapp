@@ -200,10 +200,16 @@ class Dashboard extends Component
             ->groupBy('ym')
             ->pluck('total', 'ym');
 
+        // Disaring `plan='paid'` + `registration_source='self'`: assignPlan()
+        // menstempel registration_paid_at untuk paket GRATIS hibah admin juga,
+        // jadi tanpa saringan ini tren pendapatan naik oleh pemberian admin
+        // yang tak pernah masuk kas. Sama seperti di RevenueDashboard.
         $saas = Eventner::select(
                 DB::raw(str_replace('%col', 'registration_paid_at', $ymExpr) . ' as ym'),
                 DB::raw('COUNT(*) as total')
             )
+            ->where('plan', 'paid')
+            ->where('registration_source', 'self')
             ->whereNotNull('registration_paid_at')
             ->where('registration_paid_at', '>=', $start)
             ->groupBy('ym')

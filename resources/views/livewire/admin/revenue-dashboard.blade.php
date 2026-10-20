@@ -30,7 +30,7 @@
                         <span class="rounded-circle p-2 bg-primary-subtle"><i class="ti ti-crown text-primary fs-5"></i></span>
                     </div>
                     <h4 class="fw-bold mb-0">Rp {{ number_format($saasRevenue, 0, ',', '.') }}</h4>
-                    <small class="text-muted">{{ $paidEventners }} eventner paid</small>
+                    <small class="text-muted">{{ $paidEventners }} eventner berbayar</small>
                 </div>
             </div>
         </div>
@@ -73,33 +73,97 @@
     </div>
 
     {{-- ============================ --}}
-    {{-- FUNNEL PAKET --}}
+    {{-- CORONG PAKET --}}
     {{-- ============================ --}}
+    {{--
+        Tiap kartu di sini menjaring eventner yang TIDAK dihitung kartu lain —
+        penggolongannya satu rantai match di loadSummary(), bukan lima where()
+        terpisah. Itu disengaja: kartu yang saling menutupi membuat pembaca
+        menjumlahkan angka yang sebenarnya sudah dihitung di kartu lain.
+    --}}
     <div class="row g-4 mb-4">
-        <div class="col-md-4">
+        <div class="col-6 col-lg">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body text-center">
-                    <h6 class="text-muted fw-semibold mb-1">Free Aktif / Trial</h6>
-                    <h3 class="fw-bold mb-0">{{ $freeActive }}</h3>
+                    <h6 class="text-muted fw-semibold mb-1">Trial Berjalan</h6>
+                    <h3 class="fw-bold mb-0">{{ $trialAktif }}</h3>
+                    <small class="text-muted">Masa uji belum diputuskan</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-6 col-lg">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body text-center">
-                    <h6 class="text-muted fw-semibold mb-1">Trial Berakhir</h6>
-                    <h3 class="fw-bold text-warning mb-0">{{ $trialExpired }}</h3>
-                    @if($trialExpired > 0)
+                    <h6 class="text-muted fw-semibold mb-1">Trial Habis</h6>
+                    <h3 class="fw-bold text-warning mb-0">{{ $trialHabis }}</h3>
+                    @if($trialHabis > 0)
                         <a href="{{ route('admin.eventner.index') }}" class="small text-decoration-none">Prospek upgrade →</a>
+                    @else
+                        <small class="text-muted">Tak ada prospek</small>
                     @endif
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-6 col-lg">
             <div class="card border-0 shadow-sm h-100">
                 <div class="card-body text-center">
-                    <h6 class="text-muted fw-semibold mb-1">Konversi ke Paid</h6>
-                    <h3 class="fw-bold text-success mb-0">{{ $conversionRate }}%</h3>
+                    <h6 class="text-muted fw-semibold mb-1">Trial → Berbayar</h6>
+                    <h3 class="fw-bold text-success mb-0">{{ $trialConverted }}</h3>
+                    <small class="text-muted">Dari {{ $trialConverted + $trialHabis }} trial yang sudah selesai</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted fw-semibold mb-1">Diberikan Admin</h6>
+                    <h3 class="fw-bold mb-0">{{ $diberikanAdmin }}</h3>
+                    <small class="text-muted">Diaktifkan tanpa bayar</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h6 class="text-muted fw-semibold mb-1">Belum Bayar</h6>
+                    <h3 class="fw-bold text-warning mb-0">{{ $percobaanBerbayar }}</h3>
+                    <small class="text-muted">Pilih paket, QRIS belum lunas</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ============================ --}}
+    {{-- TINGKAT KONVERSI --}}
+    {{-- ============================ --}}
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted fw-semibold mb-1">Konversi Trial → Berbayar</h6>
+                    <h3 class="fw-bold text-success mb-1">{{ $conversionRate }}%</h3>
+                    <small class="text-muted">
+                        Pembaginya hanya trial yang sudah berakhir, bukan yang masih berjalan —
+                        masa uji yang belum diputuskan belum menjawab apa pun.
+                        @if($trialConverted + $trialHabis === 0)
+                            Belum ada trial yang selesai, jadi angkanya belum berarti.
+                        @endif
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-muted fw-semibold mb-1">Eventner Berbayar</h6>
+                    <h3 class="fw-bold mb-1">{{ $paidEventners }}</h3>
+                    <small class="text-muted">
+                        Pendaftar mandiri dengan pembayaran tercatat. Belum termasuk pemberian
+                        admin dan pendaftar yang QRIS-nya belum lunas.
+                        @if($belumPernahTrial > 0)
+                            {{ $belumPernahTrial }} eventner lama tanpa jejak trial maupun aktivasi.
+                        @endif
+                    </small>
                 </div>
             </div>
         </div>
@@ -165,7 +229,7 @@
                                     <td class="fw-medium">{{ \Illuminate\Support\Str::limit($ev['nama_event'], 40) }}</td>
                                     <td class="text-muted">{{ $ev['owner_name'] }}</td>
                                     <td class="text-center">
-                                        <span class="badge {{ $ev['plan'] === 'paid' ? 'bg-success' : 'bg-secondary' }}">{{ ucfirst($ev['plan']) }}</span>
+                                        <span class="badge {{ $ev['paket_class'] }}">{{ $ev['paket_label'] }}</span>
                                     </td>
                                     <td class="text-end">Rp {{ number_format($ev['ticket_total'], 0, ',', '.') }}</td>
                                     <td class="text-end">Rp {{ number_format($ev['vote_total'], 0, ',', '.') }}</td>

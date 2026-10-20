@@ -200,7 +200,18 @@ class AdminDashboardTest extends TestCase
 
     public function test_tren_revenue_menyertakan_aktivasi_paket()
     {
+        // `registration_source => 'self'` wajib: hanya pendaftar mandiri yang
+        // melewati QRIS. Pembelian selalu berpasangan dengan `plan='paid'`,
+        // dan itu memang bentuk satu-satunya yang menghasilkan uang.
+        //
+        // Dulu tes ini memakai default factory (`registration_source =>
+        // 'admin'`), yaitu bentuk akun yang DIBUAT admin lewat assignPlan() —
+        // yang menstempel registration_paid_at sebagai penanda "diaktifkan"
+        // tanpa QRIS. Tren pendapatan menghitungnya sebagai Rp 150.000 yang
+        // tak pernah masuk kas; itu yang sekarang disaring, dan kasus
+        // sebaliknya dijaga TrialConversionTest.
         Eventner::factory()->paid()->create([
+            'registration_source' => 'self',
             'registration_paid_at' => now(),
         ]);
 
@@ -208,6 +219,34 @@ class AdminDashboardTest extends TestCase
 
         $tren = collect($component->get('revenueTrend'));
         $this->assertSame(150000, $tren->last()['total']);
+    }
+
+    /**
+     * Sisi lain dari tes di atas: paket yang diaktifkan admin tanpa bayar
+     * tidak boleh menaikkan tren pendapatan, meski `registration_paid_at`
+     * terisi. Kalau saringan `registration_source` dilepas, tes ini gagal.
+     */
+    public function test_tren_revenue_mengabaikan_aktivasi_oleh_admin()
+    {
+        $eventner = Eventner::factory()->create(['plan' => 'free']);
+        $eventner->assignPlan(
+            \App\Models\SaasPlan::create([
+                'name' => 'Gratis Uji Dashboard',
+                'slug' => 'gratis-uji-dash-' . \Illuminate\Support\Str::lower(\Illuminate\Support\Str::random(6)),
+                'price' => 0,
+                'registration_fee' => 0,
+                'is_active' => true,
+                'is_free' => true,
+                'is_contact' => false,
+                'sort_order' => 1,
+            ]),
+            'admin'
+        );
+
+        $component = Livewire::actingAs($this->admin())->test(Dashboard::class);
+
+        $tren = collect($component->get('revenueTrend'));
+        $this->assertSame(0, $tren->last()['total']);
     }
 
     // ────────────────────────────────────────────────

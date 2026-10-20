@@ -44,6 +44,53 @@ trait HasFeatureGates
     }
 
     /**
+     * Pendaftar mandiri yang pernah diberi masa uji.
+     *
+     * Ini keanggotaan kohort, jadi sengaja TIDAK memeriksa `plan`: pendaftar
+     * trial yang kemudian meng-upgrade ber-plan 'paid', dan kalau di sini
+     * ditambahkan `plan === 'free'` ia akan lenyap dari penyebut konversi
+     * justru pada saat konversinya terjadi.
+     *
+     * `trial_ends_at` terisi persis pada dua peristiwa: pendaftaran mandiri
+     * paket gratis (EventnerRegister, now()->addDays(3)) dan penolakan
+     * assignPlan(). Pembeli paket berbayar tidak pernah melewatinya, dan
+     * eventner yang dibuat admin pun tidak — jadi kolom ini, bersama
+     * `registration_source`, yang memisahkan "pernah trial" dari "gratis
+     * sejak awal". `plan` sendirian tak bisa menjawab itu: 'free' dipakai
+     * baik oleh trial maupun oleh paket gratis terpasang.
+     */
+    public function pernahTrial(): bool
+    {
+        return $this->registration_source === 'self'
+            && $this->trial_ends_at !== null;
+    }
+
+    /**
+     * Pembeli sungguhan — paket berbayar disertai pembayaran yang tercatat.
+     *
+     * Bukan `plan === 'paid'` saja: pendaftar paket berbayar ber-plan 'paid'
+     * sejak mendaftar, sebelum QRIS-nya dibayar, jadi `plan` menghitung
+     * pengunjung yang belum membayar sebagai pembeli.
+     *
+     * Dan bukan `registration_paid_at !== null` saja: assignPlan() menstempel
+     * kolom itu sebagai penanda "diaktifkan" bahkan untuk paket GRATIS, jadi
+     * paket gratis hibah admin akan terhitung sebagai konversi. Itu sebabnya
+     * di sini ada `registration_source === 'self'` — hanya pendaftar mandiri
+     * yang sampai ke QRIS; sisanya pemberian admin, yang tak menghasilkan
+     * pendapatan.
+     *
+     * Bedanya dengan hasActivePlan() disengaja: yang itu untuk GERBANG AKSES
+     * (hibah admin memang harus membuka fitur), yang ini untuk STATISTIK
+     * UANG (hibah admin tak boleh menambah pendapatan).
+     */
+    public function isPembeli(): bool
+    {
+        return $this->plan === 'paid'
+            && $this->registration_source === 'self'
+            && $this->registration_paid_at !== null;
+    }
+
+    /**
      * Sisa hari trial (0 jika tidak dalam masa trial).
      */
     public function trialDaysLeft(): int
