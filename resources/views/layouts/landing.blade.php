@@ -117,23 +117,30 @@
                     $sectionsActive = $sectionsActive ?? [];
                     $sectionsRender = $sectionsRender ?? [];
                     // Hanya section yang benar-benar dirender. Dulu di sini ada
-                    // 'vote' dan 'gallery': dua tautan yang tidak menuju apa pun
-                    // karena komponennya berhenti render begitu datanya kosong.
+                    // 'gallery': tautan yang tidak menuju apa pun karena
+                    // komponennya berhenti render begitu datanya kosong.
                     // Saklar di pengaturan tidak cukup untuk tahu itu — section
                     // yang menyala tapi datanya kosong tetap tidak menghasilkan
                     // markup, jadi `$sectionsRender` (dihitung di komponen dari
-                    // hasil query yang sama) yang menentukan.
+                    // hasil query yang sama) yang menentukan. 'vote' kembali
+                    // dengan gerbang yang sama: tampil hanya kalau ada event
+                    // yang membuka voting.
                     //
                     // Kolom ketiga = section yang menaungi anchor itu. 'contact'
                     // sekarang kartu di dalam #faq, jadi dia ikut hidup-matinya
                     // FAQ, bukan punya kunci sendiri.
+                    //
+                    // Urutannya mendahulukan EVENT sebelum alat dan harga:
+                    // pengunjung laman depan sedang mencari acara, bukan daftar
+                    // fitur. Sama dengan urutan bawaannya di LandingPage.
                     $navItems = [
                         ['hero', 'Beranda', 'hero'],
+                        ['eventners', 'Event', 'eventners'],
+                        ['ticket', 'Tiket', 'ticket'],
+                        ['vote', 'Vote', 'vote'],
                         ['features', 'Fitur', 'features'],
                         ['pricing', 'Harga', 'pricing'],
                         ['perbandingan', 'Perbandingan', 'perbandingan'],
-                        ['eventners', 'Event', 'eventners'],
-                        ['ticket', 'Tiket', 'ticket'],
                         ['team', 'Tim', 'team'],
                         ['faq', 'FAQ', 'faq'],
                         ['contact', 'Kontak', 'faq'],
@@ -234,10 +241,18 @@
                     <h4 class="mb-4 font-display text-sm font-semibold uppercase tracking-wider text-white">Navigasi</h4>
                     <ul class="space-y-2.5 text-sm">
                         <li><a href="{{ $prefiksNav }}#hero" class="transition hover:text-secondary">Beranda</a></li>
+                        <li><a href="{{ $prefiksNav }}#eventners" class="transition hover:text-secondary">Event</a></li>
+                        {{-- Vote digerbangi `sectionsRender`, bukan sekadar
+                             saklar: section-nya cuma render kalau ada event
+                             yang membuka voting, dan footer ini juga dipakai
+                             halaman lain yang tidak punya anchor sama sekali
+                             ($sectionsRender kosong di sana). --}}
+                        @if(($sectionsActive['vote'] ?? true) && ($sectionsRender['vote'] ?? false))
+                        <li><a href="{{ $prefiksNav }}#vote" class="transition hover:text-secondary">Vote</a></li>
+                        @endif
                         <li><a href="{{ $prefiksNav }}#features" class="transition hover:text-secondary">Fitur</a></li>
                         <li><a href="{{ route('public.features') }}" class="transition hover:text-secondary">Semua Fitur</a></li>
                         <li><a href="{{ $prefiksNav }}#pricing" class="transition hover:text-secondary">Harga</a></li>
-                        <li><a href="{{ $prefiksNav }}#eventners" class="transition hover:text-secondary">Event</a></li>
                         <li><a href="{{ $prefiksNav }}#team" class="transition hover:text-secondary">Tim</a></li>
                         <li><a href="{{ $prefiksNav }}#faq" class="transition hover:text-secondary">FAQ</a></li>
                     </ul>

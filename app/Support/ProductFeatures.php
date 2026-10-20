@@ -7,8 +7,9 @@ namespace App\Support;
  *
  * Sumber kebenaran tampilan — sama perannya dengan App\Support\Pricing yang
  * dibaca /pricing. Array polos, nol I/O, nol DB; admin tidak menyuntingnya
- * dari panel (bukan kunci Setting). Yang admin pegang adalah SEMBILAN item
- * ringkasan di `landing_features`; ini katalog penuhnya.
+ * dari panel (bukan kunci Setting). Yang admin pegang adalah sembilan item
+ * ringkasan di `landing_features` — dan dari sembilan itu hanya EMPAT yang
+ * tampil di laman depan, yang bertanda `featured`; ini katalog penuhnya.
  *
  * Kenapa kelas ini terpisah dari config/eventner_features.php — bukan
  * memakainya ulang:

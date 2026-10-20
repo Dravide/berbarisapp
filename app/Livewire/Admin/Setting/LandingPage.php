@@ -23,7 +23,12 @@ class LandingPage extends Component
      * saat menyimpan — kalau tidak, landing akan memanggil view yang sudah
      * dihapus dan error 500.
      */
-    private const SECTION_DIKENAL = ['hero', 'features', 'pricing', 'perbandingan', 'eventners', 'ticket', 'faq', 'team', 'sponsor', 'cta'];
+    private const SECTION_DIKENAL = ['hero', 'eventners', 'ticket', 'vote', 'features', 'pricing', 'perbandingan', 'faq', 'team', 'sponsor', 'cta'];
+
+    /** Urutan & saklar bawaan. Harus sama dengan LandingPage::URUTAN_BAWAAN. */
+    private const URUTAN_BAWAAN = '["hero","eventners","ticket","vote","features","pricing","perbandingan","faq","team","sponsor","cta"]';
+
+    private const AKTIF_BAWAAN = '{"hero":true,"eventners":true,"ticket":true,"vote":true,"features":true,"pricing":true,"perbandingan":true,"faq":true,"team":true,"sponsor":true,"cta":true}';
 
     // Active tab
     public $activeTab = 'hero';
@@ -105,6 +110,11 @@ class LandingPage extends Component
 
     public $ticket_subtitle;
 
+    // Vote section (live data juga; gerbangnya ada event yang buka voting)
+    public $vote_title;
+
+    public $vote_subtitle;
+
     // Team section (profil tim di landing — item: nama, peran, foto)
     public $team_title;
 
@@ -128,8 +138,8 @@ class LandingPage extends Component
     public function mount()
     {
         // Load section order & active
-        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', '["hero","features","pricing","perbandingan","eventners","ticket","faq","cta"]'), true);
-        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', '{"hero":true,"features":true,"pricing":true,"perbandingan":true,"eventners":true,"ticket":true,"faq":true,"cta":true}'), true);
+        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', self::URUTAN_BAWAAN), true);
+        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', self::AKTIF_BAWAAN), true);
 
         // Load Hero
         $hero = json_decode(Setting::get('landing_hero', '{}'), true) ?? [];
@@ -185,6 +195,11 @@ class LandingPage extends Component
         $ticket = json_decode(Setting::get('landing_ticket', '{}'), true) ?? [];
         $this->ticket_title = $ticket['title'] ?? 'E-Tiket Digital';
         $this->ticket_subtitle = $ticket['subtitle'] ?? 'Beli tiket event favoritmu secara online. Praktis, aman, dengan QR code check-in.';
+
+        // Load Vote section
+        $vote = json_decode(Setting::get('landing_vote', '{}'), true) ?? [];
+        $this->vote_title = $vote['title'] ?? 'Voting Online';
+        $this->vote_subtitle = $vote['subtitle'] ?? 'Dukung peserta favoritmu lewat voting online. Setiap suara menentukan juara favorit.';
 
         // Load Team section
         $team = json_decode(Setting::get('landing_team', '{}'), true) ?? [];
@@ -394,6 +409,12 @@ class LandingPage extends Component
         Setting::set('landing_ticket', json_encode([
             'title' => $this->ticket_title,
             'subtitle' => $this->ticket_subtitle,
+        ]));
+
+        // Save Vote section
+        Setting::set('landing_vote', json_encode([
+            'title' => $this->vote_title,
+            'subtitle' => $this->vote_subtitle,
         ]));
 
         // Save Team — foto per item ter-bind langsung di `team_items.*.photo`;

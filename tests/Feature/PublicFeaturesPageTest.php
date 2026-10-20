@@ -182,7 +182,7 @@ class PublicFeaturesPageTest extends TestCase
     {
         $html = $this->get('/fitur')->getContent();
 
-        foreach (['#hero', '#features', '#pricing', '#eventners', '#team', '#faq', '#contact'] as $anchor) {
+        foreach (['#hero', '#features', '#pricing', '#eventners', '#vote', '#team', '#faq', '#contact'] as $anchor) {
             $this->assertStringNotContainsString(
                 'href="' . $anchor . '"',
                 $html,

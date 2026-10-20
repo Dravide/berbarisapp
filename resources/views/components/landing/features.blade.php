@@ -30,21 +30,40 @@
         'icon11.png' => 'ti-building-store', // sponsor & tenant = stan
     ];
 
-    // Unggulan ditandai per ITEM (`featured`), bukan per indeks: indeks
+    // Laman depan hanya memuat EMPAT fitur; sisanya hidup di /fitur. Dulu
+    // sembilan kartu sekaligus, dan yang benar-benar utama tenggelam di
+    // antaranya.
+    //
+    // Yang dipilih ditandai per ITEM (`featured`), bukan per indeks: indeks
     // bergeser tiap admin menghapus satu baris (removeFeatureItem memanggil
     // array_values), jadi penanda berbasis indeks akan menunjuk item yang
     // salah setelah satu penghapusan. Dibandingkan lewat KUNCI indeks, bukan
     // lewat isi item: dua item bisa saja punya judul+deskripsi+ikon identik
     // (admin menduplikasi), dan pencocokan isi akan membuang yang salah.
-    // Data lama belum punya kunci ini sama sekali — kalau tidak ada yang
-    // ditandai, dua item pertama yang jadi unggulan, sehingga halaman depan
-    // membaik tanpa admin menyentuh apa pun.
-    $featuredKeys = collect($items)->filter(fn ($i) => !empty($i['featured']))->keys()->take(2);
-    if ($featuredKeys->isEmpty()) {
-        $featuredKeys = collect($items)->keys()->take(2);
+    //
+    // Data di produksi belum punya kunci ini sama sekali. Kalau tidak ada yang
+    // ditandai, yang tampil adalah empat fitur utama versi kode (pendaftaran,
+    // penilaian, skor, sertifikat) — bukan empat teratas daftar, karena
+    // urutan daftar mengikuti seeder dan bukan prioritas pemasaran. Halaman
+    // depan jadi benar tanpa admin menyentuh apa pun, dan begitu ia menandai
+    // sendiri, pilihannya yang dipakai.
+    $FITUR_UTAMA = ['icon3.png', 'icon4.png', 'icon7.png', 'icon9.png'];
+
+    $tampil = collect($items)->filter(fn ($i) => ! empty($i['featured']))->keys();
+
+    if ($tampil->isEmpty()) {
+        $tampil = collect($items)
+            ->filter(fn ($i) => in_array($i['icon'] ?? '', $FITUR_UTAMA, true))
+            ->keys();
     }
-    $compactKeys  = collect($items)->keys()->diff($featuredKeys);
-    $compactCount = $compactKeys->count();
+
+    // Daftar yang isinya tidak satu pun ikon kanonik (mis. semua diganti ikon
+    // unggahan sendiri) tetap harus menampilkan sesuatu.
+    if ($tampil->isEmpty()) {
+        $tampil = collect($items)->keys();
+    }
+
+    $tampil = $tampil->take(4);
 
     // Poin dari section "Tentang" yang dibuang. Dulu tiga blok ceklis
     // tersendiri beberapa layar di bawah section ini dan mengulang hal yang
@@ -74,45 +93,17 @@
             @endif
         </div>
 
-        {{-- Bento enam kolom: unggulan 3+3, padat 2+2+2, kartu terakhir yang
-             sendirian melebar penuh (6). Kelas span ditulis LITERAL di tiap
-             cabang — Tailwind memindai berkas dan tidak pernah menjalankan
-             Blade, jadi kelas yang dirakit dari variabel tidak masuk CSS
-             hasil build (pelajaran yang sudah dibayar di komponen harga). --}}
-        <div class="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-6">
-            @foreach($featuredKeys as $index)
+        {{-- Empat kartu, semuanya seukuran: 2×2 di layar lebar, 2 baris
+             bertumpuk di ponsel. Dulu bento enam kolom dengan dua kartu
+             unggulan dan tujuh kartu padat — hierarki yang tidak lagi ada
+             gunanya begitu isinya dipangkas jadi empat. Kelas span ditulis
+             LITERAL, bukan dirakit dari variabel: Tailwind memindai berkas
+             dan tidak pernah menjalankan Blade, jadi kelas hasil rakitan
+             tidak masuk CSS hasil build (pelajaran dari komponen harga). --}}
+        <div class="mt-12 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            @foreach($tampil as $index)
             @php $item = $items[$index] ?? []; @endphp
-            <div class="surface-card surface-card-hover p-6 sm:col-span-2 lg:col-span-3" wire:key="feature-{{ $index }}">
-                <div class="mb-4 flex items-start justify-between gap-3">
-                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        @if(!empty($item['icon_custom']))
-                            <img src="{{ Storage::url($item['icon_custom']) }}" alt="{{ $item['title'] ?? '' }}" class="h-6 w-6 object-contain">
-                        @else
-                            <i class="ti {{ $iconMap[$item['icon'] ?? ''] ?? 'ti-star' }} text-xl"></i>
-                        @endif
-                    </div>
-                    <span class="chip">Paling dipakai</span>
-                </div>
-
-                <x-landing.feature-miniature :item="$item" />
-
-                <h3 class="text-lg font-bold text-deep-slate">{{ $item['title'] ?? '' }}</h3>
-                <p class="mt-2 text-sm leading-relaxed text-on-surface-variant">{{ $item['description'] ?? '' }}</p>
-            </div>
-            @endforeach
-
-            @foreach($compactKeys as $index)
-            @php
-                $item = $items[$index] ?? [];
-                // Sisa kartu padat yang habis dibagi tiga menyisakan satu:
-                // yang terakhir melebar penuh, bukan menggantung separuh baris.
-                $sendiri = $loop->last && $compactCount % 3 === 1;
-            @endphp
-            @if($sendiri)
-            <div class="surface-card surface-card-hover p-6 sm:col-span-2 lg:col-span-6" wire:key="feature-{{ $index }}">
-            @else
-            <div class="surface-card surface-card-hover p-6 sm:col-span-1 lg:col-span-2" wire:key="feature-{{ $index }}">
-            @endif
+            <div class="surface-card surface-card-hover p-6" wire:key="feature-{{ $index }}">
                 <div class="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
                     @if(!empty($item['icon_custom']))
                         <img src="{{ Storage::url($item['icon_custom']) }}" alt="{{ $item['title'] ?? '' }}" class="h-6 w-6 object-contain">
@@ -129,7 +120,7 @@
             @endforeach
         </div>
 
-        {{-- Landing cuma memuat sembilan fitur; sisanya hidup di /fitur. --}}
+        {{-- Laman depan cuma memuat empat fitur; sisanya hidup di /fitur. --}}
         <div class="mt-10 text-center">
             <a href="{{ route('public.features') }}" class="btn-ghost">
                 Lihat Semua Fitur

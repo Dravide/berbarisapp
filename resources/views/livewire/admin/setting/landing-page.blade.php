@@ -51,6 +51,7 @@
                                             'pricing' => 'Harga',
                                             'perbandingan' => 'Perbandingan',
                                             'ticket' => 'Tiket',
+                                            'vote' => 'Vote',
                                             'faq' => 'FAQ',
                                             'team' => 'Tim',
                                             'contact' => 'Kontak',
@@ -121,8 +122,11 @@
                                         <div class="alert alert-light border d-flex align-items-start mb-3">
                                             <i class="ti ti-info-circle fs-6 me-2 mt-1 text-primary"></i>
                                             <span class="fs-2">
-                                                Sembilan item di bawah adalah <strong>ringkasan untuk laman depan</strong>.
-                                                Katalog fitur lengkap ({{ \App\Support\ProductFeatures::total() }} fitur,
+                                                Laman depan hanya menampilkan <strong>4 item</strong> dari daftar di bawah —
+                                                yang dicentang "Tampil di laman depan". Kalau tidak ada yang dicentang,
+                                                empat fitur utama versi bawaan yang dipakai (Pendaftaran, Penilaian Juri,
+                                                Live Scoreboard, Sertifikat). Katalog fitur lengkap
+                                                ({{ \App\Support\ProductFeatures::total() }} fitur,
                                                 {{ count(\App\Support\ProductFeatures::groups()) }} kelompok) ada di halaman
                                                 <a href="{{ route('public.features') }}" target="_blank" class="fw-bold text-primary">/fitur</a>
                                                 dan disusun dari kode — tidak bisa diubah dari panel ini.
@@ -173,10 +177,10 @@
                                                         <input type="text" class="form-control form-control-sm" wire:model="features_items.{{ $i }}.description" placeholder="Deskripsi singkat">
                                                     </div>
                                                     <div class="col-md-2 mb-2">
-                                                        <label class="form-label small">Unggulan</label>
+                                                        <label class="form-label small">Laman depan</label>
                                                         <div class="form-check">
                                                             <input type="checkbox" class="form-check-input" id="feat-unggulan-{{ $i }}" wire:model="features_items.{{ $i }}.featured">
-                                                            <label class="form-check-label small" for="feat-unggulan-{{ $i }}">Tampil besar</label>
+                                                            <label class="form-check-label small" for="feat-unggulan-{{ $i }}">Tampilkan</label>
                                                         </div>
                                                     </div>
                                                     <div class="col-md-1 d-flex align-items-end">
@@ -185,7 +189,7 @@
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <p class="text-muted small mb-0">Maksimal 2 yang tampil besar — kalau ditandai lebih, dua teratas yang dipakai.</p>
+                                                <p class="text-muted small mb-0">Laman depan menampilkan maksimal 4 item yang dicentang. Kalau tidak ada yang dicentang, empat fitur utama bawaan yang dipakai.</p>
                                             </div>
                                             @endforeach
                                         </div>
@@ -362,6 +366,28 @@
                                             <div class="col-12 mb-3">
                                                 <label class="form-label">Subjudul</label>
                                                 <textarea class="form-control" wire:model="ticket_subtitle" rows="2" placeholder="Deskripsi singkat section tiket"></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+
+
+                                    {{-- ==================== VOTE TAB ==================== --}}
+                                    @if($activeTab === 'vote')
+                                    <div wire:key="tab-vote">
+                                        <h5 class="fw-semibold mb-3"><i class="ti ti-thumb-up me-2"></i>Section Vote</h5>
+                                        <div class="alert alert-light border d-flex align-items-center mb-3">
+                                            <i class="ti ti-info-circle fs-6 me-2 text-primary"></i>
+                                            <span class="fs-2">Menampilkan event yang membuka voting secara <strong>otomatis (data live)</strong>. Section ini hilang sendiri kalau tidak ada satu pun event yang membuka voting — sama seperti section Tiket.</span>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-12 mb-3">
+                                                <label class="form-label">Judul Section</label>
+                                                <input type="text" class="form-control" wire:model="vote_title" placeholder="Mis: Voting Online">
+                                            </div>
+                                            <div class="col-12 mb-3">
+                                                <label class="form-label">Subjudul</label>
+                                                <textarea class="form-control" wire:model="vote_subtitle" rows="2" placeholder="Deskripsi singkat section vote"></textarea>
                                             </div>
                                         </div>
                                     </div>

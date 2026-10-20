@@ -13,6 +13,12 @@ class LandingPage extends Component
     /**
      * Section yang punya komponen Blade-nya, dalam urutan bawaan.
      *
+     * Urutannya sengaja mendahulukan EVENT (eventners, ticket, vote), baru
+     * fitur dan harga: laman depan menjual acaranya lebih dulu, alatnya
+     * belakangan. `vote` hidup lagi — dulu dibuang karena menyala tanpa satu
+     * pun event yang membuka voting, jadi nav-nya tautan mati; sekarang
+     * gerbangnya data, sama seperti `ticket`.
+     *
      * Urutan yang tersimpan di settings hanya *preferensi urutan* milik admin;
      * daftar section yang benar-benar ada ditentukan di sini. Kalau halaman
      * mempercayai urutan tersimpan apa adanya, dua hal bisa terjadi: nama lama
@@ -24,7 +30,12 @@ class LandingPage extends Component
      * Begitu shim-nya dibuang dan urutan lama masih tersimpan di DB,
      * halaman harga hilang dari laman produksi.
      */
-    private const SECTION_DIKENAL = ['hero', 'features', 'pricing', 'perbandingan', 'eventners', 'ticket', 'faq', 'team', 'sponsor', 'cta'];
+    private const SECTION_DIKENAL = ['hero', 'eventners', 'ticket', 'vote', 'features', 'pricing', 'perbandingan', 'faq', 'team', 'sponsor', 'cta'];
+
+    /** Urutan bawaan, dipakai juga sebagai nilai default saat setting kosong. */
+    private const URUTAN_BAWAAN = '["hero","eventners","ticket","vote","features","pricing","perbandingan","faq","team","sponsor","cta"]';
+
+    private const AKTIF_BAWAAN = '{"hero":true,"eventners":true,"ticket":true,"vote":true,"features":true,"pricing":true,"perbandingan":true,"faq":true,"team":true,"sponsor":true,"cta":true}';
 
     public $sections = [];
     public $sectionsOrder = [];
@@ -46,16 +57,15 @@ class LandingPage extends Component
 
         // Load sections order & active state
         //
-        // Tujuh section, bukan dua belas: yang dibuang adalah blok yang isinya
-        // mengulang blok lain (statistik muncul dua kali; daftar fitur muncul
-        // lagi di footer) atau yang tidak pernah render sama sekali karena
-        // datanya kosong (vote, galeri) — nav-nya tetap aktif, jadi kliknya
-        // tidak terjadi apa-apa.
+        // Urutan tersimpan cuma preferensi; `lengkapiUrutan()` yang menentukan
+        // section mana yang betul-betul bisa dirender, dan menyelipkan yang
+        // belum ada di urutan lama. Blok yang isinya mengulang blok lain
+        // (statistik, galeri, testimoni) tetap dibuang di sana.
         $tersimpan = json_decode(Setting::get('landing_sections_order', '[]'), true) ?: [];
         $this->sectionsOrder = $this->lengkapiUrutan($tersimpan);
 
         $this->sectionsActive = json_decode(
-            Setting::get('landing_sections_active', '{"hero":true,"features":true,"pricing":true,"perbandingan":true,"eventners":true,"ticket":true,"faq":true,"cta":true}'),
+            Setting::get('landing_sections_active', self::AKTIF_BAWAAN),
             true
         );
 
@@ -80,8 +90,8 @@ class LandingPage extends Component
      * Dua penyaringan, dan keduanya perlu:
      *
      * 1. Nama yang tidak punya komponen Blade dibuang. Kalau tidak, urutan
-     *    lama yang masih tersimpan (mis. `testimonials`, `gallery`, `vote`)
-     *    akan memanggil view yang sudah dihapus — error 500 di laman depan.
+     *    lama yang masih tersimpan (mis. `testimonials`, `gallery`) akan
+     *    memanggil view yang sudah dihapus — error 500 di laman depan.
      * 2. Nama yang belum ada di urutan tersimpan ditambahkan di posisi
      *    bawaannya. Ini yang bikin section baru muncul tanpa harus menunggu
      *    admin menyusun ulang atau migration dijalankan — persis kasus
@@ -161,6 +171,19 @@ class LandingPage extends Component
             ->filter(fn ($event) => $event->hasTicketPrice())
             ->values();
 
+        // Voting dibuka sampai `vote_end` lewat (null = tanpa batas), sama
+        // seperti penyaring tiket di atas. Eventnya sendiri sudah disetujui,
+        // jadi kartunya tidak menautkan ke 404.
+        $voteEvents = Eventner::approved()
+            ->where('vote_active', true)
+            ->where(function ($q) {
+                $q->whereNull('vote_end')
+                  ->orWhere('vote_end', '>=', now());
+            })
+            ->orderBy('created_at', 'desc')
+            ->limit(8)
+            ->get();
+
         // Section yang benar-benar menghasilkan markup. Saklar di pengaturan
         // saja tidak cukup: beberapa komponen punya gerbang datanya sendiri
         // (`@if($events->count() > 0)`), jadi section yang menyala tapi
@@ -180,6 +203,7 @@ class LandingPage extends Component
             'perbandingan' => true,
             'eventners' => $eventners->isNotEmpty(),
             'ticket' => $ticketEvents->isNotEmpty(),
+            'vote' => $voteEvents->isNotEmpty(),
             'cta' => true,
             'faq' => $this->faqRenderable(),
             // Gerbang section sponsor: ada partner aktif, apapun tipenya.
@@ -190,6 +214,7 @@ class LandingPage extends Component
         return view('livewire.public.landing-page', [
             'eventners' => $eventners,
             'ticketEvents' => $ticketEvents,
+            'voteEvents' => $voteEvents,
         ])
             ->layout('layouts.landing', [
                 'logoPath' => $this->logoPath,

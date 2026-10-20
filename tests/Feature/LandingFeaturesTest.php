@@ -70,32 +70,24 @@ class LandingFeaturesTest extends TestCase
             // cabang itu tidak pernah kena untuk icon3–icon11).
             // Judul di-escape Blade sebelum masuk HTML (`&` jadi `&amp;`),
             // jadi pembandingnya pun harus lewat e().
-            $needle = '<h3 class="text-lg font-bold text-deep-slate">' . e($item['title']) . '</h3>';
-            $pos[$i] = strpos($html, $needle);
-            $this->assertNotFalse($pos[$i], "Judul \"{$item['title']}\" tidak dirender.");
+            $pos[$i] = strpos($html, $this->judulKartu($item));
         }
         return $pos;
     }
 
-    /**
-     * Kartu dikatakan unggulan kalau penanda "Paling dipakai" muncul SESUDAH
-     * judul kartu sebelumnya dan SEBELUM judul kartu ini — penanda ada di atas
-     * miniatur, judul di bawahnya.
-     */
-    private function unggulanDariUrutan(string $html, array $items): array
+    private function judulKartu(array $item): string
+    {
+        return '<h3 class="text-lg font-bold text-deep-slate">' . e($item['title']) . '</h3>';
+    }
+
+    /** Indeks item yang kartunya benar-benar dirender, urut dokumen. */
+    private function dirender(string $html, array $items): array
     {
         $pos = $this->posisiJudul($html, $items);
-        $urut = array_keys($pos);
-        usort($urut, fn ($a, $b) => $pos[$a] <=> $pos[$b]);
+        $ada = array_filter($pos, fn ($p) => $p !== false);
+        asort($ada);
 
-        $penanda = [];
-        $kursor = 0;
-        foreach ($urut as $i) {
-            $penanda[] = substr_count(substr($html, $kursor, $pos[$i] - $kursor), 'Paling dipakai');
-            $kursor = $pos[$i];
-        }
-
-        return array_combine($urut, $penanda);
+        return array_keys($ada);
     }
 
     public function test_anchor_features_tetap_ada()
@@ -105,20 +97,36 @@ class LandingFeaturesTest extends TestCase
         $this->assertStringContainsString('id="features"', $this->get('/')->getContent());
     }
 
-    public function test_sembilan_judul_fitur_dirender()
+    /**
+     * Laman depan hanya memuat EMPAT fitur dari sembilan item tersimpan;
+     * sisanya hidup di /fitur. Yang menjaga ini bukan cuma jumlah kartu —
+     * kalau lima kartu lolos ke Blade, jumlah judulnya ikut berubah.
+     */
+    public function test_laman_depan_hanya_merender_empat_fitur()
     {
         $items = $this->features();
         $this->setFeatures($items);
 
         $html = $this->get('/')->getContent();
 
-        foreach ($items as $item) {
-            $this->assertStringContainsString(e($item['title']), $html);
-        }
+        $this->assertSame(4, substr_count($html, 'class="feat-mini"'));
+        $this->assertCount(4, $this->dirender($html, $items));
+    }
 
-        // Bukan cuma sembilan judul: sembilan rangka miniatur juga. Kalau
-        // hanya lima yang lolos ke Blade, judulnya tetap lulus tanpa ini.
-        $this->assertSame(9, substr_count($html, 'class="feat-mini"'));
+    /**
+     * Data di produksi belum punya kunci `featured` sama sekali. Yang tampil
+     * harus empat fitur utama versi kode, bukan empat teratas daftar (urutan
+     * daftar mengikuti seeder, bukan prioritas pemasaran).
+     */
+    public function test_tanpa_penanda_empat_fitur_utama_bawaan_yang_tampil()
+    {
+        $items = $this->features();
+        $this->setFeatures($items);
+
+        $html = $this->get('/')->getContent();
+
+        // icon3 pendaftaran, icon4 penilaian, icon7 skor, icon9 sertifikat.
+        $this->assertSame([0, 1, 4, 6], $this->dirender($html, $items));
     }
 
     public function test_temuan_icon_map_tidak_kembali()
@@ -127,13 +135,16 @@ class LandingFeaturesTest extends TestCase
 
         $html = $this->get('/')->getContent();
 
+        // Empat kartu yang tampil memakai empat glif berbeda — dulu `$iconMap`
+        // berhenti di `icon8` dan tiga fitur terakhir jatuh ke `ti-star` yang
+        // sama.
         $this->assertStringContainsString('ti ti-certificate', $html);
-        $this->assertStringContainsString('ti ti-broadcast', $html);
-        $this->assertStringContainsString('ti ti-building-store', $html);
+        $this->assertStringContainsString('ti ti-podium', $html);
 
-        // Hanya Voting Online yang memakai bintang; sebelumnya tiga fitur
-        // terakhir ikut jatuh ke sini.
-        $this->assertSame(1, substr_count($html, 'ti ti-star'));
+        // Voting Online (satu-satunya pemakai bintang) tidak ikut dirender,
+        // jadi tidak ada `ti-star` sama sekali — kalau ada, berarti sebuah
+        // kartu jatuh ke fallback glif.
+        $this->assertSame(0, substr_count($html, 'ti ti-star'));
     }
 
     public function test_temuan_ti_scoreboard_tidak_kembali()
@@ -149,39 +160,44 @@ class LandingFeaturesTest extends TestCase
         $this->assertStringContainsString('ti ti-podium', $html);
     }
 
-    public function test_item_bertanda_featured_menjadi_unggulan()
+    /**
+     * `featured` menentukan item mana yang tampil, bukan item mana yang
+     * diperbesar. Yang ditandai sengaja BUKAN empat yang pertama: kalau kode
+     * diam-diam mengabaikan penanda dan selalu mengambil empat teratas, tes
+     * ini gagal.
+     */
+    public function test_item_bertanda_featured_yang_tampil()
     {
-        // Yang ditandai sengaja BUKAN dua yang pertama: kalau kode diam-diam
-        // mengabaikan penanda dan selalu mengambil dua teratas, tes ini gagal.
         $items = $this->features([
-            4 => ['featured' => true],
+            2 => ['featured' => true],
             7 => ['featured' => true],
         ]);
         $this->setFeatures($items);
 
         $html = $this->get('/')->getContent();
-        $unggulan = $this->unggulanDariUrutan($html, $items);
 
-        $this->assertSame(2, array_sum($unggulan));
-        $this->assertSame(1, $unggulan[4], 'Live Scoreboard ditandai unggulan tapi tidak dapat penanda.');
-        $this->assertSame(1, $unggulan[7], 'Livestream Overlay ditandai unggulan tapi tidak dapat penanda.');
-        $this->assertSame(0, $unggulan[0], 'Manajemen Pendaftaran tidak ditandai, tapi ikut jadi unggulan.');
+        // Hanya yang ditandai. Tanpa penanda tambahan, tidak ada lagi slot
+        // yang diisi dari daftar atas.
+        $this->assertSame([2, 7], $this->dirender($html, $items));
     }
 
-    public function test_tanpa_penanda_dua_item_pertama_jadi_unggulan()
+    /** Penanda lebih dari empat dipotong, bukan menumbuhkan section. */
+    public function test_penanda_lebih_dari_empat_dipotong()
     {
-        // Data di produksi belum punya kunci `featured` sama sekali. Halaman
-        // depan harus membaik tanpa admin menyentuh apa pun.
-        $items = $this->features();
+        $items = $this->features([
+            0 => ['featured' => true],
+            1 => ['featured' => true],
+            2 => ['featured' => true],
+            3 => ['featured' => true],
+            4 => ['featured' => true],
+            5 => ['featured' => true],
+        ]);
         $this->setFeatures($items);
 
         $html = $this->get('/')->getContent();
-        $unggulan = $this->unggulanDariUrutan($html, $items);
 
-        $this->assertSame(2, array_sum($unggulan));
-        $this->assertSame(1, $unggulan[0]);
-        $this->assertSame(1, $unggulan[1]);
-        $this->assertSame(0, $unggulan[2]);
+        $this->assertSame(4, substr_count($html, 'class="feat-mini"'));
+        $this->assertSame([0, 1, 2, 3], $this->dirender($html, $items));
     }
 
     public function test_data_lama_tanpa_kunci_featured_tetap_render()
@@ -193,7 +209,6 @@ class LandingFeaturesTest extends TestCase
         // glif Tabler, tapi tidak boleh mematikan miniatur kartunya.
         $items = $this->features([
             0 => ['icon_custom' => 'landing/ikon-lama.png'],
-            8 => ['featured' => true],
         ]);
         $this->setFeatures($items);
 
@@ -201,8 +216,27 @@ class LandingFeaturesTest extends TestCase
         $response->assertStatus(200);
 
         $html = $response->getContent();
-        $this->assertSame(9, substr_count($html, 'class="feat-mini"'));
+        $this->assertSame(4, substr_count($html, 'class="feat-mini"'));
+        $this->assertSame([0, 1, 4, 6], $this->dirender($html, $items));
         $this->assertStringContainsString('landing/ikon-lama.png', $html);
+    }
+
+    /**
+     * Daftar yang isinya tidak satu pun ikon kanonik (mis. admin mengganti
+     * semua ikonnya) tetap harus menampilkan sesuatu, bukan section kosong.
+     */
+    public function test_daftar_tanpa_ikon_kanonik_tetap_render_empat()
+    {
+        $items = $this->features();
+        foreach ($items as $i => $item) {
+            $items[$i]['icon'] = 'ikon-unggahan-' . $i . '.png';
+        }
+        $this->setFeatures($items);
+
+        $html = $this->get('/')->getContent();
+
+        $this->assertSame(4, substr_count($html, 'class="feat-mini"'));
+        $this->assertSame([0, 1, 2, 3], $this->dirender($html, $items));
     }
 
     /**
@@ -210,25 +244,32 @@ class LandingFeaturesTest extends TestCase
      * selama katalog /fitur ditambahkan: resolusi kunci sekarang membaca
      * `miniature` lebih dulu, dan item landing tidak punya kunci itu — jadi
      * setiap seni harus tetap memakai kelas pembedanya.
+     *
+     * Diuji satu per satu, bukan sembilan sekaligus: laman depan hanya
+     * merender empat, jadi cek serentak akan selalu gagal untuk lima sisanya.
      */
     public function test_sembilan_miniatur_masih_memakai_art_masing_masing()
     {
-        $this->setFeatures($this->features());
-
-        $html = $this->get('/')->getContent();
-
         // Satu kelas yang khas per cabang icon3…icon11.
-        foreach ([
-            'feat-pill-lime feat-end">Terverifikasi',  // icon3 — meja verifikasi
-            'feat-numbox',                              // icon4 — lembar nilai
-            'feat-ballot',                              // icon5 — papan perolehan
-            'feat-qr',                                  // icon6 — tiket
-            'feat-rk',                                  // icon7 — papan peringkat
-            'feat-cellnum',                             // icon8 — nomor undian
-            'feat-sign',                                // icon9 — sertifikat
-            'feat-stage',                               // icon10 — overlay siaran
-            'feat-logobox',                             // icon11 — dinding sponsor
-        ] as $kelas) {
+        $seni = [
+            0 => 'feat-pill-lime feat-end">Terverifikasi',   // icon3 — meja verifikasi
+            1 => 'feat-numbox',                               // icon4 — lembar nilai
+            2 => 'feat-ballot',                               // icon5 — papan perolehan
+            3 => 'feat-qr',                                   // icon6 — tiket
+            4 => 'feat-rk',                                   // icon7 — papan peringkat
+            5 => 'feat-cellnum',                              // icon8 — nomor undian
+            6 => 'feat-sign',                                 // icon9 — sertifikat
+            7 => 'feat-stage',                                // icon10 — overlay siaran
+            8 => 'feat-logobox',                              // icon11 — dinding sponsor
+        ];
+
+        foreach ($seni as $i => $kelas) {
+            $items = $this->features([$i => ['featured' => true]]);
+            $this->setFeatures($items);
+
+            $html = $this->get('/')->getContent();
+
+            $this->assertSame([$i], $this->dirender($html, $items));
             $this->assertStringContainsString($kelas, $html, "Seni miniatur \"{$kelas}\" hilang.");
         }
     }

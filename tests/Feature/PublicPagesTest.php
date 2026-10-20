@@ -26,7 +26,9 @@ class PublicPagesTest extends TestCase
     /**
      * Tautan nav yang menunjuk section yang tidak ada = klik yang tidak terjadi
      * apa-apa. Halaman ini pernah punya dua (#vote, #gallery): nav-nya aktif
-     * sementara komponennya berhenti render begitu datanya kosong.
+     * sementara komponennya berhenti render begitu datanya kosong. #gallery
+     * masih hilang; #vote kembali dengan gerbang data yang sama seperti #tiket —
+     * lihat test_section_vote_* di bawah.
      */
     public function test_tautan_nav_landing_menunjuk_ke_section_yang_ada()
     {
@@ -304,6 +306,119 @@ class PublicPagesTest extends TestCase
         // Nav-nya ikut hilang, bukan jadi tautan yang kliknya tidak terjadi apa-apa.
         $header = substr($response->getContent(), 0, strpos($response->getContent(), '</header>'));
         $this->assertStringNotContainsString('href="#perbandingan"', $header);
+    }
+
+    /**
+     * Section Vote hidup lagi di laman depan, dengan gerbang DATA seperti
+     * Tiket: tampil hanya kalau ada event yang membuka voting. Dulu section
+     * ini dibuang justru karena menyala tanpa satu pun event yang memenuhi,
+     * jadi nav-nya tautan yang kliknya tidak terjadi apa-apa.
+     */
+    public function test_section_vote_tampil_saat_ada_event_yang_membuka_voting()
+    {
+        Eventner::factory()->voteAktif()->create(['nama_event' => 'Lomba Vokal 2026']);
+
+        $html = $this->get('/')->getContent();
+
+        $this->assertStringContainsString('<section id="vote"', $html);
+        $this->assertStringContainsString('Lomba Vokal 2026', $html);
+        $this->assertStringContainsString('href="#vote"', $html);
+    }
+
+    public function test_section_vote_hilang_saat_tidak_ada_event_yang_membuka_voting()
+    {
+        // Eventnya ada, tapi votingnya mati.
+        Eventner::factory()->create(['nama_event' => 'Lomba Vokal 2026', 'vote_active' => false]);
+
+        $html = $this->get('/')->getContent();
+
+        $this->assertStringNotContainsString('<section id="vote"', $html);
+
+        // Nav-nya ikut hilang — inilah bagian yang dulu bocor.
+        $header = substr($html, 0, strpos($html, '</header>'));
+        $this->assertStringNotContainsString('href="#vote"', $header);
+    }
+
+    /** Voting yang sudah ditutup tidak lagi menautkan ke halaman vote. */
+    public function test_section_vote_hilang_saat_voting_sudah_ditutup()
+    {
+        Eventner::factory()->voteAktif()->create([
+            'nama_event' => 'Lomba Vokal 2026',
+            'vote_end' => now()->subDay(),
+        ]);
+
+        $this->assertStringNotContainsString('<section id="vote"', $this->get('/')->getContent());
+    }
+
+    /** Saklarnya tetap milik admin: menyala di data pun bisa dimatikan. */
+    public function test_section_vote_hilang_saat_saklarnya_dimatikan()
+    {
+        Eventner::factory()->voteAktif()->create(['nama_event' => 'Lomba Vokal 2026']);
+
+        Setting::set('landing_sections_active', json_encode([
+            'vote' => false,
+        ]));
+
+        $html = $this->get('/')->getContent();
+
+        $this->assertStringNotContainsString('<section id="vote"', $html);
+        $this->assertStringNotContainsString('href="#vote"', $html);
+    }
+
+    /**
+     * Urutan bawaannya mendahulukan EVENT: event, tiket, vote, baru fitur dan
+     * harga. Yang menjaga ini adalah posisi anchor-nya di dokumen.
+     */
+    public function test_urutan_bawaan_event_sebelum_fitur_dan_harga()
+    {
+        Eventner::factory()->voteAktif()->create([
+            'ticket_active' => true,
+            'ticket_price' => 50000,
+        ]);
+
+        $html = $this->get('/')->getContent();
+
+        $event = strpos($html, '<section id="eventners"');
+        $tiket = strpos($html, '<section id="ticket"');
+        $vote = strpos($html, '<section id="vote"');
+        $fitur = strpos($html, '<section id="features"');
+        $harga = strpos($html, '<section id="pricing"');
+
+        foreach (compact('event', 'tiket', 'vote', 'fitur', 'harga') as $nama => $posisi) {
+            $this->assertNotFalse($posisi, "Section {$nama} tidak dirender sama sekali.");
+        }
+
+        $this->assertLessThan($fitur, $event, 'Event harus sebelum Fitur.');
+        $this->assertLessThan($fitur, $tiket, 'Tiket harus sebelum Fitur.');
+        $this->assertLessThan($fitur, $vote, 'Vote harus sebelum Fitur.');
+        $this->assertLessThan($harga, $fitur, 'Fitur harus sebelum Harga.');
+    }
+
+    /**
+     * Susunan pilihan admin tidak ditimpa: section yang belum ada di urutan
+     * tersimpan diselipkan SETELAH tetangga terdekatnya, bukan selalu di
+     * belakang. Urutan lama (fitur di depan) tetap dipakai apa adanya.
+     */
+    public function test_urutan_tersimpan_tetap_dipakai_saat_push_urutannya_lain()
+    {
+        Eventner::factory()->create(['status' => 'approved']);
+
+        Setting::set('landing_sections_order', json_encode([
+            'hero', 'features', 'pricing', 'eventners', 'ticket', 'faq', 'cta',
+        ]));
+
+        $html = $this->get('/')->getContent();
+
+        $fitur = strpos($html, '<section id="features"');
+        $harga = strpos($html, '<section id="pricing"');
+        $event = strpos($html, '<section id="eventners"');
+
+        $this->assertNotFalse($fitur);
+        $this->assertNotFalse($harga);
+        $this->assertNotFalse($event);
+
+        $this->assertLessThan($harga, $fitur, 'Urutan tersimpan (fitur sebelum harga) harus dihormati.');
+        $this->assertLessThan($event, $harga);
     }
 
     public function test_event_detail_loads()

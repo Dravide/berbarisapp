@@ -19,25 +19,27 @@ class LandingPageSeeder extends Seeder
         Setting::set('site_font_display', 'Plus Jakarta Sans');
 
         // Sections order & visibility
+        //
+        // Event dulu sebelum alat: pengunjung laman depan sedang mencari acara,
+        // bukan daftar fitur. Empat fitur utama ditandai `featured` supaya yang
+        // tampil di laman depan bukan sekadar empat teratas daftar.
         Setting::set('landing_sections_order', json_encode([
-            'hero', 'features', 'about', 'statistics', 'eventners', 'ticket', 'vote',
-            'schedule', 'testimonials', 'faq', 'gallery', 'cta', 'contact',
+            'hero', 'eventners', 'ticket', 'vote', 'features', 'pricing',
+            'perbandingan', 'faq', 'team', 'sponsor', 'cta',
         ]));
 
         Setting::set('landing_sections_active', json_encode([
             'hero' => true,
-            'features' => true,
-            'about' => true,
-            'statistics' => true,
             'eventners' => true,
             'ticket' => true,
             'vote' => true,
-            'schedule' => true,
-            'testimonials' => true,
+            'features' => true,
+            'pricing' => true,
+            'perbandingan' => true,
             'faq' => true,
-            'gallery' => true,
+            'team' => true,
+            'sponsor' => true,
             'cta' => true,
-            'contact' => true,
         ]));
 
         // Hero
@@ -50,7 +52,10 @@ class LandingPageSeeder extends Seeder
             'background_image' => '',
         ]));
 
-        // Features — 9 fitur
+        // Features — sembilan item tersimpan, EMPAT yang bertanda `featured`
+        // yang tampil di laman depan (lihat components/landing/features.blade.php);
+        // sisanya hidup di /fitur. Ditandai, bukan dipotong jadi empat: admin
+        // masih bisa menukar mana yang tampil dari panel tanpa kehilangan teks.
         Setting::set('landing_features', json_encode([
             'title' => 'Fitur Lengkap untuk Event Sukses',
             'items' => [
@@ -58,11 +63,13 @@ class LandingPageSeeder extends Seeder
                     'icon' => 'icon3.png',
                     'title' => 'Manajemen Pendaftaran',
                     'description' => 'Kelola pendaftaran peserta secara digital. Verifikasi berkas otomatis, kuota per kategori, dan tracking status real-time.',
+                    'featured' => true,
                 ],
                 [
                     'icon' => 'icon4.png',
                     'title' => 'Penilaian Juri Digital',
                     'description' => 'Sistem penilaian dengan format kustom, bobot kriteria fleksibel, input nilai langsung oleh juri, dan rekap otomatis.',
+                    'featured' => true,
                 ],
                 [
                     'icon' => 'icon5.png',
@@ -78,6 +85,7 @@ class LandingPageSeeder extends Seeder
                     'icon' => 'icon7.png',
                     'title' => 'Live Scoreboard',
                     'description' => 'Papan skor real-time untuk ditampilkan ke layar proyektor. Penonton bisa langsung pantau hasil penilaian.',
+                    'featured' => true,
                 ],
                 [
                     'icon' => 'icon8.png',
@@ -88,6 +96,7 @@ class LandingPageSeeder extends Seeder
                     'icon' => 'icon9.png',
                     'title' => 'Sertifikat Digital',
                     'description' => 'Buat dan cetak sertifikat otomatis untuk juara dan peserta. Template kustom dengan data dinamis dari hasil penilaian.',
+                    'featured' => true,
                 ],
                 [
                     'icon' => 'icon10.png',
