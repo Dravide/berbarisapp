@@ -46,12 +46,66 @@ class EventVote extends Component
         'selectedCategoryId' => ['except' => ''],
     ];
 
-    protected $rules = [
-        'selectedRegistrationId' => 'required|exists:registrations,id',
-        'voterName' => 'required|string|max:255',
-        'voterEmail' => 'required|email|max:255',
-        'voteCount' => 'required|integer|min:1',
-    ];
+    /**
+     * Anggaran percobaan kirim vote per menit — DUA angka, dan bedanya
+     * disengaja.
+     *
+     * Kunci IP dipakai BERSAMA oleh semua orang di satu jaringan: satu sekolah,
+     * satu kantor, satu warnet semuanya keluar lewat IP yang sama. Anggaran
+     * kecil di kunci IP berarti satu orang yang menekan "Bayar" berulang kali
+     * menahan seluruh jaringan — persis keluhan yang membuat pembatasan per
+     * email ditambahkan. Kunci email sebaliknya hanya milik satu orang, jadi
+     * anggarannya boleh ketat; itulah yang menahan satu pembeli yang berpindah
+     * jaringan. Karena IP = banyak orang dan email = satu orang, anggaran IP
+     * harus jauh lebih longgar.
+     */
+    private const MAX_ATTEMPTS_PER_IP = 20;
+
+    private const MAX_ATTEMPTS_PER_EMAIL = 5;
+
+    private const THROTTLE_DECAY_SECONDS = 60;
+
+    /**
+     * Aturan validasi sebagai method, bukan properti $rules.
+     *
+     * Batas atas voteCount bergantung pada event yang sedang dibuka
+     * (`vote_max_per_order`), dan properti tidak bisa membaca objek. Tanpa
+     * batas ini satu permintaan bisa meminta jumlah vote berapa pun — nominal
+     * QRIS-nya ditentukan klien, bukan penyelenggara.
+     *
+     * @return array<string, string>
+     */
+    public function rules(): array
+    {
+        return [
+            'selectedRegistrationId' => 'required|exists:registrations,id',
+            'voterName' => 'required|string|max:255',
+            'voterEmail' => 'required|email|max:255',
+            'voteCount' => 'required|integer|min:1|max:' . $this->maxVotePerOrder,
+        ];
+    }
+
+    /** Pesan batas atas menyebut angkanya — "max" bawaan tidak berguna di sini. */
+    public function messages(): array
+    {
+        return [
+            'voteCount.max' => 'Jumlah vote per transaksi maksimal ' . number_format($this->maxVotePerOrder, 0, ',', '.') . '.',
+        ];
+    }
+
+    /**
+     * Batas jumlah vote per transaksi untuk event ini.
+     *
+     * Dibaca dari konfigurasi event, meniru `maxPerOrder` di halaman tiket.
+     * Kolomnya NOT NULL dengan default 1000 (migrasi
+     * 2026_10_20_000003_batas_vote_per_transaksi), jadi tidak ada cabang
+     * "kolom kosong" yang perlu ditebak di sini; `max(1, ...)` hanya penjaga
+     * terakhir supaya batasnya tidak pernah 0 dan memblokir semua pembelian.
+     */
+    public function getMaxVotePerOrderProperty(): int
+    {
+        return max(1, (int) $this->eventner->vote_max_per_order);
+    }
 
     public function mount($slug = null)
     {
@@ -117,7 +171,10 @@ class EventVote extends Component
 
     public function incrementVote()
     {
-        $this->voteCount = (int)$this->voteCount + 1;
+        // Tombol "+" tidak boleh melewati batas event: biarkan validasi yang
+        // menolak angka yang DIKETIK, tapi menaikkan lewat tombol sampai
+        // mustahil dibayar cuma bikin pembeli menabrak galat yang sama.
+        $this->voteCount = min((int) $this->voteCount + 1, $this->maxVotePerOrder);
     }
 
     public function decrementVote()
@@ -154,14 +211,47 @@ class EventVote extends Component
         return [true, ''];
     }
 
-    public function submitVote()
+    /**
+     * Kunci pembatas laju beserta anggaran masing-masing: satu per IP, satu per
+     * email pembeli.
+     *
+     * Dulu hanya IP. Karena halaman ini publik dan anonim, satu orang di satu
+     * jaringan (sekolah, kantor, warnet) cukup menekan "Bayar" berkali-kali
+     * untuk menahan SEMUA pembeli lain di jaringan itu — dan sebaliknya, satu
+     * pembeli yang berpindah jaringan bebas menumpuk QRIS PENDING sebanyak
+     * yang ia mau. Email dinormalkan lewat PendingPaymentGuard supaya kuncinya
+     * sama dengan yang dipakai gerbang satu-QR-per-email; kalau berbeda,
+     * "Budi@Email.com" dan "budi@email.com" jadi dua kunci terpisah.
+     *
+     * Anggarannya dibawa bersama kuncinya, bukan disamakan: lihat komentar
+     * MAX_ATTEMPTS_PER_IP soal kenapa IP dan email tidak boleh seketat itu.
+     *
+     * @return array<string, int> kunci => anggaran per menit
+     */
+    private function kunciPembatas(): array
     {
-        if (RateLimiter::tooManyAttempts('vote-submit:' . request()->ip(), $maxAttempts = 5)) {
-            session()->flash('error', 'Terlalu banyak permintaan. Silakan coba lagi dalam satu menit.');
-            return;
+        $kunci = ['vote-submit:' . request()->ip() => self::MAX_ATTEMPTS_PER_IP];
+        $email = PendingPaymentGuard::normalizeEmail($this->voterEmail);
+
+        if ($email !== '') {
+            $kunci['vote-submit-email:' . $email] = self::MAX_ATTEMPTS_PER_EMAIL;
         }
 
-        RateLimiter::hit('vote-submit:' . request()->ip(), $decaySeconds = 60);
+        return $kunci;
+    }
+
+    public function submitVote()
+    {
+        foreach ($this->kunciPembatas() as $kunci => $batas) {
+            if (RateLimiter::tooManyAttempts($kunci, $batas)) {
+                session()->flash('error', 'Terlalu banyak permintaan. Silakan coba lagi dalam satu menit.');
+                return;
+            }
+        }
+
+        foreach ($this->kunciPembatas() as $kunci => $batas) {
+            RateLimiter::hit($kunci, self::THROTTLE_DECAY_SECONDS);
+        }
 
         [$terbuka, $pesan] = $this->votingState();
 

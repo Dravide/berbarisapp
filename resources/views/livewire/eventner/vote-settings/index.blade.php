@@ -51,9 +51,16 @@
                             <label class="form-label fw-semibold">Harga per 1 Vote (Rp)</label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
-                                <input type="number" class="form-control" wire:model="vote_price" placeholder="1000" min="0">
+                                <input type="number" class="form-control @error('vote_price') is-invalid @enderror" wire:model="vote_price" placeholder="1000" min="0">
                             </div>
+                            @error('vote_price') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                             <small class="form-text text-muted">Biaya dasar yang dikenakan untuk setiap 1 poin vote. Bisa didiskon via Vote Booster.</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Maksimal Vote per Transaksi</label>
+                            <input type="number" class="form-control @error('vote_max_per_order') is-invalid @enderror" wire:model="vote_max_per_order" placeholder="1000" min="1" max="100000">
+                            @error('vote_max_per_order') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+                            <small class="form-text text-muted">Batas jumlah vote yang bisa dibeli pengunjung dalam satu kali bayar. Nominal QRIS = jumlah vote × harga di atas, jadi isi angka yang wajar untuk satu transaksi.</small>
                         </div>
                     </div>
                 </div>

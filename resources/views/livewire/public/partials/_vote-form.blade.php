@@ -14,18 +14,20 @@
             <label class="text-xs font-bold text-deep-slate block mb-1.5 uppercase tracking-wider">Jumlah Vote</label>
             <div class="flex max-w-[160px] border border-outline-variant/60 rounded-lg overflow-hidden h-11 bg-surface">
                 <button type="button" x-on:click="$wire.voteCount = Math.max(1, Number($wire.voteCount || 0) - 1)" class="w-12 flex items-center justify-center font-bold text-lg text-primary hover:bg-primary/5 border-r border-outline-variant/60 transition cursor-pointer select-none">−</button>
-                <input type="number" x-model="$wire.voteCount" class="flex-1 text-center font-bold text-sm text-deep-slate border-none outline-none h-full w-full bg-transparent px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" min="1">
-                <button type="button" x-on:click="$wire.voteCount = Number($wire.voteCount || 0) + 1" class="w-12 flex items-center justify-center font-bold text-lg text-primary hover:bg-primary/5 border-l border-outline-variant/60 transition cursor-pointer select-none">+</button>
+                <input type="number" x-model="$wire.voteCount" class="flex-1 text-center font-bold text-sm text-deep-slate border-none outline-none h-full w-full bg-transparent px-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" min="1" max="{{ $this->maxVotePerOrder }}">
+                <button type="button" x-on:click="$wire.voteCount = Math.min({{ $this->maxVotePerOrder }}, Number($wire.voteCount || 0) + 1)" class="w-12 flex items-center justify-center font-bold text-lg text-primary hover:bg-primary/5 border-l border-outline-variant/60 transition cursor-pointer select-none">+</button>
             </div>
 
-            {{-- Quick select buttons --}}
+            {{-- Tombol cepat di atas batas event sengaja tidak dirender: menawarkan
+                 angka yang pasti ditolak validasi bukan pilihan, hanya jebakan. --}}
             <div class="flex flex-wrap gap-1.5 mt-2.5">
-                <button type="button" x-on:click="$wire.voteCount = 10" class="chip py-1.5 px-3 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">10</button>
-                <button type="button" x-on:click="$wire.voteCount = 50" class="chip py-1.5 px-3 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">50</button>
-                <button type="button" x-on:click="$wire.voteCount = 100" class="chip py-1.5 px-3 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">100</button>
-                <button type="button" x-on:click="$wire.voteCount = 500" class="chip py-1.5 px-3 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">500</button>
-                <button type="button" x-on:click="$wire.voteCount = 1000" class="chip py-1.5 px-3 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">1000</button>
+                @foreach([10, 50, 100, 500, 1000] as $cepat)
+                    @if($cepat <= $this->maxVotePerOrder)
+                        <button type="button" x-on:click="$wire.voteCount = {{ $cepat }}" class="chip py-1.5 px-3 text-center font-bold justify-center hover:bg-primary hover:text-white transition cursor-pointer select-none">{{ $cepat }}</button>
+                    @endif
+                @endforeach
             </div>
+            <p class="text-[11px] text-on-surface-variant font-medium mt-2">Maksimal {{ number_format($this->maxVotePerOrder, 0, ',', '.') }} vote per transaksi.</p>
             @error('voteCount') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
         </div>
 

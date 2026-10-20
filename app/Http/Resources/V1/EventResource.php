@@ -27,6 +27,9 @@ class EventResource extends JsonResource
             'vote_start' => $this->vote_start,
             'vote_end' => $this->vote_end,
             'vote_price' => $this->vote_price,
+            // Batas jumlah vote satu transaksi. Dikirim ke klien supaya
+            // aplikasi bisa menahan angka sebelum menabrak 422 dari server.
+            'vote_max_per_order' => $this->vote_max_per_order,
             'registration_status' => $this->registration_status,
             'ticket_active' => $this->ticket_active,
             'ticket_start' => $this->ticket_start,

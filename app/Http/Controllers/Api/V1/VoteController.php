@@ -15,6 +15,28 @@ use Illuminate\Support\Facades\RateLimiter;
 
 class VoteController extends Controller
 {
+    /**
+     * Anggaran percobaan per menit — sama dengan jalur web, termasuk alasan
+     * angkanya berbeda: kunci IP dipakai bersama semua klien di satu jaringan,
+     * kunci email hanya milik satu pembeli.
+     */
+    private const MAX_ATTEMPTS_PER_IP = 20;
+
+    private const MAX_ATTEMPTS_PER_EMAIL = 5;
+
+    private const THROTTLE_DECAY_SECONDS = 60;
+
+    /**
+     * Batas jumlah vote per transaksi untuk sebuah event.
+     *
+     * Satu sumber untuk validasi dan untuk balasan galat, supaya angka yang
+     * disebut ke klien selalu angka yang benar-benar dipakai.
+     */
+    private function maxVotePerOrder(Eventner $event): int
+    {
+        return max(1, (int) $event->vote_max_per_order);
+    }
+
     public function calculate(Request $request)
     {
         $request->validate([
@@ -26,12 +48,37 @@ class VoteController extends Controller
             'comment' => 'nullable|string|max:500',
         ]);
 
-        if (RateLimiter::tooManyAttempts('api-vote:' . $request->ip(), 5)) {
-            return response()->json(['message' => 'Terlalu banyak permintaan. Silakan coba lagi nanti.'], 429);
+        // Dua kunci: IP menahan penyalahgunaan dari satu jaringan, email
+        // menahan satu pembeli yang berpindah jaringan. Email dinormalkan
+        // lewat PendingPaymentGuard supaya kuncinya sejalan dengan gerbang
+        // satu-QR-per-email (huruf besar/kecil tidak jadi celah).
+        $kunci = ['api-vote:' . $request->ip() => self::MAX_ATTEMPTS_PER_IP];
+        $email = PendingPaymentGuard::normalizeEmail($request->voter_email);
+
+        if ($email !== '') {
+            $kunci['api-vote-email:' . $email] = self::MAX_ATTEMPTS_PER_EMAIL;
         }
-        RateLimiter::hit('api-vote:' . $request->ip(), 60);
+
+        foreach ($kunci as $satu => $batas) {
+            if (RateLimiter::tooManyAttempts($satu, $batas)) {
+                return response()->json(['message' => 'Terlalu banyak permintaan. Silakan coba lagi nanti.'], 429);
+            }
+        }
+
+        foreach ($kunci as $satu => $batas) {
+            RateLimiter::hit($satu, self::THROTTLE_DECAY_SECONDS);
+        }
 
         $event = Eventner::approved()->where('slug', $request->event_slug)->firstOrFail();
+
+        // Batas atas setelah event diketahui: angkanya milik event, bukan
+        // konstan global. Tanpa ini nominal QRIS ditentukan klien.
+        if ((int) $request->vote_count > $this->maxVotePerOrder($event)) {
+            return response()->json([
+                'message' => 'Jumlah vote per transaksi maksimal '
+                    . number_format($this->maxVotePerOrder($event), 0, ',', '.') . '.',
+            ], 422);
+        }
 
         // Pastikan registration_id milik event ini, bukan registrasi tenant lain.
         $registration = Registration::where('eventner_id', $event->id)

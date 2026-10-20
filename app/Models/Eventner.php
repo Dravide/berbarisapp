@@ -65,6 +65,7 @@ class Eventner extends Model
         'registration_status',
         'vote_active',
         'vote_price',
+        'vote_max_per_order',
         'vote_start',
         'vote_end',
         'surat_tugas_required',
