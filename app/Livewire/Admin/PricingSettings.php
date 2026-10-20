@@ -157,6 +157,39 @@ class PricingSettings extends Component
         $this->loadFeatureDefaults();
     }
 
+    /**
+     * Kunci config yang tak dipegang paket berbayar mana pun.
+     *
+     * Fitur ber-locked_free yang tak dimiliki paket mana pun bukan "terkunci
+     * untuk yang gratis" — ia terkunci untuk SEMUA ORANG, termasuk pembeli.
+     * Persis itulah yang terjadi pada `layout`, `schedule`, dan `vote_comments`:
+     * ditambahkan ke config setelah paket disemai, jadi barisnya tak pernah ikut
+     * tersalin, dan halaman ber-gate-nya melempar pengguna berbayar ke /upgrade.
+     *
+     * Dihitung dari paket AKTIF saja: paket yang dinonaktifkan memang tidak
+     * membuka apa pun, jadi menghitungnya sebagai "tercakup" justru menyembunyikan
+     * masalahnya dari admin.
+     *
+     * @return array<int, string>
+     */
+    private function fiturYatim(): array
+    {
+        $dipegang = SaasPlan::where('is_active', true)
+            ->where('is_free', false)
+            ->with('features')
+            ->get()
+            ->flatMap(fn (SaasPlan $plan) => $plan->featureKeys())
+            ->unique()
+            ->all();
+
+        return collect(config('eventner_features', []))
+            ->filter(fn ($c) => $c['locked_free'] ?? true)
+            ->keys()
+            ->reject(fn ($key) => in_array($key, $dipegang, true))
+            ->values()
+            ->all();
+    }
+
     public function render()
     {
         return view('livewire.admin.pricing-settings', [
@@ -165,6 +198,7 @@ class PricingSettings extends Component
                 ->filter(fn ($c) => $c['locked_free'] ?? true)
                 ->keys()
                 ->all(),
+            'fiturYatim' => $this->fiturYatim(),
         ])->title('Harga & Paket SaaS - ' . app_name());
     }
 }

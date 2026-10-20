@@ -35,6 +35,34 @@
         </div>
     @endif
 
+    {{--
+        Fitur yang tak dipegang paket berbayar mana pun terkunci untuk SEMUA
+        orang — bukan cuma yang gratis. Tanpa peringatan ini, satu-satunya
+        gejalanya adalah pengguna berbayar yang tiba-tiba diminta upgrade, dan
+        tak ada yang tahu dari mana.
+    --}}
+    @if(!empty($fiturYatim))
+        <div class="alert alert-warning" role="alert">
+            <div class="d-flex">
+                <i class="ti ti-alert-triangle fs-6 me-2"></i>
+                <div>
+                    <h6 class="fw-semibold mb-1">{{ count($fiturYatim) }} fitur belum masuk paket mana pun</h6>
+                    <p class="mb-2 fs-3">
+                        Fitur ini terkunci untuk semua pengguna, termasuk yang sudah berbayar — halamannya akan meminta upgrade walau paketnya aktif.
+                        Buka paket berbayar di bawah, centang fiturnya, lalu simpan.
+                    </p>
+                    <div class="d-flex flex-wrap gap-1">
+                        @foreach($fiturYatim as $kunci)
+                            <span class="badge bg-warning text-dark">
+                                {{ config('eventner_features.' . $kunci . '.label', $kunci) }}
+                            </span>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="row justify-content-center">
         <div class="col-lg-9">
             <div class="card mb-4">
