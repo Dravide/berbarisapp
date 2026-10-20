@@ -976,363 +976,218 @@
                     // Kartu dirender per section, isinya loop field builder.
                     // Field yang dinonaktifkan panitia tidak muncul di sini —
                     // termasuk nama pelatih, foto pelatih, dan danton.
+                    //
+                    // Section Pelatih dan Danton tampil ringkas (lihat
+                    // SEKSI_BERMODAL): kartunya meringkas isian, pengubahannya
+                    // lewat modal di bawah form.
                     $teksPerSection = $this->textFields->groupBy(fn ($f) => $f->section ?: 'umum');
                     $berkasPerSection = collect($this->berkasFields)->groupBy(fn ($b) => $b['field']->section ?: 'umum');
                     $grupPeserta = $this->groupFields->first();
-                    $dantonAktif = $this->textFields->where('section', 'danton')->isNotEmpty()
-                        || collect($this->berkasFields)->contains(fn ($b) => $b['field']->section === 'danton');
                 @endphp
                 <fieldset {{ $isLocked ? 'disabled' : '' }} class="flex flex-col gap-6">
 
                     <form wire:submit.prevent="submit(false)" class="flex flex-col gap-6">
                         @foreach(\App\Models\RegistrationField::SECTIONS as $slug => $judulSection)
-                            {{-- Section danton punya kartunya sendiri di bawah:
-                                 inputnya terikat ke properti dantonNama/dantonNisn,
-                                 bukan ke fieldValues. Merendernya di sini juga
-                                 membuat satu field tampil dua kali. --}}
-                            @continue($slug === 'danton')
-
                             @php
                                 $teksSection = $teksPerSection->get($slug, collect());
                                 $berkasSection = $berkasPerSection->get($slug, collect());
+                                $bermodal = in_array($slug, \App\Livewire\Public\MagicLink\Registration::SEKSI_BERMODAL, true);
                             @endphp
                             @continue($teksSection->isEmpty() && $berkasSection->isEmpty())
 
+                            @if($bermodal)
+                            {{-- Kartu ringkas: menampilkan isian yang sekarang ada, dan
+                                 pengubahannya lewat modal di bawah. Dengan begitu error
+                                 satu section tidak lagi membanjiri section lain, dan
+                                 halaman tetap terbaca sekilas tanpa menggulir form panjang.
+                                 Label tetap dicetak lengkap — pendaftar (dan tes yang
+                                 menjaga kesetaraan dengan PDF) harus tetap melihat
+                                 label yang dipasang panitia. --}}
+                            <div class="surface-card overflow-hidden">
+                                <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40 flex justify-between items-center gap-3 flex-wrap">
+                                    <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-0">
+                                        <i class="ti {{ $slug === 'pelatih' ? 'ti-user' : 'ti-star text-amber-500' }}"></i> {{ $judulSection }}
+                                    </h3>
+                                    @unless($isLocked)
+                                        <button type="button" wire:click="bukaModalSeksi('{{ $slug }}')" class="btn-ghost py-1.5 px-3 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer">
+                                            <i class="ti ti-pencil"></i> Ubah
+                                        </button>
+                                    @endunless
+                                </div>
+                                <div class="p-5 flex flex-col gap-2.5">
+                                    @foreach($teksSection as $field)
+                                        @php
+                                            $kunci = $this->propertiField($field) ?: 'fieldValues.' . $field->field_key;
+                                            $isi = $this->nilaiTampil($field);
+                                        @endphp
+                                        <div wire:key="ringkas-{{ $field->id }}" class="flex items-start justify-between gap-3 border-b border-outline-variant/25 pb-2.5 last:border-0 last:pb-0">
+                                            <div class="min-w-0">
+                                                <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block">{{ $field->label }}</span>
+                                                @if($isi !== '')
+                                                    <span class="text-sm font-semibold text-deep-slate break-words">{{ $isi }}</span>
+                                                @else
+                                                    <span class="text-sm italic text-on-surface-variant/70">Belum diisi</span>
+                                                @endif
+                                                @error($kunci) <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                                            </div>
+                                            @if($field->is_required && $isi === '')
+                                                <span class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold bg-amber-500/10 text-amber-700 border border-amber-500/25">Wajib</span>
+                                            @endif
+                                        </div>
+                                    @endforeach
+
+                                    @foreach($berkasSection as $berkas)
+                                        @php $fieldBerkas = $berkas['field']; @endphp
+                                        <div wire:key="ringkas-berkas-{{ $fieldBerkas->id }}" class="flex items-start justify-between gap-3 border-b border-outline-variant/25 pb-2.5 last:border-0 last:pb-0">
+                                            <div class="min-w-0">
+                                                <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block">{{ $fieldBerkas->label }}</span>
+                                                @if($berkas['path'])
+                                                    <span class="text-sm font-semibold text-emerald-600 inline-flex items-center gap-1">
+                                                        <i class="ti ti-circle-check-filled"></i> Sudah diunggah
+                                                        <a href="{{ $berkas['url'] }}" target="_blank" class="text-primary underline ml-1">Lihat</a>
+                                                    </span>
+                                                    @if($fieldBerkas->type === 'image')
+                                                        <img src="{{ $berkas['url'] }}" class="mt-2 h-20 w-16 rounded-lg object-cover border border-outline-variant/30 shadow-sm" alt="{{ $fieldBerkas->label }}">
+                                                    @endif
+                                                @else
+                                                    <span class="text-sm italic text-on-surface-variant/70">Belum diunggah</span>
+                                                @endif
+                                                @error('fields.' . $fieldBerkas->id) <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                                            </div>
+                                            @if($fieldBerkas->is_required && ! $berkas['path'])
+                                                <span class="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold bg-amber-500/10 text-amber-700 border border-amber-500/25">Wajib</span>
+                                            @endif
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @else
                             <div class="surface-card overflow-hidden">
                                 <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40">
                                     <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">
-                                        <i class="ti {{ $slug === 'pelatih' ? 'ti-user' : ($slug === 'danton' ? 'ti-star text-amber-500' : 'ti-clipboard-text text-primary') }}"></i> {{ $judulSection }}
+                                        <i class="ti ti-clipboard-text text-primary"></i> {{ $judulSection }}
                                     </h3>
                                 </div>
                                 <div class="p-6">
                                     <div class="grid gap-5 md:grid-cols-2">
                                         @foreach($teksSection as $field)
-                                            @php
-                                                $kunci = 'fieldValues.' . $field->field_key;
-                                                $nilai = $this->nilaiField($field);
-                                            @endphp
-                                            <div wire:key="text-{{ $field->id }}" class="{{ $field->type === 'textarea' ? 'md:col-span-2' : '' }}">
-                                                <label class="text-sm font-bold text-deep-slate block mb-1.5">
-                                                    {{ $field->label }}
-                                                    @if($field->is_required) <span class="text-red-500">*</span> @endif
-                                                </label>
-
-                                                @if($field->type === 'textarea')
-                                                    <textarea wire:model="{{ $kunci }}" rows="3" maxlength="{{ $field->maxLength() }}" class="field-input w-full" placeholder="{{ $field->help_text ?: $field->label }}">{{ $nilai }}</textarea>
-                                                @elseif($field->type === 'select')
-                                                    <select wire:model="{{ $kunci }}" class="field-input w-full">
-                                                        <option value="">— Pilih {{ $field->label }} —</option>
-                                                        @foreach(($field->options ?? []) as $opsi)
-                                                            <option value="{{ $opsi['value'] }}">{{ $opsi['label'] }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                @elseif($field->type === 'wilayah')
-                                                    @include('livewire.public.partials._wilayah-field', [
-                                                        'field' => $field,
-                                                        'kelas' => 'field-input w-full',
-                                                    ])
-                                                @else
-                                                    <input type="{{ $field->type === 'number' ? 'number' : ($field->type === 'date' ? 'date' : 'text') }}"
-                                                        @if(! in_array($field->type, ['number', 'date'], true)) maxlength="{{ $field->maxLength() }}" @endif
-                                                        wire:model="{{ $kunci }}" class="field-input w-full" placeholder="{{ $field->help_text ?: $field->label }}">
-                                                @endif
-
-                                                @error($kunci) <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                                @if($field->help_text && ! in_array($field->type, ['textarea']))
-                                                    <span class="text-[10px] text-on-surface-variant font-medium mt-1 block leading-normal">{{ $field->help_text }}</span>
-                                                @endif
-                                            </div>
+                                            @include('livewire.public.partials._teks-field', [
+                                                'field' => $field,
+                                                'kunci' => 'fieldValues.' . $field->field_key,
+                                                'nilai' => $this->nilaiField($field),
+                                            ])
                                         @endforeach
 
                                         @foreach($berkasSection as $berkas)
-                                            @php
-                                                $field = $berkas['field'];
-                                                $fieldId = 'pond-' . $activeRegId . '-field-' . $field->id;
-                                                $uploadUrl = route('magic.link.field.upload', ['token' => $token, 'fieldId' => $field->id]);
-                                                $deleteUrl = route('magic.link.field.destroy', ['token' => $token, 'fieldId' => $field->id]);
-                                                // Dua-duanya HARUS MIME, dan HARUS sama.
-                                                //
-                                                // FilePondPluginFileValidateType memetakan
-                                                // atribut `accept` ke opsi `acceptedFileTypes`
-                                                // (SET_ATTRIBUTE_TO_OPTION_MAP), dan core merge
-                                                // atribut SETELAH opsi JS — jadi `accept` menimpa
-                                                // array yang kita tulis di FilePond.create().
-                                                // Memberi ekstensi di `accept` membuat daftar
-                                                // yang benar-benar dipakai berisi ".pdf", yang
-                                                // tidak pernah cocok dengan file.type
-                                                // ("application/pdf") — plugin hanya mengerti
-                                                // MIME dan wildcard, ekstensi "not enabled yet".
-                                                // Efeknya berkas yang benar ditolak "File is of
-                                                // invalid type" tanpa pernah sampai ke server.
-                                                //
-                                                // Wildcard image/* dulu lolos karena kedua sisi
-                                                // kebetulan sama; daftar eksplisit tidak.
-                                                $tipes = $field->type === 'image'
-                                                    ? 'image/*'
-                                                    : 'application/pdf,image/jpeg,image/png';
-                                                $mimeDiterima = $field->type === 'image'
-                                                    ? '[\'image/*\']'
-                                                    : '[\'application/pdf\', \'image/jpeg\', \'image/png\']';
-                                                $batas = number_format($field->max_kb ?: 5120, 0, ',', '.');
-                                            @endphp
-                                            {{-- Unggahan lewat endpoint HTTP, bukan properti Livewire:
-                                                 field builder jumlahnya dinamis sedangkan properti
-                                                 upload Livewire harus ada saat compile. --}}
-                                            <div wire:key="{{ $fieldId }}" class="md:col-span-2">
-                                                <label class="text-sm font-bold text-deep-slate block mb-1.5">
-                                                    {{ $field->label }}
-                                                    @if($field->is_required) <span class="text-red-500">*</span> @endif
-                                                    <span class="font-normal text-on-surface-variant">(maks. {{ $batas }} KB)</span>
-                                                </label>
-                                                <div wire:ignore x-data="{ pond: null }" x-init="
-                                                    pond = FilePond.create($refs.input, {
-                                                        credits: false,
-                                                        acceptedFileTypes: {!! $mimeDiterima !!},
-                                                        labelFileTypeNotAllowed: 'Tipe berkas tidak diizinkan. Gunakan {{ $field->type === 'image' ? 'gambar (JPG/PNG)' : 'PDF, JPG, atau PNG' }}.',
-                                                        labelIdle: 'Tarik & Letakkan berkas atau <span class=\'filepond--label-action\'>Pilih File</span>',
-                                                        server: {
-                                                            process: (fieldName, file, metadata, load, error, progress, abort) => {
-                                                                const data = new FormData();
-                                                                data.append('file', file);
-                                                                data.append('_token', '{{ csrf_token() }}');
-
-                                                                const request = new XMLHttpRequest();
-                                                                request.open('POST', '{{ $uploadUrl }}');
-                                                                request.upload.onprogress = (e) => progress(e.lengthComputable, e.loaded, e.total);
-                                                                request.onload = () => {
-                                                                    if (request.status >= 200 && request.status < 300) {
-                                                                        load(request.responseText);
-                                                                    } else {
-                                                                        let pesan = 'Berkas gagal diunggah.';
-                                                                        try { pesan = JSON.parse(request.responseText).message || pesan; } catch (e) {}
-                                                                        error(pesan);
-                                                                    }
-                                                                };
-                                                                request.onerror = () => error('Berkas gagal diunggah. Periksa koneksi Anda.');
-                                                                request.send(data);
-
-                                                                return {
-                                                                    abort: () => {
-                                                                        request.abort();
-                                                                        abort();
-                                                                    },
-                                                                };
-                                                            },
-                                                            revert: (uniqueFileId, load, error) => {
-                                                                fetch('{{ $deleteUrl }}', {
-                                                                    method: 'DELETE',
-                                                                    headers: {
-                                                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                                        'Accept': 'application/json',
-                                                                    },
-                                                                }).then((res) => res.ok ? load() : error('Berkas gagal dihapus.'));
-                                                            },
-                                                        },
-                                                    });
-                                                ">
-                                                    <input type="file" x-ref="input" accept="{{ $tipes }}">
-                                                </div>
-                                                @error('fields.' . $field->id) <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                                @if($berkas['path'])
-                                                    <span class="text-xs font-bold text-emerald-600 mt-2 inline-flex items-center gap-1">
-                                                        <i class="ti ti-circle-check-filled"></i> Berkas sudah diunggah
-                                                        <a href="{{ $berkas['url'] }}" target="_blank" class="text-primary underline ml-1">Lihat</a>
-                                                    </span>
-                                                @elseif($field->is_required)
-                                                    <span class="text-[10px] text-on-surface-variant font-medium mt-1 block leading-normal">Wajib diunggah sebelum data difinalisasi.</span>
-                                                @endif
-                                            </div>
+                                            @include('livewire.public.partials._berkas-field', ['berkas' => $berkas])
                                         @endforeach
                                     </div>
                                 </div>
                             </div>
+                            @endif
                         @endforeach
-                        @if($dantonAktif)
-                        <div class="surface-card overflow-hidden">
-                            <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40">
-                                <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">
-                                    <i class="ti ti-star text-amber-500"></i> {{ \App\Models\RegistrationField::SECTIONS['danton'] }}
-                                </h3>
-                            </div>
-                            <div class="p-6">
-                                <div class="grid gap-5 md:grid-cols-12">
-                                    @php
-                                        $dantonNamaField = $this->barisField('danton_nama');
-                                        $dantonNisnField = $this->barisField('danton_nisn');
-                                        $dantonFotoField = $this->barisField('danton_foto');
-                                        $fotoBerkas = collect($this->berkasFields)->firstWhere('field.id', $dantonFotoField?->id);
-                                    @endphp
-                                    @if($dantonNamaField)
-                                    <div class="md:col-span-5">
-                                        <label class="text-sm font-bold text-deep-slate block mb-1.5">
-                                            {{ $dantonNamaField->label }}
-                                            @if($dantonNamaField->is_required) <span class="text-red-500">*</span> @endif
-                                        </label>
-                                        <input type="text" wire:model="dantonNama" class="field-input w-full" placeholder="{{ $dantonNamaField->help_text ?: $dantonNamaField->label }}">
-                                        @error('dantonNama') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                    </div>
-                                    @endif
-                                    @if($dantonNisnField)
-                                    <div class="md:col-span-3">
-                                        <label class="text-sm font-bold text-deep-slate block mb-1.5">
-                                            {{ $dantonNisnField->label }}
-                                            @if($dantonNisnField->is_required) <span class="text-red-500">*</span> @endif
-                                        </label>
-                                        <input type="text" wire:model="dantonNisn" class="field-input w-full" placeholder="{{ $dantonNisnField->help_text ?: $dantonNisnField->label }}">
-                                        @error('dantonNisn') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                    </div>
-                                    @endif
-                                    @if($dantonFotoField && $fotoBerkas)
-                                    <div class="md:col-span-4">
-                                        <label class="text-sm font-bold text-deep-slate block mb-1.5">
-                                            {{ $dantonFotoField->label }}
-                                            @if($dantonFotoField->is_required) <span class="text-red-500">*</span> @endif
-                                            <span class="font-normal text-on-surface-variant">(maks. {{ number_format($dantonFotoField->max_kb ?: 5120, 0, ',', '.') }} KB)</span>
-                                        </label>
-                                        {{-- Unggahan lewat endpoint HTTP generik, sama seperti
-                                             berkas lain — bukan properti upload Livewire. --}}
-                                        <div wire:ignore wire:key="pond-{{ $activeRegId }}-danton" x-data="{ pond: null }" x-init="
-                                            pond = FilePond.create($refs.input, {
-                                                credits: false,
-                                                labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
-                                                server: {
-                                                    process: (fieldName, file, metadata, load, error, progress, abort) => {
-                                                        const data = new FormData();
-                                                        data.append('file', file);
-                                                        data.append('_token', '{{ csrf_token() }}');
 
-                                                        const request = new XMLHttpRequest();
-                                                        request.open('POST', '{{ route('magic.link.field.upload', ['token' => $token, 'fieldId' => $dantonFotoField->id]) }}');
-                                                        request.upload.onprogress = (e) => progress(e.lengthComputable, e.loaded, e.total);
-                                                        request.onload = () => {
-                                                            if (request.status >= 200 && request.status < 300) {
-                                                                load(request.responseText);
-                                                            } else {
-                                                                let pesan = 'Berkas gagal diunggah.';
-                                                                try { pesan = JSON.parse(request.responseText).message || pesan; } catch (e) {}
-                                                                error(pesan);
-                                                            }
-                                                        };
-                                                        request.onerror = () => error('Berkas gagal diunggah. Periksa koneksi Anda.');
-                                                        request.send(data);
-
-                                                        return { abort: () => { request.abort(); abort(); } };
-                                                    },
-                                                    revert: (uniqueFileId, load, error) => {
-                                                        fetch('{{ route('magic.link.field.destroy', ['token' => $token, 'fieldId' => $dantonFotoField->id]) }}', {
-                                                            method: 'DELETE',
-                                                            headers: {
-                                                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                                                'Accept': 'application/json',
-                                                            },
-                                                        }).then((res) => res.ok ? load() : error('Berkas gagal dihapus.'));
-                                                    },
-                                                },
-                                            });
-                                        ">
-                                            <input type="file" x-ref="input" accept="image/*">
-                                        </div>
-                                        @error('fields.' . $dantonFotoField->id) <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                        @if($registration->danton_foto)
-                                            <span class="text-xs font-bold text-emerald-600 mt-2 block inline-flex items-center gap-1"><i class="ti ti-circle-check-filled"></i> Foto danton berhasil diunggah</span>
-                                            <div class="mt-2">
-                                                <a href="{{ asset('storage/' . $registration->danton_foto) }}" target="_blank" title="Lihat foto">
-                                                    <img src="{{ asset('storage/' . $registration->danton_foto) }}" class="h-24 w-20 rounded-lg object-cover border border-outline-variant/30 shadow-sm" alt="{{ $dantonFotoField->label }}">
-                                                </a>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                        @endif
-
-                        {{-- Anggota Pasukan — sub-field & jumlah baris dari builder group --}}
+                        {{-- Anggota Pasukan — satu per satu lewat modal, daftar ringkas.
+                             Sub-field tetap dibaca dari builder group: label, wajib,
+                             dan jumlah minimal ikut definisi panitia. --}}
                         @php
-                            $subNamaPeserta = $grupPeserta?->subField('nama');
-                            $subNisnPeserta = $grupPeserta?->subField('nisn');
+                            $subAnggota = $grupPeserta?->sub_fields['items'] ?? [];
+                            $minAnggota = $grupPeserta?->minRows() ?? 1;
                             $subFotoPeserta = $grupPeserta?->subField('foto');
+                            $tambahAnggota = count($participants) < $minAnggota;
                         @endphp
                         @if($grupPeserta)
                         <div class="surface-card overflow-hidden">
-                            <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40 flex justify-between items-center">
+                            <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40 flex justify-between items-center gap-3 flex-wrap">
                                 <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-0">
                                     <i class="ti ti-users-group text-primary"></i> {{ $grupPeserta->label }}
                                 </h3>
-                                @if(!$isLocked)
-                                    <button type="button" wire:click="addParticipant" class="btn-ghost py-1.5 px-3.5 text-xs font-bold leading-normal inline-flex items-center gap-1 transition cursor-pointer">
-                                        <i class="ti ti-plus"></i> Tambah Anggota
-                                    </button>
-                                @endif
+                                <div class="flex items-center gap-2.5">
+                                    @if(!$isLocked)
+                                        <span class="rounded-full px-2.5 py-1 text-[11px] font-bold border {{ $tambahAnggota ? 'bg-amber-500/10 text-amber-700 border-amber-500/25' : 'bg-surface-container text-on-surface-variant border-outline-variant/50' }}">
+                                            {{ count($participants) }} / min. {{ $minAnggota }}
+                                        </span>
+                                        <button type="button" wire:click="bukaModalAnggota" class="btn-ghost py-1.5 px-3.5 text-xs font-bold leading-normal inline-flex items-center gap-1 transition cursor-pointer">
+                                            <i class="ti ti-plus"></i> Tambah Anggota
+                                        </button>
+                                    @else
+                                        <span class="rounded-full px-2.5 py-1 text-[11px] font-bold border bg-surface-container text-on-surface-variant border-outline-variant/50">
+                                            {{ count($participants) }} anggota
+                                        </span>
+                                    @endif
+                                </div>
                             </div>
-                            <div class="p-6 flex flex-col gap-6 divide-y divide-outline-variant/30">
-                                @foreach($participants as $index => $participant)
-                                    <div wire:key="participant-{{ $index }}" class="flex gap-4 items-start flex-wrap pt-6 first:pt-0">
-                                        <div class="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 mt-8">
-                                            {{ $index + 1 }}
-                                        </div>
-                                        @if($subNamaPeserta)
-                                        <div class="flex-1 min-w-[200px]">
-                                            <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase tracking-wider">
-                                                {{ $subNamaPeserta['label'] }}
-                                                @if($subNamaPeserta['is_required'] ?? false) <span class="text-red-500">*</span> @endif
-                                            </label>
-                                            <input type="text" wire:model="participants.{{ $index }}.nama" class="field-input w-full" placeholder="{{ $subNamaPeserta['label'] }}">
-                                            @error('participants.'.$index.'.nama') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                        </div>
-                                        @endif
-                                        @if($subNisnPeserta)
-                                        <div class="flex-1 min-w-[120px]">
-                                            <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase tracking-wider">
-                                                {{ $subNisnPeserta['label'] }}
-                                                @if($subNisnPeserta['is_required'] ?? false) <span class="text-red-500">*</span> @endif
-                                            </label>
-                                            <input type="text" wire:model="participants.{{ $index }}.nisn" class="field-input w-full" placeholder="{{ $subNisnPeserta['label'] }}">
-                                            @error('participants.'.$index.'.nisn') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                        </div>
-                                        @endif
+
+                            <div class="p-4 flex flex-col gap-2.5">
+                                @forelse($participants as $index => $participant)
+                                    @php
+                                        // Kekurangan dibaca dari sub-field yang memang
+                                        // diwajibkan panitia — bukan dari daftar tetap.
+                                        $kurang = [];
+                                        foreach ($subAnggota as $sub) {
+                                            if (!($sub['is_required'] ?? false)) continue;
+                                            $nilai = ($sub['key'] ?? '') === 'foto'
+                                                ? ($participant['foto'] ?? null) ?? ($participant['existing_foto'] ?? null)
+                                                : trim((string) ($participant[$sub['key']] ?? ''));
+                                            if (empty($nilai)) $kurang[] = $sub['label'] ?? 'Isian';
+                                        }
+                                        $fotoAnggota = $participant['existing_foto'] ?? null;
+                                    @endphp
+                                    <div wire:key="anggota-{{ $index }}-{{ $registration->id }}" class="flex items-center gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-lowest px-3 py-2.5 flex-wrap">
+                                        <span class="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[11px] shrink-0">{{ $index + 1 }}</span>
+
                                         @if($subFotoPeserta)
-                                        <div class="flex-1 min-w-[160px]">
-                                            <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase tracking-wider">
-                                                {{ $subFotoPeserta['label'] }}
-                                                @if($subFotoPeserta['is_required'] ?? false) <span class="text-red-500">*</span> @endif
-                                            </label>
-                                            <div wire:ignore wire:key="pond-{{ $activeRegId }}-p-{{ $index }}" x-data="{ pond: null }" x-init="
-                                                pond = FilePond.create($refs.input, {
-                                                    credits: false,
-                                                    labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
-                                                    server: {
-                                                        process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
-                                                            @this.upload('participants.{{ $index }}.foto', file, load, error, progress)
-                                                        },
-                                                        revert: (filename, load) => {
-                                                            @this.removeUpload('participants.{{ $index }}.foto', filename, load)
-                                                        },
-                                                    },
-                                                });
-                                            ">
-                                                <input type="file" x-ref="input" accept="image/*">
-                                            </div>
-                                            @if(isset($participant['existing_foto']) && $participant['existing_foto'])
-                                                <span class="text-xs font-bold text-emerald-600 mt-2 block inline-flex items-center gap-1"><i class="ti ti-circle-check-filled"></i> Foto diunggah</span>
-                                                <div class="mt-2">
-                                                    <a href="{{ asset('storage/' . $participant['existing_foto']) }}" target="_blank" title="Lihat foto">
-                                                        <img src="{{ asset('storage/' . $participant['existing_foto']) }}" class="h-20 w-16 rounded object-cover border border-outline-variant/30 shadow-sm" alt="{{ $subFotoPeserta['label'] }}">
-                                                    </a>
-                                                </div>
+                                            @if($fotoAnggota)
+                                                <img src="{{ asset('storage/' . $fotoAnggota) }}" class="h-9 w-8 rounded object-cover border border-outline-variant/30 shrink-0" alt="{{ $subFotoPeserta['label'] }}">
+                                            @else
+                                                <span class="h-9 w-8 rounded border border-dashed border-outline-variant flex items-center justify-center text-[9px] text-on-surface-variant shrink-0">
+                                                    <i class="ti ti-photo"></i>
+                                                </span>
                                             @endif
-                                        </div>
                                         @endif
-                                        @if(count($participants) > 1 && !$isLocked)
-                                            <div class="pt-8">
-                                                <button type="button" wire:click="removeParticipant({{ $index }})" class="flex h-10 w-10 items-center justify-center rounded-xl border border-red-500/30 text-red-500 hover:bg-red-50 transition cursor-pointer">
-                                                    <i class="ti ti-trash"></i>
+
+                                        <div class="flex-1 min-w-[140px]">
+                                            <div class="text-sm font-bold text-deep-slate leading-tight">{{ $participant['nama'] ?: '(tanpa nama)' }}</div>
+                                            <div class="text-[11px] text-on-surface-variant leading-tight mt-0.5">
+                                                @if(trim((string) ($participant['nisn'] ?? '')) !== '')
+                                                    NISN {{ $participant['nisn'] }}
+                                                @else
+                                                    tanpa NISN
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        @if(empty($kurang))
+                                            <span class="rounded-full px-2.5 py-1 text-[10px] font-bold bg-emerald-500/10 text-emerald-700 border border-emerald-500/25 inline-flex items-center gap-1">
+                                                <i class="ti ti-circle-check"></i> Lengkap
+                                            </span>
+                                        @else
+                                            <span class="rounded-full px-2.5 py-1 text-[10px] font-bold bg-amber-500/10 text-amber-700 border border-amber-500/25 inline-flex items-center gap-1">
+                                                <i class="ti ti-alert-circle"></i> {{ implode(', ', $kurang) }} kosong
+                                            </span>
+                                        @endif
+
+                                        @if(!$isLocked)
+                                            <div class="flex items-center gap-1.5">
+                                                <button type="button" wire:click="bukaModalAnggota({{ $index }})" title="Ubah anggota" class="flex h-8 w-8 items-center justify-center rounded-lg border border-outline-variant/50 text-on-surface-variant hover:border-primary/40 hover:text-primary transition cursor-pointer">
+                                                    <i class="ti ti-pencil"></i>
                                                 </button>
+                                                @if(count($participants) > 1)
+                                                    <button type="button" wire:click="mintaHapusAnggota({{ $index }})" title="Hapus anggota" class="flex h-8 w-8 items-center justify-center rounded-lg border border-red-500/30 text-red-500 hover:bg-red-50 transition cursor-pointer">
+                                                        <i class="ti ti-trash"></i>
+                                                    </button>
+                                                @endif
                                             </div>
                                         @endif
                                     </div>
-                                @endforeach
+                                @empty
+                                    <div class="rounded-xl border border-dashed border-outline-variant px-4 py-6 text-center">
+                                        <p class="text-xs font-semibold text-on-surface-variant m-0">Belum ada anggota pasukan.</p>
+                                        @if(!$isLocked)
+                                            <p class="text-[11px] text-on-surface-variant mt-1 mb-0">Tambahkan satu per satu — setiap anggota langsung tersimpan begitu Anda menekan Simpan Anggota.</p>
+                                        @endif
+                                    </div>
+                                @endforelse
                             </div>
                         </div>
                         @endif
@@ -1363,6 +1218,189 @@
                         @endif
                     </form>
                 </fieldset>
+
+                {{-- ========== MODAL SECTION (Data Pelatih & Danton) ==========
+                     Sama seperti modal anggota: satu section satu formulir,
+                     divalidasi di dalam modalnya sendiri, jadi salah isi di Data
+                     Pelatih tidak lagi memunculkan error Danton sekaligus.
+                     Diletakkan di luar <fieldset> supaya tidak ikut `disabled`
+                     saat terkunci dan tidak berada di dalam <form>.
+
+                     Tidak ada draf terpisah di sini: input modal mengikat
+                     `fieldValues` / `dantonNama` yang sama dengan kartu ringkas di
+                     atas, jadi tidak ada dua salinan nilai yang bisa berselisih. --}}
+                @if($modalSeksi)
+                    @php
+                        $teksModal = $teksPerSection->get($modalSeksi, collect());
+                        $berkasModal = $berkasPerSection->get($modalSeksi, collect());
+                    @endphp
+                    <div class="fixed inset-0 z-[60] flex items-center justify-center p-4" wire:key="modal-seksi-{{ $modalSeksi }}-{{ $seksiNonce }}">
+                        <div class="absolute inset-0 bg-black/45" wire:click="tutupModalSeksi"></div>
+
+                        <div class="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-surface shadow-2xl border border-outline-variant/40">
+                            <div class="flex items-center justify-between gap-3 px-5 py-4 border-b border-outline-variant/40">
+                                <div>
+                                    <h3 class="font-display text-base font-bold text-deep-slate mb-0">
+                                        {{ \App\Models\RegistrationField::SECTIONS[$modalSeksi] ?? 'Ubah Data' }}
+                                    </h3>
+                                    <p class="text-[11px] font-semibold text-on-surface-variant mt-0.5 mb-0">
+                                        Isian section ini langsung tersimpan saat Anda menekan Simpan.
+                                    </p>
+                                </div>
+                                <button type="button" wire:click="tutupModalSeksi" class="flex h-8 w-8 items-center justify-center rounded-lg border border-outline-variant/50 text-on-surface-variant hover:bg-surface-container transition cursor-pointer">
+                                    <i class="ti ti-x"></i>
+                                </button>
+                            </div>
+
+                            <div class="px-5 py-5">
+                                <div class="grid gap-5 md:grid-cols-2">
+                                    @foreach($teksModal as $field)
+                                        @include('livewire.public.partials._teks-field', [
+                                            'field' => $field,
+                                            'kunci' => $this->propertiField($field) ?: 'fieldValues.' . $field->field_key,
+                                            'nilai' => $this->nilaiTampil($field),
+                                        ])
+                                    @endforeach
+
+                                    @foreach($berkasModal as $berkas)
+                                        @include('livewire.public.partials._berkas-field', [
+                                            'berkas' => $berkas,
+                                            'nonce' => $seksiNonce,
+                                        ])
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <div class="flex items-center justify-end gap-2.5 px-5 py-4 border-t border-outline-variant/40 bg-surface-container-low">
+                                <button type="button" wire:click="tutupModalSeksi" class="btn-ghost py-2 px-4 text-xs font-bold cursor-pointer">
+                                    Batal
+                                </button>
+                                <button type="button" wire:click="simpanSeksi" class="btn-primary py-2 px-4 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer">
+                                    <i class="ti ti-device-floppy"></i> Simpan
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- ========== MODAL ANGGOTA ==========
+                     Satu anggota satu formulir. Divalidasi di dalam modalnya
+                     sendiri, jadi salah ketik di anggota ke-3 tidak lagi
+                     memunculkan error untuk sebelas baris kosong. Diletakkan
+                     di luar <fieldset> supaya tidak ikut `disabled` saat
+                     terkunci dan tidak berada di dalam <form>. --}}
+                @if($modalAnggota && $grupPeserta)
+                    @php
+                        $subAnggotaModal = $grupPeserta->sub_fields['items'] ?? [];
+                        $anggotaKe = ($editingIndex === null ? count($participants) : $editingIndex) + 1;
+                    @endphp
+                    <div class="fixed inset-0 z-[60] flex items-center justify-center p-4" wire:key="modal-anggota-{{ $modalNonce }}">
+                        <div class="absolute inset-0 bg-black/45" wire:click="tutupModalAnggota"></div>
+
+                        <div class="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-surface shadow-2xl border border-outline-variant/40">
+                            <div class="flex items-center justify-between gap-3 px-5 py-4 border-b border-outline-variant/40">
+                                <div>
+                                    <h3 class="font-display text-base font-bold text-deep-slate mb-0">
+                                        {{ $editingIndex === null ? 'Tambah Anggota' : 'Ubah Anggota' }}
+                                    </h3>
+                                    <p class="text-[11px] font-semibold text-on-surface-variant mt-0.5 mb-0">Anggota ke-{{ $anggotaKe }}</p>
+                                </div>
+                                <button type="button" wire:click="tutupModalAnggota" class="flex h-8 w-8 items-center justify-center rounded-lg border border-outline-variant/50 text-on-surface-variant hover:bg-surface-container transition cursor-pointer">
+                                    <i class="ti ti-x"></i>
+                                </button>
+                            </div>
+
+                            <div class="px-5 py-5 flex flex-col gap-4">
+                                @foreach($subAnggotaModal as $sub)
+                                    @php
+                                        $key = $sub['key'] ?? '';
+                                        $tipe = $sub['type'] ?? 'text';
+                                        if ($key === '' || !in_array($tipe, ['text', 'image', 'number'], true)) continue;
+                                    @endphp
+
+                                    <div>
+                                        <label class="text-xs font-bold text-on-surface-variant block mb-1.5 uppercase tracking-wider">
+                                            {{ $sub['label'] ?? $key }}
+                                            @if($sub['is_required'] ?? false) <span class="text-red-500">*</span> @endif
+                                        </label>
+
+                                        @if($tipe === 'image')
+                                            <div wire:ignore wire:key="pond-anggota-{{ $modalNonce }}" x-data="{ pond: null }" x-init="
+                                                pond = FilePond.create($refs.input, {
+                                                    credits: false,
+                                                    labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
+                                                    server: {
+                                                        process: (fieldName, file, metadata, load, error, progress, abort) => {
+                                                            @this.upload('memberDraft.{{ $key }}', file, load, error, progress)
+                                                        },
+                                                        revert: (filename, load) => {
+                                                            @this.removeUpload('memberDraft.{{ $key }}', filename, load)
+                                                        },
+                                                    },
+                                                });
+                                            ">
+                                                <input type="file" x-ref="input" accept="image/*">
+                                            </div>
+
+                                            @if($memberDraft['existing_foto'] ?? null)
+                                                <div class="mt-2 flex items-center gap-2.5">
+                                                    <img src="{{ asset('storage/' . $memberDraft['existing_foto']) }}" class="h-16 w-14 rounded object-cover border border-outline-variant/30" alt="{{ $sub['label'] ?? 'Foto' }}">
+                                                    <span class="text-[11px] font-semibold text-on-surface-variant">Foto lama tetap dipakai bila tidak diganti.</span>
+                                                </div>
+                                            @endif
+                                        @else
+                                            <input type="{{ $tipe === 'number' ? 'number' : 'text' }}"
+                                                   wire:model="memberDraft.{{ $key }}"
+                                                   class="field-input w-full"
+                                                   placeholder="{{ $sub['label'] ?? $key }}">
+                                        @endif
+
+                                        @error('memberDraft.'.$key)
+                                            <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <div class="flex items-center justify-end gap-2.5 px-5 py-4 border-t border-outline-variant/40 bg-surface-container-low">
+                                <button type="button" wire:click="tutupModalAnggota" class="btn-ghost py-2 px-4 text-xs font-bold cursor-pointer">
+                                    Batal
+                                </button>
+                                <button type="button" wire:click="simpanAnggota" class="btn-primary py-2 px-4 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer">
+                                    <i class="ti ti-device-floppy"></i>
+                                    {{ $editingIndex === null ? 'Simpan Anggota' : 'Simpan Perubahan' }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Konfirmasi hapus — modal sendiri, bukan window.confirm.
+                     `wire:confirm` di dalam modal Bootstrap selalu batal, dan
+                     menimpa window.confirm membuat aksi Livewire diam-diam
+                     tidak jalan. --}}
+                @if($konfirmasiHapus !== null)
+                    @php $anggotaDihapus = $participants[$konfirmasiHapus] ?? null; @endphp
+                    @if($anggotaDihapus)
+                        <div class="fixed inset-0 z-[70] flex items-center justify-center p-4">
+                            <div class="absolute inset-0 bg-black/45" wire:click="batalHapusAnggota"></div>
+                            <div class="relative w-full max-w-sm rounded-2xl bg-surface shadow-2xl border border-outline-variant/40">
+                                <div class="px-5 py-5">
+                                    <h3 class="font-display text-base font-bold text-deep-slate mb-1.5">Hapus anggota ini?</h3>
+                                    <p class="text-xs text-on-surface-variant leading-relaxed mb-0">
+                                        <strong>{{ $anggotaDihapus['nama'] ?: '(tanpa nama)' }}</strong> akan dikeluarkan dari daftar pasukan. Penghapusan ini langsung tersimpan.
+                                    </p>
+                                </div>
+                                <div class="flex items-center justify-end gap-2.5 px-5 py-4 border-t border-outline-variant/40 bg-surface-container-low">
+                                    <button type="button" wire:click="batalHapusAnggota" class="btn-ghost py-2 px-4 text-xs font-bold cursor-pointer">Batal</button>
+                                    <button type="button" wire:click="hapusAnggota({{ $konfirmasiHapus }})" class="py-2 px-4 text-xs font-bold rounded-lg bg-red-600 text-white hover:bg-red-700 transition inline-flex items-center gap-1.5 cursor-pointer">
+                                        <i class="ti ti-trash"></i> Ya, Hapus
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @endif
                 @endif
             @endif
 

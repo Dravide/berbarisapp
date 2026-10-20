@@ -483,6 +483,280 @@ class RegistrationDynamicFieldTest extends TestCase
         $this->assertSame('Danton Lama', $reg->fresh()->danton_nama);
     }
 
+    // ── Modal section (Data Pelatih & Danton) ───────────────────────────
+
+    /**
+     * Modal section memvalidasi section-nya sendiri.
+     *
+     * Inilah alasan modal ini ada: salah isi di Data Pelatih tidak lagi
+     * memunculkan error Danton sekaligus, dan sebaliknya.
+     */
+    public function test_modal_seksi_memvalidasi_seksinya_sendiri()
+    {
+        $reg = $this->peserta();
+
+        $komponen = Livewire::test(MagicLink::class, ['token' => $reg->magic_token])
+            ->set('fieldValues.nama_pelatih', '')
+            ->set('dantonNama', '')
+            ->call('bukaModalSeksi', 'pelatih');
+
+        $this->assertSame('pelatih', $komponen->get('modalSeksi'));
+
+        $errors = $komponen->call('simpanSeksi')->errors()->getMessages();
+
+        $this->assertArrayHasKey('fieldValues.nama_pelatih', $errors);
+        $this->assertArrayNotHasKey('dantonNama', $errors);
+    }
+
+    /** Modal ditutup setelah isinya sah, dan nilainya langsung masuk DB. */
+    public function test_modal_seksi_tersimpan_dan_menutup_diri()
+    {
+        $reg = $this->peserta();
+
+        $komponen = Livewire::test(MagicLink::class, ['token' => $reg->magic_token])
+            ->call('bukaModalSeksi', 'danton')
+            ->set('dantonNama', 'Danton Uji')
+            ->set('dantonNisn', '')
+            ->call('simpanSeksi')
+            ->assertHasNoErrors();
+
+        $this->assertNull($komponen->get('modalSeksi'));
+
+        // Langsung ke DB: menyegarkan halaman tidak boleh membuang isian ini.
+        $this->assertSame('Danton Uji', $reg->fresh()->danton_nama);
+    }
+
+    /** Pelatih memakai jalur simpan yang sama dengan Danton. */
+    public function test_modal_seksi_pelatih_langsung_menulis_ke_db()
+    {
+        $reg = $this->peserta();
+
+        Livewire::test(MagicLink::class, ['token' => $reg->magic_token])
+            ->call('bukaModalSeksi', 'pelatih')
+            ->set('fieldValues.nama_pelatih', 'Pelatih Uji')
+            ->call('simpanSeksi')
+            ->assertHasNoErrors();
+
+        $this->assertSame('Pelatih Uji', $reg->fresh()->nama_pelatih);
+    }
+
+    /** Section bermodal tidak menulis saat pendaftaran masih booking. */
+    public function test_modal_seksi_tidak_menulis_saat_booking()
+    {
+        // Deadline masih jauh, TM belum lewat → status event = booking.
+        $this->eventner->update(['technical_meeting' => now()->addDays(3)]);
+
+        $reg = $this->peserta();
+
+        $this->assertSame('booking', $reg->eventner->fresh()->registration_status);
+
+        Livewire::test(MagicLink::class, ['token' => $reg->magic_token])
+            ->call('bukaModalSeksi', 'danton')
+            ->set('dantonNama', 'Danton Uji')
+            ->call('simpanSeksi');
+
+        $this->assertNull($reg->fresh()->danton_nama);
+    }
+
+    /** Membuka modal section membersihkan error section lain punya sendiri. */
+    public function test_buka_modal_seksi_hanya_menghapus_error_seksinya()
+    {
+        $reg = $this->peserta();
+
+        $this->field('nama_sekolah')->update(['is_required' => true]);
+        $this->field('nama_pelatih')->update(['is_required' => true]);
+
+        $komponen = Livewire::test(MagicLink::class, ['token' => $reg->magic_token])
+            ->set('fieldValues.nama_sekolah', '')
+            ->set('fieldValues.nama_pelatih', '')
+            ->call('submit', false);
+
+        $this->assertNotEmpty($komponen->errors()->get('fieldValues.nama_sekolah'));
+        $this->assertNotEmpty($komponen->errors()->get('fieldValues.nama_pelatih'));
+
+        $komponen->call('bukaModalSeksi', 'pelatih');
+
+        // Error umum tetap ada, error pelatih hilang karena sedang diubah.
+        $this->assertNotEmpty($komponen->errors()->get('fieldValues.nama_sekolah'));
+        $this->assertEmpty($komponen->errors()->get('fieldValues.nama_pelatih'));
+    }
+
+    /** Section tanpa field aktif tidak punya modal untuk dibuka. */
+    public function test_modal_seksi_danton_nonaktif_tidak_bisa_dibuka()
+    {
+        $reg = $this->peserta();
+
+        foreach (['danton_nama', 'danton_nisn', 'danton_foto'] as $key) {
+            $this->field($key)->update(['is_active' => false]);
+        }
+
+        Livewire::test(MagicLink::class, ['token' => $reg->magic_token])
+            ->call('bukaModalSeksi', 'danton')
+            ->assertSet('modalSeksi', null);
+    }
+
+    /** Portal yang sudah terkunci tidak membuka modal, sama seperti formnya. */
+    public function test_modal_seksi_tidak_dibuka_saat_terkunci()
+    {
+        $reg = $this->peserta();
+        $reg->update(['is_finalized' => true, 'status_berkas' => 'Terverifikasi']);
+
+        Livewire::test(MagicLink::class, ['token' => $reg->magic_token])
+            ->call('bukaModalSeksi', 'pelatih')
+            ->assertSet('modalSeksi', null);
+    }
+
+    /**
+     * Pindah tab pasukan menutup modal section.
+     *
+     * Isinya terikat ke properti form, jadi modal yang tertinggal akan
+     * mengedit pasukan yang baru dibuka, bukan yang tadi.
+     */
+    public function test_pindah_tab_menutup_modal_seksi()
+    {
+        $reg = $this->peserta();
+
+        $lain = Registration::factory()->for($this->eventner, 'eventner')->create([
+            'competition_category_id' => $this->category->id,
+            'status_berkas' => 'confirmed',
+            'npsn' => $reg->npsn,
+            'magic_token' => 'TOKEN-LAIN',
+        ]);
+
+        Livewire::test(MagicLink::class, ['token' => $reg->magic_token])
+            ->call('bukaModalSeksi', 'pelatih')
+            ->assertSet('modalSeksi', 'pelatih')
+            ->call('switchRegistration', $lain->id)
+            ->assertSet('modalSeksi', null);
+    }
+
+    // ── Modal anggota (langsung ke DB) ──────────────────────────────────
+
+    /**
+     * Menekan "Simpan Anggota" langsung menulis barisnya ke tabel participants.
+     *
+     * Inilah alasan jalur ini ada: pendaftar yang menyegarkan halaman tidak
+     * boleh kehilangan anggota yang baru saja ia isi — termasuk fotonya.
+     */
+    public function test_simpan_anggota_langsung_menulis_ke_db()
+    {
+        $reg = $this->peserta();
+
+        Livewire::test(MagicLink::class, ['token' => $reg->magic_token])
+            ->call('bukaModalAnggota')
+            ->set('memberDraft.nama', 'Anggota Uji')
+            ->set('memberDraft.nisn', '1234')
+            ->call('simpanAnggota')
+            ->assertHasNoErrors();
+
+        $anggota = $reg->fresh()->participants;
+
+        $this->assertCount(1, $anggota);
+        $this->assertSame('Anggota Uji', $anggota->first()->nama);
+        $this->assertSame('1234', $anggota->first()->nisn);
+    }
+
+    /** Hapus anggota juga langsung ke DB, bukan menunggu Simpan Draft. */
+    public function test_hapus_anggota_langsung_menghapus_di_db()
+    {
+        $reg = $this->peserta();
+        $reg->participants()->createMany([
+            ['nama' => 'Anggota Satu', 'nisn' => null, 'foto' => null],
+            ['nama' => 'Anggota Dua', 'nisn' => null, 'foto' => null],
+        ]);
+
+        Livewire::test(MagicLink::class, ['token' => $reg->magic_token])
+            ->call('mintaHapusAnggota', 0)
+            ->call('hapusAnggota', 0);
+
+        $this->assertSame(['Anggota Dua'], $reg->fresh()->participants->pluck('nama')->all());
+    }
+
+    /**
+     * Simpan Draft tidak boleh menghapus apa yang sudah ditulis modal.
+     *
+     * Dulu `saveParticipants()` menghapus semua baris lalu membuat ulang; kalau
+     * jalan itu masih dipakai, id anggota berubah setiap kali simpan dan baris
+     * yang baru ditulis bisa hilang bila daftarnya belum sinkron.
+     */
+    public function test_simpan_draft_tidak_menghapus_anggota_yang_baru_ditulis()
+    {
+        $reg = $this->peserta();
+
+        $komponen = Livewire::test(MagicLink::class, ['token' => $reg->magic_token])
+            ->call('bukaModalAnggota')
+            ->set('memberDraft.nama', 'Anggota Uji')
+            ->set('memberDraft.nisn', '')
+            ->call('simpanAnggota');
+
+        $idAwal = $reg->fresh()->participants->first()->id;
+
+        $komponen->set('fieldValues.nama_pelatih', 'Pelatih Uji')
+            ->set('dantonNama', 'Danton Uji')
+            ->call('submit', false)
+            ->assertHasNoErrors();
+
+        $anggota = $reg->fresh()->participants;
+
+        $this->assertCount(1, $anggota);
+        $this->assertSame('Anggota Uji', $anggota->first()->nama);
+        $this->assertSame($idAwal, $anggota->first()->id);
+    }
+
+    /** Mengubah nama tidak menghapus pas foto yang sudah tersimpan. */
+    public function test_ubah_anggota_menyimpan_foto_lama()
+    {
+        Storage::fake('public');
+
+        $reg = $this->peserta();
+        $anggota = $reg->participants()->create(['nama' => 'Nama Lama', 'nisn' => null, 'foto' => 'registrations/peserta/lama.jpg']);
+
+        Livewire::test(MagicLink::class, ['token' => $reg->magic_token])
+            ->call('bukaModalAnggota', 0)
+            ->set('memberDraft.nama', 'Nama Baru')
+            ->call('simpanAnggota')
+            ->assertHasNoErrors();
+
+        $segar = $anggota->fresh();
+
+        $this->assertSame('Nama Baru', $segar->nama);
+        $this->assertSame('registrations/peserta/lama.jpg', $segar->foto);
+    }
+
+    /** Fotos anggota yang diunggah lewat modal ikut tersimpan pada saat itu. */
+    public function test_simpan_anggota_menyimpan_foto_baru()
+    {
+        Storage::fake('public');
+
+        $reg = $this->peserta();
+
+        Livewire::test(MagicLink::class, ['token' => $reg->magic_token])
+            ->call('bukaModalAnggota')
+            ->set('memberDraft.nama', 'Anggota Uji')
+            ->set('memberDraft.foto', UploadedFile::fake()->image('anggota.jpg'))
+            ->call('simpanAnggota')
+            ->assertHasNoErrors();
+
+        $foto = $reg->fresh()->participants->first()->foto;
+
+        $this->assertNotNull($foto);
+        Storage::disk('public')->assertExists($foto);
+    }
+
+    /** Portal terkunci tidak menulis anggota, sama seperti formnya. */
+    public function test_simpan_anggota_tidak_menulis_saat_terkunci()
+    {
+        $reg = $this->peserta();
+        $reg->update(['is_finalized' => true, 'status_berkas' => 'Terverifikasi']);
+
+        Livewire::test(MagicLink::class, ['token' => $reg->magic_token])
+            ->call('bukaModalAnggota')
+            ->set('memberDraft.nama', 'Anggota Uji')
+            ->call('simpanAnggota');
+
+        $this->assertCount(0, $reg->fresh()->participants);
+    }
+
     // ── Modal panitia ───────────────────────────────────────────────────
 
     private function panitia(): User

@@ -1,0 +1,585 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Input Anggota Satu Per Satu (Modal) — Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: dokumen spesifikasi — tiap layar satu slide, wireframe di kiri, anotasi di kanan. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --amber:#b45309; --amber-soft:#fef3c7;
+  --green:#15803d; --green-soft:#dcfce7;
+  --red:#b91c1c; --red-soft:#fee2e2;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --amber:#fbbf24; --amber-soft:#3a2b08;
+    --green:#4ade80; --green-soft:#0c2a18;
+    --red:#f87171; --red-soft:#3a1212;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --amber:#fbbf24; --amber-soft:#3a2b08;
+  --green:#4ade80; --green-soft:#0c2a18;
+  --red:#f87171; --red-soft:#3a1212;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:clamp(28px,5vw,56px)}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:70ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap}
+.chip b{color:var(--ink);font-weight:600}
+
+/* Slide */
+.slide{margin-top:clamp(36px,6vw,64px)}
+.slide-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.slide-head h2{font-size:20px;font-weight:700}
+.mode-tag{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.mode-tag.bad{background:var(--red-soft);color:var(--red)}
+.slide-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:900px){.slide-grid{grid-template-columns:1fr}}
+
+/* Bingkai layar */
+.frame{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r);
+  padding:10px;box-shadow:0 1px 2px rgba(0,0,0,.04);
+}
+.screen{
+  border-radius:8px;border:1px solid var(--line);
+  background:var(--panel-2);overflow:hidden;position:relative;
+  font-size:12px;padding:18px;
+}
+.frame-cap{font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 4px 2px;display:flex;justify-content:space-between;gap:8px}
+
+/* Placeholder umum */
+.ph{background:var(--ph-fill);border:1px solid var(--ph-line);border-radius:6px}
+.lab{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+.row{display:flex;align-items:center;gap:8px}
+.grow{flex:1;min-width:0}
+.mt6{margin-top:6px}.mt10{margin-top:10px}.mt14{margin-top:14px}.mt20{margin-top:20px}
+
+/* Elemen form wireframe */
+.in{background:var(--panel);border:1px solid var(--ph-line);border-radius:8px;padding:9px 12px;color:var(--muted)}
+.in b{color:var(--ink);font-weight:600}
+.in.err{border-color:var(--red)}
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:9px 16px;font-weight:600;font-size:12px;border:1px solid transparent;white-space:nowrap}
+.btn-pri{background:var(--accent);color:#fff}
+.btn-gho{border-color:var(--line);color:var(--muted)}
+.btn-sm{padding:6px 11px;font-size:11px;border-radius:7px}
+.btn-ico{width:30px;height:30px;padding:0;justify-content:center}
+.tag-ok{display:inline-flex;align-items:center;gap:6px;background:var(--green-soft);color:var(--green);border-radius:999px;padding:4px 12px;font-weight:600;font-size:12px}
+.tag-err{display:inline-flex;align-items:center;gap:6px;background:var(--red-soft);color:var(--red);border-radius:999px;padding:4px 12px;font-weight:600;font-size:12px}
+.tag-mini{font-size:10.5px;padding:2px 9px;font-weight:600;border-radius:999px}
+.tag-neutral{background:var(--ph-fill);color:var(--muted);border:1px solid var(--line-soft)}
+.tag-amber{background:var(--amber-soft);color:var(--amber)}
+
+/* Kartu anggota */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card-head{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--ph-fill)}
+.card-body{padding:14px;display:grid;gap:8px}
+
+/* Daftar anggota — baris ringkas */
+.mrow{display:flex;align-items:center;gap:10px;border:1px solid var(--line-soft);border-radius:9px;padding:8px 10px;background:var(--panel)}
+.mrow .no{width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:10.5px;font-weight:700;flex:none}
+.mrow .nm{font-weight:600;color:var(--ink)}
+.mrow .ns{font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.thumb{width:30px;height:36px;border-radius:5px;flex:none;display:grid;place-items:center;font-size:9px;color:var(--muted);background:var(--ph-fill);border:1px solid var(--ph-line)}
+.thumb.empty{border-style:dashed;color:var(--red)}
+.mempty{border:1px dashed var(--ph-line);border-radius:9px;padding:18px;text-align:center;color:var(--muted)}
+
+/* Modal */
+.scrim{background:repeating-linear-gradient(45deg,var(--ph-fill),var(--ph-fill) 6px,var(--panel-2) 6px,var(--panel-2) 12px);border-radius:8px;padding:22px;min-height:330px;display:flex;align-items:center;justify-content:center}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 34px rgba(0,0,0,.22);width:100%;max-width:430px;overflow:hidden}
+.modal-head{display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line)}
+.modal-body{padding:16px;display:grid;gap:12px}
+.modal-foot{display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line);background:var(--panel-2)}
+.fld{display:grid;gap:5px}
+.fld .lb{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.fld .lb .req{color:var(--red)}
+.drop{border:1px dashed var(--ph-line);border-radius:9px;padding:16px;text-align:center;color:var(--muted);background:var(--panel-2)}
+.drop.filled{border-style:solid;border-color:var(--green);background:var(--green-soft);color:var(--green)}
+.errmsg{color:var(--red);font-size:11px;font-weight:600}
+
+/* Tabel */
+table.wf{width:100%;border-collapse:collapse;font-size:11.5px}
+table.wf th{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+table.wf td{padding:7px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table.wf td code{font-size:11px}
+
+/* Anotasi */
+.notes{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.notes h3{font-size:14px;margin-bottom:8px}
+.notes ul{margin:0;padding-left:18px;color:var(--muted);font-size:13.5px;display:grid;gap:6px}
+.notes b{color:var(--ink)}
+.k{font-family:var(--mono);font-size:.85em;background:var(--ph-fill);border:1px solid var(--line-soft);border-radius:5px;padding:1px 6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Spesifikasi UI · berbaris.app</p>
+    <h1>Input Anggota Pasukan — Satu Per Satu (Modal)</h1>
+    <p class="lede">
+      Portal kontingen <code>/reg/{token}</code>, kartu <b>Anggota Pasukan</b>. Sekarang
+      <code>loadFormData()</code> menabur <b>12 baris kosong</b> (<code>default_rows</code>) dan
+      <code>submit()</code> memvalidasi <code>participants.*.nama</code> untuk <b>semua</b> baris
+      sekaligus — jadi isian yang wajar pun berakhir dinding error. Usulan: satu anggota satu
+      formulir, di dalam modal, divalidasi satu baris saja.
+    </p>
+    <div class="meta">
+      <span class="chip">Komponen <b>App\Livewire\Public\MagicLink\Registration</b></span>
+      <span class="chip">View <b>livewire/public/magic-link/registration.blade.php</b></span>
+      <span class="chip">Sumber baris <b>RegistrationField::defaultRows()</b> = 12</span>
+      <span class="chip">Status <b>sudah diimplementasikan</b> — anggota, Pelatih &amp; Danton sama-sama lewat modal</span>
+    </div>
+  </header>
+
+  <!-- ================= SLIDE 1 ================= -->
+  <section class="slide">
+    <div class="slide-head">
+      <h2>1 · Sekarang — 12 baris kosong, satu validasi untuk semua</h2>
+      <span class="mode-tag bad">masalah</span>
+    </div>
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen">
+            <div class="card">
+              <div class="card-head">
+                <b class="grow">Anggota Pasukan</b>
+                <span class="btn btn-gho btn-sm">+ Tambah Anggota</span>
+              </div>
+              <div class="card-body">
+                <!-- 3 baris terlihat, sisanya terpotong demi gambar -->
+                <div class="mrow">
+                  <span class="no">1</span>
+                  <div class="grow"><div class="nm">Andi Pratama</div><div class="ns">0071234567</div></div>
+                  <span class="thumb">foto</span>
+                </div>
+                <div class="mrow">
+                  <span class="no">2</span>
+                  <div class="grow">
+                    <div class="in err" style="padding:6px 10px"><span style="color:var(--red)">— kosong —</span></div>
+                    <div class="errmsg mt6">Nama Anggota wajib diisi.</div>
+                  </div>
+                  <span class="thumb empty">kosong</span>
+                </div>
+                <div class="mrow">
+                  <span class="no">3</span>
+                  <div class="grow">
+                    <div class="in err" style="padding:6px 10px"><span style="color:var(--red)">— kosong —</span></div>
+                    <div class="errmsg mt6">Nama Anggota wajib diisi.</div>
+                  </div>
+                  <span class="thumb empty">kosong</span>
+                </div>
+                <div class="mrow" style="color:var(--muted);justify-content:center">
+                  <span class="lab">⋮ baris 4 – 12 — semuanya sama</span>
+                </div>
+              </div>
+            </div>
+            <div class="row mt14" style="justify-content:center">
+              <span class="btn btn-gho">Simpan Draft</span>
+              <span class="btn btn-pri">Konfirmasi &amp; Kirim</span>
+            </div>
+            <div class="mt10" style="text-align:center"><span class="tag-err">11 isian belum lengkap — periksa kembali</span></div>
+          </div>
+          <div class="frame-cap"><span>halaman /reg/{token} — seperti sekarang</span><span>satu pasukan ≈ 12 baris</span></div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Akar masalahnya</h3>
+        <ul>
+          <li><code>loadFormData()</code> dulu mengisi <b>12 baris kosong</b> saat registrasi belum punya peserta: <code>$jumlah = $this-&gt;groupFields-&gt;first()?-&gt;defaultRows() ?? 12</code>. Sekarang <code>default_rows</code> tinggal petunjuk ukuran pasukan; daftarnya mulai kosong.</li>
+          <li><code>aturanField()</code> menempelkan <code>participants.*.nama = required</code> ke <b>setiap</b> baris, dan <code>submit()</code> memvalidasi semuanya dalam satu <code>validate()</code>.</li>
+          <li>Menyimpan 3 anggota berarti 9 error sekaligus — pendaftar tidak tahu mana yang benar-benar kurang, dan mengira datanya rusak.</li>
+          <li>FilePond tiap baris memakai <code>wire:ignore wire:key="pond-{reg}-p-{index}"</code>: 12 instance hidup sekaligus, mahal dan rawan saat baris disisipkan.</li>
+          <li>Yang <b>tidak</b> bermasalah: <code>saveParticipants()</code> sudah melewati baris bernama kosong — datanya aman, yang menyiksa cuma validasinya.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 2 ================= -->
+  <section class="slide">
+    <div class="slide-head">
+      <h2>2 · Usulan — kartu anggota jadi daftar ringkas</h2>
+      <span class="mode-tag">state terisi</span>
+    </div>
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen">
+            <div class="card">
+              <div class="card-head">
+                <b class="grow">Anggota Pasukan</b>
+                <span class="tag-neutral tag-mini">3 / min. 1</span>
+                <span class="btn btn-pri btn-sm">+ Tambah Anggota</span>
+              </div>
+              <div class="card-body">
+                <div class="mrow">
+                  <span class="no">1</span>
+                  <span class="thumb">foto</span>
+                  <div class="grow">
+                    <div class="nm">Andi Pratama</div>
+                    <div class="ns">NISN 0071234567</div>
+                  </div>
+                  <span class="tag-ok tag-mini">✓ lengkap</span>
+                  <span class="btn btn-gho btn-sm btn-ico">✎</span>
+                  <span class="btn btn-gho btn-sm btn-ico">🗑</span>
+                </div>
+                <div class="mrow">
+                  <span class="no">2</span>
+                  <span class="thumb">foto</span>
+                  <div class="grow">
+                    <div class="nm">Budi Santoso</div>
+                    <div class="ns">NISN —</div>
+                  </div>
+                  <span class="tag-ok tag-mini">✓ lengkap</span>
+                  <span class="btn btn-gho btn-sm btn-ico">✎</span>
+                  <span class="btn btn-gho btn-sm btn-ico">🗑</span>
+                </div>
+                <div class="mrow">
+                  <span class="no">3</span>
+                  <span class="thumb empty">foto</span>
+                  <div class="grow">
+                    <div class="nm">Citra Dewi</div>
+                    <div class="ns">NISN 0071234569</div>
+                  </div>
+                  <span class="tag-amber tag-mini">! foto kosong</span>
+                  <span class="btn btn-gho btn-sm btn-ico">✎</span>
+                  <span class="btn btn-gho btn-sm btn-ico">🗑</span>
+                </div>
+                <div class="mempty">
+                  Baris kosong <b>tidak ada lagi</b> — daftar hanya memuat anggota yang benar-benar disimpan.
+                </div>
+              </div>
+            </div>
+            <div class="row mt14" style="justify-content:center">
+              <span class="btn btn-gho">Simpan Draft</span>
+              <span class="btn btn-pri">Konfirmasi &amp; Kirim</span>
+            </div>
+          </div>
+          <div class="frame-cap"><span>kartu yang sama, isi diganti</span><span>daftar = peserta tersimpan</span></div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Bentuk kartu</h3>
+        <ul>
+          <li>Satu baris = satu anggota: nomor urut, thumbnail foto, nama, NISN, chip status, ikon <b>ubah</b> dan <b>hapus</b>. Tidak ada input langsung di kartu.</li>
+          <li>Chip per baris membaca keadaan nyata: <b>lengkap</b> (nama + NISN + foto), <b>! foto kosong</b> (foto opsional), dan seterusnya — pendaftar melihat mana yang kurang tanpa submit.</li>
+          <li>Penghitung <b>n / min.</b> dari <code>min_rows</code>; tombol kirim tidak diblokir, tapi kurang dari minimum memunculkan pesan yang jelas.</li>
+          <li>Kosong: <code>mempty</code> + tombol Tambah, bukan 12 kerangka input.</li>
+          <li>Semua chip memakai kelas Tailwind literal di Blade (aturan proyek), bukan kelas gabungan hasil interpolasi.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 3 ================= -->
+  <section class="slide">
+    <div class="slide-head">
+      <h2>3 · Modal — tambah satu anggota</h2>
+      <span class="mode-tag">aksi: Tambah Anggota</span>
+    </div>
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen" style="padding:0">
+            <div class="scrim">
+              <div class="modal">
+                <div class="modal-head">
+                  <b class="grow">Tambah Anggota</b>
+                  <span class="lab">anggota ke-4</span>
+                </div>
+                <div class="modal-body">
+                  <div class="fld">
+                    <span class="lb">Nama Anggota <span class="req">*</span></span>
+                    <div class="in err"><b>Andi Pratama</b></div>
+                  </div>
+                  <div class="fld">
+                    <span class="lb">NISN</span>
+                    <div class="in">0071234567</div>
+                  </div>
+                  <div class="fld">
+                    <span class="lb">Foto Anggota</span>
+                    <div class="drop filled">✓ foto-anggota.jpg — terunggah</div>
+                    <span class="lab">FilePond · process ke memberDraft.foto</span>
+                  </div>
+                  <div class="errmsg">Nama Anggota wajib diisi.</div>
+                </div>
+                <div class="modal-foot">
+                  <span class="btn btn-gho">Batal</span>
+                  <span class="btn btn-pri">Simpan Anggota</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="frame-cap"><span>modal di atas halaman, bukan halaman baru</span><span>validasi di dalam modal</span></div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Perilaku</h3>
+        <ul>
+          <li><b>Satu anggota, satu formulir.</b> Field mengikuti <code>sub_fields</code> grup — nama, nisn, foto bertipe text/image. Field yang dimatikan panitia tidak muncul, sama seperti sekarang.</li>
+          <li>Validasi dijalankan saat <b>Simpan Anggota</b>, hanya untuk baris ini: <code>required|string|max:255</code> pada nama, <code>nullable|image|max:3072</code> pada foto. Gagal → pesan di dalam modal, daftar tidak tersentuh.</li>
+          <li>Foto diunggah ke properti <b>tetap</b> <code>memberDraft.foto</code> — bukan <code>participants.{index}.foto</code>. Satu instance FilePond, satu <code>wire:key</code>, tidak ada indeks yang bergeser saat urutan berubah.</li>
+          <li>Simpan sukses → baris <b>langsung ditulis ke tabel <code>participants</code></b> (foto baru disimpan ke <code>registrations/peserta</code>, foto lama dipertahankan bila tidak diganti), lalu <code>$participants</code> di form disinkronkan dan modal tutup. Menyegarkan halaman tidak lagi memaksa unggah ulang.</li>
+          <li>Batal / Esc / klik scrim → draf dibuang, tidak ada baris kosong yang tertinggal.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 4 ================= -->
+  <section class="slide">
+    <div class="slide-head">
+      <h2>4 · Modal — ubah &amp; hapus anggota</h2>
+      <span class="mode-tag">aksi: ✎ / 🗑 di baris</span>
+    </div>
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen" style="padding:0">
+            <div class="scrim">
+              <div class="modal">
+                <div class="modal-head">
+                  <b class="grow">Ubah Anggota</b>
+                  <span class="lab">anggota ke-3</span>
+                </div>
+                <div class="modal-body">
+                  <div class="fld">
+                    <span class="lb">Nama Anggota <span class="req">*</span></span>
+                    <div class="in"><b>Citra Dewi</b></div>
+                  </div>
+                  <div class="fld">
+                    <span class="lb">NISN</span>
+                    <div class="in">0071234569</div>
+                  </div>
+                  <div class="fld">
+                    <span class="lb">Foto Anggota</span>
+                    <div class="row">
+                      <span class="thumb">lama</span>
+                      <div class="drop grow" style="padding:11px">Ganti foto…</div>
+                    </div>
+                    <span class="lab">foto lama tetap dipakai bila tidak diganti</span>
+                  </div>
+                </div>
+                <div class="modal-foot">
+                  <span class="btn btn-gho">Batal</span>
+                  <span class="btn btn-pri">Simpan Perubahan</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="frame-cap"><span>modal sama, terisi nilai baris</span><span>existing_foto dijaga</span></div>
+        </div>
+
+        <div class="frame mt14">
+          <div class="screen" style="padding:0">
+            <div class="scrim" style="min-height:0;padding:16px">
+              <div class="modal" style="max-width:360px">
+                <div class="modal-body" style="gap:8px">
+                  <b>Hapus anggota ke-3?</b>
+                  <span style="color:var(--muted)">Citra Dewi akan dikeluarkan dari daftar pasukan. Penghapusan ini langsung tersimpan.</span>
+                </div>
+                <div class="modal-foot">
+                  <span class="btn btn-gho">Batal</span>
+                  <span class="btn btn-pri" style="background:var(--red)">Ya, Hapus</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="frame-cap"><span>konfirmasi hapus — modal sendiri</span><span>tanpa window.confirm</span></div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Ubah &amp; hapus</h3>
+        <ul>
+          <li><b>Ubah</b> memakai modal yang sama; mode ditentukan oleh <code>$editingIndex</code> (<code>null</code> = tambah). Judul modal berganti, tombol jadi “Simpan Perubahan”.</li>
+          <li><b>Foto lama</b> dipertahankan lewat <code>existing_foto</code>: kalau tidak ada unggahan baru, jalur lama dipakai. Pratinjau lama + kotak “Ganti foto…”.</li>
+          <li><b>Hapus</b> pakai modal konfirmasi sendiri, bukan <code>window.confirm</code>/<code>wire:confirm</code> — proyek ini punya riwayat kedua cara itu membatalkan aksi diam-diam (dan <code>wire:confirm</code> di dalam modal Bootstrap selalu batal). Lihat catatan <b>Jebakan override confirm</b>.</li>
+          <li><code>removeParticipant()</code> sudah menolak menyisakan &lt; 1 baris; dengan daftar ringkas, aturan itu jadi bisa dijelaskan ke pendaftar (“minimal satu anggota”).</li>
+          <li>Urutan nomor mengikuti urutan di <code>$participants</code>; setelah hapus, <code>array_values()</code> menjaga nomor tetap rapat seperti sekarang.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 5 ================= -->
+  <section class="slide">
+    <div class="slide-head">
+      <h2>5 · Terkunci — menunggu verifikasi / hari-H</h2>
+      <span class="mode-tag">state $isLocked</span>
+    </div>
+    <div class="slide-grid">
+      <div>
+        <div class="frame">
+          <div class="screen">
+            <div class="card">
+              <div class="card-head">
+                <b class="grow">Anggota Pasukan</b>
+                <span class="tag-neutral tag-mini">3 anggota</span>
+              </div>
+              <div class="card-body">
+                <div class="mrow">
+                  <span class="no">1</span><span class="thumb">foto</span>
+                  <div class="grow"><div class="nm">Andi Pratama</div><div class="ns">NISN 0071234567</div></div>
+                </div>
+                <div class="mrow">
+                  <span class="no">2</span><span class="thumb">foto</span>
+                  <div class="grow"><div class="nm">Budi Santoso</div><div class="ns">NISN —</div></div>
+                </div>
+                <div class="mrow">
+                  <span class="no">3</span><span class="thumb">foto</span>
+                  <div class="grow"><div class="nm">Citra Dewi</div><div class="ns">NISN 0071234569</div></div>
+                </div>
+              </div>
+            </div>
+            <div class="mt14" style="text-align:center">
+              <span class="tag-neutral tag-mini" style="font-size:12px;padding:7px 18px">🕘 MENUNGGU VERIFIKASI PANITIA</span>
+            </div>
+          </div>
+          <div class="frame-cap"><span>Terverifikasi / is_finalized</span><span>tanpa ✎ 🗑 sama sekali</span></div>
+        </div>
+      </div>
+      <aside class="notes">
+        <h3>Bila terkunci</h3>
+        <ul>
+          <li><code>$isLocked</code> = <code>is_finalized &amp;&amp; status_berkas !== 'Ditolak'</code>. Tombol <b>Tambah Anggota</b>, ✎, dan 🗑 tidak dirender — bukan sekadar dinonaktifkan.</li>
+          <li>Server tetap penjaga sebenarnya: <code>bukaModalAnggota()</code> dan <code>bukaModalSeksi()</code> pulang awal saat <code>terkunci()</code>, jadi modal pun tidak bisa dibuka dari sisi Livewire.</li>
+          <li>Penghitung berubah dari <b>n / min.</b> menjadi <b>n anggota</b> — terkunci tidak ada minimum yang perlu dikejar.</li>
+          <li>Ditolak panitia → terbuka lagi, daftar dari DB langsung bisa disunting satu per satu.</li>
+        </ul>
+      </aside>
+    </div>
+  </section>
+
+  <!-- ================= SLIDE 6 ================= -->
+  <section class="slide">
+    <div class="slide-head">
+      <h2>6 · Yang berubah di kode</h2>
+      <span class="mode-tag">ringkasan teknis</span>
+    </div>
+    <div class="frame">
+      <div class="screen" style="padding:16px">
+        <table class="wf">
+          <thead>
+            <tr><th>Titik</th><th>Sekarang</th><th>Usulan</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>loadFormData()</code></td>
+              <td>Tanpa peserta → tabur <b>12 baris kosong</b> dari <code>defaultRows()</code></td>
+              <td>Tanpa peserta → <code>$participants = []</code>. <code>default_rows</code> berhenti jadi jumlah baris, tetap dipakai sebagai saran kapasitas</td>
+            </tr>
+            <tr>
+              <td>Validasi anggota</td>
+              <td><code>participants.*.nama | required</code> — semua baris sekaligus di <code>submit()</code></td>
+              <td><code>participants.*.nama | required</code> <b>tetap ada</b> sebagai jaring terakhir, tapi isi daftar sudah pasti lengkap karena divalidasi di modal satu per satu</td>
+            </tr>
+            <tr>
+              <td>Draf modal</td>
+              <td>—</td>
+              <td>Properti baru <code>memberDraft</code> (<code>nama</code>, <code>nisn</code>, <code>foto</code>) + <code>editingIndex</code></td>
+            </tr>
+            <tr>
+              <td>Kartu Pelatih &amp; Danton</td>
+              <td>Form inline penuh: setiap field aktif dirender langsung di kartu</td>
+              <td>Ringkasan label + nilai + tombol <b>Ubah</b>; fieldnya pindah ke modal section. Daftar section bermodal: <code>SEKSI_BERMODAL</code></td>
+            </tr>
+            <tr>
+              <td>Validasi section</td>
+              <td><code>aturanField()</code> tanpa argumen — semua section sekaligus</td>
+              <td><code>aturanField('pelatih')</code> / <code>aturanField('danton')</code>: satu section saja, jadi error Pelatih tidak lagi muncul bersama error Danton</td>
+            </tr>
+            <tr>
+              <td>Metode</td>
+              <td><code>addParticipant()</code> langsung menambah baris kosong</td>
+              <td><code>bukaModalAnggota($index = null)</code>, <code>simpanAnggota()</code>, <code>tutupModalAnggota()</code>, <code>hapusAnggota($index)</code></td>
+            </tr>
+            <tr>
+              <td>Foto peserta</td>
+              <td>FilePond per baris: <code>participants.{index}.foto</code>, 12 instance</td>
+              <td>FilePond tunggal: <code>memberDraft.foto</code>. Disimpan ke <code>participants.foto</code> saat <code>simpanAnggota()</code></td>
+            </tr>
+            <tr>
+              <td>Minimum</td>
+              <td><code>min_rows = 1</code> ada di builder tapi <b>tidak dibaca kode mana pun</b></td>
+              <td>Dibaca: penghitung <b>n / min.</b> dan pesan “minimal N anggota” saat kirim</td>
+            </tr>
+            <tr>
+              <td>Simpan ke DB</td>
+              <td><code>saveParticipants()</code> hapus-semua lalu buat ulang, lewati nama kosong</td>
+              <td>Anggota ditulis/dihapus <b>saat itu juga</b> oleh <code>simpanAnggota()</code> / <code>hapusAnggota()</code>; <code>saveParticipants()</code> jadi penyelaras (perbarui yang ber-<code>id</code>, buat yang belum, hapus sisanya)</td>
+            </tr>
+            <tr>
+              <td>Tombol bawah</td>
+              <td>Simpan Draft · Konfirmasi &amp; Kirim · Finalisasi Data</td>
+              <td><b>Tidak berubah</b> — alurnya tetap, hanya dinding error-nya hilang</td>
+            </tr>
+            <tr>
+              <td><code>draftCache</code></td>
+              <td>Menyimpan <code>participants</code> + danton + fieldValues per tab pasukan</td>
+              <td><b>Tidak berubah</b> — daftar anggota tetap ikut tersimpan saat pindah tab</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="frame-cap"><span>daftar berkas yang tersentuh</span><span>2 berkas inti + partial kotak isian, tanpa migrasi</span></div>
+    </div>
+
+    <div class="notes mt14">
+      <h3>Catatan pelaksanaan</h3>
+      <ul>
+        <li>Berkas: <code>app/Livewire/Public/MagicLink/Registration.php</code> + <code>resources/views/livewire/public/magic-link/registration.blade.php</code>. Tanpa migrasi, tanpa kolom baru.</li>
+        <li><code>participants.*.nama</code> dibiarkan required — dengan daftar yang tidak lagi punya baris kosong, aturan itu berhenti melukai dan tetap menjaga klien yang menyusun payload sendiri.</li>
+        <li>Anggota yang ditambahkan lewat modal <b>langsung</b> ke DB saat Simpan Anggota — itulah permintaan yang memicu revisi ini: menyegarkan halaman dulu memaksa unggah ulang semua foto. Tombol hapus pun langsung menghapus barisnya. Gerbang <code>booking</code> dan hari-H yang dulu hanya ada di <code>submit()</code> ikut dipasang di jalur ini lewat <code>bolehMenulisAnggota()</code>.</li>
+        <li>Data Pelatih dan Danton memakai konteks yang sama: kartunya meringkas isian + tombol <b>Ubah</b>, dan <code>bukaModalSeksi()</code> / <code>simpanSeksi()</code> memvalidasi <code>aturanField('pelatih')</code> / <code>aturanField('danton')</code> saja. Tidak ada draf terpisah di sini — input modal mengikat <code>fieldValues</code> / <code>dantonNama</code> yang sama dengan form, jadi tidak ada dua salinan nilai yang bisa berselisih. <code>simpanSeksi()</code> juga menulis section itu ke DB saat itu juga, dengan <code>tulisDanton($reg, $seksi)</code> dan <code>simpanFieldTeks($reg, $seksi)</code> dipersempit ke section yang divalidasi — menulis section lain yang belum diperiksa berarti membuang isian yang belum sempat divalidasi.</li>
+        <li>Section <code>umum</code> tetap satu form inline: ia data pendaftaran yang dibaca sekilas, bukan bagian yang diisi berulang. Daftar section bermodal ada di <code>Registration::SEKSI_BERMODAL</code>.</li>
+        <li>Markup kotak isian dan kotak unggah dipindah ke partial bersama (<code>_teks-field</code>, <code>_berkas-field</code>, <code>_wilayah-field</code>) supaya kartu inline dan modal tidak menyalin blok FilePond yang panjang.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer class="mt20" style="padding-bottom:40px">
+    <p class="lede">
+      Rujukan kode: <code>Registration.php:345-363</code> (seeding baris), <code>:153-197</code> (aturan),
+      <code>:454-525</code> (submit) — dan catatan memori <i>Jebakan override confirm</i> untuk modal konfirmasi.
+    </p>
+  </footer>
+
+</div>
+</body>
+</html>

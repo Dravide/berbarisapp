@@ -345,10 +345,25 @@ class RegistrationField extends Model
 
     /**
      * Jumlah baris kosong yang disiapkan untuk satu field group.
+     *
+     * Sejak anggota diisi satu per satu lewat modal, angka ini bukan lagi
+     * jumlah kotak yang dirender — ia tinggal jadi petunjuk ukuran pasukan
+     * yang wajar ("umumnya berisi 12 anggota").
      */
     public function defaultRows(): int
     {
         return (int) ($this->sub_fields['default_rows'] ?? 12);
+    }
+
+    /**
+     * Jumlah baris paling sedikit yang harus ada sebelum data dianggap lengkap.
+     *
+     * Dipakai portal untuk menghitung "n / min." — bukan gerbang yang memblokir
+     * tombol kirim, hanya isyarat bahwa pasukannya masih kosong.
+     */
+    public function minRows(): int
+    {
+        return max(1, (int) ($this->sub_fields['min_rows'] ?? 1));
     }
 
     /**
