@@ -145,13 +145,18 @@ table.wf td{padding:7px 8px;border-bottom:1px solid var(--line-soft)}
   <div class="scope">
     <h3>Catatan ruang lingkup</h3>
     <p>
-      Alur ini <b>belum ada di kode</b>. Yang tersedia sekarang: import Excel
+      Alur ini <b>sudah ada di kode</b> (dicek 2026-10-21): komponen
+      <code>App\Livewire\Eventner\FormatNilai\ImportLintas</code>, kode berbagi
+      <code>eventners.format_share_code</code> (migrasi
+      <code>2026_10_19_000004</code>, dibuat/dicabut dari panel Bagikan di
+      <code>FormatNilai\Builder</code>), dan pencocokan kode memakai
+      <code>hash_equals</code>. Selain itu tetap tersedia import Excel
       (<code>eventner.format-nilai.import</code>) dan salin rubrik ke tingkat lain
-      <b>di dalam event yang sama</b> (<code>/format-nilai/copy/{categoryId}</code>) — keduanya
-      tidak pernah menyentuh data event lain. Wireframe ini menggambarkan alur yang
-      diminta, memakai pola gerbang kode yang sudah dipakai aplikasi
-      (<code>drawing_code</code>, <code>scoring_code</code>) dan cangkang modal yang sudah ada
-      (<code>#importExcelModal</code>). Nama kolom &amp; rute di bawah usulan, bukan kutipan kode.
+      <b>di dalam event yang sama</b> (<code>/format-nilai/copy/{categoryId}</code>).
+      Wireframe ini menggambarkan alur yang diminta, memakai pola gerbang kode yang
+      sudah dipakai aplikasi (<code>drawing_code</code>, <code>scoring_code</code>)
+      dan cangkang modal yang sudah ada (<code>#importExcelModal</code>). Nama kolom
+      &amp; rute di bawah mengikuti kode, bukan usulan.
     </p>
   </div>
 

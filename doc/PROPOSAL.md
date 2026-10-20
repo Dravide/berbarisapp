@@ -8,7 +8,7 @@
 
 **BARIS APP** adalah platform SaaS berbasis web untuk mengelola event dan kompetisi — khususnya lomba baris-berbaris (PBB), paskibra, dan kegiatan sekolah/ekstrakurikuler. Platform mencakup manajemen pendaftaran, penilaian juri, voting penonton, tiket event, livestream overlay, drawing/undian, hingga pengumuman juara — semua dalam satu sistem terintegrasi.
 
-Dibangun dengan **Laravel 13** (Livewire 3) + **MySQL** + **Tailwind CSS**, dengan pembayaran via **AutoGoPay (QRIS)**.
+Dibangun dengan **Laravel 13** (Livewire 4) + **MySQL** + **Tailwind CSS**, dengan pembayaran via **AutoGoPay (QRIS)**.
 
 ---
 
@@ -17,8 +17,8 @@ Dibangun dengan **Laravel 13** (Livewire 3) + **MySQL** + **Tailwind CSS**, deng
 | Komponen | Spesifikasi |
 |---|---|
 | **Backend** | PHP 8.3, Laravel 13 |
-| **Frontend** | Livewire 3, Tailwind CSS 4 (Vite), Alpine.js |
-| **Database** | MySQL dengan 35+ tabel |
+| **Frontend** | Livewire 4, Tailwind CSS 4 (Vite), Alpine.js (bundled di Livewire) |
+| **Database** | MySQL dengan 66 tabel |
 | **Autentikasi** | Custom auth (role-based: Admin / Eventner / Peserta) |
 | **Payment Gateway** | AutoGoPay (QRIS dinamis) |
 | **Email Service** | Maily.id API |
@@ -118,9 +118,12 @@ Dibangun dengan **Laravel 13** (Livewire 3) + **MySQL** + **Tailwind CSS**, deng
 - Fallback ke `/event/{slug}` jika subdomain tidak diisi
 
 ### 4.10. Feature Gating System
-- Kontrol akses fitur berdasarkan plan
-- Fitur premium: Tiket, Vote, Drawing, Champion, Livestream, Sponsor, Tenant, Format Nilai
+- Kontrol akses fitur berdasarkan plan — 17 kunci di `config/eventner_features.php`,
+  diberikan per paket lewat `saas_plan_features`
+- Fitur premium: Tiket, Vote (settings/booster/results/transactions/comments), Drawing,
+  Champion, Livestream, Sponsor, Tenant, Format Nilai, Rundown, Jadwal, Denah, Sertifikat
 - Trial countdown + banner dashboard
+- Katalog publik 41 fitur di `/fitur` (`App\Support\ProductFeatures`)
 
 ### 4.11. Lainnya
 - Activity log (riwayat perubahan data)
@@ -132,11 +135,11 @@ Dibangun dengan **Laravel 13** (Livewire 3) + **MySQL** + **Tailwind CSS**, deng
 
 ---
 
-## 5. Struktur Database (35+ Tabel)
+## 5. Struktur Database (66 Tabel)
 
 ### Core
 - `users` — Admin, Eventner, Peserta (role enum)
-- `eventners` — Profil event (37+ kolom, termasuk theme_config JSON)
+- `eventners` — Profil event (68 kolom, termasuk theme_config JSON)
 
 ### Pendaftaran & Peserta
 - `registrations` — Booking pendaftaran sekolah
@@ -209,10 +212,11 @@ Dibangun dengan **Laravel 13** (Livewire 3) + **MySQL** + **Tailwind CSS**, deng
 
 | Sumber | Mekanisme |
 |---|---|
-| **Pendaftaran Eventner (Paid)** | Bayar sekali via QRIS — Rp 50.000 (default, bisa diubah admin) |
+| **Pendaftaran Eventner (Paid)** | Bayar sekali via QRIS — nominal dari paket berbayar di `/admin/pricing-settings` (`saas_plans.price` dikurangi `discount_percent`), bukan angka tetap di dokumen ini |
 | **Voting Penonton** | Harga per vote ditentukan eventner + biaya platform |
 | **Tiket Event** | Harga tiket ditentukan eventner, platform potong fee |
 | **Paket Gratis** | Trial 3 hari, konversi ke paid setelah trial |
+| **Voucher/Diskon Pendaftaran** | Kode promo terarah (persen/flat, kuota, periode) — lihat `voucher-register-plan.md` |
 
 ---
 
@@ -220,12 +224,12 @@ Dibangun dengan **Laravel 13** (Livewire 3) + **MySQL** + **Tailwind CSS**, deng
 
 ### PHP Packages (composer.json)
 - `laravel/framework ^13.0`
-- `livewire/livewire`
+- `livewire/livewire ^4.2`
 - `barryvdh/laravel-dompdf` — PDF generation
 - `chillerlan/php-qrcode` — QR code
 - `spatie/laravel-activitylog` — Activity logging
-- `laravel/boost` — Laravel dev tools
-- `laravel/pail` — Log viewer
+- `phpoffice/phpspreadsheet` — ekspor/impor Excel
+- `kreait/firebase-php` + `laravel-notification-channels/fcm` — push notification
 - `laravel/tinker` — REPL
 
 ### Frontend
@@ -273,10 +277,10 @@ Dibangun dengan **Laravel 13** (Livewire 3) + **MySQL** + **Tailwind CSS**, deng
 | Domain | Routes | Middleware |
 |---|---|---|
 | `berbaris.app/` | Landing, Login, Register Eventner | guest |
-| `berbaris.app/event/{slug}/*` | 10 route publik (detail, peserta, vote, tiket, dll) | web |
+| `berbaris.app/event/{slug}/*` | 19 route publik (detail, peserta, rundown, denah, hasil, vote, tiket, register, drawing) | web |
 | `berbaris.app/dashboard` | Dashboard router (redirect berdasarkan role) | auth |
 | `berbaris.app/admin/*` | Panel admin | auth + role:Admin |
-| `berbaris.app/eventner/*` | Panel eventner (36+ route) | auth + role:Eventner |
+| `berbaris.app/eventner/*` | Panel eventner (77 route) | auth + role:Eventner |
 | `*.berbaris.app/` | Subdomain halaman publik event | web + subdomain |
 
 ---
@@ -305,8 +309,20 @@ Dibangun dengan **Laravel 13** (Livewire 3) + **MySQL** + **Tailwind CSS**, deng
 | FAQ & galeri event | ✅ Selesai |
 | Multi-kategori booking | ✅ Selesai |
 | Activity log | ✅ Selesai |
-| **Pending: Payment gateway untuk pendaftaran paid** | 🔄 Selesai (AutoGoPay) |
-| **Pending: Dashboard analytics lanjutan** | 📋 Rencana |
+| Payment gateway untuk pendaftaran paid | ✅ Selesai (AutoGoPay) |
+| Voucher/diskon pendaftaran eventner | ✅ Selesai |
+| Harga pendaftaran per gelombang | ✅ Selesai |
+| Denah lapangan per kategori + alur pasukan | ✅ Selesai |
+| Katalog fitur publik (`/fitur`) | ✅ Selesai (41 fitur) |
+| Berita acara & verifikasi penyelenggara | ✅ Selesai |
+| Ekspor CSV/Excel lintas modul | ✅ Selesai |
+| API publik `/api/v1` | ✅ Selesai (37 route) |
+| Push notification (FCM) | ✅ Selesai |
+| Dashboard analytics lanjutan (grafik) | 📋 Rencana |
+
+Status di tabel ini dicek ulang 2026-10-21; angka-angka di dokumen ini (jumlah tabel,
+route, fitur) ikut disesuaikan saat itu. Kalau ragu, kode adalah sumbernya — dokumen
+ini ringkasan, bukan kontrak.
 
 ---
 
@@ -337,12 +353,16 @@ Dibangun dengan **Laravel 13** (Livewire 3) + **MySQL** + **Tailwind CSS**, deng
 
 ## 14. Pengembangan Selanjutnya
 
-- Dashboard analytics dengan grafik
-- Export data peserta ke Excel
-- Multi-language (EN)
-- API untuk integrasi pihak ketiga
-- Notifikasi WhatsApp
-- Automated scoring tiebreak
+Sudah menyusul sejak daftar ini ditulis (dicek 2026-10-21):
+- ~~Export data peserta ke Excel~~ → `eventner.participants.data-sekolah` (PhpSpreadsheet)
+- ~~API untuk integrasi pihak ketiga~~ → `routes/api.php` (37 route, prefix `/api/v1`)
+- ~~Automated scoring tiebreak~~ → `App\Services\ChampionCalculator` + `tiebreakCriterias`
+- ~~Public event directory~~ → `/eventner` + `/hall-of-fame/{penyelenggara}`
+- ~~Voucher/diskon pendaftaran~~ → `registration_vouchers` (lihat `voucher-register-plan.md`)
+
+Belum dikerjakan:
+- Dashboard analytics dengan grafik (angka rekap ada, grafik belum)
+- Multi-language (EN) — `lang/en` ada, tapi tampilan belum memakai `__()`
+- Notifikasi WhatsApp — baru tautan `wa.me`, belum kirim otomatis
 - Template kategori lomba preset
-- Manajemen kehadiran/scanner offline
-- Public event directory / marketplace
+- Manajemen kehadiran / scanner offline

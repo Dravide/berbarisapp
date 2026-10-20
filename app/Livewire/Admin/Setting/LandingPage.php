@@ -3,6 +3,7 @@
 namespace App\Livewire\Admin\Setting;
 
 use App\Models\Setting;
+use App\Support\LandingSections;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -17,18 +18,17 @@ class LandingPage extends Component
     /**
      * Section yang benar-benar punya komponen Blade-nya.
      *
+     * Daftarnya tinggal di `LandingSections` supaya panel ini, laman depan, dan
+     * nav tidak bisa lagi berselisih. Sebelumnya tiga salinan ditulis tangan
+     * dan dua di antaranya memang berbeda urutan (FAQ vs Tim).
+     *
      * Urutan section tersimpan di settings dan disunting lewat panel
      * naik/turun, jadi daftarnya bisa memuat nama lama (mis. dari susunan
      * 12 blok sebelum penyederhanaan). Nama yang tidak ada di sini disaring
      * saat menyimpan — kalau tidak, landing akan memanggil view yang sudah
      * dihapus dan error 500.
      */
-    private const SECTION_DIKENAL = ['hero', 'eventners', 'ticket', 'vote', 'features', 'pricing', 'perbandingan', 'faq', 'team', 'sponsor', 'cta'];
-
-    /** Urutan & saklar bawaan. Harus sama dengan LandingPage::URUTAN_BAWAAN. */
-    private const URUTAN_BAWAAN = '["hero","eventners","ticket","vote","features","pricing","perbandingan","faq","team","sponsor","cta"]';
-
-    private const AKTIF_BAWAAN = '{"hero":true,"eventners":true,"ticket":true,"vote":true,"features":true,"pricing":true,"perbandingan":true,"faq":true,"team":true,"sponsor":true,"cta":true}';
+    private const SECTION_DIKENAL = LandingSections::DIKENAL;
 
     // Active tab
     public $activeTab = 'hero';
@@ -138,8 +138,8 @@ class LandingPage extends Component
     public function mount()
     {
         // Load section order & active
-        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', self::URUTAN_BAWAAN), true);
-        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', self::AKTIF_BAWAAN), true);
+        $this->sectionsOrder = json_decode(Setting::get('landing_sections_order', LandingSections::urutanBawaan()), true);
+        $this->sectionsActive = json_decode(Setting::get('landing_sections_active', LandingSections::aktifBawaan()), true);
 
         // Load Hero
         $hero = json_decode(Setting::get('landing_hero', '{}'), true) ?? [];

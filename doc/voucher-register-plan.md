@@ -1,6 +1,10 @@
 # Voucher/Diskon Pendaftaran Eventner
 
-> Status: PLAN — belum diimplementasi. Wireframe: `doc/voucher-register-wireframe.html`.
+> Status: SELESAI — diimplementasi 2026-10-12 (`registration_vouchers`, migrasi
+> `2026_10_12_000004`, `/admin/vouchers`, validasi ulang saat submit di
+> `Public\EventnerRegister`). Dokumen ini sekarang menjelaskan keputusan yang
+> diambil, bukan rencana. Uji: `tests/Feature/RegistrationVoucherTest.php`.
+> Wireframe: `doc/voucher-register-wireframe.html`.
 
 ## Masalah
 Pendaftaran eventner (`/register/eventner`) menagih paket SaaS via QRIS dengan harga efektif `price - discount_percent` (diskon global per paket). Tidak ada cara memberi potongan terarah: kode promo untuk kampanye/komunitas tertentu, kuota terbatas, berperiode.

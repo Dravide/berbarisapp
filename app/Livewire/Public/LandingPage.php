@@ -6,36 +6,32 @@ use Livewire\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Setting;
 use App\Models\Eventner;
+use App\Support\LandingSections;
 use Illuminate\Support\Facades\Storage;
 
 class LandingPage extends Component
 {
     /**
-     * Section yang punya komponen Blade-nya, dalam urutan bawaan.
+     * Urutan section yang dikenal — satu sumber, di `LandingSections`.
      *
-     * Urutannya sengaja mendahulukan EVENT (eventners, ticket, vote), baru
-     * fitur dan harga: laman depan menjual acaranya lebih dulu, alatnya
-     * belakangan. `vote` hidup lagi — dulu dibuang karena menyala tanpa satu
-     * pun event yang membuka voting, jadi nav-nya tautan mati; sekarang
-     * gerbangnya data, sama seperti `ticket`.
+     * Daftar ini dulu ditulis ulang di sini, di komponen admin, dan lagi
+     * sebagai `$navItems` di layout. Tiga salinan, dan dua di antaranya memang
+     * berselisih soal urutan FAQ vs Tim. `vote` hidup lagi — dulu dibuang
+     * karena menyala tanpa satu pun event yang membuka voting, jadi nav-nya
+     * tautan mati; sekarang gerbangnya data, sama seperti `ticket`.
      *
      * Urutan yang tersimpan di settings hanya *preferensi urutan* milik admin;
-     * daftar section yang benar-benar ada ditentukan di sini. Kalau halaman
-     * mempercayai urutan tersimpan apa adanya, dua hal bisa terjadi: nama lama
-     * yang view-nya sudah dihapus dipanggil (error 500), dan section yang
-     * belum ada di urutan lama tidak pernah muncul sama sekali.
+     * daftar section yang benar-benar ada ditentukan oleh `SECTION_DIKENAL`.
+     * Kalau halaman mempercayai urutan tersimpan apa adanya, dua hal bisa
+     * terjadi: nama lama yang view-nya sudah dihapus dipanggil (error 500), dan
+     * section yang belum ada di urutan lama tidak pernah muncul sama sekali.
      *
      * Yang kedua itu nyata terjadi: `pricing` dulu diselipkan oleh shim di
      * dalam mount() karena urutan bawaan komponen admin tidak memuatnya.
      * Begitu shim-nya dibuang dan urutan lama masih tersimpan di DB,
      * halaman harga hilang dari laman produksi.
      */
-    private const SECTION_DIKENAL = ['hero', 'eventners', 'ticket', 'vote', 'features', 'pricing', 'perbandingan', 'faq', 'team', 'sponsor', 'cta'];
-
-    /** Urutan bawaan, dipakai juga sebagai nilai default saat setting kosong. */
-    private const URUTAN_BAWAAN = '["hero","eventners","ticket","vote","features","pricing","perbandingan","faq","team","sponsor","cta"]';
-
-    private const AKTIF_BAWAAN = '{"hero":true,"eventners":true,"ticket":true,"vote":true,"features":true,"pricing":true,"perbandingan":true,"faq":true,"team":true,"sponsor":true,"cta":true}';
+    private const SECTION_DIKENAL = LandingSections::DIKENAL;
 
     public $sections = [];
     public $sectionsOrder = [];
@@ -65,7 +61,7 @@ class LandingPage extends Component
         $this->sectionsOrder = $this->lengkapiUrutan($tersimpan);
 
         $this->sectionsActive = json_decode(
-            Setting::get('landing_sections_active', self::AKTIF_BAWAAN),
+            Setting::get('landing_sections_active', LandingSections::aktifBawaan()),
             true
         );
 
@@ -221,6 +217,10 @@ class LandingPage extends Component
                 'favicon' => $this->favicon,
                 'sectionsActive' => $this->sectionsActive,
                 'sectionsRender' => $sectionsRender,
+                // Urutan yang benar-benar dirender diteruskan juga: nav dibangun
+                // dari daftar yang sama, jadi nav mengikuti susunan pilihan
+                // admin, bukan kembali ke urutan bawaan saat blok dipindah.
+                'sectionsOrder' => $this->sectionsOrder,
                 // Eksplisit, walau defaultnya juga true: layout memakai
                 // ketiadaan variabel ini sebagai penanda "bukan laman depan"
                 // dan memberi prefiks url('/') pada sembilan tautan nav.

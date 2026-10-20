@@ -1,5 +1,12 @@
 # Terra — Organic Design
 
+> **Tidak dipakai (ditandai 2026-10-21).** Ini keluaran generator desain (Stitch), bukan arah
+> proyek. Tidak ada satu pun rujukannya di `app/`, `resources/`, `routes/`, atau `config/`, dan
+> resepnya memang berbeda dari yang berjalan: proyek memakai **Inter + Plus Jakarta Sans** dengan
+> primer `#0062ff`, sedangkan dokumen ini menawarkan **Literata + Nunito Sans** dengan `#4a7c59`.
+> Rancangan overlay siaran yang berlaku ada di `doc/videotron-wireframe.html` (2026-10-13).
+> Berkas ini disimpan sebagai jejak eksplorasi, bukan pedoman — jangan ikuti warnanya.
+
 ## North Star: "Rooted Warmth"
 Calm, grounded, and human. Earthy tones, soft shapes, and natural textures create a warm, approachable experience.
 

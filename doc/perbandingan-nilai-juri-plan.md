@@ -5,6 +5,13 @@
 **Wireframe:** `doc/perbandingan-nilai-juri-wireframe.html`
 **Tanggal:** 2026-10-08
 
+> Status: SELESAI — `App\Livewire\Eventner\Scoring\Perbandingan` dan
+> `App\Services\JudgeScoreComparison` sudah ada, rute
+> `eventner.scoring.perbandingan` terpasang, ujinya di
+> `tests/Feature/JudgeScoreComparisonTest.php`. Dokumen ini dibaca sebagai
+> catatan keputusan (`MIN_SEL`, "Data belum cukup", bukan tuduhan), bukan
+> sebagai rencana.
+
 ---
 
 ## 1. Keputusan bentuk: laman khusus, bukan modal

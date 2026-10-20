@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\CompetitionCategory;
 use App\Models\Eventner;
+use App\Models\LandingPartner;
 use App\Models\Participant;
 use App\Models\Registration;
 use App\Models\Setting;
@@ -419,6 +420,121 @@ class PublicPagesTest extends TestCase
 
         $this->assertLessThan($harga, $fitur, 'Urutan tersimpan (fitur sebelum harga) harus dihormati.');
         $this->assertLessThan($event, $harga);
+    }
+
+    /**
+     * Nav harus menggulir SEARAH halaman, bukan melawannya.
+     *
+     * Anchor-nya selalu hidup (dijaga tes di atas), tapi urutannya pernah
+     * salah: `$navItems` yang ditulis tangan di layout menaruh Tim sebelum FAQ,
+     * sementara halamannya merender FAQ sebelum Tim — jadi mengklik "Tim" lalu
+     * "FAQ" berarti menggulir ke bawah lalu kembali ke atas.
+     *
+     * Sekarang urutan nav diturunkan dari `LandingSections::navItems()`, dan
+     * yang dijaga di sini adalah AKIBATNYA: posisi setiap anchor di nav harus
+     * menaik di dalam dokumen yang benar-benar dirender. Ini menangkap
+     * perselisihan dari arah mana pun — menambah section baru, memindahkan
+     * blok, atau menyunting nav langsung.
+     */
+    public function test_urutan_nav_landing_mengikuti_urutan_section_yang_dirender()
+    {
+        $this->landingLengkap();
+
+        $html = $this->get('/')->getContent();
+        $anchors = $this->navAnchors($html);
+
+        // Tanpa ini tesnya bisa lulus hanya karena nav-nya kosong.
+        $this->assertNotEmpty($anchors, 'Nav landing tidak punya tautan anchor sama sekali.');
+
+        $posisiSebelumnya = -1;
+        foreach ($anchors as $anchor) {
+            $posisi = strpos($html, 'id="' . $anchor . '"');
+
+            $this->assertNotFalse($posisi, "Anchor nav #{$anchor} tidak punya section di halaman.");
+            $this->assertGreaterThan(
+                $posisiSebelumnya,
+                $posisi,
+                "Nav menaruh #{$anchor} sebelum anchor sebelumnya, padahal section-nya dirender sesudahnya — gulirnya melawan alur baca."
+            );
+
+            $posisiSebelumnya = $posisi;
+        }
+    }
+
+    /**
+     * Urutan nav mengikuti susunan yang dipilih admin, bukan hanya urutan
+     * bawaan yang kebetulan sama. Tim dan FAQ sengaja dibalik di sini.
+     */
+    public function test_urutan_nav_ikut_susunan_section_pilihan_admin()
+    {
+        $this->landingLengkap();
+
+        Setting::set('landing_sections_order', json_encode([
+            'hero', 'eventners', 'ticket', 'vote', 'features', 'pricing',
+            'team', 'faq', 'perbandingan', 'cta',
+        ]));
+
+        $html = $this->get('/')->getContent();
+        $anchors = $this->navAnchors($html);
+
+        $tim = array_search('team', $anchors, true);
+        $faq = array_search('faq', $anchors, true);
+
+        $this->assertNotFalse($tim, 'Nav tidak memuat anchor #team.');
+        $this->assertNotFalse($faq, 'Nav tidak memuat anchor #faq.');
+        $this->assertLessThan(
+            $faq,
+            $tim,
+            'Admin menaruh Tim sebelum FAQ; nav harus mengikuti, bukan kembali ke urutan bawaannya.'
+        );
+
+        // "Kontak" bukan section sendiri — ia kartu di dalam #faq, jadi ia
+        // harus ikut berpindah mengikuti FAQ-nya.
+        $kontak = array_search('contact', $anchors, true);
+        $this->assertNotFalse($kontak, 'Nav tidak memuat anchor #contact.');
+        $this->assertSame($faq + 1, $kontak, 'Kontak tidak lagi menempel pada FAQ-nya.');
+    }
+
+    /**
+     * Halaman depan dengan semua section yang bisa menyala benar-benar hidup —
+     * Event, Tiket, Vote, FAQ, Tim, dan Sponsor punya gerbang datanya masing-
+     * masing, jadi tanpa data ini nav-nya setengah kosong dan tes urutan di
+     * atas cuma menguji sebagian daftar.
+     */
+    private function landingLengkap(): void
+    {
+        Setting::set('landing_faq', json_encode([
+            'items' => [['question' => 'Apa itu Berbaris App?', 'answer' => 'Platform manajemen lomba.']],
+        ]));
+
+        Setting::set('landing_team', json_encode([
+            'items' => [['name' => 'Budi Santoso', 'role' => 'Founder']],
+        ]));
+
+        LandingPartner::factory()->create(['is_active' => true]);
+
+        // Satu event yang membuka tiket sekaligus voting: cukup untuk
+        // menyalakan #eventners, #ticket, dan #vote.
+        Eventner::factory()->voteAktif()->create([
+            'ticket_active' => true,
+            'ticket_price' => 50000,
+        ]);
+    }
+
+    /** Anchor nav desktop, urut seperti yang dibaca pengunjung. */
+    private function navAnchors(string $html): array
+    {
+        $awal = strpos($html, 'id="landing-desktop-nav"');
+        $this->assertNotFalse($awal, 'Nav desktop tidak ditemukan di halaman landing.');
+
+        // Berhenti di </nav>, bukan </header>: menu mobile mengulang daftar yang
+        // sama setelahnya, dan salinan kedua itu akan mengacaukan urutannya.
+        $akhir = strpos($html, '</nav>', $awal);
+        $nav = substr($html, $awal, $akhir - $awal);
+
+        preg_match_all('/href="(?:[^"#]*)#([^"]+)"/', $nav, $cocok);
+
+        return $cocok[1];
     }
 
     public function test_event_detail_loads()

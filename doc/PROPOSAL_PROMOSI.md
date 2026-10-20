@@ -48,7 +48,11 @@ Tidak perlu 5 aplikasi berbeda. Cukup BARIS APP untuk semuanya:
 | Paket | Harga | Fitur |
 |---|---|---|
 | **Gratis** | **Rp 0** | Trial 3 hari eksplorasi semua fitur premium |
-| **Berbayar** | **Rp 50.000** (sekali bayar) | Semua fitur terbuka permanen — **tidak ada biaya bulanan** |
+| **Berbayar** | **Harga paket di `/admin/pricing-settings`** (sekali bayar) | Semua fitur terbuka permanen — **tidak ada biaya bulanan** |
+
+> Nominalnya sengaja tidak ditulis di dokumen ini: harga berbayar dibaca dari `saas_plans`
+> (`price` dikurangi `discount_percent` = `effective_price`) lewat `App\Support\Pricing::planPrice()`,
+> jadi angka di sini pasti tertinggal begitu admin mengubahnya. Sebutkan harga saat kirim proposal.
 
 > Bayar sekali — 1 event bisa ribuan peserta, puluhan juri, ratusan vote — tanpa biaya tambahan.
 
@@ -128,7 +132,7 @@ Tidak perlu 5 aplikasi berbeda. Cukup BARIS APP untuk semuanya:
 
 | Platform | Model Harga | Estimasi Biaya / Event |
 |---|---|---|
-| BARIS APP | **Sekali bayar Rp 50.000** | **Rp 50.000** |
+| BARIS APP | **Sekali bayar per event** (harga dari `/admin/pricing-settings`) | **Satu kali harga paket** |
 | Platform A | Rp 500.000 - 2.000.000 / bulan | Rp 500.000 - 2.000.000 |
 | Manual (kertas) | Cetak, kertas, lembur panitia | > Rp 300.000 + tenaga |
 | Bangun sendiri | Developer fullstack 3-6 bulan | > Rp 50.000.000 |

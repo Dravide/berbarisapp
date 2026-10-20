@@ -130,21 +130,17 @@
                     // sekarang kartu di dalam #faq, jadi dia ikut hidup-matinya
                     // FAQ, bukan punya kunci sendiri.
                     //
-                    // Urutannya mendahulukan EVENT sebelum alat dan harga:
-                    // pengunjung laman depan sedang mencari acara, bukan daftar
-                    // fitur. Sama dengan urutan bawaannya di LandingPage.
-                    $navItems = [
-                        ['hero', 'Beranda', 'hero'],
-                        ['eventners', 'Event', 'eventners'],
-                        ['ticket', 'Tiket', 'ticket'],
-                        ['vote', 'Vote', 'vote'],
-                        ['features', 'Fitur', 'features'],
-                        ['pricing', 'Harga', 'pricing'],
-                        ['perbandingan', 'Perbandingan', 'perbandingan'],
-                        ['team', 'Tim', 'team'],
-                        ['faq', 'FAQ', 'faq'],
-                        ['contact', 'Kontak', 'faq'],
-                    ];
+                    // Urutannya TIDAK ditulis di sini lagi. Daftarnya turun dari
+                    // `LandingSections::navItems()`, yang dibangun dari urutan
+                    // `DIKENAL` yang sama dengan urutan render section — jadi
+                    // nav tidak mungkin lagi menggulir melawan alur baca.
+                    // Sebelumnya array ini disalin tangan dan memang berselisih:
+                    // nav menaruh Tim sebelum FAQ, halamannya sebaliknya.
+                    //
+                    // Kolom ketiga = section yang menaungi anchor itu. 'contact'
+                    // sekarang kartu di dalam #faq, jadi dia ikut hidup-matinya
+                    // FAQ, bukan punya kunci sendiri.
+                    $navItems = \App\Support\LandingSections::navItems($sectionsOrder ?? null);
                     $navTampil = fn (string $gate) => ($sectionsActive[$gate] ?? true) && ($sectionsRender[$gate] ?? true);
 
                     // Halaman ini benar-benar punya section ber-anchor. Hanya
@@ -253,8 +249,11 @@
                         <li><a href="{{ $prefiksNav }}#features" class="transition hover:text-secondary">Fitur</a></li>
                         <li><a href="{{ route('public.features') }}" class="transition hover:text-secondary">Semua Fitur</a></li>
                         <li><a href="{{ $prefiksNav }}#pricing" class="transition hover:text-secondary">Harga</a></li>
-                        <li><a href="{{ $prefiksNav }}#team" class="transition hover:text-secondary">Tim</a></li>
+                        {{-- FAQ sebelum Tim, sama seperti urutan section di
+                             `LandingSections` — footer ini juga tautan gulir,
+                             jadi ia tunduk pada urutan baca yang sama. --}}
                         <li><a href="{{ $prefiksNav }}#faq" class="transition hover:text-secondary">FAQ</a></li>
+                        <li><a href="{{ $prefiksNav }}#team" class="transition hover:text-secondary">Tim</a></li>
                     </ul>
                 </div>
 
