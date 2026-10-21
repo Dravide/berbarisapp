@@ -32,15 +32,18 @@ class PenugasanJuri
     /**
      * Penugasan seluruh juri satu event, dikelompokkan per juri lalu per tingkat.
      *
-     * Tiap tingkat membawa tiga kunci:
+     * Tiap tingkat membawa lima kunci:
      *
-     *   name  label tingkat, "Induk — Tingkat"
-     *   induk nama induk saja, untuk chip ringkas
-     *   grup  true bila ada baris scope 'group' di tingkat itu — dipakai
-     *         memutuskan apakah nama grupnya perlu ikut ditulis
-     *   items label tiap baris (nama grup, atau label scope)
+     *   name    label tingkat, "Induk — Tingkat"
+     *   induk   nama induk saja, untuk chip ringkas
+     *   tingkat nama tingkat saja — ringkas() menyusun ulang labelnya per
+     *           induk, dan menyaringnya kembali dari `name` akan mengikat
+     *           hasilnya pada bentuk penggabungan, bukan pada datanya
+     *   grup    true bila ada baris scope 'group' di tingkat itu — dipakai
+     *           memutuskan apakah nama grupnya perlu ikut ditulis
+     *   items   label tiap baris (nama grup, atau label scope)
      *
-     * @return Collection<int, Collection<int, array{name: string, induk: ?string, grup: bool, items: Collection<int, string>}>>
+     * @return Collection<int, Collection<int, array{name: string, induk: ?string, tingkat: ?string, grup: bool, items: Collection<int, string>}>>
      *         kunci = judge_id; kunci dalam = competition_category_id
      */
     public static function perJuri(int $eventnerId): Collection
@@ -71,6 +74,7 @@ class PenugasanJuri
                         $perTingkat->first()->level_name
                     ),
                     'induk' => $perTingkat->first()->parent_name,
+                    'tingkat' => $perTingkat->first()->level_name,
                     'grup' => $perTingkat->contains(
                         fn ($b) => $b->scope === CompetitionGroup::SCOPE_GROUP
                     ),
@@ -82,30 +86,90 @@ class PenugasanJuri
     }
 
     /**
-     * Satu baris teks tugas untuk halaman publik: "Induk — Tingkat", ditambah
-     * nama grup bila juri hanya memegang sebagian grup di tingkat itu.
+     * Satu baris teks tugas untuk halaman publik: tingkat-tingkat yang
+     * dipegang juri, dikelompokkan per INDUK.
+     *
+     * Bentuk lamanya menulis "Induk — Tingkat" untuk tiap tingkat lalu
+     * menyambungnya dengan " · ". Untuk juri yang memegang dua induk kali tiga
+     * tingkat — keadaan biasa di event PBB — hasilnya enam ruas yang menyebut
+     * nama induknya dua kali, dan kartu potret 200 px melipatnya jadi enam
+     * baris. Nama induk kini ditulis SEKALI, tingkat-tingkatnya berbagi satu
+     * ruas:
+     *
+     *   LOBB — U16 - SMP / MTS, U19 - SMA / SMK / MA, U13 - SD / MI
+     *   · VARMUS — U16 - SMP / MTS, U19 - SMA / SMK / MA, U13 - SD / MI
+     *
+     * Tingkat yang jurinya hanya memegang sebagian grup tidak ikut dilebur:
+     * nama grupnya berlaku untuk tingkat itu saja, jadi ruasnya berdiri sendiri
+     * ("PBB Putri — Regu Inti · Regu Cadangan").
      *
      * Baris scope 'level' TIDAK menulis "Seluruh Tingkat" — nama tingkatnya
      * sudah menyatakan itu, dan menambahkannya membuat kalimatnya berbunyi
      * "PBB Putri — Regu Inti · Seluruh Tingkat" untuk satu fakta yang sama.
      *
-     * @param  Collection<int, array{name: string, grup: bool, items: Collection<int, string>}>  $perTingkat
+     * Urutan induk mengikuti urutan tingkatnya (query mengurutkan per
+     * competition_category_id), bukan urutan abjad: urutan abjad akan
+     * menukar-nukar kelompok tiap kali nama induk berubah, dan pembaca
+     * membandingkan daftar ini antar juri.
+     *
+     * @param  Collection<int, array{name: string, induk: ?string, tingkat: ?string, grup: bool, items: Collection<int, string>}>  $perTingkat
      */
     public static function ringkas(Collection $perTingkat): string
     {
-        return $perTingkat
-            ->map(function ($t) {
-                if (!$t['grup']) {
-                    return $t['name'];
+        if ($perTingkat->isEmpty()) {
+            return '';
+        }
+
+        $bagian = [];
+
+        foreach ($perTingkat->groupBy(fn ($t) => $t['induk'] ?? '') as $induk => $satuInduk) {
+            $polos = [];
+            $rinci = [];
+
+            foreach ($satuInduk as $t) {
+                // Kategori yang baris pivot-nya masih ada tapi kategorinya
+                // sudah dihapus tak punya nama tingkat (leftJoin di
+                // perJuri()) — dan `name`-nya ikut kosong, karena nama itu
+                // dirakit dari induk + tingkat. Barisnya dilewati alih-alih
+                // mencetak pemisah menggantung; tak ada label yang hilang
+                // karenanya.
+                if (trim((string) $t['tingkat']) === '') {
+                    continue;
+                }
+
+                if (! $t['grup']) {
+                    $polos[] = $t['tingkat'];
+                    continue;
                 }
 
                 $grup = $t['items']
                     ->reject(fn ($label) => in_array($label, CompetitionGroup::SCOPE_LABELS, true))
                     ->join(', ');
 
-                return $grup === '' ? $t['name'] : $t['name'] . ' · ' . $grup;
-            })
-            ->join(' · ');
+                $rinci[] = $grup === '' ? $t['tingkat'] : $t['tingkat'] . ' · ' . $grup;
+            }
+
+            if ($polos !== []) {
+                array_unshift($rinci, implode(', ', $polos));
+            }
+
+            $isi = implode(' · ', $rinci);
+
+            // Seluruh tingkat di induk ini kategorinya sudah terhapus: yang
+            // tersisa cuma nama induknya, dan itu tetap dicetak — pemisah
+            // menggantung ("PBB Putri — ") tidak.
+            if ($induk === '') {
+                if ($isi !== '') {
+                    $bagian[] = $isi;
+                }
+
+                continue;
+            }
+
+            $bagian[] = $isi === '' ? $induk : $induk . ' — ' . $isi;
+        }
+
+        return implode(' · ', $bagian);
     }
 
     /**

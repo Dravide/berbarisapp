@@ -37,7 +37,12 @@
 
             <div class="flex min-w-0 flex-col gap-1 px-3 py-2.5">
                 <span class="text-sm font-bold leading-tight text-deep-slate [overflow-wrap:anywhere]">{{ $row['judge']->name }}</span>
-                <span class="text-[11px] leading-snug [overflow-wrap:anywhere] {{ $row['tugas'] ? 'text-on-surface-variant' : 'italic text-on-surface-variant/70' }}">
+                {{-- Tugas juri bisa menyebut beberapa tingkat; dua baris cukup
+                     untuk membacanya, dan `title` menyimpan sisanya. Tanpa
+                     batas ini satu juri dengan banyak penugasan melipat kartu
+                     potretnya jadi tinggi beberapa kali kartu tetangganya. --}}
+                <span class="line-clamp-2 text-[11px] leading-snug [overflow-wrap:anywhere] {{ $row['tugas'] ? 'text-on-surface-variant' : 'italic text-on-surface-variant/70' }}"
+                      title="{{ $row['tugas'] ?: 'Penilai' }}">
                     {{ $row['tugas'] ?: 'Penilai' }}
                 </span>
             </div>
