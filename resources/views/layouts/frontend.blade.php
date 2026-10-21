@@ -238,106 +238,183 @@
     </main>
 
     {{-- Footer section --}}
-    <footer class="bg-deep-slate text-white/80 border-t border-white/5">
-        <div class="container-landing py-12 md:py-16">
-            <div class="grid gap-10 sm:grid-cols-2 md:grid-cols-4">
-                {{-- Brand Column --}}
-                <div class="flex flex-col gap-4">
-                    <a href="{{ url('/') }}" class="flex items-center gap-2 text-decoration-none text-white">
-                        @isset($eventner?->logo_event)
-                            <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt="" class="h-9 w-9 rounded-lg object-cover">
+    @isset($eventner?->slug)
+        {{-- Footer halaman EVENT — pita identitas, bukan empat kolom.
+
+             Layout ini dipakai bersama halaman publik lain, tapi footer halaman
+             event tidak lagi boleh sama dengan mereka. Seluruh isi kolom
+             "Navigasi" sudah dirender dua kali di halaman yang sama — header
+             (baris 197–212) dan nav bawah ponsel (342–375) — dan keduanya
+             dijaga sakelar yang sama (hasPublishedLayout/vote_active/
+             ticket_active), jadi kolom itu tidak memuat satu pun tautan unik.
+             Nama penyelenggara sudah ada di hero event, lokasi punya kartu
+             sendiri, dan Instagram/TikTok sudah jadi pill di hero sekaligus
+             tombol di kartu "Hubungi Penyelenggara". Yang tersisa hanya
+             pengulangan setinggi ±320 px.
+
+             Gantinya pita ini menyebut fakta acara — tanggal, lokasi, tingkat —
+             yang justru tak muncul di footer mana pun. Tepi atasnya memakai
+             warna brand event: --color-primary dan --color-secondary sudah
+             disuntik dari theme_config event di baris 123–130, jadi tiap acara
+             punya warna footernya sendiri tanpa konfigurasi baru.
+
+             pb-24 (96 px) di ponsel bukan selera: nav bawah `fixed bottom-0`
+             setinggi h-16 (64 px) + safe-area menindih dasar halaman, sehingga
+             `py-12` yang lama (48 px) menutupi baris hak cipta. --}}
+        @php
+            $ftMulai = $eventner->tanggal ? \Carbon\Carbon::parse($eventner->tanggal) : null;
+            $ftSelesai = $eventner->tanggal_akhir ? \Carbon\Carbon::parse($eventner->tanggal_akhir) : null;
+            $ftRentang = null;
+
+            if ($ftMulai) {
+                $ftRentang = ($ftSelesai && ! $ftSelesai->isSameDay($ftMulai))
+                    ? $ftMulai->translatedFormat('d M') . ' – ' . $ftSelesai->translatedFormat('d F Y')
+                    : $ftMulai->translatedFormat('d F Y');
+            }
+
+            $ftPenyelenggara = $eventner->diselenggarakan_oleh ?: get_setting('site_title', 'Berbaris App');
+        @endphp
+        <footer class="bg-deep-slate text-white/80 border-t-2 border-primary">
+            <div class="container-landing pt-10 pb-24 md:pt-12 md:pb-12">
+                <div class="flex flex-col justify-between gap-6 md:flex-row md:items-center">
+                    {{-- Identitas: siapa yang memiliki acara ini --}}
+                    <div class="flex min-w-0 items-center gap-3">
+                        @if($eventner->logo_event)
+                            <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt="" class="h-11 w-11 shrink-0 rounded-xl object-cover">
                         @else
-                            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white">
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white">
                                 <i class="ti ti-calendar-event text-xl"></i>
                             </div>
-                        @endisset
-                        <span class="font-display text-base font-bold tracking-tight text-white">{{ $eventner?->nama_event ?? get_setting('site_title', 'Berbaris App') }}</span>
-                    </a>
-                    <p class="text-sm text-white/60 leading-relaxed">
-                        {{ ($eventner?->deskripsi ?? null) ? Str::limit(strip_tags($eventner->deskripsi), 120) : 'Platform manajemen event dan kompetisi terpadu.' }}
-                    </p>
+                        @endif
+                        <div class="min-w-0">
+                            <span class="font-display flex items-center gap-1.5 text-base font-bold tracking-tight text-white">
+                                <span class="truncate">{{ $eventner->nama_event }}</span>
+                                @if($eventner->is_verified)
+                                    <x-verified-badge size="sm" />
+                                @endif
+                            </span>
+                            <span class="block truncate text-sm text-white/50">{{ $ftPenyelenggara }}</span>
+                        </div>
+                    </div>
+
+                    {{-- Fakta acara, lalu tautan sosial sebagai ikon.
+                         Tiap butir disembunyikan bila kolomnya kosong — chip
+                         kosong terbaca seperti render yang gagal. --}}
+                    <div class="flex flex-wrap items-center gap-2">
+                        @if($ftRentang)
+                            <span class="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70">
+                                <i class="ti ti-calendar text-sm text-secondary"></i> {{ $ftRentang }}
+                            </span>
+                        @endif
+                        @if($eventner->lokasi)
+                            <span class="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70">
+                                <i class="ti ti-map-pin text-sm text-secondary"></i> {{ $eventner->lokasi }}
+                            </span>
+                        @endif
+                        @if($eventner->tingkat_perlombaan)
+                            <span class="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white/70">
+                                <i class="ti ti-trophy text-sm text-secondary"></i> Tingkat {{ $eventner->tingkat_perlombaan }}
+                            </span>
+                        @endif
+                        @if($eventner->link_instagram)
+                            <a href="{{ $eventner->link_instagram }}" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram"
+                               class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 hover:border-secondary/40 hover:text-secondary transition-colors text-decoration-none">
+                                <i class="ti ti-brand-instagram text-sm"></i>
+                            </a>
+                        @endif
+                        @if($eventner->link_tiktok)
+                            <a href="{{ $eventner->link_tiktok }}" target="_blank" rel="noopener" aria-label="TikTok" title="TikTok"
+                               class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 hover:border-secondary/40 hover:text-secondary transition-colors text-decoration-none">
+                                <i class="ti ti-brand-tiktok text-sm"></i>
+                            </a>
+                        @endif
+                        @if($eventner->link_whatsapp)
+                            <a href="{{ Str::startsWith($eventner->link_whatsapp, ['http://', 'https://']) ? $eventner->link_whatsapp : 'https://wa.me/' . preg_replace('/[^0-9]/', '', $eventner->link_whatsapp) }}" target="_blank" rel="noopener" aria-label="WhatsApp" title="WhatsApp"
+                               class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 hover:border-secondary/40 hover:text-secondary transition-colors text-decoration-none">
+                                <i class="ti ti-brand-whatsapp text-sm"></i>
+                            </a>
+                        @endif
+                        @if($eventner->link_livestreaming)
+                            <a href="{{ $eventner->link_livestreaming }}" target="_blank" rel="noopener" aria-label="Live Stream" title="Live Stream"
+                               class="inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/70 hover:border-secondary/40 hover:text-secondary transition-colors text-decoration-none">
+                                <i class="ti ti-brand-youtube text-sm"></i>
+                            </a>
+                        @endif
+                    </div>
                 </div>
 
-                {{-- Navigasi Column --}}
-                <div>
-                    <h4 class="mb-4 text-xs font-semibold uppercase tracking-[0.15em] text-white/90">Navigasi</h4>
-                    <ul class="space-y-2 text-sm list-none p-0 m-0">
-                        @isset($eventner?->slug)
-                            <li><a href="{{ event_url($eventner, 'detail') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Info Event</a></li>
-                            <li><a href="{{ event_url($eventner, 'participant') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Daftar Peserta</a></li>
-                            <li><a href="{{ event_url($eventner, 'results') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Hasil Perlombaan</a></li>
-                            @if($eventner?->hasPublishedLayout())
-                                <li><a href="{{ event_url($eventner, 'denah') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Denah Lapangan</a></li>
-                            @endif
-                            @if($eventner?->vote_active)
-                                <li><a href="{{ event_url($eventner, 'vote') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Voting</a></li>
-                            @endif
-                            @if($eventner?->ticket_active)
-                                <li><a href="{{ event_url($eventner, 'ticket') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Beli Tiket</a></li>
-                            @endif
-                        @else
+                {{-- Bottom copyright --}}
+                <div class="mt-8 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row">
+                    <p class="m-0">&copy; {{ date('Y') }} {{ $ftPenyelenggara }}. Hak cipta dilindungi.</p>
+                    <p class="m-0">Powered by <a href="{{ platform_url('/') }}" class="text-secondary hover:text-secondary hover:underline text-decoration-none transition font-semibold">{{ app_name() }}</a></p>
+                </div>
+            </div>
+        </footer>
+    @else
+        {{-- Footer non-event: halaman Hall of Fame memakai layout ini tanpa
+             layoutData, jadi $eventner kosong di sana. Empat kolom lama tetap
+             dipakai apa adanya — footer platform tidak ikut berubah. --}}
+        <footer class="bg-deep-slate text-white/80 border-t border-white/5">
+            <div class="container-landing py-12 md:py-16">
+                <div class="grid gap-10 sm:grid-cols-2 md:grid-cols-4">
+                    {{-- Brand Column --}}
+                    <div class="flex flex-col gap-4">
+                        <a href="{{ url('/') }}" class="flex items-center gap-2 text-decoration-none text-white">
+                            @isset($eventner?->logo_event)
+                                <img src="{{ asset('storage/' . $eventner->logo_event) }}" alt="" class="h-9 w-9 rounded-lg object-cover">
+                            @else
+                                <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-white/10 text-white">
+                                    <i class="ti ti-calendar-event text-xl"></i>
+                                </div>
+                            @endisset
+                            <span class="font-display text-base font-bold tracking-tight text-white">{{ $eventner?->nama_event ?? get_setting('site_title', 'Berbaris App') }}</span>
+                        </a>
+                        <p class="text-sm text-white/60 leading-relaxed">
+                            {{ ($eventner?->deskripsi ?? null) ? Str::limit(strip_tags($eventner->deskripsi), 120) : 'Platform manajemen event dan kompetisi terpadu.' }}
+                        </p>
+                    </div>
+
+                    {{-- Navigasi Column --}}
+                    <div>
+                        <h4 class="mb-4 text-xs font-semibold uppercase tracking-[0.15em] text-white/90">Navigasi</h4>
+                        <ul class="space-y-2 text-sm list-none p-0 m-0">
                             <li><a href="{{ url('/') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Beranda</a></li>
                             <li><a href="{{ route('pricing') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Harga & Paket</a></li>
-                        @endisset
-                    </ul>
+                        </ul>
+                    </div>
+
+                    {{-- Kontak Column --}}
+                    <div>
+                        <h4 class="mb-4 text-xs font-semibold uppercase tracking-[0.15em] text-white/90">Kontak</h4>
+                        <ul class="space-y-2 text-sm list-none p-0 m-0">
+                            <li><a href="{{ route('privacy') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Kebijakan Privasi</a></li>
+                            <li><a href="{{ route('terms') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Syarat & Ketentuan</a></li>
+                            <li><a href="{{ route('help') }}" class="text-white/60 hover:text-secondary text-decoration-none transition">Bantuan</a></li>
+                        </ul>
+                    </div>
+
+                    {{-- Penyelenggara Column --}}
+                    <div>
+                        <h4 class="mb-4 text-xs font-semibold uppercase tracking-[0.15em] text-white/90">Penyelenggara</h4>
+                        <ul class="space-y-2 text-sm list-none p-0 m-0 text-white/60">
+                            <li class="font-medium text-white/80">{{ $eventner?->diselenggarakan_oleh ?? '-' }}</li>
+                            @if($eventner?->lokasi)
+                                <li class="inline-flex items-center gap-1.5 leading-normal">
+                                    <i class="ti ti-map-pin text-base shrink-0"></i> {{ $eventner->lokasi }}
+                                </li>
+                            @endif
+                        </ul>
+                    </div>
                 </div>
 
-                {{-- Kontak Column --}}
-                <div>
-                    <h4 class="mb-4 text-xs font-semibold uppercase tracking-[0.15em] text-white/90">Kontak</h4>
-                    <ul class="space-y-2 text-sm list-none p-0 m-0">
-                        @if($eventner?->link_whatsapp)
-                            <li>
-                                <a href="{{ Str::startsWith($eventner->link_whatsapp, ['http://', 'https://']) ? $eventner->link_whatsapp : 'https://wa.me/' . preg_replace('/[^0-9]/', '', $eventner->link_whatsapp) }}" target="_blank" class="text-white/60 hover:text-secondary text-decoration-none transition inline-flex items-center gap-1.5">
-                                    <i class="ti ti-brand-whatsapp text-base"></i> WhatsApp
-                                </a>
-                            </li>
-                        @endif
-                        @if($eventner?->link_instagram)
-                            <li>
-                                <a href="{{ $eventner->link_instagram }}" target="_blank" class="text-white/60 hover:text-secondary text-decoration-none transition inline-flex items-center gap-1.5">
-                                    <i class="ti ti-brand-instagram text-base"></i> Instagram
-                                </a>
-                            </li>
-                        @endif
-                        @if($eventner?->link_tiktok)
-                            <li>
-                                <a href="{{ $eventner->link_tiktok }}" target="_blank" class="text-white/60 hover:text-secondary text-decoration-none transition inline-flex items-center gap-1.5">
-                                    <i class="ti ti-brand-tiktok text-base"></i> TikTok
-                                </a>
-                            </li>
-                        @endif
-                        @if($eventner?->link_livestreaming)
-                            <li>
-                                <a href="{{ $eventner->link_livestreaming }}" target="_blank" class="text-white/60 hover:text-secondary text-decoration-none transition inline-flex items-center gap-1.5">
-                                    <i class="ti ti-brand-youtube text-base"></i> Live Stream
-                                </a>
-                            </li>
-                        @endif
-                    </ul>
-                </div>
-
-                {{-- Penyelenggara Column --}}
-                <div>
-                    <h4 class="mb-4 text-xs font-semibold uppercase tracking-[0.15em] text-white/90">Penyelenggara</h4>
-                    <ul class="space-y-2 text-sm list-none p-0 m-0 text-white/60">
-                        <li class="font-medium text-white/80">{{ $eventner?->diselenggarakan_oleh ?? '-' }}</li>
-                        @if($eventner?->lokasi)
-                            <li class="inline-flex items-center gap-1.5 leading-normal">
-                                <i class="ti ti-map-pin text-base shrink-0"></i> {{ $eventner->lokasi }}
-                            </li>
-                        @endif
-                    </ul>
+                {{-- Bottom copyright --}}
+                <div class="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row">
+                    <p class="m-0">&copy; {{ date('Y') }} {{ $eventner?->diselenggarakan_oleh ?? get_setting('site_title', 'Berbaris App') }}. Hak cipta dilindungi.</p>
+                    <p class="m-0">Powered by <a href="{{ platform_url('/') }}" class="text-secondary hover:text-secondary hover:underline text-decoration-none transition font-semibold">{{ app_name() }}</a></p>
                 </div>
             </div>
-
-            {{-- Bottom copyright --}}
-            <div class="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row">
-                <p class="m-0">&copy; {{ date('Y') }} {{ $eventner?->diselenggarakan_oleh ?? get_setting('site_title', 'Berbaris App') }}. Hak cipta dilindungi.</p>
-                <p class="m-0">Powered by <a href="{{ platform_url('/') }}" class="text-secondary hover:text-secondary hover:underline text-decoration-none transition font-semibold">{{ app_name() }}</a></p>
-            </div>
-        </div>
-    </footer>
+        </footer>
+    @endisset
 
     {{-- Mobile bottom navigation (hanya halaman event) --}}
     @isset($eventner?->slug)

@@ -1,0 +1,625 @@
+<title>Footer Halaman Event</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* =========================================================================
+   Wireframe "Footer halaman event" — layouts/frontend.blade.php:240–340.
+
+   Kanvas mengikuti keluarga dokumen di doc/*-wireframe.html (kertas abu,
+   panel putih, satu slide = satu layar + anotasi). Warna diambil dari
+   resources/css/landing.css dan dari data event pbb2026 yang sebenarnya,
+   bukan dikarang di sini:
+     platform : deep-slate #111827, primary #0062ff, secondary #a3e635
+     pbb2026  : primary #0072FF, secondary #00D4AA (theme_config.preset=ocean)
+   ========================================================================= */
+:root{
+  /* Layout: dokumen spesifikasi — wireframe kiri, anotasi kanan, satu slide satu tugas. */
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --amber:#b45309; --amber-soft:#fef3c7;
+  --green:#15803d; --green-soft:#dcfce7;
+  --red:#b91c1c; --red-soft:#fee2e2;
+  /* Bidang gelap footer — dipakai miniatur, bukan token tema dokumen. */
+  --slate:#111827; --slate-line:#2b3444;
+  /* Warna brand event pbb2026, diambil dari theme_config. */
+  --ev-primary:#0072FF; --ev-secondary:#00D4AA;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --amber:#fbbf24; --amber-soft:#3a2b08;
+    --green:#4ade80; --green-soft:#0c2a18;
+    --red:#f87171; --red-soft:#3a1717;
+    --slate:#0c1017; --slate-line:#232b38;
+    --ev-primary:#4d9bff; --ev-secondary:#2ee0bd;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --amber:#fbbf24; --amber-soft:#3a2b08;
+  --green:#4ade80; --green-soft:#0c2a18;
+  --red:#f87171; --red-soft:#3a1717;
+  --slate:#0c1017; --slate-line:#232b38;
+  --ev-primary:#4d9bff; --ev-secondary:#2ee0bd;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:clamp(28px,5vw,56px)}
+h1,h2,h3,h4{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:72ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap}
+.chip b{color:var(--ink);font-weight:600}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin-top:22px}
+.toc a{font-family:var(--mono);font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);text-decoration:none}
+.toc a:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Slide */
+.slide{margin-top:clamp(36px,6vw,64px);scroll-margin-top:24px}
+.slide-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.slide-head h2{font-size:20px;font-weight:700}
+.mode-tag{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.mode-tag.now{background:var(--red-soft);color:var(--red)}
+.mode-tag.pick{background:var(--green-soft);color:var(--green)}
+.slide-goal{color:var(--muted);font-size:13.5px;max-width:74ch;margin-bottom:14px}
+.slide-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:start}
+.slide-grid.wide{grid-template-columns:1fr}
+@media(max-width:900px){.slide-grid{grid-template-columns:1fr}}
+
+/* Bingkai layar */
+.screen{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.screen-inner{border-radius:8px;border:1px solid var(--line);background:var(--panel-2);overflow:hidden;position:relative;font-size:11px;display:flex;flex-direction:column}
+.screen-cap{font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 4px 2px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+
+/* Anotasi */
+.notes{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.notes h3{font-size:14px;margin-bottom:8px}
+.notes ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.notes li{font-size:13.5px;color:var(--muted)}
+.notes li b{color:var(--ink);font-weight:600}
+.notes code{background:var(--panel-2);border:1px solid var(--line-soft);padding:1px 5px;border-radius:5px}
+.verdict{margin-top:12px;padding-top:12px;border-top:1px solid var(--line-soft);font-size:13px}
+table.mini{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+table.mini th{font-family:var(--mono);font-weight:500;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;color:var(--muted);text-align:left;padding:4px 8px;border-bottom:1px solid var(--line)}
+table.mini td{padding:6px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table.mini tr:last-child td{border-bottom:0}
+table.mini td:first-child{width:170px;color:var(--ink);font-weight:600}
+.scroll-x{overflow-x:auto}
+.num{font-family:var(--mono);font-size:12px;color:var(--muted)}
+
+/* =========================================================================
+   Miniatur footer — digambar kode, satuan --u (1 px pada halaman asli).
+
+   --u dideklarasikan di pembungkus terluar miniatur dan MEWARISI ke seluruh
+   isinya; yang tak boleh menanyai dirinya sendiri hanyalah `cqw`, bukan
+   variabel biasa. Karena itu tak ada satu pun nilai px di bawah ini.
+   ========================================================================= */
+.ftmini{--u:.86px;background:var(--panel-2);display:flex;flex-direction:column}
+.ftmini.tight{--u:.72px}
+.ftmini .page{background:var(--ph-fill);flex:1;min-height:calc(46 * var(--u));position:relative}
+.ftmini .page::after{
+  content:'';position:absolute;inset:calc(10 * var(--u)) calc(12 * var(--u)) auto;
+  height:calc(4 * var(--u));background:var(--ph-line);opacity:.35;border-radius:999px;
+  box-shadow:0 calc(10 * var(--u)) 0 color-mix(in srgb,var(--ph-line) 25%,transparent),
+             0 calc(20 * var(--u)) 0 color-mix(in srgb,var(--ph-line) 18%,transparent);
+}
+.ftmini .band{background:var(--slate);color:#fff;display:flex;flex-direction:column}
+
+/* Pita aksen event di tepi atas footer. */
+.rule{height:calc(3 * var(--u));background:var(--ev-primary)}
+
+.ftbody{padding:calc(18 * var(--u)) calc(20 * var(--u)) calc(14 * var(--u));display:flex;flex-direction:column;gap:calc(14 * var(--u))}
+.ftcols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:calc(14 * var(--u))}
+.ftcols.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+.col{display:flex;flex-direction:column;gap:calc(6 * var(--u));min-width:0}
+.col h5{font-size:calc(9.5 * var(--u));font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.42)}
+.col a,.col span{font-size:calc(10.5 * var(--u));color:rgba(255,255,255,.72);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.col .brandrow{display:flex;align-items:center;gap:calc(7 * var(--u));margin-bottom:calc(2 * var(--u))}
+.col b{font-size:calc(12 * var(--u));font-weight:700;color:#fff;line-height:1.25;overflow-wrap:anywhere}
+.ftlogo{width:calc(24 * var(--u));height:calc(24 * var(--u));border-radius:calc(7 * var(--u));background:rgba(255,255,255,.12);flex:none;display:flex;align-items:center;justify-content:center;font-size:calc(10 * var(--u));color:#fff}
+
+.ftbot{
+  display:flex;justify-content:space-between;gap:calc(10 * var(--u));flex-wrap:wrap;
+  border-top:1px solid rgba(255,255,255,.12);padding:calc(9 * var(--u)) calc(20 * var(--u)) calc(11 * var(--u));
+  font-size:calc(9.5 * var(--u));color:rgba(255,255,255,.42);
+}
+.ftbot .pw b{color:var(--ev-secondary)}
+
+/* Bentuk usulan: satu baris identitas, bukan empat kolom. */
+.ftid{display:flex;align-items:center;gap:calc(9 * var(--u));min-width:0}
+.ftid .txt{display:flex;flex-direction:column;gap:calc(2 * var(--u));min-width:0}
+.ftid .txt b{font-size:calc(12.5 * var(--u));font-weight:700;color:#fff;line-height:1.2}
+.ftid .txt span{font-size:calc(10 * var(--u));color:rgba(255,255,255,.5);line-height:1.3}
+.ftver{
+  display:inline-flex;align-items:center;justify-content:center;flex:none;
+  width:calc(11 * var(--u));height:calc(11 * var(--u));border-radius:999px;
+  background:var(--ev-primary);color:#fff;font-size:calc(7 * var(--u));font-weight:700;
+}
+.ftfacts{display:flex;flex-wrap:wrap;gap:calc(6 * var(--u));align-items:center}
+.fact{
+  font-size:calc(9.5 * var(--u));color:rgba(255,255,255,.78);
+  border:1px solid rgba(255,255,255,.16);border-radius:999px;
+  padding:calc(3 * var(--u)) calc(8 * var(--u));white-space:nowrap;
+}
+.fact i{font-style:normal;color:var(--ev-secondary);margin-right:calc(4 * var(--u))}
+.ftrow{display:flex;align-items:center;justify-content:space-between;gap:calc(12 * var(--u));flex-wrap:wrap}
+
+/* Nav bawah ponsel — ditempel di dasar bingkai, seperti `fixed bottom-0`. */
+.navbar{
+  position:absolute;left:0;right:0;bottom:0;height:calc(46 * var(--u));
+  background:var(--panel);border-top:1px solid var(--line);
+  display:flex;align-items:stretch;
+}
+.navbar div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(3 * var(--u));font-size:calc(8 * var(--u));color:var(--muted)}
+.navbar div.on{color:var(--accent)}
+.dot{width:calc(12 * var(--u));height:calc(12 * var(--u));border-radius:calc(4 * var(--u));background:currentColor;opacity:.6}
+.phone{--u:.8px;width:min(340px,100%);border:1px solid var(--line);border-radius:22px;background:var(--panel);padding:8px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.phone-inner{border-radius:16px;border:1px solid var(--line);background:var(--panel-2);overflow:hidden;position:relative}
+.phone-inner .ftmini{--u:.72px}
+
+/* Kisi perbandingan footer */
+.compare{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.cmp{display:flex;flex-direction:column;gap:8px;min-width:0}
+.cmp .lbl{font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.cmp .lbl b{color:var(--ink);font-weight:600}
+.cmp .box{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:8px;overflow:hidden}
+.hl{outline:2px solid var(--accent);outline-offset:-2px;border-radius:10px}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Berbaris App — Spesifikasi &amp; Wireframe</p>
+  <h1>Footer Khusus Halaman Event</h1>
+  <p class="lede">
+    Halaman event memakai footer yang sama dengan seluruh halaman publik lain:
+    empat kolom — Brand, Navigasi, Kontak, Penyelenggara. Isinya <b>seluruhnya sudah ada
+    di atasnya</b>: tiap tautan Navigasi muncul tiga kali di halaman yang sama (header, nav bawah,
+    footer), nama penyelenggara ada di hero, dan Instagram/TikTok ada di pill hero sekaligus di
+    kartu "Hubungi Penyelenggara". Usulan: footer halaman event menjadi <b>pita identitas</b> —
+    satu baris yang membawa warna brand event itu sendiri, tanpa tiga kolom itu.
+  </p>
+  <div class="meta">
+    <span class="chip">Berkas: <b>layouts/frontend.blade.php</b> (240–340)</span>
+    <span class="chip">Dipakai <b>12 komponen</b></span>
+    <span class="chip">Dibuang: <b>Navigasi · Kontak · Penyelenggara</b></span>
+    <span class="chip">Warna: <b>theme_config event</b></span>
+    <span class="chip">Tanpa aset baru — <b>nol gambar</b></span>
+  </div>
+  <nav class="toc" aria-label="Daftar slide">
+    <a href="#s1">1 Keadaan sekarang</a>
+    <a href="#s2">2 Isi yang dibuang</a>
+    <a href="#s3">3 Usulan — pita identitas</a>
+    <a href="#s4">4 Beda dari footer lain</a>
+    <a href="#s5">5 Ponsel</a>
+    <a href="#s6">6 Varian ditahan</a>
+    <a href="#s7">7 Rencana</a>
+  </nav>
+
+  <!-- ============ 1 · KEADAAN SEKARANG ============ -->
+  <section class="slide" id="s1">
+    <div class="slide-head"><span class="num">01</span><h2>Keadaan sekarang</h2><span class="mode-tag now">frontend.blade.php:240–340</span></div>
+    <p class="slide-goal">Patokan sebelum diubah: empat kolom, tinggi ± 320 px di layar lebar, dirender identik untuk semua halaman event.</p>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="ftmini">
+            <div class="page"></div>
+            <div class="band">
+              <div class="ftbody">
+                <div class="ftcols">
+                  <div class="col">
+                    <div class="brandrow"><div class="ftlogo">◆</div><b>Lomba PBB se-Jawa Barat 2026</b></div>
+                    <span>Lomba PBB antar sekolah se-Jawa Barat. Menampilkan kedisiplinan…</span>
+                  </div>
+                  <div class="col">
+                    <h5>Navigasi</h5>
+                    <a>Info Event</a><a>Daftar Peserta</a><a>Hasil Perlombaan</a>
+                    <a>Denah Lapangan</a><a>Voting</a><a>Beli Tiket</a>
+                  </div>
+                  <div class="col">
+                    <h5>Kontak</h5>
+                    <span>WhatsApp</span><a>Instagram</a><a>TikTok</a><span>Live Stream</span>
+                  </div>
+                  <div class="col">
+                    <h5>Penyelenggara</h5>
+                    <span>Dinas Pendidikan Jawa Barat</span>
+                    <span>⌖ Bandung</span>
+                  </div>
+                </div>
+              </div>
+              <div class="ftbot">
+                <span>&copy; 2026 Dinas Pendidikan Jawa Barat. Hak cipta dilindungi.</span>
+                <span class="pw">Powered by <b>Berbaris App</b></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>460 px isi · 6 + 4 + 2 tautan · 1 baris hak cipta</span><span>Nol warna dari event yang memilikinya</span></div>
+      </div>
+      <div class="notes">
+        <h3>Empat sebab ia terasa generik</h3>
+        <ul>
+          <li><b>Semuanya sudah ada di atasnya.</b> <code>Daftar Peserta</code>, <code>Hasil Perlombaan</code>, <code>Voting</code>, <code>Beli Tiket</code> — tiap satu muncul <b>3×</b> dalam satu halaman: header (baris 197–212), nav bawah (342–375), lalu footer lagi.</li>
+          <li><b>Kontak kosong di event nyata.</b> <code>pbb2026</code> tak punya <code>link_whatsapp</code> maupun <code>link_livestreaming</code>, jadi kolom Kontak tinggal dua tautan sosial — yang keduanya sudah jadi pill di hero (baris 72–83).</li>
+          <li><b>Penyelenggara diulang tiga kali.</b> Nama + badge terverifikasi ada di hero (63–66), lokasi punya kartu sendiri (159–166), dan baris hak cipta menyebutnya lagi.</li>
+          <li><b>Tidak menyebut satu pun fakta event.</b> Tinggi 320 px dipakai untuk mengulang, sementara tanggal, lokasi, dan tingkat — yang justru dicari pengunjung — tak muncul sama sekali.</li>
+          <li><b>Tak bisa dibedakan dari footer platform.</b> Latar <code>bg-deep-slate</code>, palet tetap, susunan empat kolom: sama dengan <code>layouts/landing</code>. Pengunjung tak punya tanda apa pun bahwa ia sedang di halaman sebuah acara.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2 · ISI YANG DIBUANG ============ -->
+  <section class="slide" id="s2">
+    <div class="slide-head"><span class="num">02</span><h2>Isi yang dibuang, dan ke mana perginya</h2><span class="mode-tag pick">tanpa kehilangan informasi</span></div>
+    <p class="slide-goal">Tiga kolom dibuang hanya kalau tiap barisnya sudah punya rumah lain di halaman yang sama. Diperiksa satu per satu dari render <code>pbb2026.berbaris.local</code>.</p>
+    <div class="slide-grid wide">
+      <div class="notes scroll-x">
+        <table class="mini">
+          <tr><th>Baris yang dibuang</th><th>Sudah ada di</th><th>Keputusan</th></tr>
+          <tr>
+            <td>Navigasi · Info / Peserta / Hasil</td>
+            <td>Header desktop <code>197–199</code> + nav bawah ponsel <code>346–348</code></td>
+            <td>Buang — dua tempat, keduanya selalu terlihat</td>
+          </tr>
+          <tr>
+            <td>Navigasi · Denah / Voting / Beli Tiket</td>
+            <td>Header <code>203/208/211</code> + nav bawah <code>352/356/359</code>, keduanya sudah dijaga sakelar yang sama (<code>hasPublishedLayout()</code>, <code>vote_active</code>, <code>ticket_active</code>)</td>
+            <td>Buang — nol tautan unik</td>
+          </tr>
+          <tr>
+            <td>Kontak · WhatsApp</td>
+            <td>Kartu "Hubungi Penyelenggara" <code>event-detail.blade.php:676–700</code></td>
+            <td>Buang — di sana ia tombol aksi, bukan teks</td>
+          </tr>
+          <tr>
+            <td>Kontak · Instagram / TikTok</td>
+            <td>Pill hero <code>event-detail.blade.php:72–83</code> (di atas lipatan) + kartu kontak di bawah</td>
+            <td>Pindah jadi ikon di pita — tetap ada, tak lagi satu kolom</td>
+          </tr>
+          <tr>
+            <td>Kontak · Live Stream</td>
+            <td>Badge <code>.badge-live</code> di hero <code>event-detail.blade.php:44–48</code></td>
+            <td>Buang — badge di hero justru lebih terlihat</td>
+          </tr>
+          <tr>
+            <td>Penyelenggara · nama</td>
+            <td>Hero <code>63–66</code> (dengan badge terverifikasi) + baris hak cipta footer</td>
+            <td>Buang kolomnya; nama tetap di hak cipta</td>
+          </tr>
+          <tr>
+            <td>Penyelenggara · lokasi</td>
+            <td>Kartu lokasi <code>event-detail.blade.php:159–166</code></td>
+            <td>Pindah jadi satu fakta di pita — baris paling sering dicari</td>
+          </tr>
+        </table>
+        <div class="verdict">
+          <b>Hasil pemeriksaan:</b> dari 12 tautan di tiga kolom itu, <b>tidak satu pun</b> yang hanya hidup di footer.
+          Yang dibuang murni pengulangan; yang berguna (lokasi, tanggal, tingkat, sosial) dipindahkan ke pita.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3 · USULAN ============ -->
+  <section class="slide" id="s3">
+    <div class="slide-head"><span class="num">03</span><h2>Usulan — pita identitas event</h2><span class="mode-tag pick">rekomendasi</span></div>
+    <p class="slide-goal">Satu baris setinggi ± 96 px: identitas di kiri, fakta event di kanan, hak cipta di bawahnya. Tepi atasnya memakai warna brand event, jadi setiap acara punya footer sendiri tanpa satu pun berkas baru.</p>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="ftmini">
+            <div class="page"></div>
+            <div class="band">
+              <div class="rule"></div>
+              <div class="ftbody">
+                <div class="ftrow">
+                  <div class="ftid">
+                    <div class="ftlogo">◆</div>
+                    <div class="txt">
+                      <b>Lomba PBB se-Jawa Barat 2026 <span class="ftver">✓</span></b>
+                      <span>Dinas Pendidikan Jawa Barat</span>
+                    </div>
+                  </div>
+                  <div class="ftfacts">
+                    <span class="fact"><i>▤</i>2–4 Nov 2026</span>
+                    <span class="fact"><i>⌖</i>Bandung</span>
+                    <span class="fact"><i>◈</i>Tingkat Provinsi</span>
+                    <span class="fact"><i>◎</i></span>
+                    <span class="fact"><i>♪</i></span>
+                  </div>
+                </div>
+              </div>
+              <div class="ftbot">
+                <span>&copy; 2026 Dinas Pendidikan Jawa Barat. Hak cipta dilindungi.</span>
+                <span class="pw">Powered by <b>Berbaris App</b></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Tinggi ± 96 px — sepertiga keadaan sekarang</span><span>Tepi atas <code>#0072FF</code> = warna brand pbb2026</span></div>
+      </div>
+      <div class="notes">
+        <h3>Bagaimana ia dibangun</h3>
+        <ul>
+          <li><b>Warnanya bukan warna karangan.</b> <code>frontend.blade.php:123–130</code> sudah menyuntik <code>--color-primary: {{ $primaryColor }}</code> dari <code>theme_config</code>. Karena itu cukup <code>border-t-2 border-primary</code> dan ikon sosial <code>text-secondary</code> — keduanya sudah terkompilasi di <code>landing.css</code>, dan otomatis ikut brand tiap event.</li>
+          <li><b>Yang pindah, bukan yang hilang.</b> Tiga fakta (<code>tanggal</code>–<code>tanggal_akhir</code>, <code>lokasi</code>, <code>tingkat_perlombaan</code>) dan dua ikon sosial adalah isi yang hari ini tak ada di footer. Empat kolom dibuang, lima informasi masuk.</li>
+          <li><b>Hak cipta tetap utuh.</b> <code>ProgrammaticTest</code> mengunci <code>Powered by &lt;a href="{platform_url('/')}"</code> secara harfiah — baris itu tidak disentuh, hanya latarnya yang berubah.</li>
+          <li><b>Tautan vote tetap ada.</b> Meski footer tak lagi menautkan Vote, header (208) dan nav bawah (356) tetap merendernya saat <code>vote_active</code>, jadi <code>FrontendNavGatingTest</code> tetap hijau.</li>
+          <li><b>Cabang non-event tak tersentuh.</b> <code>HallOfFame</code> memanggil layout tanpa <code>layoutData</code>, jadi <code>$eventner</code> kosong di sana. Empat kolom lama tetap dipakai cabang <code>@else</code> — footer platform tak ikut berubah.</li>
+        </ul>
+        <div class="verdict">
+          <b>Kelas yang dipakai semuanya sudah ada di blade yang dipindai Tailwind</b> (<code>border-primary</code>, <code>bg-deep-slate</code>,
+          <code>text-secondary</code>, <code>container-landing</code>) — tak ada kelas baru yang lahir tanpa aturan CSS.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4 · BEDA DARI FOOTER LAIN ============ -->
+  <section class="slide" id="s4">
+    <div class="slide-head"><span class="num">04</span><h2>Bedanya dengan empat footer lain</h2><span class="mode-tag pick">yang diminta</span></div>
+    <p class="slide-goal">Aplikasi ini punya lima footer. Yang membedakan usulan ini bukan ornamen, tapi sumbu yang berbeda: ia satu-satunya yang memakai warna pemilik halaman dan satu-satunya yang menyebut fakta acara.</p>
+    <div class="compare">
+      <div class="cmp">
+        <div class="lbl"><b>layouts/landing</b><span>halaman pemasaran</span></div>
+        <div class="box">
+          <div class="ftmini tight">
+            <div class="band">
+              <div class="ftbody">
+                <div class="ftcols three">
+                  <div class="col"><div class="brandrow"><div class="ftlogo">◆</div><b>Berbaris App</b></div><span>Platform manajemen event…</span></div>
+                  <div class="col"><h5>Navigasi</h5><a>Fitur</a><a>Harga</a><a>Event</a><a>FAQ</a></div>
+                  <div class="col"><h5>Kontak</h5><a>Privasi</a><a>Syarat</a><a>Bantuan</a><span>◎ ◎ ◎</span></div>
+                </div>
+              </div>
+              <div class="ftbot"><span>&copy; 2026 Berbaris App. Semua hak dilindungi.</span></div>
+            </div>
+          </div>
+        </div>
+        <p class="slide-goal">3 kolom, tautan <code>#anchor</code> ke section — masuk akal di sana, karena section-nya memang ada di halaman itu.</p>
+      </div>
+
+      <div class="cmp">
+        <div class="lbl"><b>layouts/frontend</b><span>sekarang</span></div>
+        <div class="box">
+          <div class="ftmini tight">
+            <div class="band">
+              <div class="ftbody">
+                <div class="ftcols">
+                  <div class="col"><div class="brandrow"><div class="ftlogo">◆</div><b>Nama event</b></div><span>Deskripsi…</span></div>
+                  <div class="col"><h5>Navigasi</h5><a>Info</a><a>Peserta</a><a>Hasil</a><a>Vote</a></div>
+                  <div class="col"><h5>Kontak</h5><a>IG</a><a>TT</a><span>Live</span></div>
+                  <div class="col"><h5>Penyelenggara</h5><span>Dinas…</span><span>⌖ Bandung</span></div>
+                </div>
+              </div>
+              <div class="ftbot"><span>&copy; 2026 Dinas Pendidikan…</span><span class="pw">Powered by <b>Berbaris App</b></span></div>
+            </div>
+          </div>
+        </div>
+        <p class="slide-goal">Sama seperti halaman pemasaran padahal isinya halaman acara: 12 tautan yang semuanya sudah ada di header.</p>
+      </div>
+
+      <div class="cmp">
+        <div class="lbl"><b>usulan</b><span>event</span></div>
+        <div class="box hl">
+          <div class="ftmini tight">
+            <div class="band">
+              <div class="rule"></div>
+              <div class="ftbody">
+                <div class="ftrow">
+                  <div class="ftid"><div class="ftlogo">◆</div><div class="txt"><b>Nama event ✓</b><span>Dinas…</span></div></div>
+                  <div class="ftfacts"><span class="fact">2–4 Nov</span><span class="fact">⌖ Bandung</span><span class="fact">◈ Provinsi</span></div>
+                </div>
+              </div>
+              <div class="ftbot"><span>&copy; 2026 Dinas…</span><span class="pw">Powered by <b>Berbaris App</b></span></div>
+            </div>
+          </div>
+        </div>
+        <p class="slide-goal"><b>Pita aksen = warna event.</b> Tak ada kolom tautan; yang tampil justru fakta acara.</p>
+      </div>
+
+      <div class="cmp">
+        <div class="lbl"><b>layouts/entry · layouts/judge</b><span>tablet petugas</span></div>
+        <div class="box">
+          <div class="ftmini tight">
+            <div class="page" style="min-height:calc(28 * var(--u))"></div>
+            <div class="band" style="background:var(--panel);color:var(--ink)">
+              <div style="border-top:1px solid var(--line);padding:calc(7 * var(--u)) calc(14 * var(--u));font-size:calc(9.5 * var(--u));color:var(--muted);display:flex;justify-content:space-between">
+                <span>Nilai tersimpan otomatis</span><span>Berbaris App</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="slide-goal">Satu baris <code>border-t</code>, tanpa latar gelap. Ini yang jadi acuan ponsel: footer tipis memang sudah ada di aplikasi ini.</p>
+      </div>
+    </div>
+    <div class="notes" style="margin-top:16px">
+      <h3>Ringkas</h3>
+      <ul>
+        <li><b>Lawan arahnya beda.</b> <code>layouts/landing</code> menjual platform, <code>layouts/frontend</code> sekarang hanya mengulang navigasi, <code>layouts/entry</code>/<code>judge</code> melayani petugas di tablet. Usulan ini melayani <b>pengunjung sebuah acara</b> — maka isinya identitas acara, bukan tautan.</li>
+        <li><b>Ia satu-satunya yang berwarna.</b> Hanya halaman event yang punya <code>theme_config</code>; memakainya di footer membuat tiap event berbeda satu sama lain tanpa satu baris pun konfigurasi baru.</li>
+        <li><b>Tidak menyerupai keduanya.</b> Kalau ia dibuat tipis polos seperti <code>layouts/entry</code>, ia justru tertukar dengan footer tablet. Pita berwarna menjaga jarak dari keempatnya.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 5 · PONSEL ============ -->
+  <section class="slide" id="s5">
+    <div class="slide-head"><span class="num">05</span><h2>Ponsel — nav bawah menutupi baris terakhir</h2><span class="mode-tag now">bug yang ikut diperbaiki</span></div>
+    <p class="slide-goal">Di bawah <code>md</code>, nav bawah <code>fixed bottom-0</code> setinggi 64 px menindih dasar halaman. Padding bawah footer hari ini hanya 48 px, jadi baris "Powered by" memang tertutup.</p>
+    <div class="slide-grid">
+      <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start">
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="ftmini">
+              <div class="page" style="min-height:calc(120 * var(--u))"></div>
+              <div class="band">
+                <div class="rule"></div>
+                <div class="ftbody" style="padding:calc(14 * var(--u)) calc(14 * var(--u)) calc(16 * var(--u))">
+                  <div class="ftid">
+                    <div class="ftlogo">◆</div>
+                    <div class="txt"><b>Lomba PBB se-Jawa Barat 2026 ✓</b><span>Dinas Pendidikan Jawa Barat</span></div>
+                  </div>
+                  <div class="ftfacts">
+                    <span class="fact">2–4 Nov 2026</span><span class="fact">⌖ Bandung</span>
+                  </div>
+                </div>
+                <div class="ftbot" style="flex-direction:column;gap:calc(4 * var(--u));padding:calc(8 * var(--u)) calc(14 * var(--u)) calc(64 * var(--u))">
+                  <span>&copy; 2026 Dinas Pendidikan Jawa Barat.</span>
+                  <span class="pw">Powered by <b>Berbaris App</b></span>
+                </div>
+              </div>
+            </div>
+            <div class="navbar">
+              <div class="on"><span class="dot"></span>Info</div>
+              <div><span class="dot"></span>Peserta</div>
+              <div><span class="dot"></span>Hasil</div>
+              <div><span class="dot"></span>Vote</div>
+              <div><span class="dot"></span>Tiket</div>
+            </div>
+          </div>
+        </div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="ftmini">
+              <div class="page" style="min-height:calc(120 * var(--u))"></div>
+              <div class="band">
+                <div class="rule"></div>
+                <div class="ftbody" style="padding:calc(14 * var(--u)) calc(14 * var(--u)) calc(16 * var(--u))">
+                  <div class="ftid">
+                    <div class="ftlogo">◆</div>
+                    <div class="txt"><b>Lomba PBB se-Jawa Barat 2026 ✓</b><span>Dinas Pendidikan Jawa Barat</span></div>
+                  </div>
+                  <div class="ftfacts">
+                    <span class="fact">2–4 Nov 2026</span><span class="fact">⌖ Bandung</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="navbar">
+              <div class="on"><span class="dot"></span>Info</div>
+              <div><span class="dot"></span>Peserta</div>
+              <div><span class="dot"></span>Hasil</div>
+              <div><span class="dot"></span>Vote</div>
+              <div><span class="dot"></span>Tiket</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <h3>Aturan padding bawah</h3>
+        <ul>
+          <li><b>Ukur dari nav, bukan dari selera.</b> Nav bawah = <code>h-16</code> (64 px) + <code>env(safe-area-inset-bottom)</code>. Karena itu footer memakai <code>pb-24 md:pb-12</code>: 96 px di ponsel, 48 px sejak <code>md</code>.</li>
+          <li><b>Kiri = salah, kanan = benar.</b> Padding 48 px menyisakan baris hak cipta di bawah nav (kiri). 96 px menaruhnya jelas di atas nav (kanan).</li>
+          <li><b>Pita jadi dua baris, bukan satu.</b> Di bawah 360 px fakta event turun ke baris kedua (kiri) alih-alih terpotong <code>truncate</code> seperti sekarang — <code>flex-wrap</code> cukup, tanpa breakpoint tambahan.</li>
+          <li><b>Alamat utama tak berubah.</b> <code>body</code> sudah punya <code>padding-bottom: env(safe-area-inset-bottom)</code> (baris 162); footer hanya menambah ruang untuk nav di atasnya.</li>
+          <li><b>Footer bukan lagi elemen terakhir yang bisa diklik.</b> Karena taat aturan <code>pb-24</code>, semua yang di dalamnya tetap dapat dijangkau jempol.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6 · VARIAN DITAHAN ============ -->
+  <section class="slide" id="s6">
+    <div class="slide-head"><span class="num">06</span><h2>Varian yang tidak dipilih</h2><span class="mode-tag">cadangan</span></div>
+    <p class="slide-goal">Tercatat supaya tak diusulkan ulang, beserta alasan tiap penolakan.</p>
+    <div class="compare">
+      <div class="cmp">
+        <div class="lbl"><b>A · footer sewarna brand penuh</b><span>ditolak</span></div>
+        <div class="box">
+          <div class="ftmini tight">
+            <div class="band" style="background:var(--ev-primary)">
+              <div class="ftbody">
+                <div class="ftrow">
+                  <div class="ftid"><div class="ftlogo">◆</div><div class="txt"><b>Lomba PBB se-Jawa Barat 2026</b><span>Dinas Pendidikan Jawa Barat</span></div></div>
+                  <div class="ftfacts"><span class="fact">2–4 Nov</span><span class="fact">⌖ Bandung</span></div>
+                </div>
+              </div>
+              <div class="ftbot" style="border-color:rgba(255,255,255,.28)"><span>&copy; 2026 Dinas…</span></div>
+            </div>
+          </div>
+        </div>
+        <p class="slide-goal">Seluruh bidang jadi warna event. Ambang kontrasnya tak bisa dijamin: <code>theme_config</code> menerima <code>#a3e635</code>, <code>#00D4AA</code>, bahkan preset kuning — teks putih di atasnya gagal. Pita tepi memberi kesan yang sama tanpa mempertaruhkan keterbacaan.</p>
+      </div>
+
+      <div class="cmp">
+        <div class="lbl"><b>B · baris polos seperti tablet</b><span>ditolak</span></div>
+        <div class="box">
+          <div class="ftmini tight">
+            <div class="band" style="background:var(--panel);color:var(--ink)">
+              <div style="border-top:1px solid var(--line);padding:calc(9 * var(--u)) calc(16 * var(--u));font-size:calc(9.5 * var(--u));color:var(--muted);display:flex;justify-content:space-between;gap:calc(8 * var(--u))">
+                <span>&copy; 2026 Dinas Pendidikan Jawa Barat</span><span>Powered by Berbaris App</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="slide-goal">Paling murah, tapi jadi kembar dengan <code>layouts/entry</code> dan <code>layouts/judge</code>. Halaman acara kehilangan kesempatan menyebut tanggal dan lokasi.</p>
+      </div>
+
+      <div class="cmp">
+        <div class="lbl"><b>C · pita + baris tautan legal</b><span>opsional</span></div>
+        <div class="box">
+          <div class="ftmini tight">
+            <div class="band">
+              <div class="rule"></div>
+              <div class="ftbody"><div class="ftrow"><div class="ftid"><div class="ftlogo">◆</div><div class="txt"><b>Nama event ✓</b><span>Dinas…</span></div></div><div class="ftfacts"><span class="fact">2–4 Nov</span></div></div></div>
+              <div class="ftbot" style="flex-direction:column;gap:calc(5 * var(--u))">
+                <span style="color:rgba(255,255,255,.62)">Privasi · Syarat · Bantuan</span>
+                <span>&copy; 2026 Dinas…</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="slide-goal">Menambah tiga tautan platform yang hari ini <b>tidak ada</b> di halaman event, padahal route-nya hidup di host event. Bukan bagian dari permintaan — dicatat sebagai langkah lanjutan bila diinginkan.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 7 · RENCANA ============ -->
+  <section class="slide" id="s7">
+    <div class="slide-head"><span class="num">07</span><h2>Rencana implementasi</h2><span class="mode-tag pick">selesai 2026-10-21</span></div>
+    <p class="slide-goal">Satu berkas disentuh, nol migrasi, nol route, nol aset. Semua kelas dan semua kolom yang dipakai sudah ada.</p>
+    <div class="slide-grid wide">
+      <div class="notes scroll-x">
+        <table class="mini">
+          <tr><th>Bagian</th><th>Rencana</th></tr>
+          <tr><td><b>Pemisahan cabang</b></td><td>Bungkus footer dengan <code>@isset($eventner?->slug)</code>. Cabang event memakai pita baru; cabang <code>@else</code> mempertahankan empat kolom lama apa adanya untuk <code>HallOfFame</code> (satu-satunya pemakai layout ini tanpa <code>layoutData</code>). Footer platform tak ikut berubah.</td></tr>
+          <tr><td><b>Kolom yang dibuang</b></td><td>Navigasi (<code>261–283</code>), Kontak (<code>285–318</code>), Penyelenggara (<code>320–331</code>) — hanya di cabang event. Tak ada tes yang menyebut ketiga judul kolom itu (sudah diperiksa: nol kecocokan di <code>tests/</code>).</td></tr>
+          <tr><td><b>Warna</b></td><td><code>border-t-2 border-primary</code> pada <code>&lt;footer&gt;</code>, ikon sosial <code>text-secondary</code>. Tak perlu variabel baru: <code>--color-primary</code> dan <code>--color-secondary</code> sudah disuntik dari <code>theme_config</code> di baris 123–130, jadi pita otomatis memakai <code>#0072FF</code> milik pbb2026.</td></tr>
+          <tr><td><b>Fakta event</b></td><td>Tanggal dari <code>tanggal</code>–<code>tanggal_akhir</code> (pola <code>translatedFormat</code> yang sudah dipakai <code>event-detail.blade.php:141–152</code>), <code>lokasi</code>, <code>tingkat_perlombaan</code>. Tiap fakta disembunyikan bila kolomnya kosong — jangan mencetak chip kosong.</td></tr>
+          <tr><td><b>Kontak sosial</b></td><td>Hanya ikon untuk <code>link_instagram</code> / <code>link_tiktok</code> / <code>link_whatsapp</code> yang <b>terisi</b>. Di <code>pbb2026</code> WhatsApp kosong, jadi ia tak dirender — persis sebab kolom Kontak lama terasa timpang.</td></tr>
+          <tr><td><b>Padding ponsel</b></td><td><code>pt-10 pb-24 md:pt-12 md:pb-12</code>. <code>pb-24</code> = 96 px, di atas nav <code>h-16</code> (64 px) + safe-area. Memperbaiki baris hak cipta yang hari ini tertutup nav di bawah <code>md</code>.</td></tr>
+          <tr><td><b>Yang wajib tetap harfiah</b></td><td><code>Powered by &lt;a href="{{ platform_url('/') }}"</code> — dikunci <code>FrontendNavGatingTest::test_footer_powered_by_menunjuk_laman_utama</code> sebagai string utuh. Jangan diganti <code>url('/')</code>: itu mengikuti host permintaan (subdomain event), bukan host platform.</td></tr>
+          <tr><td><b>Tautan vote</b></td><td>Footer tak lagi menautkan Vote, tapi <code>FrontendNavGatingTest</code> menuntut <code>href</code> vote ada saat <code>vote_active</code> — tetap terpenuhi dari header (208) dan nav bawah (356). Diverifikasi dengan menjalankan tesnya, bukan dengan asumsi.</td></tr>
+          <tr><td><b>Tes baru</b></td><td>Empat kunci: (1) halaman event <b>tidak</b> memuat judul kolom <code>Navigasi</code>/<code>Kontak</code>/<code>Penyelenggara</code>; (2) halaman event memuat tanggal, lokasi, dan tingkat; (3) <code>hall-of-fame</code> <b>masih</b> memuat empat kolomnya; (4) footer <code>layouts/landing</code> tak tersentuh — <code>PublicPagesTest</code> yang sudah ada tetap mengunci <code>#features</code> dan <code>#contact</code>.</td></tr>
+          <tr><td><b>Berkas</b></td><td><code>resources/views/layouts/frontend.blade.php</code> saja (baris 240–340), ditambah satu berkas tes. Opsional: pisahkan pita ke <code>layouts/partials/footer-event.blade.php</code> bila berkas induk terasa panjang.</td></tr>
+          <tr><td><b>Verifikasi</b></td><td>Buka <code>pbb2026.berbaris.local</code> di lebar 1280 px dan 390 px (memastikan baris hak cipta keluar dari bawah nav), lalu <code>node node_modules/vite/bin/vite.js build</code> dan suite penuh. Patokan terakhir: 1764 lulus / 5878 assertion.</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
