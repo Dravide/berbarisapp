@@ -223,29 +223,60 @@
 
             {{-- Hitung mundur pendaftaran, menempel pada tanggal batasnya.
                  Merah hanya di angka — sisi merah dipertahankan karena
-                 deadline adalah status nyata, bukan dekorasi (R-31). --}}
+                 deadline adalah status nyata, bukan dekorasi (R-31).
+
+                 Setelah deadline lewat, empat sel itu berhenti di "00" dan
+                 labelnya tetap berbunyi "Ditutup Dalam" — angka nol yang
+                 menunggu selamanya, padahal yang terjadi justru sebaliknya.
+                 Percabangannya di sisi SERVER, bukan di Alpine: hitung mundur
+                 yang dibiarkan menggantung akan tampil nol selama satu detik
+                 penuh sebelum skripnya sempat menyembunyikannya.
+
+                 Ambangnya `endOfDay()`, sama persis dengan sasaran hitung
+                 mundurnya — jadi nolnya berhenti tepat saat sel ini berganti,
+                 tanpa satu detik pun yang menampilkannya. (Status pendaftaran
+                 di DB memakai batas yang lebih ketat, awal hari; yang dijaga
+                 di sini cuma "jangan pernah menggambar nol".) --}}
             @if($eventner->tanggal_pendaftaran)
-                <div class="mt-5 rounded-xl border border-red-500/25 bg-white p-4" x-data="countdown('{{ \Carbon\Carbon::parse($eventner->tanggal_pendaftaran)->endOfDay()->toIso8601String() }}')">
-                    <span class="mb-2 block text-center text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">Pendaftaran Ditutup Dalam</span>
-                    <div class="grid grid-cols-4 gap-2 max-w-[280px] mx-auto">
-                        <div class="rounded-lg p-1.5 text-center bg-surface-container-low">
-                            <span class="block text-base font-extrabold leading-tight text-red-600" x-text="days"></span>
-                            <span class="text-[8px] font-semibold uppercase text-on-surface-variant">Hari</span>
+                {{-- Ditulis sebagai blok @php…@endphp, bukan @php(...):
+                     Blade memungut blok dengan /(?<!@)@php(.*?)@endphp/s
+                     dan bentuk kurungnya tak menutup apa pun, jadi ia
+                     menelan seluruh isi berkas sampai @endphp berikutnya. --}}
+                @php $batasPendaftaran = \Carbon\Carbon::parse($eventner->tanggal_pendaftaran)->endOfDay(); @endphp
+
+                @if($batasPendaftaran->isPast())
+                    <div class="mt-5 rounded-xl border border-outline-variant/50 bg-surface-container-low p-4">
+                        <div class="flex items-center justify-center gap-2">
+                            <i class="ti ti-lock text-base text-on-surface-variant" aria-hidden="true"></i>
+                            <span class="text-sm font-semibold text-deep-slate">Pendaftaran Telah Ditutup</span>
                         </div>
-                        <div class="rounded-lg p-1.5 text-center bg-surface-container-low">
-                            <span class="block text-base font-extrabold leading-tight text-red-600" x-text="hours"></span>
-                            <span class="text-[8px] font-semibold uppercase text-on-surface-variant">Jam</span>
-                        </div>
-                        <div class="rounded-lg p-1.5 text-center bg-surface-container-low">
-                            <span class="block text-base font-extrabold leading-tight text-red-600" x-text="minutes"></span>
-                            <span class="text-[8px] font-semibold uppercase text-on-surface-variant">Mnt</span>
-                        </div>
-                        <div class="rounded-lg p-1.5 text-center bg-surface-container-low">
-                            <span class="block text-base font-extrabold leading-tight text-red-600" x-text="seconds"></span>
-                            <span class="text-[8px] font-semibold uppercase text-on-surface-variant">Det</span>
+                        <span class="mt-1 block text-center text-[11px] text-on-surface-variant">
+                            Batas pendaftaran {{ $batasPendaftaran->translatedFormat('d F Y') }}
+                        </span>
+                    </div>
+                @else
+                    <div class="mt-5 rounded-xl border border-red-500/25 bg-white p-4" x-data="countdown('{{ $batasPendaftaran->toIso8601String() }}')">
+                        <span class="mb-2 block text-center text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">Pendaftaran Ditutup Dalam</span>
+                        <div class="grid grid-cols-4 gap-2 max-w-[280px] mx-auto">
+                            <div class="rounded-lg p-1.5 text-center bg-surface-container-low">
+                                <span class="block text-base font-extrabold leading-tight text-red-600" x-text="days"></span>
+                                <span class="text-[8px] font-semibold uppercase text-on-surface-variant">Hari</span>
+                            </div>
+                            <div class="rounded-lg p-1.5 text-center bg-surface-container-low">
+                                <span class="block text-base font-extrabold leading-tight text-red-600" x-text="hours"></span>
+                                <span class="text-[8px] font-semibold uppercase text-on-surface-variant">Jam</span>
+                            </div>
+                            <div class="rounded-lg p-1.5 text-center bg-surface-container-low">
+                                <span class="block text-base font-extrabold leading-tight text-red-600" x-text="minutes"></span>
+                                <span class="text-[8px] font-semibold uppercase text-on-surface-variant">Mnt</span>
+                            </div>
+                            <div class="rounded-lg p-1.5 text-center bg-surface-container-low">
+                                <span class="block text-base font-extrabold leading-tight text-red-600" x-text="seconds"></span>
+                                <span class="text-[8px] font-semibold uppercase text-on-surface-variant">Det</span>
+                            </div>
                         </div>
                     </div>
-                </div>
+                @endif
             @endif
 
             {{-- Peta: hanya muncul kalau penyelenggara mengisi koordinat di

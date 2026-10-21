@@ -46,15 +46,50 @@ class EventDetailScheduleTest extends TestCase
     {
         // Dua hitung mundur di satu halaman (hari H dan batas pendaftaran)
         // membingungkan; labelnya harus unik.
+        //
+        // Tanggalnya relatif terhadap sekarang, bukan tanggal mati: tes ini
+        // dulu bertanggal tetap, dan begitu hari itu lewat ia berhenti menguji
+        // hitung mundurnya tanpa gagal — hitung mundurnya berganti jadi baris
+        // "telah ditutup", dan substr_count-nya tetap 0 == 0.
         $eventner = Eventner::factory()->create([
             'status' => 'approved',
-            'tanggal' => '2026-10-18',
-            'tanggal_pendaftaran' => '2026-10-10',
+            'tanggal' => now()->addDays(30)->toDateString(),
+            'tanggal_pendaftaran' => now()->addDays(10)->toDateString(),
         ]);
 
         $html = $this->get("/event/{$eventner->slug}")->assertStatus(200)->getContent();
 
         $this->assertSame(1, substr_count($html, 'Pendaftaran Ditutup Dalam'));
+    }
+
+    /**
+     * Deadline lewat: hitung mundurnya berhenti, labelnya ikut berubah.
+     *
+     * Selama ini empat selnya cuma berhenti di "00" sambil tetap berbunyi
+     * "Ditutup Dalam" — angka nol yang menunggu selamanya, dan pembaca
+     * menyimpulkan masih ada waktu. Yang benar adalah kebalikannya.
+     *
+     * Tanggal `tanggal` sengaja juga di masa lalu supaya hitung mundur hari H
+     * tak ikut dirender; tes ini lalu bisa menuntut halaman itu tidak memuat
+     * satu pun `countdown(` — bukan sekadar tidak memuat labelnya.
+     */
+    public function test_deadline_terlewat_menampilkan_pendaftaran_telah_ditutup()
+    {
+        $eventner = Eventner::factory()->create([
+            'status' => 'approved',
+            'tanggal' => now()->subDays(5)->toDateString(),
+            'tanggal_pendaftaran' => now()->subDays(10)->toDateString(),
+        ]);
+
+        $html = $this->get("/event/{$eventner->slug}")->assertStatus(200)->getContent();
+
+        $this->assertStringContainsString('Pendaftaran Telah Ditutup', $html);
+        $this->assertStringNotContainsString('Pendaftaran Ditutup Dalam', $html);
+        $this->assertStringNotContainsString('countdown(', $html);
+        $this->assertStringContainsString(
+            'Batas pendaftaran ' . now()->subDays(10)->translatedFormat('d F Y'),
+            $html
+        );
     }
 
     public function test_tanpa_tanggal_pendaftaran_tidak_ada_hitung_mundur()
