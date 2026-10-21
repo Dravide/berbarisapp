@@ -1,0 +1,631 @@
+<title>Dewan Juri Carousel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* =========================================================================
+   Wireframe "Dewan Juri — carousel?" — dokumen keputusan.
+
+   Kanvas mengikuti keluarga doc/*-wireframe.html (kertas abu, panel putih,
+   satu slide satu tugas + anotasi). Warna perangkat desain BARIS APP dari
+   resources/css/landing.css, bukan dikarang di sini.
+
+   Dokumen ini menjawab SATU pertanyaan: apakah bentuk carousel lebih baik
+   daripada grid auto-fit untuk bagian Dewan Juri? Tiga jalur digambar
+   berdampingan pada geometri kartu yang SEBENARNYA — angka di slide 02
+   dihitung dari .container-landing, p-6, dan md:grid-cols-3, bukan dikira.
+   ========================================================================= */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --amber:#b45309; --amber-soft:#fef3c7;
+  --green:#15803d; --green-soft:#dcfce7;
+  --red:#b91c1c; --red-soft:#fee2e2;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --amber:#fbbf24; --amber-soft:#3a2b08;
+    --green:#4ade80; --green-soft:#0c2a18;
+    --red:#f87171; --red-soft:#3a1717;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --amber:#fbbf24; --amber-soft:#3a2b08;
+  --green:#4ade80; --green-soft:#0c2a18;
+  --red:#f87171; --red-soft:#3a1717;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:clamp(28px,5vw,56px)}
+h1,h2,h3,h4{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:76ch;color:var(--muted)}
+.lede b{color:var(--ink);font-weight:600}
+.ans{margin-top:18px;padding:16px 18px;border-radius:var(--r);background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--green);max-width:76ch}
+.ans h2{font-size:14px;margin-bottom:6px}
+.ans p{font-size:14px;color:var(--muted)}
+.ans b{color:var(--ink);font-weight:600}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap}
+.chip b{color:var(--ink);font-weight:600}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin-top:22px}
+.toc a{font-family:var(--mono);font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);text-decoration:none}
+.toc a:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Slide */
+.slide{margin-top:clamp(36px,6vw,64px);scroll-margin-top:24px}
+.slide-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.slide-head h2{font-size:20px;font-weight:700}
+.mode-tag{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.mode-tag.now{background:var(--red-soft);color:var(--red)}
+.mode-tag.pick{background:var(--green-soft);color:var(--green)}
+.mode-tag.hold{background:var(--amber-soft);color:var(--amber)}
+.slide-goal{color:var(--muted);font-size:13.5px;max-width:78ch;margin-bottom:14px}
+.slide-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:start}
+.slide-grid.wide{grid-template-columns:1fr}
+.slide-grid.even{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(max-width:900px){.slide-grid,.slide-grid.even{grid-template-columns:1fr}}
+
+/* Bingkai layar */
+.screen{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.screen-inner{border-radius:8px;border:1px solid var(--line);background:var(--panel-2);overflow:hidden;position:relative;display:flex;flex-direction:column}
+.screen-cap{font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 4px 2px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.vp-tag{font-family:var(--mono);font-size:11px;color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:2px 7px}
+.vp-tag.dim{color:var(--muted);background:var(--panel-2)}
+
+/* Anotasi */
+.notes{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.notes h3{font-size:14px;margin-bottom:8px}
+.notes ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.notes li{font-size:13.5px;color:var(--muted)}
+.notes li b{color:var(--ink);font-weight:600}
+.notes code{background:var(--panel-2);border:1px solid var(--line-soft);padding:1px 5px;border-radius:5px}
+.verdict{margin-top:12px;padding-top:12px;border-top:1px solid var(--line-soft);font-size:13px}
+.verdict b{color:var(--ink)}
+table.mini{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+table.mini th{font-family:var(--mono);font-weight:500;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;color:var(--muted);text-align:left;padding:4px 8px;border-bottom:1px solid var(--line)}
+table.mini td{padding:6px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table.mini tr:last-child td{border-bottom:0}
+table.mini td:first-child{width:150px;color:var(--ink);font-weight:600}
+table.mini td.num,table.mini th.num{text-align:right;font-family:var(--mono);white-space:nowrap}
+.scroll-x{overflow-x:auto}
+tr.bad td{background:var(--red-soft)}
+tr.good td{background:var(--green-soft)}
+tr.cliff td{border-top:2px solid var(--red)}
+
+/* =========================================================================
+   Miniatur "Dewan Juri" — digambar kode, satuan --u
+   `--u` = 1 px pada kartu asli. Dideklarasikan di ANAK .pubcard, bukan di
+   .pubcard sendiri: cqw menilik container terdekat, dan sebuah elemen tak
+   bisa menanyai dirinya sendiri.
+   ========================================================================= */
+.pubcard{padding:calc(24 * var(--u));display:flex;flex-direction:column;gap:calc(20 * var(--u))}
+.pubcard>*{--u:.62px}
+.sec-head{display:flex;align-items:center;gap:calc(8 * var(--u))}
+.sec-head h4{font-size:calc(17 * var(--u));font-weight:700;letter-spacing:-.01em;color:var(--ink)}
+.sec-head .cnt{margin-left:auto;font-size:calc(11 * var(--u));font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:calc(4 * var(--u)) calc(11 * var(--u))}
+.icn{width:calc(15 * var(--u));height:calc(15 * var(--u));flex:none;fill:none;stroke:var(--accent);stroke-width:1.7}
+
+/* Kartu potret */
+.potrait{aspect-ratio:1/1;background:var(--ph-fill);border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;container-type:inline-size}
+.mono{font-size:34cqw;font-weight:700;letter-spacing:.01em;line-height:1}
+.mono.a{color:#0062ff}.mono.b{color:#059669}.mono.c{color:#b45309}
+:root[data-theme="dark"] .mono.a{color:#709cff}
+:root[data-theme="dark"] .mono.b{color:#34d399}
+:root[data-theme="dark"] .mono.c{color:#e2b857}
+.jcard{border:1px solid var(--line);border-radius:calc(14 * var(--u));background:var(--panel);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.jcard .body{padding:calc(11 * var(--u)) calc(13 * var(--u)) calc(13 * var(--u));display:flex;flex-direction:column;gap:calc(5 * var(--u));min-width:0}
+.jcard b{font-size:calc(13.5 * var(--u));font-weight:700;line-height:1.25;overflow-wrap:anywhere}
+.jcard .tugas{font-size:calc(11 * var(--u));color:var(--muted);line-height:1.4;overflow-wrap:anywhere}
+.jcard .tugas.penilai{font-style:italic;opacity:.8}
+
+/* Grid auto-fit — bentuk yang berjalan sekarang */
+.jgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(calc(140 * var(--u)),calc(200 * var(--u))));gap:calc(16 * var(--u));justify-content:center}
+
+/* Jalur A — carousel snap */
+.snapwrap{position:relative}
+.snap{display:flex;gap:calc(16 * var(--u));overflow-x:auto;scroll-snap-type:x mandatory;scroll-behavior:smooth;padding:calc(4 * var(--u)) calc(2 * var(--u)) calc(10 * var(--u));margin:calc(-4 * var(--u)) calc(-2 * var(--u)) calc(-10 * var(--u));scrollbar-width:none}
+.snap::-webkit-scrollbar{display:none}
+.snap>.jcard{flex:0 0 calc(200 * var(--u));scroll-snap-align:start}
+.car-arrow{position:absolute;top:calc(100 * var(--u));width:calc(30 * var(--u));height:calc(30 * var(--u));border-radius:999px;border:1px solid var(--line);background:var(--panel);box-shadow:0 1px 4px rgba(0,0,0,.10);display:flex;align-items:center;justify-content:center;color:var(--ink);z-index:2}
+.car-arrow.l{left:calc(-15 * var(--u))}
+.car-arrow.r{right:calc(-15 * var(--u))}
+.car-arrow svg{width:calc(14 * var(--u));height:calc(14 * var(--u));fill:none;stroke:currentColor;stroke-width:2}
+.dots{display:flex;justify-content:center;gap:calc(6 * var(--u));margin-top:calc(4 * var(--u))}
+.dots i{width:calc(6 * var(--u));height:calc(6 * var(--u));border-radius:999px;background:var(--ph-line);display:block}
+.dots i.on{background:var(--accent);width:calc(16 * var(--u));border-radius:999px}
+.fade{position:absolute;top:0;bottom:calc(10 * var(--u));width:calc(28 * var(--u));background:linear-gradient(90deg,var(--panel),transparent);pointer-events:none;z-index:1}
+.fade.r{right:0;background:linear-gradient(270deg,var(--panel),transparent)}
+
+/* Jalur B — ambang lebar (potret hanya ≥ lg) */
+.grid-noambang{display:grid;grid-template-columns:repeat(auto-fit,minmax(calc(140 * var(--u)),1fr));gap:calc(16 * var(--u))}
+
+/* Baris kompak — jalur C, dan bentuk ponsel ketiga jalur */
+.jrows{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:calc(12 * var(--u));overflow:hidden;background:var(--panel)}
+.jrow{display:flex;align-items:center;gap:calc(12 * var(--u));padding:calc(11 * var(--u)) calc(14 * var(--u));border-bottom:1px solid var(--line-soft);min-width:0}
+.jrow:last-child{border-bottom:0}
+.av{width:calc(38 * var(--u));height:calc(38 * var(--u));border-radius:999px;background:var(--ph-fill);border:1px solid var(--ph-line);display:flex;align-items:center;justify-content:center;font-size:calc(12 * var(--u));font-weight:700;flex:none;overflow:hidden}
+.av.a{color:#0062ff}.av.b{color:#059669}.av.c{color:#b45309}
+:root[data-theme="dark"] .av.a{color:#709cff}
+:root[data-theme="dark"] .av.b{color:#34d399}
+:root[data-theme="dark"] .av.c{color:#e2b857}
+.jrow .mid{flex:1;min-width:0}
+.jrow .mid b{display:block;font-size:calc(13 * var(--u));line-height:1.25;color:var(--ink)}
+.jrow .mid span{display:block;font-size:calc(11 * var(--u));color:var(--muted);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jrow .lv{font-size:calc(10 * var(--u));font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:calc(3 * var(--u)) calc(9 * var(--u));white-space:nowrap;flex:none}
+.jmore{display:flex;align-items:center;justify-content:center;gap:calc(6 * var(--u));padding:calc(11 * var(--u));border-top:1px solid var(--line-soft);font-size:calc(12 * var(--u));font-weight:700;color:var(--accent);background:var(--panel-2)}
+
+/* Ponsel */
+.phone{--u:.78px;width:min(330px,100%);border:1px solid var(--line);border-radius:22px;background:var(--panel);padding:8px;box-shadow:0 1px 2px rgba(0,0,0,.05);margin-inline:auto}
+.phone-inner{border-radius:16px;border:1px solid var(--line);background:var(--panel-2);overflow:hidden}
+.p-head{padding:calc(14 * var(--u)) calc(14 * var(--u)) calc(10 * var(--u));background:var(--panel);display:flex;align-items:center;gap:calc(8 * var(--u));border-bottom:1px solid var(--line-soft)}
+.p-head b{font-size:calc(14 * var(--u));color:var(--ink)}
+.p-head .cnt{margin-left:auto;font-size:calc(10 * var(--u));font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:calc(3 * var(--u)) calc(9 * var(--u))}
+.p-snap{display:flex;gap:calc(10 * var(--u));overflow-x:auto;scroll-snap-type:x mandatory;padding:calc(12 * var(--u));scrollbar-width:none}
+.p-snap::-webkit-scrollbar{display:none}
+.p-snap .jcard{flex:0 0 calc(132 * var(--u));scroll-snap-align:start}
+.p-dots{display:flex;justify-content:center;gap:calc(5 * var(--u));padding-bottom:calc(12 * var(--u))}
+.p-dots i{width:calc(5 * var(--u));height:calc(5 * var(--u));border-radius:999px;background:var(--ph-line);display:block}
+.p-dots i.on{background:var(--accent);width:calc(13 * var(--u))}
+
+/* Penggaris lebar miniatur */
+.ruler{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-bottom:6px}
+.ruler .bar{flex:1;height:1px;background:var(--line);position:relative}
+.ruler .bar::before,.ruler .bar::after{content:"";position:absolute;top:-3px;width:1px;height:7px;background:var(--line)}
+.ruler .bar::before{left:0}.ruler .bar::after{right:0}
+.overflow-warn{margin-top:8px;font-size:12px;color:var(--red);background:var(--red-soft);border-radius:8px;padding:7px 10px;font-family:var(--mono)}
+.num{font-family:var(--mono);font-size:12px;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Berbaris App — Spesifikasi &amp; Wireframe</p>
+  <h1>Dewan Juri: carousel, atau bukan?</h1>
+  <p class="lede">
+    Pertanyaan yang dijawab dokumen ini: kalau bagian "Dewan Juri" di
+    <code>event-detail.blade.php</code> dibuat <b>carousel</b> — geser ke samping, sekian kartu
+    terlihat, sisanya di balik panah — apakah hasilnya lebih baik daripada bentuk yang berjalan
+    sekarang? Jawabannya disusun dari geometri kartu yang sebenarnya, bukan dari kesan:
+    <code>.container-landing</code> (maks 1280 px), <code>p-6</code> (24 px), kolom <code>md:grid-cols-3</code>
+    (2 dari 3 = 0,618 lebar isi), kartu potret <code>minmax(140px,200px)</code>, dan baris kompak ± 65 px.
+  </p>
+
+  <div class="ans">
+    <h2>Kesimpulan</h2>
+    <p>
+      <b>Carousel memang menyelesaikan satu masalah nyata — tapi masalah itu bukan masalah utama,
+      dan harganya dibayar di tempat yang salah.</b> Yang sekarang bocor adalah <b>ambangnya salah
+      sumbu</b>: bentuk kompak dipilih dari JUMLAH juri (<code>count() &gt; 6</code>), bukan dari
+      muat-tidaknya. Akibatnya ada jurang di 800–820 px, tempat lebar isi turun dari 456 ke 443 px
+      dan kolom <code>auto-fit</code> terjatuh dari 3 ke 2 — tinggi bagian ini melonjak dari 672 ke
+      1136 px. Carousel menutup jurang itu (296 px, tetap di semua lebar), tapi di 1280 px ia
+      menukar grid yang muat sempurna (8 dari 8 kartu terlihat, 517 px) dengan rel yang hanya
+      memperlihatkan 3 dari 8.
+      Jalur yang dipilih: <b>buang ambang jumlah, ganti dengan ambang lebar</b> — kartu potret
+      hanya untuk ≥ <code>lg</code> (tempat ia memang muat), baris kompak untuk di bawahnya
+      (tempat ia memang tidak) — <b>tanpa satu baris JavaScript pun.</b>
+    </p>
+  </div>
+
+  <div class="meta">
+    <span class="chip">Berkas: <b>livewire/public/event-detail.blade.php</b> 545–580</span>
+    <span class="chip">Partial: <b>_dewan-juri-portraits</b> · <b>_dewan-juri-rows</b></span>
+    <span class="chip">Data nyata: <b>1 event · 3 juri · 0 berfoto</b></span>
+    <span class="chip">Usulan: <b>ambang lebar, bukan ambang jumlah</b></span>
+    <span class="chip">Kesimpulan: <b>carousel ditolak</b></span>
+  </div>
+  <nav class="toc" aria-label="Daftar slide">
+    <a href="#s1">1 Geometri sebenarnya</a>
+    <a href="#s2">2 Di mana yang bocor</a>
+    <a href="#s3">3 Jalur A — carousel snap</a>
+    <a href="#s4">4 Jalur B — ambang lebar</a>
+    <a href="#s5">5 Jalur C — snap di ponsel saja</a>
+    <a href="#s6">6 Perbandingan</a>
+    <a href="#s7">7 Biaya carousel</a>
+    <a href="#s8">8 Rekomendasi</a>
+  </nav>
+
+  <!-- ============ 1 · GEOMETRI ============ -->
+  <section class="slide" id="s1">
+    <div class="slide-head"><span class="num">01</span><h2>Geometri sebenarnya</h2><span class="mode-tag now">diukur, bukan dikira</span></div>
+    <p class="slide-goal">
+      Carousel hanya masuk akal kalau kartunya memang tidak muat. Jadi yang pertama dihitung adalah:
+      berapa kartu yang benar-benar muat pada tiap lebar layar. Kartunya duduk di dalam
+      <code>md:grid-cols-3</code> dengan <code>md:col-span-2</code>, jadi ruangnya hanya 2/3 lebar isi
+      halaman — bukan seluruh layar.
+    </p>
+    <div class="slide-grid wide">
+      <div class="notes scroll-x">
+        <table class="mini">
+          <tr>
+            <th>Viewport</th><th>Lebar isi kartu</th><th class="num">Kolom</th>
+            <th class="num">Ukuran kartu</th><th class="num">Tinggi 8 juri (potret)</th><th class="num">Tinggi 8 juri (baris)</th>
+          </tr>
+          <tr><td>1280 px</td><td>763 px</td><td class="num">4</td><td class="num">179 × 251</td><td class="num">517 px</td><td class="num">520 px</td></tr>
+          <tr><td>1024 px</td><td>592 px</td><td class="num">3</td><td class="num">187 × 259</td><td class="num">808 px</td><td class="num">520 px</td></tr>
+          <tr><td>900 px</td><td>509 px</td><td class="num">3</td><td class="num">159 × 231</td><td class="num">725 px</td><td class="num">520 px</td></tr>
+          <tr class="good"><td>820 px</td><td>456 px</td><td class="num">3</td><td class="num">141 × 213</td><td class="num">672 px</td><td class="num">520 px</td></tr>
+          <tr class="bad cliff"><td>800 px</td><td>443 px</td><td class="num">2</td><td class="num">200 × 272</td><td class="num">1136 px</td><td class="num">520 px</td></tr>
+          <tr class="bad"><td>768 px</td><td>421 px</td><td class="num">2</td><td class="num">200 × 272</td><td class="num">1136 px</td><td class="num">520 px</td></tr>
+          <tr><td>&lt; 768 px</td><td>350–620 px</td><td class="num">2–4</td><td class="num">—</td><td class="num">baris: 301 px</td><td class="num">301 px</td></tr>
+        </table>
+        <div class="verdict">
+          <b>Baris yang ditandai merah adalah temuannya.</b> Karena <code>auto-fit</code> menghitung
+          <code>floor((lebar + 16) / (140 + 16))</code>, lebar isi 443 px hanya memberi 2 kolom sementara
+          456 px memberi 3. Selisih viewport 20 px (820 → 800) <b>menggandakan</b> tinggi bagian ini:
+          672 px jadi 1136 px. Itu jurang yang tak terlihat siapa pun sampai ada yang mengukurnya.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2 · YANG BOCOR ============ -->
+  <section class="slide" id="s2">
+    <div class="slide-head"><span class="num">02</span><h2>Di mana sebenarnya yang bocor</h2><span class="mode-tag now">$kompak = count() &gt; 6</span></div>
+    <p class="slide-goal">
+      Bentuk sekarang dipilih dari jumlah juri, bukan dari lebar layar. Baris kompak dipakai di
+      SEMUA lebar begitu juri lebih dari enam — termasuk di desktop yang lebarnya justru berlimpah.
+    </p>
+    <div class="slide-grid even">
+      <div>
+        <div class="ruler"><span>1280 px · desktop</span><span class="bar"></span><span>isi 763 px</span></div>
+        <div class="screen">
+          <div class="screen-inner">
+            <div class="pubcard">
+              <div class="sec-head">
+                <svg class="icn" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 15.7 7.1 18.4l1-5.6L4 8.9l5.6-.7z"/></svg>
+                <h4>Dewan Juri</h4><span class="cnt">8 Juri</span>
+              </div>
+              <div class="jrows">
+                <div class="jrow"><div class="av a">AS</div><div class="mid"><b>Ahmad Sudrajat</b><span>LOBB — U16 - SMP / MTS, U19 - SMA / SMK / MA</span></div><span class="lv">LOBB</span></div>
+                <div class="jrow"><div class="av b">BS</div><div class="mid"><b>Budi Santoso</b><span>VARMUS — U13 - SD / MI, U16 - SMP / MTS</span></div><span class="lv">VARMUS</span></div>
+                <div class="jrow"><div class="av c">CD</div><div class="mid"><b>Citra Dewi</b><span>PBB Putri — Regu Inti</span></div><span class="lv">PBB Putri</span></div>
+                <div class="jrow"><div class="av a">EW</div><div class="mid"><b>Eko Wibowo</b><span>PBB Campuran — Regu Utama</span></div><span class="lv">PBB Campuran</span></div>
+              </div>
+              <div class="jmore">
+                <svg class="icn" viewBox="0 0 24 24" style="stroke:currentColor" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                Lihat semua juri (8)
+              </div>
+            </div>
+          </div>
+          <div class="screen-cap"><span>4 teratas, 4 disembunyikan di balik tombol</span><span>± 301 px · 1 kolom · 763 px ruang terbuang</span></div>
+        </div>
+        <div class="overflow-warn">763 px tersedia; 4 kartu potret muat berjajar (2 baris total), tapi yang digambar cuma 4 baris vertikal — 4 juri disembunyikan</div>
+      </div>
+      <div class="notes">
+        <h3>Yang bocor, tepatnya</h3>
+        <ul>
+          <li><b>Ambangnya salah sumbu.</b> <code>$kompak = $dewan-&gt;count() &gt; 6</code> membaca jumlah, bukan lebar. Di 1280 px delapan kartu potret jadi 2 baris (517 px) dan seluruh dewan terlihat; yang dirender justru baris kompak 4 + tombol (301 px) dengan empat juri tersembunyi. Jadi di desktop ia <em>lebih pendek</em> tapi <b>kehilangan informasi</b> — dan tinggi bukan satu-satunya ukuran.</li>
+          <li><b>Di 800–820 px ambang jumlah kebetulan menyelamatkan.</b> Potret 8 juri = 1136 px; baris kompak 4 + tombol = 301 px. Jadi pada satu rentang lebar ambang jumlah benar, pada rentang lain salah. Itu tanda ia bukan sumbu yang tepat — bukan tanda ia harus dibuang tanpa ganti.</li>
+          <li><b>Yang paling bocor justru rentang 768–1023 px dengan juri ≤ 6.</b> Di situ <code>$kompak</code> bernilai <code>false</code>, jadi kartu potret tetap dipakai: pada 800 px, enam juri memakan 3 baris (848 px) sementara pada 1280 px hanya 2 baris (518 px). Juri ke-7 adalah pemicu ambangnya — dan pada 800 px ia melompat dari 848 ke 1136 px sebelum ambangnya akhirnya menyala.</li>
+          <li><b>Jadi masalahnya bukan "kartu tidak muat" di desktop luas.</b> Masalahnya: bentuk dipilih dari jumlah, sehingga jumlah yang salah bertemu lebar yang salah. Carousel menutupi gejalanya (tinggi) tanpa memperbaiki sebabnya (sumbu).</li>
+        </ul>
+        <div class="verdict">
+          <b>Perhatikan:</b> yang gagal bukan bentuk barisnya — baris kompak itu sendiri baik
+          (informasi lebih padat daripada kartu lama). Yang gagal adalah <em>kapan</em> ia dipakai.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3 · JALUR A ============ -->
+  <section class="slide" id="s3">
+    <div class="slide-head"><span class="num">03</span><h2>Jalur A — carousel snap</h2><span class="mode-tag hold">yang ditanyakan</span></div>
+    <p class="slide-goal">
+      Delapan kartu potret dalam rel geser: 3 terlihat + potongan kartu ke-4 sebagai isyarat bisa
+      digeser, panah kiri-kanan, titik indikator. Digambar pada lebar kartu yang sebenarnya (763 px).
+    </p>
+    <div class="slide-grid">
+      <div>
+        <div class="screen">
+          <div class="screen-inner">
+            <div class="pubcard">
+              <div class="sec-head">
+                <svg class="icn" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 15.7 7.1 18.4l1-5.6L4 8.9l5.6-.7z"/></svg>
+                <h4>Dewan Juri</h4><span class="cnt">8 Juri</span>
+              </div>
+              <div class="snapwrap">
+                <div class="fade r"></div>
+                <div class="car-arrow l"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></div>
+                <div class="car-arrow r"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></div>
+                <div class="snap">
+                  <div class="jcard"><div class="potrait"><span class="mono a">AS</span></div><div class="body"><b>Ahmad Sudrajat</b><span class="tugas">LOBB — U16 - SMP / MTS, U19 - SMA / SMK / MA</span></div></div>
+                  <div class="jcard"><div class="potrait"><span class="mono b">BS</span></div><div class="body"><b>Budi Santoso</b><span class="tugas">VARMUS — U13 - SD / MI, U16 - SMP / MTS</span></div></div>
+                  <div class="jcard"><div class="potrait"><span class="mono c">CD</span></div><div class="body"><b>Citra Dewi</b><span class="tugas">PBB Putri — Regu Inti</span></div></div>
+                  <div class="jcard"><div class="potrait"><span class="mono a">EW</span></div><div class="body"><b>Eko Wibowo</b><span class="tugas">PBB Campuran — Regu Utama</span></div></div>
+                </div>
+                <div class="dots"><i class="on"></i><i></i><i></i></div>
+              </div>
+            </div>
+          </div>
+          <div class="screen-cap"><span>3 kartu penuh + 1 terpotong, titik indikator di tengah</span><span>± 296 px</span></div>
+        </div>
+      </div>
+      <div class="notes">
+        <h3>Yang didapat, dan yang dibayar</h3>
+        <ul>
+          <li><b>Yang didapat: 296 px, tetap di semua lebar.</b> Kartu carousel lebarnya dipaku 200 px, jadi tingginya berhenti bergantung pada lebar layar. Delapan juri muat dalam satu baris kartu — hemat ± 221 px di 1280 px, dan <b>seluruh jurang 800–820 px hilang</b> (1136 px → 296 px). Di situ carousel memang menang telak.</li>
+          <li><b>Yang dibayar: lima dari delapan kartu tersembunyi.</b> Di grid, 1280 px menampilkan kedelapan potret sekaligus dalam 2 baris. Carousel menampilkan tiga. Untuk bagian yang intinya "wajah juri", menyembunyikan lima wajah adalah pertukaran yang merugikan — dan di 1280 px ia menukar masalah yang tidak ada (grid sudah muat) dengan masalah yang baru (lima kartu hilang).</li>
+          <li><b>Yang dibayar: hitungannya berhenti terbaca.</b> Chip header berbunyi "8 Juri" sementara mata melihat tiga. Sekarang pun begitu di baris kompak (4 dari 8), tapi di sana ada tombol "Lihat semua juri (8)" yang menjanjikan sisanya — carousel tidak punya padanannya, dan geser bukan hal yang semua orang coba.</li>
+          <li><b>Kelas Tailwind harus lahir dari blade, bukan app/.</b> <code>@source</code> di <code>landing.css</code> hanya memindai blade, JS, dan view kompilasi — <code>app/**/*.php</code> BUKAN anggotanya. <code>snap-x</code>, <code>snap-mandatory</code>, <code>snap-start</code>, <code>scrollbar-hide</code> kini <b>nol</b> di <code>landing-B_mEZyD2.css</code>; menuliskan namanya dari komponen PHP mencetak kelas tanpa satu pun aturan CSS di belakangnya.</li>
+        </ul>
+        <div class="verdict"><b>Putusan jalur A:</b> ini satu-satunya jalur yang paling rapat menutup jurang 800–820 px (296 px, lawan 520 px di jalur B) — dan itu bukan alasan yang cukup. Di 1280 px ia menukar grid yang muat sempurna (8 dari 8 terlihat) dengan rel yang menyembunyikan lima wajah, sementara jurangnya sendiri bisa ditutup dengan mengganti sumbu ambangnya (slide 08). Lihat juga slide 08 untuk bentuk carousel yang <em>masuk akal</em>: dibatasi ke rentang 768–1023 px saja, bukan dijadikan bentuk utama.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4 · JALUR B ============ -->
+  <section class="slide" id="s4">
+    <div class="slide-head"><span class="num">04</span><h2>Jalur B — ambang lebar, bukan ambang jumlah</h2><span class="mode-tag pick">rekomendasi</span></div>
+    <p class="slide-goal">
+      Ganti sumbunya: kartu potret hanya untuk <code>lg</code> ke atas (di situ ia memang muat),
+      baris kompak untuk di bawahnya (di situ ia memang tidak). Digambar pada 763 px yang sama.
+    </p>
+    <div class="slide-grid">
+      <div>
+        <div class="screen">
+          <div class="screen-inner">
+            <div class="pubcard">
+              <div class="sec-head">
+                <svg class="icn" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 15.7 7.1 18.4l1-5.6L4 8.9l5.6-.7z"/></svg>
+                <h4>Dewan Juri</h4><span class="cnt">8 Juri</span>
+              </div>
+              <div class="grid-noambang">
+                <div class="jcard"><div class="potrait"><span class="mono a">AS</span></div><div class="body"><b>Ahmad Sudrajat</b><span class="tugas">LOBB — U16 - SMP / MTS</span></div></div>
+                <div class="jcard"><div class="potrait"><span class="mono b">BS</span></div><div class="body"><b>Budi Santoso</b><span class="tugas">VARMUS — U13 - SD / MI</span></div></div>
+                <div class="jcard"><div class="potrait"><span class="mono c">CD</span></div><div class="body"><b>Citra Dewi</b><span class="tugas">PBB Putri — Regu Inti</span></div></div>
+                <div class="jcard"><div class="potrait"><span class="mono a">EW</span></div><div class="body"><b>Eko Wibowo</b><span class="tugas">PBB Campuran — Regu Utama</span></div></div>
+                <div class="jcard"><div class="potrait"><span class="mono b">FS</span></div><div class="body"><b>Fajar Saputra</b><span class="tugas">LOBB — U19</span></div></div>
+                <div class="jcard"><div class="potrait"><span class="mono c">GS</span></div><div class="body"><b>Gita Sari</b><span class="tugas">VARMUS — U16</span></div></div>
+                <div class="jcard"><div class="potrait"><span class="mono a">HS</span></div><div class="body"><b>Hadi Susanto</b><span class="tugas">PBB Putra — Regu Inti</span></div></div>
+                <div class="jcard"><div class="potrait"><span class="mono b">IW</span></div><div class="body"><b>Iwan Setiawan</b><span class="tugas penilai">Penilai</span></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="screen-cap"><span>Bentuk <code>lg</code> ke atas · kedelapan juri terlihat, 2 baris, tanpa satu pun disembunyikan</span><span>± 517 px</span></div>
+        </div>
+      </div>
+      <div class="notes">
+        <h3>Kenapa ini yang dipilih</h3>
+        <ul>
+          <li><b>Seluruh dewan terbaca sekaligus.</b> Delapan potret dalam 2 baris pada 1280 px. Tak ada yang perlu digeser, ditekan, atau ditemukan.</li>
+          <li><b>Tak ada JavaScript baru.</b> <code>auto-fit</code> sudah ada di partial dan sudah bekerja; yang diubah cuma percabangan di pemanggilnya.</li>
+          <li><b>Tak ada kelas Tailwind baru.</b> <code>hidden</code>, <code>sm:hidden</code>, <code>lg:block</code> semuanya sudah ada di CSS terkompilasi, jadi tak ada risiko kelas-yatim-yang-tak-beraturan.</li>
+          <li><b>Tak ada kehilangan informasi.</b> Justru sebaliknya: baris kompak memotong tugas jadi satu baris (<code>truncate</code>), sedangkan kartu potret menampungnya dua baris (<code>line-clamp-2</code>) — muatan informasi tiap juri lebih besar.</li>
+          <li><b>Ambiguitas ponsel hilang.</b> Dengan ambang jumlah, 5 juri di ponsel dan 8 juri di ponsel memakai bentuk berbeda dari yang sama-sama layar lebar. Sekarang aturannya satu: lebar.</li>
+          <li><b>Jurangnya ikut tertutup.</b> Pada 800–820 px (di bawah <code>lg</code>) bentuknya baris kompak = 520 px, bukan 1136 px. Jadi jalur ini menyelesaikan temuan slide 01 tanpa menambah satu pola pun.</li>
+        </ul>
+        <div class="verdict">
+          <b>Bedanya dengan yang sekarang cuma satu kata.</b> Sekarang: <em>"banyak juri? pakai baris."</em>
+          Jalur B: <em>"layar sempit? pakai baris."</em> Satu sumbu diganti, dua kerangka tetap, satu
+          mekanisme tetap. Semua yang kalah dari carousel (JS, kelas baru, kerangka ketiga,
+          lima kartu tersembunyi) hilang, dan satu-satunya yang dikorbankan adalah 517 → 520 px di
+          1280 px — tiga piksel.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 5 · JALUR C ============ -->
+  <section class="slide" id="s5">
+    <div class="slide-head"><span class="num">05</span><h2>Jalur C — snap hanya di ponsel</h2><span class="mode-tag hold">cadangan</span></div>
+    <p class="slide-goal">
+      Kompromi: layar sempit memakai grid (jalur B), ponsel <em>di bawah</em> <code>sm</code> memakai
+      rel geser sebagai ganti daftar vertikal + tombol "Lihat semua juri". Di sini geser memang
+      menghemat tinggi.
+    </p>
+    <div class="slide-grid even">
+      <div>
+        <div class="ruler"><span>Ponsel 390 px</span><span class="bar"></span><span>isi ± 310 px</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="p-head">
+              <svg class="icn" viewBox="0 0 24 24" style="width:14px;height:14px" aria-hidden="true"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 15.7 7.1 18.4l1-5.6L4 8.9l5.6-.7z"/></svg>
+              <b>Dewan Juri</b><span class="cnt">8 Juri</span>
+            </div>
+            <div class="p-snap">
+              <div class="jcard"><div class="potrait"><span class="mono a">AS</span></div><div class="body"><b>Ahmad S.</b><span class="tugas">LOBB — U16</span></div></div>
+              <div class="jcard"><div class="potrait"><span class="mono b">BS</span></div><div class="body"><b>Budi S.</b><span class="tugas">VARMUS — U13</span></div></div>
+              <div class="jcard"><div class="potrait"><span class="mono c">CD</span></div><div class="body"><b>Citra D.</b><span class="tugas">PBB Putri</span></div></div>
+            </div>
+            <div class="p-dots"><i class="on"></i><i></i><i></i><i></i></div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>2 kartu penuh + 1 terpotong = isyarat geser</span><span>± 228 px</span></div>
+      </div>
+      <div>
+        <div class="ruler"><span>Ponsel 390 px · bentuk sekarang</span><span class="bar"></span><span>isi ± 310 px</span></div>
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="p-head">
+              <svg class="icn" viewBox="0 0 24 24" style="width:14px;height:14px" aria-hidden="true"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 15.7 7.1 18.4l1-5.6L4 8.9l5.6-.7z"/></svg>
+              <b>Dewan Juri</b><span class="cnt">8 Juri</span>
+            </div>
+            <div class="jrows" style="border:0;border-radius:0">
+              <div class="jrow"><div class="av a">AS</div><div class="mid"><b>Ahmad Sudrajat</b><span>LOBB — U16 - SMP / MTS</span></div></div>
+              <div class="jrow"><div class="av b">BS</div><div class="mid"><b>Budi Santoso</b><span>VARMUS — U13 - SD / MI</span></div></div>
+              <div class="jrow"><div class="av c">CD</div><div class="mid"><b>Citra Dewi</b><span>PBB Putri — Regu Inti</span></div></div>
+              <div class="jrow"><div class="av a">EW</div><div class="mid"><b>Eko Wibowo</b><span>PBB Campuran — Regu Utama</span></div></div>
+            </div>
+            <div class="jmore">
+              <svg class="icn" viewBox="0 0 24 24" style="stroke:currentColor;width:12px;height:12px" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              Lihat semua juri (8)
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Semua nama terbaca, satu kolom, tanpa geser</span><span>± 301 px</span></div>
+      </div>
+    </div>
+
+    <div class="slide-grid wide" style="margin-top:16px">
+      <div class="notes">
+        <h3>Kenapa ini cuma cadangan</h3>
+        <ul>
+          <li><b>Hematnya kecil: 73 px.</b> 301 px (4 baris + tombol) → 228 px. Itu seperlima layar ponsel, ditukar dengan enam juri yang jadi tak terlihat sampai digeser.</li>
+          <li><b>Menukar satu pola dengan dua.</b> Bentuk sekarang satu pola dengan dua kerangka (baris &amp; potret) dan satu mekanisme buka (<code>x-show</code>). Jalur C menambah pola ketiga — rel snap — dengan mekanisme kedua (geser), jadi tiga kerangka dan dua mekanisme untuk satu bagian.</li>
+          <li><b>Tabrakan dengan <code>[container-type:inline-size]</code>.</b> Bidang potret menanyai lebar container-nya untuk menghitung monogram <code>34cqw</code>. Di dalam rel geser, container itu diselesaikan dari lebar kartu (132 px), bukan lebar rel — jadi monogramnya menyusut mengikuti kartu, bukan mengikuti ruang yang tersedia. Bukan galat, tapi tak lagi sepadan dengan kartu potret di desktop.</li>
+          <li><b>Baris kompak justru lebih informatif di ponsel.</b> Satu baris memuat nama penuh + tugas terpotong + chip induk. Kartu potret 132 px hanya memuat nama dan tugas yang terpotong lebih cepat, karena fotonya memakan 132 px pertama.</li>
+        </ul>
+        <div class="verdict">
+          <b>Putusan jalur C:</b> hemat 73 px tidak sebanding dengan menambah kerangka ketiga.
+          Kalau nanti baris kompak ponsel dirasa terlalu tinggi, yang lebih murah adalah menaikkan
+          <code>$batas</code> dari 4 ke 6 — satu angka, bukan satu pola baru.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6 · PERBANDINGAN ============ -->
+  <section class="slide" id="s6">
+    <div class="slide-head"><span class="num">06</span><h2>Perbandingan tiga jalur</h2><span class="mode-tag">8 juri · 0 berfoto</span></div>
+    <p class="slide-goal">Diukur pada tiga lebar: 1280 px (desktop), 800 px (jurang), 390 px (ponsel).</p>
+    <div class="slide-grid wide">
+      <div class="notes scroll-x">
+        <table class="mini">
+          <tr>
+            <th>Ukuran</th><th>Jalur A carousel</th><th>Jalur B ambang lebar</th><th>Jalur C snap di ponsel</th>
+          </tr>
+          <tr><td>Tinggi · 1280 px</td><td class="num">296 px</td><td class="num">517 px</td><td class="num">517 px</td></tr>
+          <tr class="good"><td>Tinggi · 800 px</td><td class="num">296 px</td><td class="num">520 px</td><td class="num">520 px</td></tr>
+          <tr><td>Tinggi · 390 px</td><td class="num">228 px</td><td class="num">301 px</td><td class="num">228 px</td></tr>
+          <tr><td>Juri terlihat · 1280 px</td><td>3 dari 8</td><td>8 dari 8</td><td>8 dari 8</td></tr>
+          <tr><td>Juri terlihat · 800 px</td><td>3 dari 8</td><td>4 dari 8 + tombol</td><td>4 dari 8 + tombol</td></tr>
+          <tr><td>Juri terlihat · 390 px</td><td>2 dari 8</td><td>4 dari 8 + tombol</td><td>2 dari 8</td></tr>
+          <tr><td>JS baru</td><td>~30 baris (indeks, panah, tombol mati)</td><td class="num">0</td><td>~30 baris, hanya &lt; sm</td></tr>
+          <tr><td>Kelas Tailwind baru</td><td>4 (<code>snap-*</code>, <code>scrollbar-hide</code>)</td><td class="num">0</td><td>4, hanya &lt; sm</td></tr>
+          <tr><td>Kerangka bentuk</td><td>3 (potret, baris, rel)</td><td>2 (potret, baris)</td><td>3 (potret, baris, rel)</td></tr>
+          <tr><td>Mekanisme buka</td><td>2 (geser + panah)</td><td>1 (<code>x-show</code>)</td><td>2</td></tr>
+          <tr><td>Info per juri</td><td>tugas 2 baris</td><td>potret 2 baris · baris 1 baris</td><td>ponsel: tugas 1 baris</td></tr>
+          <tr><td>Memecahkan jurang 800–820 px?</td><td><b>Ya</b> — 1136 → 296</td><td><b>Ya</b> — 1136 → 520</td><td><b>Ya</b> — 1136 → 520</td></tr>
+        </table>
+        <div class="verdict">
+          <b>Bacaan tabelnya.</b> Ketiga jalur menutup jurang 800–820 px — jalur A lebih rapat
+          (296 px), jalur B dan C sama (520 px). Sisanya jalur A kalah di empat kolom yang justru
+          jadi alasan bagian ini ada: berapa juri yang terlihat di layar lebar (3 lawan 8), berapa
+          baris kode, berapa kelas baru, berapa mekanisme. Jalur B menang karena ia membayar
+          jurangnya dengan <b>satu aturan lebar</b>, bukan dengan pola baru.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 7 · BIAYA CAROUSEL ============ -->
+  <section class="slide" id="s7">
+    <div class="slide-head"><span class="num">07</span><h2>Biaya carousel, satu per satu</h2><span class="mode-tag now">kalau tetap dipaksakan</span></div>
+    <p class="slide-goal">
+      Bukan alasan untuk menolak tanpa memeriksa — ini daftar hal yang harus dibereskan lebih dulu
+      bila jalur A atau C akhirnya dipilih.
+    </p>
+    <div class="slide-grid wide">
+      <div class="notes scroll-x">
+        <table class="mini">
+          <tr><th>Hal</th><th>Beban</th></tr>
+          <tr>
+            <td><b>Kelas snap belum ada</b></td>
+            <td><code>snap-x</code>, <code>snap-mandatory</code>, <code>snap-start</code>, <code>scrollbar-hide</code> semuanya <b>nol</b> di <code>landing-B_mEZyD2.css</code> (diperiksa dengan <code>grep -F</code>; <code>grep</code> biasa salah baca karena Tailwind meng-escape selektornya jadi <code>.snap-x</code> → <code>.snap-x</code> tetap utuh, tapi <code>bg-white/5</code> jadi <code>.bg-white\/5</code>). Boleh dipakai asal namanya lahir dari blade — <code>@source</code> memindai blade, JS, dan view kompilasi; <code>app/**/*.php</code> <b>bukan</b> anggotanya.</td>
+          </tr>
+          <tr>
+            <td><b>Monogram <code>cqw</code> vs rel</b></td>
+            <td><code>[container-type:inline-size]</code> di bidang potret + <code>scroll-snap</code> saling mengganggu: container bertanya lebar dirinya sendiri, dan di dalam rel lebar itu adalah lebar kartu, bukan lebar rel. <code>34cqw</code> karena itu berhenti sepadan antar bentuk.</td>
+          </tr>
+          <tr>
+            <td><b><code>.surface-card</code> tanpa <code>overflow-hidden</code></b></td>
+            <td>Kartu pembungkusnya tidak menggunting isi. Tanpa <code>overflow-x-auto</code> di pembungkus rel, track-nya meluber keluar kartu dan menyeret lebar halaman.</td>
+          </tr>
+          <tr>
+            <td><b>Afordansi geser tak terlihat</b></td>
+            <td>Butuh kartu terpotong + titik indikator + tombol panah — tiga elemen baru. Atau tidak, dan separuh pengunjung tak pernah tahu ada juri lain. Geser bukan hal yang semua orang coba.</td>
+          </tr>
+          <tr>
+            <td><b>Alpine ~30 baris</b></td>
+            <td>Indeks aktif, tombol prev/next nonaktif di ujung, kelipatan lebar kartu, penyelarasan ulang saat lebar berubah. Semua ini untuk memecahkan masalah yang <code>auto-fit</code> pecahkan tanpa skrip — dan yang paling rapuh di antara keduanya adalah yang berskrip.</td>
+          </tr>
+          <tr>
+            <td><b>Aksesibilitas papan ketik</b></td>
+            <td>Rel <code>overflow-x:auto</code> bisa difokus dan digeser dengan tombol panah, tapi <code>scroll-snap-type:x mandatory</code> membuat Tab ke kartu ke-4 melompat — fokus dan snap berebut posisi. Menambah <code>tabindex</code> dan <code>aria-label</code> yang benar menambah pekerjaan lagi.</td>
+          </tr>
+          <tr>
+            <td><b>Jujur soal motifnya</b></td>
+            <td>Carousel di sini cenderung diusulkan karena <em>terasa</em> lebih hidup, bukan karena lebih terbaca. Ini bagian yang isinya wajah dan tugas orang; animasi menggeser tidak menambah satu fakta pun tentang siapa menilai apa.</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 8 · REKOMENDASI ============ -->
+  <section class="slide" id="s8">
+    <div class="slide-head"><span class="num">08</span><h2>Rekomendasi &amp; rencana</h2><span class="mode-tag pick">jalur B</span></div>
+    <p class="slide-goal">
+      Satu perubahan kecil di pemanggil, tanpa berkas baru, tanpa kelas baru, tanpa skrip baru.
+    </p>
+    <div class="slide-grid wide">
+      <div class="notes scroll-x">
+        <table class="mini">
+          <tr><th>Bagian</th><th>Rencana</th></tr>
+          <tr>
+            <td><b>Ganti ambangnya</b></td>
+            <td>Di <code>event-detail.blade.php</code> (545–580), hapus <code>$kompak = $dewan-&gt;count() &gt; 6</code>. Ganti dengan satu aturan lebar: kartu potret untuk <code>lg</code> ke atas, baris kompak untuk di bawahnya. Jumlah juri berhenti menentukan bentuk.</td>
+          </tr>
+          <tr>
+            <td><b>Bentuk akhirnya</b></td>
+            <td>&lt; <code>lg</code> (termasuk 800–820 px yang jadi jurang): baris kompak, semua juri, tanpa tombol. ≥ <code>lg</code>: kartu potret lewat <code>auto-fit</code>, seluruh dewan terlihat.</td>
+          </tr>
+          <tr>
+            <td><b>Yang ikut berubah</b></td>
+            <td><code>_dewan-juri-rows</code> tak lagi menerima <code>$batas</code> — tombol "Lihat semua juri" hilang seluruhnya. Empat tes di <code>EventDetailDewanJuriTest</code> menyebut tombol itu dan <code>batas =&gt; 4</code>; keduanya harus diperbarui.</td>
+          </tr>
+          <tr>
+            <td><b>Kenapa <code>lg</code>, bukan <code>sm</code></b></td>
+            <td><code>sm</code> (640 px) masih di bawah titik lekuk: pada 640 px lebar isi hanya 560 px, dan <code>auto-fit</code> memberi 3 kolom kartu 176 px — dewan 8 orang jadi 776 px, lebih tinggi daripada baris kompak. <code>lg</code> (1024 px, lebar isi 592 px) adalah titik pertama tempat kartu potret menang telak: 808 px untuk 8 juri, dan turun lagi ke 517 px di 1280 px.</td>
+          </tr>
+          <tr>
+            <td><b>Kalau tetap ingin carousel</b></td>
+            <td>Satu bentuk yang masuk akal: rel snap <em>hanya</em> untuk rentang <code>md–lg</code> (768–1023 px), tempat kartu potret benar-benar tidak muat (1136 px pada 768–800 px) dan baris kompak terasa memanjang. Di luar rentang itu tak ada masalah yang bisa dipecahkannya. Itu menambah satu kerangka untuk satu rentang — mahal, tapi setidaknya jujur soal apa yang dibeli.</td>
+          </tr>
+          <tr>
+            <td><b>Tes</b></td>
+            <td>Kunci perilaku: 8 juri → 8 potret dirender (bukan 4 + tombol); tak ada lagi string "Lihat semua juri"; baris kompak tetap ada sebagai jalur layar sempit; juri tanpa tugas tetap berbunyi "Penilai"; <code>line-clamp-2</code> tetap menahan tugas panjang.</td>
+          </tr>
+          <tr>
+            <td><b>Verifikasi</b></td>
+            <td><code>pbb2026.berbaris.local</code> (3 juri, 0 foto) untuk bentuk normal, lalu event berjuri 8+ untuk bentuk ramai, pada 1280 / 1024 / 820 / 800 / 640 / 390 px. Suite penuh setelahnya.</td>
+          </tr>
+          <tr>
+            <td><b>Berkas</b></td>
+            <td><code>livewire/public/event-detail.blade.php</code> + <code>partials/_dewan-juri-rows.blade.php</code> (buang <code>$batas</code>) + <code>tests/Feature/EventDetailDewanJuriTest.php</code>. Tanpa CSS baru, tanpa migrasi, tanpa route.</td>
+          </tr>
+        </table>
+        <div class="verdict">
+          <b>Ringkas:</b> carousel ditolak bukan karena jelek, tapi karena memecahkan masalah yang
+          salah di tempat yang salah. Yang bocor adalah ambang yang membaca jumlah padahal yang
+          menentukan adalah lebar — dan itu diperbaiki dengan mengganti satu baris, bukan
+          menambah tiga puluh.
+        </div>
+      </div>
+    </div>
+  </section>
+</div>

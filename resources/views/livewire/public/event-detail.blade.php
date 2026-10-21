@@ -532,20 +532,26 @@
                 @endif
 
                 {{-- Dewan Juri --}}
-                {{-- Dua bentuk, satu sumber data. Kartu potret untuk dewan
-                     kecil (wajah juri adalah alasan bagian ini ada), baris
-                     kompak begitu jurinya banyak atau layarnya sempit —
+                {{-- Dua bentuk, satu sumber data, satu sumbu pemisah: LEBAR
+                     layar. Kartu potret begitu ruangnya cukup untuk berdiri
+                     berdampingan (lg ke atas), baris kompak di bawahnya —
                      kartu potret yang ditumpuk di ponsel memakan tiga layar
                      untuk informasi yang sama.
 
-                     Tugas penilaian datang dari competition_group_judge lewat
-                     PenugasanJuri, bukan dari rubrik: rubrik menempel pada
-                     seri peserta sehingga di event nyata sering kosong, dan
-                     chip-nya berakhir sebagai baris kosong tanpa isi. --}}
+                     Jumlah juri tidak lagi menentukan bentuk, dan itu bukan
+                     penyederhanaan gaya: ambang jumlah (dulu `count() > 6`)
+                     bocor tepat di rentang yang paling butuh penjagaan.
+                     `auto-fit` menurunkan kolomnya sendiri saat kartunya tak
+                     muat, jadi pada 820 px delapan juri jadi tiga kolom
+                     (672 px), sementara pada 800 px — dua puluh piksel lebih
+                     sempit — ia jatuh ke dua kolom dan tingginya berlipat jadi
+                     1136 px; dan ambang `count() > 6` tak menyala selama
+                     jurinya tujuh. Lebar adalah satu-satunya sumbu yang benar-
+                     benar menentukan, jadi lebarlah yang dibaca. --}}
                 @php $dewan = $this->dewanJuri; @endphp
 
                 @if($dewan->isNotEmpty())
-                    <div class="surface-card p-6" x-data="{ semua: false }">
+                    <div class="surface-card p-6">
                         <div class="mb-5 flex items-center gap-2">
                             <i class="ti ti-user-star text-primary text-lg"></i>
                             <h3 class="font-display text-lg font-bold text-deep-slate">Dewan Juri</h3>
@@ -554,28 +560,18 @@
                             </span>
                         </div>
 
-                        @php
-                            // Ambang 6 bukan angka bulat: enam kartu potret
-                            // sudah setinggi lebih dari satu layar ponsel,
-                            // dan di atas itu peta serta kontak terdorong
-                            // terlalu jauh ke bawah.
-                            $kompak = $dewan->count() > 6;
-                        @endphp
-
-                        {{-- Ponsel selalu kompak (sm:hidden) — kartu potret
-                             hanya muncul begitu ada ruang berdampingan. --}}
-                        <div class="{{ $kompak ? '' : 'sm:hidden' }}">
-                            @include('livewire.public.partials._dewan-juri-rows', [
-                                'dewan' => $dewan,
-                                'batas' => $kompak ? 4 : null,
-                            ])
+                        {{-- Satu aturan untuk kedua bentuk, ditulis sekali di
+                             sini: baris kompak di bawah `lg`, potret di atas
+                             `lg`. Tak ada lagi jalur yang tampil di dua
+                             rentang berbeda, jadi tak ada lagi bentuk yang
+                             bergantung pada berapa banyak jurinya. --}}
+                        <div class="lg:hidden">
+                            @include('livewire.public.partials._dewan-juri-rows', ['dewan' => $dewan])
                         </div>
 
-                        @unless($kompak)
-                            <div class="hidden sm:block">
-                                @include('livewire.public.partials._dewan-juri-portraits', ['dewan' => $dewan])
-                            </div>
-                        @endunless
+                        <div class="hidden lg:block">
+                            @include('livewire.public.partials._dewan-juri-portraits', ['dewan' => $dewan])
+                        </div>
                     </div>
                 @endif
 

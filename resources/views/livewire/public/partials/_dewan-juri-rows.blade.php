@@ -1,26 +1,24 @@
 {{-- Baris tugas juri — bentuk kompak.
 
-     Dipakai di dua tempat dengan sasaran berbeda: di ponsel selalu (kartu
-     potret yang ditumpuk memakan tiga layar), dan di layar lebar begitu
-     jurinya banyak. `$batas` null = tampilkan semuanya tanpa tombol.
+     Bentuknya ditentukan LEBAR layar, bukan jumlah juri: pemanggil memasang
+     partial ini di bawah `lg`, dan kartu potret di atasnya. Karena itu daftar
+     ini selalu tampil penuh — dulu ia menerima `$batas` dan menyembunyikan
+     sisanya di balik tombol "Lihat semua juri", sisa dari ambang `count() > 6`
+     yang sekarang sudah dibuang.
+
+     Menyembunyikan sebagian daftar memang masuk akal untuk kartu potret yang
+     tinggi, tapi bukan untuk bentuk ini: sepuluh baris kompak pun masih lebih
+     pendek daripada empat kartu potret, dan di ponsel justru bentuk inilah
+     yang menggantikan potret — menyembunyikan juri di situ berarti pembaca
+     ponsel tak pernah bisa melihat seluruh dewan tanpa menekan tombol.
 
      Tugas dipotong satu baris dengan atribut title berisi teks penuhnya:
      memotong tanpa menyisakan jalur ke teks aslinya sama dengan
      menghilangkan informasi. --}}
-@php
-    $batas = $batas ?? null;
-    $sisa = $batas === null ? 0 : max(0, $dewan->count() - $batas);
-@endphp
 
 <div class="flex flex-col divide-y divide-outline-variant/30 overflow-hidden rounded-xl border border-outline-variant/40">
     @foreach($dewan as $row)
-        @php $tersembunyi = $batas !== null && $loop->index >= $batas; @endphp
-
-        {{-- x-cloak wajib di baris yang tersembunyi: tanpa itu isinya sempat
-             terlihat sebelum Alpine menyala, dan halaman berkedip memanjang
-             lalu memendek. --}}
-        <div class="flex items-center gap-3 px-4 py-3"
-             @if($tersembunyi) x-cloak x-show="semua" @endif>
+        <div class="flex items-center gap-3 px-4 py-3">
             @if($row['judge']->photo)
                 <img src="{{ asset('storage/' . $row['judge']->photo) }}"
                      alt="{{ $row['judge']->name }}"
@@ -44,14 +42,4 @@
             @endif
         </div>
     @endforeach
-
-    @if($sisa > 0)
-        <button type="button"
-                x-show="!semua"
-                @click="semua = true"
-                class="flex w-full items-center justify-center gap-1.5 bg-surface-container-low px-4 py-3 text-xs font-bold text-primary transition-colors hover:bg-surface-container">
-            <i class="ti ti-chevron-down"></i>
-            Lihat semua juri ({{ $dewan->count() }})
-        </button>
-    @endif
 </div>

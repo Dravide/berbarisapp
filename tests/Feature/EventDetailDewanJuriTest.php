@@ -150,32 +150,63 @@ class EventDetailDewanJuriTest extends TestCase
     }
 
     /**
-     * Dewan besar memakai bentuk baris dengan tombol "Lihat semua juri".
+     * Bentuknya ditentukan LEBAR layar, bukan jumlah juri.
      *
-     * Enam kartu potret sudah setinggi lebih dari satu layar ponsel; di atas itu
-     * peta dan kontak terdorong terlalu jauh ke bawah kartu juri.
+     * Ambang lamanya `count() > 6`, dan itu bocor tepat di rentang yang paling
+     * butuh penjagaan: `auto-fit` sudah menurunkan kolomnya sendiri saat kartu
+     * potret tak muat, jadi pada 820 px delapan juri masih tiga kolom (672 px)
+     * sementara pada 800 px — dua puluh piksel lebih sempit — ia jatuh ke dua
+     * kolom dan tingginya berlipat jadi 1136 px. Ambang yang membaca jumlah tak
+     * pernah menyala di situ.
+     *
+     * Kedua bentuk ikut ter-render: server tak tahu lebar layar pembaca, jadi
+     * CSS yang memilih. Yang dijaga di sini adalah pilihannya, bukan jumlah
+     * simpangannya — dan `lg:hidden` / `hidden lg:block` adalah satu-satunya
+     * yang menentukan bentuk mana yang terlihat.
      */
-    public function test_dewan_besar_memakai_bentuk_baris_dengan_tombol_selengkapnya()
+    public function test_bentuk_juri_dipilih_oleh_lebar_layar_bukan_jumlah_juri()
     {
         foreach (range(1, 8) as $i) {
             $this->juri("Juri Ke{$i}");
         }
 
-        $this->get("/event/{$this->eventner->slug}")
-            ->assertStatus(200)
-            ->assertSee('8 Juri', false)
-            ->assertSee('Lihat semua juri (8)', false);
+        $html = $this->get("/event/{$this->eventner->slug}")->assertStatus(200)->getContent();
+
+        $this->assertStringContainsString('8 Juri', $html);
+
+        // Baris kompak di bawah `lg`, potret di atasnya — dan tak ada bentuk
+        // ketiga yang menyala di rentang lain.
+        $this->assertStringContainsString('lg:hidden', $html);
+        $this->assertStringContainsString('hidden lg:block', $html);
+
+        // Delapan juri tetap delapan, di kedua bentuk: tak ada yang
+        // disembunyikan di balik tombol. (Keduanya ter-render di HTML yang
+        // sama — 2 kemunculan per nama — jadi yang dituntut adalah
+        // kehadirannya, bukan jumlahnya.)
+        foreach (range(1, 8) as $i) {
+            $this->assertStringContainsString("Juri Ke{$i}", $html);
+        }
+
+        $this->assertStringNotContainsString('Lihat semua juri', $html);
     }
 
-    /** Dewan kecil tidak menyembunyikan siapa pun di balik tombol. */
-    public function test_dewan_kecil_menampilkan_semua_juri_tanpa_tombol()
+    /**
+     * Dewan kecil tidak diperlakukan berbeda dari dewan besar.
+     *
+     * Sebelumnya dua juri dan delapan juri memakai bentuk yang berbeda di
+     * ponsel — yang satu potret, yang satu baris — padahal layarnya sama-sama
+     * sempit. Sekarang aturannya satu: lebar.
+     */
+    public function test_dewan_kecil_memakai_aturan_lebar_yang_sama()
     {
         $this->juri('Ahmad Sudrajat');
         $this->juri('Budi Santoso');
 
-        $this->get("/event/{$this->eventner->slug}")
-            ->assertStatus(200)
-            ->assertDontSee('Lihat semua juri', false);
+        $html = $this->get("/event/{$this->eventner->slug}")->assertStatus(200)->getContent();
+
+        $this->assertStringContainsString('lg:hidden', $html);
+        $this->assertStringContainsString('hidden lg:block', $html);
+        $this->assertStringNotContainsString('Lihat semua juri', $html);
     }
 
     /** Event tanpa juri tidak menampilkan kartu kosong. */

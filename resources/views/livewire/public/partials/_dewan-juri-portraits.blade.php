@@ -1,4 +1,4 @@
-{{-- Kartu potret juri — bentuk lega, untuk dewan ≤ 6 orang di layar lebar.
+{{-- Kartu potret juri — bentuk lega, untuk layar `lg` ke atas.
 
      Hanya juri BERFOTO yang memakai <img>. Juri tanpa foto tidak dibuatkan
      placeholder gambar, melainkan monogram dua inisial di atas bidang yang
