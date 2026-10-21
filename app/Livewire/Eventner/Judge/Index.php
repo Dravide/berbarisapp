@@ -4,12 +4,12 @@ namespace App\Livewire\Eventner\Judge;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use App\Models\CompetitionGroup;
 use App\Models\Judge;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Livewire\Concerns\MelaporKePengguna;
+use App\Support\PenugasanJuri;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Computed;
 
@@ -66,46 +66,16 @@ class Index extends Component
     /**
      * Baris penugasan yang dipegang tiap juri, dari competition_group_judge.
      *
-     * Sumbernya sama dengan yang dibaca tablet juri, jadi modal rincian tak
-     * bisa lagi menampilkan tugas yang berbeda dari yang benar-benar dinilai.
-     * Satu baris = satu label: nama grup, atau "Final"/"Belum Bergrup"/
-     * "Seluruh Tingkat" untuk tiga baris tanpa grup.
+     * Sumbernya sama dengan yang dibaca tablet juri dan halaman publik event
+     * (App\Support\PenugasanJuri), jadi modal rincian tak bisa menampilkan
+     * tugas yang berbeda dari yang benar-benar dinilai.
      *
      * @return \Illuminate\Support\Collection<int, \Illuminate\Support\Collection>
      */
     #[Computed]
     public function assignmentsByJudge()
     {
-        return DB::table('competition_group_judge as cgj')
-            ->join('judges as j', 'j.id', '=', 'cgj.judge_id')
-            ->leftJoin('competition_groups as cg', 'cg.id', '=', 'cgj.competition_group_id')
-            ->leftJoin('competition_categories as cc', 'cc.id', '=', 'cgj.competition_category_id')
-            ->leftJoin('competition_categories as induk', 'induk.id', '=', 'cc.parent_id')
-            ->where('j.eventner_id', $this->eventnerId)
-            ->orderBy('cgj.competition_category_id')
-            ->orderBy('cgj.scope')
-            ->orderBy('cgj.competition_group_id')
-            ->get([
-                'cgj.judge_id',
-                'cgj.scope',
-                'cgj.competition_category_id',
-                'cg.name as group_name',
-                'cc.name as level_name',
-                'induk.name as parent_name',
-            ])
-            ->groupBy('judge_id')
-            ->map(fn ($baris) => $baris
-                ->groupBy('competition_category_id')
-                ->map(fn ($perTingkat) => [
-                    'name' => trim(
-                        ($perTingkat->first()->parent_name ? $perTingkat->first()->parent_name . ' — ' : '')
-                        . $perTingkat->first()->level_name
-                    ),
-                    'items' => $perTingkat->map(fn ($b) => $b->scope === CompetitionGroup::SCOPE_GROUP
-                        ? $b->group_name
-                        : CompetitionGroup::SCOPE_LABELS[$b->scope])->values(),
-                ])
-                ->values());
+        return PenugasanJuri::perJuri($this->eventnerId);
     }
 
     /**

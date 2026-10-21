@@ -3,6 +3,7 @@
 namespace App\Livewire\Public;
 
 use App\Models\Eventner;
+use App\Support\PenugasanJuri;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -38,7 +39,10 @@ class EventDetail extends Component
                         ->orderBy('urutan_tampil', 'asc');
                 },
                 'competitionCategories.registrations.participants',
-                'judges.assessmentCategories',
+                // Kartu "Dewan Juri" membaca competition_group_judge lewat
+                // PenugasanJuri::perJuri(), bukan relasi rubrik — rubrik ikut
+                // seri peserta, jadi di event nyata ia sering kosong.
+                'judges',
                 'sponsors' => function ($query) {
                     $query->where('is_active', true)->orderBy('sort_order')->latest();
                 },
@@ -120,6 +124,87 @@ class EventDetail extends Component
         }
 
         return empty($perCategory) ? collect() : $perCategory;
+    }
+
+    /**
+     * Dewan juri + tugas penilaiannya, siap dirender kartu.
+     *
+     * Urut A–Z, bukan urutan insert: tabel `judges` tak punya sort_order, jadi
+     * urutan bawaan tak berarti apa-apa dan berbeda tiap kali data disemai.
+     *
+     * Sumber tugasnya competition_group_judge — sama dengan tablet juri dan
+     * modal penugasan panitia (App\Support\PenugasanJuri). Dulu kartu ini
+     * membaca `judges.assessmentCategories` (rubrik), yang di event nyata
+     * sering kosong karena rubrik menempel pada seri peserta, bukan juri:
+     * hasilnya baris chip kosong.
+     *
+     * @return \Illuminate\Support\Collection<int, array{judge: \App\Models\Judge, tugas: string, induk: ?string, inisial: string, aksen: string}>
+     */
+    #[Computed]
+    public function dewanJuri()
+    {
+        $judges = $this->eventner->judges->sortBy(
+            fn ($j) => mb_strtolower($j->name ?? '')
+        )->values();
+
+        $penugasan = PenugasanJuri::perJuri($this->eventner->id);
+
+        return $judges->map(function ($judge, $urut) use ($penugasan) {
+            $perTingkat = $penugasan->get($judge->id, collect());
+
+            return [
+                'judge' => $judge,
+                'tugas' => PenugasanJuri::ringkas($perTingkat),
+                // Nama induk tingkat pertama, untuk chip ringkas di bentuk
+                // baris. Null kalau juri belum punya penugasan sama sekali.
+                'induk' => $perTingkat->first()['induk'] ?? null,
+                'inisial' => self::inisial($judge->name),
+                // Warna aksen bergilir menurut urutan A–Z, bukan hash nama:
+                // nama Indonesia yang mirip (Ahmad/Budi/Citra) menghasilkan sisa
+                // bagi yang sama, jadi justru dewan tiga orang — kasus yang
+                // bentuk kartu ini dibuat untuknya — tampil sewarna semua.
+                // Bergilir menurut posisi menjamin tetangga selalu berbeda.
+                'aksen' => self::AKSEN_JURI[$urut % count(self::AKSEN_JURI)],
+            ];
+        });
+    }
+
+    /**
+     * Tiga warna aksen monogram juri, bergilir menurut urutan A–Z.
+     *
+     * Ketiganya harus terbaca sebagai teks di atas permukaan terang, jadi
+     * neon-lime mentah (#a3e635) tidak dipakai — terlalu pucat untuk huruf.
+     *
+     * Ketiganya juga kelas yang SUDAH terpakai di blade lain. Kelas Tailwind
+     * hanya lahir kalau namanya muncul di berkas yang dipindai @source, dan
+     * berkas ini bukan salah satunya — kelas karangan baru di sini akan tercetak
+     * di HTML tanpa satu pun aturan CSS di belakangnya, dan monogramnya kembali
+     * sewarna seperti sebelumnya tanpa ada yang tahu.
+     */
+    private const AKSEN_JURI = ['text-primary', 'text-emerald-600', 'text-amber-700'];
+
+    /**
+     * Inisial dua huruf: awal kata pertama + awal kata terakhir.
+     *
+     * Dipakai bidang potret juri yang belum berfoto. Satu huruf membuat ketiga
+     * kartu terbaca identik seperti sebelumnya; dua huruf cukup membedakan
+     * tanpa menuntut kolom baru.
+     */
+    private static function inisial(?string $nama): string
+    {
+        $kata = preg_split('/\s+/', trim((string) $nama), -1, PREG_SPLIT_NO_EMPTY);
+
+        if (!$kata) {
+            return '';
+        }
+
+        $inisial = mb_substr($kata[0], 0, 1);
+
+        if (count($kata) > 1) {
+            $inisial .= mb_substr($kata[count($kata) - 1], 0, 1);
+        }
+
+        return mb_strtoupper($inisial);
     }
 
     public function render()

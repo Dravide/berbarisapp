@@ -1,0 +1,463 @@
+<title>Dewan Juri Event Publik</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* =========================================================================
+   Wireframe "Dewan Juri" — halaman event publik.
+
+   Kanvas mengikuti keluarga dokumen di doc/*-wireframe.html (kertas abu,
+   panel putih, satu slide = satu layar + anotasi). Warna perangkat desain
+   BARIS APP diambil dari resources/css/landing.css, bukan dikarang di sini:
+   --primary #0062ff, --secondary #a3e635, --deep-slate #111827,
+   --surface-container-lowest #ffffff, --outline-variant #c2c6d9.
+   ========================================================================= */
+:root{
+  /* Layout: dokumen spesifikasi — wireframe kiri, anotasi kanan, satu slide satu tugas. */
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --amber:#b45309; --amber-soft:#fef3c7;
+  --green:#15803d; --green-soft:#dcfce7;
+  --red:#b91c1c; --red-soft:#fee2e2;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --amber:#fbbf24; --amber-soft:#3a2b08;
+    --green:#4ade80; --green-soft:#0c2a18;
+    --red:#f87171; --red-soft:#3a1717;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --amber:#fbbf24; --amber-soft:#3a2b08;
+  --green:#4ade80; --green-soft:#0c2a18;
+  --red:#f87171; --red-soft:#3a1717;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:clamp(28px,5vw,56px)}
+h1,h2,h3,h4{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:72ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap}
+.chip b{color:var(--ink);font-weight:600}
+.toc{display:flex;flex-wrap:wrap;gap:6px;margin-top:22px}
+.toc a{font-family:var(--mono);font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--muted);text-decoration:none}
+.toc a:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Slide */
+.slide{margin-top:clamp(36px,6vw,64px);scroll-margin-top:24px}
+.slide-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.slide-head h2{font-size:20px;font-weight:700}
+.mode-tag{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.mode-tag.now{background:var(--red-soft);color:var(--red)}
+.mode-tag.pick{background:var(--green-soft);color:var(--green)}
+.slide-goal{color:var(--muted);font-size:13.5px;max-width:74ch;margin-bottom:14px}
+.slide-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:start}
+.slide-grid.wide{grid-template-columns:1fr}
+@media(max-width:900px){.slide-grid{grid-template-columns:1fr}}
+
+/* Bingkai layar */
+.screen{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:10px;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.screen-inner{border-radius:8px;border:1px solid var(--line);background:var(--panel-2);overflow:hidden;position:relative;font-size:11px;display:flex;flex-direction:column}
+.screen-cap{font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 4px 2px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+
+/* Anotasi */
+.notes{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.notes h3{font-size:14px;margin-bottom:8px}
+.notes ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.notes li{font-size:13.5px;color:var(--muted)}
+.notes li b{color:var(--ink);font-weight:600}
+.notes code{background:var(--panel-2);border:1px solid var(--line-soft);padding:1px 5px;border-radius:5px}
+.verdict{margin-top:12px;padding-top:12px;border-top:1px solid var(--line-soft);font-size:13px}
+table.mini{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+table.mini th{font-family:var(--mono);font-weight:500;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;color:var(--muted);text-align:left;padding:4px 8px;border-bottom:1px solid var(--line)}
+table.mini td{padding:6px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table.mini tr:last-child td{border-bottom:0}
+table.mini td:first-child{width:170px;color:var(--ink);font-weight:600}
+.scroll-x{overflow-x:auto}
+
+/* =========================================================================
+   Miniatur kartu "Dewan Juri" — digambar kode, satuan --u
+   `--u` = 1 px pada kartu asli (kanvas acuan 760 px). Dideklarasikan di ANAK
+   .pubcard, bukan di .pubcard sendiri: cqw menilik container terdekat dan
+   sebuah elemen tak bisa menanyai dirinya sendiri.
+   ========================================================================= */
+.pubcard{padding:calc(22 * var(--u)) calc(24 * var(--u));display:flex;flex-direction:column;gap:calc(18 * var(--u))}
+.pubcard>*{--u:.86px}
+.sec-head{display:flex;align-items:center;gap:calc(8 * var(--u))}
+.sec-head h4{font-size:calc(17 * var(--u));font-weight:700;letter-spacing:-.01em;color:var(--ink)}
+.sec-head .cnt{margin-left:auto;font-size:calc(11 * var(--u));font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:calc(4 * var(--u)) calc(11 * var(--u))}
+.icn{width:calc(15 * var(--u));height:calc(15 * var(--u));flex:none;fill:none;stroke:var(--accent);stroke-width:1.7}
+
+/* Bidang potret & monogram */
+.potrait{aspect-ratio:1/1;background:var(--ph-fill);border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;container-type:inline-size}
+.potrait img{width:100%;height:100%;object-fit:cover;display:block}
+.mono{font-size:34cqw;font-weight:700;letter-spacing:.01em;line-height:1}
+.mono.a{color:#0062ff}.mono.b{color:#059669}.mono.c{color:#b45309}
+:root[data-theme="dark"] .mono.a{color:#709cff}
+:root[data-theme="dark"] .mono.b{color:#34d399}
+:root[data-theme="dark"] .mono.c{color:#e2b857}
+
+/* Varian A — kartu potret */
+.jgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(calc(140 * var(--u)),1fr));gap:calc(14 * var(--u))}
+.jcard{border:1px solid var(--line);border-radius:calc(14 * var(--u));background:var(--panel);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+.jcard .body{padding:calc(11 * var(--u)) calc(13 * var(--u)) calc(13 * var(--u));display:flex;flex-direction:column;gap:calc(5 * var(--u));min-width:0}
+.jcard b{font-size:calc(13.5 * var(--u));font-weight:700;line-height:1.25;overflow-wrap:anywhere}
+.jcard .tugas{font-size:calc(11 * var(--u));color:var(--muted);line-height:1.4;overflow-wrap:anywhere}
+.jcard .tugas .sep{opacity:.5;padding-inline:calc(4 * var(--u))}
+.jcard .tugas.penilai{font-style:italic;opacity:.8}
+
+/* Varian B — baris kompak */
+.jrows{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:calc(12 * var(--u));overflow:hidden;background:var(--panel)}
+.jrow{display:flex;align-items:center;gap:calc(12 * var(--u));padding:calc(11 * var(--u)) calc(14 * var(--u));border-bottom:1px solid var(--line-soft);min-width:0}
+.jrow:last-child{border-bottom:0}
+.av{width:calc(38 * var(--u));height:calc(38 * var(--u));border-radius:999px;background:var(--ph-fill);border:1px solid var(--ph-line);display:flex;align-items:center;justify-content:center;font-size:calc(12 * var(--u));font-weight:700;flex:none;overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
+.av.a{color:#0062ff}.av.b{color:#059669}.av.c{color:#b45309}
+:root[data-theme="dark"] .av.a{color:#709cff}
+:root[data-theme="dark"] .av.b{color:#34d399}
+:root[data-theme="dark"] .av.c{color:#e2b857}
+.jrow .mid{flex:1;min-width:0}
+.jrow .mid b{display:block;font-size:calc(13 * var(--u));line-height:1.25;color:var(--ink)}
+.jrow .mid span{display:block;font-size:calc(11 * var(--u));color:var(--muted);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jrow .lv{font-size:calc(10 * var(--u));font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:calc(3 * var(--u)) calc(9 * var(--u));white-space:nowrap;flex:none}
+.jmore{display:flex;align-items:center;justify-content:center;gap:calc(6 * var(--u));padding:calc(11 * var(--u));border-top:1px solid var(--line-soft);font-size:calc(12 * var(--u));font-weight:700;color:var(--accent);background:var(--panel-2)}
+
+/* Keadaan sekarang (sebagai patokan, bukan usulan) */
+.now-rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:calc(14 * var(--u))}
+.now-row{display:flex;align-items:center;gap:calc(14 * var(--u));padding:calc(14 * var(--u));border:1px solid var(--line);border-radius:calc(12 * var(--u));background:var(--ph-fill)}
+.now-row .av{background:var(--ph-line);color:#fff;border:0}
+.now-row b{font-size:calc(13 * var(--u));color:var(--ink)}
+.now-row .ghost{font-size:calc(10 * var(--u));color:var(--muted);opacity:.8}
+
+/* Varian C — papan kursi (ditahan) */
+.jboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(calc(120 * var(--u)),1fr));gap:calc(10 * var(--u))}
+.seat{border:1px solid var(--line);border-radius:calc(12 * var(--u));background:var(--panel);padding:calc(12 * var(--u));display:flex;flex-direction:column;gap:calc(6 * var(--u));min-width:0}
+.seat .mark{width:calc(28 * var(--u));height:calc(28 * var(--u));border-radius:calc(9 * var(--u));background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:calc(11 * var(--u));font-weight:700}
+.seat b{font-size:calc(12.5 * var(--u));color:var(--ink)}
+.seat span{font-size:calc(10.5 * var(--u));color:var(--muted);line-height:1.35}
+
+/* Ponsel */
+.phone{--u:.8px;width:min(330px,100%);border:1px solid var(--line);border-radius:22px;background:var(--panel);padding:8px;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.phone-inner{border-radius:16px;border:1px solid var(--line);background:var(--panel-2);overflow:hidden}
+.p-head{padding:calc(14 * var(--u)) calc(14 * var(--u)) calc(10 * var(--u));background:var(--panel);display:flex;align-items:center;gap:calc(8 * var(--u));border-bottom:1px solid var(--line-soft)}
+.p-head b{font-size:calc(14 * var(--u));color:var(--ink)}
+.p-head .cnt{margin-left:auto;font-size:calc(10 * var(--u));font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:calc(3 * var(--u)) calc(9 * var(--u))}
+
+/* Nomor slide sebagai penanda urutan baca — dokumen ini memang berurutan. */
+.num{font-family:var(--mono);font-size:12px;color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Berbaris App — Spesifikasi &amp; Wireframe</p>
+  <h1>Dewan Juri di Halaman Event Publik</h1>
+  <p class="lede">
+    Bagian "Dewan Juri" di <code>event-detail.blade.php</code> kini berisi tiga baris abu-abu berisi
+    inisial dan nama. Untuk event yang jurinya belum punya foto dan rubriknya belum ditautkan — persis
+    data <code>pbb2026</code> hari ini — kartunya nyaris kosong, dan <code>pbb2026.berbaris.local</code>
+    menampilkannya apa adanya. Usulan di bawah: satu komponen juri yang tetap punya bobot visual tanpa
+    foto, yang menyebut <b>tugas penilaian</b> tiap juri dari sumber yang sama dengan tablet juri.
+  </p>
+  <div class="meta">
+    <span class="chip">Berkas: <b>livewire/public/event-detail.blade.php</b> (504–531)</span>
+    <span class="chip">Sumber tugas: <b>competition_group_judge</b></span>
+    <span class="chip">Usulan utama: <b>kartu potret</b></span>
+    <span class="chip">Tanpa aset baru — <b>nol gambar</b></span>
+  </div>
+  <nav class="toc" aria-label="Daftar slide">
+    <a href="#s1">1 Keadaan sekarang</a>
+    <a href="#s2">2 Kartu potret</a>
+    <a href="#s3">3 Baris kompak</a>
+    <a href="#s4">4 Tanpa foto</a>
+    <a href="#s5">5 Ponsel</a>
+    <a href="#s6">6 Varian ditahan</a>
+    <a href="#s7">7 Rencana</a>
+  </nav>
+
+  <!-- ============ 1 · KEADAAN SEKARANG ============ -->
+  <section class="slide" id="s1">
+    <div class="slide-head"><span class="num">01</span><h2>Keadaan sekarang</h2><span class="mode-tag now">event-detail.blade.php:504–531</span></div>
+    <p class="slide-goal">Patokan sebelum diubah. Yang dirender hanyalah inisial, nama, dan baris chip rubrik yang kebetulan kosong.</p>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="pubcard">
+            <div class="sec-head"><h4>Dewan Juri</h4></div>
+            <div class="now-rows">
+              <div class="now-row"><div class="av">A</div><div><b>Ahmad Sudrajat</b><div class="ghost">Tugas tidak disebut</div></div></div>
+              <div class="now-row"><div class="av">B</div><div><b>Budi Santoso</b><div class="ghost">Tugas tidak disebut</div></div></div>
+              <div class="now-row"><div class="av">C</div><div><b>Citra Dewi</b><div class="ghost">Tugas tidak disebut</div></div></div>
+              <div class="now-row" style="opacity:.5"><div class="av">?</div><div><b>juri ke-4</b><div class="ghost">jatuh sendirian di baris kedua</div></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Dirender apa adanya dari <code>$eventner-&gt;judges</code></span><span>2 kolom · 4 kartu = 1 baris penuh + 1 yatim</span></div>
+      </div>
+      <div class="notes">
+        <h3>Enam sebab terasa datar</h3>
+        <ul>
+          <li><b>Tanpa foto, kartunya kosong.</b> Inisial di lingkaran <code>bg-surface-container-high</code> seragam untuk semua orang; tiga kartu terbaca identik dan tak satu pun menandai ini "dewan".</li>
+          <li><b>Chip rubrik menjanjikan data yang tak ada.</b> Di <code>pbb2026</code> <code>$judge-&gt;assessmentCategories</code> kosong, jadi baris chip dirender sebagai <code>&lt;div&gt;</code> kosong — kartu berakhir sebagai nama telanjang.</li>
+          <li><b>Tugas penilaian tidak disebut</b>, padahal datanya ada: pivot <code>competition_group_judge</code> menyimpan "PBB Putri — Regu Inti · Seluruh Tingkat" untuk ketiga juri ini. Pengunjung tak bisa tahu siapa menilai apa.</li>
+          <li><b>Urutan tak bermakna.</b> Tabel <code>judges</code> tak punya <code>sort_order</code>; urutannya urutan insert.</li>
+          <li><b>Tinggi berlebih, informasi minim.</b> Tiap baris memakan ±76 px untuk satu nama.</li>
+          <li><b>Bahasa desain berbeda dari halaman hasil.</b> <code>event-result-detail.blade.php:100</code> sudah memakai pola header + chip jumlah juri; kartu ini tidak. Dua bagian juri dalam satu acara terbaca sebagai dua sistem.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2 · USULAN UTAMA ============ -->
+  <section class="slide" id="s2">
+    <div class="slide-head"><span class="num">02</span><h2>Usulan utama — kartu potret</h2><span class="mode-tag pick">rekomendasi</span></div>
+    <p class="slide-goal">Untuk 6 juri ke bawah. Wajah adalah alasan bagian ini ada, jadi bidang potretnya besar; tugas penilaian menggantikan chip rubrik.</p>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="pubcard">
+            <div class="sec-head">
+              <svg class="icn" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 15.7 7.1 18.4l1-5.6L4 8.9l5.6-.7z"/></svg>
+              <h4>Dewan Juri</h4>
+              <span class="cnt">3 Juri</span>
+            </div>
+            <div class="jgrid">
+              <div class="jcard">
+                <div class="potrait"><span class="mono a">AS</span></div>
+                <div class="body">
+                  <b>Ahmad Sudrajat</b>
+                  <span class="tugas">PBB Putri — Regu Inti<span class="sep">·</span>Seluruh Tingkat</span>
+                </div>
+              </div>
+              <div class="jcard">
+                <div class="potrait"><img alt="" src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23dfe3ea'/%3E%3Ccircle cx='50' cy='38' r='17' fill='%23b3bac6'/%3E%3Cpath d='M16 100c0-20 15-31 34-31s34 11 34 31z' fill='%23b3bac6'/%3E%3C/svg%3E"></div>
+                <div class="body">
+                  <b>Budi Santoso</b>
+                  <span class="tugas">PBB Putri — Regu Inti<span class="sep">·</span>Seluruh Tingkat</span>
+                </div>
+              </div>
+              <div class="jcard">
+                <div class="potrait"><span class="mono c">CD</span></div>
+                <div class="body">
+                  <b>Citra Dewi</b>
+                  <span class="tugas">PBB Putri — Regu Inti<span class="sep">·</span>Seluruh Tingkat</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Foto 1:1 penuh lebar kartu, nama + tugas di bawahnya</span><span>Juri tanpa foto tetap sebesar juri berfoto</span></div>
+      </div>
+      <div class="notes">
+        <h3>Bentuk &amp; alasan</h3>
+        <ul>
+          <li><b>Bidang potret <code>aspect-ratio:1/1</code> selebar kartu.</b> Foto 48 px di dalam baris terlalu kecil untuk dibaca — dan foto juri satu-satunya aset visual di bagian ini.</li>
+          <li><b>Tanpa foto → monogram dua inisial di bidang potret yang sama.</b> Geometri kartu identik, jadi dewan tanpa foto tidak lagi tampak seperti daftar gagal render.</li>
+          <li><b>Baris tugas menggantikan chip rubrik.</b> Rubrik bukan identitas juri — ia menempel pada seri peserta. Yang dicari pengunjung: "siapa menilai tingkat mana".</li>
+          <li><b>Header meniru halaman hasil:</b> ikon + judul + chip jumlah juri. Satu bahasa untuk dua bagian juri.</li>
+          <li><b>Tugas panjang tidak dipotong jadi satu baris.</b> Boleh membungkus sampai dua baris, lalu di-<code>line-clamp</code> dengan <code>title</code> penuh — bukan <code>truncate</code>.</li>
+          <li><b>Tetap <code>surface-card</code> + <code>p-6</code>.</b> Tanpa gradien, overlay, atau bayangan tambahan; kartunya sama dengan kartu sekitarnya.</li>
+          <li><b>Grid <code>auto-fit minmax</code>, bukan <code>repeat(3,1fr)</code>.</b> Lima juri mengisi baris tanpa menyisakan lubang; <code>repeat(3,…)</code> meninggalkan satu sel kosong yang terbaca seperti data hilang.</li>
+        </ul>
+        <div class="verdict"><b>Ambang:</b> ≤ 6 juri pakai bentuk ini. Di atas 6, kartu potret memakan lebih dari satu layar ponsel dan mendorong peta serta kontak terlalu jauh — pindah ke bentuk baris kompak.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3 · BARIS KOMPAK ============ -->
+  <section class="slide" id="s3">
+    <div class="slide-head"><span class="num">03</span><h2>Bentuk padat — baris kompak</h2><span class="mode-tag">juri &gt; 6</span></div>
+    <p class="slide-goal">Satu markup nama + tugas yang sama, kerangka berbeda. Empat teratas tampil, sisanya di balik tombol tanpa round-trip Livewire.</p>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="pubcard">
+            <div class="sec-head">
+              <svg class="icn" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 15.7 7.1 18.4l1-5.6L4 8.9l5.6-.7z"/></svg>
+              <h4>Dewan Juri</h4>
+              <span class="cnt">14 Juri</span>
+            </div>
+            <div class="jrows">
+              <div class="jrow"><div class="av a">AS</div><div class="mid"><b>Ahmad Sudrajat</b><span>PBB Putra — Regu Inti · Grup A</span></div><span class="lv">PBB Putra</span></div>
+              <div class="jrow"><div class="av b">BS</div><div class="mid"><b>Budi Santoso</b><span>PBB Putra — Regu Inti · Grup B</span></div><span class="lv">PBB Putra</span></div>
+              <div class="jrow"><div class="av c">CD</div><div class="mid"><b>Citra Dewi</b><span>PBB Putri — Regu Inti · Seluruh Tingkat</span></div><span class="lv">PBB Putri</span></div>
+              <div class="jrow"><div class="av a">EW</div><div class="mid"><b>Eko Wibowo</b><span>PBB Campuran — Regu Utama · Final</span></div><span class="lv">PBB Campuran</span></div>
+              <div class="jrow" style="opacity:.45"><div class="av" style="border-style:dashed">···</div><div class="mid"><b>10 juri lain</b><span>disembunyikan sampai diminta</span></div></div>
+            </div>
+            <div class="jmore">
+              <svg class="icn" viewBox="0 0 24 24" style="stroke:currentColor" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              Lihat semua juri (14)
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Baris ±60 px, informasi lebih banyak daripada kartu lama</span><span>4 teratas + tombol buka sisanya</span></div>
+      </div>
+      <div class="notes">
+        <h3>Satu ambang, bukan dua desain</h3>
+        <ul>
+          <li><b><code>judges-&gt;count() &gt; 6</code></b> memilih bentuk. Nama dan teks tugasnya sama; hanya kerangkanya berbeda, jadi tak ada logika data yang diduplikasi.</li>
+          <li><b>Empat teratas tampil dulu</b>, diurutkan nama A–Z, sisanya dibuka lewat <code>x-show</code> — murni Alpine, tanpa properti Livewire baru dan tanpa permintaan server.</li>
+          <li><b>Chip tingkat di kanan</b> memakai nama induk tingkat (<code>PBB Putra</code>), bukan daftar penuh — daftar penuh sudah ada di baris tugas di sebelahnya.</li>
+          <li><b>Di ponsel bentuk ini wajib</b>, bukan pilihan: kartu potret yang ditumpuk jadi dua kolom membuat bagian ini setinggi tiga layar.</li>
+          <li><b>Tombol "Lihat semua" hilang sendiri</b> saat juri ≤ 4 — jangan tampilkan tombol yang membuka nol baris tambahan.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4 · TANPA FOTO ============ -->
+  <section class="slide" id="s4">
+    <div class="slide-head"><span class="num">04</span><h2>Tanpa foto — monogram yang tidak seragam</h2><span class="mode-tag">data pbb2026 hari ini</span></div>
+    <p class="slide-goal">Ketiga juri pbb2026 belum berfoto. Aturan ini yang menjaga kartunya tetap terbaca sebagai dewan, bukan sebagai kegagalan render.</p>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="pubcard">
+            <div class="sec-head">
+              <svg class="icn" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 15.7 7.1 18.4l1-5.6L4 8.9l5.6-.7z"/></svg>
+              <h4>Dewan Juri</h4>
+              <span class="cnt">4 Juri</span>
+            </div>
+            <div class="jgrid">
+              <div class="jcard"><div class="potrait"><span class="mono a">AS</span></div><div class="body"><b>Ahmad Sudrajat</b><span class="tugas">Seluruh Tingkat</span></div></div>
+              <div class="jcard"><div class="potrait"><span class="mono b">BS</span></div><div class="body"><b>Budi Santoso</b><span class="tugas">Seluruh Tingkat</span></div></div>
+              <div class="jcard"><div class="potrait"><span class="mono c">CD</span></div><div class="body"><b>Citra Dewi</b><span class="tugas">Seluruh Tingkat</span></div></div>
+              <div class="jcard"><div class="potrait"><span class="mono a">EW</span></div><div class="body"><b>Eko Wibowo</b><span class="tugas">Final</span></div></div>
+            </div>
+            <div class="jrows" style="margin-top:2px">
+              <div class="jrow"><div class="av">IW</div><div class="mid"><b>Iwan Setiawan</b><span>Penilai</span></div><span class="lv">Belum ada tugas</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Warna dari hash nama — stabil antar muat halaman</span><span>Baris kedua tidak pernah kosong</span></div>
+      </div>
+      <div class="notes">
+        <h3>Aturan monogram</h3>
+        <ul>
+          <li><b>Dua inisial</b>, bukan satu huruf: huruf pertama kata pertama + huruf pertama kata terakhir, di-<code>strtoupper</code>. "Ahmad Sudrajat" → <code>AS</code>; nama satu kata → satu huruf; nama kosong → ikon pengguna, bukan <code>?</code>.</li>
+          <li><b>Warna deterministik:</b> <code>crc32($name) % 3</code> memilih biru primer, hijau sekunder, atau amber tersier — semuanya di atas varian <code>-soft</code>. Stabil di antara render, tidak diacak, dan tak perlu kolom warna di basis data.</li>
+          <li><b>Ukuran huruf proporsional</b> lewat <code>34cqw</code> pada container bidang potret — pola yang sama dengan <code>.feat-mini</code> di <code>landing.css</code>, jadi ukuran kartu boleh berubah tanpa media query baru.</li>
+          <li><b>Jangan pakai placeholder abu-abu seragam</b> seperti sekarang; itulah yang membuat ketiga kartu terbaca identik.</li>
+          <li><b>Baris tugas tidak boleh kosong.</b> Juri tanpa penugasan ditulis "Penilai" secara redup — kartu yang barisnya hilang jadi timpang dibanding tetangganya dan terbaca seperti render gagal.</li>
+        </ul>
+        <div class="verdict"><b>Perhatikan:</b> kartu ini hanya merender foto lewat <code>asset('storage/'…)</code>. Jangan menambahkan pratinjau apa pun di sini — <code>temporaryUrl()</code> melempar galat 500 untuk berkas non-gambar.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 5 · PONSEL ============ -->
+  <section class="slide" id="s5">
+    <div class="slide-head"><span class="num">05</span><h2>Ponsel — selalu baris kompak</h2><span class="mode-tag">≤ 640 px</span></div>
+    <p class="slide-goal">Di bawah <code>sm</code>, bidang potret 1:1 tidak muat berdampingan tanpa mendorong sisa halaman turun terlalu jauh.</p>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner" style="padding:14px;display:flex;justify-content:center">
+          <div class="phone">
+            <div class="phone-inner">
+              <div class="p-head">
+                <svg class="icn" viewBox="0 0 24 24" style="width:14px;height:14px" aria-hidden="true"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 15.7 7.1 18.4l1-5.6L4 8.9l5.6-.7z"/></svg>
+                <b>Dewan Juri</b>
+                <span class="cnt">3 Juri</span>
+              </div>
+              <div class="jrows" style="border:0;border-radius:0">
+                <div class="jrow"><div class="av a">AS</div><div class="mid"><b>Ahmad Sudrajat</b><span>PBB Putri — Regu Inti · Seluruh Tingkat</span></div></div>
+                <div class="jrow"><div class="av b">BS</div><div class="mid"><b>Budi Santoso</b><span>PBB Putri — Regu Inti · Seluruh Tingkat</span></div></div>
+                <div class="jrow"><div class="av c">CD</div><div class="mid"><b>Citra Dewi</b><span>PBB Putri — Regu Inti · Seluruh Tingkat</span></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Semua nama muat satu layar</span><span>Tugas dipotong satu baris + atribut <code>title</code></span></div>
+      </div>
+      <div class="notes">
+        <h3>Aturan layar sempit</h3>
+        <ul>
+          <li><b>Bentuk kompak tanpa kecuali di ponsel</b>, walau jurinya cuma tiga. Empat kartu potret yang ditumpuk dua kolom memakan ± tiga layar untuk informasi yang sama.</li>
+          <li>Avatar 36 px lingkaran adalah jalur <code>sm:hidden</code> untuk kartu potret; versi lebar <code>hidden sm:grid</code>. Dua markup, satu koleksi data — bukan perhitungan ulang.</li>
+          <li>Teks tugas satu baris dengan <code>text-overflow:ellipsis</code> plus <code>title</code> berisi teks penuh, supaya tak ada informasi yang benar-benar hilang di layar sempit.</li>
+          <li>Header tetap satu baris: ikon, judul, chip jumlah. Di bawah 360 px chip turun ke baris kedua, bukan terpotong.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6 · VARIAN DITAHAN ============ -->
+  <section class="slide" id="s6">
+    <div class="slide-head"><span class="num">06</span><h2>Varian yang tidak dipilih — papan kursi</h2><span class="mode-tag">cadangan</span></div>
+    <p class="slide-goal">Tercatat supaya tak diusulkan ulang. Bentuk ini menambah dekorasi tanpa menambah informasi.</p>
+    <div class="slide-grid">
+      <div class="screen">
+        <div class="screen-inner">
+          <div class="pubcard">
+            <div class="sec-head">
+              <svg class="icn" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.4 5.2 5.6.7-4.1 3.9 1 5.6L12 15.7 7.1 18.4l1-5.6L4 8.9l5.6-.7z"/></svg>
+              <h4>Dewan Juri</h4>
+              <span class="cnt">4 Juri</span>
+            </div>
+            <div class="jboard">
+              <div class="seat"><span class="mark">1</span><b>Ahmad Sudrajat</b><span>Seluruh Tingkat</span></div>
+              <div class="seat"><span class="mark">2</span><b>Budi Santoso</b><span>Seluruh Tingkat</span></div>
+              <div class="seat"><span class="mark">3</span><b>Citra Dewi</b><span>Seluruh Tingkat</span></div>
+              <div class="seat"><span class="mark">4</span><b>Eko Wibowo</b><span>Final</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-cap"><span>Nomor kursi mengklaim urutan resmi yang tidak ada di data</span><span>Hanya layak setelah ada kolom urutan &amp; jabatan</span></div>
+      </div>
+      <div class="notes">
+        <h3>Kenapa ditahan</h3>
+        <ul>
+          <li><b>Angka kursi mengklaim sesuatu yang tidak benar.</b> <code>judges</code> tak punya <code>sort_order</code> maupun penanda ketua; nomor urut akan menampilkan urutan insert seolah urutan resmi dewan.</li>
+          <li><b>Tanpa foto dan tanpa jabatan</b>, papan kursi hanyalah baris yang diberi kotak — informasi lebih sedikit daripada bentuk kompak, dekorasi lebih banyak.</li>
+          <li><b>Layak dipertimbangkan nanti</b> hanya bila panitia benar-benar mengisi jabatan struktural (Ketua / Wakil / Anggota); saat itu ia menggantikan kartu potret, bukan menemaninya.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 7 · RENCANA ============ -->
+  <section class="slide" id="s7">
+    <div class="slide-head"><span class="num">07</span><h2>Rencana implementasi</h2><span class="mode-tag pick">selesai 2026-10-21</span></div>
+    <p class="slide-goal">Semua yang dibutuhkan sudah ada di basis data; tak ada route baru, tak ada migrasi wajib, tak ada aset baru.</p>
+    <div class="slide-grid wide">
+      <div class="notes scroll-x">
+        <table class="mini">
+          <tr><th>Bagian</th><th>Rencana</th></tr>
+          <tr><td><b>Sumber tugas</b></td><td>Dibaca dari <code>competition_group_judge</code> — sumber yang sama dengan tablet juri. <b>Jangan</b> menurunkannya dari rubrik: rubrik mengikuti seri peserta, bukan juri, dan baris <code>final</code>/<code>ungrouped</code>/<code>level</code> tak punya grup sehingga tingkatnya harus dibaca dari <code>competition_category_id</code>.</td></tr>
+          <tr><td><b>Hindari salinan ketiga</b></td><td>Logika label sudah disalin dua kali: <code>Eventner\Judge\Index::assignmentsByJudge()</code> dan <code>Admin\Eventner\Struktur::penugasanPerJuri()</code>. Angkat ke <code>App\Support\PenugasanJuri::perJuri($eventnerId)</code> lebih dulu, lalu pakai di ketiga tempat.</td></tr>
+          <tr><td><b>Query</b></td><td>Satu query untuk seluruh juri (dikelompokkan <code>judge_id</code>), dihitung sekali per render — bukan per kartu. Di <code>EventDetail::mount()</code>, ganti eager load <code>judges.assessmentCategories</code> dengan data penugasan ini; chip rubrik dihapus, jadi relasi itu tak lagi dipakai halaman ini.</td></tr>
+          <tr><td><b>Urutan</b></td><td>Tahap 1 (tanpa migrasi): urutkan nama A–Z secara sadar — jangan mewarisi urutan insert seperti sekarang. Tahap 2 (opsional): kolom <code>judges.sort_order</code> yang diatur dari <code>/eventner/judges</code>.</td></tr>
+          <tr><td><b>Ambonekan kosong</b></td><td>Juri tanpa penugasan: baris tugas ditulis "Penilai" secara redup. Baris kosong menghasilkan kartu timpang dibanding tetangganya.</td></tr>
+          <tr><td><b>Jumlah juri</b></td><td>Chip header memakai hitungan koleksi yang sudah dimuat — bukan <code>withCount</code> baru, dan bukan query kedua.</td></tr>
+          <tr><td><b>Berkas</b></td><td><code>livewire/public/event-detail.blade.php</code> (blok Dewan Juri diganti) + <code>App\Livewire\Public\EventDetail</code> + <code>app/Support/PenugasanJuri.php</code> baru. Tanpa route, migrasi, atau aset baru.</td></tr>
+          <tr><td><b>Tes</b></td><td>Kunci perilaku: nama juri tampil; tugas dari pivot tampil; kartu tetap utuh saat juri tanpa foto; baris "Penilai" muncul untuk juri tanpa tugas; chip rubrik lama tak muncul lagi.</td></tr>
+          <tr><td><b>Verifikasi</b></td><td>Uji dua bentuk ke <code>pbb2026.berbaris.local</code> (3 juri tanpa foto, tanpa rubrik) dan satu event berjuri banyak, lalu jalankan suite penuh.</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>

@@ -501,32 +501,50 @@
                 @endif
 
                 {{-- Dewan Juri --}}
-                @if($eventner->judges->count() > 0)
-                    <div class="surface-card p-6">
-                        <h3 class="font-display text-lg font-bold text-deep-slate mb-6">
-                            Dewan Juri
-                        </h3>
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            @foreach($eventner->judges as $judge)
-                                <div class="flex items-center gap-4 p-4 rounded-xl bg-surface-container-low border border-outline-variant/30">
-                                    @if($judge->photo)
-                                        <img src="{{ asset('storage/' . $judge->photo) }}" alt="{{ $judge->name }}" class="h-12 w-12 rounded-full object-cover">
-                                    @else
-                                        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-surface-container-high text-on-surface-variant font-bold text-lg">
-                                            {{ strtoupper(substr($judge->name, 0, 1)) }}
-                                        </div>
-                                    @endif
-                                    <div>
-                                        <h4 class="text-sm font-bold text-deep-slate leading-tight mb-1">{{ $judge->name }}</h4>
-                                        <div class="flex flex-wrap gap-1">
-                                            @foreach($judge->assessmentCategories->take(2) as $cat)
-                                                <span class="chip py-0.5 px-2 !text-[10px]">{{ $cat->name }}</span>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
+                {{-- Dua bentuk, satu sumber data. Kartu potret untuk dewan
+                     kecil (wajah juri adalah alasan bagian ini ada), baris
+                     kompak begitu jurinya banyak atau layarnya sempit —
+                     kartu potret yang ditumpuk di ponsel memakan tiga layar
+                     untuk informasi yang sama.
+
+                     Tugas penilaian datang dari competition_group_judge lewat
+                     PenugasanJuri, bukan dari rubrik: rubrik menempel pada
+                     seri peserta sehingga di event nyata sering kosong, dan
+                     chip-nya berakhir sebagai baris kosong tanpa isi. --}}
+                @php $dewan = $this->dewanJuri; @endphp
+
+                @if($dewan->isNotEmpty())
+                    <div class="surface-card p-6" x-data="{ semua: false }">
+                        <div class="mb-5 flex items-center gap-2">
+                            <i class="ti ti-user-star text-primary text-lg"></i>
+                            <h3 class="font-display text-lg font-bold text-deep-slate">Dewan Juri</h3>
+                            <span class="ml-auto chip bg-primary/10 text-primary py-0.5 px-2.5 text-xs font-bold leading-normal">
+                                {{ $dewan->count() }} Juri
+                            </span>
                         </div>
+
+                        @php
+                            // Ambang 6 bukan angka bulat: enam kartu potret
+                            // sudah setinggi lebih dari satu layar ponsel,
+                            // dan di atas itu peta serta kontak terdorong
+                            // terlalu jauh ke bawah.
+                            $kompak = $dewan->count() > 6;
+                        @endphp
+
+                        {{-- Ponsel selalu kompak (sm:hidden) — kartu potret
+                             hanya muncul begitu ada ruang berdampingan. --}}
+                        <div class="{{ $kompak ? '' : 'sm:hidden' }}">
+                            @include('livewire.public.partials._dewan-juri-rows', [
+                                'dewan' => $dewan,
+                                'batas' => $kompak ? 4 : null,
+                            ])
+                        </div>
+
+                        @unless($kompak)
+                            <div class="hidden sm:block">
+                                @include('livewire.public.partials._dewan-juri-portraits', ['dewan' => $dewan])
+                            </div>
+                        @endunless
                     </div>
                 @endif
 
