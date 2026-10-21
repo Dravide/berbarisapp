@@ -1,0 +1,1455 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Proposal BARIS APP — wireframe 18 halaman</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: dokumen spesifikasi — satu halaman A4 satu blok, wireframe di atas,
+   anotasi di bawahnya. Sama sebentuk dengan ig-mitra-wireframe.html, tapi
+   kanvasnya A4 potret (794 × 1123 px) supaya bisa langsung dicetak. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --lime:#a3e635; --lime-ink:#2c4703;
+  --gold:#b8860b; --gold-soft:#fdf6e3;
+  --warn:#c2410c; --warn-soft:#fff1e8;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --lime:#b6f24e; --lime-ink:#16250a;
+    --gold:#e2b857; --gold-soft:#2a2413;
+    --warn:#ff9a6b; --warn-soft:#2e2018;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --lime:#b6f24e; --lime-ink:#16250a;
+  --gold:#e2b857; --gold-soft:#2a2413;
+  --warn:#ff9a6b; --warn-soft:#2e2018;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{
+  max-width:1180px;margin-inline:auto;
+  padding-inline:clamp(16px,4vw,40px);
+  padding-block:clamp(28px,5vw,56px);
+}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 10px;
+}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:64ch;color:var(--muted)}
+.lede strong{color:var(--ink);font-weight:600}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{
+  font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap;
+}
+.chip.warn{border-color:var(--gold);background:var(--gold-soft);color:var(--gold)}
+button.toggle{
+  font-family:var(--mono);font-size:12px;padding:7px 14px;border-radius:999px;
+  border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);
+  cursor:pointer;white-space:nowrap;
+}
+button.toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.toggle[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.spec{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-top:28px;
+}
+.spec > div{background:var(--panel);padding:16px 18px}
+.spec dt{
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;
+}
+.spec dd{margin:0;font-size:14px;line-height:1.5}
+
+/* ---------- halaman A4 ---------- */
+.sheet{
+  margin-top:clamp(32px,5vw,56px);
+}
+.sheet-head{grid-column:1/-1;margin-bottom:14px}
+.sheet-head h2{font-size:clamp(19px,2.2vw,23px);font-weight:700}
+.sheet-head .num{
+  font-family:var(--mono);font-size:12px;color:var(--accent);
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.sheet-head .goal{color:var(--muted);font-size:14px;margin-top:6px;max-width:70ch}
+
+/* Kanvas A4 potret: 794 × 1123 px desain, margin 60 px. */
+.page{
+  position:relative;
+  width:min(100%,794px);
+  aspect-ratio:794/1123;
+  margin-inline:auto;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  overflow:hidden;
+  container-type:inline-size;
+  --u:0.1259cqw; /* 1 px desain (lebar 794) */
+  display:flex;flex-direction:column;
+}
+.p-in{
+  position:absolute;inset:calc(60*var(--u));
+  display:flex;flex-direction:column;gap:calc(22*var(--u));
+  min-height:0;
+}
+.safe{
+  position:absolute;inset:calc(60*var(--u));
+  border:1px dashed var(--accent);border-radius:calc(6*var(--u));
+  opacity:0;transition:opacity .15s;pointer-events:none;z-index:6;
+}
+.safe::after{
+  content:"margin 60 px";position:absolute;top:calc(-16*var(--u));left:0;
+  font-family:var(--mono);font-size:10px;color:var(--accent);
+}
+.guides .safe{opacity:.6}
+
+/* Kepala halaman proposal — label kecil + nomor, garis bawah. */
+.p-head{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:calc(20*var(--u));flex:0 0 auto;
+  border-bottom:1px solid var(--line);
+  padding-bottom:calc(14*var(--u));
+}
+.p-head .lbl{
+  font-family:var(--mono);font-size:calc(15*var(--u));letter-spacing:.1em;
+  text-transform:uppercase;color:var(--accent);
+}
+.p-head .pn{font-family:var(--mono);font-size:calc(15*var(--u));color:var(--muted)}
+.grow{flex:1 1 auto;min-height:0}
+.tinym{font-family:var(--mono);font-size:calc(14*var(--u));color:var(--muted)}
+.h-big{font-size:calc(56*var(--u));font-weight:700;line-height:1.06;letter-spacing:-.02em}
+.h-mid{font-size:calc(38*var(--u));font-weight:700;line-height:1.1;text-wrap:balance}
+.h-sm{font-size:calc(28*var(--u));font-weight:700;line-height:1.15}
+.sub{font-size:calc(20*var(--u));color:var(--muted);line-height:1.4}
+.tiny{font-size:calc(16*var(--u));color:var(--muted);line-height:1.5}
+.rule{height:1px;background:var(--line);flex:0 0 auto}
+
+/* Kotak catatan internal — dipakai halaman harga. */
+.box{border:1px solid var(--line);border-radius:calc(6*var(--u));padding:calc(11*var(--u));background:var(--panel)}
+.box.warn{border-color:var(--warn);background:var(--warn-soft)}
+.box.warn .tinym{color:var(--warn)}
+.box.warn .tinym strong{color:var(--ink)}
+.box.warn code{color:var(--ink);font-size:calc(13*var(--u))}
+.box.gold{border-color:var(--gold);background:var(--gold-soft)}
+
+/* Slot gambar / tangkapan layar */
+.ph{
+  border:1px dashed var(--ph-line);background:var(--ph-fill);
+  border-radius:calc(6*var(--u));
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:2px;text-align:center;flex:none;overflow:hidden;
+}
+.ph span{font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:var(--muted);line-height:1.3}
+.ph span em{display:block;font-style:normal;opacity:.75;font-size:9px}
+
+/* Kosakata wireframe halaman aplikasi (di dalam .mock) */
+.mock{
+  border:1px solid var(--line);border-radius:calc(7*var(--u));
+  background:var(--panel-2);overflow:hidden;flex:none;
+  display:flex;flex-direction:column;
+}
+.mock .chrome{
+  display:flex;align-items:center;gap:calc(8*var(--u));
+  padding:calc(9*var(--u)) calc(13*var(--u));
+  border-bottom:1px solid var(--line-soft);background:var(--panel);
+}
+.chrome .dot{width:calc(7*var(--u));height:calc(7*var(--u));border-radius:50%;background:var(--ph-line);flex:none}
+.chrome .url{
+  flex:1;border-radius:999px;background:var(--ph-fill);height:calc(15*var(--u));
+  display:flex;align-items:center;padding-inline:calc(9*var(--u));
+  font-family:var(--mono);font-size:calc(10*var(--u));color:var(--muted);
+}
+.m-in{
+  padding:calc(18*var(--u));display:flex;flex-direction:column;gap:calc(11*var(--u));
+  container-type:inline-size;flex:1;
+}
+.m-in > *{--u:0.1639cqw} /* 1 px desain pada lebar isi ± 610 */
+.bar{background:var(--ph-fill);border-radius:calc(3*var(--u));height:calc(8*var(--u));flex:none}
+.bar.t{height:calc(15*var(--u));background:var(--ph-line)}
+.bar.s{height:calc(5*var(--u))}
+.bar.h{height:calc(20*var(--u));background:linear-gradient(90deg,var(--ph-line),var(--ph-fill))}
+.bar.acc{background:var(--accent);height:calc(17*var(--u));border-radius:calc(5*var(--u))}
+.bar.lim{background:var(--lime);height:calc(17*var(--u));border-radius:calc(5*var(--u))}
+.w100{width:100%}.w90{width:90%}.w85{width:85%}.w80{width:80%}.w70{width:70%}.w60{width:60%}.w50{width:50%}.w40{width:40%}.w30{width:30%}.w20{width:20%}
+.mrow{display:flex;gap:calc(9*var(--u));align-items:center}
+.mrow.g{flex:1}
+.mcol{display:flex;flex-direction:column;gap:calc(7*var(--u));flex:1;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:calc(9*var(--u))}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(9*var(--u))}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:calc(9*var(--u))}
+.card{
+  border:1px solid var(--line);border-radius:calc(6*var(--u));
+  padding:calc(11*var(--u));display:flex;flex-direction:column;gap:calc(6*var(--u));
+  background:var(--panel);
+}
+.card.hi{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent-soft)}
+.thumb{background:var(--ph-fill);border-radius:calc(4*var(--u));aspect-ratio:4/3;width:100%}
+.pill{
+  font-family:var(--mono);font-size:calc(10*var(--u));color:var(--muted);
+  border:1px solid var(--line);border-radius:999px;
+  padding:calc(2*var(--u)) calc(7*var(--u));white-space:nowrap;
+  background:var(--panel);align-self:flex-start;
+}
+.pill.acc{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.pill.lim{border-color:var(--lime);color:var(--lime-ink);background:var(--lime)}
+.pill.warn{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+/* Baris daftar fitur di dalam wireframe: nama + gembok. */
+.fx{
+  display:grid;grid-template-columns:calc(20*var(--u)) minmax(0,1fr) auto;
+  gap:calc(9*var(--u));align-items:center;
+  border:1px solid var(--line);border-radius:calc(5*var(--u));
+  padding:calc(8*var(--u)) calc(10*var(--u));background:var(--panel);
+}
+.fx .ic{
+  width:calc(20*var(--u));height:calc(20*var(--u));border-radius:calc(5*var(--u));
+  background:var(--accent-soft);flex:none;
+}
+.fx .nm{font-size:calc(13*var(--u));line-height:1.3;color:var(--ink)}
+.fx .nm > span,.fx .nm em{font-style:normal;color:var(--muted);font-size:calc(11*var(--u));display:block;margin-top:calc(2*var(--u))}
+.fx .lk{
+  font-family:var(--mono);font-size:calc(10*var(--u));color:var(--gold);
+  border:1px solid var(--gold);background:var(--gold-soft);
+  border-radius:999px;padding:calc(1*var(--u)) calc(6*var(--u));white-space:nowrap;
+}
+.fx .ok{font-family:var(--mono);font-size:calc(10*var(--u));color:var(--muted)}
+/* Tabel data ringkas. */
+.tt{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:calc(6*var(--u));overflow:hidden;background:var(--panel)}
+.tt .tr{display:grid;align-items:baseline;gap:calc(10*var(--u));padding:calc(8*var(--u)) calc(11*var(--u));border-bottom:1px solid var(--line-soft)}
+.tt .tr:last-child{border-bottom:0}
+.tt .tr.head{background:var(--panel-2)}
+.tt .k{font-family:var(--mono);font-size:calc(11*var(--u));letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.tt .v{font-size:calc(13*var(--u));line-height:1.35}
+.tt .v strong{font-weight:600}
+.c2{grid-template-columns:calc(170*var(--u)) minmax(0,1fr)}
+.c3{grid-template-columns:calc(150*var(--u)) minmax(0,1fr) auto}
+.cq{grid-template-columns:calc(24*var(--u)) minmax(0,1fr) calc(90*var(--u))}
+
+/* Harga: dua kartu paket berdampingan. */
+.paket{display:grid;grid-template-columns:1fr 1fr;gap:calc(14*var(--u))}
+.pk{
+  border:1px solid var(--line);border-radius:calc(8*var(--u));
+  padding:calc(14*var(--u));display:flex;flex-direction:column;gap:calc(9*var(--u));
+  background:var(--panel);
+}
+.pk.hi{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent-soft)}
+.pk .nm{font-size:calc(16*var(--u));font-weight:600}
+.pk .pr{font-size:calc(30*var(--u));font-weight:700;letter-spacing:-.02em}
+.pk .pr em{font-style:normal;font-size:calc(13*var(--u));font-weight:400;color:var(--muted)}
+.pk .li{font-size:calc(12*var(--u));color:var(--muted);line-height:1.35;padding-left:calc(14*var(--u));position:relative}
+.pk .li::before{content:"✓";position:absolute;left:0;color:var(--lime-ink);font-weight:700}
+.pk .li.mut::before{content:"·";color:var(--ph-line)}
+
+/* Anotasi di bawah wireframe. */
+.notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.notes li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;align-items:baseline}
+.notes .n{
+  font-family:var(--mono);font-size:11px;color:var(--accent);
+  border-top:1px solid var(--accent);padding-top:4px;
+}
+.notes b{font-weight:600;font-size:14.5px}
+.notes .dim{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px;white-space:nowrap}
+.notes p{font-size:13.5px;color:var(--muted);margin-top:2px;line-height:1.5}
+.notes code{color:var(--ink)}
+.notes .flag{color:var(--gold);font-weight:600}
+
+/* Anotasi versi ringkas — dipakai halaman fitur (17 halaman, anotasi harus pendek). */
+.notes.ketat{gap:9px}
+.notes.ketat li{grid-template-columns:22px minmax(0,1fr);gap:9px}
+.notes.ketat b{font-size:13.5px}
+.notes.ketat p{font-size:12.5px;margin-top:1px}
+
+/* Blok penjelas di bawah kumpulan halaman */
+.rules{
+  margin-top:clamp(40px,6vw,72px);
+  border-top:1px solid var(--line);padding-top:clamp(24px,3vw,36px);
+}
+.rules h2{font-size:clamp(19px,2.2vw,23px)}
+.rules .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;margin-top:20px}
+.rules h3{font-size:14px;font-weight:600;letter-spacing:.02em;margin-bottom:12px}
+.rules ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--muted)}
+.rules ul strong{color:var(--ink);font-weight:600}
+.rules p.lead{color:var(--muted);font-size:14px;margin-top:10px;max-width:78ch}
+table.data{
+  width:100%;border-collapse:collapse;margin-top:18px;font-size:13.5px;
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+}
+@media (max-width:700px){
+  table.data{display:block;overflow-x:auto;white-space:nowrap}
+}
+table.data th,table.data td{
+  border-bottom:1px solid var(--line-soft);padding:9px 12px;text-align:left;vertical-align:top;
+}
+table.data thead th{
+  background:var(--panel-2);font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted);font-weight:500;
+}
+table.data tbody tr:last-child td{border-bottom:0}
+table.data td.mono{font-family:var(--mono);font-size:12px;color:var(--muted)}
+table.data .ya{color:var(--lime-ink);font-weight:600}
+table.data .tidak{color:var(--gold);font-weight:600}
+footer{
+  margin-top:clamp(32px,5vw,56px);border-top:1px solid var(--line);padding-top:20px;
+  font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em;
+}
+
+/* ---------- cetak ---------- */
+@page{size:A4 portrait;margin:0}
+@media print{
+  body{background:#fff}
+  .wrap{max-width:none;padding:0}
+  .no-print{display:none!important}
+  .sheet{margin:0;break-after:page}
+  .page{
+    width:794px;aspect-ratio:auto;height:1123px;
+    border:0;border-radius:0;margin:0;
+  }
+  .safe{display:none}
+  .sheet-head{display:none}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="no-print">
+    <p class="eyebrow">BARIS APP — Proposal</p>
+    <h1>Proposal platform: 18 halaman A4, dari cover sampai ajakan</h1>
+    <p class="lede">Dokumen ini adalah <strong>spesifikasi tata letak</strong> proposal — tiap halaman digambar wireframe, dengan anotasi yang menyebut apa yang harus terlihat, apa yang sudah ada di aplikasinya, dan mana yang masih menunggu. Isi fiturnya bukan karangan: 41 item di halaman 5–12 dibaca dari <code>App\Support\ProductFeatures</code>, dan harganya dari tabel <code>saas_plans</code> yang dikelola admin.</p>
+    <div class="meta">
+      <span class="chip">A4 potret · 794 × 1123 px</span>
+      <span class="chip">18 halaman</span>
+      <span class="chip">margin aman 60 px</span>
+      <span class="chip">41 fitur · 8 kelompok</span>
+      <span class="chip">siap <code>Ctrl+P</code></span>
+      <button class="toggle" id="gt" type="button" aria-pressed="false">Tampilkan garis margin</button>
+    </div>
+  </header>
+
+  <dl class="spec no-print">
+    <div>
+      <dt>Kanvas</dt>
+      <dd>794 × 1123 px (A4 potret). Semua ukuran di wireframe ini dalam px kanvas, jadi hasil cetak bisa diukur.</dd>
+    </div>
+    <div>
+      <dt>Skala teks</dt>
+      <dd>Judul halaman 56 · Judul blok 38 · Sub 20 · Isi tabel 13 · Keterangan 16 · <em>minimum 12</em></dd>
+    </div>
+    <div>
+      <dt>Sumber isi</dt>
+      <dd>Fitur dari <code>ProductFeatures::groups()</code> (8 kelompok, 41 item). Harga dari <code>Pricing::plans()</code>. Keduanya dibaca dari aplikasinya, bukan ditulis ulang.</dd>
+    </div>
+    <div>
+      <dt>Susunan halaman</dt>
+      <dd>Label + nomor → judul → wireframe blok → anotasi bernomor</dd>
+    </div>
+  </dl>
+
+  <!-- ============ HALAMAN 0: COVER ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Cover</p>
+      <h2>Sampul — menyebut apa ini dalam satu baris</h2>
+      <p class="goal">Sampul yang menuliskan jenis dokumennya ("proposal kerja sama") membuat pembaca tahu sejak detik pertama ini bukan brosur. Tanpa itu, enam halaman pertama dipakai untuk menebak.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in" style="gap:calc(15*var(--u))">
+        <div class="mrow">
+          <div class="ph" style="width:calc(60*var(--u));height:calc(60*var(--u))">
+            <span>LOGO<em>60 × 60</em></span>
+          </div>
+          <div class="mcol" style="flex:0 0 auto">
+            <p class="tinym" style="font-size:calc(15*var(--u))">BARIS APP</p>
+            <p class="tinym" style="font-size:calc(12*var(--u))">berbaris.app</p>
+          </div>
+        </div>
+
+        <div class="grow"></div>
+
+        <p class="tinym" style="font-size:calc(16*var(--u));letter-spacing:.1em">PROPOSAL KERJA SAMA</p>
+        <p class="h-big" style="font-size:calc(46*var(--u))">Satu platform untuk mengelola lomba, dari pendaftaran sampai juara.</p>
+        <p class="sub" style="font-size:calc(17*var(--u))">Pendaftaran peserta, penilaian juri, papan skor, voting penonton, tiket, dan siaran langsung — berjalan di satu sistem, bukan di lima berkas terpisah.</p>
+
+        <div class="grow"></div>
+
+        <div class="rule"></div>
+        <div class="tt" style="border:0">
+          <div class="tr c2" style="border:0;padding-left:0;padding-right:0">
+            <span class="k">Ditujukan kepada</span>
+            <span class="v">— isi sebelum dikirim —<br><span class="tiny">Nama sekolah / dinas / penyelenggara</span></span>
+          </div>
+          <div class="tr c2" style="border:0;padding-left:0;padding-right:0">
+            <span class="k">Disusun oleh</span>
+            <span class="v">Tim BARIS APP</span>
+          </div>
+          <div class="tr c2" style="border:0;padding-left:0;padding-right:0">
+            <span class="k">Tanggal</span>
+            <span class="v">— isi tanggal kirim —</span>
+          </div>
+        </div>
+        <div class="ph" style="width:calc(150*var(--u));height:calc(28*var(--u))">
+          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:94%">SLOT FOTO · 150 × 28</span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>"Proposal kerja sama" bukan "penawaran"</b><span class="dim">16 px · mono</span><p>Kata itu menandakan dokumennya dibaca dulu, bukan langsung diputuskan. Untuk dokumen yang dikirim ke dinas, ini yang menentukan ia masuk berkas atau tempat sampah.</p></div></li>
+      <li><span class="n">02</span><div><b>Tiga baris penerima diisi sebelum dikirim</b><span class="dim">—</span><p><span class="flag">Jangan kirim dengan tanda pisah masih terpasang.</span> Sampul yang masih berbunyi "— isi sebelum dikirim —" membuat seluruh dokumen ini terlihat seperti contoh, bukan proposal untuk mereka.</p></div></li>
+      <li><span class="n">03</span><div><b>Tanpa angka di sampul</b><span class="dim">—</span><p>Jumlah event, peserta, dan sekolah ada di halaman bukti, dan di sana ditulis apa adanya. Sampul yang memuat angka akan ditagih di halaman pertama percakapan, dan angka kita belum besar.</p></div></li>
+      <li><span class="n">04</span><div><b>Kalimat judul menyebut dua ujungnya</b><span class="dim">56 px · 3 baris</span><p>"Dari pendaftaran sampai juara" membuat lingkupnya terbaca tanpa perlu membaca daftar fitur. Kalau judulnya cuma "platform manajemen event", pembaca mengira ini alat lain yang mirip yang pernah ia coba.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 1: RINGKASAN ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 1 / 17</p>
+      <h2>Ringkasan — seluruh proposal dalam satu halaman</h2>
+      <p class="goal">Halaman yang menentukan apakah sisa dokumen dibaca. Karena itu isinya bukan pengantar, melainkan jawaban: apa ini, untuk siapa, berapa harganya, dan apa buktinya — empat hal yang biasanya baru terjawab di halaman terakhir.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Ringkasan</span>
+          <span class="pn">1 / 17</span>
+        </div>
+
+        <p class="h-mid">Apa ini, dan untuk siapa.</p>
+        <p class="tiny">BARIS APP adalah perangkat lunak berbasis web untuk menyelenggarakan lomba dan kompetisi. Peserta mendaftar sendiri lewat halaman event, juri menilai dari tablet, panitia memantau semuanya dari satu dashboard. Tidak perlu memasang apa pun — cukup peramban.</p>
+
+        <div class="grid4" style="flex:0 0 auto">
+          <div class="card"><span class="bar t w60"></span><span class="bar s w100"></span></div>
+          <div class="card"><span class="bar t w60"></span><span class="bar s w100"></span></div>
+          <div class="card"><span class="bar t w60"></span><span class="bar s w100"></span></div>
+          <div class="card"><span class="bar t w60"></span><span class="bar s w100"></span></div>
+        </div>
+
+        <p class="tinym">EMPAT JAWABAN — di gambar jadi kartu angka, di naskah diisi empat baris:</p>
+
+        <div class="tt">
+          <div class="tr head c2"><span class="k">Pertanyaan</span><span class="k">Jawaban yang ditulis</span></div>
+          <div class="tr c2"><span class="v">Apa ini?</span><span class="v">Platform pengelolaan lomba: pendaftaran, penilaian, papan skor, voting, tiket, siaran.</span></div>
+          <div class="tr c2"><span class="v">Untuk siapa?</span><span class="v">Sekolah, paskibra, pramuka, kampus, dinas, dan penyelenggara event.</span></div>
+          <div class="tr c2"><span class="v">Berapa harganya?</span><span class="v">Gratis untuk mulai. Fitur lanjutan dibuka sekali bayar per event — tanpa langganan bulanan.</span></div>
+          <div class="tr c2"><span class="v">Apa buktinya?</span><span class="v">Sudah dipakai di lomba sungguhan; rinciannya di halaman 14.</span></div>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny"><strong>Semua yang tertulis di dokumen ini bisa diperiksa di aplikasinya.</strong> Daftar fitur di halaman 5–12 dibaca langsung dari katalog fitur yang dipakai halaman publik aplikasi; tabel harga dibaca dari paket yang sedang aktif. Kalau ada yang berubah, halaman ini ikut berubah — bukan disunting manual.</p>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Empat jawaban, bukan kata pengantar</b><span class="dim">—</span><p>Halaman ringkasan yang isinya "terima kasih atas kepercayaan Anda" membuang satu halaman. Yang ditaruh di sini harus bisa dipakai untuk memutuskan tanpa membaca lagi.</p></div></li>
+      <li><span class="n">02</span><div><b>Empat kartu angka diisi dari data nyata</b><span class="dim">4 × kartu</span><p>Isi yang benar: jumlah event yang pernah dikelola, jumlah sekolah peserta, jumlah kategori lomba yang didukung, jumlah juri yang pernah menilai. <span class="flag">Ambil dari basis data, jangan dibulatkan ke atas.</span></p></div></li>
+      <li><span class="n">03</span><div><b>Harga disebut dua baris, apa adanya</b><span class="dim">—</span><p>"Gratis untuk mulai" dan "sekali bayar per event" adalah dua hal yang benar di aplikasinya — paket gratis punya masa uji coba, dan paket berbayar memang sekali bayar, bukan langganan. Menyebut angka rupiah di halaman ringkasan boleh, asal sama dengan tabel di halaman 13.</p></div></li>
+      <li><span class="n">04</span><div><b>Kalimat penutup menyebut sumbernya</b><span class="dim">—</span><p>Itu yang membedakan proposal ini dari brosur: pembaca boleh mengecek. Dan karena katalognya dijaga tes, kalimat itu tetap benar setelah aplikasinya berubah.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 2: MASALAH ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 2 / 17</p>
+      <h2>Masalah — ditulis dari sisi panitia, bukan dari sisi aplikasi</h2>
+      <p class="goal">Halaman yang membuat pembaca mengangguk sebelum tahu produknya. Semua masalah di sini harus yang pernah dialaminya sendiri; satu baris yang terasa mengarang akan merusak tujuh baris yang benar.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Masalah</span>
+          <span class="pn">2 / 17</span>
+        </div>
+
+        <p class="h-mid">Enam hal yang selalu terulang di tiap lomba.</p>
+        <p class="tiny">Berurutan sesuai hari terjadinya: sebelum acara, saat acara, dan sesudahnya. Urutan ini yang dipakai lagi di halaman 3 (solusi) supaya pembaca bisa mencocokkan sendiri.</p>
+
+        <div class="tt">
+          <div class="tr head cq"><span class="k">#</span><span class="k">Yang terjadi</span><span class="k">Akibatnya</span></div>
+          <div class="tr cq"><span class="k">1</span><span class="v">Formulir pendaftaran disebar lewat pesan, diisi di kertas, lalu dipindahkan ke lembar kerja</span><span class="v">Data hilang, nama tertukar</span></div>
+          <div class="tr cq"><span class="k">2</span><span class="v">Berkas tiap sekolah datang dalam bentuk berbeda, tersebar di banyak obrolan</span><span class="v">Verifikasi jadi berhari-hari</span></div>
+          <div class="tr cq"><span class="k">3</span><span class="v">Juri menulis nilai di kertas, lalu dihitung ulang</span><span class="v">Rekap lama, rawan salah hitung</span></div>
+          <div class="tr cq"><span class="k">4</span><span class="v">Penonton menanyakan skor, panitia menjawab satu per satu</span><span class="v">Panitia tak sempat mengurus acara</span></div>
+          <div class="tr cq"><span class="k">5</span><span class="v">Voting dan donasi dikumpulkan tunai</span><span class="v">Uang tidak tercatat rapi</span></div>
+          <div class="tr cq"><span class="k">6</span><span class="v">Juara ditetapkan malam itu juga, sertifikat ditulis tangan</span><span class="v">Peserta menunggu berminggu-minggu</span></div>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny"><strong>Yang tidak diklaim.</strong> Dokumen ini tidak menyebut lomba yang dikelola manual itu gagal — banyak yang berjalan baik. Yang diklaim hanya bahwa seluruh pekerjaan di atas bisa dikerjakan sekali, di satu tempat, tanpa berpindah lima alat.</p>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Enam baris, bukan sepuluh</b><span class="dim">—</span><p>Tabel masalah yang panjang membuat pembaca merasa sedang dijual ketakutan. Enam baris cukup untuk menutup seluruh alur acara, dan tiap barisnya punya pasangannya di halaman solusi.</p></div></li>
+      <li><span class="n">02</span><div><b>Kolom akibat sengaja satu frasa</b><span class="dim">kolom 3</span><p>Bukan paragraf. Yang membuat baris ini terasa benar bukan penjelasannya, melainkan pembaca mengenali akibatnya sendiri.</p></div></li>
+      <li><span class="n">03</span><div><b>Urutnya mengikuti hari acara</b><span class="dim">—</span><p>Sebelum / saat / sesudah. Kalau urutannya acak, pembaca harus menyusun sendiri peta masalahnya, dan itu pekerjaan yang tidak perlu ia lakukan.</p></div></li>
+      <li><span class="n">04</span><div><b>Tanpa menyebut merek lain</b><span class="dim">—</span><p>Halaman ini soal kebiasaan, bukan soal pesaing. Membandingkan dengan alat lain di halaman masalah memindahkan perhatian dari acara panitia ke pasar perangkat lunak.</p></div></li>
+      <li><span class="n">05</span><div><b>Paragraf penutup menahan klaim</b><span class="dim">—</span><p>Menyatakan sendiri apa yang <em>tidak</em> diklaim membuat halaman berikutnya lebih mudah dipercaya. Ini juga satu-satunya tempat di dokumen ini yang boleh berbicara soal kelemahan.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 3: SOLUSI ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 3 / 17</p>
+      <h2>Solusi — apa yang dilihat tiap orang yang terlibat</h2>
+      <p class="goal">Halaman ini menjelaskan produknya lewat empat orang, bukan lewat daftar fitur. Tiap orang punya satu kalimat yang menyebut apa yang harus ia lakukan sendiri — dan di aplikasinya memang cuma itu.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Solusi</span>
+          <span class="pn">3 / 17</span>
+        </div>
+
+        <p class="h-mid">Empat orang, empat hal yang harus mereka lakukan.</p>
+        <p class="tiny">Yang paling sering ditanyakan panitia sebelum memutuskan: "nanti gurunya harus daftar akun?" Jawabannya ada di baris kedua tabel ini, dan jawaban itu yang paling sering membuat mereka lanjut membaca.</p>
+
+        <div class="tt">
+          <div class="tr head c3"><span class="k">Siapa</span><span class="k">Yang ia lakukan</span><span class="k">Perlu akun?</span></div>
+          <div class="tr c3"><span class="v"><strong>Peserta</strong><br><span class="tiny">sekolah / tim</span></span><span class="v">Mendaftar lewat halaman event, mengunggah berkas, mengunduh formulir dan sertifikat.</span><span class="v">Tidak — satu tautan pribadi</span></div>
+          <div class="tr c3"><span class="v"><strong>Panitia</strong><br><span class="tiny">penyelenggara</span></span><span class="v">Menyiapkan kategori, memverifikasi berkas, mengatur jadwal, menetapkan juara.</span><span class="v">Ya</span></div>
+          <div class="tr c3"><span class="v"><strong>Juri</strong><br><span class="tiny">dewan penilai</span></span><span class="v">Menilai dari tablet atau ponsel lewat tautan bertoken, langsung saat lomba berjalan.</span><span class="v">Tidak — satu tautan bertoken</span></div>
+          <div class="tr c3"><span class="v"><strong>Penonton</strong><br><span class="tiny">publik</span></span><span class="v">Melihat papan skor, mem-voting, membeli tiket — semuanya dari ponselnya.</span><span class="v">Tidak</span></div>
+        </div>
+
+        <p class="h-sm" style="margin-top:calc(4*var(--u))">Yang membuat ini bukan alat terpisah-pisah</p>
+        <p class="tiny">Nilai yang diisi juri langsung jadi bahan penetapan juara; juara itu langsung dipakai menarik sertifikat dan menampilkan papan skor. Datanya mengalir, tidak dipindahkan tangan.</p>
+
+        <div class="grid3" style="flex:0 0 auto">
+          <div class="ph" style="aspect-ratio:16/10"><span>ALUR DATA<em>juri → juara</em></span></div>
+          <div class="ph" style="aspect-ratio:16/10"><span>ALUR DATA<em>juara → sertifikat</em></span></div>
+          <div class="ph" style="aspect-ratio:16/10"><span>ALUR DATA<em>juara → papan skor</em></span></div>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny"><strong>Tanpa pemasangan.</strong> Aplikasinya berjalan di peramban dan tidak perlu dipasang di komputer sekolah. Ini sering jadi penghalang pertama di dinas — dan di sini penghalang itu tidak ada.</p>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Kolom "perlu akun?" ada karena itu pertanyaan pertama</b><span class="dim">kolom 3</span><p>Tiga dari empat peran jawabannya "tidak". Menaruhnya di kolom sendiri membuat fakta itu terlihat sekilas, tanpa perlu membaca paragraf.</p></div></li>
+      <li><span class="n">02</span><div><b>Empat peran, bukan lima atau enam</b><span class="dim">—</span><p>Admin platform sengaja tidak dimasukkan. Ia tidak berhubungan dengan panitia, dan menaruhnya di tabel ini membuat pembaca mengira ada satu pihak lagi yang harus ia hubungi.</p></div></li>
+      <li><span class="n">03</span><div><b>Tiga slot alur data digambar apa adanya</b><span class="dim">3 × 16:10</span><p>Kotak-kotaknya lebih berguna daripada tulisan "terintegrasi": yang harus terbaca adalah ada tiga anak panah keluar dari satu titik — juara. Kalau digambar jadi bagan melingkar, justru terlihat rumit.</p></div></li>
+      <li><span class="n">04</span><div><b>Kalimat "tanpa pemasangan" jangan dihapus</b><span class="dim">—</span><p><span class="flag">Ini satu-satunya baris di halaman ini yang menjawab keberatan, bukan menjual fitur.</span> Di lingkungan sekolah dan dinas, "harus instal" sering mematikan percakapan sebelum sampai soal harga.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 4: PETA FITUR ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 4 / 17</p>
+      <h2>Peta fitur — delapan kelompok, urut alur kerja panitia</h2>
+      <p class="goal">Satu halaman yang bisa dibaca sebagai daftar isi: pembaca memilih sendiri kelompok mana yang ia butuhkan, lalu membuka halaman 5–12 di bagian itu. Urutannya sengaja mengikuti pekerjaan panitia, bukan urutan modul di dalam aplikasinya.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Peta fitur</span>
+          <span class="pn">4 / 17</span>
+        </div>
+
+        <p class="h-mid">Delapan kelompok, 41 fitur.</p>
+        <p class="tiny">Dibaca dari katalog yang dipakai halaman publik aplikasi. Angka di kolom kanan adalah jumlah fitur di kelompok itu; tiap kelompok mendapat satu halaman sendiri di halaman 5–12.</p>
+
+        <div class="tt">
+          <div class="tr head c3"><span class="k">Kelompok</span><span class="k">Dipakai kapan</span><span class="k">Jumlah</span></div>
+          <div class="tr c3"><span class="v"><strong>Pendaftaran &amp; Peserta</strong></span><span class="v">Sebelum acara — sekolah mulai mendaftar</span><span class="v">6 fitur</span></div>
+          <div class="tr c3"><span class="v"><strong>Hari-H &amp; Venue</strong></span><span class="v">Hari lomba — panitia bekerja sambil berdiri</span><span class="v">9 fitur</span></div>
+          <div class="tr c3"><span class="v"><strong>Penilaian &amp; Juara</strong></span><span class="v">Saat menilai sampai juara ditetapkan</span><span class="v">6 fitur</span></div>
+          <div class="tr c3"><span class="v"><strong>Papan Skor &amp; Siaran</strong></span><span class="v">Yang dilihat penonton, di aula maupun di rumah</span><span class="v">4 fitur</span></div>
+          <div class="tr c3"><span class="v"><strong>Voting Penonton</strong></span><span class="v">Sepanjang acara — perolehan suara berjalan</span><span class="v">4 fitur</span></div>
+          <div class="tr c3"><span class="v"><strong>Tiket Event</strong></span><span class="v">Acara yang menontonnya berbayar</span><span class="v">2 fitur</span></div>
+          <div class="tr c3"><span class="v"><strong>Konten &amp; Komunikasi</strong></span><span class="v">Sebelum dan sesudah acara</span><span class="v">5 fitur</span></div>
+          <div class="tr c3"><span class="v"><strong>Sponsor, Tenant &amp; Keuangan</strong></span><span class="v">Menutup acara — mencatat pemasukan</span><span class="v">5 fitur</span></div>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny"><strong>Catatan untuk yang membandingkan.</strong> Enam dari delapan kelompok ini mengandung fitur yang baru terbuka di paket berbayar — ditandai gembok di halaman 5–12 dan dirangkum lagi di halaman 13. Yang seluruhnya terbuka di paket gratis hanya dua: Pendaftaran &amp; Peserta, dan Konten &amp; Komunikasi.</p>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Urut mengikuti pekerjaan, bukan menu</b><span class="dim">—</span><p>Di sidebar aplikasinya urutannya beda. Yang dibakukan di sini adalah urutan <em>hari</em>: mendaftar → hari-H → menilai → menayangkan → monetisasi → menutup. Kalau urutannya mengikuti menu, pembaca harus menyusun sendiri kronologinya.</p></div></li>
+      <li><span class="n">02</span><div><b>Peta ini juga daftar isi</b><span class="dim">—</span><p>Nama kelompok di kolom pertama harus sama persis dengan judul delapan halaman berikutnya. Pembaca yang melompat dari sini ke halaman 9 harus langsung menemukan yang ia cari.</p></div></li>
+      <li><span class="n">03</span><div><b>Angka 41 bisa diperiksa</b><span class="dim">8 baris · total 41</span><p>Jumlahnya dijumlahkan dari katalog di aplikasinya, dan ada tes yang gagal kalau katalognya berubah tanpa halaman ini ikut berubah. Jangan dibulatkan jadi "40+" — pembaca yang menghitung sendiri akan menemukan 41.</p></div></li>
+      <li><span class="n">04</span><div><b>Kolom "dipakai kapan" lebih berguna dari ikon</b><span class="dim">kolom 2</span><p>Ikon di tiap baris hanya mengulang nama kelompoknya. Frasa waktu membuat pembaca mengurutkan sendiri apa yang mendesak baginya — dan itu sudah cukup untuk membuat ia terus membaca.</p></div></li>
+      <li><span class="n">05</span><div><b>Paragraf terakhir menyebut gembok lebih awal</b><span class="dim">—</span><p>Menariknya di halaman peta, bukan menunggu sampai halaman harga, membuat dokumen ini tidak terasa menyembunyikan sesuatu. Pembaca yang sadar sejak awal justru lebih tenang membacanya.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 5: PENDAFTARAN ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 5 / 17 · Kelompok 1 dari 8</p>
+      <h2>Pendaftaran &amp; Peserta — enam fitur</h2>
+      <p class="goal">Halaman pertama dari delapan halaman fitur. Tiap halaman kelompok berbentuk sama: satu tangkapan layar perwakilan, lalu enam sampai sembilan baris fitur dengan gembok di yang perlu paket berbayar.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Pendaftaran &amp; Peserta</span>
+          <span class="pn">5 / 17</span>
+        </div>
+
+        <p class="h-mid">Dari formulir pendaftaran publik sampai kartu akses yang dicetak untuk sekolah.</p>
+
+        <div class="mock" style="flex:0 0 auto">
+          <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.app/event/nama-lomba/register</span></div>
+          <div class="m-in" style="padding:calc(14*var(--u));gap:calc(8*var(--u))">
+            <div class="mrow"><span class="bar t w40"></span><span class="bar s w30"></span></div>
+            <div class="mrow"><span class="pill acc">1 · Kategori</span><span class="pill">2 · Data sekolah</span><span class="pill">3 · Konfirmasi</span></div>
+            <div class="grid2">
+              <div class="card"><span class="bar w70"></span><span class="bar s w100"></span><span class="bar s w85"></span><span class="pill lim">Kuota tersisa</span></div>
+              <div class="card"><span class="bar w70"></span><span class="bar s w100"></span><span class="bar s w60"></span><span class="pill">Pilih</span></div>
+            </div>
+            <div class="mrow"><span class="thumb" style="width:calc(70*var(--u));aspect-ratio:1"></span><span class="mcol"><span class="bar w70"></span><span class="bar s w50"></span></span><span class="bar acc" style="width:calc(90*var(--u))"></span></div>
+          </div>
+        </div>
+
+        <p class="tinym">ENAM FITUR — gembok berarti perlu paket berbayar:</p>
+
+        <div class="mcol" style="gap:calc(4*var(--u));flex:0 0 auto">
+          <div class="fx"><span class="ic"></span><span class="nm">Pendaftaran Online Multi-Step<span>Formulir bertahap, kuota per kategori, status berkas bisa dipantau</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Magic Link Peserta<span>Satu tautan pribadi per peserta, tanpa membuat akun</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Field Pendaftaran Kustom<span>Susun sendiri isian formulir, urutannya bisa diseret</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Kategori Lomba Bertingkat<span>Kategori, grup, seri, dan babak — juri dan rubrik per tingkat</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Manajemen Peserta &amp; Verifikasi Berkas<span>Satu tabel untuk seluruh peserta, ubah status massal</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Kartu Akses Peserta &amp; Rekap Sekolah<span>Cetak kartu ber-QR, rekap peserta per sekolah</span></span><span class="ok">terbuka</span></div>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny"><strong>Seluruh kelompok ini terbuka di paket gratis.</strong> Enam dari enam fiturnya bisa dipakai tanpa membayar apa pun — di halaman ini tidak ada satu gembok pun.</p>
+      </div>
+    </div>
+
+    <ol class="notes ketat">
+      <li><span class="n">01</span><div><b>Tangkapan layar perwakilan, satu saja</b><span class="dim">mock 16:9-an</span><p>Yang diambil adalah halaman pendaftaran publiknya, bukan panel panitia — itu yang belum pernah dilihat calon peserta, dan itu juga yang paling meyakinkan. Ambil layar sungguhan dengan data contoh.</p></div></li>
+      <li><span class="n">02</span><div><b>Baris fitur memakai nama dari katalog</b><span class="dim">6 nama persis</span><p>Keenamnya dikutip apa adanya dari <code>ProductFeatures</code>, dan deskripsi di baris keduanya adalah versi pendeknya. Kalau nama di proposal berbeda dari nama di aplikasi, pembaca yang mencari di aplikasinya akan tersesat.</p></div></li>
+      <li><span class="n">03</span><div><b>Kolom kanan menulis "terbuka", bukan centang</b><span class="dim">kolom 3</span><p>Kata itu yang nanti dibandingkan dengan gembok di halaman 6 dan seterusnya. Simbol centang hijau akan terbaca sebagai nilai, bukan status.</p></div></li>
+      <li><span class="n">04</span><div><b>Gembok "berbayar" itu penanda, bukan penilaian</b><span class="dim">kolom 3</span><p>Nama dan tingkat bacaannya harus tetap sama di kedelapan halaman fitur. Kalau di halaman 6 ditulis "premium" dan di halaman 9 ditulis "Pro", pembaca akan mengira keduanya paket berbeda.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 6: HARI-H ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 6 / 17 · Kelompok 2 dari 8</p>
+      <h2>Hari-H &amp; Venue — sembilan fitur</h2>
+      <p class="goal">Kelompok terbesar, dan kelompok dengan gembok terbanyak: tujuh dari sembilan. Daftarnya sengaja dipecah dua kolom supaya sembilan baris tidak jadi satu tumpukan panjang.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Hari-H &amp; Venue</span>
+          <span class="pn">6 / 17</span>
+        </div>
+
+        <p class="h-mid">Yang dipakai panitia sambil berdiri.</p>
+
+        <div class="mock" style="flex:0 0 auto">
+          <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">Berbaris → Denah lapangan per kategori</span></div>
+          <div class="m-in">
+            <div class="mrow"><span class="bar t w30"></span><span class="pill">Arena</span><span class="pill">DP 1–5</span><span class="pill acc">Alur pasukan</span></div>
+            <div class="ph" style="aspect-ratio:16/6"><span>KANVAS DENAH<em>arena · pos penilaian · tribun · DP 1–5 · garis alur</em></span></div>
+            <div class="mrow"><span class="bar s w40"></span><span class="bar lim" style="width:calc(80*var(--u))"></span><span class="bar s w30"></span></div>
+          </div>
+        </div>
+
+        <div class="grid2" style="flex:0 0 auto">
+          <div class="mcol" style="gap:calc(5*var(--u))">
+            <div class="fx"><span class="ic"></span><span class="nm">Tempat Lomba<span>Beberapa venue per event, kuota &amp; harga sendiri</span></span><span class="ok">terbuka</span></div>
+            <div class="fx"><span class="ic"></span><span class="nm">Denah Lapangan per Kategori<span>Kanvas arena, pos penilaian, tribun, DP 1–5</span></span><span class="lk">berbayar</span></div>
+            <div class="fx"><span class="ic"></span><span class="nm">Kunci Denah &amp; Kunci per Zona<span>Bekukan seluruh denah atau satu kotak saja</span></span><span class="lk">berbayar</span></div>
+            <div class="fx"><span class="ic"></span><span class="nm">Alur Gerak Pasukan<span>Jalur masuk, titik belok, arah hadap</span></span><span class="lk">berbayar</span></div>
+            <div class="fx"><span class="ic"></span><span class="nm">Ukuran Meter Papan &amp; Arena<span>Angka denah cocok dengan lapangan</span></span><span class="lk">berbayar</span></div>
+          </div>
+          <div class="mcol" style="gap:calc(5*var(--u))">
+            <div class="fx"><span class="ic"></span><span class="nm">Meja Daftar Ulang &amp; Scan QR<span>Kartu dipindai, peserta langsung hadir</span></span><span class="ok">terbuka</span></div>
+            <div class="fx"><span class="ic"></span><span class="nm">Drawing / Undian Urutan Tampil<span>Undian digital, hasil bisa dicetak</span></span><span class="lk">berbayar</span></div>
+            <div class="fx"><span class="ic"></span><span class="nm">Rundown Acara<span>Susun per jam, tayang di halaman publik</span></span><span class="lk">berbayar</span></div>
+            <div class="fx"><span class="ic"></span><span class="nm">Jadwal Pertandingan<span>Per tingkat, grup, babak, dan venue</span></span><span class="lk">berbayar</span></div>
+          </div>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny"><strong>Tujuh gembok di sini, empat di antaranya soal denah.</strong> Denah memang fitur termahal untuk dikembangkan — itu yang membuatnya masuk paket berbayar, bukan karena dipotong-potong sengaja. Tiga sisanya — undian urutan tampil, rundown, dan jadwal pertandingan — satu paket dengan halaman publik event.</p>
+      </div>
+    </div>
+
+    <ol class="notes ketat">
+      <li><span class="n">01</span><div><b>Sembilan baris dipecah dua kolom</b><span class="dim">5 + 4</span><p>Satu kolom sembilan baris membuat halamannya jadi daftar belanja. Dua kolom membuatnya terbaca sebagai kelompok, dan halaman ini yang paling butuh itu.</p></div></li>
+      <li><span class="n">02</span><div><b>Tangkapan layar denah, bukan jadwal</b><span class="dim">mock 16:7</span><p>Denah adalah satu-satunya hal di seluruh proposal ini yang tidak bisa dijelaskan dengan kalimat. Yang lain cukup baris teks; halaman ini butuh gambarnya.</p></div></li>
+      <li><span class="n">03</span><div><b>Empat gembok berurutan, bukan berselang</b><span class="dim">kolom kiri, baris 2–5</span><p>Empat fitur denah dikelompokkan berdekatan — di kolom kiri, baris 2 sampai 5 — supaya pembaca melihatnya sebagai satu paket, bukan sebagai empat larangan terpisah. Tiga gembok sisanya jatuh di kolom kanan, terpisah dari blok denah.</p></div></li>
+      <li><span class="n">04</span><div><b>Angka DP 1–5 ditulis di slot gambar</b><span class="dim">16:7</span><p>Keterangan di dalam kotak gambar menyebutkan isinya secara rinci — arena, pos penilaian, tribun, DP 1–5, garis alur. Itu memandu orang yang mengambil tangkapan layarnya supaya tidak memotret denah kosong.</p></div></li>
+      <li><span class="n">05</span><div><b>Kalimat penutup menjelaskan kenapa ada gembok</b><span class="dim">—</span><p>Satu kalimat yang menyebut alasannya membuat paket berbayar terasa masuk akal. Tanpa itu, tujuh gembok berderet terbaca sebagai pembatasan yang dipasang sengaja.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 7: PENILAIAN ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 7 / 17 · Kelompok 3 dari 8</p>
+      <h2>Penilaian &amp; Juara — enam fitur</h2>
+      <p class="goal">Inti produknya ada di halaman ini, dan separuhnya berbayar. Kalau pembaca hanya membuka satu halaman fitur, kemungkinan besar halaman inilah yang dibuka.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Penilaian &amp; Juara</span>
+          <span class="pn">7 / 17</span>
+        </div>
+
+        <p class="h-mid">Juara yang keluar dari data, bukan dari rekap ulang di kertas.</p>
+
+        <div class="mock" style="flex:0 0 auto">
+          <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">Input nilai juri · tautan bertoken, tanpa akun</span></div>
+          <div class="m-in">
+            <div class="mrow"><span class="bar t w40"></span><span class="pill lim">Juri 2 dari 5</span></div>
+            <div class="cq"><span class="bar s w100"></span><span class="mcol"><span class="bar w80"></span><span class="bar s w60"></span></span><span class="bar acc" style="width:calc(60*var(--u))"></span></div>
+            <div class="cq"><span class="bar s w100"></span><span class="mcol"><span class="bar w70"></span><span class="bar s w50"></span></span><span class="bar acc" style="width:calc(60*var(--u))"></span></div>
+            <div class="cq"><span class="bar s w100"></span><span class="mcol"><span class="bar w80"></span><span class="bar s w70"></span></span><span class="bar acc" style="width:calc(60*var(--u))"></span></div>
+          </div>
+        </div>
+
+        <div class="mcol" style="gap:calc(6*var(--u));flex:0 0 auto">
+          <div class="fx"><span class="ic"></span><span class="nm">Format Penilaian Kustom<span>Rubrik sendiri: kriteria, rentang nilai, bobot — bisa disalin antar kategori</span></span><span class="lk">berbayar</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Input Nilai Juri via Tablet<span>Tautan bertoken, tanpa akun; dinilai per peserta atau per sesi</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Perbandingan Nilai Antar Juri<span>Nilai tiap juri berdampingan untuk peserta yang sama</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Rekap Nilai &amp; Cetak PDF<span>Per peserta, per kategori, atau seluruh tingkat — CSV dan PDF</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Kategori Juara &amp; Berita Acara<span>Tetapkan juara dari hasil penilaian, cetak berita acara siap tanda tangan</span></span><span class="lk">berbayar</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Sertifikat Digital<span>Template sendiri, data juara ditarik dari hasil penilaian</span></span><span class="lk">berbayar</span></div>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny"><strong>Tiga terbuka, tiga berbayar.</strong> Yang terbuka adalah menilai dan merekap; yang berbayar adalah menyusun rubriknya sendiri, menetapkan juara, dan mencetak sertifikat.</p>
+      </div>
+    </div>
+
+    <ol class="notes ketat">
+      <li><span class="n">01</span><div><b>Tiga terbuka, tiga berbayar</b><span class="dim">berselang-seling</span><p>Urutannya sengaja berselang agar terbaca berpasangan: rubrik berbayar disusul penilaian gratis, lalu juara berbayar disusul sertifikat berbayar. Yang penting jangan menaruh ketiga gembok berurutan di bawah — itu terbaca sebagai dinding.</p></div></li>
+      <li><span class="n">02</span><div><b>Contoh disalin dari halaman penilaian juri</b><span class="dim">mock</span><p>Bukan panel panitia. Yang perlu dilihat calon pembeli adalah betapa ringan tampilan juri di tablet — itulah keberatan terbesar panitia selama ini.</p></div></li>
+      <li><span class="n">03</span><div><b>Kolom kanan tabel kecil di mock</b><span class="dim">3 baris</span><p>Tiga baris nilai akordeon mewakili tiga kriteria, dengan kotak nilai di kanan. Tiga sudah cukup; lima membuat mock-nya jadi penuh dan tidak lagi terbaca sebagai tangkapan layar.</p></div></li>
+      <li><span class="n">04</span><div><b>"Tanpa akun" ditulis eksplisit</b><span class="dim">baris 2</span><p>Empat kata yang menjawab keberatan teknis paling sering: juri biasanya tidak mau memasang aplikasi atau mengingat kata sandi. Sebutkan di proposal, bukan hanya di aplikasi.</p></div></li>
+      <li><span class="n">05</span><div><b>Kalimat penutup membagi jelas</b><span class="dim">—</span><p>Menyebut mana yang terbuka dan mana yang berbayar dalam satu kalimat membuat pembaca bisa memutuskan sendiri tanpa harus menelusuri tabel harga di halaman 13.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 8: SIARAN ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 8 / 17 · Kelompok 4 dari 8</p>
+      <h2>Papan Skor &amp; Siaran — empat fitur</h2>
+      <p class="goal">Kelompok paling sedikit fiturnya, tapi paling banyak yang bisa dibuka orang luar tanpa login. Halaman publik itu sendiri sudah jadi bahan promosi.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Papan Skor &amp; Siaran</span>
+          <span class="pn">8 / 17</span>
+        </div>
+
+        <p class="h-mid">Yang dilihat penonton, di aula maupun di rumah.</p>
+
+        <div class="mock" style="flex:0 0 auto">
+          <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">berbaris.app/scoreboard/nama-lomba</span></div>
+          <div class="m-in">
+            <div class="mrow"><span class="bar t w30"></span><span class="pill warn">LIVE</span><span class="bar s w20"></span></div>
+            <div class="grid3">
+              <div class="card"><span class="bar s w60"></span><span class="bar acc w80"></span><span class="bar s w40"></span></div>
+              <div class="card hi"><span class="bar s w60"></span><span class="bar acc w90"></span><span class="bar s w40"></span></div>
+              <div class="card"><span class="bar s w60"></span><span class="bar acc w70"></span><span class="bar s w40"></span></div>
+            </div>
+            <div class="mrow"><span class="thumb" style="width:calc(64*var(--u));aspect-ratio:1"></span><span class="mcol"><span class="bar s w60"></span><span class="bar s w40"></span></span><span class="pill lim">Sekolah</span></div>
+          </div>
+        </div>
+
+        <div class="mcol" style="gap:calc(6*var(--u));flex:0 0 auto">
+          <div class="fx"><span class="ic"></span><span class="nm">Live Scoreboard Publik<span>Menyegarkan sendiri, dibuka lewat satu tautan atau QR, bisa diproyeksikan</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Pengumuman Juara &amp; Hall of Fame<span>Juara satu event, plus rekap juara lintas event penyelenggara</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Livestream Overlay OBS<span>Alamat overlay siap tempel: nama peserta, skor berjalan, logo sponsor</span></span><span class="lk">berbayar</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Videotron Display Venue<span>Mode putar otomatis bergantian: skor, jadwal, sponsor</span></span><span class="ok">terbuka</span></div>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny"><strong>Tiga dari empat bisa dibuka tanpa login.</strong> Panitia yang memasang scoreboard otomatis mempromosikan aplikasinya ke setiap sekolah yang menonton — itu sebabnya tiga halaman ini tidak digembok.</p>
+      </div>
+    </div>
+
+    <ol class="notes ketat">
+      <li><span class="n">01</span><div><b>Hanya empat baris, jadi mock-nya dibesarkan</b><span class="dim">mock + grid3</span><p>Empat baris tidak akan cukup memenuhi halaman. Ruang sisa diisi mock papan skor yang lebih besar, bukan dengan menambah baris baru — katalognya memang hanya berisi empat fitur di sini.</p></div></li>
+      <li><span class="n">02</span><div><b>Pill "LIVE" warna peringatan</b><span class="dim">mock</span><p>Satu-satunya pill merah di seluruh dokumen. Warna peringatan dipakai untuk status langsung, bukan untuk penanda bahaya, dan tidak dipakai lagi di halaman lain supaya tetap berarti.</p></div></li>
+      <li><span class="n">03</span><div><b>Grid tiga kartu = tiga peringkat</b><span class="dim">.grid3</span><p>Kartu tengah ditandai <code>.hi</code> untuk juara 1. Perbedaan satu kartu itu sudah cukup menjelaskan bahwa papan skornya berperingkat.</p></div></li>
+      <li><span class="n">04</span><div><b>Gemboknya hanya satu, dan itu overlay</b><span class="dim">baris 3</span><p>Overlay OBS memang paling teknis di antara keempatnya. Menempatkannya di baris ketiga dengan gembok tunggal membuatnya terbaca sebagai fitur khusus, bukan sebagai kelompok yang dipotong.</p></div></li>
+      <li><span class="n">05</span><div><b>Alamat contoh memakai /scoreboard</b><span class="dim">chrome</span><p>Ditulis lengkap dengan domain pada baris alamat. Pembaca bisa mengetiknya sendiri untuk mencoba sebelum menghubungi — halaman ini memang tanpa login.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 9: VOTING ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 9 / 17 · Kelompok 5 dari 8</p>
+      <h2>Voting Penonton — empat fitur</h2>
+      <p class="goal">Satu-satunya kelompok yang seluruh isinya berbayar. Sebabnya jelas: di dalamnya ada uang penonton yang harus dicatat, dibagi, dan dipertanggungjawabkan.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Voting Penonton</span>
+          <span class="pn">9 / 17</span>
+        </div>
+
+        <p class="h-mid">Suara penonton lewat pembayaran digital, dengan harga yang panitia tentukan sendiri.</p>
+
+        <div class="mock" style="flex:0 0 auto">
+          <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">Voting · pengaturan harga per suara</span></div>
+          <div class="m-in">
+            <div class="mrow"><span class="bar t w40"></span><span class="pill warn">Voting dibuka</span></div>
+            <div class="grid2">
+              <div class="card"><span class="bar s w50"></span><span class="bar h w60"></span><span class="bar s w70"></span></div>
+              <div class="card"><span class="bar s w50"></span><span class="bar h w40"></span><span class="bar s w80"></span></div>
+            </div>
+            <div class="cq"><span class="bar s w100"></span><span class="mcol"><span class="bar w70"></span><span class="bar s w50"></span></span><span class="pill lim">3 suara</span></div>
+            <div class="cq"><span class="bar s w100"></span><span class="mcol"><span class="bar w60"></span><span class="bar s w40"></span></span><span class="pill">1 suara</span></div>
+          </div>
+        </div>
+
+        <div class="mcol" style="gap:calc(6*var(--u));flex:0 0 auto">
+          <div class="fx"><span class="ic"></span><span class="nm">Voting Berbayar<span>Harga per suara, jumlah suara per transaksi, dan jam buka-tutup diatur panitia</span></span><span class="lk">berbayar</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Vote Booster<span>Paket suara tambahan berharga khusus untuk pendukung yang mau memberi lebih</span></span><span class="lk">berbayar</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Hasil &amp; Transaksi Voting<span>Perolehan tiap peserta berdampingan dengan daftar transaksinya, plus unduhan CSV</span></span><span class="lk">berbayar</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Moderasi Komentar Voting<span>Komentar penonton disetujui atau disembunyikan sebelum tampil</span></span><span class="lk">berbayar</span></div>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny"><strong>Empat dari empat berbayar.</strong> Uang penonton yang masuk lewat QRIS harus tercatat rapi dan bisa ditelusuri per transaksi — itu bagian yang paling mahal untuk dibuat, dan bagian yang paling tidak boleh disederhanakan.</p>
+      </div>
+    </div>
+
+    <ol class="notes ketat">
+      <li><span class="n">01</span><div><b>Mock menampilkan pengaturan harga, bukan halaman voting</b><span class="dim">mock</span><p>Yang menarik bagi panitia adalah bahwa ia boleh menentukan harganya sendiri. Halaman voting penonton tidak sekuat itu sebagai bukti.</p></div></li>
+      <li><span class="n">02</span><div><b>Pill "Voting dibuka" warna peringatan</b><span class="dim">mock</span><p>Status buka-tutup adalah hal pertama yang dicari panitia di halaman ini. Warna peringatan dipakai untuk status yang perlu diperhatikan cepat, dan hanya muncul di sini serta di papan skor.</p></div></li>
+      <li><span class="n">03</span><div><b>Empat gembok, tanpa penjelasan pembelaan</b><span class="dim">kalimat penutup</span><p>Halaman 6 menjelaskan kenapa ada gembok karena denah itu fitur besar. Di sini penjelasannya berbeda: bukan ukurannya, tapi risikonya. Dua alasan berbeda untuk dua halaman yang sama-sama penuh gembok justru membuat keduanya lebih masuk akal.</p></div></li>
+      <li><span class="n">04</span><div><b>Kolom kanan baris 3 dan 4 memakai pill biasa</b><span class="dim">suara</span><p>Pill "3 suara" dan "1 suara" memakai gaya biasa, tanpa warna aksen, supaya tidak bersaing dengan pill status di atasnya. Yang berwarna hanya yang status.</p></div></li>
+      <li><span class="n">05</span><div><b>Jangan menulis angka perolehan contoh</b><span class="dim">—</span><p>Di data sungguhan, transaksi voting masih <span class="flag">nol</span>. Menampilkan angka contoh di mock akan terbaca sebagai capaian. Biarkan kosong sampai ada acara sungguhan yang memakainya.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 10: TIKET ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 10 / 17 · Kelompok 6 dari 8</p>
+      <h2>Tiket Event — dua fitur</h2>
+      <p class="goal">Kelompok terkecil, jadi halamannya paling lapang. Sisa ruang dipakai untuk contoh susunan harga per tempat — sesuatu yang di aplikasi nyata ada di halaman tiket.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Tiket Event</span>
+          <span class="pn">10 / 17</span>
+        </div>
+
+        <p class="h-mid">Jual tiketnya online, pindai QR-nya di pintu.</p>
+
+        <div class="mock" style="flex:0 0 auto">
+          <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">E-tiket pembeli · QR satu kali pakai</span></div>
+          <div class="m-in">
+            <div class="mrow"><span class="thumb" style="width:calc(96*var(--u));aspect-ratio:1"></span><span class="mcol"><span class="bar t w60"></span><span class="bar s w80"></span><span class="bar s w50"></span><span class="pill lim">Belum dipindai</span></span></div>
+          </div>
+        </div>
+
+        <div class="tt" style="flex:0 0 auto">
+          <div class="tr head c3"><span class="k">Tempat</span><span class="k">Harga tiket</span><span class="k">Kuota</span></div>
+          <div class="tr c3"><span class="v">Tribun utama</span><span class="v">diatur panitia</span><span class="v">terbatas</span></div>
+          <div class="tr c3"><span class="v">Tribun sayap</span><span class="v">diatur panitia</span><span class="v">terbatas</span></div>
+          <div class="tr c3"><span class="v">Harga bawaan event</span><span class="v">dipakai bila tempat tidak punya harga sendiri</span><span class="v">—</span></div>
+        </div>
+
+        <div class="mcol" style="gap:calc(6*var(--u));flex:0 0 auto">
+          <div class="fx"><span class="ic"></span><span class="nm">Penjualan Tiket Online<span>Halaman event dengan pembayaran digital; harga bisa berbeda per tempat</span></span><span class="lk">berbayar</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">E-Tiket QR &amp; Check-in di Pintu<span>Tiket ber-QR dikirim ke pembeli, dipindai petugas, ditandai terpakai</span></span><span class="ok">terbuka</span></div>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny"><strong>Yang berbayar itu penjualannya; memindai tiketnya tidak.</strong> Petugas pintu tetap bisa memeriksa tiket walau paketnya sudah turun ke gratis — gerbang masuk tidak pernah dikunci.</p>
+      </div>
+    </div>
+
+    <ol class="notes ketat">
+      <li><span class="n">01</span><div><b>Dua baris fitur, sisanya tabel penjelas</b><span class="dim">.tt c3</span><p>Menambah fitur karangan bukan pilihan. Yang bisa ditambahkan secara jujur hanyalah penjelasan cara harga bekerja — dan itu memang pertanyaan pertama orang soal tiket.</p></div></li>
+      <li><span class="n">02</span><div><b>Harga tidak ditulis angkanya</b><span class="dim">kolom 2</span><p>Isinya "diatur panitia", bukan angka contoh. Harga venue menang atas harga bawaan event, dan itu ditulis di baris ketiga sebagai aturannya — bukan sebagai contoh angka yang bisa salah dikutip.</p></div></li>
+      <li><span class="n">03</span><div><b>Gemboknya di penjualan, bukan di pemindaian</b><span class="dim">baris 1 vs 2</span><p>Pembagian ini disalin dari perilaku aplikasinya: yang digerbangi adalah halaman penjualan beserta pengaturannya, sedangkan <code>event.checkin.scan</code> tidak punya gembok sama sekali.</p></div></li>
+      <li><span class="n">04</span><div><b>Kolom "kuota" ditulis "terbatas"</b><span class="dim">kolom 3</span><p>Kuota per tempat memang ada, tapi jumlahnya milik panitia masing-masing. Menulis satu angka contoh akan mengesankan kuota bawaan yang sebenarnya tidak ada.</p></div></li>
+      <li><span class="n">05</span><div><b>Di data sungguhan, tiket masih nol</b><span class="dim">—</span><p><span class="flag">Belum ada penjualan tiket</span> di basis data saat proposal ini disusun. Halaman ini menggambarkan kemampuan, bukan pemakaian — dan itu memang yang tertulis di judul halamannya.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 11: KONTEN ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 11 / 17 · Kelompok 7 dari 8</p>
+      <h2>Konten &amp; Komunikasi — lima fitur</h2>
+      <p class="goal">Kelompok terbuka yang kedua, dan yang paling sering diremehkan. Semuanya terlihat sederhana — sampai acara berjalan dan panitia menjawab pertanyaan yang sama lima puluh kali.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Konten &amp; Komunikasi</span>
+          <span class="pn">11 / 17</span>
+        </div>
+
+        <p class="h-mid">Yang dibaca peserta sebelum dan sesudah acara.</p>
+
+        <div class="mock" style="flex:0 0 auto">
+          <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">Halaman publik event · juknis, galeri, FAQ</span></div>
+          <div class="m-in">
+            <div class="mrow"><span class="bar t w40"></span><span class="pill acc">Juknis</span><span class="pill">Galeri</span><span class="pill">FAQ</span></div>
+            <div class="grid2">
+              <div class="card"><span class="bar s w70"></span><span class="bar s w50"></span><span class="pill lim">Unduh PDF</span></div>
+              <div class="card"><span class="bar s w70"></span><span class="bar s w60"></span><span class="pill">Unduh</span></div>
+            </div>
+            <div class="mcol"><span class="bar s w80"></span><span class="bar s w30"></span><span class="bar s w60"></span><span class="bar s w20"></span></div>
+          </div>
+        </div>
+
+        <div class="mcol" style="gap:calc(6*var(--u));flex:0 0 auto">
+          <div class="fx"><span class="ic"></span><span class="nm">Juknis &amp; Dokumen Unduhan<span>Unggah juknis dan dokumen pendukung, tampil di halaman publik event</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Galeri Foto Event<span>Dokumentasi acara di halaman publik, tidak hilang begitu acara selesai</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">FAQ Event<span>Dijawab sekali, tampil di halaman event — menghemat waktu panitia</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Kirim Notifikasi Peserta<span>Satu pesan ke peserta terpilih atau ke seluruh sekolah sekaligus</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Activity Log<span>Catatan siapa mengubah apa di panel, kapan — bisa disaring per pengguna</span></span><span class="ok">terbuka</span></div>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny"><strong>Lima dari lima terbuka.</strong> Ini kelompok kedua yang tanpa gembok — bersama Pendaftaran, keduanya bebas dipakai di paket gratis.</p>
+      </div>
+    </div>
+
+    <ol class="notes ketat">
+      <li><span class="n">01</span><div><b>FAQ ditulis sebagai penghemat waktu</b><span class="dim">baris 3</span><p>"FAQ event" saja terdengar seperti halaman pelengkap. Yang dijual di situ bukan halamannya, melainkan panitia yang tidak perlu menjawab pertanyaan yang sama berulang kali.</p></div></li>
+      <li><span class="n">02</span><div><b>Activity log bukan di tempat terakhir karena penting</b><span class="dim">baris 5</span><p>Ia di baris terakhir justru karena paling jarang dipakai saat acara sedang berjalan. Kalau ia di atas, sisa barisnya turun dan kelompok ini terlihat sebagai fitur administrasi, bukan fitur acara.</p></div></li>
+      <li><span class="n">03</span><div><b>Mock adalah halaman publik, bukan panel</b><span class="dim">mock</span><p>Empat dari lima fiturnya berujung di halaman yang dilihat peserta. Menampilkan halaman itu sekaligus memperlihatkan hasil akhirnya, dan itu yang dicari pembaca.</p></div></li>
+      <li><span class="n">04</span><div><b>"Juknis" bisa berarti dua hal</b><span class="dim">baris 1</span><p>Di aplikasi ini ada juknis PDF yang dibuat dari rubrik, dan ada dokumen yang diunggah panitia. Yang dimaksud di baris ini adalah yang kedua. Kalau pembaca bertanya, jawabannya sudah ada.</p></div></li>
+      <li><span class="n">05</span><div><b>Kalimat penutup mengaitkan ke kelompok pertama</b><span class="dim">—</span><p>Menyebut bahwa Pendaftaran juga bebas gembok membuat dua kelompok terbuka itu terbaca sebagai pola, bukan sebagai kebetulan.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 12: KEUANGAN ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 12 / 17 · Kelompok 8 dari 8</p>
+      <h2>Sponsor, Tenant &amp; Keuangan — lima fitur</h2>
+      <p class="goal">Halaman fitur terakhir, dan yang paling dekat dengan mitra usaha — sebab dua dari lima fiturnya memang untuk mereka, bukan untuk peserta.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Sponsor, Tenant &amp; Keuangan</span>
+          <span class="pn">12 / 17</span>
+        </div>
+
+        <p class="h-mid">Menutup acara: mencatat pemasukan, menampilkan mitra, mengurus dokumen.</p>
+
+        <div class="mock" style="flex:0 0 auto">
+          <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">Dashboard keuangan event</span></div>
+          <div class="m-in">
+            <div class="mrow"><span class="bar t w40"></span><span class="pill lim">Unduh PDF</span></div>
+            <div class="grid3">
+              <div class="card"><span class="bar s w50"></span><span class="bar h w70"></span></div>
+              <div class="card"><span class="bar s w50"></span><span class="bar h w50"></span></div>
+              <div class="card"><span class="bar s w50"></span><span class="bar h w60"></span></div>
+            </div>
+            <div class="grid4">
+              <span class="thumb"></span><span class="thumb"></span><span class="thumb"></span><span class="thumb"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mcol" style="gap:calc(6*var(--u));flex:0 0 auto">
+          <div class="fx"><span class="ic"></span><span class="nm">Sponsor &amp; Partner<span>Logo mitra tampil di halaman publik, videotron, dan overlay siaran</span></span><span class="lk">berbayar</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Tenant / Stand &amp; Peta Venue<span>Posisi stand di peta venue, plus daftar tenant untuk panitia</span></span><span class="lk">berbayar</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Dashboard Keuangan &amp; PDF<span>Pemasukan per sumber, biaya pendaftaran, hasil akumulasi — bisa diunduh</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Rekening Bank &amp; TTD/Stempel Dokumen<span>Data rekening dan tanda tangan yang tercetak di dokumen resmi</span></span><span class="ok">terbuka</span></div>
+          <div class="fx"><span class="ic"></span><span class="nm">Upgrade Paket &amp; Feature Gating<span>Halaman paket di dalam panel, plus masa uji coba tiga hari</span></span><span class="ok">terbuka</span></div>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny"><strong>Dua gembok, dan keduanya untuk mitra.</strong> Sponsor dan tenant bukan fitur yang dipakai peserta — itu tempat mitra usaha terlihat. Halaman ini juga penutup bagian fitur; setelah ini masuk soal harga.</p>
+      </div>
+    </div>
+
+    <ol class="notes ketat">
+      <li><span class="n">01</span><div><b>Baris terakhir sengaja fitur gating</b><span class="dim">baris 5</span><p>Ia bukan fitur acara, tapi justru paling tepat di akhir kelompok. Pembaca yang sampai baris kelima sedang bertanya soal biaya, dan baris itu mengantarnya ke halaman 13.</p></div></li>
+      <li><span class="n">02</span><div><b>Grid empat kotak = logo mitra</b><span class="dim">mock</span><p>Empat kotak abu mewakili deretan logo. Jangan pasang logo sungguhan di wireframe — kalau ada mitra yang menarik diri, halaman ini harus dicetak ulang.</p></div></li>
+      <li><span class="n">03</span><div><b>Trial tiga hari disebut di baris fitur</b><span class="dim">baris 5</span><p>Angkanya diambil dari <code>EventnerRegister</code>, bukan dari brosur lama. Masa uji dihitung sejak akun penyelenggara gratis dibuat, dan itu berlaku untuk seluruh fitur bergembok.</p></div></li>
+      <li><span class="n">04</span><div><b>Kolom kanan pakai "gembok", bukan "Rp"</b><span class="dim">kalimat penutup</span><p>Harga tidak muncul sama sekali di delapan halaman fitur. Menyebut satu angka pun di sini akan membuat halaman 13 terasa seperti pengulangan.</p></div></li>
+      <li><span class="n">05</span><div><b>Kalimat penutup menunjuk halaman berikutnya</b><span class="dim">—</span><p>Satu kalimat peralihan di ujung bagian fitur membuat pembaca yang membaca berurutan tahu bahwa daftarnya sudah habis. Tanpa itu, ia akan mencari halaman fitur ke-13 yang tidak ada.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 13: HARGA ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 13 / 17 · Setelah bagian fitur</p>
+      <h2>Harga &amp; paket — bayar sekali per event</h2>
+      <p class="goal">Dua paket, dan satu-satunya halaman yang memuat angka rupiah. Semuanya diambil dari tabel paket yang dikelola admin, bukan dari brosur lama yang masih menulis Rp 50.000.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Harga &amp; Paket</span>
+          <span class="pn">13 / 17</span>
+        </div>
+
+        <p class="h-mid" style="font-size:calc(28*var(--u))">Sekali bayar untuk satu event. Tidak ada langganan bulanan.</p>
+
+        <div class="paket" style="flex:0 0 auto">
+          <div class="pk">
+            <span class="nm">Gratis</span>
+            <span class="pr">Rp 0</span>
+            <span class="tinym">Untuk mulai mengelola lomba. Selamanya, tanpa batas waktu.</span>
+            <span class="li">Dashboard event &amp; profil</span>
+            <span class="li">Kategori lomba &amp; pendaftaran peserta</span>
+            <span class="li">Manajemen juri &amp; input nilai</span>
+            <span class="li">Rekap nilai &amp; scoreboard publik</span>
+            <span class="li">QR check-in peserta</span>
+          </div>
+          <div class="pk hi">
+            <span class="nm">Event Penuh</span>
+            <span class="pr">Rp 800 <em>dari Rp 1.000 · hemat 20%</em></span>
+            <span class="tinym">Bayar sekali, aktif selama event berlangsung.</span>
+            <span class="li">Semua yang ada di paket Gratis</span>
+            <span class="li">14 dari 17 fitur bergembok terbuka</span>
+            <span class="li">Denah lapangan, drawing, rundown</span>
+            <span class="li">Format nilai kustom &amp; sertifikat</span>
+            <span class="li">Voting, tiket, sponsor &amp; tenant</span>
+            <span class="li mut">Moderasi komentar, jadwal, denah — lihat catatan di bawah</span>
+          </div>
+        </div>
+
+        <div class="tt" style="flex:0 0 auto">
+          <div class="tr head c3"><span class="k">Yang perlu diketahui</span><span class="k">Keterangan</span><span class="k">Sumber</span></div>
+          <div class="tr c3"><span class="v">Masa uji coba</span><span class="v">3 hari sejak akun penyelenggara dibuat — selama itu seluruh fitur bergembok terbuka</span><span class="v">EventnerRegister</span></div>
+          <div class="tr c3"><span class="v">Cara bayar</span><span class="v">QRIS dinamis dari aplikasi, diverifikasi otomatis lewat webhook bertanda tangan</span><span class="v">AutoGoPay</span></div>
+          <div class="tr c3"><span class="v">Harga berubah?</span><span class="v">Admin mengubahnya di panel; proposal ini membaca angka yang sedang berlaku</span><span class="v">saas_plans</span></div>
+        </div>
+
+        <div class="box" style="flex:0 0 auto">
+          <p class="tinym"><strong>Yang dulu jadi catatan, sekarang sudah beres.</strong> Tiga fitur bergembok — <code>vote_comments</code>, <code>schedule</code>, dan <code>layout</code> — pernah tidak diberikan paket mana pun, sehingga tidak bisa dibuka siapa pun termasuk yang sudah membayar. Ketiganya kini masuk paket berbayar, dan sebuah tes menjaga agar setiap kunci gerbang selalu ada pemiliknya. Kalau nanti ada fitur bergembok baru ditambahkan, tes itu gagal sampai paketnya ikut diisi.</p>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny">Pembaca yang sudah sampai sini biasanya bertanya satu hal: "sudah dipakai siapa?" Halaman berikutnya menjawabnya dengan angka yang benar-benar ada di basis data — bukan dengan angka brosur.</p>
+      </div>
+    </div>
+
+    <ol class="notes ketat">
+      <li><span class="n">01</span><div><b>Angka diambil dari basis data, bukan dari dokumen lama</b><span class="dim">Rp 800</span><p>Paket "Event Penuh" saat ini berharga Rp 1.000 dengan potongan 20%, jadi efektifnya Rp 800. Dokumen promosi lama masih menulis Rp 50.000 sekali bayar — angka itu tidak lagi benar dan tidak boleh disalin.</p></div></li>
+      <li><span class="n">02</span><div><b>Kotak peringatan itu sengaja ditulis terus terang</b><span class="dim">.warn</span><p>Bukan untuk dibaca calon pembeli sebagai keluhan, tapi supaya kamu memutuskannya sebelum proposal ini dikirim. Tiga fitur yang tidak bisa dibuka siapa pun akan terasa aneh begitu ada yang bertanya "kenapa gembok ini tidak hilang setelah saya bayar?".</p></div></li>
+      <li><span class="n">03</span><div><b>Kolom "sumber" menyebut nama berkas dan kelas</b><span class="dim">kolom 3</span><p>Kalau harganya berubah, halaman ini yang pertama kedaluwarsa. Menulis sumbernya membuat penggantinya tahu ke mana harus melihat tanpa membaca ulang seluruh aplikasi.</p></div></li>
+      <li><span class="n">04</span><div><b>Nama paket gratis adalah "Gratis", slug-nya <code>gratis</code></b><span class="dim">kartu 1</span><p>Identitas paket gratis ditentukan oleh kolom <code>is_free</code>, bukan oleh slug atau namanya. Jangan pernah menuliskan slug paket sebagai "free" — di basis data aplikasi ini, slug yang benar adalah <code>gratis</code>.</p></div></li>
+      <li><span class="n">05</span><div><b>Kotak peringatan bisa dihapus</b><span class="dim">.warn</span><p>Begitu ketiga gerbang itu diputuskan, hapus seluruh blok <code>.warn</code> dan ganti dengan satu kalimat biasa. Kalau dibiarkan, halaman harga akan memuat catatan internal yang tidak perlu dibaca mitra.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 14: BUKTI ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 14 / 17 · Bagian penutup</p>
+      <h2>Bukti — apa yang benar-benar sudah berjalan</h2>
+      <p class="goal">Halaman yang paling gampang dirusak oleh angka karangan. Semua angka di sini dibaca dari basis data pada 19 Oktober 2026, dan yang masih nol ditulis nol.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Bukti</span>
+          <span class="pn">14 / 17</span>
+        </div>
+
+        <p class="h-mid">Diambil dari basis data, bukan dari brosur.</p>
+
+        <div class="grid4" style="flex:0 0 auto">
+          <div class="card"><span class="bar t w40"></span><span class="tinym" style="font-size:calc(24*var(--u));font-family:var(--sans);color:var(--ink);font-weight:700">14</span><span class="bar s w80"></span></div>
+          <div class="card"><span class="bar t w40"></span><span class="tinym" style="font-size:calc(24*var(--u));font-family:var(--sans);color:var(--ink);font-weight:700">36</span><span class="bar s w80"></span></div>
+          <div class="card"><span class="bar t w40"></span><span class="tinym" style="font-size:calc(24*var(--u));font-family:var(--sans);color:var(--ink);font-weight:700">8</span><span class="bar s w80"></span></div>
+          <div class="card"><span class="bar t w40"></span><span class="tinym" style="font-size:calc(24*var(--u));font-family:var(--sans);color:var(--ink);font-weight:700">3</span><span class="bar s w80"></span></div>
+        </div>
+
+        <div class="tt" style="flex:0 0 auto">
+          <div class="tr head c3"><span class="k">Angka</span><span class="k">Artinya</span><span class="k">Diambil dari</span></div>
+          <div class="tr c3"><span class="v"><strong>14</strong> penyelenggara</span><span class="v">Akun penyelenggara yang pernah dibuat; 3 di antaranya berstatus paket berbayar</span><span class="v">eventners</span></div>
+          <div class="tr c3"><span class="v"><strong>8</strong> pendaftaran</span><span class="v">Pendaftaran yang tercatat, semuanya di event sungguhan yang sama</span><span class="v">registrations</span></div>
+          <div class="tr c3"><span class="v"><strong>36</strong> peserta</span><span class="v">Peserta bernama yang datanya terisi, 6 orang per regu</span><span class="v">participants</span></div>
+          <div class="tr c3"><span class="v"><strong>3</strong> juri</span><span class="v">Akun juri dengan tautan penilaian bertoken</span><span class="v">judges</span></div>
+          <div class="tr c3"><span class="v"><strong>0</strong> tiket · <strong>0</strong> transaksi voting</span><span class="v">Belum ada satu pun. Fiturnya ada dan bisa dicoba, tapi belum dipakai di acara sungguhan</span><span class="v">tickets · vote_transactions</span></div>
+        </div>
+
+        <div class="box" style="flex:0 0 auto">
+          <p class="tinym"><strong>Yang bisa disebut namanya:</strong> Lomba PBB se-Jawa Barat 2026 — diselenggarakan Dinas Pendidikan Jawa Barat, 2–4 November 2026, GOR Padjajaran, Bandung, tingkat provinsi. Event itu berstatus teladan alias terverifikasi, delapan kategori lomba, tiga juri, dan delapan pendaftaran di dalamnya berasal dari sana.</p>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny"><strong>Angka yang tidak boleh muncul di halaman ini.</strong> Isi halaman pendaratan aplikasi memuat "500+ event terkelola", "50K penyelenggara aktif", "1jt+ peserta terdaftar", "99.9% uptime", dan enam testimoni bernama. Semuanya data contoh yang ditanam agar tampilan tidak kosong — <span class="flag">tidak satu pun boleh dicetak di proposal.</span> Kalau yang dijanjikan berbeda dari kenyataan, yang pertama hilang bukan penjualannya, tapi kepercayaannya.</p>
+      </div>
+    </div>
+
+    <ol class="notes ketat">
+      <li><span class="n">01</span><div><b>Empat kartu angka, dan semuanya kecil</b><span class="dim">grid4</span><p>14, 36, 8, 3 bukan angka yang menjual. Tapi angka yang salah akan terlihat salah begitu calon pembeli bertanya "event mana saja" — dan pertanyaan itu selalu datang.</p></div></li>
+      <li><span class="n">02</span><div><b>Yang nol ditulis nol</b><span class="dim">baris 5</span><p>Tiket dan voting masih nol. Menuliskannya justru menguatkan baris-baris lain: pembaca jadi tahu angka yang lain tidak dibulatkan.</p></div></li>
+      <li><span class="n">03</span><div><b>Hanya satu event yang disebut namanya</b><span class="dim">kotak</span><p>Dua belas dari empat belas event di basis data adalah data contoh bernama perusahaan karangan — "<em>CV Wahyudin Mahendra (Persero) Tbk Lomba</em>" dan sejenisnya. Menyebutnya sebagai bukti akan langsung terbaca palsu.</p></div></li>
+      <li><span class="n">04</span><div><b>Kalimat penutup justru soal angka pendaratan</b><span class="dim">—</span><p>Catatan ini untukmu, bukan untuk pembaca. Halaman pendaratan menyimpan angka karangan di basis data; selama itu belum dibersihkan, ada risiko seseorang mengutipnya dari sana.</p></div></li>
+      <li><span class="n">05</span><div><b>Ambang tanggal ditulis terbuka</b><span class="dim">19 Okt 2026</span><p>Angka apa pun cepat basi. Menyebut tanggal pengambilannya membuat halaman ini tetap jujur walau dibaca setahun kemudian.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 15: KEAMANAN ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 15 / 17 · Bagian penutup</p>
+      <h2>Keamanan &amp; kendali data</h2>
+      <p class="goal">Bagian yang paling sering dilewati di proposal, dan yang paling sering ditanyakan dinas. Jawabannya pendek — enam hal, semuanya bisa diperiksa di kode.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Keamanan</span>
+          <span class="pn">15 / 17</span>
+        </div>
+
+        <p class="h-mid">Data peserta milik panitia, bukan milik kami.</p>
+
+        <div class="mock" style="flex:0 0 auto">
+          <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">POST /webhook/pembayaran · X-Signature</span></div>
+          <div class="m-in">
+            <div class="cq"><span class="pill lim">200</span><span class="mcol"><span class="bar w70"></span><span class="bar s w50"></span></span><span class="ok" style="font-family:var(--mono);font-size:calc(11*var(--u));color:var(--muted)">diterima</span></div>
+            <div class="cq"><span class="pill warn">401</span><span class="mcol"><span class="bar w60"></span><span class="bar s w40"></span></span><span class="ok" style="font-family:var(--mono);font-size:calc(11*var(--u));color:var(--muted)">ditolak</span></div>
+          </div>
+        </div>
+
+        <div class="tt" style="flex:0 0 auto">
+          <div class="tr head c2"><span class="k">Yang dijaga</span><span class="k">Caranya</span></div>
+          <div class="tr c2"><span class="v">Pemberitahuan pembayaran</span><span class="v">Setiap pemberitahuan harus membawa tanda tangan HMAC yang cocok. Yang tidak cocok ditolak dengan 401 — jadi tidak ada yang bisa mengaku "sudah bayar".</span></div>
+          <div class="tr c2"><span class="v">Tautan juri &amp; peserta</span><span class="v">Bertoken dan hanya berlaku untuk satu penugasan. Tidak bisa ditukar antar event, dan tidak membuka menu panitia.</span></div>
+          <div class="tr c2"><span class="v">Pemisahan antar event</span><span class="v">Satu penyelenggara tidak bisa membaca data event milik orang lain, walau keduanya memakai alamat yang sama.</span></div>
+          <div class="tr c2"><span class="v">Sesi masuk</span><span class="v">Disimpan di basis data, bukan di berkas — sesi bisa dicabut, dan pengguna yang keluar benar-benar keluar.</span></div>
+          <div class="tr c2"><span class="v">Jejak perubahan</span><span class="v">Setiap perubahan penting tercatat: siapa, kapan, apa yang diubah. Bisa disaring per pengguna di panel.</span></div>
+          <div class="tr c2"><span class="v">Gerbang masuk venue</span><span class="v">Memeriksa tiket dan kartu tidak pernah dikunci di balik paket berbayar.</span></div>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny">Enam hal di atas bukan janji pemasaran — <span class="flag">semuanya diperiksa ulang sebelum halaman ini dikirim.</span> Kalau ada yang berubah di aplikasi, baris itu harus diubah atau dihapus, bukan dibiarkan.</p>
+      </div>
+    </div>
+
+    <ol class="notes ketat">
+      <li><span class="n">01</span><div><b>Yang ditulis enam, bukan dua belas</b><span class="dim">.tt c2</span><p>Daftar keamanan yang panjang justru melemahkan yang penting. Enam baris bisa dibaca sekali duduk; dua belas baris membuat pembaca berhenti di baris keempat.</p></div></li>
+      <li><span class="n">02</span><div><b>Angka 401 ditulis, bukan disembunyikan</b><span class="dim">mock</span><p>Menyebut kode penolakannya membuat pernyataannya bisa diperiksa. "Pembayaran aman" tidak bisa diperiksa siapa pun.</p></div></li>
+      <li><span class="n">03</span><div><b>Baris pertama soal uang, bukan soal sandi</b><span class="dim">baris 1</span><p>Yang paling ditakutkan penyelenggara bukan pembobolan akun, melainkan pemberitahuan pembayaran palsu. Taruh yang paling ditakuti di baris pertama.</p></div></li>
+      <li><span class="n">04</span><div><b>Baris keenam soal gerbang venue</b><span class="dim">baris 6</span><p>Ia bukan soal keamanan siber, tapi soal kendali: acara tidak boleh macet di pintu hanya karena paketnya turun. Tempatnya di sini karena itu jenis jaminan yang sama — sesuatu yang tidak akan terjadi.</p></div></li>
+      <li><span class="n">05</span><div><b>Kalimat penutup menuntut pemeriksaan</b><span class="dim">—</span><p>Halaman keamanan yang tidak pernah diperiksa ulang adalah halaman yang paling cepat jadi bohong. Kalimat penutupnya harus menyuruh pembacanya memeriksa, termasuk dirimu sendiri.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 16: CARA MULAI ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 16 / 17 · Bagian penutup</p>
+      <h2>Cara mulai — empat langkah, satu hari</h2>
+      <p class="goal">Halaman yang mengubah pembaca jadi pengguna. Empat langkah ini sama persis dengan urutan yang dipakai aplikasinya, bukan urutan karangan agar terdengar mudah.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Cara Mulai</span>
+          <span class="pn">16 / 17</span>
+        </div>
+
+        <p class="h-mid">Dari akun kosong sampai juara diumumkan.</p>
+
+        <div class="mcol" style="gap:calc(9*var(--u));flex:0 0 auto">
+          <div class="card" style="flex-direction:row;align-items:center;gap:calc(12*var(--u))">
+            <span class="bar" style="width:calc(26*var(--u));height:calc(26*var(--u));border-radius:50%;background:var(--accent-soft);border:1px solid var(--accent)"></span>
+            <span class="mcol" style="gap:calc(4*var(--u))"><span class="v" style="font-weight:600">Hari ke-0 — Daftar akun penyelenggara</span><span class="tinym">Isi data event, unggah logo dan poster. Masa uji tiga hari mulai berjalan sejak akun dibuat, dan selama itu seluruh fitur terbuka.</span></span>
+          </div>
+          <div class="card" style="flex-direction:row;align-items:center;gap:calc(12*var(--u))">
+            <span class="bar" style="width:calc(26*var(--u));height:calc(26*var(--u));border-radius:50%;background:var(--accent-soft);border:1px solid var(--accent)"></span>
+            <span class="mcol" style="gap:calc(4*var(--u))"><span class="v" style="font-weight:600">Jauh sebelum hari-H — Buka pendaftaran</span><span class="tinym">Susun kategori dan isian formulir, lalu sebarkan tautannya. Peserta mendaftar sendiri; panitia tinggal memverifikasi berkas dari satu tabel.</span></span>
+          </div>
+          <div class="card" style="flex-direction:row;align-items:center;gap:calc(12*var(--u))">
+            <span class="bar" style="width:calc(26*var(--u));height:calc(26*var(--u));border-radius:50%;background:var(--accent-soft);border:1px solid var(--accent)"></span>
+            <span class="mcol" style="gap:calc(4*var(--u))"><span class="v" style="font-weight:600">Hari-H — Penilaian dan voting</span><span class="tinym">Juri menilai dari tablet lewat tautan bertoken; daftar ulang dipindai dengan kartu QR. Kalau voting dibuka, penonton ikut memberi suara.</span></span>
+          </div>
+          <div class="card" style="flex-direction:row;align-items:center;gap:calc(12*var(--u))">
+            <span class="bar" style="width:calc(26*var(--u));height:calc(26*var(--u));border-radius:50%;background:var(--accent-soft);border:1px solid var(--accent)"></span>
+            <span class="mcol" style="gap:calc(4*var(--u))"><span class="v" style="font-weight:600">Setelah acara — Juara dan sertifikat</span><span class="tinym">Juara ditetapkan dari hasil penilaian, berita acara dicetak untuk ditandatangani, sertifikat diunduh per peserta. Arsipnya tetap tersimpan.</span></span>
+          </div>
+        </div>
+
+        <div class="tt" style="flex:0 0 auto">
+          <div class="tr head c2"><span class="k">Yang perlu disiapkan panitia</span><span class="k">Keterangan</span></div>
+          <div class="tr c2"><span class="v">Peramban dan jaringan</span><span class="v">Tidak ada yang dipasang di komputer panitia. Tablet juri cukup punya peramban.</span></div>
+          <div class="tr c2"><span class="v">Daftar kategori dan rubrik</span><span class="v">Kalau rubriknya sudah ada di kertas, memindahkannya ke aplikasi cukup sekali kerja.</span></div>
+          <div class="tr c2"><span class="v">Pilihan paket</span><span class="v">Boleh mulai dari paket gratis. Naik ke paket berbayar kapan saja, dan hanya dibayar sekali untuk event itu.</span></div>
+        </div>
+
+        <div class="grow"></div>
+        <div class="rule"></div>
+        <p class="tiny">Kalau salah satu langkah di atas tersendat, yang pertama dibutuhkan bukan manual — <span class="flag">tapi orang yang bisa menjawab hari itu juga.</span> Kontaknya ada di halaman berikutnya.</p>
+      </div>
+    </div>
+
+    <ol class="notes ketat">
+      <li><span class="n">01</span><div><b>Empat kartu, bukan daftar berbutir</b><span class="dim">4 × kartu</span><p>Langkah yang ditulis sebagai butir-butir akan dibaca seperti syarat. Ditulis sebagai kartu bernomor, ia terbaca sebagai perjalanan yang punya akhir.</p></div></li>
+      <li><span class="n">02</span><div><b>Judul kartu memakai penanda waktu, bukan urutan</b><span class="dim">Hari ke-0 · Hari-H</span><p>"Langkah 1" tidak memberi tahu apa pun soal kapan. "Jauh sebelum hari-H" langsung memberi tahu panitia bahwa langkah itu memang harus selesai lebih dulu.</p></div></li>
+      <li><span class="n">03</span><div><b>Uji tiga hari disebut di langkah pertama</b><span class="dim">kartu 1</span><p>Itu tempatnya — bukan di halaman harga. Panitia yang tahu ia punya tiga hari untuk mencoba akan mencoba; yang tidak tahu akan mengira harus membayar dulu.</p></div></li>
+      <li><span class="n">04</span><div><b>Tabel kecil menyebut tiga hal yang ditanyakan panitia</b><span class="dim">.tt c2</span><p>Perangkat, rubrik, dan paket. Ketiganya pertanyaan praktis yang selalu muncul setelah "bagaimana caranya", dan ketiganya dijawab singkat.</p></div></li>
+      <li><span class="n">05</span><div><b>Kalimat penutup mengarah ke kontak</b><span class="dim">—</span><p>Halaman ini berakhir dengan pertanyaan "kalau tersendat?". Kalimat terakhirnya harus menjawab, bukan mengulang ajakan.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 17: PENUTUP ============ -->
+  <article class="sheet">
+    <div class="sheet-head">
+      <p class="num">Halaman 17 / 17 · Halaman terakhir</p>
+      <h2>Penutup &amp; kontak</h2>
+      <p class="goal">Satu ajakan, satu kontak, tanpa pengulangan daftar fitur. Pembaca yang sudah sampai halaman ini tidak perlu diyakinkan lagi — ia perlu tahu harus menghubungi siapa.</p>
+    </div>
+
+    <div class="page">
+      <div class="safe"></div>
+      <div class="p-in">
+        <div class="p-head">
+          <span class="lbl">Penutup</span>
+          <span class="pn">17 / 17</span>
+        </div>
+
+        <div class="grow"></div>
+
+        <p class="h-mid">Kalau acara berikutnya masih dikelola lewat lima berkas terpisah, sekarang waktu yang tepat untuk memindahkannya.</p>
+        <p class="sub">Kami bisa mendampingi dari penyusunan kategori sampai hari pengumuman juara. Cukup mulai dari satu event — kalau cocok, event berikutnya tinggal disalin.</p>
+
+        <div class="grid3" style="flex:0 0 auto">
+          <div class="card"><span class="bar t w60"></span><span class="tinym">berbaris.app</span></div>
+          <div class="card"><span class="bar t w60"></span><span class="tinym">halo@berbaris.local <em>— contoh</em></span></div>
+          <div class="card"><span class="bar t w60"></span><span class="tinym">belum diisi <em>— IG / TikTok</em></span></div>
+        </div>
+
+        <div class="box gold" style="flex:0 0 auto">
+          <p class="tinym"><strong>Isi dulu sebelum dikirim.</strong> Alamat surel dan akun media sosial di tiga kartu itu masih berisi contoh — pengaturan kontak dan tautan sosialnya belum diisi di basis data. Ganti ketiganya dengan yang sungguhan, atau hapus kartu yang belum ada, sebelum halaman ini dicetak.</p>
+        </div>
+
+        <div class="rule"></div>
+        <div class="mrow" style="justify-content:space-between;align-items:flex-end">
+          <div class="mcol" style="flex:0 0 auto">
+            <p class="tinym" style="font-size:calc(15*var(--u))">BARIS APP</p>
+            <p class="tinym" style="font-size:calc(12*var(--u))">Proposal kerja sama · 18 halaman A4</p>
+          </div>
+          <div class="ph" style="width:calc(90*var(--u));height:calc(28*var(--u))">
+            <span>RUANG TTD<em>90 × 28</em></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes ketat">
+      <li><span class="n">01</span><div><b>Tidak ada daftar fitur di penutup</b><span class="dim">—</span><p>Delapan halaman sebelumnya sudah memuat semuanya. Mengulangnya di sini hanya menambah halaman tanpa menambah keputusan.</p></div></li>
+      <li><span class="n">02</span><div><b>Ajakan memakai perbandingan, bukan kata sifat</b><span class="dim">h-mid</span><p>"Masih dikelola lewat lima berkas terpisah" adalah keadaan yang pernah dialami tiap panitia. "Solusi terbaik untuk Anda" bukan keadaan, jadi tidak bisa dikenali.</p></div></li>
+      <li><span class="n">03</span><div><b>Tiga kartu kontak, dan hanya tiga</b><span class="dim">grid3</span><p>Situs, surel, satu akun sosial. Menambahkan nomor telepon dan empat kanal lain membuat pembaca tidak tahu mana yang harus dipakai.</p></div></li>
+      <li><span class="n">04</span><div><b>Kotak kuning wajib dihapus sebelum cetak</b><span class="dim">.gold</span><p>Pengaturan kontak di basis data masih berisi <code>halo@berbaris.local</code> dengan nomor dan akun sosial contoh. Ini satu-satunya kotak di seluruh dokumen yang harus hilang sebelum dokumennya keluar dari meja.</p></div></li>
+      <li><span class="n">05</span><div><b>Ruang tanda tangan, bukan stempel digital</b><span class="dim">90 × 28</span><p>Dokumen kerja sama biasanya ditandatangani setelah dicetak. Menyediakan ruang kosong lebih berguna daripada menyisipkan gambar tanda tangan yang tidak bisa dibubuhkan di kertas.</p></div></li>
+    </ol>
+  </article>
+
+  <footer>BERBARIS APP · proposal wireframe · kanvas A4 794 × 1123 · 18 halaman</footer>
+
+  <!-- ============ BLOK PENJELAS (tidak ikut tercetak) ============ -->
+  <section class="rules no-print">
+    <h2>Dari mana isi tiap halaman diambil</h2>
+    <p class="lead">Tidak ada angka, harga, atau nama fitur di dokumen ini yang dikarang. Semuanya dibaca dari berkas berikut pada 19 Oktober 2026. Kalau salah satunya berubah, halaman yang bersangkutan harus diperbarui — bukan ditambal dengan perkiraan.</p>
+
+    <table class="data">
+      <thead>
+        <tr><th>Isi</th><th>Halaman</th><th>Sumber</th><th>Catatan</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>41 fitur, 8 kelompok, gembok berbayar</td>
+          <td>4, 5–12</td>
+          <td><code>app/Support/ProductFeatures.php</code></td>
+          <td>Nama dan deskripsi fitur dikutip apa adanya. Katalog ini di jaga tes dua arah (<code>PublicFeaturesPageTest</code>) supaya tidak melenceng dari gerbang di config.</td>
+        </tr>
+        <tr>
+          <td>Tujuh belas dari tujuh belas gerbang berbayar</td>
+          <td>5–12, 13</td>
+          <td><code>config/eventner_features.php</code></td>
+          <td>17 kunci, semuanya <code>locked_free = true</code>. Ketiganya yang dulu tanpa pemilik — <code>vote_comments</code>, <code>schedule</code>, <code>layout</code> — kini dipegang paket berbayar, dan <code>PaywallCompletenessTest</code> menjaga dua arah: kunci config wajib berpaket, kunci paket wajib ada di config.</td>
+        </tr>
+        <tr>
+          <td>Rp 0 dan Rp 800 (dari Rp 1.000, potongan 20%)</td>
+          <td>13</td>
+          <td><code>App\Support\Pricing</code> → tabel <code>saas_plans</code></td>
+          <td>Paket "Gratis" (<code>is_free</code>) dan "Event Penuh" (slug <code>event-penuh-m4y17</code>, <code>sort_order</code> kedua, ditandai <code>highlight</code>). Angka berubah kalau admin mengubahnya di panel.</td>
+        </tr>
+        <tr>
+          <td>Lima fitur dasar paket gratis</td>
+          <td>13</td>
+          <td><code>Pricing::baseFeatures()</code></td>
+          <td>Daftar ini tetap sama di semua paket dan juga dipakai sebagai baris pertama matriks perbandingan di <code>/pricing</code>.</td>
+        </tr>
+        <tr>
+          <td>Masa uji coba 3 hari</td>
+          <td>12, 13, 16</td>
+          <td><code>app/Livewire/Public/EventnerRegister.php</code></td>
+          <td><code>trial_ends_at = now()->addDays(3)</code>, hanya diisi kalau penyelenggara memilih paket gratis. Paket berbayar tidak mendapat uji coba.</td>
+        </tr>
+        <tr>
+          <td>14 penyelenggara · 8 pendaftaran · 36 peserta · 3 juri · 0 tiket · 0 transaksi voting</td>
+          <td>14</td>
+          <td>Basis data, dihitung 19 Okt 2026</td>
+          <td>Hanya satu event yang layak disebut namanya: <strong>Lomba PBB se-Jawa Barat 2026</strong> (id 37, terverifikasi, 8 kategori, 3 juri). Dua belas event lain adalah data contoh bernama perusahaan karangan.</td>
+        </tr>
+        <tr>
+          <td>Tanda tangan webhook, sesi basis data, jejak perubahan</td>
+          <td>15</td>
+          <td><code>AutoGoPayWebhookController</code>, <code>.env</code> (<code>SESSION_DRIVER=database</code>), <code>spatie/laravel-activitylog</code></td>
+          <td>Header <code>X-Signature</code> diperiksa lewat <code>AutoGoPay::verifySignature()</code>; yang tidak cocok dijawab <code>401 Invalid signature</code>.</td>
+        </tr>
+        <tr>
+          <td>Alamat surel dan akun sosial belum diisi</td>
+          <td>17</td>
+          <td>Setelan <code>landing_contact</code> / <code>landing_social_links</code></td>
+          <td>Masih berisi <code>halo@berbaris.local</code> dan <code>+62 812-3456-7890</code>; Instagram, TikTok, YouTube, dan Facebook kosong. Ketiga kartu kontak di halaman 17 harus diganti atau dihapus.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="cols">
+      <div>
+        <h3>Yang sengaja tidak dimasukkan</h3>
+        <ul>
+          <li><strong>Statistik halaman pendaratan</strong> — "500+ event terkelola", "50K penyelenggara aktif", "1jt+ peserta terdaftar", "99.9% uptime". Semuanya data contoh yang ditanam agar tampilan tidak kosong.</li>
+          <li><strong>Enam testimoni bernama</strong> di isian yang sama. Nama, jabatan, dan kutipannya dikarang; tidak satu pun berasal dari pengguna sungguhan.</li>
+          <li><strong>Harga Rp 50.000 sekali bayar</strong> dari dokumen promosi lama. Angka yang berlaku sekarang Rp 1.000 dengan potongan 20%.</li>
+          <li><strong>Tangkapan layar sungguhan.</strong> Dokumen ini wireframe murni — semua kotak abu adalah penanda tempat, bukan gambar aplikasinya.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Sebelum dikirim</h3>
+        <ul>
+          <li><strong>Isi tiga baris sampul</strong> — penerima, penyusun, tanggal. Sampul yang masih berbunyi "— isi sebelum dikirim —" terbaca sebagai contoh.</li>
+          <li><strong>Ganti kontak di halaman 17</strong>, atau hapus kartu yang belum ada akunnya.</li>
+          <li><strong>Perbarui angka bukti</strong> di halaman 14 kalau sudah ada acara baru yang masuk.</li>
+          <li><strong>Cetak lewat peramban</strong> — <code>Ctrl+P</code>, ukuran A4, margin None, dan matikan header/footer peramban. Satu halaman wireframe = satu lembar A4.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  var btn = document.getElementById('gt');
+  if(!btn) return;
+  var root = document.documentElement;
+  function apply(on){
+    root.classList.toggle('guides', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.textContent = on ? 'Sembunyikan garis margin' : 'Tampilkan garis margin';
+  }
+  var saved = false;
+  try { saved = localStorage.getItem('wireframe.guides') === '1'; } catch(e){}
+  apply(saved);
+  btn.addEventListener('click', function(){
+    var on = !root.classList.contains('guides');
+    apply(on);
+    try { localStorage.setItem('wireframe.guides', on ? '1' : '0'); } catch(e){}
+  });
+})();
+</script>
+
+</body>
+</html>
