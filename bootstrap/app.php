@@ -20,6 +20,19 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->prefix('eventner')
                 ->group(base_path('routes/eventner.php'));
 
+            // Host jasa Event Organizer (mis. eo.berbaris.app). Sama seperti
+            // host entry: BUKAN tenant, jadi tanpa middleware 'subdomain'.
+            //
+            // WAJIB didaftarkan SEBELUM grup {subdomain}.{root}: grup tenant itu
+            // juga punya rute '/', dan rute yang didaftarkan lebih dulu yang
+            // menang. Tanpa urutan ini, beranda EO tertangkap tenant lalu
+            // dijawab 404 "Event tidak ditemukan" — sementara halaman lain
+            // (yang path-nya tidak ada di grup tenant) tetap 200, sehingga
+            // gejalanya terlihat seperti "cuma beranda yang rusak".
+            Route::middleware(['web'])
+                ->domain(eo_host())
+                ->group(base_path('routes/eo.php'));
+
             Route::middleware(['web', 'subdomain'])
                 ->domain('{subdomain}.' . parse_url(config('app.url'), PHP_URL_HOST))
                 ->group(base_path('routes/subdomain.php'));

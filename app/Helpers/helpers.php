@@ -43,6 +43,43 @@ if (!function_exists('platform_url')) {
     }
 }
 
+if (!function_exists('eo_host')) {
+    /**
+     * Host (tanpa skema) halaman jasa Event Organizer, mis. "eo.berbaris.app".
+     */
+    function eo_host(): ?string
+    {
+        $value = config('app.eo_host');
+
+        if (!$value) {
+            return null;
+        }
+
+        // config boleh ditulis dengan atau tanpa skema ("eo.berbaris.app").
+        return parse_url(str_contains($value, '://') ? $value : 'http://' . $value, PHP_URL_HOST);
+    }
+}
+
+if (!function_exists('eo_url')) {
+    /**
+     * URL absolut satu halaman subdomain EO, mis. eo_url('layanan').
+     *
+     * Dibangun dari config, bukan dari host request — sama alasannya dengan
+     * judge_entry_url(): tautan ke halaman EO harus tetap menunjuk ke host EO
+     * walau dibuat dari laman utama atau dari subdomain event.
+     */
+    function eo_url(string $path = '/'): string
+    {
+        $scheme = parse_url((string) config('app.eo_host'), PHP_URL_SCHEME)
+            ?: parse_url((string) config('app.url'), PHP_URL_SCHEME)
+            ?: 'http';
+
+        $path = '/' . ltrim($path, '/');
+
+        return $scheme . '://' . eo_host() . ($path === '/' ? '' : $path);
+    }
+}
+
 if (!function_exists('judge_entry_host')) {
     /**
      * Host (tanpa skema) halaman input nilai juri, mis. "entry.berbaris.app".

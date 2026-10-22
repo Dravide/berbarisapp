@@ -49,6 +49,17 @@ class SitemapController extends Controller
             ['loc' => platform_url('help')],
         ];
 
+        // Halaman jasa Event Organizer hidup di host sendiri (eo.berbaris.app),
+        // bukan di root platform — jadi tanpa blok ini sitemap tidak pernah
+        // menyebutnya. Didaftarkan hanya kalau hostnya memang dikonfigurasi;
+        // eo_host() mengembalikan null bila EO_HOST kosong dan APP_URL tidak
+        // bisa diurai, dan URL "://" setengah jadi lebih buruk daripada absen.
+        if (eo_host()) {
+            foreach (['/', '/layanan', '/alur', '/event', '/tim', '/sponsor', '/ajukan'] as $path) {
+                $urls[] = ['loc' => eo_url($path)];
+            }
+        }
+
         foreach ($eventners as $eventner) {
             if ($eventner['subdomain']) {
                 // Sama dengan Eventner::publicUrl('detail') tapi dari array

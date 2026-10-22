@@ -71,6 +71,27 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Host Event Organizer
+    |--------------------------------------------------------------------------
+    |
+    | Subdomain tetap milik platform untuk halaman jasa penyelenggaraan lomba,
+    | mis. "eo.berbaris.app". Isinya profil tim EO, lingkup kerja, alur, event,
+    | tim, sponsor, dan formulir pengajuan — bukan satu event tertentu.
+    |
+    | Karena itu host ini TIDAK memakai middleware 'subdomain' (sama seperti
+    | host entry): tidak ada Eventner yang perlu di-resolve, dan kalau ia ikut
+    | grup {subdomain}.{root}, ResolveEventnerSubdomain akan mencari event
+    | bernama "eo" lalu menjawab 404 untuk semua halaman di sini.
+    |
+    | Subdomain "eo" juga dicadangkan di Settings\Profile::reservedSubdomain()
+    | supaya penyelenggara tidak bisa mengklaimnya sebagai subdomain event.
+    |
+    */
+
+    'eo_host' => env('EO_HOST') ?: 'eo.' . parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

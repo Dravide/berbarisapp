@@ -1,0 +1,1004 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wireframe EO Berbaris</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: dokumen spesifikasi halaman — tiap halaman situs satu blok, mockup di
+   kiri, anotasi di kanan. Sebentuk dengan landing-wireframe.html; kanvasnya
+   kolom desktop 1180 px karena yang digambar halaman web, bukan artboard. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --lime:#a3e635; --lime-ink:#2c4703;
+  --gold:#b8860b; --gold-soft:#fdf6e3;
+  --warn:#c2410c; --warn-soft:#fff1e8;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --lime:#b6f24e; --lime-ink:#16250a;
+    --gold:#e2b857; --gold-soft:#2a2413;
+    --warn:#ff9a6b; --warn-soft:#2e2018;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --lime:#b6f24e; --lime-ink:#16250a;
+  --gold:#e2b857; --gold-soft:#2a2413;
+  --warn:#ff9a6b; --warn-soft:#2e2018;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{
+  position:relative;
+  max-width:1180px;margin-inline:auto;
+  padding-inline:clamp(16px,4vw,40px);
+  padding-block:clamp(28px,5vw,56px);
+}
+/* Kolom 12 — dihidupkan tombol di kepala dokumen, untuk memeriksa bahwa tiap
+   mockup benar-benar duduk di kolomnya. */
+.wrap::after{
+  content:"";position:absolute;pointer-events:none;z-index:4;
+  top:0;bottom:0;
+  left:clamp(16px,4vw,40px);right:clamp(16px,4vw,40px);
+  opacity:0;transition:opacity .15s;
+  background:repeating-linear-gradient(to right,
+    color-mix(in srgb,var(--accent) 10%,transparent) 0 1px,
+    transparent 1px calc(100%/12));
+}
+.guides .wrap::after{opacity:1}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+a{color:var(--accent)}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{
+  font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--accent);margin:0 0 10px;
+}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:66ch;color:var(--muted)}
+.lede strong{color:var(--ink);font-weight:600}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{
+  font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap;
+}
+.chip.warn{border-color:var(--gold);background:var(--gold-soft);color:var(--gold)}
+button.toggle{
+  font-family:var(--mono);font-size:12px;padding:7px 14px;border-radius:999px;
+  border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);
+  cursor:pointer;white-space:nowrap;
+}
+button.toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.toggle[aria-pressed="true"]{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.spec{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1px;background:var(--line);border:1px solid var(--line);
+  border-radius:var(--r);overflow:hidden;margin-top:28px;
+}
+.spec > div{background:var(--panel);padding:16px 18px}
+.spec dt{
+  font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:8px;
+}
+.spec dd{margin:0;font-size:14px;line-height:1.5}
+.swatches{display:inline-flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.sw{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.sw i{width:14px;height:14px;border-radius:4px;border:1px solid var(--line);display:block}
+
+/* ---------- peta halaman ---------- */
+.peta{margin-top:28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.pg{
+  border:1px solid var(--line);border-radius:9px;background:var(--panel);
+  padding:12px 13px;display:flex;flex-direction:column;gap:5px;
+}
+.pg .no{font-family:var(--mono);font-size:10.5px;color:var(--accent)}
+.pg .nm{font-size:13.5px;font-weight:600}
+.pg .ds{font-size:12px;color:var(--muted);line-height:1.4}
+.pg.baru{border-color:var(--gold);background:var(--gold-soft)}
+.pg.baru .no{color:var(--gold)}
+.pg.baru .nm{color:var(--ink)}
+
+/* ---------- satu halaman ---------- */
+.slide{
+  margin-top:clamp(32px,5vw,56px);
+  display:grid;
+  grid-template-columns:minmax(0,560px) minmax(0,1fr);
+  gap:clamp(20px,3vw,44px);
+  align-items:start;
+}
+@media (max-width:900px){ .slide{grid-template-columns:minmax(0,1fr)} }
+.slide-head{grid-column:1/-1}
+.slide-head h2{font-size:clamp(19px,2.2vw,23px);font-weight:700}
+.slide-head .num{
+  font-family:var(--mono);font-size:12px;color:var(--accent);
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.slide-head .goal{color:var(--muted);font-size:14px;margin-top:6px;max-width:70ch}
+
+/* Mockup halaman web: 1180 px desain, tinggi mengikuti isi. */
+.frame{
+  position:relative;width:100%;background:var(--panel);
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+  container-type:inline-size;
+  --u:0.0847cqw; /* 1 px desain (lebar 1180) */
+}
+.frame > .chrome{
+  display:flex;align-items:center;gap:calc(8*var(--u));
+  padding:calc(14*var(--u)) calc(20*var(--u));
+  border-bottom:1px solid var(--line-soft);background:var(--panel-2);
+}
+.chrome .dot{width:calc(10*var(--u));height:calc(10*var(--u));border-radius:50%;background:var(--ph-line)}
+.chrome .url{
+  flex:1;height:calc(20*var(--u));border-radius:999px;background:var(--ph-fill);
+  display:flex;align-items:center;padding-inline:calc(12*var(--u));
+  font-family:var(--mono);font-size:calc(11*var(--u));color:var(--muted);
+}
+.mock{display:flex;flex-direction:column;gap:calc(22*var(--u));padding:calc(34*var(--u)) calc(40*var(--u)) calc(42*var(--u))}
+.mock.tight{gap:calc(14*var(--u))}
+.bar{background:var(--ph-fill);border-radius:calc(4*var(--u));height:calc(11*var(--u))}
+.bar.t{height:calc(24*var(--u));background:var(--ph-line)}
+.bar.h{height:calc(30*var(--u));background:linear-gradient(90deg,var(--ph-line),var(--ph-fill))}
+.bar.s{height:calc(8*var(--u))}
+.bar.acc{background:var(--accent);height:calc(26*var(--u));border-radius:calc(7*var(--u))}
+.w100{width:100%}.w90{width:90%}.w80{width:80%}.w70{width:70%}.w60{width:60%}.w50{width:50%}.w40{width:40%}.w30{width:30%}
+.cx{align-items:center;text-align:center}
+.row{display:flex;gap:calc(14*var(--u));align-items:center}
+.row.g{flex:1}
+.row.wr{flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:calc(10*var(--u))}
+.col.s{min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:calc(14*var(--u))}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:calc(14*var(--u))}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:calc(14*var(--u))}
+.g2-1{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:calc(18*var(--u))}
+.card{
+  border:1px solid var(--line);border-radius:calc(9*var(--u));
+  padding:calc(16*var(--u));display:flex;flex-direction:column;gap:calc(9*var(--u));
+}
+.card.hi{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent-soft)}
+.thumb{background:var(--ph-fill);border-radius:calc(6*var(--u));aspect-ratio:4/3;width:100%}
+.pill{
+  font-family:var(--mono);font-size:calc(10*var(--u));color:var(--muted);
+  border:1px solid var(--line);border-radius:999px;padding:calc(3*var(--u)) calc(9*var(--u));
+  white-space:nowrap;align-self:flex-start;background:var(--panel);
+}
+.pill.acc{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.pill.warn{border-color:var(--warn);color:var(--warn);background:var(--warn-soft)}
+.pill.lim{border-color:var(--lime);color:var(--lime-ink);background:var(--lime)}
+.pill.gold{border-color:var(--gold);color:var(--gold);background:var(--gold-soft)}
+/* Baris layanan di dalam wireframe: nama + keterangan. */
+.fx{
+  display:grid;grid-template-columns:calc(20*var(--u)) minmax(0,1fr);
+  gap:calc(10*var(--u));align-items:start;
+  border:1px solid var(--line-soft);border-radius:calc(5*var(--u));
+  padding:calc(8*var(--u)) calc(10*var(--u));background:var(--panel);
+}
+.fx .ic{width:calc(18*var(--u));height:calc(18*var(--u));border-radius:calc(5*var(--u));background:var(--accent-soft)}
+.fx .nm{font-size:calc(12.5*var(--u));line-height:1.35}
+.fx .nm em{font-style:normal;color:var(--muted);font-size:calc(11*var(--u));display:block;margin-top:calc(2*var(--u))}
+/* Langkah bernomor — dipakai hanya di halaman yang memang berurutan. */
+.step{
+  display:grid;grid-template-columns:calc(26*var(--u)) minmax(0,1fr);
+  gap:calc(11*var(--u));align-items:start;
+}
+.step .n{
+  width:calc(24*var(--u));height:calc(24*var(--u));border-radius:50%;
+  border:1px solid var(--accent);background:var(--accent-soft);color:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:calc(11*var(--u));
+}
+.step .nm{font-size:calc(13*var(--u));font-weight:600;line-height:1.3}
+.step .nm em{display:block;font-style:normal;font-weight:400;color:var(--muted);font-size:calc(11*var(--u));margin-top:calc(3*var(--u))}
+/* Kartu peran tim — nama masih kosong, hanya peran yang terisi. */
+.role{
+  border:1px solid var(--line);border-radius:calc(8*var(--u));
+  padding:calc(13*var(--u));display:flex;flex-direction:column;gap:calc(7*var(--u));
+  background:var(--panel);
+}
+.role .t{font-size:calc(12.5*var(--u));font-weight:600;line-height:1.3}
+.role .d{font-size:calc(10.5*var(--u));color:var(--muted);line-height:1.4}
+.role .nm-slot{
+  border:1px dashed var(--ph-line);border-radius:calc(5*var(--u));
+  padding:calc(5*var(--u)) calc(7*var(--u));
+  font-family:var(--mono);font-size:calc(9.5*var(--u));color:var(--muted);
+  display:flex;justify-content:space-between;gap:calc(6*var(--u));
+}
+/* Mock isian formulir. */
+.field{display:flex;flex-direction:column;gap:calc(5*var(--u))}
+.field .lb{font-family:var(--mono);font-size:calc(9.5*var(--u));color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.field .in{
+  height:calc(26*var(--u));border:1px solid var(--line);border-radius:calc(6*var(--u));
+  background:var(--panel-2);
+}
+.field .in.area{height:calc(58*var(--u))}
+.field .in.sel{background:linear-gradient(90deg,var(--panel-2) 88%,var(--ph-fill) 88%)}
+/* Kotak catatan di dalam wireframe. */
+.box{border:1px solid var(--line);border-radius:calc(7*var(--u));padding:calc(12*var(--u));background:var(--panel-2)}
+.box.gold{border-color:var(--gold);background:var(--gold-soft)}
+.box.warn{border-color:var(--warn);background:var(--warn-soft)}
+.box .k{font-family:var(--mono);font-size:calc(10*var(--u));color:var(--muted);letter-spacing:.05em;text-transform:uppercase}
+/* Kepala & kaki halaman di dalam wireframe. */
+.nav{
+  display:flex;align-items:center;gap:calc(14*var(--u));
+  border-bottom:1px solid var(--line-soft);padding-bottom:calc(12*var(--u));
+}
+.nav .logo{display:flex;align-items:center;gap:calc(8*var(--u))}
+.nav .logo .sq{width:calc(24*var(--u));height:calc(24*var(--u));border-radius:calc(6*var(--u));background:var(--ink)}
+.nav .logo .tx{font-size:calc(12*var(--u));font-weight:700;letter-spacing:.02em}
+.nav .lnk{display:flex;gap:calc(12*var(--u));margin-left:auto;align-items:center}
+.kaki{
+  border-top:1px solid var(--line);padding-top:calc(14*var(--u));
+  display:grid;grid-template-columns:repeat(4,1fr);gap:calc(14*var(--u));
+}
+.kaki .h{font-size:calc(11*var(--u));font-weight:600;margin-bottom:calc(6*var(--u))}
+
+.notes{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.notes li{display:grid;grid-template-columns:26px minmax(0,1fr);gap:12px;align-items:baseline}
+.notes .n{
+  font-family:var(--mono);font-size:11px;color:var(--accent);
+  border-top:1px solid var(--accent);padding-top:4px;
+}
+.notes b{font-weight:600;font-size:14.5px}
+.notes .dim{font-family:var(--mono);font-size:11px;color:var(--muted);margin-left:8px;white-space:nowrap}
+.notes p{font-size:13.5px;color:var(--muted);margin-top:2px;line-height:1.5}
+.notes code{color:var(--ink)}
+.notes .flag{color:var(--gold);font-weight:600}
+
+.rules{
+  margin-top:clamp(40px,6vw,72px);
+  border-top:1px solid var(--line);padding-top:clamp(24px,3vw,36px);
+}
+.rules h2{font-size:clamp(19px,2.2vw,23px)}
+.rules .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;margin-top:20px}
+.rules h3{font-size:14px;font-weight:600;letter-spacing:.02em;margin-bottom:12px}
+.rules ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:9px;font-size:14px;color:var(--muted)}
+.rules ul strong{color:var(--ink);font-weight:600}
+.rules p.lead{color:var(--muted);font-size:14px;margin-top:10px;max-width:80ch}
+table.data{
+  width:100%;border-collapse:collapse;margin-top:18px;font-size:13.5px;
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+}
+@media (max-width:700px){
+  table.data{display:block;overflow-x:auto;white-space:nowrap}
+}
+table.data th,table.data td{border-bottom:1px solid var(--line-soft);padding:9px 12px;text-align:left;vertical-align:top}
+table.data thead th{
+  background:var(--panel-2);font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted);font-weight:500;
+}
+table.data tbody tr:last-child td{border-bottom:0}
+table.data td.mono{font-family:var(--mono);font-size:12px;color:var(--muted)}
+table.data .ada{color:var(--lime-ink);font-weight:600}
+table.data .belum{color:var(--gold);font-weight:600}
+footer{
+  margin-top:clamp(32px,5vw,56px);border-top:1px solid var(--line);padding-top:20px;
+  font-family:var(--mono);font-size:11.5px;color:var(--muted);letter-spacing:.04em;
+}
+@media print{
+  .no-print{display:none!important}
+  .slide{grid-template-columns:minmax(0,1fr);break-inside:avoid}
+}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important;animation:none!important} }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="no-print">
+    <p class="eyebrow">BERBARIS APP — Subdomain EO</p>
+    <h1>Wireframe <code>eo.berbaris.local</code> — tujuh halaman jasa penyelenggaraan lomba</h1>
+    <p class="lede">Halaman ini menggambar calon subdomain milik tim <strong>Event Organizer</strong>: profil, lingkup kerja penuh (logo sampai rekap), alur pengajuan, event yang sedang dibuka, portofolio, tim, dan sponsor. Isinya bukan daftar fitur aplikasi — <strong>yang dijual di sini jasa, bukan paket perangkat lunak</strong>. Karena itu halamannya tidak boleh menumpang katalog <code>/fitur</code>.</p>
+    <div class="meta">
+      <span class="chip">1180 px · desktop</span>
+      <span class="chip">7 halaman + nav &amp; kaki</span>
+      <span class="chip">4 kelompok peran tim</span>
+      <span class="chip warn">butuh route group sendiri</span>
+      <span class="chip">nama tim: menyusul</span>
+      <button class="toggle" id="tg" type="button" aria-pressed="false">Tampilkan kolom 12</button>
+    </div>
+  </header>
+
+  <dl class="spec no-print">
+    <div>
+      <dt>Kanvas</dt>
+      <dd>Kolom desktop 1180 px, gutter 16–40 px. Yang digambar halaman web — tingginya mengikuti isi section, bukan dipotong ke rasio tetap.</dd>
+    </div>
+    <div>
+      <dt>Warna</dt>
+      <dd>
+        <span class="swatches">
+          <span class="sw"><i style="background:#f3f4f7"></i>paper</span>
+          <span class="sw"><i style="background:#ffffff"></i>panel</span>
+          <span class="sw"><i style="background:#14181f"></i>ink</span>
+          <span class="sw"><i style="background:#0062ff"></i>accent</span>
+          <span class="sw"><i style="background:#a3e635"></i>lime</span>
+        </span>
+        Sama dengan laman utama supaya dua subdomain terbaca satu keluarga. Tidak ada warna baru.
+      </dd>
+    </div>
+    <div>
+      <dt>Nada halaman</dt>
+      <dd>Panitia sekolah dan dinas yang membuka ini sedang menimbang, bukan sedang berbelanja. Karena itu tidak ada harga jasa yang dikarang, tidak ada angka pencapaian yang tidak bisa dibuktikan, dan tidak ada testimoni.</dd>
+    </div>
+    <div>
+      <dt>Hubungan dengan platform</dt>
+      <dd>EO ini memakai sistem yang sama dengan <code>berbaris.local</code> — pendaftaran, penilaian juri, papan skor, e-tiket. Jadi <em>yang dijanjikan di halaman ini harus benar-benar ada di aplikasinya</em>, bukan janji bagian penjualan.</dd>
+    </div>
+  </dl>
+
+  <div class="peta no-print">
+    <div class="pg"><span class="no">01</span><span class="nm">Beranda</span><span class="ds">Satu kalimat janji, jenis lomba, empat kelompok kerja, event terdekat.</span></div>
+    <div class="pg"><span class="no">02</span><span class="nm">Layanan</span><span class="ds">Lingkup kerja A–E, dari identitas visual sampai laporan ke sponsor.</span></div>
+    <div class="pg"><span class="no">03</span><span class="nm">Alur Kerja</span><span class="ds">Tujuh langkah, dari pengajuan sampai aftermovie.</span></div>
+    <div class="pg"><span class="no">04</span><span class="nm">Event &amp; Portofolio</span><span class="ds">Yang sedang dibuka, dan yang sudah pernah ditangani.</span></div>
+    <div class="pg baru"><span class="no">05</span><span class="nm">Tim</span><span class="ds">Peran saja dulu; nama diisi menyusul.</span></div>
+    <div class="pg"><span class="no">06</span><span class="nm">Sponsor &amp; Mitra</span><span class="ds">Paket sponsorship, tenant, dan yang didapat mitra.</span></div>
+    <div class="pg baru"><span class="no">07</span><span class="nm">Ajukan Event</span><span class="ds">Formulir pengajuan + kontak. Halaman yang mengubah pembaca jadi klien.</span></div>
+  </div>
+
+  <!-- ============ HALAMAN 1: BERANDA ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Halaman 1 / 7 · /</p>
+      <h2>Beranda — apa yang kami tangani, dalam satu layar</h2>
+      <p class="goal">Pembaca beranda adalah panitia yang sedang panik: lomba dua bulan lagi, belum ada yang mengurus. Karena itu hero-nya menyebut pekerjaan yang diambil alih, bukan menyebut nama perusahaan.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">eo.berbaris.local/</span></div>
+      <div class="mock cx" style="gap:calc(26*var(--u))">
+        <div class="nav" style="width:100%">
+          <span class="logo"><span class="sq"></span><span class="tx">TIM EO</span></span>
+          <span class="lnk">
+            <span class="bar s" style="width:calc(52*var(--u))"></span>
+            <span class="bar s" style="width:calc(44*var(--u))"></span>
+            <span class="bar s" style="width:calc(38*var(--u))"></span>
+            <span class="bar s" style="width:calc(40*var(--u))"></span>
+            <span class="bar s" style="width:calc(30*var(--u))"></span>
+            <span class="bar acc" style="width:calc(96*var(--u))"></span>
+          </span>
+        </div>
+
+        <span class="pill acc">Event Organizer Lomba Baris-Berbaris</span>
+        <div class="bar h w80"></div>
+        <div class="bar h w50" style="height:calc(20*var(--u))"></div>
+        <div class="bar w60"></div>
+        <div class="row" style="justify-content:center;margin-top:calc(6*var(--u))">
+          <span class="bar acc" style="width:calc(190*var(--u))"></span>
+          <span class="bar" style="width:calc(160*var(--u));height:calc(26*var(--u));border-radius:calc(7*var(--u));background:var(--panel);border:1px solid var(--line)"></span>
+        </div>
+        <div class="thumb" style="aspect-ratio:16/7;border:1px solid var(--line)"></div>
+
+        <div class="row wr" style="justify-content:center;gap:calc(8*var(--u))">
+          <span class="pill">PBB / LOBB</span>
+          <span class="pill">LKBB</span>
+          <span class="pill">TUB</span>
+          <span class="pill">RUKIBRA</span>
+          <span class="pill">VARMUS</span>
+          <span class="pill">Danton</span>
+          <span class="pill">Variasi &amp; Formasi</span>
+          <span class="pill">Tingkat SD–SMA &amp; Umum</span>
+        </div>
+
+        <div class="grid4" style="width:100%;text-align:left">
+          <div class="card"><span class="pill gold">A</span><div class="bar t w70"></div><div class="bar s"></div><div class="bar s w80"></div><div class="bar s w60"></div></div>
+          <div class="card"><span class="pill gold">B</span><div class="bar t w70"></div><div class="bar s"></div><div class="bar s w80"></div><div class="bar s w60"></div></div>
+          <div class="card"><span class="pill gold">C</span><div class="bar t w70"></div><div class="bar s"></div><div class="bar s w80"></div><div class="bar s w60"></div></div>
+          <div class="card"><span class="pill gold">D</span><div class="bar t w70"></div><div class="bar s"></div><div class="bar s w80"></div><div class="bar s w60"></div></div>
+        </div>
+
+        <div class="row" style="width:100%;align-items:flex-end">
+          <div class="col" style="flex:1"><div class="bar t w40"></div><div class="bar s w60"></div></div>
+          <span class="pill">Lihat semua event →</span>
+        </div>
+        <div class="grid3" style="width:100%;text-align:left">
+          <div class="card"><div class="thumb" style="aspect-ratio:16/9"></div><div class="bar t w70"></div><div class="bar s w50"></div></div>
+          <div class="card"><div class="thumb" style="aspect-ratio:16/9"></div><div class="bar t w60"></div><div class="bar s w50"></div></div>
+          <div class="card"><div class="thumb" style="aspect-ratio:16/9"></div><div class="bar t w70"></div><div class="bar s w40"></div></div>
+        </div>
+
+        <div class="card hi" style="width:100%;flex-direction:row;align-items:center;justify-content:space-between;text-align:left">
+          <span class="col" style="flex:1"><span class="bar t w50"></span><span class="bar s w70"></span></span>
+          <span class="bar acc" style="width:calc(170*var(--u))"></span>
+        </div>
+
+        <div class="kaki" style="width:100%;text-align:left">
+          <div><div class="h">Tim EO</div><div class="bar s w80"></div><div class="bar s w60"></div></div>
+          <div><div class="h">Layanan</div><div class="bar s w70"></div><div class="bar s w50"></div></div>
+          <div><div class="h">Event</div><div class="bar s w70"></div><div class="bar s w50"></div></div>
+          <div><div class="h">Kontak</div><div class="bar s w80"></div><div class="bar s w60"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Hero menyebut pekerjaan, bukan nama perusahaan</b><span class="dim">h1 · 3 baris</span><p>"Kami menyelenggarakan lombanya, dari poster sampai rekap juara" membuat panitia mengenali dirinya. Judul yang berbunyi "Solusi Event Terbaik" tidak bisa dikenali siapa pun, jadi tidak dibaca.</p></div></li>
+      <li><span class="n">02</span><div><b>Chip jenis lomba diambil dari istilah yang dipakai panitia</b><span class="dim">8 chip</span><p>PBB/LOBB, LKBB, TUB, RUKIBRA, VARMUS, Danton, variasi &amp; formasi — istilah ini juga yang sudah dipakai di aplikasinya (kategori lomba berformat <em>induk – tingkat</em>, lihat <code>Registration::resolveCertificateField()</code>). Memakai istilah sendiri berarti panitia harus menerjemahkan.</p></div></li>
+      <li><span class="n">03</span><div><b>Empat kartu kerja, bukan enam</b><span class="dim">grid4 · A–D</span><p>Empat yang pertama disebut panitia saat menelepon: identitas visual, sistem lomba, hari-H, dokumentasi. Rinciannya di halaman 2 — beranda tidak perlu memuat dua puluh baris jasa.</p></div></li>
+      <li><span class="n">04</span><div><b>Event terdekat dibaca dari basis data</b><span class="dim">3 kartu</span><p>Bukan tulisan tangan. Sumbernya penyelenggara berstatus <code>approved</code> yang tanggalnya belum lewat — sama seperti section event di laman utama. <span class="flag">Kalau tidak ada yang akan datang, kartunya hilang, bukan diisi contoh.</span></p></div></li>
+      <li><span class="n">05</span><div><b>Tidak ada angka pencapaian apa pun</b><span class="dim">—</span><p>Laman utama menyimpan "500+ event terkelola" dan sejenisnya di basis data; angka itu tidak boleh ikut ke sini. Kalau memang sudah ada bukti, tempatnya di halaman 4 dalam bentuk event yang bisa dibuka, bukan angka di beranda.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 2: LAYANAN ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Halaman 2 / 7 · /layanan</p>
+      <h2>Layanan — lima kelompok kerja, dari logo sampai rekap</h2>
+      <p class="goal">Halaman yang menjawab "kalau saya serahkan semuanya, Anda urus apa saja?". Lima kelompok ini sekaligus jadi daftar centang saat menyusun RAB, jadi urutannya mengikuti pekerjaan, bukan urutan kepintaran tim.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">eo.berbaris.local/layanan</span></div>
+      <div class="mock" style="gap:calc(20*var(--u))">
+        <div class="col cx" style="gap:calc(8*var(--u))">
+          <span class="pill acc">Lingkup Kerja</span>
+          <div class="bar h w50"></div>
+          <div class="bar w60"></div>
+        </div>
+
+        <div class="g2-1">
+          <div class="col" style="gap:calc(12*var(--u))">
+            <div class="card">
+              <div class="row"><span class="pill gold">A</span><span class="bar t w40"></span></div>
+              <div class="bar s w70"></div>
+              <div class="grid2" style="gap:calc(8*var(--u))">
+                <div class="fx"><span class="ic"></span><span class="nm">Logo &amp; identitas event<em>logo, palet, tipografi</em></span></div>
+                <div class="fx"><span class="ic"></span><span class="nm">Poster, banner, backdrop<em>cetak &amp; digital</em></span></div>
+                <div class="fx"><span class="ic"></span><span class="nm">Jersey, ID card, medali<em>desain siap produksi</em></span></div>
+                <div class="fx"><span class="ic"></span><span class="nm">Sertifikat &amp; piagam<em>siap tanda tangan</em></span></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="row"><span class="pill gold">B</span><span class="bar t w40"></span></div>
+              <div class="bar s w70"></div>
+              <div class="grid2" style="gap:calc(8*var(--u))">
+                <div class="fx"><span class="ic"></span><span class="nm">Halaman pendaftaran &amp; verifikasi<em>BARIS APP</em></span></div>
+                <div class="fx"><span class="ic"></span><span class="nm">Drawing / undian urutan tampil<em>di panggung atau layar</em></span></div>
+                <div class="fx"><span class="ic"></span><span class="nm">Penilaian juri via tablet<em>tanpa kertas</em></span></div>
+                <div class="fx"><span class="ic"></span><span class="nm">Live scoreboard &amp; rekap PDF<em>berita acara</em></span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col" style="gap:calc(12*var(--u))">
+            <div class="card">
+              <div class="row"><span class="pill gold">C</span><span class="bar t w50"></span></div>
+              <div class="bar s w80"></div>
+              <div class="fx"><span class="ic"></span><span class="nm">Denah arena &amp; alur gerak<em>per kategori</em></span></div>
+              <div class="fx"><span class="ic"></span><span class="nm">Meja daftar ulang QR</span></div>
+              <div class="fx"><span class="ic"></span><span class="nm">Rundown &amp; jadwal</span></div>
+              <div class="fx"><span class="ic"></span><span class="nm">Juri, MC, protokol</span></div>
+            </div>
+            <div class="card">
+              <div class="row"><span class="pill gold">D</span><span class="bar t w50"></span></div>
+              <div class="bar s w80"></div>
+              <div class="fx"><span class="ic"></span><span class="nm">Foto &amp; video aftermovie</span></div>
+              <div class="fx"><span class="ic"></span><span class="nm">Livestream &amp; videotron</span></div>
+              <div class="fx"><span class="ic"></span><span class="nm">Konten media sosial</span></div>
+            </div>
+            <div class="card">
+              <div class="row"><span class="pill gold">E</span><span class="bar t w50"></span></div>
+              <div class="fx"><span class="ic"></span><span class="nm">Rekap peserta &amp; laporan sponsor</span></div>
+              <div class="fx"><span class="ic"></span><span class="nm">Kwitansi, invoice, arsip event</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="box">
+          <p class="bar s w30" style="margin-bottom:calc(8*var(--u))"></p>
+          <div class="grid3" style="gap:calc(10*var(--u))">
+            <div class="col" style="gap:calc(6*var(--u))"><span class="bar t w60"></span><span class="bar s"></span><span class="bar s w70"></span></div>
+            <div class="col" style="gap:calc(6*var(--u))"><span class="bar t w60"></span><span class="bar s"></span><span class="bar s w70"></span></div>
+            <div class="col" style="gap:calc(6*var(--u))"><span class="bar t w60"></span><span class="bar s"></span><span class="bar s w70"></span></div>
+          </div>
+        </div>
+
+        <div class="card hi" style="flex-direction:row;align-items:center;justify-content:space-between">
+          <span class="col" style="flex:1"><span class="bar t w40"></span><span class="bar s w60"></span></span>
+          <span class="bar acc" style="width:calc(180*var(--u))"></span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Lima kelompok, dan tiap kelompok bisa dipesan terpisah</b><span class="dim">A–E</span><p>Banyak sekolah sudah punya panitia sendiri dan hanya butuh sistem penilaiannya, atau hanya butuh desainnya. Halaman yang menjual "paket lengkap saja" kehilangan pembaca jenis ini di paragraf pertama.</p></div></li>
+      <li><span class="n">02</span><div><b>Yang dijanjikan di B harus ada di aplikasinya</b><span class="dim">4 baris</span><p>Pendaftaran, drawing, penilaian tablet, scoreboard, rekap — semuanya sudah jalan di platform ini, jadi boleh ditulis. <span class="flag">Menambah baris baru di sini berarti menambah pekerjaan nyata</span>, bukan menambah kalimat.</p></div></li>
+      <li><span class="n">03</span><div><b>Tanpa harga di halaman ini</b><span class="dim">kotak</span><p>Jasa penyelenggaraan dihitung per acara: jumlah kategori, jumlah peserta, hari, jarak, kebutuhan cetak. Angka tunggal di halaman jasa selalu salah untuk separuh pembaca. Yang ditulis adalah apa yang <em>menentukan</em> biayanya, lalu ajakan minta penawaran.</p></div></li>
+      <li><span class="n">04</span><div><b>Jangan menumpang <code>ProductFeatures</code></b><span class="dim">—</span><p>Katalog 41 fitur itu isinya kemampuan perangkat lunak, dijaga tes dua arah dengan gerbang paket. Mencampur jasa ke sana akan membuat tes gerbang ikut menuntut harga jasa.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 3: ALUR KERJA ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Halaman 3 / 7 · /alur</p>
+      <h2>Alur kerja — tujuh langkah, dari pengajuan sampai aftermovie</h2>
+      <p class="goal">Halaman yang menjawab satu pertanyaan yang selalu muncul di rapat pertama: "kalau kami serahkan sekarang, apa yang terjadi besok?" Nomor di sini memang urutan, jadi penomoran layak dipakai.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">eo.berbaris.local/alur</span></div>
+      <div class="mock" style="gap:calc(22*var(--u))">
+        <div class="col cx" style="gap:calc(8*var(--u))">
+          <span class="pill acc">Cara Kerja</span>
+          <div class="bar h w40"></div>
+          <div class="bar w50"></div>
+        </div>
+
+        <div class="col" style="gap:calc(14*var(--u))">
+          <div class="step"><span class="n">1</span><span class="nm">Pengajuan<em>Formulir di halaman 7. Cukup nama instansi, jenis lomba, dan perkiraan tanggal.</em></span></div>
+          <div class="step"><span class="n">2</span><span class="nm">Konsultasi &amp; survei lokasi<em>Kami hitung kategori, peserta, dan kebutuhan arena. Tanpa biaya.</em></span></div>
+          <div class="step"><span class="n">3</span><span class="nm">Proposal &amp; RAB<em>Rincian pekerjaan dan biaya per baris, bukan satu angka bulat.</em></span></div>
+          <div class="step"><span class="n">4</span><span class="nm">Kesepakatan &amp; uang muka<em>Setelah ini jadwal produksi dan tanggal buka pendaftaran dikunci.</em></span></div>
+          <div class="step"><span class="n">5</span><span class="nm">Persiapan<em>Desain dicetak, kategori dan rubrik disusun, halaman pendaftaran dibuka, juri dan MC dikonfirmasi.</em></span></div>
+          <div class="step"><span class="n">6</span><span class="nm">Technical meeting &amp; hari-H<em>Drawing, daftar ulang QR, penilaian juri dari tablet, papan skor tampil di layar.</em></span></div>
+          <div class="step"><span class="n">7</span><span class="nm">Penutupan &amp; laporan<em>Juara, berita acara, sertifikat, rekap peserta, laporan sponsor, aftermovie.</em></span></div>
+        </div>
+
+        <div class="box gold">
+          <span class="k">Perkiraan waktu</span>
+          <div class="grid3" style="gap:calc(10*var(--u));margin-top:calc(8*var(--u))">
+            <div class="col" style="gap:calc(5*var(--u))"><span class="bar t w60"></span><span class="bar s w80"></span></div>
+            <div class="col" style="gap:calc(5*var(--u))"><span class="bar t w60"></span><span class="bar s w80"></span></div>
+            <div class="col" style="gap:calc(5*var(--u))"><span class="bar t w60"></span><span class="bar s w80"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Tujuh langkah, tidak lebih</b><span class="dim">.step</span><p>Alur yang dipecah jadi empat belas langkah membuat pembaca mengira pekerjaannya rumit. Tujuh adalah jumlah yang bisa dibaca sekali duduk dan masih jujur.</p></div></li>
+      <li><span class="n">02</span><div><b>Langkah 3 menyebut "per baris, bukan satu angka bulat"</b><span class="dim">langkah 3</span><p>Panitia sekolah mempertanggungjawabkan belanja ke kepala sekolah. RAB yang bisa dibaca per baris adalah alasan mereka berani memilih jasa luar, bukan mengerjakan sendiri.</p></div></li>
+      <li><span class="n">03</span><div><b>Langkah 5 dan 6 menyebut benda yang nyata</b><span class="dim">langkah 5–6</span><p>Rubrik, drawing, kartu QR, tablet juri — semuanya ada di aplikasinya. Menyebutnya membuat janji ini bisa diperiksa, dan sekaligus menjelaskan kenapa panitia tidak perlu menyiapkan apa pun.</p></div></li>
+      <li><span class="n">04</span><div><b>Perkiraan waktu ditulis jujur</b><span class="dim">kotak kuning</span><p>Tiga angka: jauh sebelum hari-H untuk persiapan, H-7 untuk kunci produksi, hari-H untuk pelaksanaan. <span class="flag">Angka ini harus disepakati tim operasional lebih dulu</span> — kalau tidak, halaman ini jadi janji yang tidak bisa ditepati.</p></div></li>
+      <li><span class="n">05</span><div><b>Berakhir di laporan, bukan di juara</b><span class="dim">langkah 7</span><p>Yang membuat panitia dipuji atasannya adalah berkas setelah acara: berita acara, rekap peserta, laporan sponsor. Menaruhnya di langkah terakhir membuat halaman ini terbaca sebagai pekerjaan yang tuntas.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 4: EVENT & PORTOFOLIO ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Halaman 4 / 7 · /event</p>
+      <h2>Event &amp; Portofolio — yang dibuka, dan yang sudah lewat</h2>
+      <p class="goal">Satu halaman untuk dua niat: yang ingin ikut lomba, dan yang ingin menyewa penyelenggara. Keduanya sama-sama mencari bukti bahwa ini bukan pertama kali.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">eo.berbaris.local/event</span></div>
+      <div class="mock" style="gap:calc(22*var(--u))">
+        <div class="row" style="align-items:flex-end">
+          <div class="col" style="flex:1;gap:calc(7*var(--u))"><span class="pill acc">Event</span><div class="bar h w40"></div></div>
+          <span class="row" style="gap:calc(8*var(--u))">
+            <span class="pill lim">Sedang dibuka</span>
+            <span class="pill">Sudah terlaksana</span>
+            <span class="pill">Semua jenis</span>
+          </span>
+        </div>
+
+        <div class="grid3">
+          <div class="card"><div class="thumb" style="aspect-ratio:16/9"></div><span class="pill acc">Dibuka</span><div class="bar t w80"></div><div class="bar s w60"></div><div class="row" style="gap:calc(6*var(--u))"><span class="pill">8 kategori</span><span class="pill">SD–SMA</span></div></div>
+          <div class="card"><div class="thumb" style="aspect-ratio:16/9"></div><span class="pill acc">Dibuka</span><div class="bar t w70"></div><div class="bar s w60"></div><div class="row" style="gap:calc(6*var(--u))"><span class="pill">6 kategori</span><span class="pill">SMP</span></div></div>
+          <div class="card"><div class="thumb" style="aspect-ratio:16/9"></div><span class="pill acc">Dibuka</span><div class="bar t w80"></div><div class="bar s w50"></div><div class="row" style="gap:calc(6*var(--u))"><span class="pill">4 kategori</span><span class="pill">Umum</span></div></div>
+        </div>
+
+        <div class="row" style="align-items:flex-end;margin-top:calc(6*var(--u))">
+          <div class="col" style="flex:1;gap:calc(7*var(--u))"><div class="bar t w30"></div><div class="bar s w50"></div></div>
+          <span class="pill">Arsip lengkap →</span>
+        </div>
+
+        <div class="grid4">
+          <div class="col" style="gap:calc(7*var(--u))"><div class="thumb" style="aspect-ratio:1"></div><span class="pill">2026 · 8 kategori</span></div>
+          <div class="col" style="gap:calc(7*var(--u))"><div class="thumb" style="aspect-ratio:1"></div><span class="pill">2026 · 24 sekolah</span></div>
+          <div class="col" style="gap:calc(7*var(--u))"><div class="thumb" style="aspect-ratio:1"></div><span class="pill">2025 · tingkat kota</span></div>
+          <div class="col" style="gap:calc(7*var(--u))"><div class="thumb" style="aspect-ratio:1"></div><span class="pill">2025 · 3 hari</span></div>
+        </div>
+
+        <div class="box">
+          <span class="k">Satu event yang bisa dibuka sendiri</span>
+          <div class="row g2-1" style="margin-top:calc(8*var(--u));align-items:center">
+            <div class="col" style="gap:calc(6*var(--u))">
+              <span class="bar t w70"></span>
+              <span class="bar s w80"></span>
+              <span class="bar s w60"></span>
+              <span class="row" style="gap:calc(6*var(--u))"><span class="pill gold">Halaman event</span><span class="pill gold">Hasil &amp; papan skor</span><span class="pill gold">Galeri</span></span>
+            </div>
+            <div class="thumb" style="aspect-ratio:4/3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Portofolio dibaca dari event, bukan ditulis manual</b><span class="dim">grid4</span><p>Sumbernya penyelenggara berstatus <code>approved</code> — yang punya subdomain sendiri, halaman hasil, papan skor, dan galeri foto (<code>event_galleries</code>). Ditulis manual, halaman ini akan basi dalam sebulan.</p></div></li>
+      <li><span class="n">02</span><div><b>Satu event dibuat bisa dibuka sungguhan</b><span class="dim">kotak</span><p>Kartu portofolio yang hanya gambar tidak membuktikan apa pun. Menautkan satu event ke halaman event, hasil, dan galerinya membuat calon klien bisa memeriksa sendiri — dan itu lebih meyakinkan daripada satu halaman pujian.</p></div></li>
+      <li><span class="n">03</span><div><b>"Terlaksana" tetap ditampilkan</b><span class="dim">filter</span><p>Event lampau bukan sampah; ia satu-satunya bukti rekam jejak. Yang dipangkas hanya jumlahnya di beranda.</p></div></li>
+      <li><span class="n">04</span><div><b>Penyaring jenis lomba memakai istilah yang sama dengan chip beranda</b><span class="dim">3 pill</span><p>PBB/LOBB, LKBB, TUB, RUKIBRA, VARMUS — supaya orang yang mencari "LKBB" menemukannya dengan kata yang ia pakai sendiri.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 5: TIM ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Halaman 5 / 7 · /tim</p>
+      <h2>Tim — peran dan tugasnya, nama diisi menyusul</h2>
+      <p class="goal">Panitia yang menyerahkan acaranya ke orang lain ingin tahu siapa yang akan berdiri di lapangan. Jadi yang ditulis lebih dulu adalah <em>peran dan tanggung jawabnya</em> — nama menyusul, dan kartu yang belum ada namanya tetap tampil.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">eo.berbaris.local/tim</span></div>
+      <div class="mock" style="gap:calc(20*var(--u))">
+        <div class="col cx" style="gap:calc(8*var(--u))">
+          <span class="pill acc">Tim</span>
+          <div class="bar h w40"></div>
+          <div class="bar w60"></div>
+        </div>
+
+        <div class="row" style="align-items:baseline">
+          <span class="pill gold">Inti &amp; Kendali</span><span class="bar s w30"></span>
+        </div>
+        <div class="grid4">
+          <div class="role"><span class="t">Direktur Event</span><span class="d">Penanggung jawab acara; satu pintu keputusan dengan panitia.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+          <div class="role"><span class="t">Manajer Lomba</span><span class="d">Menyusun kategori, rubrik, dan jadwal pertandingan.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+          <div class="role"><span class="t">Sekretaris &amp; Administrasi</span><span class="d">Berkas peserta, korespondensi sekolah, arsip acara.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+          <div class="role"><span class="t">Keuangan</span><span class="d">RAB, kwitansi, pembayaran vendor, laporan akhir.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+        </div>
+
+        <div class="row" style="align-items:baseline">
+          <span class="pill gold">Lomba &amp; Lapangan</span><span class="bar s w30"></span>
+        </div>
+        <div class="grid4">
+          <div class="role"><span class="t">Koordinator Juri &amp; Penilaian</span><span class="d">Mengundang juri, menyiapkan rubrik, menjaga konsistensi nilai.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+          <div class="role"><span class="t">Koordinator Arena</span><span class="d">Denah lapangan, alur gerak pasukan, urutan tampil.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+          <div class="role"><span class="t">Operator Sistem &amp; Skor</span><span class="d">Menjalankan BARIS APP di lapangan: drawing, penilaian, papan skor.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+          <div class="role"><span class="t">Meja Daftar Ulang</span><span class="d">Pindai kartu QR peserta, cek berkas, bagi ID card.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+          <div class="role"><span class="t">Logistik &amp; Perlengkapan</span><span class="d">Tenda, sound, panggung, listrik, konsumsi panitia.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+          <div class="role"><span class="t">MC &amp; Protokol</span><span class="d">Memandu upacara, drawing, dan pengumuman juara.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+          <div class="role"><span class="t">Tim Kesehatan</span><span class="d">P3K dan rujukan bila ada peserta cedera di arena.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+          <div class="role"><span class="t">Keamanan &amp; Parkir</span><span class="d">Akses peserta, penonton, dan kendaraan di lokasi.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+        </div>
+
+        <div class="row" style="align-items:baseline">
+          <span class="pill gold">Kreatif &amp; Media</span><span class="bar s w30"></span>
+        </div>
+        <div class="grid4">
+          <div class="role"><span class="t">Desain Grafis</span><span class="d">Logo, poster, banner, jersey, medali, sertifikat.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+          <div class="role"><span class="t">Dokumentasi Foto &amp; Video</span><span class="d">Liputan hari-H dan aftermovie.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+          <div class="role"><span class="t">Operator Siaran</span><span class="d">Livestream OBS dan tayangan videotron venue.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+          <div class="role"><span class="t">Media Sosial &amp; Konten</span><span class="d">Pengumuman, jadwal, hasil, dokumentasi harian.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+        </div>
+
+        <div class="row" style="align-items:baseline">
+          <span class="pill gold">Mitra</span><span class="bar s w30"></span>
+        </div>
+        <div class="grid4">
+          <div class="role"><span class="t">Humas &amp; Sponsorship</span><span class="d">Menawarkan kerja sama ke instansi dan merek.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+          <div class="role"><span class="t">Tenant &amp; Booth</span><span class="d">Mengatur stand dagang, peta tenant, dan listriknya.</span><span class="nm-slot"><span>NAMA</span><span>menyusul</span></span></div>
+        </div>
+
+        <div class="box warn">
+          <span class="k">Nama, foto, dan kontak belum diisi</span>
+          <div class="bar s w70" style="margin-top:calc(7*var(--u))"></div>
+          <div class="bar s w50"></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Empat kelompok, enam belas peran</b><span class="dim">4 × grid</span><p>Ditumpuk jadi satu grid dua puluh kartu, halaman ini terbaca seperti bagan organisasi dan tidak ada yang membacanya. Dikelompokkan, pembaca bisa melompat ke bagian yang ia butuhkan.</p></div></li>
+      <li><span class="n">02</span><div><b>Peran dulu, nama menyusul — dan kartunya tetap tampil</b><span class="dim">.nm-slot</span><p>Komponen tim yang sudah ada memfilter <code>!empty($item['name'])</code> sebelum merender apa pun. <span class="flag">Dengan peran terisi tapi nama kosong, section-nya hilang sama sekali</span> — jadi filter itu harus diubah lebih dulu (mis. lolos bila <code>name</code> <em>atau</em> <code>role</code> terisi), atau namanya diisi.</p></div></li>
+      <li><span class="n">03</span><div><b>Tiap peran menyebut satu pekerjaan, bukan satu gelar</b><span class="dim">16 baris</span><p>"Operator Sistem &amp; Skor — menjalankan BARIS APP di lapangan" memberi tahu panitia siapa yang akan ia cari saat papan skor mati. "Divisi Teknologi" tidak memberi tahu apa pun.</p></div></li>
+      <li><span class="n">04</span><div><b>Tidak ada satu pun nama karangan</b><span class="dim">—</span><p>Nama contoh di halaman tim adalah cara tercepat membuat halaman ini terlihat palsu: satu foto stok, satu nama yang tidak bisa dihubungi, dan seluruh janji di halaman lain ikut dicurigai.</p></div></li>
+      <li><span class="n">05</span><div><b>Enam belas kotak "menyusul" masih dua puluh menit kerja</b><span class="dim">kotak kuning</span><p>Peran kosong pun oke; nama kosong tidak. Di tombol "Rapatkan tim" lewat WhatsApp dulu, baru halaman ini diberi nama.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 6: SPONSOR & MITRA ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Halaman 6 / 7 · /sponsor</p>
+      <h2>Sponsor &amp; Mitra — apa yang didapat pihak yang membiayai</h2>
+      <p class="goal">Halaman untuk pembaca yang tidak punya anak lomba dan tidak menyewa jasa: dinas, bank daerah, toko seragam, merek minuman. Yang mereka cari cuma satu — daftar yang mereka dapat.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">eo.berbaris.local/sponsor</span></div>
+      <div class="mock" style="gap:calc(20*var(--u))">
+        <div class="col cx" style="gap:calc(8*var(--u))">
+          <span class="pill acc">Sponsor &amp; Mitra</span>
+          <div class="bar h w40"></div>
+          <div class="bar w60"></div>
+        </div>
+
+        <div class="grid3">
+          <div class="card"><span class="pill">Pendukung</span><div class="bar t w60"></div><div class="bar s w80"></div><div class="bar s w70"></div><div class="bar s w60"></div><span class="bar w100" style="height:calc(24*var(--u));border-radius:calc(7*var(--u))"></span></div>
+          <div class="card hi"><span class="pill acc">Utama</span><div class="bar t w60"></div><div class="bar s w80"></div><div class="bar s w70"></div><div class="bar s w60"></div><div class="bar s w50"></div><span class="bar acc" style="width:100%"></span></div>
+          <div class="card"><span class="pill gold">Utama &amp; penamaan</span><div class="bar t w70"></div><div class="bar s w80"></div><div class="bar s w70"></div><div class="bar s w60"></div><div class="bar s w50"></div><span class="bar w100" style="height:calc(24*var(--u));border-radius:calc(7*var(--u))"></span></div>
+        </div>
+
+        <div class="g2-1">
+          <div class="card">
+            <span class="bar t w40"></span>
+            <div class="grid2" style="gap:calc(8*var(--u))">
+              <div class="fx"><span class="ic"></span><span class="nm">Logo di backdrop &amp; poster<em>cetak dan digital</em></span></div>
+              <div class="fx"><span class="ic"></span><span class="nm">Sebutan di MC &amp; papan skor</span></div>
+              <div class="fx"><span class="ic"></span><span class="nm">Stan / tenant di lokasi</span></div>
+              <div class="fx"><span class="ic"></span><span class="nm">Konten media sosial bersama</span></div>
+              <div class="fx"><span class="ic"></span><span class="nm">Laporan jumlah tayangan &amp; peserta<em>angka nyata dari sistem</em></span></div>
+              <div class="fx"><span class="ic"></span><span class="nm">Sertifikat kerja sama</span></div>
+            </div>
+          </div>
+          <div class="col" style="gap:calc(12*var(--u))">
+            <div class="card">
+              <span class="bar t w50"></span>
+              <div class="fx"><span class="ic"></span><span class="nm">Peta tenant venue<em>posisi petak &amp; listrik</em></span></div>
+              <div class="fx"><span class="ic"></span><span class="nm">Pendaftaran tenant online</span></div>
+            </div>
+            <div class="box gold">
+              <span class="k">Angka paket belum ditetapkan</span>
+              <div class="bar s w80" style="margin-top:calc(7*var(--u))"></div>
+              <div class="bar s w60"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card hi" style="flex-direction:row;align-items:center;justify-content:space-between">
+          <span class="col" style="flex:1"><span class="bar t w40"></span><span class="bar s w60"></span></span>
+          <span class="bar acc" style="width:calc(180*var(--u))"></span>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Tiga tingkat, dan tingkat tengah yang disorot</b><span class="dim">grid3</span><p>Dua tingkat memaksa orang memilih ekstrem; empat membuat semua ragu. Tiga dengan satu ditandai adalah bentuk yang paling sering dipilih pembaca baru.</p></div></li>
+      <li><span class="n">02</span><div><b>Yang dijual adalah data, bukan spanduk</b><span class="dim">baris 5</span><p>Papan skor, jumlah peserta, dan tayangan livestream semuanya tercatat di aplikasinya, jadi laporan ke sponsor bisa berisi angka, bukan kesan. Itu yang membedakan penawaran ini dari "logo Anda kami pasang".</p></div></li>
+      <li><span class="n">03</span><div><b>Angka paket sponsorship belum ada — dan ditulis begitu</b><span class="dim">kotak kuning</span><p>Nilai kerja sama ditentukan per acara bersama sponsor. <span class="flag">Menaruh angka karangan sekarang berarti harus ditarik lagi setelah rapat pertama</span>, dan menarik harga yang sudah terlihat selalu merusak kepercayaan.</p></div></li>
+      <li><span class="n">04</span><div><b>Tenant ikut di sini, bukan di halaman layanan</b><span class="dim">kolom kanan</span><p>Tenant adalah mitra usaha, bukan pekerjaan yang dipesan panitia. Menempatkannya di halaman layanan membuat lingkup kerja EO terbaca lebih luas dari yang sebenarnya.</p></div></li>
+    </ol>
+  </article>
+
+  <!-- ============ HALAMAN 7: AJUKAN EVENT ============ -->
+  <article class="slide">
+    <div class="slide-head">
+      <p class="num">Halaman 7 / 7 · /ajukan</p>
+      <h2>Ajukan Event — satu formulir, dan apa yang terjadi sesudahnya</h2>
+      <p class="goal">Halaman yang mengubah pembaca jadi klien. Karena itu formulirnya pendek, dan di sebelahnya ada tiga langkah yang menyebut kapan ia akan dihubungi.</p>
+    </div>
+
+    <div class="frame">
+      <div class="chrome"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="url">eo.berbaris.local/ajukan</span></div>
+      <div class="mock" style="gap:calc(18*var(--u))">
+        <div class="col" style="gap:calc(7*var(--u))">
+          <span class="pill acc">Pengajuan</span>
+          <div class="bar h w50"></div>
+          <div class="bar s w70"></div>
+        </div>
+
+        <div class="g2-1">
+          <div class="card" style="gap:calc(13*var(--u))">
+            <div class="grid2" style="gap:calc(12*var(--u))">
+              <div class="field"><span class="lb">Instansi / sekolah</span><span class="in"></span></div>
+              <div class="field"><span class="lb">Nama penanggung jawab</span><span class="in"></span></div>
+              <div class="field"><span class="lb">Nomor WhatsApp</span><span class="in"></span></div>
+              <div class="field"><span class="lb">Surel</span><span class="in"></span></div>
+              <div class="field"><span class="lb">Jenis lomba</span><span class="in sel"></span></div>
+              <div class="field"><span class="lb">Perkiraan tanggal</span><span class="in"></span></div>
+              <div class="field"><span class="lb">Lokasi / kota</span><span class="in"></span></div>
+              <div class="field"><span class="lb">Perkiraan jumlah peserta</span><span class="in"></span></div>
+            </div>
+            <div class="field">
+              <span class="lb">Pekerjaan yang dibutuhkan</span>
+              <div class="row wr" style="gap:calc(6*var(--u))">
+                <span class="pill acc">Identitas &amp; desain</span>
+                <span class="pill acc">Sistem lomba</span>
+                <span class="pill">Hari-H &amp; arena</span>
+                <span class="pill">Dokumentasi &amp; siaran</span>
+                <span class="pill">Administrasi &amp; laporan</span>
+                <span class="pill">Sponsor &amp; tenant</span>
+              </div>
+            </div>
+            <div class="field"><span class="lb">Catatan</span><span class="in area"></span></div>
+            <span class="bar acc" style="width:calc(200*var(--u))"></span>
+            <div class="bar s w60"></div>
+          </div>
+
+          <div class="col" style="gap:calc(12*var(--u))">
+            <div class="card">
+              <span class="bar t w60"></span>
+              <div class="step"><span class="n">1</span><span class="nm">Kami balas hari kerja berikutnya<em>lewat WhatsApp ke nomor yang Anda tulis</em></span></div>
+              <div class="step"><span class="n">2</span><span class="nm">Konsultasi singkat 15 menit<em>untuk memastikan kategori dan tanggalnya masuk</em></span></div>
+              <div class="step"><span class="n">3</span><span class="nm">Proposal &amp; RAB dikirim<em>rincian per baris, tanpa biaya</em></span></div>
+            </div>
+            <div class="box">
+              <span class="k">Kontak langsung</span>
+              <div class="col" style="gap:calc(6*var(--u));margin-top:calc(8*var(--u))">
+                <span class="bar s w70"></span>
+                <span class="bar s w60"></span>
+                <span class="bar s w50"></span>
+              </div>
+            </div>
+            <div class="box warn">
+              <span class="k">Kontak masih kosong</span>
+              <div class="bar s w80" style="margin-top:calc(7*var(--u))"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="kaki">
+          <div><div class="h">Tim EO</div><div class="bar s w80"></div><div class="bar s w60"></div></div>
+          <div><div class="h">Layanan</div><div class="bar s w70"></div><div class="bar s w50"></div></div>
+          <div><div class="h">Event</div><div class="bar s w70"></div><div class="bar s w50"></div></div>
+          <div><div class="h">Kontak</div><div class="bar s w80"></div><div class="bar s w60"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <ol class="notes">
+      <li><span class="n">01</span><div><b>Delapan isian, dan yang wajib hanya empat</b><span class="dim">grid2</span><p>Instansi, penanggung jawab, nomor, dan jenis lomba. Perkiraan jumlah peserta dan tanggal boleh dikira-kira — formulir yang menuntut angka pasti membuat orang menutup halaman dan menelepon, dan telepon tidak tercatat di mana pun.</p></div></li>
+      <li><span class="n">02</span><div><b>Nomor WhatsApp, bukan hanya surel</b><span class="dim">isian 3</span><p>Panitia sekolah jauh lebih cepat membalas WhatsApp daripada surel, dan pembalasannya juga lewat sana. Kolom surel tetap ada untuk instansi yang butuh surat resmi.</p></div></li>
+      <li><span class="n">03</span><div><b>"Apa yang terjadi sesudahnya" harus benar</b><span class="dim">3 langkah</span><p>Menulis "kami balas hari kerja berikutnya" adalah janji operasional. <span class="flag">Kalau pengajuannya cuma masuk ke kotak surel yang jarang dibuka, kalimat itu bohong</span> — jadi pengajuan harus punya tempat yang diperiksa tiap hari.</p></div></li>
+      <li><span class="n">04</span><div><b>Belum ada tabelnya — ini keputusan yang harus diambil</b><span class="dim">—</span><p>Pilihan: tabel <code>eo_inquiries</code> dengan daftar di panel admin, atau cukup tombol WhatsApp yang membuka percakapan. Yang pertama bisa dihitung dan diingatkan; yang kedua nol kerja pengembangan tapi pengajuannya hilang. <span class="flag">Pilih sebelum halaman ini dibangun</span>, karena bentuk formulirnya mengikuti pilihan itu.</p></div></li>
+      <li><span class="n">05</span><div><b>Kontak belum boleh mewarisi setelan laman utama</b><span class="dim">kotak kuning</span><p>Setelan <code>landing_contact</code> masih berisi <code>halo@berbaris.local</code> dan nomor contoh. Tim EO butuh kotak surat, nomor WhatsApp, dan akun sosialnya sendiri — jangan disalin apa adanya.</p></div></li>
+      <li><span class="n">06</span><div><b>Formulirnya bukan formulir pendaftaran peserta</b><span class="dim">—</span><p>Ini pengajuan kerja sama, bukan pendaftaran lomba. Jangan disambungkan ke <code>Registration</code> atau magic link peserta: dua hal ini punya penerima, tabel, dan masa berlaku yang berbeda.</p></div></li>
+    </ol>
+  </article>
+
+  <footer>BERBARIS APP · wireframe subdomain EO · kanvas 1180 px · 7 halaman · 22 Oktober 2026</footer>
+
+  <!-- ============ BLOK PENJELAS (tidak ikut tercetak) ============ -->
+  <section class="rules no-print">
+    <h2>Sebelum halaman pertama dibangun</h2>
+    <p class="lead">Satu temuan menentukan seluruh pekerjaan ini: <strong><code>eo.berbaris.local</code> saat ini sudah tertangkap rute tenant</strong>. Setiap host berbentuk <code>{subdomain}.berbaris.local</code> di-resolve oleh <code>ResolveEventnerSubdomain</code>, yang mencari penyelenggara dengan <code>subdomain = 'eo'</code>; tidak ketemu, jawabannya 404 "Event tidak ditemukan." Jadi subdomain ini tidak bisa dibuka hanya dengan menambahkan route — ia harus keluar dari grup tenant lebih dulu, persis seperti yang dilakukan host <code>entry</code>.</p>
+
+    <table class="data">
+      <thead>
+        <tr><th>Yang perlu</th><th>Keadaannya sekarang</th><th>Berkas yang bersangkutan</th><th>Catatan</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="mono">Route group host</td>
+          <td class="belum">Belum ada</td>
+          <td><code>bootstrap/app.php</code> · <code>routes/entry.php</code></td>
+          <td>Tambahkan grup <code>domain(config('app.eo_host'))</code> tanpa middleware <code>subdomain</code>, sebentuk dengan grup <code>entry</code>. Host <code>eo</code> tidak punya tenant yang perlu di-resolve.</td>
+        </tr>
+        <tr>
+          <td class="mono">Kunci <code>app.eo_host</code></td>
+          <td class="belum">Belum ada</td>
+          <td><code>config/app.php</code> (<code>entry_host</code>)</td>
+          <td>Pola <code>entry_host</code> sudah ada: dari <code>env</code>, cadangan <code>eo.{host}</code>. Tambahkan <code>EO_HOST=</code> di <code>.env.example</code>.</td>
+        </tr>
+        <tr>
+          <td class="mono">Cadangan subdomain "eo"</td>
+          <td class="belum">Belum ada</td>
+          <td><code>Eventner\Settings\Profile::reservedSubdomain()</code></td>
+          <td>Metode itu sekarang hanya mengunci subdomain host entry. Tanpa menambah <code>eo</code>, penyelenggara mana pun bisa mendaftarkan <code>eo</code> sebagai subdomain event dan host EO jadi rebutan — kegagalan yang sama yang sudah dihindari untuk <code>entry</code>.</td>
+        </tr>
+        <tr>
+          <td class="mono">Halaman 7 halaman</td>
+          <td class="belum">Belum ada</td>
+          <td><code>routes/web.php</code> · <code>app/Livewire/Public/</code></td>
+          <td>Komponen Livewire publik baru. Jangan menaruhnya di grup tenant — halaman ini tidak punya konteks event.</td>
+        </tr>
+        <tr>
+          <td class="mono">Sumber portofolio &amp; event</td>
+          <td class="ada">Sudah ada</td>
+          <td><code>Eventner</code> (<code>status = approved</code>) · <code>event_galleries</code></td>
+          <td>Halaman 4 membaca dari sini, sebentuk dengan <code>SitemapController</code> yang menyusun URL event dari kolom <code>subdomain</code>.</td>
+        </tr>
+        <tr>
+          <td class="mono">Komponen tim</td>
+          <td class="ada">Sudah ada, perlu diubah</td>
+          <td><code>components/landing/team.blade.php</code> · setelan <code>landing_team</code></td>
+          <td>Menyimpan <code>name</code>, <code>role</code>, <code>photo</code>. <strong>Tapi ia memfilter <code>!empty($item['name'])</code></strong> — dengan peran saja, section-nya tidak render. Ubah filternya, atau isi namanya.</td>
+        </tr>
+        <tr>
+          <td class="mono">Tabel pengajuan</td>
+          <td class="belum">Belum diputuskan</td>
+          <td>—</td>
+          <td><code>eo_inquiries</code> + daftar di panel admin, atau tombol WhatsApp saja. Bentuk halaman 7 mengikuti keputusan ini.</td>
+        </tr>
+        <tr>
+          <td class="mono">Kontak &amp; sosial</td>
+          <td class="belum">Masih contoh</td>
+          <td>Setelan <code>landing_contact</code> / <code>landing_social_links</code></td>
+          <td>Masih <code>halo@berbaris.local</code>. Tim EO perlu kotak surat dan nomor sendiri; kalau belum ada, kartunya dihapus, bukan dibiarkan berisi contoh.</td>
+        </tr>
+        <tr>
+          <td class="mono">Sitemap</td>
+          <td class="belum">Belum memuat host ini</td>
+          <td><code>Public\SitemapController</code></td>
+          <td>Sitemap sekarang hanya memuat laman utama dan subdomain event. Kalau tujuh halaman ini ingin terindeks, host EO harus didaftarkan di sana.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="cols">
+      <div>
+        <h3>Yang bisa dipakai ulang, bukan dibangun lagi</h3>
+        <ul>
+          <li><strong>Pola host tetap</strong> — <code>entry.berbaris.app</code> sudah membuktikan bentuknya: satu grup domain, satu kunci config, satu subdomain yang dicadangkan. Salin polanya, jangan bikin cara baru.</li>
+          <li><strong>Komponen tim</strong> <code>landing/team.blade.php</code> — kartu nama + peran + foto sudah ada; tinggal mengubah filternya.</li>
+          <li><strong>Halaman event, hasil, papan skor, galeri</strong> — seluruh halaman publik per event sudah jalan. Portofolio cukup menautkannya, tidak perlu galeri sendiri.</li>
+          <li><strong>Istilah kategori lomba</strong> — induk (LOBB / RUKIBRA / VARMUS) dan tingkat sudah dipakai di kategori, sertifikat, dan format nilai. Pakai istilah yang sama di halaman ini.</li>
+          <li><strong>Token warna &amp; tipografi</strong> — IBM Plex Sans/Mono dan palet laman utama, supaya dua subdomain terbaca satu keluarga.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Yang sengaja tidak dimasukkan</h3>
+        <ul>
+          <li><strong>Harga jasa</strong> — dihitung per acara; angka tunggal selalu salah untuk separuh pembaca. Diganti ajakan minta penawaran.</li>
+          <li><strong>Angka pencapaian</strong> — "500+ event", "50K penyelenggara" dari laman utama. Itu data contoh yang ditanam agar tampilan tidak kosong.</li>
+          <li><strong>Testimoni dan logo klien</strong> — belum ada yang boleh disebut namanya selain event yang sudah ada di basis data.</li>
+          <li><strong>Nama tim</strong> — halaman 5 menampilkan peran dan tugas saja. Nama, foto, dan kontak diisi setelah timnya lengkap.</li>
+          <li><strong>Foto stok</strong> — semua kotak abu adalah penanda tempat, termasuk yang berbentuk tangkapan lapangan.</li>
+        </ul>
+      </div>
+    </div>
+
+    <table class="data">
+      <thead>
+        <tr><th>Halaman</th><th>Blok</th><th>Sumber isi</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="mono">1 Beranda</td><td>Event terdekat</td><td><code>eventners</code> status <code>approved</code>, tanggal belum lewat</td></tr>
+        <tr><td class="mono">1 Beranda</td><td>Chip jenis lomba</td><td>Istilah kategori lomba di aplikasinya (induk – tingkat)</td></tr>
+        <tr><td class="mono">2 Layanan</td><td>Kelompok B</td><td>Kemampuan nyata: pendaftaran, drawing, penilaian tablet, scoreboard, rekap — sama dengan katalog <code>ProductFeatures</code>, tapi dijual sebagai jasa, bukan daftar fitur</td></tr>
+        <tr><td class="mono">3 Alur</td><td>Perkiraan waktu</td><td><span class="belum">Kesepakatan tim operasional</span> — belum ada angkanya</td></tr>
+        <tr><td class="mono">4 Event</td><td>Portofolio &amp; arsip</td><td><code>eventners</code> + <code>event_galleries</code>; tautan ke halaman event, hasil, dan papan skor</td></tr>
+        <tr><td class="mono">5 Tim</td><td>16 kartu peran</td><td><span class="belum">Belum ada</span> — isi setelan <code>landing_team</code> (atau kunci setelan EO sendiri) sesudah filter komponennya diubah</td></tr>
+        <tr><td class="mono">6 Sponsor</td><td>Tingkat paket &amp; angka</td><td><span class="belum">Belum ada</span> — menunggu kesepakatan sponsorship</td></tr>
+        <tr><td class="mono">7 Ajukan</td><td>Formulir &amp; kontak</td><td><span class="belum">Belum ada</span> — tabel pengajuan atau tombol WhatsApp; kontak tidak boleh mewarisi setelan laman utama</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<script>
+(function(){
+  var btn = document.getElementById('tg');
+  if(!btn) return;
+  var root = document.documentElement;
+  function apply(on){
+    root.classList.toggle('guides', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.textContent = on ? 'Sembunyikan kolom 12' : 'Tampilkan kolom 12';
+  }
+  var saved = false;
+  try { saved = localStorage.getItem('wireframe.eo.guides') === '1'; } catch(e){}
+  apply(saved);
+  btn.addEventListener('click', function(){
+    var on = !root.classList.contains('guides');
+    apply(on);
+    try { localStorage.setItem('wireframe.eo.guides', on ? '1' : '0'); } catch(e){}
+  });
+})();
+</script>
+
+</body>
+</html>

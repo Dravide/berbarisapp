@@ -1,0 +1,468 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+/* =========================================================================
+   EO — gaya khusus subdomain eo.berbaris.local
+   =========================================================================
+
+   Kenapa berkas terpisah, bukan menumpang landing.css:
+
+   Halaman EO menjual JASA, dan pembacanya sedang menimbang di ruang rapat —
+   bukan berbelanja. Gaya laman utama (kartu bersudut 24px, bayangan lembut,
+   chip neon, tombol lime) membuat halaman ini terbaca sebagai halaman produk
+   lain dari aplikasi yang sama. Yang dipakai di sini adalah bahasa visual
+   dokumen: permukaan kertas, garis rambut 1px, label monospace, dan tipografi
+   IBM Plex. Sumbernya doc/eo-wireframe.html.
+
+   Warnanya sengaja TIDAK baru — accent tetap biru merek dan lime tetap dipakai
+   sebagai penanda status. Dua subdomain harus terbaca satu keluarga; yang
+   berbeda adalah cara menyusunnya, bukan paletnya.
+
+   Konsekuensi yang perlu diingat saat menyunting: kelas landing (container-
+   landing, surface-card, chip, btn-primary, section-pad) TIDAK ada di bundel
+   ini. Halaman EO memakai kelas berawalan `eo-` di bawah. Jangan memakai
+   <x-landing.*> di halaman EO — komponen itu memakai kelas yang tidak dimuat.
+   ========================================================================= */
+
+@theme {
+    --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    /* Permukaan — bertingkat dua saja (kertas & panel), bukan lima seperti
+       laman utama. Dokumen tidak butuh elevasi. */
+    --color-paper: #f3f4f7;
+    --color-panel: #ffffff;
+    --color-panel-2: #fafbfc;
+
+    --color-ink: #14181f;
+    --color-muted: #5b6472;
+    --color-line: #d7dbe2;
+    --color-line-soft: #e6e9ee;
+
+    --color-accent: #0062ff;
+    --color-accent-soft: #e8f0ff;
+    --color-lime: #a3e635;
+    --color-lime-ink: #2c4703;
+    --color-gold: #b8860b;
+    --color-gold-soft: #fdf6e3;
+    --color-warn: #c2410c;
+    --color-warn-soft: #fff1e8;
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 5rem;
+    }
+
+    body {
+        margin: 0;
+        background: var(--color-paper);
+        color: var(--color-ink);
+        font-family: var(--font-sans);
+        font-size: 16px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4 {
+        margin: 0;
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        text-wrap: balance;
+        color: var(--color-ink);
+    }
+
+    p { margin: 0; }
+
+    /* Tautan di dalam paragraf tetap berwarna accent; tombol menimpanya
+       sendiri lewat .eo-btn. */
+    a { color: var(--color-accent); }
+
+    [x-cloak] { display: none !important; }
+}
+
+@layer components {
+    /* ---------------------------------------------------------------- tata letak */
+    .eo-wrap {
+        width: 100%;
+        max-width: 1180px;
+        margin-inline: auto;
+        padding-inline: clamp(16px, 4vw, 40px);
+    }
+
+    /* Jarak antarbagian. Lebih rapat dari laman utama: dokumen dibaca berurutan,
+       bukan dipindai per layar. */
+    .eo-section {
+        padding-block: clamp(40px, 6vw, 72px);
+    }
+
+    .eo-section-tight {
+        padding-block: clamp(28px, 4vw, 44px);
+    }
+
+    /* Garis pemisah tipis — pengganti bayangan sebagai penanda bagian. */
+    .eo-rule {
+        border: 0;
+        border-top: 1px solid var(--color-line);
+        margin: 0;
+    }
+
+    /* ---------------------------------------------------------------- tipografi */
+    .eo-eyebrow {
+        display: inline-block;
+        margin-bottom: 10px;
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--color-accent);
+    }
+
+    .eo-h1 {
+        font-size: clamp(26px, 3.6vw, 38px);
+    }
+
+    .eo-h2 {
+        font-size: clamp(20px, 2.4vw, 26px);
+    }
+
+    .eo-h3 {
+        font-size: 17px;
+    }
+
+    .eo-lede {
+        margin-top: 12px;
+        max-width: 66ch;
+        color: var(--color-muted);
+        font-size: 16px;
+    }
+
+    .eo-muted { color: var(--color-muted); }
+
+    .eo-small { font-size: 13.5px; }
+
+    .eo-mono {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        letter-spacing: 0.04em;
+        color: var(--color-muted);
+    }
+
+    /* ---------------------------------------------------------------- chip & pita */
+    .eo-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border: 1px solid var(--color-line);
+        border-radius: 999px;
+        background: var(--color-panel);
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        color: var(--color-muted);
+        white-space: nowrap;
+    }
+
+    .eo-chip-acc {
+        border-color: var(--color-accent);
+        background: var(--color-accent-soft);
+        color: var(--color-accent);
+    }
+
+    .eo-chip-gold {
+        border-color: var(--color-gold);
+        background: var(--color-gold-soft);
+        color: var(--color-gold);
+    }
+
+    .eo-chip-lime {
+        border-color: var(--color-lime);
+        background: var(--color-lime);
+        color: var(--color-lime-ink);
+    }
+
+    .eo-chip-warn {
+        border-color: var(--color-warn);
+        background: var(--color-warn-soft);
+        color: var(--color-warn);
+    }
+
+    /* ---------------------------------------------------------------- kartu */
+    /* Satu tingkat elevasi. Garis 1px, bukan bayangan: kartu di sini adalah
+       kotak dokumen, dan bayangan membuatnya terbaca sebagai elemen mengambang. */
+    .eo-card {
+        display: flex;
+        flex-direction: column;
+        gap: 9px;
+        padding: 18px;
+        border: 1px solid var(--color-line);
+        border-radius: 12px;
+        background: var(--color-panel);
+    }
+
+    .eo-card-flat {
+        border-radius: 9px;
+        padding: 14px;
+        gap: 7px;
+    }
+
+    .eo-card-hi {
+        border-color: var(--color-accent);
+        box-shadow: inset 0 0 0 1px var(--color-accent-soft);
+    }
+
+    /* Baris butir layanan: ikon kotak + nama + keterangan. */
+    .eo-fx {
+        display: grid;
+        grid-template-columns: 20px minmax(0, 1fr);
+        gap: 10px;
+        align-items: start;
+        padding: 8px 10px;
+        border: 1px solid var(--color-line-soft);
+        border-radius: 6px;
+        background: var(--color-panel);
+    }
+
+    .eo-fx-ic {
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        background: var(--color-accent-soft);
+    }
+
+    .eo-fx-nm {
+        font-size: 13.5px;
+        line-height: 1.35;
+        color: var(--color-ink);
+    }
+
+    .eo-fx-ket {
+        display: block;
+        margin-top: 2px;
+        font-size: 11.5px;
+        color: var(--color-muted);
+    }
+
+    /* ---------------------------------------------------------------- langkah */
+    .eo-step {
+        display: grid;
+        grid-template-columns: 26px minmax(0, 1fr);
+        gap: 12px;
+        align-items: start;
+    }
+
+    .eo-step-n {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border: 1px solid var(--color-accent);
+        border-radius: 50%;
+        background: var(--color-accent-soft);
+        color: var(--color-accent);
+        font-family: var(--font-mono);
+        font-size: 11px;
+    }
+
+    .eo-step-nm {
+        font-size: 14.5px;
+        font-weight: 600;
+        line-height: 1.3;
+        color: var(--color-ink);
+    }
+
+    .eo-step-ket {
+        display: block;
+        margin-top: 3px;
+        font-size: 12.5px;
+        font-weight: 400;
+        color: var(--color-muted);
+    }
+
+    /* ---------------------------------------------------------------- peran tim */
+    .eo-role {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        padding: 14px;
+        border: 1px solid var(--color-line);
+        border-radius: 9px;
+        background: var(--color-panel);
+    }
+
+    .eo-role-t {
+        font-size: 13.5px;
+        font-weight: 600;
+        line-height: 1.3;
+        color: var(--color-ink);
+    }
+
+    .eo-role-d {
+        flex: 1;
+        font-size: 12px;
+        line-height: 1.45;
+        color: var(--color-muted);
+    }
+
+    /* Slot nama yang belum diisi. Bergaris putus-putus supaya terbaca sebagai
+       tempat kosong, bukan sebagai nama yang gagal dimuat. */
+    .eo-nm-slot {
+        padding: 5px 7px;
+        border: 1px dashed var(--color-line);
+        border-radius: 5px;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+    }
+
+    /* ---------------------------------------------------------------- kotak catatan */
+    .eo-box {
+        padding: 13px 14px;
+        border: 1px solid var(--color-line);
+        border-radius: 8px;
+        background: var(--color-panel-2);
+    }
+
+    .eo-box-gold {
+        border-color: var(--color-gold);
+        background: var(--color-gold-soft);
+    }
+
+    .eo-box-warn {
+        border-color: var(--color-warn);
+        background: var(--color-warn-soft);
+    }
+
+    .eo-box-k {
+        display: block;
+        margin-bottom: 7px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+    }
+
+    /* ---------------------------------------------------------------- tombol */
+    /* Radius 8px, bukan pill: tombol di sini benda dokumen, bukan badge. */
+    .eo-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 18px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .eo-btn:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+    }
+
+    .eo-btn-primary {
+        background: var(--color-accent);
+        color: #fff;
+    }
+
+    .eo-btn-primary:hover { background: color-mix(in srgb, var(--color-accent) 88%, #000); }
+
+    .eo-btn-ghost {
+        border-color: var(--color-line);
+        background: var(--color-panel);
+        color: var(--color-ink);
+    }
+
+    .eo-btn-ghost:hover {
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+    }
+
+    .eo-btn:disabled { opacity: 0.6; cursor: default; }
+
+    /* ---------------------------------------------------------------- formulir */
+    .eo-field {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1px solid var(--color-line);
+        border-radius: 7px;
+        background: var(--color-panel-2);
+        font-family: var(--font-sans);
+        font-size: 14px;
+        color: var(--color-ink);
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .eo-field::placeholder { color: color-mix(in srgb, var(--color-muted) 65%, transparent); }
+
+    .eo-field:focus {
+        outline: none;
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 3px var(--color-accent-soft);
+        background: var(--color-panel);
+    }
+
+    .eo-field-error { border-color: var(--color-warn); }
+
+    .eo-label {
+        display: block;
+        margin-bottom: 5px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+    }
+
+    /* ---------------------------------------------------------------- nav & kaki */
+    .eo-nav {
+        border-bottom: 1px solid var(--color-line);
+        background: color-mix(in srgb, var(--color-paper) 88%, transparent);
+        backdrop-filter: blur(8px);
+    }
+
+    .eo-nav-link {
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        letter-spacing: 0.03em;
+        color: var(--color-muted);
+        text-decoration: none;
+        padding-block: 4px;
+        border-bottom: 1px solid transparent;
+        transition: color 0.15s, border-color 0.15s;
+    }
+
+    .eo-nav-link:hover { color: var(--color-ink); }
+
+    .eo-nav-link[aria-current='page'] {
+        color: var(--color-ink);
+        border-bottom-color: var(--color-accent);
+    }
+
+    .eo-kaki-h {
+        margin-bottom: 8px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--color-ink);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}

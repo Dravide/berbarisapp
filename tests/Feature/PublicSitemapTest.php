@@ -105,4 +105,18 @@ class PublicSitemapTest extends TestCase
         // nama penyelenggara di-rawurlencode (spasi → %20), bukan slug kebab
         $this->assertStringContainsString('hall-of-fame/Dinas%20Pendidikan%20Jawa%20Barat', $xml);
     }
+
+    /**
+     * Halaman jasa EO ada di host sendiri, bukan di root platform. Tanpa blok
+     * khusus di controller, ketujuh halamannya tidak pernah muncul di sitemap
+     * walau publik dan tanpa token.
+     */
+    public function test_sitemap_memuat_tujuh_halaman_eo()
+    {
+        $xml = $this->get('/sitemap.xml')->getContent();
+
+        foreach (['', '/layanan', '/alur', '/event', '/tim', '/sponsor', '/ajukan'] as $path) {
+            $this->assertStringContainsString('<loc>' . eo_url($path) . '</loc>', $xml);
+        }
+    }
 }

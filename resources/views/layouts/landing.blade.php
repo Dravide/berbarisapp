@@ -164,6 +164,15 @@
                     // section-nya mati akan ikut dianggap bukan laman depan.
                     $diLamanDepan = $diLamanDepan ?? false;
                     $prefiksNav = $diLamanDepan ? '' : url('/');
+
+                    // Halaman jasa Event Organizer hidup di host sendiri
+                    // (eo.berbaris.app), jadi tautannya absolut dan TIDAK ikut
+                    // daftar anchor di atas: nav anchor digerakkan scroll-spy
+                    // yang mencari elemen `#id` di halaman ini, dan tautan lintas
+                    // host tidak punya elemen seperti itu. Ditaruh terpisah di
+                    // sisi kanan navbar supaya tetap terbaca sebagai "keluar
+                    // dari halaman ini", bukan section lain di laman depan.
+                    $tautanEo = eo_host() ? eo_url('/') : null;
                 @endphp
                 <nav class="hidden items-center gap-8 lg:flex" id="landing-desktop-nav">
                     @foreach($navItems as [$id, $label, $gate])
@@ -178,6 +187,11 @@
 
                 {{-- Desktop CTAs --}}
                 <div class="hidden items-center gap-3 lg:flex">
+                    @if($tautanEo)
+                        <a href="{{ $tautanEo }}" class="text-sm font-medium text-on-surface-variant transition-colors duration-200 hover:text-primary">
+                            Jasa Event Organizer
+                        </a>
+                    @endif
                     <a href="{{ route('login') }}" class="btn-ghost">Login</a>
                     <a href="{{ route('register.eventner') }}" class="btn-primary">
                         Daftar Eventner
@@ -200,6 +214,9 @@
                     @endif
                 @endforeach
                 <div class="mt-2 flex flex-col gap-2 border-t border-outline-variant/40 pt-3">
+                    @if($tautanEo)
+                        <a href="{{ $tautanEo }}" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">Jasa Event Organizer</a>
+                    @endif
                     <a href="{{ route('register.eventner') }}" class="btn-primary w-full">Daftar Eventner</a>
                     <a href="{{ route('login') }}" class="btn-ghost w-full">Login</a>
                 </div>
@@ -268,6 +285,12 @@
                         <li><a href="{{ route('terms') }}" class="transition hover:text-secondary">Syarat &amp; Ketentuan</a></li>
                         <li><a href="{{ route('help') }}" class="transition hover:text-secondary">Bantuan &amp; Support</a></li>
                         <li><a href="{{ route('public.eventners') }}" class="transition hover:text-secondary">Penyelenggara Event</a></li>
+                        @if($tautanEo)
+                            {{-- Lintas host: jasa penyelenggaraan lomba oleh tim
+                                 EO. Ditaruh di kolom ini, bukan kolom Navigasi —
+                                 kolom Navigasi isinya anchor gulir halaman ini. --}}
+                            <li><a href="{{ $tautanEo }}" class="transition hover:text-secondary">Jasa Event Organizer</a></li>
+                        @endif
                     </ul>
                     @php $socials = json_decode(get_setting('landing_social_links', '{}'), true); @endphp
                     @if(!empty($socials))

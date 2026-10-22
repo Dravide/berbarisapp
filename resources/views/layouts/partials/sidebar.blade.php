@@ -143,6 +143,15 @@
             </a>
           </li>
           <li class="sidebar-item">
+            <a class="sidebar-link {{ request()->routeIs('admin.eo-inquiries') ? 'active' : '' }}"
+              href="{{ route('admin.eo-inquiries') }}" aria-expanded="false">
+              <span>
+                <i class="ti ti-message-2"></i>
+              </span>
+              <span class="hide-menu">Pengajuan EO</span>
+            </a>
+          </li>
+          <li class="sidebar-item">
             <a class="sidebar-link {{ request()->routeIs('admin.revenue') ? 'active' : '' }}"
               href="{{ route('admin.revenue') }}" aria-expanded="false">
               <span>

@@ -121,13 +121,39 @@ class Profile extends Component
         $this->theme_font_display = $theme['font_display'] ?? 'Plus Jakarta Sans';
     }
 
-    /** Subdomain yang dipakai host entry platform — tidak boleh dipakai event. */
+    /**
+     * Subdomain yang dipakai host tetap platform — tidak boleh dipakai event.
+     *
+     * Daftarnya dikembalikan sebagai string berkoma karena langsung ditempel ke
+     * aturan `not_in:`. Selain `entry`, `eo` juga dipesan: subdomain EO adalah
+     * rute tetap (routes/eo.php), jadi event yang memakainya akan menutupi
+     * halaman penawaran dan tidak pernah bisa dibuka.
+     */
     private function reservedSubdomain(): string
     {
-        $host = judge_entry_host() ?: 'entry';
-        $root = parse_url(config('app.url'), PHP_URL_HOST) ?: '';
+        $subdomain = [];
 
-        return str_replace('.' . $root, '', $host);
+        foreach ([judge_entry_host(), eo_host()] as $host) {
+            if (!$host) {
+                continue;
+            }
+
+            // Label pertama host, bukan selisih terhadap config('app.url'):
+            // bentuk "entry.berbaris.app" dan "entry.berbaris.test" harus sama-
+            // sama menghasilkan "entry", termasuk saat APP_URL menunjuk host
+            // lain (mis. localhost di lingkungan tes).
+            $nama = explode('.', $host)[0];
+
+            if ($nama !== '') {
+                $subdomain[] = $nama;
+            }
+        }
+
+        // `entry` tetap dicadangkan walau ENTRY_HOST kosong: tanpa itu, event
+        // pertama yang memakai nama "entry" mematikan halaman nilai juri.
+        $subdomain[] = 'entry';
+
+        return implode(',', array_unique($subdomain));
     }
 
     public function save()
