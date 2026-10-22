@@ -173,6 +173,48 @@ class EoPagesTest extends TestCase
     }
 
     /**
+     * Brand header: logo ATAU nama, tidak keduanya.
+     *
+     * Logo yang diunggah sudah memuat nama, jadi merender teks di sebelahnya
+     * membuat nama terbaca dua kali. Tanpa logo, nama teks berdiri sendiri —
+     * bukan kotak gelap kosong sebagai pengganti, karena kotak tanpa isi
+     * terbaca sebagai gambar yang gagal dimuat.
+     */
+    public function test_header_shows_the_name_when_no_logo_is_uploaded(): void
+    {
+        $html = $this->eo('/')->assertOk()->getContent();
+        $header = substr($html, 0, strpos($html, '</header>'));
+
+        $this->assertStringContainsString(self::namaHeader(), $header);
+        $this->assertStringNotContainsString('<img', $header, 'Tidak ada logo diunggah, jadi tidak boleh ada <img> di header.');
+    }
+
+    public function test_header_shows_the_logo_instead_of_the_name_when_uploaded(): void
+    {
+        \App\Models\Setting::set('logo_dark', 'logo/logo-eo.png');
+
+        $html = $this->eo('/')->assertOk()->getContent();
+        $header = substr($html, 0, strpos($html, '</header>'));
+
+        $this->assertStringContainsString('logo/logo-eo.png', $header);
+
+        // Nama muncul sebagai alt gambar, bukan sebagai teks kedua di
+        // sebelahnya. Yang dihitung adalah kemunculan di luar atribut alt.
+        $tanpaAlt = preg_replace('/alt="[^"]*"/', '', $header);
+        $this->assertStringNotContainsString(
+            '>' . self::namaHeader() . '<',
+            $tanpaAlt,
+            'Logo sudah memuat nama; menambahkan teks nama lagi membuatnya terbaca dua kali.'
+        );
+    }
+
+    /** Nama EO bawaan saat setelan `eo_nama` kosong = nama platform. */
+    private static function namaHeader(): string
+    {
+        return \App\Livewire\Public\Eo\Beranda::namaEo();
+    }
+
+    /**
      * Halaman EO memakai bundel CSS sendiri (resources/css/eo.css) dan TIDAK
      * memuat landing.css. Komponen <x-landing.*> memakai kelas landing, jadi
      * memakainya di sini akan menghasilkan kartu tanpa gaya. Tes ini menjaga

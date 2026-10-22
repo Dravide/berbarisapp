@@ -61,13 +61,18 @@
     <header class="eo-nav sticky top-0 z-50">
         <div class="eo-wrap">
             <div class="flex h-14 items-center justify-between gap-4 md:h-16">
+                {{-- Brand: logo ATAU nama, tidak keduanya. Logo yang diunggah
+                     sudah memuat nama, jadi menaruh teks di sebelahnya membuat
+                     nama terbaca dua kali. Kalau belum ada logo, nama teks yang
+                     berdiri sendiri — bukan kotak kosong sebagai pengganti,
+                     karena kotak gelap tanpa isi terbaca sebagai gambar rusak.
+                     Pola ini sama dengan header laman platform. --}}
                 <a href="{{ route('eo.beranda') }}" class="flex items-center gap-2.5 no-underline">
                     @if(($logoPath ?? null) && is_string($logoPath))
                         <img src="{{ $logoPath }}" alt="{{ $eoNama }}" class="h-7 w-auto" style="object-fit: contain;">
                     @else
-                        <span class="flex h-6 w-6 items-center justify-center rounded-md" style="background: var(--color-ink);"></span>
+                        <span class="text-[13px] font-bold tracking-tight" style="color: var(--color-ink);">{{ $eoNama }}</span>
                     @endif
-                    <span class="text-[13px] font-bold tracking-tight" style="color: var(--color-ink);">{{ $eoNama }}</span>
                     <span class="eo-chip hidden sm:inline-flex">EO</span>
                 </a>
 
