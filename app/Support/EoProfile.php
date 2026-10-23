@@ -3,7 +3,7 @@
 namespace App\Support;
 
 /**
- * Isi halaman subdomain EO — profil, lingkup kerja, alur, peran tim, tingkat
+ * Isi halaman subdomain EO: profil, lingkup kerja, alur, peran tim, tingkat
  * sponsor, dan daftar isian formulir pengajuan.
  *
  * Kenapa kelas sendiri, bukan Setting dan bukan `ProductFeatures`:
@@ -16,11 +16,11 @@ namespace App\Support;
  *    tiap kelompok layanan, dan tiap langkah alur benar-benar dirender. Karena
  *    itu ia kode, bukan suntingan admin yang bisa kosong tanpa ada yang gagal.
  *
- * Aturan isi — sama seperti katalog fitur: **tidak ada janji aspirasional**.
+ * Aturan isi, sama seperti katalog fitur: **tidak ada janji aspirasional**.
  * Butir layanan yang menyebut sistem (pendaftaran, drawing, penilaian tablet,
  * papan skor, rekap) harus benar-benar ada di aplikasinya. Butir yang belum
  * diputuskan (angka paket sponsor, perkiraan waktu alur) TIDAK ditulis di sini
- * sebagai angka — kelas ini hanya menyediakan tempatnya, dan halaman
+ * sebagai angka: kelas ini hanya menyediakan tempatnya, dan halaman
  * menampilkannya sebagai "menunggu kesepakatan" alih-alih angka karangan.
  *
  * Nama tim sengaja tidak ada di sini: halaman /tim menampilkan peran dan
@@ -29,7 +29,7 @@ namespace App\Support;
 class EoProfile
 {
     /**
-     * Identitas EO. `nama` kosong berarti halaman memakai nama platform —
+     * Identitas EO. `nama` kosong berarti halaman memakai nama platform,
      * bukan nama contoh. Ganti lewat setelan `eo_nama` setelah timnya punya
      * nama resmi.
      */
@@ -60,7 +60,7 @@ class EoProfile
     }
 
     /**
-     * Lingkup kerja, urut pekerjaan panitia — bukan urutan kepintaran tim.
+     * Lingkup kerja, urut pekerjaan panitia, bukan urutan kepintaran tim.
      * Huruf A–E dipakai sebagai rujukan di halaman lain ("lingkup B").
      *
      * @return array<int, array{kode: string, judul: string, ringkas: string, butir: array<int, array{nama: string, ket: string}>}>
@@ -82,7 +82,7 @@ class EoProfile
             [
                 'kode' => 'B',
                 'judul' => 'Sistem Lomba',
-                'ringkas' => 'Bagian yang berjalan di BARIS APP — bukan berkas terpisah.',
+                'ringkas' => 'Bagian yang berjalan di BARIS APP, bukan berkas terpisah.',
                 'butir' => [
                     ['nama' => 'Halaman pendaftaran & verifikasi berkas', 'ket' => 'peserta mendaftar sendiri'],
                     ['nama' => 'Drawing / undian urutan tampil', 'ket' => 'di panggung atau layar'],
@@ -147,7 +147,7 @@ class EoProfile
      *
      * `nama` sengaja kosong untuk semua peran: kartu yang belum ada namanya
      * tetap dirender dengan penanda "menyusul", bukan disembunyikan. Nama
-     * diisi lewat setelan `eo_team` (JSON `{peran: nama}`) — pemetaannya
+     * diisi lewat setelan `eo_team` (JSON `{peran: nama}`). Pemetaannya
      * dilakukan `Livewire\Public\Eo\Team`, bukan di sini, supaya katalog ini
      * tetap satu sumber untuk peran dan tugasnya.
      *
@@ -198,13 +198,20 @@ class EoProfile
     }
 
     /**
-     * Tingkat sponsorship. `sorot` menandai satu kartu yang diangkat.
+     * Tingkat sponsorship, bertingkat KUMULATIF: tiap tingkat memuat semua
+     * yang ada di tingkat sebelumnya, ditambah sesuatu.
+     *
+     * Tidak ada kartu yang disorot. Bentuk "tiga tingkat, yang tengah
+     * diangkat" adalah pola bawaan yang dipakai harga berlangganan, dan di
+     * sini tidak ada alasannya: ketiganya bertingkat, jadi tidak ada satu
+     * tingkat yang "paling benar". Yang perlu dilihat sponsor adalah APA YANG
+     * BERTAMBAH di tiap langkah, dan itu ditulis di `tambah`.
      *
      * `nilai` sengaja null: angka kerja sama ditentukan per acara bersama
-     * sponsor. Halaman menampilkan "menunggu kesepakatan" — bukan angka
+     * sponsor. Halaman menampilkan "Nilai ditentukan per acara", bukan angka
      * karangan yang harus ditarik lagi setelah rapat pertama.
      *
-     * @return array<int, array{nama: string, ringkas: string, butir: array<int, string>, sorot: bool}>
+     * @return array<int, array{nama: string, ringkas: string, tambah: string, butir: array<int, string>}>
      */
     public static function sponsor(): array
     {
@@ -212,27 +219,32 @@ class EoProfile
             [
                 'nama' => 'Pendukung',
                 'ringkas' => 'Untuk instansi atau usaha yang ingin ikut meramaikan.',
+                'tambah' => 'Titik masuk. Belum ada syarat sebelumnya.',
                 'butir' => ['Logo di poster & backdrop', 'Sebutan terima kasih di penutupan', 'Sertifikat kerja sama'],
-                'sorot' => false,
             ],
             [
                 'nama' => 'Utama',
-                'ringkas' => 'Tingkat yang paling sering dipilih instansi dan merek daerah.',
+                'ringkas' => 'Untuk yang ingin terlihat sepanjang acara, bukan hanya di poster.',
+                'tambah' => 'Menambahkan tempat dan suara di lokasi.',
                 'butir' => ['Semua di tingkat Pendukung', 'Logo di backdrop utama & papan skor', 'Stan / tenant di lokasi', 'Konten media sosial bersama'],
-                'sorot' => true,
             ],
             [
                 'nama' => 'Utama & Penamaan',
                 'ringkas' => 'Nama sponsor melekat pada acaranya.',
+                'tambah' => 'Menambahkan nama pada acara itu sendiri.',
                 'butir' => ['Semua di tingkat Utama', 'Nama sponsor pada judul acara', 'Sebutan di MC sepanjang acara', 'Laporan tayangan & jumlah peserta'],
-                'sorot' => false,
             ],
         ];
     }
 
     /**
-     * Yang didapat mitra di semua tingkat — termasuk dua hal yang dikelola
-     * sistemnya langsung (peta tenant, pendaftaran tenant online).
+     * Yang didapat mitra di semua tingkat. Satu daftar, satu sumber: dua butir
+     * pertama adalah hal yang dikelola sistemnya langsung (peta tenant,
+     * pendaftaran tenant online), empat sisanya berlaku di tiap tingkat.
+     *
+     * Keenamnya sengaja TIDAK dipisah jadi dua daftar: kotak "berlaku di
+     * semua tingkat" yang isinya bercampur dari dua sumber membuat isinya bisa
+     * berbeda tanpa ada yang menyadari.
      *
      * @return array<int, array{nama: string, ket: string}>
      */
@@ -241,6 +253,10 @@ class EoProfile
         return [
             ['nama' => 'Peta tenant venue', 'ket' => 'posisi petak & listrik'],
             ['nama' => 'Pendaftaran tenant online', 'ket' => 'tanpa daftar lewat pesan'],
+            ['nama' => 'Logo di backdrop & poster', 'ket' => 'cetak dan digital'],
+            ['nama' => 'Sebutan di MC & papan skor', 'ket' => 'sepanjang acara'],
+            ['nama' => 'Laporan jumlah tayangan & peserta', 'ket' => 'angka nyata dari sistem'],
+            ['nama' => 'Sertifikat kerja sama', 'ket' => 'siap diserahkan ke atasan'],
         ];
     }
 
@@ -266,7 +282,7 @@ class EoProfile
     }
 
     /**
-     * Pilihan pekerjaan yang bisa dicentang di formulir — diambil dari kode
+     * Pilihan pekerjaan yang bisa dicentang di formulir, diambil dari kode
      * kelompok layanan supaya daftarnya tidak pernah berselisih dengan
      * halaman /layanan.
      *

@@ -1,5 +1,5 @@
 <div>
-    {{-- /alur — tujuh langkah. Wireframe halaman 3.
+    {{-- /alur: tujuh langkah. Wireframe halaman 3.
          Nomornya memang urutan, jadi penomoran di sini bermakna.
          Perkiraan waktu datang dari setelan `eo_alur_waktu`; kalau belum diisi,
          halaman mengatakannya apa adanya alih-alih mengarang angka. --}}
@@ -33,16 +33,21 @@
             </div>
 
             {{-- Tiga penanda waktu. Nilainya dari setelan; kosong berarti
-                 "menunggu kesepakatan", bukan angka contoh. --}}
+                 "menunggu kesepakatan", bukan angka contoh.
+                 Disusun satu baris bersekat, bukan tiga kotak sejajar: ini tiga
+                 titik pada satu garis waktu yang sama, dan sekat tipis
+                 menampakkan urutannya sementara kotak memutusnya. Sekatnya
+                 hanya di layar lebar, karena di ponsel ketiganya menumpuk. --}}
             <div class="eo-box eo-box-gold mx-auto mt-8 max-w-[760px]">
                 <span class="eo-box-k">Perkiraan waktu</span>
-                <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div class="flex flex-col gap-3 sm:flex-row sm:gap-0">
                     @foreach([
                         ['kunci' => 'pengajuan', 'label' => 'Balasan pengajuan'],
                         ['kunci' => 'kunci_produksi', 'label' => 'Kunci produksi'],
                         ['kunci' => 'pelaksanaan', 'label' => 'Pelaksanaan'],
-                    ] as $p)
-                        <div>
+                    ] as $i => $p)
+                        <div class="sm:flex-1 sm:px-5 sm:first:pl-0 sm:last:pr-0 {{ $i > 0 ? 'sm:border-l' : '' }}"
+                             style="border-color: var(--color-gold);">
                             <p class="eo-mono" style="font-size: 11px;">{{ $p['label'] }}</p>
                             @if(!empty($waktu[$p['kunci']]))
                                 <p class="text-[13.5px] font-semibold" style="color: var(--color-ink);">{{ $waktu[$p['kunci']] }}</p>

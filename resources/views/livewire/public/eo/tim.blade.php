@@ -1,9 +1,9 @@
 <div>
-    {{-- /tim — enam belas peran dalam empat kelompok. Wireframe halaman 5.
+    {{-- /tim: enam belas peran dalam empat kelompok. Wireframe halaman 5.
          Kartu TANPA nama tetap dirender, dengan slot "menyusul". Ini disengaja:
          peran adalah bagian dari penawaran, dan menunggu semua nama terisi
          berarti halaman ini kosong sampai entah kapan.
-         Jangan diubah memfilter `nama !== null` — itu membuat seluruh section
+         Jangan diubah memfilter `nama !== null`; itu membuat seluruh section
          hilang dan janji "ada timnya" ikut hilang. --}}
 
     <section class="eo-section-tight">
@@ -57,7 +57,7 @@
                 <div class="eo-box eo-box-warn">
                     <span class="eo-box-k">Nama, foto, dan kontak belum lengkap</span>
                     <p class="eo-small eo-muted">
-                        Susunan tim sedang difinalkan — {{ $jumlahTerisi }} dari {{ $jumlahPeran }} peran sudah terisi nama.
+                        Susunan tim sedang difinalkan. {{ $jumlahTerisi }} dari {{ $jumlahPeran }} peran sudah terisi nama.
                         Peran dan tugasnya sudah berlaku; yang menyusul hanya namanya.
                     </p>
                 </div>
@@ -73,23 +73,35 @@
                 <span class="eo-eyebrow">Cara Kami Bekerja</span>
                 <h2 class="eo-h2">Tiga hal yang kami pegang</h2>
             </div>
-            <div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                @foreach([
-                    ['Satu pintu keputusan', 'Panitia bicara dengan Direktur Event, bukan dengan sepuluh orang berbeda.'],
-                    ['Perubahan tercatat', 'Perubahan jadwal dan jumlah kategori masuk berita acara, bukan lewat pesan yang hilang.'],
-                    ['Angka dari sistem', 'Jumlah peserta dan hasil juara diambil dari aplikasinya, bukan dihitung ulang di kertas.'],
-                ] as [$judul, $ket])
-                    <div class="eo-card eo-card-flat">
-                        <h3 class="eo-h3">{{ $judul }}</h3>
-                        <p class="eo-small eo-muted">{{ $ket }}</p>
-                    </div>
-                @endforeach
+            {{-- Bukan tiga kartu kembar. Yang pertama adalah jawaban langsung
+                 atas judul halaman (satu pintu keputusan), dua sisanya sifat
+                 cara kerja. Bobotnya beda, jadi bentuknya juga beda: yang
+                 pertama selebar kolom, dua sisanya baris bersekat. --}}
+            <div class="mt-5 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)]">
+                <div class="eo-card">
+                    <h3 class="eo-h2">Satu pintu keputusan</h3>
+                    <p class="eo-small eo-muted">
+                        Panitia bicara dengan Direktur Event, bukan dengan sepuluh orang berbeda.
+                        Satu nama yang menjawab, satu nama yang menanggung keputusannya.
+                    </p>
+                </div>
+                <dl class="flex flex-col justify-center gap-3">
+                    @foreach([
+                        ['Perubahan tercatat', 'Perubahan jadwal dan jumlah kategori masuk berita acara, bukan lewat pesan yang hilang.'],
+                        ['Angka dari sistem', 'Jumlah peserta dan hasil juara diambil dari aplikasinya, bukan dihitung ulang di kertas.'],
+                    ] as [$judul, $ket])
+                        <div>
+                            <dt class="text-[13.5px] font-semibold" style="color: var(--color-ink);">{{ $judul }}</dt>
+                            <dd class="eo-small eo-muted">{{ $ket }}</dd>
+                        </div>
+                    @endforeach
+                </dl>
             </div>
 
             <div class="eo-card eo-card-hi mt-6 flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
                 <div class="max-w-[560px]">
                     <h2 class="eo-h3">Ingin tim ini menangani lomba Anda?</h2>
-                    <p class="eo-small eo-muted mt-1">Sebutkan jenis lomba dan perkiraan tanggalnya — kami susun komposisi tim yang dibutuhkan.</p>
+                    <p class="eo-small eo-muted mt-1">Sebutkan jenis lomba dan perkiraan tanggalnya. Kami susun komposisi tim yang dibutuhkan.</p>
                 </div>
                 <a href="{{ route('eo.ajukan') }}" class="eo-btn eo-btn-primary shrink-0">Ajukan Event</a>
             </div>

@@ -9,7 +9,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * /tim — enam belas peran dalam empat kelompok, dengan nama menyusul.
+ * /tim: enam belas peran dalam empat kelompok, dengan nama menyusul.
  *
  * Peran dan tugasnya datang dari `EoProfile::tim()`; namanya dari setelan
  * `eo_team` (JSON `{"Direktur Event": "Nama", ...}`). Dua sumber terpisah itu
@@ -19,7 +19,7 @@ use Livewire\Component;
  * Kartu TANPA nama tetap dirender, dengan penanda "menyusul". Ini berbeda dari
  * komponen tim di laman utama (`components/landing/team.blade.php`) yang
  * memfilter `!empty($item['name'])` sehingga section-nya hilang total kalau
- * nama kosong — di sini justru peran yang kosong yang tidak masuk akal, bukan
+ * nama kosong, di sini justru peran yang kosong yang tidak masuk akal, bukan
  * nama. Karena itu halaman ini punya view sendiri, bukan memakai komponen itu.
  */
 #[Layout('layouts.eo')]
@@ -52,6 +52,6 @@ class Team extends Component
             'jumlahTerisi' => $terisi,
         ]))
             ->layoutData($this->dataEo())
-            ->title('Tim — ' . self::namaEo());
+            ->title('Tim | ' . self::namaEo());
     }
 }

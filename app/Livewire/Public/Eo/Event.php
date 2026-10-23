@@ -9,7 +9,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * /event — dua niat dalam satu halaman: yang ingin ikut lomba, dan yang ingin
+ * /event: dua niat dalam satu halaman, yang ingin ikut lomba, dan yang ingin
  * menyewa penyelenggara. Keduanya sama-sama mencari bukti bahwa ini bukan
  * pertama kali.
  *
@@ -49,6 +49,6 @@ class Event extends Component
             'jenisLomba' => EoProfile::jenisLomba(),
         ]))
             ->layoutData($this->dataEo())
-            ->title('Event & Portofolio — ' . self::namaEo());
+            ->title('Event & Portofolio | ' . self::namaEo());
     }
 }

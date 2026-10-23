@@ -8,7 +8,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * /layanan — lima kelompok kerja, dari identitas visual sampai laporan.
+ * /layanan: lima kelompok kerja, dari identitas visual sampai laporan.
  *
  * Halaman ini menjawab "kalau saya serahkan semuanya, Anda urus apa saja?".
  * Tiap kelompok bisa dipesan terpisah: banyak sekolah sudah punya panitia
@@ -30,6 +30,6 @@ class Layanan extends Component
             'layanan' => EoProfile::layanan(),
         ]))
             ->layoutData($this->dataEo())
-            ->title('Lingkup Kerja — ' . self::namaEo());
+            ->title('Lingkup Kerja | ' . self::namaEo());
     }
 }

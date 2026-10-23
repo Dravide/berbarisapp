@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {{-- `$title` sudah berisi nama halaman + nama EO (dipasang ->title() di
-         komponen). Jangan menambahkan $eoNama lagi di sini — hasilnya
-         "Lingkup Kerja — Berbaris App — Berbaris App". --}}
-    <title>{{ $title ?? ('Event Organizer — ' . ($eoNama ?? get_setting('site_title', 'Berbaris App'))) }}</title>
+         komponen). Jangan menambahkan $eoNama lagi di sini: hasilnya jadi
+         "Lingkup Kerja - Berbaris App - Berbaris App". --}}
+    <title>{{ $title ?? ('Event Organizer ' . ($eoNama ?? get_setting('site_title', 'Berbaris App'))) }}</title>
     <meta name="description" content="{{ $deskripsi ?? 'Penyelenggara lomba baris-berbaris: dari poster dan pendaftaran, penilaian juri di lapangan, sampai rekap juara dan laporan ke sponsor.' }}">
     <link rel="canonical" href="{{ url()->current() }}">
 
@@ -20,7 +20,7 @@
 
     {{-- Bahasa visual halaman ini mengikuti doc/eo-wireframe.html: IBM Plex,
          garis rambut 1px, label monospace, permukaan kertas. Sengaja TIDAK
-         memuat landing.css — kelas landing (surface-card, chip, btn-primary)
+         memuat landing.css: kelas landing (surface-card, chip, btn-primary)
          tidak ada di sini, dan memakainya akan menghasilkan elemen tanpa gaya.
          Palet tetap diturunkan dari setelan situs supaya dua subdomain terbaca
          satu keluarga; yang berbeda adalah cara menyusunnya. --}}
@@ -28,9 +28,14 @@
         $accentColor = get_setting('site_primary_color', '#0062ff');
     @endphp
 
+    {{-- Warna merek diserahkan sebagai `--eo-accent`, bukan sebagai
+         `--color-accent`. `eo.css` satu-satunya penulis `--color-accent`, dan
+         ia memakai nilai ini lewat `var(--eo-accent, …)`. Dua penulis untuk
+         satu token membuat nilai yang menang ditentukan urutan CSS, bukan
+         niat; satu penulis membuatnya ditentukan niat. --}}
     <style>
         :root {
-            --color-accent: {{ $accentColor }};
+            --eo-accent: {{ $accentColor }};
         }
     </style>
 
@@ -64,7 +69,7 @@
                 {{-- Brand: logo ATAU nama, tidak keduanya. Logo yang diunggah
                      sudah memuat nama, jadi menaruh teks di sebelahnya membuat
                      nama terbaca dua kali. Kalau belum ada logo, nama teks yang
-                     berdiri sendiri — bukan kotak kosong sebagai pengganti,
+                     berdiri sendiri, bukan kotak kosong sebagai pengganti,
                      karena kotak gelap tanpa isi terbaca sebagai gambar rusak.
                      Pola ini sama dengan header laman platform. --}}
                 <a href="{{ route('eo.beranda') }}" class="flex items-center gap-2.5 no-underline">
@@ -91,10 +96,14 @@
                     <a href="{{ route('eo.ajukan') }}" class="eo-btn eo-btn-primary">Ajukan Event</a>
                 </div>
 
+                {{-- 44px: ini satu-satunya kendali navigasi di lebar ponsel, jadi
+                     ia harus bisa ditekan dengan ibu jari tanpa membidik.
+                     Tinggi minimum, bukan padding, karena padding 7px pada teks
+                     14px hanya menghasilkan sekitar 34px. --}}
                 <button type="button" id="eo-menu-toggle"
                         class="eo-btn eo-btn-ghost lg:hidden"
                         aria-label="Buka menu" aria-expanded="false" aria-controls="eo-mobile-menu"
-                        style="padding: 7px 10px;">
+                        style="min-height: 44px; padding: 0 14px;">
                     <span aria-hidden="true">Menu</span>
                 </button>
             </div>
@@ -103,7 +112,9 @@
         <div id="eo-mobile-menu" class="hidden border-t lg:hidden" style="border-color: var(--color-line); background: var(--color-paper);">
             <nav class="eo-wrap flex flex-col gap-1 py-3" aria-label="Halaman EO (ponsel)">
                 @foreach($menuEo as $item)
-                    <a href="{{ route($item['route']) }}" class="eo-nav-link py-2.5" @if(request()->routeIs($item['route'])) aria-current="page" @endif>{{ $item['label'] }}</a>
+                    {{-- 44px: tautan ini hanya muncul di ponsel, tempat ia
+                         ditekan ibu jari. --}}
+                    <a href="{{ route($item['route']) }}" class="eo-nav-link flex items-center py-2.5" style="min-height: 44px;" @if(request()->routeIs($item['route'])) aria-current="page" @endif>{{ $item['label'] }}</a>
                 @endforeach
                 <div class="mt-2 flex flex-col gap-2 border-t pt-3" style="border-color: var(--color-line);">
                     <a href="{{ route('eo.ajukan') }}" class="eo-btn eo-btn-primary w-full">Ajukan Event</a>
@@ -184,12 +195,12 @@
         // Pembaca event 'toast' dari trait MelaporKePengguna. Formulir /ajukan
         // memakainya untuk mengabarkan pengajuan terkirim; tanpa blok ini
         // pesannya hilang tanpa jejak dan pengunjung hanya melihat formulir
-        // yang mendadak kosong — terbaca sebagai isian yang gagal terkirim.
+        // yang mendadak kosong, terbaca sebagai isian yang gagal terkirim.
         window.beToast = function (message, icon) {
             var tipe = icon || 'success';
 
             // Swal datang dari CDN. Kalau gagal dimuat, satu baris teks di tepi
-            // atas tetap memberi tahu hasilnya — lebih baik daripada diam.
+            // atas tetap memberi tahu hasilnya, lebih baik daripada diam.
             if (!window.Swal) {
                 var el = document.getElementById('be-toast-fallback');
                 if (!el) {

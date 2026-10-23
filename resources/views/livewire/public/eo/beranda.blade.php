@@ -10,7 +10,7 @@
                 <span class="eo-eyebrow">Event Organizer Lomba Baris-Berbaris</span>
                 <h1 class="eo-h1">Kami menyelenggarakan lombanya, dari poster sampai rekap juara.</h1>
                 <p class="eo-lede">
-                    Desain, pendaftaran, penilaian juri di lapangan, papan skor, dokumentasi, dan laporan setelah acara — dikerjakan satu tim, di satu sistem.
+                    Desain, pendaftaran, penilaian juri di lapangan, papan skor, dokumentasi, dan laporan setelah acara. Semuanya dikerjakan satu tim, di satu sistem.
                 </p>
 
                 <div class="mt-7 flex flex-col gap-2.5 sm:flex-row">
@@ -59,13 +59,13 @@
 
             <p class="mt-6">
                 <a href="{{ route('eo.layanan') }}" class="text-[13.5px] font-semibold no-underline hover:underline">
-                    Lihat semua {{ $totalLayanan }} kelompok kerja &rarr;
+                    Lihat semua {{ $totalLayanan }} kelompok kerja
                 </a>
             </p>
         </div>
     </section>
 
-    {{-- Event terdekat — hanya kalau ada. Kalau kosong, seluruh section hilang
+    {{-- Event terdekat, hanya kalau ada. Kalau kosong, seluruh section hilang
          (bukan diisi kartu contoh). --}}
     @if($eventner->isNotEmpty())
         <hr class="eo-rule">
@@ -76,7 +76,7 @@
                         <span class="eo-eyebrow">Event Terdekat</span>
                         <h2 class="eo-h2">Yang sedang dibuka</h2>
                     </div>
-                    <a href="{{ route('eo.event') }}" class="text-[13.5px] font-semibold no-underline hover:underline">Semua event &rarr;</a>
+                    <a href="{{ route('eo.event') }}" class="text-[13.5px] font-semibold no-underline hover:underline">Semua event</a>
                 </div>
 
                 <div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

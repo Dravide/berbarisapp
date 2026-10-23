@@ -8,10 +8,10 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * /sponsor — tiga tingkat kerja sama, dan apa yang didapat pihak yang membiayai.
+ * /sponsor: tiga tingkat kerja sama, dan apa yang didapat pihak yang membiayai.
  *
  * Halaman untuk pembaca yang tidak punya anak lomba dan tidak menyewa jasa:
- * dinas, bank daerah, toko seragam, merek minuman. Yang mereka cari cuma satu —
+ * dinas, bank daerah, toko seragam, merek minuman. Yang mereka cari cuma satu:
  * daftar yang mereka dapat.
  *
  * Angka paket sengaja tidak ada. Nilai kerja sama ditentukan per acara bersama
@@ -30,6 +30,6 @@ class Sponsor extends Component
             'mitra' => EoProfile::mitra(),
         ]))
             ->layoutData($this->dataEo())
-            ->title('Sponsor & Mitra — ' . self::namaEo());
+            ->title('Sponsor & Mitra | ' . self::namaEo());
     }
 }

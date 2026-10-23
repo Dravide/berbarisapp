@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 /**
  * Data yang dipakai SETIAP halaman subdomain EO: logo, favicon, dan nama EO.
  *
- * Ditaruh di satu tempat karena ketujuhnya harus sama — logo yang muncul di
+ * Ditaruh di satu tempat karena ketujuhnya harus sama: logo yang muncul di
  * beranda tapi hilang di /sponsor terbaca sebagai halaman lain. Sama seperti
  * FeaturesPage, tiap komponen memanggil `layoutEo()` saat merender.
  *

@@ -6,33 +6,38 @@
 @source '../**/*.js';
 
 /* =========================================================================
-   EO — gaya khusus subdomain eo.berbaris.local
+   EO: gaya khusus subdomain eo.berbaris.local
    =========================================================================
 
    Kenapa berkas terpisah, bukan menumpang landing.css:
 
-   Halaman EO menjual JASA, dan pembacanya sedang menimbang di ruang rapat —
+   Halaman EO menjual JASA, dan pembacanya sedang menimbang di ruang rapat,
    bukan berbelanja. Gaya laman utama (kartu bersudut 24px, bayangan lembut,
    chip neon, tombol lime) membuat halaman ini terbaca sebagai halaman produk
    lain dari aplikasi yang sama. Yang dipakai di sini adalah bahasa visual
    dokumen: permukaan kertas, garis rambut 1px, label monospace, dan tipografi
    IBM Plex. Sumbernya doc/eo-wireframe.html.
 
-   Warnanya sengaja TIDAK baru — accent tetap biru merek dan lime tetap dipakai
-   sebagai penanda status. Dua subdomain harus terbaca satu keluarga; yang
-   berbeda adalah cara menyusunnya, bukan paletnya.
+   Warnanya sengaja TIDAK baru: accent tetap biru merek, dan penanda status
+   memakai emas dan jingga yang sudah ada di berkas cetak aplikasi. Dua
+   subdomain harus terbaca satu keluarga; yang berbeda adalah cara menyusunnya,
+   bukan paletnya.
+
+   Design Read: halaman dokumen penawaran jasa, dibaca berurutan di ruang rapat
+   oleh orang yang sedang menimbang, bukan dipindai seperti laman produk.
+   Dial: ENERGY 1 (Calm), RHYTHM 2 (Balanced), MOTION 1 (Calm).
 
    Konsekuensi yang perlu diingat saat menyunting: kelas landing (container-
    landing, surface-card, chip, btn-primary, section-pad) TIDAK ada di bundel
    ini. Halaman EO memakai kelas berawalan `eo-` di bawah. Jangan memakai
-   <x-landing.*> di halaman EO — komponen itu memakai kelas yang tidak dimuat.
+   <x-landing.*> di halaman EO: komponen itu memakai kelas yang tidak dimuat.
    ========================================================================= */
 
 @theme {
     --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-    /* Permukaan — bertingkat dua saja (kertas & panel), bukan lima seperti
+    /* Permukaan: bertingkat dua saja (kertas & panel), bukan lima seperti
        laman utama. Dokumen tidak butuh elevasi. */
     --color-paper: #f3f4f7;
     --color-panel: #ffffff;
@@ -43,11 +48,31 @@
     --color-line: #d7dbe2;
     --color-line-soft: #e6e9ee;
 
-    --color-accent: #0062ff;
+    /* Dua langkah accent, bukan satu: `--color-accent` adalah warna merek yang
+       dipakai sebagai LATAR (tombol primary: putih di atasnya 5.01:1), dan
+       `--color-accent-ink` adalah versi lebih gelap untuk TEKS di atas latar
+       accent-soft. Satu nilai tidak bisa melakukan keduanya: biru merek hanya
+       mencapai 4.38:1 di atas accent-soft, di bawah ambang 4.5:1 teks normal.
+
+       `--color-accent` di sini SATU-SATUNYA penulisnya. Nilai dari setelan
+       situs masuk lewat `--eo-accent` (dipasang tata letak), jadi warna admin
+       tetap menang tanpa bergantung pada urutan lapisan CSS: penggantian
+       variabel terjadi saat nilai dihitung, bukan saat berkas diurutkan.
+       Jangan menulis `--color-accent` lagi di tempat lain.
+
+       accent-ink sengaja angka mati, bukan `color-mix` dari accent: nilainya
+       sudah diukur, dan ia tidak boleh ikut menjadi lebih terang kalau admin
+       memilih warna merek yang lebih terang. Batas kontras bukan soal selera
+       merek. */
+    --color-accent: var(--eo-accent, #0062ff);
+    --color-accent-ink: #0050d1;
     --color-accent-soft: #e8f0ff;
-    --color-lime: #a3e635;
-    --color-lime-ink: #2c4703;
-    --color-gold: #b8860b;
+
+    /* Emas versi gelap. Nilai lama #b8860b hanya 2.96:1 di atas kertas dan
+       3.02:1 di atas gold-soft, gagal di keduanya, padahal ia dipakai untuk
+       teks 11.5px. Nilai ini 5.61:1 di kertas, 5.72:1 di gold-soft, 6.17:1 di
+       putih, jadi satu token aman di ketiga permukaan. */
+    --color-gold: #7d5c06;
     --color-gold-soft: #fdf6e3;
     --color-warn: #c2410c;
     --color-warn-soft: #fff1e8;
@@ -106,7 +131,7 @@
         padding-block: clamp(28px, 4vw, 44px);
     }
 
-    /* Garis pemisah tipis — pengganti bayangan sebagai penanda bagian. */
+    /* Garis pemisah tipis, pengganti bayangan sebagai penanda bagian. */
     .eo-rule {
         border: 0;
         border-top: 1px solid var(--color-line);
@@ -169,10 +194,13 @@
         white-space: nowrap;
     }
 
+    /* Teks chip memakai accent-ink, bukan accent: latarnya accent-soft, dan
+       biru merek hanya 4.38:1 di atasnya, gagal ambang 4.5:1 teks normal pada
+       ukuran 11.5px. accent-ink 5.98:1 di latar yang sama. */
     .eo-chip-acc {
         border-color: var(--color-accent);
         background: var(--color-accent-soft);
-        color: var(--color-accent);
+        color: var(--color-accent-ink);
     }
 
     .eo-chip-gold {
@@ -181,16 +209,21 @@
         color: var(--color-gold);
     }
 
-    .eo-chip-lime {
-        border-color: var(--color-lime);
-        background: var(--color-lime);
-        color: var(--color-lime-ink);
+    /* Chip yang benar-benar tombol (saringan /event) mendapat tinggi 44px.
+       Chip label cukup 5px padding karena ia hanya dibaca, bukan ditekan;
+       yang ditekan harus memenuhi R-03. Warna sengaja tidak ditulis di sini:
+       ia datang dari `.eo-chip` dan `.eo-chip-acc` supaya keadaan aktif tetap
+       terbaca. */
+    .eo-chip-aksi {
+        min-height: 44px;
+        padding-inline: 14px;
+        font-family: var(--font-sans);
+        font-size: 13px;
+        font-weight: 500;
     }
 
-    .eo-chip-warn {
-        border-color: var(--color-warn);
-        background: var(--color-warn-soft);
-        color: var(--color-warn);
+    .eo-chip-aksi:hover:not([aria-pressed='true']) {
+        border-color: var(--color-muted);
     }
 
     /* ---------------------------------------------------------------- kartu */
@@ -266,7 +299,9 @@
         border: 1px solid var(--color-accent);
         border-radius: 50%;
         background: var(--color-accent-soft);
-        color: var(--color-accent);
+        /* Sama alasannya dengan .eo-chip-acc: angka ini 11px di atas
+           accent-soft. */
+        color: var(--color-accent-ink);
         font-family: var(--font-mono);
         font-size: 11px;
     }
@@ -353,12 +388,16 @@
     }
 
     /* ---------------------------------------------------------------- tombol */
-    /* Radius 8px, bukan pill: tombol di sini benda dokumen, bukan badge. */
+    /* Radius 8px, bukan pill: tombol di sini benda dokumen, bukan badge.
+       44px tinggi minimum (R-03): padding 10px pada teks 14px hanya
+       menghasilkan sekitar 42px, dan tombol ini juga dipakai di menu ponsel
+       tempat ibu jari harus bisa menekannya tanpa membidik. */
     .eo-btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 8px;
+        min-height: 44px;
         padding: 10px 18px;
         border: 1px solid transparent;
         border-radius: 8px;

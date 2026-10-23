@@ -12,12 +12,12 @@ use Livewire\Component;
  * Beranda subdomain EO.
  *
  * Satu kalimat janji, jenis lomba yang ditangani, empat kelompok kerja, dan
- * tiga event terdekat. Empat kelompok — bukan lima — karena kelompok kelima
+ * tiga event terdekat. Empat kelompok, bukan lima, karena kelompok kelima
  * (Administrasi & Laporan) paling jarang ditanyakan di rapat pertama; ia
  * muncul utuh di /layanan.
  *
  * Event terdekat dibaca dari basis data, bukan ditulis tangan. Kalau belum ada
- * event yang akan datang, blok itu hilang seluruhnya — bukan diisi contoh.
+ * event yang akan datang, blok itu hilang seluruhnya, bukan diisi contoh.
  */
 #[Layout('layouts.eo')]
 class Beranda extends Component
@@ -36,6 +36,6 @@ class Beranda extends Component
             'eventner' => $eventner,
         ]))
             ->layoutData($this->dataEo())
-            ->title('Event Organizer Lomba Baris-Berbaris — ' . self::namaEo());
+            ->title('Event Organizer Lomba Baris-Berbaris | ' . self::namaEo());
     }
 }

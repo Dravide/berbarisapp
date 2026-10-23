@@ -8,7 +8,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * /alur — tujuh langkah, dari pengajuan sampai aftermovie.
+ * /alur: tujuh langkah, dari pengajuan sampai aftermovie.
  *
  * Nomornya memang urutan, jadi penomoran di sini layak dipakai (beda dari
  * nomor hiasan di halaman pemasaran yang tidak menandakan apa pun).
@@ -35,6 +35,6 @@ class Alur extends Component
             'waktu' => $waktu,
         ]))
             ->layoutData($this->dataEo())
-            ->title('Cara Kerja — ' . self::namaEo());
+            ->title('Cara Kerja | ' . self::namaEo());
     }
 }

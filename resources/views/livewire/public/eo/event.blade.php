@@ -1,5 +1,5 @@
 <div>
-    {{-- /event — portofolio. Wireframe halaman 4.
+    {{-- /event: portofolio. Wireframe halaman 4.
          Dibaca dari `eventners` approved, bukan ditulis tangan: setiap event di
          sini punya halaman publik sendiri (hasil, papan skor, galeri), jadi
          kartunya bisa dibuka dan diperiksa. --}}
@@ -15,7 +15,11 @@
                     </p>
                 </div>
 
-                <div class="flex flex-wrap gap-2">
+                {{-- Tiga saringan. Ditandai `aria-pressed`, bukan warna saja:
+                     warna tidak terbaca oleh pembaca layar. Indikator memuat
+                     muncul di sampingnya, bukan di dalam tombol, supaya lebar
+                     tombol tidak berubah saat ditekan. --}}
+                <div class="flex flex-wrap items-center gap-2">
                     @foreach([
                         ['kunci' => 'semua', 'label' => 'Semua'],
                         ['kunci' => 'akan-datang', 'label' => 'Sedang dibuka'],
@@ -23,11 +27,16 @@
                     ] as $tab)
                         <button type="button"
                                 wire:click="setSaring('{{ $tab['kunci'] }}')"
-                                class="eo-chip cursor-pointer {{ $saring === $tab['kunci'] ? 'eo-chip-acc' : '' }}"
+                                class="eo-chip eo-chip-aksi cursor-pointer {{ $saring === $tab['kunci'] ? 'eo-chip-acc' : '' }}"
+                                wire:loading.attr="disabled" wire:target="setSaring"
                                 aria-pressed="{{ $saring === $tab['kunci'] ? 'true' : 'false' }}">
                             {{ $tab['label'] }}
                         </button>
                     @endforeach
+
+                    <span class="eo-mono" style="font-size: 11px;" wire:loading wire:target="setSaring" role="status">
+                        Menyaring…
+                    </span>
                 </div>
             </div>
         </div>
@@ -47,7 +56,7 @@
                     <div class="eo-box mt-5">
                         <p class="eo-small eo-muted">
                             Belum ada event yang dibuka untuk pendaftaran saat ini.
-                            <a href="{{ route('eo.ajukan') }}" class="font-semibold">Ajukan event Anda</a> — jadwalnya bisa kita susun bersama.
+                            <a href="{{ route('eo.ajukan') }}" class="font-semibold">Ajukan event Anda</a>. Jadwalnya bisa kita susun bersama.
                         </p>
                     </div>
                 @else
@@ -84,7 +93,7 @@
                     </div>
 
                     {{-- Satu kartu yang menegaskan bahwa event di atas bisa
-                         diperiksa sendiri — bukan sekadar gambar. --}}
+                         diperiksa sendiri, bukan sekadar gambar. --}}
                     <div class="eo-box mt-4">
                         <span class="eo-box-k">Yang bisa dibuka dari setiap kartu</span>
                         <div class="flex flex-wrap gap-2">

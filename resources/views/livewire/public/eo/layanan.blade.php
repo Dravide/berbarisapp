@@ -1,5 +1,5 @@
 <div>
-    {{-- /layanan — lima kelompok kerja utuh. Wireframe halaman 2.
+    {{-- /layanan: lima kelompok kerja utuh. Wireframe halaman 2.
          Dua kolom: A–B di kiri (pekerjaan desain & sistem), C–E di kanan
          (lapangan, dokumentasi, administrasi). Tanpa harga: biaya jasa dihitung
          per acara, jadi yang ditulis adalah apa yang menentukan biayanya. --}}
@@ -21,7 +21,7 @@
     <section class="eo-section">
         <div class="eo-wrap">
             <div class="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
-                {{-- Kolom kiri: A & B — kelompok dengan butir terbanyak, disusun
+                {{-- Kolom kiri: A & B, kelompok dengan butir terbanyak, disusun
                      dua kolom di dalamnya supaya tingginya seimbang. --}}
                 <div class="space-y-3">
                     @foreach(array_slice($layanan, 0, 2) as $grup)
@@ -72,23 +72,28 @@
             </div>
 
             {{-- Yang menentukan biaya. Ditulis terbuka supaya pertanyaan pertama
-                 di rapat ("berapa?") bisa dijawab dengan daftar, bukan angka. --}}
+                 di rapat ("berapa?") bisa dijawab dengan daftar, bukan angka.
+                 Bentuknya daftar pasangan istilah-keterangan, bukan tiga kotak
+                 sejajar: ketiganya bagian dari satu daftar yang sama, dan
+                 memecahnya jadi tiga kartu membuatnya terbaca sebagai tiga hal
+                 yang terpisah. --}}
             <div class="eo-box mt-6">
                 <span class="eo-box-k">Yang menentukan besar biayanya</span>
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <dl>
                     @foreach([
                         ['Jumlah kategori lomba', 'Tiap kategori punya rubrik, jadwal, dan jurinya sendiri.'],
                         ['Jumlah peserta & kontingen', 'Menentukan meja daftar ulang, ID card, dan durasi arena.'],
                         ['Hari, lokasi & kebutuhan cetak', 'Acara luar kota dan backdrop besar menambah biaya produksi.'],
-                    ] as [$judul, $ket])
-                        <div>
-                            <p class="text-[13.5px] font-semibold" style="color: var(--color-ink);">{{ $judul }}</p>
-                            <p class="eo-small eo-muted">{{ $ket }}</p>
+                    ] as $i => [$judul, $ket])
+                        <div class="grid grid-cols-1 gap-1 py-3 sm:grid-cols-[minmax(0,210px)_minmax(0,1fr)] sm:gap-4"
+                             @if($i > 0) style="border-top: 1px solid var(--color-line-soft);" @endif>
+                            <dt class="text-[13.5px] font-semibold" style="color: var(--color-ink);">{{ $judul }}</dt>
+                            <dd class="eo-small eo-muted">{{ $ket }}</dd>
                         </div>
                     @endforeach
-                </div>
+                </dl>
                 <p class="eo-small eo-muted mt-4">
-                    Setelah pengajuan, kami menyusun proposal dan RAB per baris — bukan satu angka bulat yang tidak bisa diperiksa.
+                    Setelah pengajuan, kami menyusun proposal dan RAB per baris, bukan satu angka bulat yang tidak bisa diperiksa.
                 </p>
             </div>
 

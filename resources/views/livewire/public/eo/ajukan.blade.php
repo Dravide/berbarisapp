@@ -1,5 +1,5 @@
 <div>
-    {{-- /ajukan — formulir pengajuan event. Wireframe halaman 7.
+    {{-- /ajukan: formulir pengajuan event. Wireframe halaman 7.
          Empat isian wajib, sisanya boleh dikira-kira: formulir yang menuntut
          angka pasti membuat orang menutup halaman dan menelepon, dan telepon
          tidak tercatat di mana pun. --}}
@@ -10,7 +10,7 @@
                 <span class="eo-eyebrow">Pengajuan</span>
                 <h1 class="eo-h1">Ceritakan lomba yang ingin Anda selenggarakan.</h1>
                 <p class="eo-lede">
-                    Empat isian wajib. Perkiraan tanggal dan jumlah peserta boleh dikira-kira — kami balas lewat WhatsApp pada hari kerja berikutnya.
+                    Empat isian wajib. Perkiraan tanggal dan jumlah peserta boleh dikira-kira. Kami balas lewat WhatsApp pada hari kerja berikutnya.
                 </p>
             </div>
         </div>
@@ -28,7 +28,7 @@
                         <div class="eo-box mb-3" style="border-color: var(--color-accent); background: var(--color-accent-soft);" role="status">
                             <p class="text-[13.5px] font-semibold" style="color: var(--color-ink);">Pengajuan Anda sudah kami terima.</p>
                             <p class="eo-small eo-muted">
-                                Kami balas lewat WhatsApp pada hari kerja berikutnya. Kalau perlu menambah data, kirim pengajuan baru saja — keduanya kami catat.
+                                Kami balas lewat WhatsApp pada hari kerja berikutnya. Kalau perlu menambah data, kirim pengajuan baru saja. Keduanya kami catat.
                             </p>
                         </div>
                     @endif
@@ -45,7 +45,7 @@
 
                                 <div class="{{ $lebar }}">
                                     <label for="eo-{{ $nama }}" class="eo-label">
-                                        {{ $f['label'] }}@if($f['wajib'])<span aria-hidden="true" style="color: var(--color-warn);"> *</span><span class="sr-only">(wajib)</span>@else<span style="text-transform: none; letter-spacing: 0;"> — opsional</span>@endif
+                                        {{ $f['label'] }}@if($f['wajib'])<span aria-hidden="true" style="color: var(--color-warn);"> *</span><span class="sr-only">(wajib)</span>@else<span style="text-transform: none; letter-spacing: 0;">, opsional</span>@endif
                                     </label>
 
                                     @if($f['tipe'] === 'select')
@@ -86,10 +86,10 @@
                              EoProfile::pekerjaanPilihan() supaya tidak pernah
                              berselisih dengan halaman /layanan. --}}
                         <div class="border-t pt-4" style="border-color: var(--color-line-soft);">
-                            <span class="eo-label">Pekerjaan yang dibutuhkan — boleh lebih dari satu</span>
+                            <span class="eo-label">Pekerjaan yang dibutuhkan, boleh lebih dari satu</span>
                             <div class="flex flex-wrap gap-2">
                                 @foreach($pekerjaanPilihan as $pilihan)
-                                    <label class="eo-chip cursor-pointer" style="gap: 6px;">
+                                    <label class="eo-chip eo-chip-aksi cursor-pointer" style="gap: 8px;">
                                         <input type="checkbox" wire:model="pekerjaan" value="{{ $pilihan }}"
                                                class="h-3.5 w-3.5 rounded-sm" style="accent-color: var(--color-accent);">
                                         <span>{{ $pilihan }}</span>
@@ -99,7 +99,7 @@
                         </div>
 
                         <div class="border-t pt-4" style="border-color: var(--color-line-soft);">
-                            <label for="eo-catatan" class="eo-label">Catatan — opsional</label>
+                            <label for="eo-catatan" class="eo-label">Catatan, opsional</label>
                             <textarea id="eo-catatan" wire:model="catatan" rows="3"
                                       placeholder="Mis. dua hari, dua panggung, peserta dari luar kota."
                                       class="eo-field @error('catatan') eo-field-error @enderror"></textarea>
@@ -124,21 +124,28 @@
                 <div class="space-y-3">
                     <div class="eo-card">
                         <h2 class="eo-h3">Setelah dikirim</h2>
-                        <div class="space-y-3">
+                        {{-- Daftar berurut bergaris, bukan tiga bulatan bernomor.
+                             /alur sudah memakai bulatan bernomor untuk tujuh
+                             langkahnya; mengulang bentuk yang sama di sini
+                             membuat keduanya terbaca sebagai daftar yang sama,
+                             padahal yang ini ringkasan tiga peristiwa, bukan
+                             alur kerja. --}}
+                        <ol class="mt-1">
                             @foreach([
                                 ['Kami balas hari kerja berikutnya', 'lewat WhatsApp ke nomor yang Anda tulis'],
                                 ['Konsultasi singkat 15 menit', 'untuk memastikan kategori dan tanggalnya masuk'],
                                 ['Proposal & RAB dikirim', 'rincian per baris, tanpa biaya'],
                             ] as $i => [$judul, $ket])
-                                <div class="eo-step">
-                                    <span class="eo-step-n">{{ $i + 1 }}</span>
-                                    <span class="eo-step-nm">
-                                        {{ $judul }}
-                                        <span class="eo-step-ket">{{ $ket }}</span>
-                                    </span>
-                                </div>
+                                <li class="py-2.5 @if($i > 0) border-t @endif"
+                                    style="border-color: var(--color-line-soft);">
+                                    <div class="flex items-baseline gap-2.5">
+                                        <span class="eo-mono shrink-0" style="font-size: 11px;">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</span>
+                                        <span class="text-[13.5px] font-semibold" style="color: var(--color-ink);">{{ $judul }}</span>
+                                    </div>
+                                    <p class="eo-small eo-muted mt-0.5" style="padding-left: 1.55rem;">{{ $ket }}</p>
+                                </li>
                             @endforeach
-                        </div>
+                        </ol>
                     </div>
 
                     <div class="eo-box">

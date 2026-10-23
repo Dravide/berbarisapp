@@ -6,12 +6,12 @@ use App\Models\Eventner;
 use Illuminate\Support\Collection;
 
 /**
- * Query event untuk halaman EO — beranda (tiga terdekat) dan /event (portofolio).
+ * Query event untuk halaman EO: beranda (tiga terdekat) dan /event (portofolio).
  *
  * Sumbernya `eventners` berstatus approved, sama seperti section event di laman
  * utama dan `/eventner`. Yang membedakan: di sini event dipisah menjadi
  * "akan datang" dan "sudah terlaksana", karena halaman /event memakainya
- * sebagai dua hal yang berbeda — yang pertama ditawarkan ke peserta, yang
+ * sebagai dua hal yang berbeda: yang pertama ditawarkan ke peserta, yang
  * kedua ditawarkan sebagai bukti rekam jejak.
  *
  * Batas "terlaksana" mengikuti `eventner-card.blade.php`: `tanggal_akhir`
@@ -40,7 +40,7 @@ trait MengambilEventEo
     }
 
     /**
-     * Event yang sudah lewat, terbaru lebih dulu — bahan portofolio.
+     * Event yang sudah lewat, terbaru lebih dulu, bahan portofolio.
      *
      * @return Collection<int, Eventner>
      */

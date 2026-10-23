@@ -11,11 +11,11 @@ use Livewire\Attributes\Layout;
 use Livewire\Component;
 
 /**
- * /ajukan — formulir pengajuan event, plus apa yang terjadi sesudahnya.
+ * /ajukan: formulir pengajuan event, plus apa yang terjadi sesudahnya.
  *
  * Isiannya delapan, dan yang wajib hanya empat: instansi, penanggung jawab,
  * nomor WhatsApp, jenis lomba. Perkiraan tanggal dan jumlah peserta boleh
- * dikira-kira — formulir yang menuntut angka pasti membuat orang menutup
+ * dikira-kira; formulir yang menuntut angka pasti membuat orang menutup
  * halaman dan menelepon, dan telepon tidak tercatat di mana pun.
  *
  * Pengajuannya disimpan ke `eo_inquiries`, bukan hanya dikirim sebagai pesan:
@@ -75,7 +75,7 @@ class Ajukan extends Component
         return [
             'instansi.required' => 'Nama instansi atau sekolah wajib diisi.',
             'penanggung_jawab.required' => 'Nama penanggung jawab wajib diisi.',
-            'whatsapp.required' => 'Nomor WhatsApp wajib diisi — balasan kami lewat sana.',
+            'whatsapp.required' => 'Nomor WhatsApp wajib diisi, karena balasan kami lewat sana.',
             'whatsapp.regex' => 'Tulis nomor WhatsApp Indonesia, mis. 0812xxxxxxx atau +62812xxxxxxx.',
             'email.email' => 'Alamat surel tidak dikenali.',
             'jumlah_peserta.integer' => 'Perkiraan jumlah peserta ditulis angka saja.',
@@ -94,7 +94,7 @@ class Ajukan extends Component
 
         // Kolom opsional yang dikosongkan harus jadi NULL, bukan ''. Kolom
         // `tanggal` ber-cast date: string kosong tersimpan sebagai '' lalu
-        // dibaca balik sebagai tanggal hari ini — pengajuan tanpa tanggal
+        // dibaca balik sebagai tanggal hari ini: pengajuan tanpa tanggal
         // mendadak punya tanggal, dan itu salah di daftar admin.
         foreach (['email', 'tanggal', 'lokasi', 'jumlah_peserta', 'catatan'] as $kolom) {
             if (($data[$kolom] ?? null) === '' || $data[$kolom] === null) {
@@ -127,6 +127,6 @@ class Ajukan extends Component
             'waUrl' => wa_me_url($kontak['phone'] ?? null),
         ]))
             ->layoutData($this->dataEo())
-            ->title('Ajukan Event — ' . self::namaEo());
+            ->title('Ajukan Event | ' . self::namaEo());
     }
 }

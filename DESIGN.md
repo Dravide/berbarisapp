@@ -114,6 +114,24 @@ spacing:
   container-max: 1280px
 ---
 
+## Design Read & Dials
+
+**Design Read (platform, laman utama):** laman produk yang dipindai per layar oleh
+calon penyelenggara yang sedang membandingkan, bukan dibaca berurutan.
+**Dial:** ENERGY 3 (Vibrant), RHYTHM 3 (Varied), MOTION 3 (Lively). Arah "Vibrant
+Momentum" di bawah berlaku untuk laman utama dan halaman aplikasi.
+
+**Design Read (subdomain EO, `eo.berbaris.local`):** halaman dokumen penawaran
+jasa, dibaca berurutan di ruang rapat oleh orang yang sedang menimbang, bukan
+dipindai seperti laman produk. **Dial:** ENERGY 1 (Calm), RHYTHM 2 (Balanced),
+MOTION 1 (Calm).
+
+Bundel EO (`resources/css/eo.css`) sengaja MENYIMPANG dari arah di bawah:
+tanpa glassmorphism kecuali navbar, tanpa bayangan ambien, radius 8-12px bukan
+16px+, dan tanpa lencana berdenyut. Alasannya tertulis di kepala berkas itu.
+Dua subdomain harus terbaca satu keluarga; yang berbeda adalah cara
+menyusunnya, bukan paletnya.
+
 ## Brand & Style
 
 The design system is engineered to transform a standard event management utility into a high-energy, tech-forward platform. The brand personality is **Professional**, **Efficient**, and **Futuristic**, yet maintains a **Welcoming** atmosphere for organizers and participants alike.

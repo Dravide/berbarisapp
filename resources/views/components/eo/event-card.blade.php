@@ -7,7 +7,7 @@
      Komponen landing (`components/landing/eventner-card`) TIDAK dipakai di sini:
      ia memakai kelas landing.css (surface-card, chip, card-past) yang tidak
      dimuat di bundel EO, jadi kartunya akan tampil tanpa gaya sama sekali.
-     Bentuk kartu EO juga berbeda — keterangan ditaruh sebagai label monospace,
+     Bentuk kartu EO juga berbeda: keterangan ditaruh sebagai label monospace,
      bukan chip neon. --}}
 <article class="eo-card eo-card-flat">
     <a href="{{ event_url($eventner, 'detail') }}" class="block no-underline" style="color: inherit;">
