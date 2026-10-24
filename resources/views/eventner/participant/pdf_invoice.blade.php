@@ -115,15 +115,30 @@
 
     <table class="info">
         @php
-            // Identitas dicetak dari definisi field event — label hasil suntingan
-            // panitia ikut tercetak, berkas ditandai ada/belum.
-            $isianIdentitas = $primary->fieldValuesForDisplay();
+            // Kwitansi hanya mencetak identitas pokok — bukan seluruh isian
+            // formulir (pembina, wilayah, unggahan berkas, danton, dsb. sudah
+            // tercetak di formulir pendaftaran). Labelnya tetap dibaca dari
+            // definisi field event supaya suntingan panitia ikut tercetak;
+            // field yang dinonaktifkan panitia tidak ikut dicetak.
+            $definisi = $primary->fieldDefinitionsForEvent()->keyBy('builtin_source');
+            $identitasPokok = [
+                'nama_sekolah' => ['label' => 'Nama Sekolah', 'nilai' => $primary->nama_sekolah],
+                'npsn' => ['label' => 'NPSN', 'nilai' => $primary->npsn],
+                'nama_pelatih' => ['label' => 'Nama Pelatih', 'nilai' => $primary->nama_pelatih],
+                'no_hp' => ['label' => 'No. HP / WhatsApp', 'nilai' => $primary->no_hp],
+                'school_email' => ['label' => 'Email Penanggung Jawab', 'nilai' => $primary->school_email],
+            ];
         @endphp
-        @foreach($isianIdentitas as $isian)
-        <tr>
-            <td class="lbl">{{ $isian['label'] }}</td>
-            <td class="val" colspan="3">{{ $isian['is_file'] ? ($isian['value'] ? 'Terlampir' : '—') : ($isian['value'] ?: '—') }}</td>
-        </tr>
+        @foreach($identitasPokok as $sumber => $baris)
+            @php
+                $field = $definisi->get($sumber);
+                $sembunyikan = ($field && ! $field->is_active) || blank($baris['nilai']);
+            @endphp
+            @continue($sembunyikan)
+            <tr>
+                <td class="lbl">{{ $field->label ?? $baris['label'] }}</td>
+                <td class="val" colspan="3">{{ $baris['nilai'] }}</td>
+            </tr>
         @endforeach
         <tr>
             <td class="lbl">Diverifikasi</td>

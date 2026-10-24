@@ -184,4 +184,37 @@ class InvoiceDownloadTest extends TestCase
             ->get(route('eventner.participants.invoice', $reg->id))
             ->assertForbidden();
     }
+
+    /**
+     * Kwitansi bukan salinan formulir: isian tambahan panitia (wilayah,
+     * pembina, berkas) tidak ikut tercetak — hanya identitas pokok.
+     */
+    public function test_invoice_hanya_mencetak_identitas_pokok(): void
+    {
+        $reg = $this->makePaidRegistration();
+
+        // `asal_kabupaten` sudah dibuat otomatis oleh ensureDefaults().
+        $field = \App\Models\RegistrationField::where('eventner_id', $reg->eventner_id)
+            ->where('field_key', 'asal_kabupaten')
+            ->firstOrFail();
+        $field->update(['label' => 'Asal Kabupaten Uji', 'is_active' => true]);
+
+        \App\Models\RegistrationFieldValue::create([
+            'registration_id' => $reg->id,
+            'registration_field_id' => $field->id,
+            'value' => 'Bandar Lampung',
+        ]);
+
+        $html = view('eventner.participant.pdf_invoice', [
+            'eventner' => $reg->eventner,
+            'registrations' => collect([$reg->fresh(['fieldValues', 'competitionCategory'])]),
+        ])->render();
+
+        $this->assertStringContainsString($reg->nama_sekolah, $html);
+        $this->assertStringContainsString($reg->npsn, $html);
+        $this->assertStringNotContainsString('Asal Kabupaten Uji', $html);
+        $this->assertStringNotContainsString('Bandar Lampung', $html);
+        // Berkas tidak ikut dicetak sebagai baris "Terlampir".
+        $this->assertStringNotContainsString('Surat Tugas', $html);
+    }
 }
