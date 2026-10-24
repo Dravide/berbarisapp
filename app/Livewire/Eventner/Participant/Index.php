@@ -32,6 +32,17 @@ class Index extends Component
     public $editId = null;
     public $nama_sekolah = '';
     public $npsn = '';
+    /**
+     * Nama pasukan. Hanya disunting di modal EDIT.
+     *
+     * Di modal Tambah, penanda pasukan sudah diurus "Jumlah Pasukan" (sufiks
+     * " (A)", " (B)" pada nama sekolah), jadi satu isian nama di sana akan
+     * berebut dengan sufiks itu: tiga pasukan dari satu sekolah akan mendapat
+     * nama yang sama persis. Di Edit tidak ada sufiks yang berjalan, dan
+     * panitia justru perlu membetulkan nama pasukan yang sudah terlanjur
+     * tersimpan ("Pleton 2" ditulis "Pleton 3").
+     */
+    public $label_pasukan = '';
     public $nama_pelatih = '';
     public $no_hp = '';
     public $school_email = '';
@@ -131,6 +142,7 @@ class Index extends Component
         $this->editId = null;
         $this->nama_sekolah = '';
         $this->npsn = '';
+        $this->label_pasukan = '';
         $this->nama_pelatih = '';
         $this->no_hp = '';
         $this->school_email = '';
@@ -145,11 +157,16 @@ class Index extends Component
      * yang punya baris builder aktif DAN punya properti di komponen ini (Livewire
      * menolak memvalidasi nama properti yang tidak ada). Field yang dimatikan
      * panitia tidak dirender dan tidak ikut divalidasi/ditulis.
+     *
+     * Nama Pasukan hanya ikut saat MENGEDIT. Di modal Tambah, penanda pasukan
+     * datang dari "Jumlah Pasukan" (sufiks " (A)", " (B)" pada nama sekolah):
+     * satu isian nama yang sama untuk tiga pasukan akan menghapus pembeda itu.
      */
     public function fieldsModal()
     {
         return RegistrationField::forEventner(auth()->user()->eventner)
             ->reject(fn ($f) => $f->isFile() || $f->isGroup())
+            ->reject(fn ($f) => $f->builtin_source === 'label_pasukan' && ! $this->editId)
             ->filter(fn ($f) => $f->builtin_source !== null && property_exists($this, $f->builtin_source));
     }
 
@@ -279,6 +296,7 @@ class Index extends Component
         $this->editId = $reg->id;
         $this->nama_sekolah = $reg->nama_sekolah;
         $this->npsn = $reg->npsn;
+        $this->label_pasukan = (string) ($reg->label_pasukan ?? '');
         $this->nama_pelatih = $reg->nama_pelatih;
         $this->no_hp = $reg->no_hp;
         $this->school_email = $reg->school_email;

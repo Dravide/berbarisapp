@@ -814,6 +814,57 @@ class RegistrationDynamicFieldTest extends TestCase
     }
 
     /**
+     * Nama pasukan hanya bisa disunting, bukan ditambahkan.
+     *
+     * Di modal Tambah penanda pasukan datang dari "Jumlah Pasukan" (sufiks
+     * " (A)", " (B)" pada nama sekolah). Satu isian nama di sana akan memberi
+     * tiga pasukan nama yang sama, menghapus pembeda yang justru dibutuhkan
+     * undian dan papan skor.
+     */
+    public function test_modal_edit_bisa_mengubah_nama_pasukan()
+    {
+        $reg = $this->peserta();
+        $reg->update(['label_pasukan' => 'Pleton 2']);
+
+        Livewire::actingAs($this->panitia())
+            ->test(ParticipantIndex::class)
+            ->call('edit', $reg->id)
+            ->assertSee('Nama Pasukan')
+            ->assertSet('label_pasukan', 'Pleton 2')
+            ->set('label_pasukan', 'Pleton 3')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertSame('Pleton 3', $reg->fresh()->label_pasukan);
+    }
+
+    /** Dikosongkan berarti kembali tanpa nama pasukan, bukan string kosong. */
+    public function test_modal_edit_boleh_mengosongkan_nama_pasukan()
+    {
+        $reg = $this->peserta();
+        $reg->update(['label_pasukan' => 'Pleton 2']);
+
+        Livewire::actingAs($this->panitia())
+            ->test(ParticipantIndex::class)
+            ->call('edit', $reg->id)
+            ->set('label_pasukan', '')
+            ->call('save')
+            ->assertHasNoErrors();
+
+        $this->assertNull($reg->fresh()->label_pasukan);
+        $this->assertSame($reg->nama_sekolah, $reg->fresh()->display_name);
+    }
+
+    public function test_modal_tambah_tidak_menampilkan_nama_pasukan()
+    {
+        Livewire::actingAs($this->panitia())
+            ->test(ParticipantIndex::class)
+            ->call('openModal', $this->category->id)
+            ->assertSee('Jumlah Pasukan')
+            ->assertDontSee('Nama Pasukan');
+    }
+
+    /**
      * Autofill NPSN dipicu lewat fieldValues (satu jalur form), bukan
      * wire:blur="updatedNpsn" — Livewire 3 melempar
      * DirectlyCallingLifecycleHooksNotAllowedException bila hook lifecycle
