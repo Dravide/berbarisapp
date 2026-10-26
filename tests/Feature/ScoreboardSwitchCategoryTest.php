@@ -56,7 +56,7 @@ class ScoreboardSwitchCategoryTest extends TestCase
         ]);
     }
 
-    public function test_ganti_kategori_dropdown_data_ranking_berubah()
+    public function test_ganti_kategori_lewat_tab_data_ranking_berubah()
     {
         $regA = Registration::factory()->for($this->eventner, 'eventner')->create([
             'competition_category_id' => $this->catA->id,
@@ -81,11 +81,52 @@ class ScoreboardSwitchCategoryTest extends TestCase
         // Awal: kategori pertama (A, urut nama) → SMP Alpha tampil
         $component->assertSee('SMP Alpha');
 
-        // Ganti dropdown ke kategori B
-        $component->set('selectedOption', 'cat:' . $this->catB->id);
+        // Tekan tab kategori B
+        $component->call('switchCategory', $this->catB->id);
 
         // Data ranking harus ikut berubah → SMP Beta muncul, Alpha hilang
         $component->assertSee('SMP Beta');
         $component->assertDontSee('SMP Alpha');
+    }
+
+    /**
+     * Pemilih kategori berupa TAB yang selalu ada.
+     *
+     * Dulu pemilihnya dropdown yang dibungkus `!$selectedChampionCategoryId`:
+     * begitu kategori juara dipilih, seluruh blok pemilih ter-render hilang dan
+     * tidak ada jalan kembali ke kategori lomba tanpa menyunting URL. Tes ini
+     * menjaga dua hal sekaligus — tab tetap tampil di mode juara, dan menekan
+     * tab kategori lomba mengembalikan mode juara ke mode biasa.
+     */
+    public function test_tab_kategori_tetap_ada_di_mode_juara_dan_bisa_kembali()
+    {
+        Registration::factory()->for($this->eventner, 'eventner')->create([
+            'competition_category_id' => $this->catA->id,
+            'nama_sekolah' => 'SMP Alpha',
+        ]);
+
+        $champion = \App\Models\ChampionCategory::create([
+            'eventner_id' => $this->eventner->id,
+            'name' => 'Juara Umum',
+        ]);
+
+        $component = Livewire::test(\App\Livewire\Public\Scoreboard\Index::class, [
+            'scoringCode' => 'SC-SWITCH',
+        ]);
+
+        // Tab kategori lomba dan tab juara sama-sama tampil.
+        $component->assertSee('Kategori A')->assertSee('Juara Umum');
+
+        $component->call('switchChampionCategory', $champion->id);
+        $component->assertSet('selectedChampionCategoryId', $champion->id);
+
+        // Mode juara TIDAK boleh menyembunyikan tab kategori lomba.
+        $component->assertSee('Kategori A')->assertSee('Kategori B');
+
+        // Kembali ke kategori lomba dari mode juara.
+        $component->call('switchCategory', $this->catA->id);
+
+        $component->assertSet('selectedChampionCategoryId', null)
+            ->assertSee('SMP Alpha');
     }
 }
