@@ -266,10 +266,13 @@
                                                                 </a>
                                                             </li>
                                                         @endif
-                                                        @if($reg->payment_status === 'paid')
+                                                        {{-- Kuitansi terbit begitu ADA uang masuk, bukan hanya saat
+                                                             lunas: peserta yang baru menyetor DP berhak atas kuitansi
+                                                             uang muka. Gerbangnya sama dengan downloadInvoice(). --}}
+                                                        @if($reg->jumlahDibayar() > 0)
                                                             <li>
                                                                 <a href="{{ route('eventner.participants.invoice', $reg->id) }}" target="_blank" class="dropdown-item">
-                                                                    <i class="ti ti-receipt me-2"></i>Invoice
+                                                                    <i class="ti ti-receipt me-2"></i>{{ $reg->sisaTagihan() > 0 ? 'Kuitansi DP' : 'Invoice' }}
                                                                 </a>
                                                             </li>
                                                         @endif

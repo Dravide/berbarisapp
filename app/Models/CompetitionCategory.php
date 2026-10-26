@@ -9,12 +9,15 @@ class CompetitionCategory extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['eventner_id', 'parent_id', 'venue_id', 'name', 'tanggal_pelaksanaan', 'kuota', 'max_registrations_per_school', 'registration_fee', 'sort_order'];
+    protected $fillable = ['eventner_id', 'parent_id', 'venue_id', 'name', 'tanggal_pelaksanaan', 'kuota', 'max_registrations_per_school', 'registration_fee', 'dp_amount', 'dp_percent', 'dp_days', 'sort_order'];
 
     protected function casts(): array
     {
         return [
             'registration_fee' => 'decimal:2',
+            'dp_amount' => 'decimal:2',
+            'dp_percent' => 'integer',
+            'dp_days' => 'integer',
         ];
     }
 
@@ -167,6 +170,84 @@ class CompetitionCategory extends Model
     public function punyaBiaya(): bool
     {
         return $this->biayaTerendah() !== null;
+    }
+
+    /**
+     * Tingkat ini menawarkan bayar uang muka?
+     *
+     * Default-nya TIDAK. Panitia harus menyalakannya sendiri lewat pengaturan
+     * gelombang/biaya, dan begitu ia mematikannya kembali, portal pendaftar
+     * langsung berhenti menawarkan pilihan DP — tanpa perlu menyentuh
+     * pendaftaran yang sudah terlanjur DP (uang yang sudah masuk tetap
+     * tercatat di registration_payments).
+     */
+    public function punyaDp(): bool
+    {
+        return ($this->dp_amount !== null && (float) $this->dp_amount > 0)
+            || ($this->dp_percent !== null && $this->dp_percent > 0);
+    }
+
+    /**
+     * Nominal DP untuk tagihan sebesar $total — angka yang ditagih.
+     *
+     * `dp_amount` menang atas `dp_percent`. Hasilnya SELALU dipotong ke total
+     * tagihan: DP sebesar harga penuh bukan DP, dan tanpa pemotongan ini
+     * pembulatan persen bisa menghasilkan angka sedikit di atas tagihan.
+     *
+     * Null bila tingkat ini tidak menawarkan DP. Panggil lewat
+     * Registration::targetDp() bila yang dibutuhkan adalah nominal per
+     * pendaftaran (yang sudah memperhitungkan tagihan snapshot-nya sendiri).
+     */
+    public function nominalDp(float $total): ?float
+    {
+        if (! $this->punyaDp() || $total <= 0) {
+            return null;
+        }
+
+        $nominal = $this->dp_amount !== null && (float) $this->dp_amount > 0
+            ? (float) $this->dp_amount
+            : round($total * $this->dp_percent / 100, 2);
+
+        return min($nominal, $total);
+    }
+
+    /**
+     * Kenapa nominal DP ini ditolak — null berarti sah.
+     *
+     * Dipakai layar pengaturan panitia. Ditegakkan di server, bukan hanya di
+     * form: nominal DP yang sama dengan atau lebih besar dari tagihan akan
+     * membuat portal menawarkan "bayar DP" yang sebenarnya bayar penuh, dan
+     * peserta tidak punya cara tahu bedanya.
+     */
+    public function alasanDpTidakSah(?float $total = null): ?string
+    {
+        if ($this->dp_amount !== null && $this->dp_percent !== null) {
+            return 'Isi nominal DP ATAU persentase, jangan keduanya.';
+        }
+
+        if ($this->dp_percent !== null && ($this->dp_percent < 1 || $this->dp_percent > 99)) {
+            return 'Persentase DP harus antara 1 dan 99.';
+        }
+
+        if ($this->dp_amount !== null && (float) $this->dp_amount <= 0) {
+            return 'Nominal DP harus lebih besar dari nol.';
+        }
+
+        $tagihan = $total ?? $this->biayaPada();
+
+        if ($tagihan !== null && $this->punyaDp()) {
+            $nominal = $this->nominalDp((float) $tagihan);
+
+            if ($nominal !== null && $nominal >= (float) $tagihan) {
+                return 'DP harus lebih kecil dari total biaya pendaftaran (Rp ' . number_format($tagihan, 0, ',', '.') . ').';
+            }
+        }
+
+        if ($this->dp_days !== null && $this->dp_days <= 0) {
+            return 'Tenggat pelunasan minimal 1 hari.';
+        }
+
+        return null;
     }
 
     /**

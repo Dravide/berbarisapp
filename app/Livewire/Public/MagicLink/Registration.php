@@ -10,6 +10,8 @@ use App\Models\Registration as RegistrationModel;
 use App\Models\Participant;
 use App\Models\RegistrationField;
 use App\Models\RegistrationFieldValue;
+use App\Models\RegistrationPayment;
+use App\Services\PaymentRecorder;
 use Livewire\Attributes\Computed;
 
 #[Layout('layouts.frontend')]
@@ -67,6 +69,19 @@ class Registration extends Component
     public array $fieldValues = [];
 
     public $paymentProof;
+
+    /**
+     * Nominal yang DIKLAIM peserta untuk pembayaran yang sedang ia unggah.
+     *
+     * Hanya klaim. Yang menentukan status pendaftaran adalah nominal yang
+     * diverifikasi panitia lewat App\Services\PaymentRecorder — di sana pun
+     * nominalnya dibaca dari baris pembayaran, bukan dari properti ini.
+     */
+    public $paymentNominal;
+
+    /** 'penuh' | 'dp' | 'pelunasan' — pilihan yang sedang aktif di kartu bayar. */
+    public string $modeBayar = 'penuh';
+
     public $participants = [];
 
     /**
@@ -591,21 +606,116 @@ class Registration extends Component
         return trim($this->fieldValues[$field->field_key] ?? '');
     }
 
+    /**
+     * Kirim satu bukti pembayaran — penuh, DP, atau pelunasan.
+     *
+     * Yang ditulis adalah BARIS pembayaran, bukan kolom di pendaftaran. Dulu
+     * method ini menimpa `payment_proof` dan menyalakan
+     * `pending_verification`, sehingga pembayaran kedua menghapus jejak yang
+     * pertama dan tidak ada satu pun nominal yang tersimpan.
+     *
+     * Gerbangnya dihitung ulang di server, bukan dipercaya dari UI: pilihan
+     * "bayar DP" di layar bisa dikirim untuk pendaftaran yang tingkatnya tidak
+     * menawarkan DP, atau yang sudah lunas.
+     */
     public function submitPaymentProof()
     {
+        $reg = $this->registration;
+
         $this->validate([
             'paymentProof' => 'required|image|max:5120',
+            'paymentNominal' => 'required|numeric|min:1',
+        ], [
+            // Nominal diisi peserta dari bukti transfernya sendiri — tidak
+            // pernah diisikan otomatis dari pilihan DP/penuh. Pesan ini harus
+            // menyebut apa yang harus diisi, bukan sekadar "wajib diisi".
+            'paymentNominal.required' => 'Nominal yang ditransfer wajib diisi.',
+            'paymentNominal.numeric' => 'Nominal harus berupa angka, tanpa titik atau koma.',
+            'paymentNominal.min' => 'Nominal harus lebih dari nol.',
+        ], [
+            'paymentProof' => 'Bukti Transfer',
+            'paymentNominal' => 'Nominal',
         ]);
 
-        $path = $this->paymentProof->store('registrations/payment', 'public');
-        $this->registration->payment_proof = $path;
-        $this->registration->payment_status = 'pending_verification';
-        $this->registration->save();
+        // Pendaftaran gratis tidak punya tagihan untuk dibayar.
+        if ((float) $reg->total_fee <= 0) {
+            session()->flash('error', 'Pendaftaran ini tidak menarik biaya, jadi tidak ada yang perlu dibayar.');
 
-        $this->paymentProof = null;
-        $this->registration = $this->registration->fresh();
+            return;
+        }
 
-        session()->flash('success', 'Bukti pembayaran berhasil diunggah. Menunggu verifikasi panitia.');
+        if ($reg->sisaTagihan() <= 0) {
+            session()->flash('error', 'Biaya pendaftaran sudah lunas. Tidak ada tagihan tersisa.');
+
+            return;
+        }
+
+        $sisa = $reg->sisaTagihan();
+
+        // DP hanya sah bila tingkatnya menawarkan DP dan pasukan ini belum
+        // menyetor uang muka. Dihitung ulang dari model, bukan dari properti.
+        $targetDp = $reg->targetDp();
+        $jenis = RegistrationPayment::KIND_PELUNASAN;
+
+        if ($this->modeBayar === 'dp') {
+            if ($targetDp === null) {
+                session()->flash('error', 'Tingkat lomba ini tidak menyediakan pembayaran DP.');
+
+                return;
+            }
+
+            $jenis = RegistrationPayment::KIND_DP;
+        }
+
+        $nominal = round((float) $this->paymentNominal, 2);
+
+        if ($nominal > $sisa) {
+            session()->flash(
+                'error',
+                'Nominal melebihi sisa tagihan (Rp ' . number_format($sisa, 0, ',', '.') . ').'
+            );
+
+            return;
+        }
+
+        // Satu bukti yang masih menunggu verifikasi sudah cukup. Tanpa ini,
+        // peserta yang menekan tombol dua kali mengirim dua baris kembar dan
+        // panitia harus menolak salah satunya secara manual.
+        $menunggu = $reg->registrationPayments()
+            ->where('status', RegistrationPayment::STATUS_PENDING)
+            ->exists();
+
+        if ($menunggu) {
+            session()->flash('error', 'Masih ada bukti pembayaran yang menunggu verifikasi panitia.');
+
+            return;
+        }
+
+        $reg->registrationPayments()->create([
+            'kind' => $jenis,
+            'amount' => $nominal,
+            'proof' => $this->paymentProof->store('registrations/payment', 'public'),
+            'status' => RegistrationPayment::STATUS_PENDING,
+            'bank_account_id' => $reg->payment_bank_account_id,
+        ]);
+
+        // Kolom lama tetap diisi supaya layar panitia dan API yang belum
+        // membaca tabel baru tetap melihat bukti terakhir.
+        $reg->payment_proof = $reg->registrationPayments()->latest('id')->value('proof');
+        $reg->save();
+
+        // Status dihitung ulang lewat satu-satunya penulisnya, bukan ditimpa
+        // manual: menulis `pending_verification` di sini akan menghapus
+        // kenyataan bahwa DP-nya sudah diterima, sehingga portal kembali
+        // menampilkan "Total Biaya Pendaftaran" penuh untuk pasukan yang
+        // setengahnya sudah dibayar.
+        app(PaymentRecorder::class)->syncStatus($reg);
+
+        $this->reset('paymentProof', 'paymentNominal', 'modeBayar');
+        $this->modeBayar = 'penuh';
+        $this->registration = $reg->fresh();
+
+        session()->flash('success', 'Bukti pembayaran terkirim. Menunggu verifikasi panitia.');
     }
 
     /**
@@ -979,11 +1089,14 @@ class Registration extends Component
 
         if ($reg->status_berkas !== 'booking') return;
 
-        // Masa booking ditahan gerbang yang sama dengan view: TM lewat, atau
-        // biaya pendaftaran sudah lunas. Dua jalur berbeda berarti pendaftar
-        // melihat tombolnya tapi ditolak server, atau sebaliknya.
-        if (($reg->eventner->registration_status ?? 'open') === 'booking' && ! $reg->sudahBolehMengisi()) {
-            session()->flash('error', 'Konfirmasi hanya bisa dilakukan setelah Technical Meeting (' . \Carbon\Carbon::parse($reg->eventner->technical_meeting)->translatedFormat('d F Y, H:i') . '), atau setelah biaya pendaftaran diverifikasi lunas.');
+        // Finalisasi ditahan gerbang yang sama dengan view. Sengaja LEBIH
+        // KETAT daripada gerbang isian: DP membuka pengisian data, tapi tidak
+        // membuka pengiriman berkas — panitia tidak boleh menerima pasukan
+        // yang biaya pendaftarannya belum tertutup.
+        if (($reg->eventner->registration_status ?? 'open') === 'booking' && ! $reg->bolehFinalisasi()) {
+            session()->flash('error', $reg->sudahDp()
+                ? 'Konfirmasi baru bisa dilakukan setelah sisa tagihan Rp ' . number_format($reg->sisaTagihan(), 0, ',', '.') . ' dilunasi dan diverifikasi panitia, atau setelah Technical Meeting.'
+                : 'Konfirmasi hanya bisa dilakukan setelah Technical Meeting (' . \Carbon\Carbon::parse($reg->eventner->technical_meeting)->translatedFormat('d F Y, H:i') . '), atau setelah biaya pendaftaran diverifikasi lunas.');
             return;
         }
 
@@ -1020,6 +1133,15 @@ class Registration extends Component
         // Check registration status of the event
         if (($reg->eventner->registration_status ?? 'open') == 'booking' && ! $reg->sudahBolehMengisi()) {
             session()->flash('error', 'Saat ini hanya diperbolehkan booking slot. Pengisian data pasukan akan dibuka setelah masa pendaftaran dibuka secara resmi, atau setelah biaya pendaftaran diverifikasi lunas.');
+            return;
+        }
+
+        // Finalisasi punya gerbang sendiri yang lebih ketat: DP membuka isian,
+        // tapi tidak membuka pengiriman berkas ke panitia.
+        if ($isFinal && ! $reg->bolehFinalisasi()) {
+            session()->flash('error', $reg->sudahDp()
+                ? 'Finalisasi baru bisa dilakukan setelah sisa tagihan Rp ' . number_format($reg->sisaTagihan(), 0, ',', '.') . ' dilunasi dan diverifikasi panitia, atau setelah Technical Meeting.'
+                : 'Finalisasi baru bisa dilakukan setelah Technical Meeting, atau setelah biaya pendaftaran diverifikasi lunas.');
             return;
         }
 
@@ -1374,6 +1496,8 @@ class Registration extends Component
         $terverifikasi = $reg->status_berkas === 'Terverifikasi';
         $lunas = $reg->payment_status === 'paid';
         $gratis = $reg->payment_status === 'free';
+        // Kuitansi DP: sudah menyetor uang muka tapi tagihannya belum tertutup.
+        $sudahDp = $reg->sudahDp();
         $cert = $this->certificate_registrations[$this->activeRegId] ?? null;
 
         $labelPasukan = trim((string) $reg->label_pasukan);
@@ -1406,18 +1530,20 @@ class Registration extends Component
             ],
             [
                 'key' => 'invoice',
-                'judul' => 'Invoice / Kwitansi',
+                'judul' => $lunas ? 'Invoice / Kwitansi' : ($sudahDp ? 'Kuitansi DP' : 'Invoice / Kwitansi'),
                 'ikon' => 'ti-file-invoice',
                 'cakupan' => 'Seluruh sekolah',
                 'keterangan' => $lunas
                     ? 'Satu berkas gabungan untuk ' . $this->jumlahPasukanLunas() . ' pasukan sekolah ini yang sudah dibayar.'
                     : ($gratis
                         ? 'Event ini tidak menarik biaya pendaftaran.'
-                        : 'Tersedia setelah pembayaran diverifikasi panitia.'),
-                'terbuka' => $lunas,
+                        : ($sudahDp
+                            ? 'Kuitansi uang muka — sisa tagihan Rp ' . number_format($reg->sisaTagihan(), 0, ',', '.') . '. Invoice lunas terbit setelah pelunasan diverifikasi.'
+                            : 'Tersedia setelah pembayaran diverifikasi panitia.')),
+                'terbuka' => $lunas || $sudahDp,
                 'berlaku' => !$gratis,
-                'url' => $lunas ? route('magic.link.invoice', $reg->magic_token) : null,
-                'tombol' => 'Unduh Invoice',
+                'url' => ($lunas || $sudahDp) ? route('magic.link.invoice', $reg->magic_token) : null,
+                'tombol' => $lunas ? 'Unduh Invoice' : 'Unduh Kuitansi DP',
                 'aksen' => null,
                 'gelar' => null,
             ],

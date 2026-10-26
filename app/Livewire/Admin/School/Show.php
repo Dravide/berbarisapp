@@ -190,7 +190,12 @@ class Show extends Component
             return;
         }
 
-        if (in_array($reg->payment_status, ['paid', 'pending_verification'], true)) {
+        // `dp_paid` ikut diblokir: uang muka adalah uang yang sudah masuk, dan
+        // menghapus pendaftarannya membuang angka itu dari rekap keuangan
+        // tanpa jejak. Yang dicek nominalnya, bukan labelnya, supaya baris lama
+        // berstatus lain tapi sudah menyetor juga tertangkap.
+        if (in_array($reg->payment_status, ['paid', 'dp_paid', 'pending_verification'], true)
+            || $reg->jumlahDibayar() > 0) {
             session()->flash('error', 'Tidak bisa menghapus: pendaftaran ini sudah dibayar (status: ' . $reg->payment_status . '). Selesaikan dulu pengembalian dana / verifikasi pembayarannya.');
             return;
         }

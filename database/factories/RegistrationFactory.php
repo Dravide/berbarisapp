@@ -78,4 +78,22 @@ class RegistrationFactory extends Factory
             'payment_status' => 'paid',
         ]);
     }
+
+    /**
+     * Sudah menyetor uang muka, sisa tagihan belum dilunasi.
+     *
+     * Sengaja TIDAK membuat baris `registration_payments`: yang diuji biasanya
+     * hanya tampilan/rekap, dan baris pembayaran sungguhan dibuat lewat
+     * PaymentRecorder di tes yang memang menguji ledger. `amount_paid` diisi
+     * karena tanpa angka itu `jumlahDibayar()` jatuh ke 0 dan DP-nya tidak
+     * terlihat sama sekali.
+     */
+    public function dpPaid(float $dibayar = 150000): static
+    {
+        return $this->state(fn (array $attrs) => [
+            'payment_status' => 'dp_paid',
+            'amount_paid' => $dibayar,
+            'dp_deadline' => now()->addDays(14),
+        ]);
+    }
 }

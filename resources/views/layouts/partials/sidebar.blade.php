@@ -608,7 +608,10 @@
                 <i class="ti ti-wallet"></i>
               </span>
               <span class="hide-menu">Dashboard Keuangan</span>
-              @php $paymentPendingCount = $ev ? \App\Models\Registration::where('eventner_id', $ev->id)->where('payment_status', 'pending_verification')->count() : 0; @endphp
+              {{-- Dihitung per BUKTI pembayaran, sama dengan FinanceDashboard:
+                   satu pasukan bisa mengirim DP lalu pelunasan, dan lonceng yang
+                   menghitung pendaftaran akan berbunyi lebih kecil dari antrean. --}}
+              @php $paymentPendingCount = $ev ? \App\Models\RegistrationPayment::where('status', \App\Models\RegistrationPayment::STATUS_PENDING)->whereHas('registration', fn ($q) => $q->where('eventner_id', $ev->id))->count() : 0; @endphp
               @if($paymentPendingCount > 0)
                 <span class="badge bg-warning rounded-pill ms-auto">{{ $paymentPendingCount }}</span>
               @endif

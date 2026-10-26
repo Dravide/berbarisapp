@@ -69,6 +69,15 @@ class Show extends Component
     public $waveAmount = '';
     public $editingWaveId = null;
 
+    // ── Uang muka (DP) ─────────────────────────────────────────────────
+    /** Panitia menyalakan DP untuk tingkat ini? Default mati. */
+    public bool $dpAktif = false;
+    /** 'nominal' | 'persen' — hanya satu yang boleh terisi. */
+    public string $dpMode = 'nominal';
+    public $dpAmount = '';
+    public $dpPercent = '';
+    public $dpDays = '';
+
     /** Babak final yang sedang dibuka panel "Loloskan Top-N". */
     public $qualifyRoundId = null;
     public $qualifyTopN = 3;
@@ -98,6 +107,101 @@ class Show extends Component
         abort_unless($cat, 404, 'Tingkat lomba tidak ditemukan.');
 
         $this->categoryId = $cat->id;
+        $this->muatFormDp();
+    }
+
+    /**
+     * Isi form DP dari keadaan tersimpan.
+     *
+     * `dpMode` ditentukan dari kolom mana yang terisi, bukan dari preferensi
+     * terakhir panitia: kalau DB menyimpan persentase, form harus terbuka di
+     * mode persen — kalau tidak, menekan Simpan tanpa menyentuh apa pun akan
+     * memindahkan nominal DP dari persen ke rupiah.
+     */
+    public function muatFormDp(): void
+    {
+        $cat = $this->category;
+        if (! $cat) {
+            return;
+        }
+
+        $this->dpAktif = $cat->punyaDp();
+        $this->dpMode = $cat->dp_percent !== null && $cat->dp_amount === null ? 'persen' : 'nominal';
+        $this->dpAmount = $cat->dp_amount !== null ? (string) (float) $cat->dp_amount : '';
+        $this->dpPercent = $cat->dp_percent !== null ? (string) $cat->dp_percent : '';
+        $this->dpDays = $cat->dp_days !== null ? (string) $cat->dp_days : '';
+    }
+
+    /**
+     * Simpan pengaturan DP tingkat ini.
+     *
+     * Nominal/persentase dihitung ulang di server lewat alasanDpTidakSah():
+     * DP yang sama dengan atau lebih besar dari tagihan akan membuat portal
+     * menawarkan "bayar DP" yang sebenarnya bayar penuh, dan peserta tidak
+     * punya cara tahu bedanya.
+     *
+     * Mematikan DP TIDAK menyentuh pendaftaran yang sudah terlanjur DP — uang
+     * yang sudah masuk tetap tercatat di registration_payments dan sisa
+     * tagihannya tetap ditagih. Yang berubah hanya penawaran untuk pendaftar
+     * berikutnya.
+     */
+    public function simpanDp()
+    {
+        $cat = $this->category;
+        if (! $cat) {
+            return;
+        }
+
+        $this->validate([
+            'dpAmount' => 'nullable|numeric|min:0',
+            'dpPercent' => 'nullable|integer|min:1|max:99',
+            'dpDays' => 'nullable|integer|min:1|max:365',
+        ], [], [
+            'dpAmount' => 'Nominal DP',
+            'dpPercent' => 'Persentase DP',
+            'dpDays' => 'Tenggat Pelunasan',
+        ]);
+
+        $data = [
+            'dp_amount' => null,
+            'dp_percent' => null,
+            'dp_days' => $this->dpDays !== '' && $this->dpDays !== null ? (int) $this->dpDays : null,
+        ];
+
+        if ($this->dpAktif) {
+            if ($this->dpMode === 'persen') {
+                $data['dp_percent'] = $this->dpPercent !== '' && $this->dpPercent !== null
+                    ? (int) $this->dpPercent
+                    : null;
+            } else {
+                $data['dp_amount'] = $this->dpAmount !== '' && $this->dpAmount !== null
+                    ? (float) $this->dpAmount
+                    : null;
+            }
+
+            if ($data['dp_amount'] === null && $data['dp_percent'] === null) {
+                $this->gagal('Isi nominal atau persentase DP bila DP dinyalakan.');
+                return;
+            }
+        }
+
+        // Validasi memakai keadaan sesudah perubahan, bukan sesudah save:
+        // menyalakan DP lalu menyimpannya dengan angka yang salah harus
+        // ditolak sebelum apa pun tertulis.
+        $cat->fill($data);
+        $alasan = $cat->alasanDpTidakSah();
+
+        if ($alasan) {
+            $this->gagal($alasan);
+            return;
+        }
+
+        $cat->save();
+        unset($this->category);
+
+        $this->toast($this->dpAktif
+            ? 'Pengaturan DP disimpan. Portal pendaftar berikutnya akan menawarkan pilihan DP.'
+            : 'DP dimatikan untuk tingkat ini. Pendaftar berikutnya membayar penuh.');
     }
 
     /** Tingkat yang diatur halaman ini, di-scope tenant setiap kali diambil. */

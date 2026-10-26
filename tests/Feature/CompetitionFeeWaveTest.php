@@ -302,7 +302,15 @@ class CompetitionFeeWaveTest extends TestCase
         $this->assertSame(99000.0, $tingkatLain->fresh()->biayaPada());
     }
 
-    /** Id gelombang tenant lain tidak bisa disunting dari halaman ini. */
+    /**
+     * Id gelombang tenant lain tidak bisa disunting dari halaman ini.
+     *
+     * Yang dijaga adalah AKIBATNYA — gelombangnya tidak terhapus dan permintaan
+     * berakhir 404 — bukan jenis exception yang dilempar. Livewire 4.4.x
+     * menangkap ModelNotFoundException lalu merender halaman 404 sendiri,
+     * sedangkan 4.2 membiarkannya naik ke test; keduanya perilaku yang benar
+     * bagi pengguna, jadi tesnya tidak boleh terikat ke salah satunya.
+     */
     public function test_tenant_lain_tidak_bisa_mengubah_gelombang()
     {
         $userLain = User::factory()->eventner()->create(['is_active' => true]);
@@ -327,9 +335,21 @@ class CompetitionFeeWaveTest extends TestCase
             'amount' => 100000,
         ]);
 
-        $this->expectException(\Illuminate\Database\Eloquent\ModelNotFoundException::class);
+        $ditolak = false;
 
-        $this->tab()->call('deleteWave', $gelombangLain->id);
+        try {
+            $this->tab()->call('deleteWave', $gelombangLain->id)->assertStatus(404);
+            $ditolak = true;
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Versi Livewire lain meneruskannya ke sini — sama-sama ditolak.
+            $ditolak = true;
+        }
+
+        $this->assertTrue($ditolak, 'Permintaan lintas tenant seharusnya ditolak.');
+        $this->assertNotNull(
+            CompetitionFeeWave::find($gelombangLain->id),
+            'Gelombang milik event lain tidak boleh terhapus.'
+        );
     }
 
     /**

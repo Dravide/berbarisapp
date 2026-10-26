@@ -105,10 +105,17 @@ class EventnerDashboardTest extends TestCase
             'competition_category_id' => $category->id,
             'payment_status' => 'paid',
         ]);
-        Registration::factory()->create([
+        $menunggu = Registration::factory()->create([
             'eventner_id' => $eventner->id,
             'competition_category_id' => $category->id,
             'payment_status' => 'pending_verification',
+        ]);
+        // Lonceng menghitung BUKTI pembayaran yang menunggu, bukan pendaftaran:
+        // satu pasukan bisa mengirim DP lalu pelunasan, dan itu dua antrean.
+        $menunggu->registrationPayments()->create([
+            'kind' => \App\Models\RegistrationPayment::KIND_DP,
+            'amount' => 150000,
+            'status' => \App\Models\RegistrationPayment::STATUS_PENDING,
         ]);
         Registration::factory()->create([
             'eventner_id' => $eventner->id,
@@ -266,16 +273,22 @@ class EventnerDashboardTest extends TestCase
     {
         [$user, $eventner, $category] = $this->setupEventnerUser();
 
-        Registration::factory()->create([
-            'eventner_id' => $eventner->id,
-            'competition_category_id' => $category->id,
-            'payment_status' => 'pending_verification',
-        ]);
-        Registration::factory()->create([
-            'eventner_id' => $eventner->id,
-            'competition_category_id' => $category->id,
-            'payment_status' => 'pending_verification',
-        ]);
+        // Peringatan menghitung BUKTI pembayaran, jadi barisnya harus ada —
+        // status `pending_verification` saja tidak lagi cukup untuk memicu
+        // lonceng ini.
+        foreach ([0, 1] as $i) {
+            $reg = Registration::factory()->create([
+                'eventner_id' => $eventner->id,
+                'competition_category_id' => $category->id,
+                'payment_status' => 'pending_verification',
+            ]);
+
+            $reg->registrationPayments()->create([
+                'kind' => \App\Models\RegistrationPayment::KIND_DP,
+                'amount' => 150000,
+                'status' => \App\Models\RegistrationPayment::STATUS_PENDING,
+            ]);
+        }
 
         // Kuota penuh: kuota 1 + 1 pendaftar = 100% ≥ 80%
         $category->update(['kuota' => 1]);

@@ -508,6 +508,103 @@
                 @endif
             </div>
         </div>
+
+        {{-- ── Uang Muka (DP) ──────────────────────────────────────────── --}}
+        <div class="card w-100 mt-3">
+            <div class="card-body p-4">
+                <h6 class="fw-semibold mb-2"><i class="ti ti-wallet me-1"></i>Uang Muka (DP)</h6>
+                <p class="text-muted fs-2">
+                    Bila dinyalakan, portal pendaftar menawarkan pilihan <strong>bayar DP dulu</strong> atau
+                    bayar penuh. DP yang diverifikasi panitia membuka pengisian data lebih awal, tetapi
+                    <strong>tidak</strong> membuka tombol "Konfirmasi &amp; Kirim" — finalisasi tetap menunggu
+                    pelunasan atau Technical Meeting.
+                </p>
+
+                @if($category->punyaDp())
+                    @php
+                        $tagihanKini = $category->biayaPada();
+                        $contohDp = $tagihanKini ? $category->nominalDp((float) $tagihanKini) : null;
+                    @endphp
+                    <div class="alert alert-success border fs-2 py-2 mb-3">
+                        <i class="ti ti-check me-1"></i> DP <strong>aktif</strong>:
+                        @if($contohDp !== null && $tagihanKini)
+                            Rp {{ number_format($contohDp, 0, ',', '.') }} dari tagihan
+                            Rp {{ number_format($tagihanKini, 0, ',', '.') }}.
+                        @else
+                            nominal mengikuti tagihan tiap pendaftar.
+                        @endif
+                        @if($category->dp_days)
+                            Pelunasan paling lambat <strong>{{ $category->dp_days }} hari</strong> setelah DP diterima.
+                        @else
+                            Tanpa tenggat pelunasan.
+                        @endif
+                    </div>
+                @else
+                    <div class="alert alert-light border fs-2 py-2 mb-3">
+                        <i class="ti ti-info-circle me-1"></i> DP belum aktif — semua pendaftar membayar penuh.
+                    </div>
+                @endif
+
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="dpAktif" wire:model.live="dpAktif">
+                    <label class="form-check-label fw-semibold" for="dpAktif">Tawarkan pembayaran DP</label>
+                </div>
+
+                @if($dpAktif)
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Cara menentukan DP</label>
+                            <select class="form-select" wire:model.live="dpMode">
+                                <option value="nominal">Nominal tetap (Rp)</option>
+                                <option value="persen">Persentase tagihan</option>
+                            </select>
+                        </div>
+                        @if($dpMode === 'nominal')
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Nominal DP</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">Rp</span>
+                                    <input type="number" class="form-control" wire:model="dpAmount" min="0" step="5000" placeholder="0">
+                                </div>
+                                @error('dpAmount') <span class="text-danger fs-2 d-block">{{ $message }}</span> @enderror
+                            </div>
+                        @else
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Persentase DP</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" wire:model="dpPercent" min="1" max="99" placeholder="30">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                @error('dpPercent') <span class="text-danger fs-2 d-block">{{ $message }}</span> @enderror
+                            </div>
+                        @endif
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Tenggat pelunasan</label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" wire:model="dpDays" min="1" max="365" placeholder="14">
+                                <span class="input-group-text">hari</span>
+                            </div>
+                            @error('dpDays') <span class="text-danger fs-2 d-block">{{ $message }}</span> @enderror
+                            <small class="form-text text-muted fs-2">Kosongkan bila tidak ada tenggat.</small>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-primary w-100" wire:click="simpanDp">
+                                <i class="ti ti-device-floppy"></i> Simpan DP
+                            </button>
+                        </div>
+                    </div>
+                @else
+                    <button type="button" class="btn btn-sm btn-light" wire:click="simpanDp">
+                        <i class="ti ti-device-floppy"></i> Simpan (DP tetap mati)
+                    </button>
+                @endif
+
+                <small class="form-text text-muted fs-2 d-block mt-2">
+                    Mematikan DP tidak membatalkan DP yang sudah dibayar: uang yang sudah masuk tetap tercatat
+                    dan sisa tagihannya tetap ditagih. Yang berubah hanya penawaran untuk pendaftar berikutnya.
+                </small>
+            </div>
+        </div>
     @endif
 
     {{-- ── Modal Loloskan Top-N ───────────────────────────────────────── --}}

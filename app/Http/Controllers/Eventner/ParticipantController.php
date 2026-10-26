@@ -54,7 +54,8 @@ class ParticipantController extends Controller
 
     /**
      * Unduh kwitansi/invoice PDF dari sisi eventner (halaman participants).
-     * Kwitansi digabung per sekolah (NPSN): semua pasukan yang sudah paid.
+     * Kwitansi digabung per sekolah (NPSN): semua pasukan yang sudah lunas
+     * atau sudah menyetor uang muka.
      */
     public function downloadInvoice(Registration $registration)
     {
@@ -67,8 +68,10 @@ class ParticipantController extends Controller
             abort(403, 'Anda tidak memiliki hak akses untuk data ini.');
         }
 
-        // Invoice hanya sah setelah pembayaran diverifikasi
-        if ($registration->payment_status !== 'paid') {
+        // Kuitansi sah setelah ada uang yang BENAR-BENAR diterima panitia —
+        // lunas maupun DP. Bukti yang masih menunggu verifikasi belum
+        // menghasilkan kuitansi apa pun.
+        if (! $this->punyaUangMasuk($registration)) {
             abort(403, 'Invoice hanya dapat diunduh setelah pembayaran diverifikasi.');
         }
 
@@ -77,7 +80,8 @@ class ParticipantController extends Controller
 
     /**
      * Unduh kwitansi/invoice PDF via magic link peserta.
-     * Kwitansi digabung per sekolah (NPSN): semua pasukan yang sudah paid.
+     * Kwitansi digabung per sekolah (NPSN): semua pasukan yang sudah lunas
+     * atau sudah menyetor uang muka.
      */
     public function downloadInvoiceByToken(string $token)
     {
@@ -85,30 +89,47 @@ class ParticipantController extends Controller
             ->where('magic_token', $token)
             ->firstOrFail();
 
-        if ($registration->payment_status !== 'paid') {
+        if (! $this->punyaUangMasuk($registration)) {
             abort(403, 'Invoice hanya dapat diunduh setelah pembayaran diverifikasi panitia.');
         }
 
         return $this->renderInvoice($registration);
     }
 
+    /** Sudah ada uang masuk yang terverifikasi (lunas atau DP)? */
+    private function punyaUangMasuk(Registration $registration): bool
+    {
+        return $registration->payment_status === 'paid'
+            || (float) $registration->amount_paid > 0;
+    }
+
     private function renderInvoice(Registration $registration)
     {
         $eventner = $registration->eventner;
 
-        // Gabung semua pasukan sekolah ini yang sudah dibayar. Sekolah dikenali
-        // dari NPSN bila ada; setelah kolomnya nullable (migrasi 2026_09_21),
-        // pencocokan `= NULL` tidak pernah cocok di MySQL — dan seandainya
-        // dianggap cocok, SEMUA pendaftar tanpa NPSN akan tercetak dalam satu
-        // invoice. Karena itu sekolah tanpa NPSN dicocokkan lewat nama.
-        $registrations = Registration::with(['competitionCategory', 'paymentBankAccount', 'fieldValues'])
+        // Gabung semua pasukan sekolah ini yang sudah ada uang masuknya.
+        // Sekolah dikenali dari NPSN bila ada; setelah kolomnya nullable
+        // (migrasi 2026_09_21), pencocokan `= NULL` tidak pernah cocok di
+        // MySQL — dan seandainya dianggap cocok, SEMUA pendaftar tanpa NPSN
+        // akan tercetak dalam satu invoice. Karena itu sekolah tanpa NPSN
+        // dicocokkan lewat nama.
+        //
+        // `dp_paid` ikut karena kuitansi DP memang dibutuhkan peserta sebagai
+        // bukti setoran pertama; cap "DIBAYAR SEBAGIAN" dan baris sisa tagihan
+        // di PDF yang membedakannya dari kuitansi lunas.
+        $registrations = Registration::with([
+            'competitionCategory',
+            'paymentBankAccount',
+            'fieldValues',
+            'registrationPayments',
+        ])
             ->where('eventner_id', $eventner->id)
             ->when(
                 $registration->npsn,
                 fn ($q) => $q->where('npsn', $registration->npsn),
                 fn ($q) => $q->whereNull('npsn')->where('nama_sekolah', $registration->nama_sekolah)
             )
-            ->where('payment_status', 'paid')
+            ->whereIn('payment_status', ['paid', 'dp_paid'])
             ->where('status_berkas', '!=', 'dibatalkan')
             ->orderBy('id')
             ->get();

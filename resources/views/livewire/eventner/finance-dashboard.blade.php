@@ -43,11 +43,12 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="bg-success text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                            <i class="ti ti-file-invoice fs-6"></i>
+                            <i class="ti ti-cash fs-6"></i>
                         </div>
                         <div class="ms-3">
-                            <h6 class="mb-0 text-muted">Biaya Pendaftaran</h6>
+                            <h6 class="mb-0 text-muted">Uang Masuk (Pendaftaran)</h6>
                             <h4 class="mb-0 fw-bold">Rp {{ number_format($feeRevenue, 0, ',', '.') }}</h4>
+                            <small class="text-muted">Dari total tagihan Rp {{ number_format($totalTagihan, 0, ',', '.') }}</small>
                         </div>
                     </div>
                 </div>
@@ -58,11 +59,12 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center">
                         <div class="bg-warning text-white rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
-                            <i class="ti ti-heart fs-6"></i>
+                            <i class="ti ti-receipt fs-6"></i>
                         </div>
                         <div class="ms-3">
-                            <h6 class="mb-0 text-muted">Voting</h6>
-                            <h4 class="mb-0 fw-bold">Rp {{ number_format($voteRevenue, 0, ',', '.') }}</h4>
+                            <h6 class="mb-0 text-muted">Sisa Tagihan</h6>
+                            <h4 class="mb-0 fw-bold">Rp {{ number_format($piutang, 0, ',', '.') }}</h4>
+                            <small class="text-muted">Belum dibayar peserta</small>
                         </div>
                     </div>
                 </div>
@@ -76,8 +78,8 @@
                             <i class="ti ti-ticket fs-6"></i>
                         </div>
                         <div class="ms-3">
-                            <h6 class="mb-0 text-muted">Tiket</h6>
-                            <h4 class="mb-0 fw-bold">Rp {{ number_format($ticketRevenue, 0, ',', '.') }}</h4>
+                            <h6 class="mb-0 text-muted">Tiket + Voting</h6>
+                            <h4 class="mb-0 fw-bold">Rp {{ number_format($ticketRevenue + $voteRevenue, 0, ',', '.') }}</h4>
                         </div>
                     </div>
                 </div>
@@ -105,21 +107,30 @@
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h5 class="card-title fw-semibold mb-0">Verifikasi Pembayaran</h5>
                     @if($pendingVerificationCount > 0)
-                        <span class="badge bg-warning rounded-pill">{{ $pendingVerificationCount }} Menunggu</span>
+                        <span class="badge bg-warning rounded-pill">{{ $pendingVerificationCount }} Bukti Menunggu</span>
                     @endif
                 </div>
                 <div class="card-body p-0">
-                    @forelse($pendingPayments as $reg)
+                    @forelse($pendingPayments as $bayar)
+                        @php $reg = $bayar->registration; @endphp
                         <div class="border-bottom p-3">
                             <div class="d-flex justify-content-between align-items-start mb-1">
                                 <div>
-                                    <h6 class="fw-semibold mb-0">{{ $reg->display_name }}</h6>
-                                    <small class="text-muted">{{ $reg->competitionCategory->full_name }}</small>
+                                    <h6 class="fw-semibold mb-0">{{ $reg?->display_name }}</h6>
+                                    <small class="text-muted">{{ $reg?->competitionCategory?->full_name }}</small>
                                 </div>
-                                <span class="fw-bold text-primary">Rp {{ number_format($reg->total_fee, 0, ',', '.') }}</span>
+                                <div class="text-end">
+                                    <span class="badge {{ $bayar->isDp() ? 'bg-primary-subtle text-primary' : 'bg-success-subtle text-success' }} mb-1">{{ $bayar->labelJenis() }}</span>
+                                    <span class="fw-bold text-primary d-block">Rp {{ number_format((float) $bayar->amount, 0, ',', '.') }}</span>
+                                </div>
                             </div>
+                            <small class="text-muted d-block">Dikirim {{ $bayar->created_at?->diffForHumans() }}
+                                @if($reg)
+                                    &middot; sisa tagihan Rp {{ number_format($reg->sisaTagihan(), 0, ',', '.') }}
+                                @endif
+                            </small>
                             <div class="d-flex gap-2 mt-2">
-                                <button class="btn btn-sm btn-primary" wire:click="openPaymentModal({{ $reg->id }})">
+                                <button class="btn btn-sm btn-primary" wire:click="openPaymentModal({{ $bayar->id }})">
                                     <i class="ti ti-eye"></i> Review
                                 </button>
                             </div>
@@ -152,10 +163,11 @@
                             <th class="text-center">Biaya/Pasukan</th>
                             <th class="text-center">Total Daftar</th>
                             <th class="text-center">Lunas</th>
+                            <th class="text-center">DP</th>
                             <th class="text-center">Menunggu</th>
                             <th class="text-center">Belum Bayar</th>
                             <th class="text-end pe-4">Terkumpul</th>
-                            <th class="text-end pe-4">Potensi</th>
+                            <th class="text-end pe-4">Sisa Tagihan</th>
                             <th class="text-center pe-4">Aksi</th>
                         </tr>
                     </thead>
@@ -175,6 +187,13 @@
                                     <span class="badge bg-success-subtle text-success px-3 py-1">{{ $cat['paid_count'] }}</span>
                                 </td>
                                 <td class="text-center">
+                                    @if($cat['dp_count'] > 0)
+                                        <span class="badge bg-primary-subtle text-primary px-3 py-1">{{ $cat['dp_count'] }}</span>
+                                    @else
+                                        <span class="text-muted">0</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
                                     @if($cat['pending_count'] > 0)
                                         <span class="badge bg-warning-subtle text-warning px-3 py-1">{{ $cat['pending_count'] }}</span>
                                     @else
@@ -189,7 +208,7 @@
                                     @endif
                                 </td>
                                 <td class="text-end pe-4 fw-bold text-success">Rp {{ number_format($cat['paid_revenue'], 0, ',', '.') }}</td>
-                                <td class="text-end pe-4 text-muted">Rp {{ number_format($cat['potential_revenue'], 0, ',', '.') }}</td>
+                                <td class="text-end pe-4 text-muted">Rp {{ number_format($cat['sisa_tagihan'], 0, ',', '.') }}</td>
                                 <td class="text-center pe-4">
                                     <button class="btn btn-sm btn-light" wire:click="openDetailModal({{ $cat['id'] }})"
                                             title="Detail pembayaran kategori {{ $cat['name'] }}">
@@ -198,7 +217,7 @@
                                 </td>
                             </tr>                        @empty
                             <tr>
-                                <td colspan="9" class="text-center py-4 text-muted">
+                                <td colspan="10" class="text-center py-4 text-muted">
                                     Belum ada kategori lomba.
                                 </td>
                             </tr>
@@ -236,7 +255,8 @@
                         <div class="col-md-4">
                             <select class="form-select" wire:model.live="detailStatus">
                                 <option value="all">Semua Status</option>
-                                <option value="paid">Sudah Bayar</option>
+                                <option value="paid">Lunas</option>
+                                <option value="dp_paid">Baru DP</option>
                                 <option value="pending_verification">Menunggu Verifikasi</option>
                                 <option value="unpaid">Belum Bayar</option>
                             </select>
@@ -256,6 +276,8 @@
                                     <th>Kategori</th>
                                     <th class="text-center">Status</th>
                                     <th class="text-end">Total Biaya</th>
+                                    <th class="text-end">Dibayar</th>
+                                    <th class="text-end">Sisa</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -266,6 +288,8 @@
                                         <td class="text-center">
                                             @if($reg->payment_status === 'paid')
                                                 <span class="badge bg-success-subtle text-success px-3 py-2"><i class="ti ti-circle-check me-1"></i>Lunas</span>
+                                            @elseif($reg->payment_status === 'dp_paid')
+                                                <span class="badge bg-primary-subtle text-primary px-3 py-2"><i class="ti ti-progress me-1"></i>Baru DP</span>
                                             @elseif($reg->payment_status === 'pending_verification')
                                                 <span class="badge bg-warning-subtle text-warning px-3 py-2"><i class="ti ti-hourglass me-1"></i>Menunggu Verifikasi</span>
                                             @elseif($reg->payment_status === 'unpaid')
@@ -275,10 +299,12 @@
                                             @endif
                                         </td>
                                         <td class="text-end fw-bold">Rp {{ number_format($reg->total_fee, 0, ',', '.') }}</td>
+                                        <td class="text-end text-success fw-semibold">Rp {{ number_format((float) $reg->amount_paid, 0, ',', '.') }}</td>
+                                        <td class="text-end text-muted">Rp {{ number_format($reg->sisaTagihan(), 0, ',', '.') }}</td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="4" class="text-center py-4 text-muted">
+                                        <td colspan="6" class="text-center py-4 text-muted">
                                             Tidak ada data sesuai filter.
                                         </td>
                                     </tr>
@@ -304,36 +330,50 @@
             </div>
             <div class="modal-body">
                 @if($this->selectedPayment)
+                    @php
+                        $bayar = $this->selectedPayment;
+                        $reg = $bayar->registration;
+                        $seharusnya = $this->nominalSeharusnya;
+                        $beda = $seharusnya !== null && abs((float) $bayar->amount - (float) $seharusnya) > 0.5;
+                    @endphp
                     <div class="row g-4">
                         <div class="col-md-6">
                             <h6 class="fw-semibold text-muted fs-3 mb-3">Detail Pendaftaran</h6>
                             <table class="table table-sm table-borderless mb-0">
                                 <tr>
                                     <td class="text-muted">Nama Sekolah</td>
-                                    <td class="fw-semibold">{{ $this->selectedPayment->display_name }}</td>
+                                    <td class="fw-semibold">{{ $reg?->display_name }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-muted">Kategori Lomba</td>
-                                    <td class="fw-semibold">{{ $this->selectedPayment->competitionCategory?->full_name }}</td>
+                                    <td class="fw-semibold">{{ $reg?->competitionCategory?->full_name }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-muted">Pelatih</td>
-                                    <td>{{ $this->selectedPayment->nama_pelatih }}</td>
+                                    <td>{{ $reg?->nama_pelatih }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-muted">No. HP</td>
-                                    <td>{{ $this->selectedPayment->no_hp }}</td>
+                                    <td>{{ $reg?->no_hp }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-muted">Total Biaya</td>
-                                    <td class="fw-bold text-primary">Rp {{ number_format($this->selectedPayment->total_fee, 0, ',', '.') }}</td>
+                                    <td class="fw-bold text-primary">Rp {{ number_format((float) $reg?->total_fee, 0, ',', '.') }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Sudah Dibayar</td>
+                                    <td class="text-success fw-semibold">Rp {{ number_format((float) $reg?->amount_paid, 0, ',', '.') }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Sisa Tagihan</td>
+                                    <td class="fw-semibold">Rp {{ number_format((float) $reg?->sisaTagihan(), 0, ',', '.') }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-muted">Rekening Tujuan</td>
                                     <td>
-                                        @if($this->selectedPayment->paymentBankAccount)
-                                            {{ $this->selectedPayment->paymentBankAccount->bank_name }} — {{ $this->selectedPayment->paymentBankAccount->account_number }}
-                                            ({{ $this->selectedPayment->paymentBankAccount->account_name }})
+                                        @if($bayar->bankAccount)
+                                            {{ $bayar->bankAccount->bank_name }} — {{ $bayar->bankAccount->account_number }}
+                                            ({{ $bayar->bankAccount->account_name }})
                                         @else
                                             <span class="text-muted">Tidak tercatat</span>
                                         @endif
@@ -343,9 +383,9 @@
                         </div>
                         <div class="col-md-6">
                             <h6 class="fw-semibold text-muted fs-3 mb-3">Bukti Transfer</h6>
-                            @if($this->selectedPayment->payment_proof)
-                                <a href="{{ asset('storage/' . $this->selectedPayment->payment_proof) }}" target="_blank">
-                                    <img src="{{ asset('storage/' . $this->selectedPayment->payment_proof) }}" class="img-fluid rounded border w-100" alt="Bukti pembayaran">
+                            @if($bayar->proof)
+                                <a href="{{ asset('storage/' . $bayar->proof) }}" target="_blank">
+                                    <img src="{{ asset('storage/' . $bayar->proof) }}" class="img-fluid rounded border w-100" alt="Bukti pembayaran">
                                 </a>
                             @else
                                 <div class="text-center py-5 bg-light-subtle rounded border text-muted">
@@ -353,6 +393,40 @@
                                     Tidak ada bukti pembayaran.
                                 </div>
                             @endif
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Jenis &amp; nominal klaim peserta</label>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge {{ $bayar->isDp() ? 'bg-primary-subtle text-primary' : 'bg-success-subtle text-success' }} px-3 py-2">{{ $bayar->labelJenis() }}</span>
+                                <span class="fw-bold fs-5">Rp {{ number_format((float) $bayar->amount, 0, ',', '.') }}</span>
+                            </div>
+                            @if($seharusnya !== null)
+                                <small class="text-muted d-block mt-1">
+                                    Seharusnya Rp {{ number_format((float) $seharusnya, 0, ',', '.') }}.
+                                </small>
+                            @endif
+                            @if($beda)
+                                <div class="alert alert-warning py-2 px-3 mt-2 mb-0 fs-2">
+                                    <i class="ti ti-alert-triangle me-1"></i>
+                                    Nominal klaim berbeda dari yang seharusnya. Cocokkan dengan mutasi rekening sebelum menerima.
+                                </div>
+                            @endif
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Nominal final diterima (Rp)</label>
+                            <input type="number" min="0" step="1000" class="form-control" wire:model="nominalDiterima">
+                            @error('nominalDiterima') <small class="text-danger">{{ $message }}</small> @enderror
+                            <small class="text-muted d-block mt-1">Isi sesuai angka di mutasi rekening. Angka inilah yang dicatat.</small>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Alasan penolakan (opsional)</label>
+                            <input type="text" class="form-control" wire:model="alasanTolak" placeholder="Contoh: nominal tidak sesuai mutasi">
+                            <small class="text-muted d-block mt-1">Peserta melihat alasan ini di portal dan dapat mengunggah ulang.</small>
                         </div>
                     </div>
                 @else
@@ -364,11 +438,11 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Tutup</button>
                 @if($this->selectedPayment)
-                    <button type="button" class="btn btn-outline-danger" wire:click="rejectPayment({{ $this->selectedPayment->id }})" wire:confirm="Tolak bukti pembayaran {{ $this->selectedPayment->display_name }}? Peserta harus upload ulang.">
+                    <button type="button" class="btn btn-outline-danger" wire:click="rejectPayment({{ $this->selectedPayment->id }})">
                         <i class="ti ti-x"></i> Tolak
                     </button>
                     <button type="button" class="btn btn-success" wire:click="verifyPayment({{ $this->selectedPayment->id }})">
-                        <i class="ti ti-circle-check"></i> Verifikasi
+                        <i class="ti ti-circle-check"></i> Terima
                     </button>
                 @endif
             </div>

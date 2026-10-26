@@ -26,6 +26,28 @@ class RegistrationResource extends JsonResource
             'urutan_tampil' => $this->urutan_tampil,
             'payment_status' => $this->payment_status,
             'total_fee' => $this->total_fee,
+
+            // Ringkasan pembayaran bertahap. `amount_paid` adalah uang yang
+            // sudah diverifikasi; `sisa_tagihan` pasangannya. Keduanya dikirim
+            // sekaligus supaya aplikasi klien tidak perlu menghitung sendiri
+            // dan bisa berbeda pendapat dengan server.
+            'amount_paid' => (float) $this->jumlahDibayar(),
+            'sisa_tagihan' => $this->sisaTagihan(),
+            'dp_deadline' => $this->dp_deadline?->toIso8601String(),
+
+            'payments' => $this->whenLoaded('registrationPayments', fn () =>
+                $this->registrationPayments->map(fn ($bayar) => [
+                    'id' => $bayar->id,
+                    'kind' => $bayar->kind,
+                    'label' => $bayar->labelJenis(),
+                    'amount' => (float) $bayar->amount,
+                    'status' => $bayar->status,
+                    'proof' => $bayar->proof ? asset('storage/' . $bayar->proof) : null,
+                    'rejection_reason' => $bayar->rejection_reason,
+                    'verified_at' => $bayar->verified_at?->toIso8601String(),
+                ])
+            ),
+
             'logo_sekolah' => $this->logo_sekolah ? asset('storage/' . $this->logo_sekolah) : null,
             'foto_pelatih' => $this->foto_pelatih ? asset('storage/' . $this->foto_pelatih) : null,
             'danton_foto' => $this->danton_foto ? asset('storage/' . $this->danton_foto) : null,

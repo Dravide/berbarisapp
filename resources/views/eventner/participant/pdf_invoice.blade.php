@@ -40,6 +40,7 @@
         .meta .no-val { font-size: 13px; font-weight: bold; color: #1a1a2e; }
         .meta .status { display: table-cell; text-align: right; vertical-align: middle; }
         .badge-lunas { display: inline-block; background: #16a34a; color: #fff; font-size: 11px; font-weight: bold; padding: 5px 14px; border-radius: 4px; letter-spacing: 1px; }
+        .badge-sebagian { display: inline-block; background: #b45309; color: #fff; font-size: 11px; font-weight: bold; padding: 5px 14px; border-radius: 4px; letter-spacing: 1px; }
 
         /* DATA PEMBAYAR */
         .info { width: 100%; border-collapse: collapse; margin-bottom: 14px; }
@@ -54,6 +55,10 @@
         table.biaya .amount { text-align: right; }
         table.biaya tr.total td { background: #1a1a2e; color: #fff; font-weight: bold; font-size: 11px; }
         table.biaya tr.total .amount { font-size: 12px; }
+
+        /* SISA TAGIHAN */
+        .sisa { border: 1px solid #b45309; background: #fffbeb; padding: 8px 10px; margin-bottom: 16px; font-size: 9px; color: #7c2d12; }
+        .sisa .angka { font-size: 12px; font-weight: bold; }
 
         /* TTD */
         .ttd { margin-top: 28px; }
@@ -76,8 +81,30 @@
         // Semua kwitansi sekolah ini (1 NPSN, bisa multi pasukan).
         $primary = $registrations->first();
         $totalFee = $registrations->sum(fn ($r) => (float) $r->total_fee);
-        $verifiedAt = $registrations->filter(fn ($r) => $r->payment_verified_at)
-            ->sortBy('payment_verified_at')->last()->payment_verified_at ?? now();
+        $totalDibayar = $registrations->sum(fn ($r) => $r->jumlahDibayar());
+        $totalSisa = max(0, $totalFee - $totalDibayar);
+
+        // Lunas hanya bila SELURUH pasukan sekolah ini tertutup tagihannya.
+        // Satu pasukan yang masih DP membuat kwitansi ini berstatus
+        // "DIBAYAR SEBAGIAN" — cap LUNAS untuk uang yang belum masuk adalah
+        // dokumen yang salah.
+        $lunas = $totalSisa <= 0.5;
+
+        // Tanggal verifikasi terakhir dari baris pembayaran yang diterima.
+        // `payment_verified_at` hanya terisi saat lunas, jadi DP akan
+        // mencetak "—" bila dibaca dari sana.
+        $verifiedAt = $registrations
+            ->flatMap(fn ($r) => $r->registrationPayments->where('status', 'verified')->pluck('verified_at'))
+            ->filter()
+            ->sort()
+            ->last();
+
+        if (! $verifiedAt) {
+            $verifiedAt = $registrations->filter(fn ($r) => $r->payment_verified_at)
+                ->sortBy('payment_verified_at')->last()?->payment_verified_at;
+        }
+
+        $verifiedAt = $verifiedAt ?: now();
         $invoiceNo = 'INV-' . str_pad($primary->id, 4, '0', STR_PAD_LEFT)
             . '/' . \Carbon\Carbon::parse($verifiedAt)->format('mY');
         $verifiedDate = \Carbon\Carbon::parse($verifiedAt)->translatedFormat('d F Y, H:i') . ' WIB';
@@ -100,7 +127,7 @@
         </table>
     </div>
 
-    <div class="judul">Kwitansi Pembayaran</div>
+    <div class="judul">{{ $lunas ? 'Kwitansi Pembayaran' : 'Kuitansi Uang Muka' }}</div>
     <div class="subjudul">Dicetak: {{ now()->translatedFormat('d F Y H:i') }} WIB</div>
 
     <div class="meta">
@@ -109,7 +136,11 @@
             <span class="no-val">{{ $invoiceNo }}</span>
         </div>
         <div class="status">
-            <span class="badge-lunas">LUNAS</span>
+            @if($lunas)
+                <span class="badge-lunas">LUNAS</span>
+            @else
+                <span class="badge-sebagian">DIBAYAR SEBAGIAN</span>
+            @endif
         </div>
     </div>
 
@@ -170,13 +201,48 @@
                     </td>
                     <td class="amount">Rp {{ number_format((float) $reg->total_fee, 0, ',', '.') }}</td>
                 </tr>
+                {{-- Rincian setoran tiap pasukan. Dicetak hanya bila lebih dari
+                     satu baris, supaya kwitansi lunas sekali-bayar tetap ringkas
+                     seperti sebelumnya. --}}
+                @if($reg->registrationPayments->where('status', 'verified')->count() > 1)
+                    @foreach($reg->registrationPayments->where('status', 'verified') as $bayar)
+                        <tr>
+                            <td style="padding-left:22px; color:#555; font-size:9px;">
+                                &ndash; {{ $bayar->labelJenis() }},
+                                diterima {{ $bayar->verified_at?->translatedFormat('d M Y') }}
+                            </td>
+                            <td class="amount" style="color:#555; font-size:9px;">Rp {{ number_format((float) $bayar->amount, 0, ',', '.') }}</td>
+                        </tr>
+                    @endforeach
+                @endif
             @endforeach
             <tr class="total">
-                <td>TOTAL ({{ $registrations->count() }} pasukan)</td>
+                <td>TOTAL TAGIHAN ({{ $registrations->count() }} pasukan)</td>
                 <td class="amount">Rp {{ number_format($totalFee, 0, ',', '.') }}</td>
             </tr>
         </tbody>
     </table>
+
+    @unless($lunas)
+        <div class="sisa">
+            <table style="width:100%; border-collapse:collapse;">
+                <tr>
+                    <td style="border:none; padding:0; font-size:9px;">
+                        Telah dibayar<br>
+                        <span class="angka">Rp {{ number_format($totalDibayar, 0, ',', '.') }}</span>
+                    </td>
+                    <td style="border:none; padding:0; font-size:9px; text-align:right;">
+                        Sisa tagihan<br>
+                        <span class="angka">Rp {{ number_format($totalSisa, 0, ',', '.') }}</span>
+                    </td>
+                </tr>
+            </table>
+            <div style="margin-top:6px; font-size:8px;">
+                Kuitansi ini adalah bukti pembayaran SEBAGIAN. Kwitansi lunas diterbitkan setelah sisa
+                tagihan dibayar dan diverifikasi panitia.
+            </div>
+        </div>
+    @endunless
 
     {{-- TANDA TANGAN --}}
     <div class="ttd">

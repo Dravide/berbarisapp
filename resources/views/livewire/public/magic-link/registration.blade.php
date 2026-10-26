@@ -521,7 +521,7 @@
             </div>
 
             {{-- Payment Section --}}
-            @if($registration->total_fee > 0 || $registration->payment_status === 'unpaid' || $registration->payment_status === 'pending_verification')
+            @if($registration->total_fee > 0 || $registration->payment_status === 'unpaid' || $registration->payment_status === 'pending_verification' || $registration->payment_status === 'dp_paid')
                 <div class="surface-card overflow-hidden border-t-4 border-t-emerald-500">
                     <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40">
                         <h3 class="font-display text-sm font-bold text-deep-slate inline-flex items-center gap-2 mb-0">
@@ -531,6 +531,14 @@
                     <div class="p-5">
                         @php
                             $bankAccounts = $registration->eventner->activeBankAccounts;
+                            $sisaTagihan = $registration->sisaTagihan();
+                            $targetDp = $registration->targetDp();
+                            $riwayatBayar = $registration->registrationPayments;
+                            $adaMenunggu = $riwayatBayar->contains(fn ($b) => $b->isPending());
+                            $sudahDp = $registration->sudahDp();
+                            $persenLunas = (float) $registration->total_fee > 0
+                                ? min(100, round((float) $registration->amount_paid / (float) $registration->total_fee * 100))
+                                : 0;
                         @endphp
 
                         @if($registration->payment_status === 'paid')
@@ -541,71 +549,188 @@
                                     <span class="block mt-1 text-xs font-medium text-emerald-700/90">Invoice dapat diunduh di kartu <strong>Dokumen &amp; Unduhan</strong> di atas.</span>
                                 </div>
                             </div>
-                        @elseif($registration->payment_status === 'pending_verification')
-                            <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 text-sm font-semibold flex items-start gap-2">
-                                <i class="ti ti-clock-filled mt-0.5"></i>
-                                <div>
-                                    Bukti pembayaran Anda sudah diunggah. Menunggu verifikasi panitia.
-                                </div>
-                            </div>
-                        @elseif($registration->payment_status === 'unpaid')
-                            <div class="grid gap-5 md:grid-cols-2">
-                                <div>
-                                    <h4 class="text-sm font-bold text-deep-slate mb-3">Tagihan Pendaftaran</h4>
-                                    <div class="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-5 text-center">
-                                        <span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider block">Total Biaya Pendaftaran</span>
-                                        <h2 class="text-2xl font-extrabold text-emerald-600 m-0">Rp {{ number_format($registration->total_fee, 0, ',', '.') }}</h2>
+                        @else
+                            {{-- Ringkasan pembayaran: hanya muncul setelah ada uang
+                                 yang benar-benar diverifikasi. --}}
+                            @if($sudahDp)
+                                <div class="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 mb-5">
+                                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                                        <span class="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">Sudah Dibayar</span>
+                                        <span class="text-sm font-extrabold text-emerald-700">Rp {{ number_format((float) $registration->amount_paid, 0, ',', '.') }}</span>
                                     </div>
+                                    <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+                                        <span class="text-[10px] text-amber-700 font-bold uppercase tracking-wider">Sisa Tagihan</span>
+                                        <span class="text-sm font-extrabold text-amber-700">Rp {{ number_format($sisaTagihan, 0, ',', '.') }}</span>
+                                    </div>
+                                    <div class="h-2 rounded-full bg-surface-container overflow-hidden">
+                                        <div class="h-full bg-emerald-500" style="width: {{ $persenLunas }}%"></div>
+                                    </div>
+                                    <span class="text-[10px] text-on-surface-variant block mt-1.5">{{ $persenLunas }}% dari total Rp {{ number_format($registration->total_fee, 0, ',', '.') }}.</span>
 
-                                    @if($bankAccounts->isNotEmpty())
-                                        <div class="mt-4">
-                                            <h4 class="text-sm font-bold text-deep-slate mb-2">Transfer ke Rekening:</h4>
-                                            @foreach($bankAccounts as $bank)
-                                                <div class="bg-surface-container-low border border-outline-variant/40 rounded-xl p-3.5 mb-2 last:mb-0">
-                                                    <div class="flex justify-between items-center">
-                                                        <div>
-                                                            <span class="text-xs font-bold text-deep-slate block">{{ $bank->bank_name }}</span>
-                                                            <span class="text-sm font-mono font-extrabold text-deep-slate block mt-0.5">{{ $bank->account_number }}</span>
-                                                            <span class="text-[10px] text-on-surface-variant block">a.n. {{ $bank->account_name }}</span>
+                                    @if($registration->dp_deadline)
+                                        <span class="text-[11px] font-semibold block mt-2 {{ $registration->lewatTenggatDp() ? 'text-red-600' : 'text-on-surface-variant' }}">
+                                            <i class="ti ti-{{ $registration->lewatTenggatDp() ? 'alert-triangle' : 'calendar-event' }}"></i>
+                                            @if($registration->lewatTenggatDp())
+                                                Tenggat pelunasan {{ \Carbon\Carbon::parse($registration->dp_deadline)->translatedFormat('d M Y') }} sudah lewat. Segera lunasi atau hubungi panitia.
+                                            @else
+                                                Lunasi paling lambat {{ \Carbon\Carbon::parse($registration->dp_deadline)->translatedFormat('d M Y') }}.
+                                            @endif
+                                        </span>
+                                    @endif
+                                </div>
+                            @endif
+
+                            {{-- Riwayat pembayaran: jejak tiap bukti yang pernah dikirim. --}}
+                            @if($riwayatBayar->isNotEmpty())
+                                <div class="mb-5">
+                                    <h4 class="text-sm font-bold text-deep-slate mb-2">Riwayat Pembayaran</h4>
+                                    <div class="rounded-xl border border-outline-variant/40 overflow-hidden">
+                                        <table class="w-full text-xs">
+                                            <tbody>
+                                                @foreach($riwayatBayar as $bayar)
+                                                    <tr class="border-b border-outline-variant/30 last:border-b-0">
+                                                        <td class="p-2.5 font-semibold text-deep-slate">{{ $bayar->labelJenis() }}</td>
+                                                        <td class="p-2.5 text-on-surface-variant">{{ $bayar->created_at?->translatedFormat('d M Y') }}</td>
+                                                        <td class="p-2.5 text-right font-bold text-deep-slate">Rp {{ number_format((float) $bayar->amount, 0, ',', '.') }}</td>
+                                                        <td class="p-2.5 text-right">
+                                                            @if($bayar->isVerified())
+                                                                <span class="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 text-emerald-700 px-2 py-0.5 font-bold"><i class="ti ti-circle-check"></i> Diterima</span>
+                                                            @elseif($bayar->isPending())
+                                                                <span class="inline-flex items-center gap-1 rounded-md bg-amber-500/10 text-amber-700 px-2 py-0.5 font-bold"><i class="ti ti-clock"></i> Menunggu</span>
+                                                            @else
+                                                                <span class="inline-flex items-center gap-1 rounded-md bg-red-500/10 text-red-600 px-2 py-0.5 font-bold"><i class="ti ti-x"></i> Ditolak</span>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                    @if($bayar->status === 'rejected' && $bayar->rejection_reason)
+                                                        <tr class="border-b border-outline-variant/30 last:border-b-0 bg-red-500/5">
+                                                            <td colspan="4" class="p-2.5 text-[11px] text-red-600 font-semibold">Alasan: {{ $bayar->rejection_reason }}</td>
+                                                        </tr>
+                                                    @endif
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @endif
+
+                            @if($adaMenunggu)
+                                <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-700 text-sm font-semibold flex items-start gap-2">
+                                    <i class="ti ti-clock-filled mt-0.5"></i>
+                                    <div>
+                                        Bukti pembayaran Anda sudah diunggah. Menunggu verifikasi panitia.
+                                    </div>
+                                </div>
+                            @else
+                                {{-- Seluruh kartu pembayaran diikat langsung ke Livewire.
+                                     Sebelumnya pilihan DP dan nominal dititipkan ke state
+                                     Alpine lewat `@entangle(...).defer`. Itu rapuh di sini:
+                                     mengunggah bukti transfer memicu request Livewire
+                                     tersendiri, blok ini dirender ulang, dan nilai yang
+                                     belum sempat terkirim hilang — akibatnya validasi
+                                     selalu bilang "wajib diisi" walau sudah diketik. --}}
+                                <div class="grid gap-5 md:grid-cols-2">
+                                    <div>
+                                        <h4 class="text-sm font-bold text-deep-slate mb-3">Tagihan Pendaftaran</h4>
+                                        <div class="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-5 text-center">
+                                            <span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider block">{{ $sudahDp ? 'Sisa Tagihan' : 'Total Biaya Pendaftaran' }}</span>
+                                            <h2 class="text-2xl font-extrabold text-emerald-600 m-0">Rp {{ number_format($sisaTagihan, 0, ',', '.') }}</h2>
+                                        </div>
+
+                                        {{-- Pilihan DP hanya muncul bila panitia menyalakannya
+                                             untuk tingkat ini. Default-nya mati, jadi portal
+                                             event biasa tidak berubah sama sekali. --}}
+                                        @if($targetDp !== null)
+                                            <div class="mt-4">
+                                                <h4 class="text-sm font-bold text-deep-slate mb-2">Cara Pembayaran</h4>
+                                                <label class="flex gap-2 items-start p-3 rounded-xl border mb-2 cursor-pointer {{ $modeBayar === 'dp' ? 'border-emerald-500 bg-emerald-500/5' : 'border-outline-variant/40' }}">
+                                                    <input type="radio" name="modeBayar" value="dp" class="mt-1" wire:model.live="modeBayar">
+                                                    <span class="text-xs leading-normal">
+                                                        <strong class="block text-deep-slate">Bayar DP dulu</strong>
+                                                        <span class="text-on-surface-variant">Rp {{ number_format($targetDp, 0, ',', '.') }} sekarang, sisa Rp {{ number_format($sisaTagihan - $targetDp, 0, ',', '.') }} menyusul.</span>
+                                                    </span>
+                                                </label>
+                                                <label class="flex gap-2 items-start p-3 rounded-xl border cursor-pointer {{ $modeBayar === 'penuh' ? 'border-emerald-500 bg-emerald-500/5' : 'border-outline-variant/40' }}">
+                                                    <input type="radio" name="modeBayar" value="penuh" class="mt-1" wire:model.live="modeBayar">
+                                                    <span class="text-xs leading-normal">
+                                                        <strong class="block text-deep-slate">Bayar penuh</strong>
+                                                        <span class="text-on-surface-variant">Rp {{ number_format($sisaTagihan, 0, ',', '.') }} sekaligus.</span>
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        @endif
+
+                                        @if($bankAccounts->isNotEmpty())
+                                            <div class="mt-4">
+                                                <h4 class="text-sm font-bold text-deep-slate mb-2">Transfer ke Rekening:</h4>
+                                                @foreach($bankAccounts as $bank)
+                                                    <div class="bg-surface-container-low border border-outline-variant/40 rounded-xl p-3.5 mb-2 last:mb-0">
+                                                        <div class="flex justify-between items-center">
+                                                            <div>
+                                                                <span class="text-xs font-bold text-deep-slate block">{{ $bank->bank_name }}</span>
+                                                                <span class="text-sm font-mono font-extrabold text-deep-slate block mt-0.5">{{ $bank->account_number }}</span>
+                                                                <span class="text-[10px] text-on-surface-variant block">a.n. {{ $bank->account_name }}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    @endif
-                                </div>
-
-                                <div>
-                                    <h4 class="text-sm font-bold text-deep-slate mb-3">Upload Bukti Transfer</h4>
-                                    <p class="text-xs text-on-surface-variant font-medium mb-4 leading-normal">
-                                        Setelah melakukan transfer, upload bukti pembayaran untuk diverifikasi panitia.
-                                    </p>
-                                    <div wire:ignore wire:key="pond-{{ $activeRegId }}-payment" x-data="{ pond: null }" x-init="
-                                        pond = FilePond.create($refs.paymentProof, {
-                                            credits: false,
-                                            labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
-                                            server: {
-                                                process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
-                                                    @this.upload('paymentProof', file, load, error, progress)
-                                                },
-                                                revert: (filename, load) => {
-                                                    @this.removeUpload('paymentProof', filename, load)
-                                                },
-                                            },
-                                        });
-                                    ">
-                                        <input type="file" x-ref="paymentProof" accept="image/*">
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </div>
-                                    @error('paymentProof') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
-                                    @if($registration->payment_proof)
-                                        <span class="text-xs font-bold text-emerald-600 mt-2 block inline-flex items-center gap-1"><i class="ti ti-circle-check-filled"></i> Bukti pembayaran sudah diunggah</span>
-                                    @endif
 
-                                    <button wire:click="submitPaymentProof" class="btn-primary w-full mt-4 py-3 px-6 font-bold text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer">
-                                        <i class="ti ti-upload"></i> Kirim Bukti Pembayaran
-                                    </button>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-deep-slate mb-3">Upload Bukti Transfer</h4>
+                                        <p class="text-xs text-on-surface-variant font-medium mb-4 leading-normal">
+                                            Setelah melakukan transfer, upload bukti pembayaran untuk diverifikasi panitia.
+                                        </p>
+
+                                        <div class="mb-4">
+                                            <label class="text-xs font-bold text-deep-slate block mb-1">
+                                                Nominal yang ditransfer <span class="text-red-500">*</span>
+                                            </label>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs font-bold text-on-surface-variant">Rp</span>
+                                                {{-- `blur`, bukan `live.debounce`: nilainya harus sudah
+                                                     tersimpan di server SEBELUM peserta menekan area
+                                                     unggah atau tombol kirim. Kedua klik itu lebih dulu
+                                                     memindahkan fokus dari kolom ini, jadi blur selalu
+                                                     terjadi tepat sebelum request mana pun berjalan —
+                                                     tidak ada jendela waktu yang bisa kalah balapan. --}}
+                                                <input type="number" min="1" step="1000" required
+                                                    wire:model.blur="paymentNominal"
+                                                    placeholder="Isi nominal sesuai bukti transfer"
+                                                    class="form-control w-full rounded-lg border border-outline-variant/50 px-3 py-2 text-sm font-semibold">
+                                            </div>
+                                            @error('paymentNominal') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+                                            <span class="text-[10px] text-on-surface-variant block mt-1">
+                                                Isi sesuai angka pada bukti transfer Anda. Panitia memverifikasi dari mutasi rekening, jadi nominal yang berbeda tetap tercatat apa adanya.
+                                            </span>
+                                        </div>
+
+                                        <div wire:ignore wire:key="pond-{{ $activeRegId }}-payment" x-data="{ pond: null }" x-init="
+                                            pond = FilePond.create($refs.paymentProof, {
+                                                credits: false,
+                                                labelIdle: 'Tarik & Letakkan gambar atau <span class=\'filepond--label-action\'>Pilih File</span>',
+                                                server: {
+                                                    process: (fieldName, file, metadata, load, error, progress, abort, transfer, options) => {
+                                                        @this.upload('paymentProof', file, load, error, progress)
+                                                    },
+                                                    revert: (filename, load) => {
+                                                        @this.removeUpload('paymentProof', filename, load)
+                                                    },
+                                                },
+                                            });
+                                        ">
+                                            <input type="file" x-ref="paymentProof" accept="image/*">
+                                        </div>
+                                        @error('paymentProof') <span class="text-red-500 text-xs font-semibold mt-1 block">{{ $message }}</span> @enderror
+
+                                        <button wire:click="submitPaymentProof" class="btn-primary w-full mt-4 py-3 px-6 font-bold text-sm inline-flex items-center justify-center gap-1.5 cursor-pointer">
+                                            <i class="ti ti-upload"></i> {{ $sudahDp ? 'Kirim Bukti Pelunasan' : 'Kirim Bukti Pembayaran' }}
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
                         @endif
                     </div>
                 </div>
@@ -626,6 +751,12 @@
                                 tidak perlu menunggu Technical Meeting. Silakan lengkapi berkas dan data pasukan di
                                 bawah ini, kemudian tekan tombol <strong>"Konfirmasi &amp; Kirim"</strong> untuk
                                 memproses berkas ke Panitia.
+                            @elseif($registration->sudahDp() && !$registration->bolehFinalisasi())
+                                Uang muka pendaftaran sudah diterima, jadi pengisian data sudah dibuka lebih awal.
+                                Silakan lengkapi berkas dan data pasukan di bawah ini. Tombol
+                                <strong>"Konfirmasi &amp; Kirim"</strong> baru aktif setelah sisa tagihan
+                                <strong>Rp {{ number_format($registration->sisaTagihan(), 0, ',', '.') }}</strong>
+                                dilunasi dan diverifikasi panitia, atau setelah Technical Meeting.
                             @else
                                 Masa Technical Meeting telah dilaksanakan. Silakan lengkapi berkas dan data pasukan di bawah ini, kemudian tekan tombol <strong>"Konfirmasi &amp; Kirim"</strong> untuk memproses berkas ke Panitia.
                             @endif
@@ -1190,7 +1321,12 @@
                                     <i class="ti ti-device-floppy"></i> Simpan Draft
                                 </button>
 
-                                @if($registration->status_berkas === 'booking' && ($regStatus === 'open' || $formulirTerbuka))
+                                {{-- Tombol finalisasi: saat pendaftaran sudah dibuka
+                                     resmi (regStatus open) tombol selalu tampil;
+                                     saat masih masa booking, ikut gerbang
+                                     bolehFinalisasi() — TM lewat atau lunas.
+                                     DP tidak membuka tombol ini. --}}
+                                @if($registration->status_berkas === 'booking' && ($regStatus === 'open' || $registration->bolehFinalisasi()))
                                     <button type="button" onclick="confirmAction()" class="btn-primary !bg-emerald-600 hover:!bg-emerald-700 !text-white border-none py-2.5 px-5 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-xs">
                                         <i class="ti ti-circle-check"></i> Konfirmasi &amp; Kirim
                                     </button>

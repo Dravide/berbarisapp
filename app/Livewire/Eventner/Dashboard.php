@@ -5,6 +5,7 @@ namespace App\Livewire\Eventner;
 use Livewire\Component;
 use App\Models\Eventner;
 use App\Models\Registration;
+use App\Models\RegistrationPayment;
 use App\Models\VoteBooster;
 use App\Models\VoteTransaction;
 use App\Models\Ticket;
@@ -216,9 +217,11 @@ class Dashboard extends Component
             ->whereIn('status', ['PAID', 'CHECKED_IN'])
             ->sum('total_amount');
 
+        // Uang pendaftaran yang benar-benar masuk — DP ikut, bukti yang belum
+        // diverifikasi tidak. Lihat Registration::sqlDibayar().
         $feeRevenue = Registration::where('eventner_id', $eventnerId)
-            ->where('payment_status', 'paid')
-            ->sum('total_fee');
+            ->selectRaw('COALESCE(SUM(' . Registration::sqlDibayar() . '), 0) as total')
+            ->first()?->total;
 
         $this->totalRevenue = $this->voteRevenue + $this->ticketRevenue + (float) $feeRevenue;
 
@@ -246,8 +249,12 @@ class Dashboard extends Component
             ->where('status', 'CHECKED_IN')
             ->count();
 
-        $this->pendingVerificationCount = Registration::where('eventner_id', $eventnerId)
-            ->where('payment_status', 'pending_verification')
+        // Dihitung per BUKTI pembayaran, bukan per pendaftaran: satu pasukan
+        // bisa mengirim bukti DP lalu bukti pelunasan, dan keduanya menunggu
+        // verifikasi masing-masing. Menghitung pendaftaran membuat lonceng ini
+        // berbunyi "1" padahal antreannya dua.
+        $this->pendingVerificationCount = RegistrationPayment::where('status', RegistrationPayment::STATUS_PENDING)
+            ->whereHas('registration', fn ($q) => $q->where('eventner_id', $eventnerId))
             ->count();
 
         $this->berkasMenungguCount = Registration::where('eventner_id', $eventnerId)
@@ -574,10 +581,13 @@ class Dashboard extends Component
             ->groupBy('date')
             ->pluck('total', 'date');
 
-        $feeRevenues = Registration::where('eventner_id', $eventnerId)
-            ->where('payment_status', 'paid')
-            ->where('payment_verified_at', '>=', $startDate)
-            ->selectRaw('DATE(payment_verified_at) as date, SUM(total_fee) as total')
+        // Uang masuk harian dari tanggal verifikasi BARIS pembayaran: kolom
+        // registrations.payment_verified_at hanya terisi saat lunas, jadi DP
+        // tidak akan pernah muncul di grafik kalau dibaca dari sana.
+        $feeRevenues = \App\Models\RegistrationPayment::where('status', 'verified')
+            ->whereHas('registration', fn ($q) => $q->where('eventner_id', $eventnerId))
+            ->where('verified_at', '>=', $startDate)
+            ->selectRaw('DATE(verified_at) as date, SUM(amount) as total')
             ->groupBy('date')
             ->pluck('total', 'date');
 

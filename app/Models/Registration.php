@@ -40,6 +40,8 @@ class Registration extends Model
         'urutan_tampil',
         'daftar_ulang_at',
         'total_fee',
+        'amount_paid',
+        'dp_deadline',
         'payment_status',
         'payment_proof',
         'payment_bank_account_id',
@@ -55,6 +57,8 @@ class Registration extends Model
     {
         return [
             'total_fee' => 'decimal:2',
+            'amount_paid' => 'decimal:2',
+            'dp_deadline' => 'datetime',
             'payment_verified_at' => 'datetime',
             'daftar_ulang_at' => 'datetime',
             'verified_at' => 'datetime',
@@ -219,6 +223,17 @@ class Registration extends Model
     public function paymentVerifiedBy()
     {
         return $this->belongsTo(User::class, 'payment_verified_by');
+    }
+
+    /**
+     * Penerimaan uang untuk pendaftaran ini — DP dan pelunasan, urut waktu.
+     *
+     * Satu-satunya sumber angka `amount_paid`; model ini tidak pernah
+     * menghitung ulang sendiri (lihat App\Services\PaymentRecorder).
+     */
+    public function registrationPayments()
+    {
+        return $this->hasMany(RegistrationPayment::class)->orderBy('created_at');
     }
 
     public function verifiedBy()
@@ -403,30 +418,179 @@ class Registration extends Model
         return $this->payment_status === 'free';
     }
 
+    /** Sudah menyetor uang muka tapi tagihannya belum tertutup. */
+    public function isDpPaid(): bool
+    {
+        return $this->payment_status === 'dp_paid';
+    }
+
+    /**
+     * Uang yang sudah benar-benar diterima panitia untuk pendaftaran ini.
+     *
+     * Sumbernya `amount_paid` — cache dari baris `registration_payments`
+     * berstatus verified yang dijumlah ulang oleh App\Services\PaymentRecorder.
+     *
+     * Ada satu cadangan: baris yang sudah ditandai `paid` tapi belum punya
+     * catatan pembayaran sama sekali. Itu pendaftaran lama dari sebelum ledger
+     * ada (migrasi backfill mengisinya, tapi seeder, factory, dan baris yang
+     * ditandai lunas langsung oleh panitia tidak lewat sana). Membacanya
+     * sebagai nol akan mencetak "DIBAYAR SEBAGIAN" pada kwitansi yang sudah
+     * lunas — dokumen yang salah untuk uang yang sudah masuk. Begitu ada satu
+     * saja baris pembayaran, angka ledger yang dipakai dan cadangan ini mati.
+     */
+    public function jumlahDibayar(): float
+    {
+        $tercatat = (float) $this->amount_paid;
+
+        if ($tercatat > 0) {
+            return min($tercatat, (float) $this->total_fee);
+        }
+
+        if ($this->payment_status === 'paid') {
+            return (float) $this->total_fee;
+        }
+
+        return 0.0;
+    }
+
+    /**
+     * Ungkapan SQL untuk "uang yang sudah diterima" — pasangan agregat dari
+     * jumlahDibayar().
+     *
+     * Dibutuhkan karena layar keuangan menjumlah puluhan ribu baris di dalam
+     * database; memanggil accessor per baris berarti menarik semuanya ke PHP.
+     * Dua ungkapan yang menghitung angka yang sama HARUS tinggal bersebelahan:
+     * kalau salah satunya berubah sendiri, dashboard dan portal akan
+     * menampilkan sisa tagihan yang berbeda untuk pendaftaran yang sama.
+     */
+    public static function sqlDibayar(): string
+    {
+        return "CASE WHEN amount_paid > 0 THEN amount_paid "
+            . "WHEN payment_status = 'paid' THEN total_fee ELSE 0 END";
+    }
+
+    /**
+     * Sisa tagihan yang belum dibayar. Nol berarti lunas.
+     *
+     * Selalu dihitung dari `total_fee` (snapshot harga saat booking) dikurangi
+     * uang yang sudah diterima — bukan dari `payment_status`, yang hanya
+     * cermin. Pendaftaran gratis menghasilkan nol.
+     */
+    public function sisaTagihan(): float
+    {
+        return max(0, (float) $this->total_fee - $this->jumlahDibayar());
+    }
+
+    /**
+     * Sudah menyetor sebagian, tapi masih ada sisa.
+     *
+     * Inilah arti "DP" di seluruh sistem. Ia sengaja TIDAK sama dengan
+     * `payment_status === 'dp_paid'`: status itu bisa tertinggal bila
+     * PaymentRecorder gagal di tengah jalan, sedangkan perbandingan dua angka
+     * selalu benar.
+     */
+    public function sudahDp(): bool
+    {
+        return $this->jumlahDibayar() > 0 && $this->sisaTagihan() > 0;
+    }
+
+    /**
+     * Nominal DP yang harus dibayar pendaftaran ini — null bila tingkatnya
+     * tidak menawarkan DP, sudah lunas, atau sudah pernah menyetor DP.
+     *
+     * Memakai `total_fee` milik baris ini, bukan harga kategori hari ini:
+     * pendaftar yang masuk di gelombang pertama tidak boleh tiba-tiba ditagih
+     * DP menurut harga gelombang terakhir.
+     */
+    public function targetDp(): ?float
+    {
+        $kategori = $this->competitionCategory;
+
+        if (! $kategori || ! $kategori->punyaDp()) {
+            return null;
+        }
+
+        $sisa = $this->sisaTagihan();
+
+        if ($sisa <= 0) {
+            return null;
+        }
+
+        // Sudah menyetor uang muka = tidak ditawari DP lagi. Tanpa penjagaan
+        // ini portal menampilkan "Bayar DP dulu" untuk pasukan yang justru
+        // sedang melunasi, dan setiap kiriman berikutnya tercatat sebagai DP
+        // kedua dengan nominal yang sama.
+        if ($this->sudahDp()) {
+            return null;
+        }
+
+        return $kategori->nominalDp((float) $this->total_fee);
+    }
+
+    /**
+     * Lewat tenggat pelunasan setelah DP.
+     *
+     * Penanda untuk panitia, BUKAN pembatal: pendaftaran yang telat melunasi
+     * tidak otomatis dibatalkan, karena pembatalan menuntut kebijakan refund
+     * yang belum ada. Yang dilakukan sistem hanya membuatnya terlihat.
+     */
+    public function lewatTenggatDp(): bool
+    {
+        return $this->sudahDp()
+            && $this->dp_deadline !== null
+            && now()->gt($this->dp_deadline);
+    }
+
     public function isBooking(): bool
     {
         return $this->status_berkas === 'booking';
     }
 
     /**
-     * Masa booking sudah boleh diisi — Technical Meeting lewat, atau biaya
-     * pendaftaran pasukan ini sudah lunas.
+     * Masa booking sudah boleh diisi — Technical Meeting lewat, biaya
+     * pendaftaran lunas, atau uang muka sudah diverifikasi.
      *
-     * Inilah satu-satunya aturan "sudah boleh" di portal: pendaftar yang sudah
-     * membayar tidak perlu menunggu TM untuk mengisi data pelatih, danton, dan
-     * anggota, dan tombol "Konfirmasi & Kirim" ikut terbuka untuknya. TM yang
-     * sudah lewat membuka hal yang sama bagi semua orang, lunas atau belum.
+     * Inilah satu-satunya aturan "sudah boleh mengisi" di portal. Dipakai
+     * bersama view, komponen Livewire, dan API supaya ketiganya tidak pernah
+     * berbeda pendapat — beda pendapat di sini berarti tombol tampil tapi
+     * server menolak, atau sebaliknya.
      *
-     * Dipakai bersama view, komponen Livewire, dan API supaya ketiganya tidak
-     * pernah berbeda pendapat — beda pendapat di sini berarti tombol tampil
-     * tapi server menolak, atau sebaliknya.
+     * DP ikut membuka pengisian (keputusan pemilik produk): sekolah yang sudah
+     * menyetor uang muka tidak perlu menunggu TM untuk melengkapi data pelatih,
+     * danton, dan anggota. Yang TIDAK dibuka oleh DP adalah finalisasi —
+     * lihat bolehFinalisasi().
      *
-     * Perhatikan: yang dibaca `payment_status` milik pendaftaran ini, bukan
-     * event. "Sudah membayar" berarti panitia sudah memverifikasi lunas; bukti
+     * Perhatikan: yang dibaca status milik pendaftaran ini, bukan event. Bukti
      * transfer yang masih menunggu verifikasi belum membuka apa pun.
      */
     public function sudahBolehMengisi(): bool
     {
+        if ($this->isPaid() || $this->sudahDp()) {
+            return true;
+        }
+
+        $tm = $this->eventner?->technical_meeting;
+
+        return ! ($tm && now()->lt($tm));
+    }
+
+    /**
+     * Tombol "Konfirmasi & Kirim" boleh ditekan?
+     *
+     * Sengaja LEBIH KETAT daripada sudahBolehMengisi(): DP membuka isian, tapi
+     * tidak membuka finalisasi. Panitia tidak boleh menerima berkas yang
+     * biaya pendaftarannya belum tertutup — begitu berkas masuk antrean
+     * verifikasi, pasukan itu sudah dihitung ikut lomba.
+     *
+     * Pendaftaran yang sudah lepas dari `booking` tidak pernah ditahan gerbang
+     * ini; yang dijaga hanya masa booking itu sendiri.
+     */
+    public function bolehFinalisasi(): bool
+    {
+        if ($this->status_berkas !== 'booking') {
+            return true;
+        }
+
         if ($this->isPaid()) {
             return true;
         }

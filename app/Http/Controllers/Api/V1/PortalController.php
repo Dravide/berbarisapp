@@ -70,10 +70,18 @@ class PortalController extends Controller
         }
 
         if ($reg->status_berkas === 'booking') {
-            if (! $reg->sudahBolehMengisi()) {
+            // Gerbang finalisasi — sengaja lebih ketat daripada gerbang isian.
+            // DP membuka pengisian data, tapi tidak membuka pengiriman berkas
+            // ke panitia. Lihat Registration::bolehFinalisasi().
+            if (! $reg->bolehFinalisasi()) {
                 return response()->json([
-                    'message' => 'Konfirmasi bisa dilakukan setelah Technical Meeting, atau setelah biaya pendaftaran lunas.',
+                    'message' => $reg->sudahDp()
+                        ? 'Konfirmasi bisa dilakukan setelah sisa tagihan Rp '
+                            . number_format($reg->sisaTagihan(), 0, ',', '.')
+                            . ' dilunasi, atau setelah Technical Meeting.'
+                        : 'Konfirmasi bisa dilakukan setelah Technical Meeting, atau setelah biaya pendaftaran lunas.',
                     'technical_meeting' => $reg->eventner->technical_meeting,
+                    'sisa_tagihan' => $reg->sisaTagihan(),
                 ], 400);
             }
         }

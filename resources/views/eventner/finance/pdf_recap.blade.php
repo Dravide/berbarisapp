@@ -41,6 +41,7 @@
         .summary-card-2 { background: #e8f7f0; color: #198754; }
         .summary-card-3 { background: #eef9fa; color: #0dcaf0; }
         .summary-card-4 { background: #fff8e6; color: #b8860b; }
+        .summary-card-unpaid { background: #fdecea; color: #c0392b; }
         .summary-label { font-size: 8px; font-weight: bold; text-transform: uppercase; color: #666; margin-bottom: 4px; }
         .summary-val { font-size: 14px; font-weight: bold; }
 
@@ -59,6 +60,7 @@
         table.data .money-muted { color: #888; }
         table.data .badge { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 7px; font-weight: bold; }
         table.data .badge-paid { background: #e8f7f0; color: #198754; }
+        table.data .badge-dp { background: #eef2ff; color: #4338ca; }
         table.data .badge-pending { background: #fff8e6; color: #b8860b; }
         table.data .badge-unpaid { background: #fdecea; color: #c0392b; }
 
@@ -100,27 +102,39 @@
     </div>
 
     {{-- Ringkasan Pendapatan --}}
+    {{--
+        "Biaya Pendaftaran" adalah UANG MASUK (diverifikasi), bukan tagihan.
+        Bedanya penting begitu DP ada: pasukan yang baru menyetor 30% masuk
+        sebesar 30%, dan sisanya tampil di kartu "Sisa Tagihan".
+    --}}
     <table class="summary-box">
         <tr>
-            <td style="width: 25%;">
+            <td style="width: 20%;">
                 <div class="summary-card summary-card-1">
                     <div class="summary-label">Total Pendapatan</div>
                     <div class="summary-val">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</div>
                 </div>
             </td>
-            <td style="width: 25%;">
+            <td style="width: 20%;">
                 <div class="summary-card summary-card-2">
-                    <div class="summary-label">Biaya Pendaftaran</div>
+                    <div class="summary-label">Uang Masuk (Daftar)</div>
                     <div class="summary-val">Rp {{ number_format($feeRevenue, 0, ',', '.') }}</div>
+                    <div style="font-size: 7px; color: #198754;">dari total tagihan Rp {{ number_format($totalTagihan, 0, ',', '.') }}</div>
                 </div>
             </td>
-            <td style="width: 25%;">
+            <td style="width: 20%;">
+                <div class="summary-card summary-card-unpaid">
+                    <div class="summary-label">Sisa Tagihan</div>
+                    <div class="summary-val">Rp {{ number_format($piutang, 0, ',', '.') }}</div>
+                </div>
+            </td>
+            <td style="width: 20%;">
                 <div class="summary-card summary-card-3">
                     <div class="summary-label">Voting</div>
                     <div class="summary-val">Rp {{ number_format($voteRevenue, 0, ',', '.') }}</div>
                 </div>
             </td>
-            <td style="width: 25%;">
+            <td style="width: 20%;">
                 <div class="summary-card summary-card-4">
                     <div class="summary-label">Tiket</div>
                     <div class="summary-val">Rp {{ number_format($ticketRevenue, 0, ',', '.') }}</div>
@@ -136,12 +150,14 @@
             <tr>
                 <th>Kategori</th>
                 <th class="center-col" style="width: 60px;">Biaya/Pasukan</th>
-                <th class="center-col" style="width: 50px;">Daftar</th>
-                <th class="center-col" style="width: 45px;">Lunas</th>
-                <th class="center-col" style="width: 55px;">Menunggu</th>
-                <th class="center-col" style="width: 50px;">Belum</th>
-                <th class="num-col" style="width: 95px;">Terkumpul</th>
-                <th class="num-col" style="width: 85px;">Potensi</th>
+                <th class="center-col" style="width: 42px;">Daftar</th>
+                <th class="center-col" style="width: 38px;">Lunas</th>
+                <th class="center-col" style="width: 34px;">DP</th>
+                <th class="center-col" style="width: 48px;">Menunggu</th>
+                <th class="center-col" style="width: 40px;">Belum</th>
+                <th class="num-col" style="width: 88px;">Terkumpul</th>
+                <th class="num-col" style="width: 82px;">Sisa Tagihan</th>
+                <th class="num-col" style="width: 78px;">Potensi</th>
             </tr>
         </thead>
         <tbody>
@@ -151,14 +167,16 @@
                     <td class="center">{{ $cat['fee'] ? 'Rp ' . number_format($cat['fee'], 0, ',', '.') : 'Gratis' }}</td>
                     <td class="center">{{ $cat['total_registrations'] }}</td>
                     <td class="center">{{ $cat['paid_count'] }}</td>
+                    <td class="center">{{ $cat['dp_count'] }}</td>
                     <td class="center">{{ $cat['pending_count'] }}</td>
                     <td class="center">{{ $cat['unpaid_count'] }}</td>
                     <td class="num money-in">Rp {{ number_format($cat['paid_revenue'], 0, ',', '.') }}</td>
+                    <td class="num money-muted">Rp {{ number_format($cat['sisa_tagihan'], 0, ',', '.') }}</td>
                     <td class="num money-muted">Rp {{ number_format($cat['potential_revenue'], 0, ',', '.') }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="center" style="padding: 10px 0; color: #888;">Belum ada kategori lomba.</td>
+                    <td colspan="10" class="center" style="padding: 10px 0; color: #888;">Belum ada kategori lomba.</td>
                 </tr>
             @endforelse
         </tbody>
@@ -172,12 +190,20 @@
                 <th style="width: 25px;">No</th>
                 <th>Nama Sekolah / Kontingen</th>
                 <th>Kategori</th>
-                <th class="center-col" style="width: 75px;">Status</th>
-                <th class="num-col" style="width: 85px;">Total Biaya</th>
+                <th class="center-col" style="width: 72px;">Status</th>
+                <th class="num-col" style="width: 78px;">Total Biaya</th>
+                <th class="num-col" style="width: 78px;">Dibayar</th>
+                <th class="num-col" style="width: 78px;">Sisa</th>
             </tr>
         </thead>
         <tbody>
             @forelse($paymentDetails as $i => $reg)
+                @php
+                    // Dibaca dari model, bukan dari kolom status: DP sebagian
+                    // punya angka yang tidak bisa disimpulkan dari satu label.
+                    $dibayar = $reg->jumlahDibayar();
+                    $sisa = $reg->sisaTagihan();
+                @endphp
                 <tr>
                     <td class="center">{{ $i + 1 }}</td>
                     <td class="name-col">{{ $reg->display_name }}</td>
@@ -185,6 +211,8 @@
                     <td class="center">
                         @if($reg->payment_status === 'paid')
                             <span class="badge badge-paid">Lunas</span>
+                        @elseif($reg->payment_status === 'dp_paid')
+                            <span class="badge badge-dp">DP</span>
                         @elseif($reg->payment_status === 'pending_verification')
                             <span class="badge badge-pending">Menunggu</span>
                         @else
@@ -192,10 +220,14 @@
                         @endif
                     </td>
                     <td class="num">Rp {{ number_format($reg->total_fee, 0, ',', '.') }}</td>
+                    <td class="num money-in">Rp {{ number_format($dibayar, 0, ',', '.') }}</td>
+                    <td class="num {{ $sisa > 0 ? 'money-muted' : 'money-in' }}">
+                        Rp {{ number_format($sisa, 0, ',', '.') }}
+                    </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="5" class="center" style="padding: 10px 0; color: #888;">Belum ada data pembayaran.</td>
+                    <td colspan="7" class="center" style="padding: 10px 0; color: #888;">Belum ada data pembayaran.</td>
                 </tr>
             @endforelse
         </tbody>
