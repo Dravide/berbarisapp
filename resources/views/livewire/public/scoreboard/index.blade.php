@@ -1,28 +1,35 @@
-<style>
-    @keyframes flashGreen {
-        0% { background-color: rgba(39, 174, 96, 0.25); }
-        100% { background-color: transparent; }
-    }
-    @keyframes flashRed {
-        0% { background-color: rgba(192, 41, 43, 0.2); }
-        100% { background-color: transparent; }
-    }
-    .rank-up-anim {
-        animation: flashGreen 3s ease-out;
-    }
-    .rank-down-anim {
-        animation: flashRed 3s ease-out;
-    }
-    .animate-pulse-slow {
-        animation: pulseSlow 2s infinite;
-    }
-    @keyframes pulseSlow {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-</style>
+{{-- WAJIB satu root element, dan root-nya harus pembungkus, bukan <style>.
+     Livewire menempelkan wire:id/wire:snapshot ke ELEMEN PERTAMA pada view.
+     Dulu elemen pertama adalah <style>, sehingga seluruh kartu (termasuk tab
+     kategori) jadi SAUDARA dari komponen, bukan bagian di dalamnya — dan
+     wire:click pada tab tidak pernah terpasang. Gejalanya persis seperti ini:
+     tab bisa diklik secara visual tapi tidak terjadi apa-apa. --}}
+<div>
+    <style>
+        @keyframes flashGreen {
+            0% { background-color: rgba(39, 174, 96, 0.25); }
+            100% { background-color: transparent; }
+        }
+        @keyframes flashRed {
+            0% { background-color: rgba(192, 41, 43, 0.2); }
+            100% { background-color: transparent; }
+        }
+        .rank-up-anim {
+            animation: flashGreen 3s ease-out;
+        }
+        .rank-down-anim {
+            animation: flashRed 3s ease-out;
+        }
+        .animate-pulse-slow {
+            animation: pulseSlow 2s infinite;
+        }
+        @keyframes pulseSlow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
 
-<div class="row justify-content-center">
+    <div class="row justify-content-center">
     <div class="col-lg-8">
 
         {{-- Page Header --}}
@@ -266,6 +273,7 @@
             </div>
         </div>
 
+    </div>
     </div>
 </div>
 

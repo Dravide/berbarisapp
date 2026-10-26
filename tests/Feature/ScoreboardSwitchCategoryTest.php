@@ -129,4 +129,74 @@ class ScoreboardSwitchCategoryTest extends TestCase
         $component->assertSet('selectedChampionCategoryId', null)
             ->assertSee('SMP Alpha');
     }
+
+    /**
+     * Tab harus benar-benar berada DI DALAM komponen Livewire.
+     *
+     * Regresi yang tes ini kunci: view diawali `<style>` sebagai elemen
+     * pertama, sehingga Livewire menempelkan `wire:id`/`wire:snapshot` ke tag
+     * <style> itu — bukan ke pembungkus. Seluruh kartu, termasuk tab kategori,
+     * jadi SAUDARA komponen, bukan bagian di dalamnya, dan `wire:click` pada
+     * tab tidak pernah terpasang. Di browser tab bisa diklik tapi tidak terjadi
+     * apa-apa; `->call('switchCategory', ...)` tetap lulus karena memanggil
+     * method langsung tanpa menyentuh DOM sama sekali. Karena itu tes ini
+     * memeriksa MARKUP, bukan method.
+     */
+    public function test_tab_berada_di_dalam_root_komponen_bukan_di_luar()
+    {
+        Registration::factory()->for($this->eventner, 'eventner')->create([
+            'competition_category_id' => $this->catA->id,
+            'nama_sekolah' => 'SMP Alpha',
+        ]);
+
+        $html = Livewire::test(\App\Livewire\Public\Scoreboard\Index::class, [
+            'scoringCode' => 'SC-SWITCH',
+        ])->html();
+
+        // Root komponen harus elemen pembungkus, bukan <style>.
+        $this->assertDoesNotMatchRegularExpression(
+            '/<style[^>]*wire:(id|snapshot)/',
+            $html,
+            'wire:id menempel pada <style>: Livewire tidak akan mengikat wire:click di dalamnya.'
+        );
+
+        // Livewire menulis `wire:key` lebih dulu, baru `wire:snapshot`/`wire:id`.
+        $this->assertSame(
+            1,
+            preg_match('/<div[^>]*wire:snapshot/', $html, $cocok, PREG_OFFSET_CAPTURE),
+            'Root komponen harus berupa <div>.'
+        );
+        $rootStart = $cocok[0][1];
+
+        // Tombol tab harus muncul SETELAH root dan pada kedalaman > 0,
+        // artinya berada di dalam subtree komponen.
+        $tabPos = strpos($html, 'switchCategory(', $rootStart);
+        $this->assertNotFalse($tabPos, 'Tombol tab switchCategory tidak ditemukan.');
+
+        $segment = substr($html, $rootStart, $tabPos - $rootStart);
+        $depth = preg_match_all('/<div\b/i', $segment) - preg_match_all('/<\/div>/i', $segment);
+
+        $this->assertGreaterThanOrEqual(
+            1,
+            $depth,
+            'Tombol tab berada di luar root komponen — wire:click tidak akan terpasang.'
+        );
+    }
+
+    /** Setiap tab membawa wire:click yang bisa dijalankan browser. */
+    public function test_setiap_tab_memakai_wire_click()
+    {
+        $html = Livewire::test(\App\Livewire\Public\Scoreboard\Index::class, [
+            'scoringCode' => 'SC-SWITCH',
+        ])->html();
+
+        $this->assertMatchesRegularExpression(
+            '/wire:click="switchCategory\(' . $this->catA->id . '\)"/',
+            $html
+        );
+        $this->assertMatchesRegularExpression(
+            '/wire:click="switchCategory\(' . $this->catB->id . '\)"/',
+            $html
+        );
+    }
 }
