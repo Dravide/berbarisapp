@@ -56,7 +56,7 @@ class ScoreboardSwitchCategoryTest extends TestCase
         ]);
     }
 
-    public function test_ganti_kategori_lewat_tab_data_ranking_berubah()
+    public function test_ganti_kategori_lewat_dropdown_data_ranking_berubah()
     {
         $regA = Registration::factory()->for($this->eventner, 'eventner')->create([
             'competition_category_id' => $this->catA->id,
@@ -98,7 +98,7 @@ class ScoreboardSwitchCategoryTest extends TestCase
      * menjaga dua hal sekaligus — tab tetap tampil di mode juara, dan menekan
      * tab kategori lomba mengembalikan mode juara ke mode biasa.
      */
-    public function test_tab_kategori_tetap_ada_di_mode_juara_dan_bisa_kembali()
+    public function test_pilihan_kategori_tetap_ada_di_mode_juara_dan_bisa_kembali()
     {
         Registration::factory()->for($this->eventner, 'eventner')->create([
             'competition_category_id' => $this->catA->id,
@@ -131,18 +131,18 @@ class ScoreboardSwitchCategoryTest extends TestCase
     }
 
     /**
-     * Tab harus benar-benar berada DI DALAM komponen Livewire.
+     * Pemilih kategori harus benar-benar berada DI DALAM komponen Livewire.
      *
      * Regresi yang tes ini kunci: view diawali `<style>` sebagai elemen
      * pertama, sehingga Livewire menempelkan `wire:id`/`wire:snapshot` ke tag
-     * <style> itu — bukan ke pembungkus. Seluruh kartu, termasuk tab kategori,
-     * jadi SAUDARA komponen, bukan bagian di dalamnya, dan `wire:click` pada
-     * tab tidak pernah terpasang. Di browser tab bisa diklik tapi tidak terjadi
-     * apa-apa; `->call('switchCategory', ...)` tetap lulus karena memanggil
+     * <style> itu — bukan ke pembungkus. Seluruh kartu, termasuk pemilih
+     * kategori, jadi SAUDARA komponen, bukan bagian di dalamnya, dan
+     * `wire:change` tidak pernah terpasang. Di browser dropdown bisa dipilih
+     * tapi tidak terjadi apa-apa; `->call(...)` tetap lulus karena memanggil
      * method langsung tanpa menyentuh DOM sama sekali. Karena itu tes ini
      * memeriksa MARKUP, bukan method.
      */
-    public function test_tab_berada_di_dalam_root_komponen_bukan_di_luar()
+    public function test_pemilih_kategori_berada_di_dalam_root_komponen()
     {
         Registration::factory()->for($this->eventner, 'eventner')->create([
             'competition_category_id' => $this->catA->id,
@@ -157,7 +157,7 @@ class ScoreboardSwitchCategoryTest extends TestCase
         $this->assertDoesNotMatchRegularExpression(
             '/<style[^>]*wire:(id|snapshot)/',
             $html,
-            'wire:id menempel pada <style>: Livewire tidak akan mengikat wire:click di dalamnya.'
+            'wire:id menempel pada <style>: Livewire tidak akan mengikat wire:change di dalamnya.'
         );
 
         // Livewire menulis `wire:key` lebih dulu, baru `wire:snapshot`/`wire:id`.
@@ -168,35 +168,99 @@ class ScoreboardSwitchCategoryTest extends TestCase
         );
         $rootStart = $cocok[0][1];
 
-        // Tombol tab harus muncul SETELAH root dan pada kedalaman > 0,
+        // Dropdown harus muncul SETELAH root dan pada kedalaman > 0,
         // artinya berada di dalam subtree komponen.
-        $tabPos = strpos($html, 'switchCategory(', $rootStart);
-        $this->assertNotFalse($tabPos, 'Tombol tab switchCategory tidak ditemukan.');
+        $pilihPos = strpos($html, 'id="pilih-kategori"', $rootStart);
+        $this->assertNotFalse($pilihPos, 'Dropdown pemilih kategori tidak ditemukan.');
 
-        $segment = substr($html, $rootStart, $tabPos - $rootStart);
+        $segment = substr($html, $rootStart, $pilihPos - $rootStart);
         $depth = preg_match_all('/<div\b/i', $segment) - preg_match_all('/<\/div>/i', $segment);
 
         $this->assertGreaterThanOrEqual(
             1,
             $depth,
-            'Tombol tab berada di luar root komponen — wire:click tidak akan terpasang.'
+            'Dropdown berada di luar root komponen — wire:change tidak akan terpasang.'
         );
     }
 
-    /** Setiap tab membawa wire:click yang bisa dijalankan browser. */
-    public function test_setiap_tab_memakai_wire_click()
+    /** Setiap pilihan kategori ada di dalam satu dropdown, bukan tab. */
+    public function test_pemilih_kategori_berupa_satu_dropdown()
     {
         $html = Livewire::test(\App\Livewire\Public\Scoreboard\Index::class, [
             'scoringCode' => 'SC-SWITCH',
         ])->html();
 
-        $this->assertMatchesRegularExpression(
-            '/wire:click="switchCategory\(' . $this->catA->id . '\)"/',
-            $html
-        );
-        $this->assertMatchesRegularExpression(
-            '/wire:click="switchCategory\(' . $this->catB->id . '\)"/',
-            $html
-        );
+        // Satu elemen <select> dengan id ini memuat kedua jenis kategori.
+        $this->assertMatchesRegularExpression('/<select[^>]*id="pilih-kategori"/', $html);
+        $this->assertMatchesRegularExpression('/value="cat:' . $this->catA->id . '"/', $html);
+        $this->assertMatchesRegularExpression('/value="cat:' . $this->catB->id . '"/', $html);
+        $this->assertMatchesRegularExpression('/wire:change="switchFromDropdown\(\$event\.target\.value\)"/', $html);
+
+        // Tab lama sudah tidak dipakai.
+        $this->assertStringNotContainsString('wire:click="switchCategory(', $html);
+    }
+
+    /** Pilihan berawalan `champ:` membuka mode juara, dan bisa kembali. */
+    public function test_dropdown_bisa_pindah_ke_juara_dan_kembali()
+    {
+        Registration::factory()->for($this->eventner, 'eventner')->create([
+            'competition_category_id' => $this->catA->id,
+            'nama_sekolah' => 'SMP Alpha',
+        ]);
+
+        $champion = \App\Models\ChampionCategory::create([
+            'eventner_id' => $this->eventner->id,
+            'name' => 'Juara Umum',
+        ]);
+
+        $component = Livewire::test(\App\Livewire\Public\Scoreboard\Index::class, [
+            'scoringCode' => 'SC-SWITCH',
+        ]);
+
+        // Opsi juara ikut tampil di dropdown yang sama.
+        $component->assertSee('Kategori Juara')->assertSee('Juara Umum');
+
+        $component->call('switchFromDropdown', 'champ:' . $champion->id);
+        $component->assertSet('selectedChampionCategoryId', $champion->id);
+
+        // Mode juara tidak boleh menyembunyikan pilihan kategori lomba.
+        $component->assertSee('Kategori A')->assertSee('Kategori B');
+
+        $component->call('switchFromDropdown', 'cat:' . $this->catA->id);
+        $component->assertSet('selectedChampionCategoryId', null)->assertSee('SMP Alpha');
+    }
+
+    /** Nilai DOM tidak dipercaya: id milik event lain ditolak. */
+    public function test_dropdown_menolak_kategori_milik_event_lain()
+    {
+        $lain = Eventner::factory()->create(['status' => 'approved']);
+        $kategoriAsing = CompetitionCategory::factory()->for($lain, 'eventner')->create();
+
+        $component = Livewire::test(\App\Livewire\Public\Scoreboard\Index::class, [
+            'scoringCode' => 'SC-SWITCH',
+        ]);
+
+        $semula = $component->get('selectedCategoryId');
+
+        $component->call('switchFromDropdown', 'cat:' . $kategoriAsing->id);
+
+        $component->assertSet('selectedCategoryId', $semula);
+        $component->assertHasErrors('selectedCategoryId');
+    }
+
+    /** Nilai tak dikenal (termasuk kosong) tidak mengubah apa pun. */
+    public function test_dropdown_menolak_nilai_tak_dikenal()
+    {
+        $component = Livewire::test(\App\Livewire\Public\Scoreboard\Index::class, [
+            'scoringCode' => 'SC-SWITCH',
+        ]);
+
+        $semula = $component->get('selectedCategoryId');
+
+        $component->call('switchFromDropdown', 'ngawur');
+        $component->assertSet('selectedCategoryId', $semula)->assertHasErrors('selectedCategoryId');
+
+        $component->call('switchFromDropdown', '');
+        $component->assertSet('selectedCategoryId', $semula)->assertHasErrors('selectedCategoryId');
     }
 }

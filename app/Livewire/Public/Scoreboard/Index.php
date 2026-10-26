@@ -86,6 +86,52 @@ class Index extends Component
     }
 
     /**
+     * Satu dropdown untuk dua jenis kategori. Nilainya berawalan
+     * `cat:` (kategori lomba) atau `champ:` (kategori juara), lalu
+     * diteruskan ke method yang sudah ada — jadi aturan reset grup,
+     * animasi peringkat, dan mode juara tidak diduplikasi di sini.
+     *
+     * Nilai dari DOM tidak dipercaya: id wajib milik event ini, kalau
+     * tidak, dropdown dikembalikan ke pilihan yang sedang aktif.
+     */
+    public function switchFromDropdown($nilai)
+    {
+        [$jenis, $id] = array_pad(explode(':', (string) $nilai, 2), 2, null);
+
+        if ($jenis === 'cat' && $id) {
+            $ada = $this->categories->contains(fn ($c) => (string) $c->id === (string) $id);
+
+            if (! $ada) {
+                $this->addError('selectedCategoryId', 'Kategori tidak ditemukan pada event ini.');
+
+                return;
+            }
+
+            $this->resetErrorBag('selectedCategoryId');
+            $this->switchCategory($id);
+
+            return;
+        }
+
+        if ($jenis === 'champ' && $id) {
+            $ada = $this->championCategories->contains(fn ($c) => (string) $c->id === (string) $id);
+
+            if (! $ada) {
+                $this->addError('selectedCategoryId', 'Kategori juara tidak ditemukan pada event ini.');
+
+                return;
+            }
+
+            $this->resetErrorBag('selectedCategoryId');
+            $this->switchChampionCategory($id);
+
+            return;
+        }
+
+        $this->addError('selectedCategoryId', 'Pilihan kategori tidak dikenali.');
+    }
+
+    /**
      * Grup milik tingkat terpilih.
      */
     public function getGroupsProperty()

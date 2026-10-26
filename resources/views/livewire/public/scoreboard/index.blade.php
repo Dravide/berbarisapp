@@ -64,61 +64,66 @@
             </div>
         </div>
 
-        {{-- Pemilih kategori: TAB, bukan dropdown.
-             Dropdown lama menghilang begitu kategori juara dipilih — seluruh
+        {{-- Pemilih kategori: SATU dropdown untuk kategori lomba DAN juara.
+             Dropdown lama hilang begitu kategori juara dipilih — seluruh
              bloknya dibungkus `!$selectedChampionCategoryId`, jadi tidak ada
-             jalan kembali ke kategori lomba tanpa menyunting URL. Tab selalu
-             tampil, dan status aktifnya dibaca dari kategori yang sedang
-             dipilih (lomba atau juara). --}}
+             jalan kembali ke kategori lomba tanpa menyunting URL. Sekarang
+             dropdown selalu tampil; kedua jenis kategori jadi pilihan di
+             dalamnya lewat awalan nilai `cat:` / `champ:`. --}}
         @if(count($categories) > 1 || count($championCategories) > 0)
             <div class="card mb-4">
                 <div class="card-body p-2">
-                    <ul class="nav nav-pills flex-nowrap overflow-x-auto gap-1" role="tablist">
-                        @foreach($categories as $cat)
-                            @php
-                                $aktif = !$selectedChampionCategoryId
-                                    && (string) $selectedCategoryId === (string) $cat->id;
-                            @endphp
-                            <li class="nav-item" role="presentation" wire:key="tab-cat-{{ $cat->id }}">
-                                <button type="button" role="tab"
-                                    class="nav-link text-nowrap {{ $aktif ? 'active' : '' }}"
-                                    aria-selected="{{ $aktif ? 'true' : 'false' }}"
-                                    wire:click="switchCategory({{ $cat->id }})">
-                                    {{ $cat->parent ? $cat->parent->name . ' — ' . $cat->name : $cat->name }}
-                                </button>
-                            </li>
-                        @endforeach
+                    <div class="row g-2 align-items-end">
+                        <div class="col-12 {{ $groups->isNotEmpty() && !$selectedChampionCategoryId ? 'col-md-7' : '' }}">
+                            <label for="pilih-kategori" class="form-label fs-2 text-muted mb-1">
+                                <i class="ti ti-category me-1"></i>Kategori
+                            </label>
+                            <select id="pilih-kategori" class="form-select fw-semibold"
+                                wire:change="switchFromDropdown($event.target.value)">
+                                @if(count($categories) > 0)
+                                    <optgroup label="Kategori Lomba">
+                                        @foreach($categories as $cat)
+                                            <option value="cat:{{ $cat->id }}"
+                                                @selected(!$selectedChampionCategoryId && (string) $selectedCategoryId === (string) $cat->id)>
+                                                {{ $cat->parent ? $cat->parent->name . ' — ' . $cat->name : $cat->name }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
 
-                        @foreach($championCategories as $champ)
-                            @php
-                                $aktif = (string) $selectedChampionCategoryId === (string) $champ->id;
-                            @endphp
-                            <li class="nav-item" role="presentation" wire:key="tab-champ-{{ $champ->id }}">
-                                <button type="button" role="tab"
-                                    class="nav-link text-nowrap {{ $aktif ? 'active' : '' }}"
-                                    aria-selected="{{ $aktif ? 'true' : 'false' }}"
-                                    wire:click="switchChampionCategory({{ $champ->id }})">
-                                    <i class="ti ti-trophy me-1"></i>{{ $champ->name }}
-                                </button>
-                            </li>
-                        @endforeach
-                    </ul>
-
-                    {{-- Grup hanya masuk akal untuk kategori lomba, bukan juara:
-                         grup juara ditentukan kategori juaranya sendiri. --}}
-                    @if(!$selectedChampionCategoryId && $groups->isNotEmpty())
-                        <div class="input-group mt-2 mx-auto" style="max-width: 260px;">
-                            <span class="input-group-text bg-warning-subtle text-warning"><i class="ti ti-users-group"></i></span>
-                            <select class="form-select" wire:change="switchGroup($event.target.value)">
-                                <option value="">Seluruh Tingkat</option>
-                                @foreach($groups as $group)
-                                    <option value="{{ $group->id }}" @selected((string) $selectedGroupId === (string) $group->id)>{{ $group->name }}</option>
-                                @endforeach
+                                @if(count($championCategories) > 0)
+                                    <optgroup label="Kategori Juara">
+                                        @foreach($championCategories as $champ)
+                                            <option value="champ:{{ $champ->id }}"
+                                                @selected((string) $selectedChampionCategoryId === (string) $champ->id)>
+                                                {{ $champ->name }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endif
                             </select>
                         </div>
-                    @endif
 
-                    @error('selectedGroupId') <div class="alert alert-danger py-2 fs-2 mt-3 mb-0">{{ $message }}</div> @enderror
+                        {{-- Grup hanya masuk akal untuk kategori lomba, bukan juara:
+                             grup juara ditentukan kategori juaranya sendiri. --}}
+                        @if(!$selectedChampionCategoryId && $groups->isNotEmpty())
+                            <div class="col-12 col-md-5">
+                                <label for="pilih-tingkat" class="form-label fs-2 text-muted mb-1">
+                                    <i class="ti ti-users-group me-1"></i>Tingkat
+                                </label>
+                                <select id="pilih-tingkat" class="form-select"
+                                    wire:change="switchGroup($event.target.value)">
+                                    <option value="">Seluruh Tingkat</option>
+                                    @foreach($groups as $group)
+                                        <option value="{{ $group->id }}" @selected((string) $selectedGroupId === (string) $group->id)>{{ $group->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+                    </div>
+
+                    @error('selectedGroupId') <div class="alert alert-danger py-2 fs-2 mt-2 mb-0">{{ $message }}</div> @enderror
+                    @error('selectedCategoryId') <div class="alert alert-danger py-2 fs-2 mt-2 mb-0">{{ $message }}</div> @enderror
                 </div>
             </div>
         @endif
