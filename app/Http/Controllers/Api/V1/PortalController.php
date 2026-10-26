@@ -70,9 +70,9 @@ class PortalController extends Controller
         }
 
         if ($reg->status_berkas === 'booking') {
-            if ($reg->eventner->technical_meeting && now()->lt($reg->eventner->technical_meeting)) {
+            if (! $reg->sudahBolehMengisi()) {
                 return response()->json([
-                    'message' => 'Konfirmasi bisa dilakukan setelah Technical Meeting.',
+                    'message' => 'Konfirmasi bisa dilakukan setelah Technical Meeting, atau setelah biaya pendaftaran lunas.',
                     'technical_meeting' => $reg->eventner->technical_meeting,
                 ], 400);
             }

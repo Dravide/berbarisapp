@@ -408,6 +408,45 @@ class Registration extends Model
         return $this->status_berkas === 'booking';
     }
 
+    /**
+     * Masa booking sudah boleh diisi — Technical Meeting lewat, atau biaya
+     * pendaftaran pasukan ini sudah lunas.
+     *
+     * Inilah satu-satunya aturan "sudah boleh" di portal: pendaftar yang sudah
+     * membayar tidak perlu menunggu TM untuk mengisi data pelatih, danton, dan
+     * anggota, dan tombol "Konfirmasi & Kirim" ikut terbuka untuknya. TM yang
+     * sudah lewat membuka hal yang sama bagi semua orang, lunas atau belum.
+     *
+     * Dipakai bersama view, komponen Livewire, dan API supaya ketiganya tidak
+     * pernah berbeda pendapat — beda pendapat di sini berarti tombol tampil
+     * tapi server menolak, atau sebaliknya.
+     *
+     * Perhatikan: yang dibaca `payment_status` milik pendaftaran ini, bukan
+     * event. "Sudah membayar" berarti panitia sudah memverifikasi lunas; bukti
+     * transfer yang masih menunggu verifikasi belum membuka apa pun.
+     */
+    public function sudahBolehMengisi(): bool
+    {
+        if ($this->isPaid()) {
+            return true;
+        }
+
+        $tm = $this->eventner?->technical_meeting;
+
+        return ! ($tm && now()->lt($tm));
+    }
+
+    /**
+     * Formulir isian di portal /reg/{token} ditampilkan?
+     *
+     * Pendaftaran yang sudah lepas dari status `booking` tidak pernah ditahan
+     * gerbang masa booking — yang dijaga hanya masa booking itu sendiri.
+     */
+    public function formulirTerbuka(): bool
+    {
+        return $this->status_berkas !== 'booking' || $this->sudahBolehMengisi();
+    }
+
     public function isConfirmed(): bool
     {
         return $this->status_berkas === 'confirmed';

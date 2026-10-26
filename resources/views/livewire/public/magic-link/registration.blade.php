@@ -618,17 +618,24 @@
                         <i class="ti ti-info-circle text-primary"></i> Lengkapi Data &amp; Konfirmasi
                     </h3>
 
-                    @if($registration->eventner->technical_meeting && now()->lt($registration->eventner->technical_meeting))
+                    @if($registration->formulirTerbuka())
+                        <div class="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/15 text-xs text-emerald-800 leading-relaxed font-semibold">
+                            <i class="ti ti-circle-check"></i>
+                            @if($registration->isPaid())
+                                Pembayaran pendaftaran sudah lunas, jadi pengisian data sudah dibuka lebih awal —
+                                tidak perlu menunggu Technical Meeting. Silakan lengkapi berkas dan data pasukan di
+                                bawah ini, kemudian tekan tombol <strong>"Konfirmasi &amp; Kirim"</strong> untuk
+                                memproses berkas ke Panitia.
+                            @else
+                                Masa Technical Meeting telah dilaksanakan. Silakan lengkapi berkas dan data pasukan di bawah ini, kemudian tekan tombol <strong>"Konfirmasi &amp; Kirim"</strong> untuk memproses berkas ke Panitia.
+                            @endif
+                        </div>
+                    @else
                         <div class="p-4 rounded-xl bg-amber-500/5 border border-amber-500/15 text-xs text-amber-800 leading-relaxed font-semibold">
                             <i class="ti ti-clock"></i>
                             Konfirmasi pendaftaran baru dibuka setelah Technical Meeting selesai dilaksanakan pada:
                             <strong class="text-deep-slate block mt-1">{{ \Carbon\Carbon::parse($registration->eventner->technical_meeting)->translatedFormat('d F Y, H:i') }} WIB</strong>
                             Anda tetap dapat melengkapi draf data pasukan di bawah ini terlebih dahulu.
-                        </div>
-                    @else
-                        <div class="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/15 text-xs text-emerald-800 leading-relaxed font-semibold">
-                            <i class="ti ti-circle-check"></i>
-                            Masa Technical Meeting telah dilaksanakan. Silakan lengkapi berkas dan data pasukan di bawah ini, kemudian tekan tombol <strong>"Konfirmasi &amp; Kirim"</strong> untuk memproses berkas ke Panitia.
                         </div>
                     @endif
                 </div>
@@ -885,9 +892,17 @@
                 {{-- FORM VIEW: (for non-verified/booking/rejected states) --}}
                 @php
                     $isLocked = ($registration->is_finalized && $registration->status_berkas !== 'Ditolak');
+                    $regStatus = $registration->eventner->registration_status ?? 'open';
+                    // Satu gerbang: TM lewat, atau biaya pendaftaran sudah lunas.
+                    // Lihat Registration::formulirTerbuka().
+                    $formulirTerbuka = $registration->formulirTerbuka();
+                    $showForm = $regStatus === 'open' || $formulirTerbuka;
                 @endphp
 
-                @if($registration->status_berkas === 'booking')
+                {{-- Kartu persiapan hanya untuk masa booking yang memang masih
+                     terkunci. Begitu formulir terbuka (TM lewat atau sudah
+                     lunas), kalimat "belum dibuka" di bawah jadi bohong. --}}
+                @if($registration->status_berkas === 'booking' && !$showForm)
                     {{-- Booking Preparation Info (Data form is disabled on client unless TM is done) --}}
                     <div class="surface-card overflow-hidden">
                         <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40">
@@ -962,24 +977,15 @@
                     </div>
                 @endif
 
-                @php
-                    $regStatus = $registration->eventner->registration_status ?? 'open';
-                    $beforeTm = $registration->status_berkas === 'booking'
-                        && $registration->eventner->technical_meeting
-                        && now()->lt($registration->eventner->technical_meeting);
-                    // Form shown when: registration is open, OR (booking mode + TM passed)
-                    $showForm = $regStatus === 'open' || !$beforeTm;
-                @endphp
-
                 @if($showForm)
                 @php
                     // Kartu dirender per section, isinya loop field builder.
                     // Field yang dinonaktifkan panitia tidak muncul di sini —
                     // termasuk nama pelatih, foto pelatih, dan danton.
                     //
-                    // Section Pelatih dan Danton tampil ringkas (lihat
-                    // SEKSI_BERMODAL): kartunya meringkas isian, pengubahannya
-                    // lewat modal di bawah form.
+                    // Ketiga section builder (Data Pendaftaran, Data Pelatih,
+                    // Danton) tampil ringkas — lihat SEKSI_BERMODAL: kartunya
+                    // meringkas isian, pengubahannya lewat modal di bawah form.
                     $teksPerSection = $this->textFields->groupBy(fn ($f) => $f->section ?: 'umum');
                     $berkasPerSection = collect($this->berkasFields)->groupBy(fn ($b) => $b['field']->section ?: 'umum');
                     $grupPeserta = $this->groupFields->first();
@@ -991,22 +997,20 @@
                             @php
                                 $teksSection = $teksPerSection->get($slug, collect());
                                 $berkasSection = $berkasPerSection->get($slug, collect());
-                                $bermodal = in_array($slug, \App\Livewire\Public\MagicLink\Registration::SEKSI_BERMODAL, true);
                             @endphp
                             @continue($teksSection->isEmpty() && $berkasSection->isEmpty())
 
-                            @if($bermodal)
                             {{-- Kartu ringkas: menampilkan isian yang sekarang ada, dan
                                  pengubahannya lewat modal di bawah. Dengan begitu error
-                                 satu section tidak lagi membanjiri section lain, dan
-                                 halaman tetap terbaca sekilas tanpa menggulir form panjang.
+                                 satu section tidak membanjiri section lain, dan halaman
+                                 tetap terbaca sekilas tanpa menggulir form panjang.
                                  Label tetap dicetak lengkap — pendaftar (dan tes yang
                                  menjaga kesetaraan dengan PDF) harus tetap melihat
                                  label yang dipasang panitia. --}}
                             <div class="surface-card overflow-hidden">
                                 <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40 flex justify-between items-center gap-3 flex-wrap">
                                     <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2 mb-0">
-                                        <i class="ti {{ $slug === 'pelatih' ? 'ti-user' : 'ti-star text-amber-500' }}"></i> {{ $judulSection }}
+                                        <i class="ti {{ ['umum' => 'ti-clipboard-text text-primary', 'pelatih' => 'ti-user', 'danton' => 'ti-star text-amber-500'][$slug] ?? 'ti-clipboard-text text-primary' }}"></i> {{ $judulSection }}
                                     </h3>
                                     @unless($isLocked)
                                         <button type="button" wire:click="bukaModalSeksi('{{ $slug }}')" class="btn-ghost py-1.5 px-3 text-xs font-bold inline-flex items-center gap-1.5 cursor-pointer">
@@ -1019,12 +1023,23 @@
                                         @php
                                             $kunci = $this->propertiField($field) ?: 'fieldValues.' . $field->field_key;
                                             $isi = $this->nilaiTampil($field);
+
+                                            // Nilai tersimpan bukan yang terbaca manusia:
+                                            // pilihan select tersimpan sebagai `value`,
+                                            // wilayah menyimpan kode BPS di depan namanya.
+                                            // Ringkasan menampilkan label/nama saja.
+                                            $tampil = match ($field->type) {
+                                                'select' => collect($field->options ?? [])
+                                                    ->firstWhere('value', $isi)['label'] ?? $isi,
+                                                'wilayah' => \App\Services\WilayahService::nama($isi),
+                                                default => $isi,
+                                            };
                                         @endphp
                                         <div wire:key="ringkas-{{ $field->id }}" class="flex items-start justify-between gap-3 border-b border-outline-variant/25 pb-2.5 last:border-0 last:pb-0">
                                             <div class="min-w-0">
                                                 <span class="text-[11px] font-bold text-on-surface-variant uppercase tracking-wider block">{{ $field->label }}</span>
-                                                @if($isi !== '')
-                                                    <span class="text-sm font-semibold text-deep-slate break-words">{{ $isi }}</span>
+                                                @if($tampil !== '')
+                                                    <span class="text-sm font-semibold text-deep-slate break-words">{{ $tampil }}</span>
                                                 @else
                                                     <span class="text-sm italic text-on-surface-variant/70">Belum diisi</span>
                                                 @endif
@@ -1061,30 +1076,6 @@
                                     @endforeach
                                 </div>
                             </div>
-                            @else
-                            <div class="surface-card overflow-hidden">
-                                <div class="bg-surface-container px-5 py-4 border-b border-outline-variant/40">
-                                    <h3 class="font-display text-base font-bold text-deep-slate inline-flex items-center gap-2">
-                                        <i class="ti ti-clipboard-text text-primary"></i> {{ $judulSection }}
-                                    </h3>
-                                </div>
-                                <div class="p-6">
-                                    <div class="grid gap-5 md:grid-cols-2">
-                                        @foreach($teksSection as $field)
-                                            @include('livewire.public.partials._teks-field', [
-                                                'field' => $field,
-                                                'kunci' => 'fieldValues.' . $field->field_key,
-                                                'nilai' => $this->nilaiField($field),
-                                            ])
-                                        @endforeach
-
-                                        @foreach($berkasSection as $berkas)
-                                            @include('livewire.public.partials._berkas-field', ['berkas' => $berkas])
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
                         @endforeach
 
                         {{-- Anggota Pasukan — satu per satu lewat modal, daftar ringkas.
@@ -1199,7 +1190,7 @@
                                     <i class="ti ti-device-floppy"></i> Simpan Draft
                                 </button>
 
-                                @if($registration->status_berkas === 'booking' && ($regStatus === 'open' || !$registration->eventner->technical_meeting || now()->gte($registration->eventner->technical_meeting)))
+                                @if($registration->status_berkas === 'booking' && ($regStatus === 'open' || $formulirTerbuka))
                                     <button type="button" onclick="confirmAction()" class="btn-primary !bg-emerald-600 hover:!bg-emerald-700 !text-white border-none py-2.5 px-5 font-bold text-xs inline-flex items-center gap-1.5 cursor-pointer shadow-xs">
                                         <i class="ti ti-circle-check"></i> Konfirmasi &amp; Kirim
                                     </button>
@@ -1237,7 +1228,7 @@
                     <div class="fixed inset-0 z-[60] flex items-center justify-center p-4" wire:key="modal-seksi-{{ $modalSeksi }}-{{ $seksiNonce }}">
                         <div class="absolute inset-0 bg-black/45" wire:click="tutupModalSeksi"></div>
 
-                        <div class="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-surface shadow-2xl border border-outline-variant/40">
+                        <div class="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-surface shadow-2xl border border-outline-variant/40">
                             <div class="flex items-center justify-between gap-3 px-5 py-4 border-b border-outline-variant/40">
                                 <div>
                                     <h3 class="font-display text-base font-bold text-deep-slate mb-0">

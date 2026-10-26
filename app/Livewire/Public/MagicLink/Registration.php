@@ -50,10 +50,13 @@ class Registration extends Component
     /**
      * Section yang kartunya di halaman cuma meringkas dan diubah lewat modal.
      *
-     * Section lain (umum) tetap satu form inline: ia justru data pendaftaran
-     * yang dibaca sekilas, bukan bagian yang diisi berulang.
+     * Ketiga section builder memakai bentuk yang sama: kartu ringkas di halaman,
+     * pengubahan lewat modal, validasi menyempit ke section itu saja. Dengan
+     * begitu salah isi di Data Pendaftaran tidak lagi membanjiri Data Pelatih
+     * dan Danton sekaligus, dan halaman tetap terbaca sekilas tanpa menggulir
+     * satu form panjang.
      */
-    public const SEKSI_BERMODAL = ['pelatih', 'danton'];
+    public const SEKSI_BERMODAL = ['umum', 'pelatih', 'danton'];
 
     /**
      * Nilai field buatan panitia (tanpa kolom di registrations), key = field_key.
@@ -755,13 +758,17 @@ class Registration extends Component
      * `submit()`. Dua syarat itu diperiksa di sini juga, karena kalau tidak,
      * tombol "Simpan" jadi celah masuk data saat pendaftaran belum dibuka atau
      * sudah lewat.
+     *
+     * Masa booking tidak lagi memblokir tanpa syarat: pasukan yang biaya
+     * pendaftarannya sudah lunas boleh mengisi lebih awal, sama seperti view
+     * yang membuka formulirnya (Registration::sudahBolehMengisi()).
      */
     private function bolehMenulis(): bool
     {
         $status = $this->registration->eventner->registration_status ?? 'open';
 
-        if ($status === 'booking') {
-            session()->flash('error', 'Saat ini hanya diperbolehkan booking slot. Pengisian data pasukan akan dibuka setelah masa pendaftaran dibuka secara resmi.');
+        if ($status === 'booking' && ! $this->registration->sudahBolehMengisi()) {
+            session()->flash('error', 'Saat ini hanya diperbolehkan booking slot. Pengisian data pasukan akan dibuka setelah masa pendaftaran dibuka secara resmi, atau setelah biaya pendaftaran diverifikasi lunas.');
 
             return false;
         }
@@ -972,12 +979,12 @@ class Registration extends Component
 
         if ($reg->status_berkas !== 'booking') return;
 
-        // Only require TM check if registration is still in booking mode
-        if (($reg->eventner->registration_status ?? 'open') === 'booking') {
-            if ($reg->eventner->technical_meeting && now()->lt($reg->eventner->technical_meeting)) {
-                session()->flash('error', 'Konfirmasi hanya bisa dilakukan setelah Technical Meeting (' . \Carbon\Carbon::parse($reg->eventner->technical_meeting)->translatedFormat('d F Y, H:i') . ').');
-                return;
-            }
+        // Masa booking ditahan gerbang yang sama dengan view: TM lewat, atau
+        // biaya pendaftaran sudah lunas. Dua jalur berbeda berarti pendaftar
+        // melihat tombolnya tapi ditolak server, atau sebaliknya.
+        if (($reg->eventner->registration_status ?? 'open') === 'booking' && ! $reg->sudahBolehMengisi()) {
+            session()->flash('error', 'Konfirmasi hanya bisa dilakukan setelah Technical Meeting (' . \Carbon\Carbon::parse($reg->eventner->technical_meeting)->translatedFormat('d F Y, H:i') . '), atau setelah biaya pendaftaran diverifikasi lunas.');
+            return;
         }
 
         $this->validate(array_merge($this->aturanField()), $this->pesanField());
@@ -1011,8 +1018,8 @@ class Registration extends Component
         if ($reg->status_berkas === 'Terverifikasi') return;
 
         // Check registration status of the event
-        if (($reg->eventner->registration_status ?? 'open') == 'booking') {
-            session()->flash('error', 'Saat ini hanya diperbolehkan booking slot. Pengisian data pasukan akan dibuka setelah masa pendaftaran dibuka secara resmi.');
+        if (($reg->eventner->registration_status ?? 'open') == 'booking' && ! $reg->sudahBolehMengisi()) {
+            session()->flash('error', 'Saat ini hanya diperbolehkan booking slot. Pengisian data pasukan akan dibuka setelah masa pendaftaran dibuka secara resmi, atau setelah biaya pendaftaran diverifikasi lunas.');
             return;
         }
 

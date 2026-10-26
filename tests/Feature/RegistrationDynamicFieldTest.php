@@ -223,6 +223,20 @@ class RegistrationDynamicFieldTest extends TestCase
         ]);
     }
 
+    /**
+     * HTML portal dengan modal section `umum` (Data Pendaftaran) terbuka.
+     *
+     * Kotak unggah berkas builder tinggal di dalam modal section, sama seperti
+     * Foto Pelatih di modal Pelatih — jadi markup FilePond-nya baru ada setelah
+     * modalnya dibuka, bukan di HTML awal halaman.
+     */
+    private function htmlModalUmum(Registration $reg): string
+    {
+        return Livewire::test(MagicLink::class, ['token' => $reg->magic_token])
+            ->call('bukaModalSeksi', 'umum')
+            ->html();
+    }
+
     public function test_portal_menyimpan_field_teks()
     {
         $reg = $this->peserta();
@@ -902,14 +916,15 @@ class RegistrationDynamicFieldTest extends TestCase
      * ("…jpg,jpeg…") tidak pernah cocok dengan `file.type` (application/pdf),
      * jadi berkas dengan ekstensi yang benar pun ditolak "File is of invalid
      * type" dan tak pernah sampai ke server.
+     *
+     * Kotak unggahnya berada di modal section `umum` — sama seperti Foto
+     * Pelatih di modal Pelatih — jadi HTML-nya baru ada setelah modal dibuka.
      */
     public function test_portal_memberi_mime_bukan_ekstensi_ke_filepond()
     {
         $reg = $this->peserta();
 
-        $html = $this->get(route('magic.link', ['token' => $reg->magic_token]))
-            ->assertOk()
-            ->getContent();
+        $html = $this->htmlModalUmum($reg);
 
         $this->assertStringContainsString(
             "acceptedFileTypes: ['application/pdf', 'image/jpeg', 'image/png']",
@@ -935,9 +950,7 @@ class RegistrationDynamicFieldTest extends TestCase
     {
         $reg = $this->peserta();
 
-        $html = $this->get(route('magic.link', ['token' => $reg->magic_token]))
-            ->assertOk()
-            ->getContent();
+        $html = $this->htmlModalUmum($reg);
 
         $this->assertStringContainsString('accept="application/pdf,image/jpeg,image/png"', $html);
         $this->assertStringNotContainsString('accept=".pdf,.jpg,.jpeg,.png"', $html);
@@ -950,9 +963,7 @@ class RegistrationDynamicFieldTest extends TestCase
         $reg = $this->peserta();
         $this->buatFieldBaru('foto_ktp', 'Foto KTP', ['type' => 'image', 'is_required' => true]);
 
-        $html = $this->get(route('magic.link', ['token' => $reg->magic_token]))
-            ->assertOk()
-            ->getContent();
+        $html = $this->htmlModalUmum($reg);
 
         $this->assertStringContainsString("acceptedFileTypes: ['image/*']", $html);
     }
@@ -969,9 +980,7 @@ class RegistrationDynamicFieldTest extends TestCase
     {
         $reg = $this->peserta();
 
-        $html = $this->get(route('magic.link', ['token' => $reg->magic_token]))
-            ->assertOk()
-            ->getContent();
+        $html = $this->htmlModalUmum($reg);
 
         $this->assertStringContainsString('labelFileTypeNotAllowed:', $html);
         $this->assertStringNotContainsString('File is of invalid type', $html);
