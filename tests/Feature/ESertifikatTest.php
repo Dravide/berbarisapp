@@ -321,11 +321,11 @@ class ESertifikatTest extends TestCase
     public function test_landing_links_to_the_cert_host(): void
     {
         // Halaman ini hanya berguna kalau peserta tahu alamatnya. Tautannya
-        // lintas host, jadi seperti tautan EO ia ditaruh absolut di navbar dan
-        // kolom Kontak — bukan di daftar anchor yang digerakkan scroll-spy.
+        // lintas host, jadi seperti tautan EO ia ditaruh absolut — di menu
+        // layanan navbar dan kolom Kontak footer, bukan di daftar anchor yang
+        // digerakkan scroll-spy.
         $html = $this->get('/')->assertOk()->getContent();
 
-        $this->assertStringContainsString('Unduh Sertifikat', $html);
         $this->assertStringContainsString('Unduh E-Sertifikat', $html);
         $this->assertStringContainsString('href="' . cert_url('/') . '"', $html);
     }
@@ -337,6 +337,21 @@ class ESertifikatTest extends TestCase
         $this->assertNull(cert_host());
 
         $this->get('/')->assertOk()->assertDontSee('Unduh E-Sertifikat', false);
+    }
+
+    public function test_menu_layanan_navbar_menyaring_tautan_lintas_host_yang_kosong(): void
+    {
+        // Panel menu dibangun dari array_filter atas dua host opsional. Kalau
+        // penyaringnya hilang, entri null ikut terender dan tautannya jadi
+        // "https://" telanjang — bukan galat, tapi tautan mati di navbar.
+        config(['app.eo_host' => null, 'app.cert_host' => null]);
+
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertStringContainsString('Daftar Eventner', $html);
+        $this->assertStringNotContainsString('Jasa Event Organizer', $html);
+        $this->assertStringNotContainsString('Unduh E-Sertifikat', $html);
+        $this->assertStringNotContainsString('href="https://"', $html);
     }
 
     public function test_katalog_fitur_memuat_laman_e_sertifikat(): void

@@ -178,6 +178,23 @@
                     // hidup di host sendiri (e-sertifikat.berbaris.app), jadi
                     // tautannya absolut dan di luar daftar anchor.
                     $tautanCert = cert_host() ? cert_url('/') : null;
+
+                    // Tiga tautan yang dulu berdiri sendiri di sisi kanan
+                    // navbar — dua di antaranya lintas host — dilipat jadi satu
+                    // menu. Sisi kanan navbar tinggal dua elemen: menu ini dan
+                    // Login, bukan lima tautan sejajar yang saling berebut
+                    // perhatian dengan nav section di sebelahnya.
+                    //
+                    // Dua host di atas opsional (config bisa kosong), jadi
+                    // entrinya disaring dengan array_filter — jangan sampai
+                    // menu ini merender tautan ke "https://" telanjang.
+                    // "Daftar Eventner" tidak pernah ikut hilang: ia tidak
+                    // bergantung pada config apa pun.
+                    $menuLayanan = array_values(array_filter([
+                        $tautanCert ? ['label' => 'Unduh E-Sertifikat', 'icon' => 'ti-file-search', 'url' => $tautanCert] : null,
+                        $tautanEo ? ['label' => 'Jasa Event Organizer', 'icon' => 'ti-briefcase', 'url' => $tautanEo] : null,
+                        ['label' => 'Daftar Eventner', 'icon' => 'ti-user-plus', 'url' => route('register.eventner')],
+                    ]));
                 @endphp
                 <nav class="hidden items-center gap-8 lg:flex" id="landing-desktop-nav">
                     @foreach($navItems as [$id, $label, $gate])
@@ -192,20 +209,29 @@
 
                 {{-- Desktop CTAs --}}
                 <div class="hidden items-center gap-3 lg:flex">
-                    @if($tautanCert)
-                        <a href="{{ $tautanCert }}" class="text-sm font-medium text-on-surface-variant transition-colors duration-200 hover:text-primary">
-                            Unduh Sertifikat
-                        </a>
-                    @endif
-                    @if($tautanEo)
-                        <a href="{{ $tautanEo }}" class="text-sm font-medium text-on-surface-variant transition-colors duration-200 hover:text-primary">
-                            Jasa Event Organizer
-                        </a>
-                    @endif
+                    {{-- Menu layanan: dua tautan lintas host + pendaftaran
+                         eventner, dilipat jadi satu supaya sisi kanan navbar
+                         tidak berdesakan dengan nav section. Panel-nya absolute
+                         dan tidak menggeser apa pun saat dibuka. --}}
+                    <div class="relative" id="landing-menu-layanan">
+                        <button type="button" id="landing-menu-layanan-toggle"
+                                class="inline-flex items-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary"
+                                aria-haspopup="true" aria-expanded="false" aria-controls="landing-menu-layanan-panel">
+                            Menu
+                            <i class="ti ti-chevron-down text-base transition-transform duration-200" data-chevron></i>
+                        </button>
+                        <div id="landing-menu-layanan-panel"
+                             class="absolute right-0 z-50 mt-2 hidden w-64 overflow-hidden rounded-xl border border-outline-variant/60 bg-white py-1.5 shadow-[0_12px_32px_rgba(17,24,39,0.14)]">
+                            @foreach($menuLayanan as $entri)
+                                <a href="{{ $entri['url'] }}"
+                                   class="flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface-variant transition hover:bg-surface-container hover:text-primary">
+                                    <i class="ti {{ $entri['icon'] }} text-lg"></i>
+                                    {{ $entri['label'] }}
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
                     <a href="{{ route('login') }}" class="btn-ghost">Login</a>
-                    <a href="{{ route('register.eventner') }}" class="btn-primary">
-                        Daftar Eventner
-                    </a>
                 </div>
 
                 {{-- Mobile hamburger --}}
@@ -224,13 +250,14 @@
                     @endif
                 @endforeach
                 <div class="mt-2 flex flex-col gap-2 border-t border-outline-variant/40 pt-3">
-                    @if($tautanCert)
-                        <a href="{{ $tautanCert }}" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">Unduh Sertifikat</a>
-                    @endif
-                    @if($tautanEo)
-                        <a href="{{ $tautanEo }}" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">Jasa Event Organizer</a>
-                    @endif
-                    <a href="{{ route('register.eventner') }}" class="btn-primary w-full">Daftar Eventner</a>
+                    {{-- Daftar yang sama dengan menu desktop; cuma ikonnya ikut
+                         supaya daftar panjang tetap terbaca di lebar sempit. --}}
+                    @foreach($menuLayanan as $entri)
+                        <a href="{{ $entri['url'] }}" class="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">
+                            <i class="ti {{ $entri['icon'] }} text-lg"></i>
+                            {{ $entri['label'] }}
+                        </a>
+                    @endforeach
                     <a href="{{ route('login') }}" class="btn-ghost w-full">Login</a>
                 </div>
             </nav>
@@ -361,6 +388,39 @@
                     var icon = btn.querySelector('i');
                     if (icon) icon.className = 'ti ti-menu-2 text-2xl';
                 });
+            });
+        })();
+
+        // Menu layanan (desktop): buka-tutup panel, tutup saat klik di luar atau
+        // tekan Escape. Chevron-nya ikut berputar supaya keadaan terbuka
+        // terbaca tanpa harus melihat panelnya.
+        (function () {
+            var wrap = document.getElementById('landing-menu-layanan');
+            var toggle = document.getElementById('landing-menu-layanan-toggle');
+            var panel = document.getElementById('landing-menu-layanan-panel');
+            if (!wrap || !toggle || !panel) return;
+
+            var chevron = toggle.querySelector('[data-chevron]');
+
+            function setOpen(open) {
+                panel.classList.toggle('hidden', !open);
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (chevron) chevron.style.transform = open ? 'rotate(180deg)' : '';
+            }
+
+            toggle.addEventListener('click', function (e) {
+                e.stopPropagation();
+                setOpen(panel.classList.contains('hidden'));
+            });
+
+            // Klik di luar: listener di document, bukan cuma di panel, karena
+            // menutup menu harus bisa dari mana saja di halaman.
+            document.addEventListener('click', function (e) {
+                if (!wrap.contains(e.target)) setOpen(false);
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') setOpen(false);
             });
         })();
 
