@@ -80,6 +80,57 @@ if (!function_exists('eo_url')) {
     }
 }
 
+if (!function_exists('cert_host')) {
+    /**
+     * Host (tanpa skema) laman unduh e-sertifikat, mis.
+     * "e-sertifikat.berbaris.app".
+     */
+    function cert_host(): ?string
+    {
+        $value = config('app.cert_host');
+
+        if (!$value) {
+            return null;
+        }
+
+        // config boleh ditulis dengan atau tanpa skema ("e-sertifikat.berbaris.app").
+        return parse_url(str_contains($value, '://') ? $value : 'http://' . $value, PHP_URL_HOST);
+    }
+}
+
+if (!function_exists('cert_url')) {
+    /**
+     * URL absolut laman unduh e-sertifikat — tanpa argumen = beranda
+     * pencarian NISN.
+     *
+     * Dibangun dari config, bukan dari host request, sama alasannya dengan
+     * eo_url(): tautan ini ditempel di portal kontingen, kwitansi, dan email,
+     * yang sebagian dibuka dari subdomain event. Lewat url() tautannya akan
+     * menunjuk balik ke subdomain event itu, bukan ke alamat tetap yang
+     * dipromosikan ke peserta.
+     *
+     * https dipaksa di luar local/testing. Di sini tidak ada token rahasia di
+     * URL (NISN dikirim sebagai isian form, bukan path), jadi alasannya bukan
+     * kerahasiaan melainkan konsistensi: alamat ini diumumkan sebagai satu
+     * tempat tetap, dan tautan http ke sana hanya menghasilkan satu lompatan
+     * redirect sebelum sampai.
+     */
+    function cert_url(string $path = '/'): string
+    {
+        $scheme = parse_url((string) config('app.cert_host'), PHP_URL_SCHEME)
+            ?: parse_url((string) config('app.url'), PHP_URL_SCHEME)
+            ?: 'http';
+
+        if ($scheme === 'http' && ! app()->environment(['local', 'testing'])) {
+            $scheme = 'https';
+        }
+
+        $path = '/' . ltrim($path, '/');
+
+        return $scheme . '://' . cert_host() . ($path === '/' ? '' : $path);
+    }
+}
+
 if (!function_exists('judge_entry_host')) {
     /**
      * Host (tanpa skema) halaman input nilai juri, mis. "entry.berbaris.app".
@@ -246,13 +297,17 @@ if (!function_exists('qr_data_uri')) {
      *
      * @param  string  $data  Isi QR (URL/token).
      * @param  int     $scale Ukuran modul; 8 untuk PDF, 10+ untuk cetak layar.
+     * @param  string  $ecc   Tingkat koreksi galat. Sertifikat yang dicetak lalu
+     *                        difotokopi memakai 'H' — kode yang sebagian
+     *                        tergores atau tertutup bayangan masih terbaca.
      */
-    function qr_data_uri(string $data, int $scale = 8): ?string
+    function qr_data_uri(string $data, int $scale = 8, string $ecc = 'L'): ?string
     {
         try {
             $options = new \chillerlan\QRCode\QROptions([
                 'scale' => $scale,
                 'imageTransparent' => false,
+                'eccLevel' => $ecc,
             ]);
             $options->outputInterface = \chillerlan\QRCode\Output\QRGdImagePNG::class;
 

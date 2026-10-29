@@ -173,6 +173,11 @@
                     // sisi kanan navbar supaya tetap terbaca sebagai "keluar
                     // dari halaman ini", bukan section lain di laman depan.
                     $tautanEo = eo_host() ? eo_url('/') : null;
+
+                    // Sama alasannya dengan $tautanEo: laman unduh e-sertifikat
+                    // hidup di host sendiri (e-sertifikat.berbaris.app), jadi
+                    // tautannya absolut dan di luar daftar anchor.
+                    $tautanCert = cert_host() ? cert_url('/') : null;
                 @endphp
                 <nav class="hidden items-center gap-8 lg:flex" id="landing-desktop-nav">
                     @foreach($navItems as [$id, $label, $gate])
@@ -187,6 +192,11 @@
 
                 {{-- Desktop CTAs --}}
                 <div class="hidden items-center gap-3 lg:flex">
+                    @if($tautanCert)
+                        <a href="{{ $tautanCert }}" class="text-sm font-medium text-on-surface-variant transition-colors duration-200 hover:text-primary">
+                            Unduh Sertifikat
+                        </a>
+                    @endif
                     @if($tautanEo)
                         <a href="{{ $tautanEo }}" class="text-sm font-medium text-on-surface-variant transition-colors duration-200 hover:text-primary">
                             Jasa Event Organizer
@@ -214,6 +224,9 @@
                     @endif
                 @endforeach
                 <div class="mt-2 flex flex-col gap-2 border-t border-outline-variant/40 pt-3">
+                    @if($tautanCert)
+                        <a href="{{ $tautanCert }}" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">Unduh Sertifikat</a>
+                    @endif
                     @if($tautanEo)
                         <a href="{{ $tautanEo }}" class="rounded-md px-3 py-2.5 text-sm font-medium text-on-surface-variant transition hover:bg-surface-container hover:text-primary">Jasa Event Organizer</a>
                     @endif
@@ -285,6 +298,10 @@
                         <li><a href="{{ route('terms') }}" class="transition hover:text-secondary">Syarat &amp; Ketentuan</a></li>
                         <li><a href="{{ route('help') }}" class="transition hover:text-secondary">Bantuan &amp; Support</a></li>
                         <li><a href="{{ route('public.eventners') }}" class="transition hover:text-secondary">Penyelenggara Event</a></li>
+                        @if($tautanCert)
+                            {{-- Lintas host: laman unduh e-sertifikat peserta. --}}
+                            <li><a href="{{ $tautanCert }}" class="transition hover:text-secondary">Unduh E-Sertifikat</a></li>
+                        @endif
                         @if($tautanEo)
                             {{-- Lintas host: jasa penyelenggaraan lomba oleh tim
                                  EO. Ditaruh di kolom ini, bukan kolom Navigasi —

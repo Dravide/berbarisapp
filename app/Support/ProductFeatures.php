@@ -79,6 +79,14 @@ class ProductFeatures
                         'gates' => [],
                     ],
                     [
+                        'title' => 'Unduh E-Sertifikat via NISN',
+                        'description' => 'Halaman publik di alamat tetap e-sertifikat: peserta memasukkan NISN, sistem menampilkan seluruh lomba yang pernah ia ikuti lintas event beserta tombol unduh PDF per baris. Tanpa akun, tanpa mencari tautan lama di chat.',
+                        'miniature' => 'cari-nisn',
+                        'icon' => 'ti-file-search',
+                        'route' => 'cert.home',
+                        'gates' => [],
+                    ],
+                    [
                         'title' => 'Field Pendaftaran Kustom',
                         'description' => 'Susun sendiri isian formulir pendaftaran: teks, pilihan, sampai unggahan berkas. Urutannya bisa diseret.',
                         'miniature' => 'form-builder',

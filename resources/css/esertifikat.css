@@ -1,0 +1,462 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+/* =========================================================================
+   E-Sertifikat: gaya khusus subdomain e-sertifikat.berbaris.local
+   =========================================================================
+
+   Kenapa berkas terpisah, bukan menumpang eo.css atau landing.css:
+
+   Pembacanya berbeda. Halaman EO dibaca orang yang sedang menimbang jasa di
+   ruang rapat; halaman ini dibuka siswa di ponsel, sering kali setelah lomba
+   selesai, lewat tautan dari grup WhatsApp, dan yang ia inginkan hanya satu:
+   berkas PDF-nya. Ia harus selesai dalam tiga ketukan.
+
+   Bahasa visualnya tetap SATU keluarga dengan halaman EO — IBM Plex, garis
+   rambut 1px, permukaan kertas, label monospace — karena keduanya subdomain
+   milik satu platform. Yang berbeda adalah kepadatannya: di sini tidak ada
+   bagian pemasaran, tidak ada navbar tujuh tautan, dan tidak ada kartu yang
+   mengajak membaca lebih jauh. Satu kolom sempit, satu medan, satu tombol.
+
+   Kelas landing (container-landing, surface-card, btn-primary) TIDAK ada di
+   bundel ini. Jangan memakai <x-landing.*> di halaman e-sertifikat.
+   ========================================================================= */
+
+@theme {
+    --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+    --color-paper: #f3f4f7;
+    --color-panel: #ffffff;
+    --color-panel-2: #fafbfc;
+
+    --color-ink: #14181f;
+    --color-muted: #5b6472;
+    --color-line: #d7dbe2;
+    --color-line-soft: #e6e9ee;
+
+    /* Satu langkah accent, seperti EO: `--color-accent` adalah warna merek
+       yang dipakai sebagai LATAR (tombol primary — putih di atasnya 5.01:1),
+       `--color-accent-ink` versi lebih gelap untuk TEKS di atas accent-soft.
+       Biru merek hanya 4.38:1 di atas accent-soft, di bawah ambang 4.5:1.
+
+       `--color-accent` satu-satunya penulisnya di sini; warna dari setelan
+       situs masuk lewat `--es-accent` yang dipasang tata letak. */
+    --color-accent: var(--es-accent, #0062ff);
+    --color-accent-ink: #0050d1;
+    --color-accent-soft: #e8f0ff;
+
+    /* Emas versi gelap: dipakai badge gelar juara, dan pada ukuran 11px ia
+       harus lolos 4.5:1 di atas gold-soft. #b8860b hanya 3.02:1. */
+    --color-gold: #7d5c06;
+    --color-gold-soft: #fdf6e3;
+    --color-warn: #c2410c;
+    --color-warn-soft: #fff1e8;
+}
+
+@layer base {
+    body {
+        margin: 0;
+        background: var(--color-paper);
+        color: var(--color-ink);
+        font-family: var(--font-sans);
+        font-size: 16px;
+        line-height: 1.55;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3 {
+        margin: 0;
+        font-weight: 700;
+        line-height: 1.15;
+        letter-spacing: -0.02em;
+        text-wrap: balance;
+        color: var(--color-ink);
+    }
+
+    p { margin: 0; }
+
+    a { color: var(--color-accent); }
+}
+
+@layer components {
+    /* ------------------------------------------------------------ tata letak */
+    /* Kolom sempit: halaman ini berisi satu medan dan satu daftar, dan baris
+       daftar yang terlalu panjang justru lebih sulit dibaca di ponsel. */
+    .es-wrap {
+        width: 100%;
+        max-width: 720px;
+        margin-inline: auto;
+        padding-inline: 16px;
+    }
+
+    /* ------------------------------------------------------------ navigasi */
+    .es-nav {
+        border-bottom: 1px solid var(--color-line);
+        background: var(--color-panel);
+    }
+
+    .es-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--color-ink);
+        text-decoration: none;
+    }
+
+    .es-mark {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        background: var(--color-accent);
+        color: #fff;
+        font-family: var(--font-mono);
+        font-size: 12px;
+    }
+
+    .es-nav-link {
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        color: var(--color-muted);
+        text-decoration: none;
+    }
+
+    .es-nav-link:hover { color: var(--color-ink); }
+
+    /* ------------------------------------------------------------ tipografi */
+    .es-h1 {
+        font-size: clamp(21px, 5.2vw, 28px);
+    }
+
+    .es-lede {
+        margin-top: 8px;
+        color: var(--color-muted);
+        font-size: 14.5px;
+        max-width: 60ch;
+    }
+
+    .es-label {
+        display: block;
+        margin-bottom: 5px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+    }
+
+    .es-mono {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--color-muted);
+    }
+
+    /* ------------------------------------------------------------ kartu */
+    .es-card {
+        border: 1px solid var(--color-line);
+        border-radius: 12px;
+        background: var(--color-panel);
+    }
+
+    /* ------------------------------------------------------------ medan NISN */
+    /* 18px monospace berjarak lebar: NISN dibaca digit per digit, dan jarak
+       itu yang membuat salah ketik langsung terlihat sebelum dikirim. */
+    .es-field {
+        width: 100%;
+        min-height: 48px;
+        padding: 10px 14px;
+        border: 1px solid var(--color-line);
+        border-radius: 8px;
+        background: var(--color-panel-2);
+        font-family: var(--font-mono);
+        font-size: 18px;
+        letter-spacing: 0.16em;
+        color: var(--color-ink);
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .es-field::placeholder {
+        letter-spacing: 0.14em;
+        color: color-mix(in srgb, var(--color-muted) 55%, transparent);
+    }
+
+    .es-field:focus {
+        outline: none;
+        border-color: var(--color-accent);
+        box-shadow: 0 0 0 3px var(--color-accent-soft);
+        background: var(--color-panel);
+    }
+
+    .es-field-error { border-color: var(--color-warn); }
+
+    /* ------------------------------------------------------------ tombol */
+    .es-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        min-height: 44px;
+        padding: 10px 18px;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    }
+
+    .es-btn:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+    }
+
+    .es-btn-primary {
+        background: var(--color-accent);
+        color: #fff;
+    }
+
+    .es-btn-primary:hover { background: color-mix(in srgb, var(--color-accent) 88%, #000); }
+
+    .es-btn-ghost {
+        border-color: var(--color-line);
+        background: var(--color-panel);
+        color: var(--color-ink);
+    }
+
+    .es-btn-ghost:hover { border-color: var(--color-accent); color: var(--color-accent); }
+
+    /* Tombol yang belum bisa dipakai. Bukan disabled sungguhan: barisnya tetap
+       perlu terbaca, dan <button disabled> akan dilewati pembaca layar. */
+    .es-btn-mati {
+        border-color: var(--color-line);
+        background: var(--color-panel-2);
+        color: var(--color-muted);
+        cursor: not-allowed;
+    }
+
+    .es-btn:disabled { opacity: 0.6; cursor: default; }
+
+    /* ------------------------------------------------------------ chip & badge */
+    .es-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border: 1px solid var(--color-line);
+        border-radius: 999px;
+        background: var(--color-panel);
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        color: var(--color-muted);
+        white-space: nowrap;
+    }
+
+    .es-chip-acc {
+        border-color: var(--color-accent);
+        background: var(--color-accent-soft);
+        color: var(--color-accent-ink);
+    }
+
+    .es-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    .es-badge-juara { background: var(--color-gold-soft); color: var(--color-gold); }
+
+    .es-badge-peserta {
+        background: var(--color-panel-2);
+        border: 1px solid var(--color-line);
+        color: var(--color-muted);
+    }
+
+    /* Baris yang belum bisa diunduh: bergaris putus-putus supaya terbaca
+       sebagai "belum ada", bukan sebagai berkas yang gagal dimuat. */
+    .es-badge-mati {
+        background: var(--color-panel-2);
+        border: 1px dashed var(--color-line);
+        color: var(--color-muted);
+    }
+
+    /* ------------------------------------------------------------ daftar lomba */
+    .es-grup {
+        border: 1px solid var(--color-line);
+        border-radius: 12px;
+        background: var(--color-panel);
+        overflow: hidden;
+    }
+
+    .es-grup-hd {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 14px;
+        border-bottom: 1px solid var(--color-line-soft);
+        background: var(--color-panel-2);
+    }
+
+    .es-logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        flex: none;
+        border: 1px solid var(--color-line);
+        border-radius: 8px;
+        background: var(--color-panel);
+        overflow: hidden;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--color-muted);
+    }
+
+    .es-logo img { width: 100%; height: 100%; object-fit: cover; }
+
+    .es-baris {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 13px 14px;
+        border-bottom: 1px solid var(--color-line-soft);
+    }
+
+    .es-baris:last-child { border-bottom: 0; }
+
+    /* Baris yang tidak bisa diunduh diredam, tapi tidak disembunyikan:
+       alasannya justru yang dicari orang yang lombanya belum terbit. */
+    .es-baris-mati { background: var(--color-panel-2); }
+
+    .es-kat-t { font-size: 14px; font-weight: 600; line-height: 1.3; }
+
+    .es-kat-s {
+        margin-top: 2px;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--color-muted);
+    }
+
+    /* ------------------------------------------------------------ keadaan kosong */
+    .es-kosong {
+        padding: 32px 20px;
+        text-align: center;
+    }
+
+    .es-kosong-ic {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 46px;
+        height: 46px;
+        margin: 0 auto 14px;
+        border: 1px solid var(--color-line);
+        border-radius: 50%;
+        background: var(--color-panel-2);
+        font-size: 20px;
+        color: var(--color-muted);
+    }
+
+    .es-saran {
+        display: grid;
+        gap: 9px;
+        margin-top: 18px;
+        text-align: left;
+    }
+
+    .es-saran-i {
+        display: grid;
+        grid-template-columns: 16px minmax(0, 1fr);
+        gap: 9px;
+        align-items: start;
+        font-size: 12.5px;
+        color: var(--color-muted);
+    }
+
+    .es-saran-n {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 16px;
+        height: 16px;
+        margin-top: 2px;
+        border: 1px solid var(--color-line);
+        border-radius: 50%;
+        font-family: var(--font-mono);
+        font-size: 9.5px;
+        color: var(--color-muted);
+    }
+
+    /* ------------------------------------------------------------ kotak catatan */
+    .es-box {
+        padding: 12px 14px;
+        border: 1px solid var(--color-line);
+        border-radius: 8px;
+        background: var(--color-panel-2);
+        font-size: 13px;
+        color: var(--color-muted);
+    }
+
+    .es-box-warn {
+        border-color: var(--color-warn);
+        background: var(--color-warn-soft);
+        color: var(--color-warn);
+    }
+
+    /* ------------------------------------------------------------ langkah */
+    .es-steps {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .es-step {
+        padding: 11px 12px;
+        border: 1px solid var(--color-line);
+        border-radius: 9px;
+        background: var(--color-panel);
+    }
+
+    .es-step-n {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--color-accent);
+    }
+
+    .es-step-t {
+        margin-top: 3px;
+        font-size: 12.5px;
+        font-weight: 600;
+        line-height: 1.3;
+    }
+
+    .es-step-d {
+        margin-top: 3px;
+        font-size: 11.5px;
+        color: var(--color-muted);
+        line-height: 1.4;
+    }
+
+    /* ------------------------------------------------------------ kaki */
+    .es-kaki {
+        border-top: 1px solid var(--color-line);
+        font-size: 11.5px;
+        color: var(--color-muted);
+    }
+}

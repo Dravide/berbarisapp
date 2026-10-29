@@ -169,6 +169,26 @@
             </div>
         @break
 
+        @case('cari-nisn'){{-- Kotak NISN yang mengembalikan daftar lomba: satu baris siap diunduh, satu belum terbit. Dua keadaan itu yang membedakan halaman ini dari tombol unduh biasa. --}}
+            <div class="feat-card">
+                <div class="feat-mrow">
+                    <span class="feat-bar feat-bar-sm w-1/3"></span>
+                    <span class="feat-numbox feat-end"></span>
+                </div>
+                <div class="feat-mrow"><span class="feat-pill feat-pill-accent feat-end">Cari NISN</span></div>
+            </div>
+            <div class="feat-card feat-card-row">
+                <span class="feat-sq"></span>
+                <span class="feat-mcol"><span class="feat-bar feat-bar-title w-4/5"></span><span class="feat-bar feat-bar-sm w-2/5"></span></span>
+                <span class="feat-pill feat-pill-lime">Unduh PDF</span>
+            </div>
+            <div class="feat-card feat-card-row">
+                <span class="feat-sq"></span>
+                <span class="feat-mcol"><span class="feat-bar feat-bar-sm w-3/5"></span><span class="feat-bar feat-bar-sm w-1/3"></span></span>
+                <span class="feat-pill">Belum terbit</span>
+            </div>
+        @break
+
         @case('form-builder'){{-- Penyusun field: gagang seret, label, jenis isian. --}}
             <div class="feat-card">
                 <div class="feat-mrow"><span class="feat-sq"></span><span class="feat-bar feat-bar-sm"></span><span class="feat-pill">Teks</span></div>

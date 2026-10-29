@@ -34,3 +34,5 @@ storage/framework/qr_test.pdf
 
 # cache font dompdf (di-generate saat render PDF)
 storage/fonts/*
+
+/my-slide

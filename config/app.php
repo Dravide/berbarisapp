@@ -92,6 +92,30 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Host E-Sertifikat
+    |--------------------------------------------------------------------------
+    |
+    | Subdomain tetap milik platform untuk mengunduh e-sertifikat lintas event,
+    | mis. "e-sertifikat.berbaris.app". Peserta memasukkan NISN di sana dan
+    | melihat semua sertifikatnya dari seluruh lomba yang pernah diikuti.
+    |
+    | Isinya bukan satu event tertentu, jadi — sama seperti host entry dan host
+    | EO — host ini TIDAK memakai middleware 'subdomain': tidak ada Eventner
+    | yang perlu di-resolve, dan kalau ia ikut grup {subdomain}.{root},
+    | ResolveEventnerSubdomain akan mencari event bernama "e-sertifikat" lalu
+    | menjawab 404 untuk semua halamannya.
+    |
+    | Label "e-sertifikat" tetap sah sebagai subdomain event (tanda hubung
+    | diizinkan regex di Settings\Profile), jadi ia WAJIB ikut dicadangkan di
+    | reservedSubdomain() — tanpa itu penyelenggara bisa mengklaimnya dan
+    | beranda event mereka yang menang.
+    |
+    */
+
+    'cert_host' => env('CERT_HOST') ?: 'e-sertifikat.' . parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

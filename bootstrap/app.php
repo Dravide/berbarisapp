@@ -33,6 +33,24 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->domain(eo_host())
                 ->group(base_path('routes/eo.php'));
 
+            // Host laman unduh e-sertifikat (mis. e-sertifikat.berbaris.app).
+            // Sama seperti host EO dan host entry: BUKAN tenant, jadi tanpa
+            // middleware 'subdomain'.
+            //
+            // WAJIB didaftarkan SEBELUM grup {subdomain}.{root} — alasannya
+            // persis sama dengan grup EO di atas, dan di sini lebih mudah
+            // terlewat: "e-sertifikat" adalah label yang SAH sebagai subdomain
+            // event, jadi kalau urutannya terbalik, beranda laman ini yang
+            // kalah oleh event (atau 404 "Event tidak ditemukan") sementara
+            // /unduh/{id} tetap 200 — gejala yang menyesatkan.
+            //
+            // Throttle 30/menit: NISN adalah nomor berurutan yang bisa ditebak,
+            // jadi tanpa pembatasan laju seluruh daftar peserta bisa dipanen
+            // satu skrip. 30 masih jauh di atas kebutuhan manusia.
+            Route::middleware(['web', 'throttle:30,1'])
+                ->domain(cert_host())
+                ->group(base_path('routes/certificate.php'));
+
             Route::middleware(['web', 'subdomain'])
                 ->domain('{subdomain}.' . parse_url(config('app.url'), PHP_URL_HOST))
                 ->group(base_path('routes/subdomain.php'));

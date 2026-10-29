@@ -28,6 +28,7 @@
         <env name="DB_URL" value=""/>
         <env name="ENTRY_HOST" value="entry.berbaris.test"/>
         <env name="EO_HOST" value="eo.berbaris.test"/>
+        <env name="CERT_HOST" value="e-sertifikat.berbaris.test"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="MAILY_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync"/>

@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>E-Sertifikat Wireframe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600;700&display=swap">
+<style>
+/* Layout: dokumen spesifikasi — tiap langkah satu slide, wireframe di kiri, anotasi di kanan. */
+:root{
+  --paper:#f3f4f7; --panel:#ffffff; --panel-2:#fafbfc;
+  --ink:#14181f; --muted:#5b6472; --line:#d7dbe2; --line-soft:#e6e9ee;
+  --ph-fill:#edeff3; --ph-line:#b3bac6;
+  --accent:#0062ff; --accent-soft:#e8f0ff;
+  --amber:#b45309; --amber-soft:#fef3c7;
+  --green:#15803d; --green-soft:#dcfce7;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:12px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+    --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+    --ph-fill:#232830; --ph-line:#414a58;
+    --accent:#709cff; --accent-soft:#1a2540;
+    --amber:#fbbf24; --amber-soft:#3a2b08;
+    --green:#4ade80; --green-soft:#0c2a18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#111419; --panel:#191d24; --panel-2:#1e232b;
+  --ink:#e7eaef; --muted:#98a1b0; --line:#2c333d; --line-soft:#242a33;
+  --ph-fill:#232830; --ph-line:#414a58;
+  --accent:#709cff; --accent-soft:#1a2540;
+  --amber:#fbbf24; --amber-soft:#3a2b08;
+  --green:#4ade80; --green-soft:#0c2a18;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1240px;margin-inline:auto;padding-inline:clamp(16px,4vw,40px);padding-block:clamp(28px,5vw,56px)}
+h1,h2,h3{text-wrap:balance;margin:0;line-height:1.15}
+p{margin:0}
+code{font-family:var(--mono);font-size:.9em}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+h1{font-size:clamp(26px,3.6vw,38px);font-weight:700;letter-spacing:-.02em}
+.lede{margin-top:12px;max-width:70ch;color:var(--muted)}
+.meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;align-items:center}
+.chip{font-family:var(--mono);font-size:12px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);white-space:nowrap}
+.chip b{color:var(--ink);font-weight:600}
+
+/* Slide */
+.slide{margin-top:clamp(36px,6vw,64px)}
+.slide-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.slide-head h2{font-size:20px;font-weight:700}
+.mode-tag{font-family:var(--mono);font-size:12px;padding:3px 9px;border-radius:6px;background:var(--accent-soft);color:var(--accent);white-space:nowrap}
+.slide-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:20px;align-items:start}
+@media(max-width:900px){.slide-grid{grid-template-columns:1fr}}
+
+/* Bingkai browser — mock halaman sungguhan, url-nya menegaskan subdomainnya */
+.browser{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+.bar{display:flex;align-items:center;gap:9px;padding:8px 12px;background:var(--panel-2);border-bottom:1px solid var(--line)}
+.dots{display:flex;gap:5px;flex:none}
+.dots i{width:9px;height:9px;border-radius:99px;background:var(--line);display:block}
+.omni{flex:1;min-width:0;font-family:var(--mono);font-size:11.5px;color:var(--muted);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.omni b{color:var(--ink);font-weight:500}
+.view{padding:16px 18px;background:var(--panel-2)}
+.cap{font-family:var(--mono);font-size:11px;color:var(--muted);padding:8px 4px 2px;display:flex;justify-content:space-between;gap:8px}
+
+/* Phone */
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+@media(max-width:560px){.two{grid-template-columns:1fr}}
+.phone{width:100%;max-width:300px;margin-inline:auto;border:9px solid #14181f;border-radius:26px;background:var(--panel);overflow:hidden}
+:root[data-theme="dark"] .phone{border-color:#39414d}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .phone{border-color:#39414d}}
+.phone .view{padding:13px 13px 16px}
+
+/* ── Elemen mock halaman ───────────────────────────────────────────── */
+.mk-top{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.mk-brand{display:flex;align-items:center;gap:7px;font-weight:700;font-size:12px}
+.mk-logo{width:19px;height:19px;border-radius:6px;background:var(--accent);flex:none}
+.mk-top .r{margin-left:auto;font-size:11px;color:var(--muted)}
+.mk-h1{font-size:18px;font-weight:700;letter-spacing:-.01em;text-align:center}
+.mk-sub{margin-top:6px;font-size:11.5px;color:var(--muted);text-align:center;max-width:34ch;margin-inline:auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px}
+.mk-form{margin-top:18px;padding:14px}
+.mk-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
+.mk-input{display:flex;gap:8px;flex-wrap:wrap}
+.mk-field{flex:1;min-width:150px;border:1px solid var(--ph-line);border-radius:8px;padding:9px 11px;font-family:var(--mono);font-size:14px;letter-spacing:.16em;color:var(--ink);background:var(--panel-2)}
+.mk-field.filled{letter-spacing:.1em;border-color:var(--accent)}
+.mk-field .hint{opacity:.4}
+.mbtn{border:1px solid var(--accent);background:var(--accent);color:#fff;font-weight:600;font-size:12px;padding:9px 15px;border-radius:8px;white-space:nowrap}
+.mbtn.ghost{background:transparent;color:var(--accent)}
+.mbtn.dead{background:var(--ph-fill);border-color:var(--ph-line);color:var(--muted)}
+.mk-note{margin-top:9px;font-size:11px;color:var(--muted)}
+
+.mk-steps{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.step{flex:1;min-width:120px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 11px}
+.step .n{font-family:var(--mono);font-size:10px;color:var(--accent)}
+.step .t{font-size:11.5px;font-weight:600;margin-top:3px}
+.step .d{font-size:10.5px;color:var(--muted);margin-top:2px}
+
+/* Hasil */
+.mk-result-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.mk-result-head .who{font-size:12px}
+.mk-result-head b{font-size:12.5px}
+.mk-search-mini{margin-left:auto;display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:3px 4px 3px 11px;background:var(--panel)}
+.mk-search-mini span{font-family:var(--mono);font-size:11px;letter-spacing:.08em}
+.mk-search-mini .sm{font-size:10.5px;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:3px 8px}
+
+.grp{margin-bottom:12px}
+.grp-hd{display:flex;align-items:center;gap:9px;padding:9px 12px;background:var(--panel);border:1px solid var(--line);border-bottom:0;border-radius:10px 10px 0 0}
+.grp-hd .lg{width:22px;height:22px;border-radius:6px;background:var(--ph-fill);border:1px solid var(--ph-line);flex:none}
+.grp-hd .nm{font-size:12.5px;font-weight:700}
+.grp-hd .mt{font-size:10.5px;color:var(--muted)}
+.grp-hd .ct{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+.rowline{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-bottom:0}
+.grp .rowline:last-child{border-bottom:1px solid var(--line);border-radius:0 0 10px 10px}
+.rowline .kat{flex:1;min-width:0}
+.rowline .kat .t{font-size:12.5px;font-weight:600}
+.rowline .kat .s{font-size:10.5px;color:var(--muted);font-family:var(--mono);margin-top:2px}
+.badge{font-family:var(--mono);font-size:10px;font-weight:500;padding:3px 8px;border-radius:999px;white-space:nowrap;flex:none}
+.b-win{background:var(--amber-soft);color:var(--amber)}
+.b-part{background:var(--panel-2);color:var(--muted);border:1px solid var(--line)}
+.b-lock{background:var(--panel-2);color:var(--muted);border:1px dashed var(--ph-line)}
+.rowline .why{font-size:10.5px;color:var(--muted);margin-top:3px}
+
+/* Kosong */
+.mk-empty{padding:26px 18px;text-align:center}
+.mk-empty .ic{width:40px;height:40px;border-radius:99px;background:var(--ph-fill);border:1px solid var(--ph-line);margin:0 auto 12px}
+.mk-empty .t{font-size:14px;font-weight:700}
+.mk-empty .d{font-size:11.5px;color:var(--muted);margin-top:5px;max-width:40ch;margin-inline:auto}
+.mk-empty .acts{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.saran{margin-top:16px;text-align:left;display:grid;gap:7px}
+.saran .s{display:flex;gap:8px;font-size:11.5px;color:var(--muted);align-items:flex-start}
+.saran .s i{width:15px;height:15px;border-radius:99px;border:1px solid var(--ph-line);flex:none;display:block;margin-top:1px}
+
+.mk-foot{margin-top:16px;padding-top:11px;border-top:1px solid var(--line-soft);font-size:10.5px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap}
+.mk-foot .r{margin-left:auto;font-family:var(--mono)}
+
+/* Anotasi */
+.notes{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px 20px}
+.notes h3{font-size:14px;margin-bottom:8px}
+.notes h3+ul{margin-top:0}
+.notes ul{margin:0;padding-left:18px;display:grid;gap:6px}
+.notes ul.plain{padding-left:0;list-style:none}
+.notes li{font-size:13.5px;color:var(--muted)}
+.notes li b{color:var(--ink);font-weight:600}
+.notes code{background:var(--panel-2);border:1px solid var(--line-soft);padding:1px 5px;border-radius:5px}
+.notes .sub{font-size:12.5px;color:var(--muted);margin-top:10px}
+
+/* Tabel ringkas di anotasi */
+table.mini{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+table.mini th{font-family:var(--mono);font-weight:500;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;color:var(--muted);text-align:left;padding:4px 8px;border-bottom:1px solid var(--line)}
+table.mini td{padding:6px 8px;border-bottom:1px solid var(--line-soft);vertical-align:top}
+table.mini tr:last-child td{border-bottom:0}
+.flag{background:var(--amber-soft);color:var(--amber);font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:5px;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Berbaris App — Spesifikasi &amp; Wireframe</p>
+  <h1>E-Sertifikat</h1>
+  <p class="lede">Laman publik <b>terpisah dari event</b> untuk mengunduh e-sertifikat: peserta memasukkan NISN, sistem menampilkan daftar lomba yang pernah ia ikuti, lalu satu tombol unduh per baris. Hidup di subdomain sendiri supaya bisa dipromosikan sebagai satu alamat tetap — “sertifikat lomba saya ada di <code>e-sertifikat.berbaris.app</code>” — tanpa harus tahu nama event atau memegang tautan portal pendaftaran.</p>
+  <div class="meta">
+    <span class="chip">Host <b>e-sertifikat.berbaris.app</b></span>
+    <span class="chip">Kunci <b>NISN 10 digit</b></span>
+    <span class="chip">Gerbang <b>fitur <code>certificate</code> + template aktif</b></span>
+    <span class="chip">Tanpa <b>login</b> · tanpa <b>migrasi baru</b></span>
+  </div>
+
+  <!-- ============ 1. CARI ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>1 · Beranda &amp; pencarian</h2><span class="mode-tag">/</span></div>
+    <div class="slide-grid">
+      <div>
+        <div class="browser">
+          <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="omni"><b>e-sertifikat.berbaris.app</b>/</span></div>
+          <div class="view">
+            <div class="mk-top">
+              <span class="mk-brand"><span class="mk-logo"></span>Berbaris</span>
+              <span class="r">Bantuan</span>
+            </div>
+            <div class="mk-h1">Unduh e-sertifikat lomba Anda</div>
+            <p class="mk-sub">Masukkan NISN untuk melihat sertifikat dari seluruh lomba yang pernah Anda ikuti.</p>
+
+            <div class="card mk-form">
+              <label class="mk-label">NISN</label>
+              <div class="mk-input">
+                <div class="mk-field"><span class="hint">0071234567</span></div>
+                <span class="mbtn">Cari Sertifikat</span>
+              </div>
+              <p class="mk-note">10 digit, tertera di kartu pelajar, rapor, atau data pokok pendidikan sekolah.</p>
+            </div>
+
+            <div class="mk-steps">
+              <div class="step"><div class="n">01</div><div class="t">Masukkan NISN</div><div class="d">Nomor induk siswa, bukan NPSN sekolah.</div></div>
+              <div class="step"><div class="n">02</div><div class="t">Pilih lomba</div><div class="d">Semua lomba Anda tampil sekaligus.</div></div>
+              <div class="step"><div class="n">03</div><div class="t">Unduh PDF</div><div class="d">Satu berkas per lomba, siap cetak.</div></div>
+            </div>
+
+            <div class="mk-foot"><span>Sertifikat diterbitkan penyelenggara lomba.</span><span class="r">Berbaris App</span></div>
+          </div>
+        </div>
+        <div class="cap"><span>Halaman masuk — satu isian, satu tombol</span><span>Titik fokus jelas</span></div>
+      </div>
+      <div class="notes">
+        <h3>Isi</h3>
+        <ul>
+          <li>Hanya <b>satu medan</b>: NISN. Tanpa pilih event, tanpa tanggal lahir.</li>
+          <li><code>inputmode="numeric"</code> + <code>maxlength=10</code>, jadi papan angka HP langsung terbuka. Spasi/titik dibuang sebelum dikirim.</li>
+          <li>Tiga langkah di bawah sekadar menjelaskan alurnya — bukan tautan, tidak perlu diklik.</li>
+          <li>Host ini <b>tanpa nav event</b> dan tanpa menu platform: tamu yang tersesat ke sini tidak boleh tergoda berkeliaran.</li>
+        </ul>
+        <p class="sub">NISN ≠ NPSN. Ini kekeliruan yang paling sering terjadi — NPSN milik sekolah, NISN milik siswa. Disebutkan sekali di catatan bawah medan, bukan sebagai peringatan mencolok.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 2. HASIL ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>2 · Hasil — sertifikat ditemukan</h2><span class="mode-tag">POST /cari</span></div>
+    <div class="slide-grid">
+      <div>
+        <div class="browser">
+          <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="omni"><b>e-sertifikat.berbaris.app</b>/cari</span></div>
+          <div class="view">
+            <div class="mk-result-head">
+              <div class="who">
+                <b>ANISA PUTRI NURAINI</b><br>
+                <span style="font-family:var(--mono);font-size:10.5px;color:var(--muted)">NISN 0071234567 · SMA Negeri 1 Semarang</span>
+              </div>
+              <span class="mk-search-mini"><span>0071234567</span><span class="sm">Cari lagi</span></span>
+            </div>
+
+            <div class="grp">
+              <div class="grp-hd">
+                <span class="lg"></span>
+                <div><div class="nm">Kejuaraan Daerah Paskibra 2026</div><div class="mt">Gedung Konvensi Semarang · 12 Juli 2026</div></div>
+                <span class="ct">2 sertifikat</span>
+              </div>
+              <div class="rowline">
+                <span class="badge b-win">JUARA 1</span>
+                <div class="kat"><div class="t">LOBB — SMA / SMK</div><div class="s">Peserta pasukan A</div></div>
+                <span class="mbtn">Unduh PDF</span>
+              </div>
+              <div class="rowline">
+                <span class="badge b-part">PESERTA</span>
+                <div class="kat"><div class="t">RUKIBRA — SMA / SMK</div><div class="s">Peserta pasukan A</div></div>
+                <span class="mbtn">Unduh PDF</span>
+              </div>
+            </div>
+
+            <div class="grp">
+              <div class="grp-hd">
+                <span class="lg"></span>
+                <div><div class="nm">Festival Paskibra Nusantara</div><div class="mt">Alun-alun Bandung · 3 Mei 2026</div></div>
+                <span class="ct">1 sertifikat</span>
+              </div>
+              <div class="rowline">
+                <span class="badge b-lock">BELUM TERBIT</span>
+                <div class="kat">
+                  <div class="t">VARMUS — SMA / SMK</div>
+                  <div class="why">Panitia belum memasang template sertifikat untuk lomba ini.</div>
+                </div>
+                <span class="mbtn dead">Unduh PDF</span>
+              </div>
+            </div>
+
+            <div class="mk-foot"><span>3 lomba dari 2 event</span><span class="r">Berbaris App</span></div>
+          </div>
+        </div>
+        <div class="cap"><span>Daftar sertifikat, dikelompokkan per event</span><span>Baris terkunci tetap tampil + alasannya</span></div>
+      </div>
+      <div class="notes">
+        <h3>Isi</h3>
+        <ul>
+          <li><b>Nama + sekolah ditampilkan</b> sebagai konfirmasi bahwa NISN-nya benar sebelum mengunduh berkas orang lain. Ini keputusan yang perlu Anda setujui — lihat slide 5.</li>
+          <li>Dikelompokkan <b>per event</b>, baris di dalamnya <b>per mata lomba</b> — sama seperti sertifikat di portal kontingen (satu PDF per mata lomba).</li>
+          <li>Gelar dibaca dari <code>ChampionCategory::titleForRank()</code>; bukan juara → <b>PESERTA</b>. Sumber perhitungannya sama dengan <code>/hasil</code> dan unduhan portal, jadi tidak ada gelar yang berbeda antar jalur.</li>
+          <li>Baris yang belum bisa diunduh <b>tidak disembunyikan</b>: ditandai <span class="flag">BELUM TERBIT</span> + satu kalimat alasan, tombolnya mati.</li>
+          <li>Medan NISN diringkas jadi pil <b>“Cari lagi”</b> di kanan atas — tidak memakan tinggi halaman.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 3. KOSONG ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>3 · Tidak ditemukan</h2><span class="mode-tag">NISN tak cocok</span></div>
+    <div class="slide-grid">
+      <div>
+        <div class="browser">
+          <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="omni"><b>e-sertifikat.berbaris.app</b>/cari</span></div>
+          <div class="view">
+            <div class="card mk-empty">
+              <div class="ic"></div>
+              <div class="t">NISN 0071234567 belum terdaftar di lomba mana pun</div>
+              <p class="d">Kami tidak menemukan sertifikat atas nomor itu. Periksa kembali angkanya sebelum menghubungi panitia.</p>
+              <div class="acts">
+                <span class="mbtn">Coba NISN lain</span>
+                <span class="mbtn ghost">Hubungi panitia</span>
+              </div>
+              <div class="saran">
+                <div class="s"><i></i><span>Pastikan angkanya <b>10 digit</b> dan tidak tertukar dengan NPSN sekolah.</span></div>
+                <div class="s"><i></i><span>NISN diisi panitia saat pendaftaran — kalau salah ketik, sertifikatnya ikut tidak ketemu.</span></div>
+                <div class="s"><i></i><span>Peserta yang terdaftar sebagai <b>danton</b> dicari dari NISN danton, bukan NISN anggota.</span></div>
+              </div>
+            </div>
+            <div class="mk-foot"><span>Sertifikat diterbitkan penyelenggara lomba.</span><span class="r">Berbaris App</span></div>
+          </div>
+        </div>
+        <div class="cap"><span>Kosong bukan jalan buntu</span><span>Tiga sebab yang paling sering</span></div>
+      </div>
+      <div class="notes">
+        <h3>Isi</h3>
+        <ul>
+          <li>NISN yang tidak cocok <b>ditampilkan ulang</b> di judul — orang salah ketik biasanya langsung melihat digit yang keliru.</li>
+          <li>Tiga saran menyebut sebab nyata, bukan “coba lagi nanti”: salah digit, NISN basi dari panitia, dan <b>danton</b> yang dicari dari kolomnya sendiri (<code>registrations.danton_nisn</code>).</li>
+          <li>“Hubungi panitia” mengarah ke halaman bantuan platform — bukan kontak event, karena di sini tidak ada event yang sedang dibuka.</li>
+          <li>NISN salah format (bukan 10 angka) ditolak di tempat oleh validasi medan, tidak sampai ke halaman ini.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 4. MOBILE ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>4 · Ponsel</h2><span class="mode-tag">360–430 px</span></div>
+    <div class="slide-grid">
+      <div>
+        <div class="two">
+          <div class="phone">
+            <div class="view">
+              <div class="mk-top"><span class="mk-brand"><span class="mk-logo"></span>Berbaris</span></div>
+              <div class="mk-h1" style="text-align:left;font-size:16px">Unduh e-sertifikat lomba Anda</div>
+              <p class="mk-sub" style="text-align:left;margin-inline:0;font-size:11px">Masukkan NISN untuk melihat sertifikat dari seluruh lomba yang pernah Anda ikuti.</p>
+              <div class="card mk-form" style="padding:12px">
+                <label class="mk-label">NISN</label>
+                <div class="mk-field" style="min-width:0"><span class="hint">0071234567</span></div>
+                <div class="mbtn" style="margin-top:8px;text-align:center;display:block">Cari Sertifikat</div>
+                <p class="mk-note">10 digit, tertera di kartu pelajar atau rapor.</p>
+              </div>
+              <div class="mk-steps" style="margin-top:12px">
+                <div class="step" style="min-width:0;padding:9px 10px"><div class="n">01</div><div class="t">Masukkan NISN</div></div>
+                <div class="step" style="min-width:0;padding:9px 10px"><div class="n">02</div><div class="t">Pilih lomba</div></div>
+                <div class="step" style="min-width:0;padding:9px 10px"><div class="n">03</div><div class="t">Unduh PDF</div></div>
+              </div>
+            </div>
+            <div class="cap" style="padding:6px 10px 8px"><span>Masuk</span><span>Medan penuh lebar</span></div>
+          </div>
+          <div class="phone">
+            <div class="view">
+              <div class="mk-result-head" style="margin-bottom:11px">
+                <div class="who" style="font-size:11px"><b style="font-size:11.5px">ANISA PUTRI NURAINI</b><br><span style="font-family:var(--mono);font-size:10px;color:var(--muted)">0071234567</span></div>
+                <span class="mk-search-mini"><span class="sm">Cari lagi</span></span>
+              </div>
+              <div class="grp">
+                <div class="grp-hd" style="padding:8px 10px"><span class="lg"></span><div><div class="nm" style="font-size:11.5px">Kejuaraan Daerah Paskibra 2026</div><div class="mt" style="font-size:10px">12 Juli 2026</div></div></div>
+                <div class="rowline" style="padding:9px 10px;flex-wrap:wrap">
+                  <span class="badge b-win">JUARA 1</span>
+                  <div class="kat" style="min-width:100%"><div class="t" style="font-size:11.5px">LOBB — SMA / SMK</div></div>
+                  <span class="mbtn" style="width:100%;text-align:center;padding:8px">Unduh PDF</span>
+                </div>
+                <div class="rowline" style="padding:9px 10px;flex-wrap:wrap">
+                  <span class="badge b-part">PESERTA</span>
+                  <div class="kat" style="min-width:100%"><div class="t" style="font-size:11.5px">RUKIBRA — SMA / SMK</div></div>
+                  <span class="mbtn ghost" style="width:100%;text-align:center;padding:8px">Unduh PDF</span>
+                </div>
+              </div>
+              <div class="grp">
+                <div class="grp-hd" style="padding:8px 10px"><span class="lg"></span><div><div class="nm" style="font-size:11.5px">Festival Paskibra Nusantara</div><div class="mt" style="font-size:10px">3 Mei 2026</div></div></div>
+                <div class="rowline" style="padding:9px 10px;flex-wrap:wrap;border-radius:0 0 10px 10px">
+                  <span class="badge b-lock">BELUM TERBIT</span>
+                  <div class="kat" style="min-width:100%"><div class="t" style="font-size:11.5px">VARMUS — SMA / SMK</div><div class="why">Panitia belum memasang template.</div></div>
+                  <span class="mbtn dead" style="width:100%;text-align:center;padding:8px">Unduh PDF</span>
+                </div>
+              </div>
+            </div>
+            <div class="cap" style="padding:6px 10px 8px"><span>Hasil</span><span>Tombol unduh satu baris penuh</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="notes">
+        <h3>Aturan sempit</h3>
+        <ul>
+          <li>Tombol <b>Unduh PDF</b> turun ke barisnya sendiri dan <b>penuh lebar</b> — sasaran jempol, bukan ikon kecil di ujung kanan.</li>
+          <li>Badge gelar naik ke baris atas, judul lomba di bawahnya; tidak ada yang dipaksa berdampingan.</li>
+          <li>Tinggi medan ≥44 px supaya tidak meleset di layar bersarung jari.</li>
+          <li>Header event ramping: nama + tanggal. Venue dibuang di ponsel — yang dicari orang adalah nama lombanya, bukan alamatnya.</li>
+          <li>Tiga kartu langkah tetap satu baris (teks saja, tanpa keterangan) — kalau dipecah jadi tiga baris, isian NISN tergeser jauh ke bawah lipatan.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 5. KEADAAN TEPI ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>5 · Keadaan tepi &amp; gerbang</h2><span class="mode-tag">apa yang tampil saat tidak bisa diunduh</span></div>
+    <div class="slide-grid" style="grid-template-columns:1fr">
+      <div class="notes">
+        <table class="mini">
+          <tr><th style="width:230px">Keadaan</th><th style="width:190px">Yang tampil</th><th>Gerbang di server — alasan ditulis apa adanya</th></tr>
+          <tr>
+            <td><b>Paket event belum memuat fitur <code>certificate</code></b></td>
+            <td>Nama event + lomba tetap tampil, badge <span class="flag">BELUM TERBIT</span></td>
+            <td><code>Eventner::canAccessFeature('certificate')</code> — sama dengan gerbang unduhan portal. Hitungannya per event, jadi event satu sekolah bisa terbuka dan yang lain belum.</td>
+          </tr>
+          <tr>
+            <td><b>Template sertifikat belum dipasang / semua nonaktif</b></td>
+            <td>Badge <span class="flag">BELUM TERBIT</span>, “Panitia belum memasang template.”</td>
+            <td><code>CertificateTemplate::where(is_active, true)</code> kosong. Tanpa template tidak ada berkas yang bisa dirender sama sekali.</td>
+          </tr>
+          <tr>
+            <td><b>Pendaftaran dibatalkan</b></td>
+            <td>Baris tidak tampil</td>
+            <td><code>status_berkas !== 'dibatalkan'</code>. Peserta yang batal bukan peserta — sertifikatnya tidak pernah seharusnya ada.</td>
+          </tr>
+          <tr>
+            <td><b>Event belum <code>approved</code></b></td>
+            <td>Baris tidak tampil</td>
+            <td>Sama dengan gerbang subdomain event — draf milik panitia tidak boleh bocor lewat halaman lintas-event ini.</td>
+          </tr>
+          <tr>
+            <td><b>Nilai belum diundi / belum dinilai</b></td>
+            <td>Sertifikat <b>PESERTA</b> tetap terbit</td>
+            <td>Bukan juara bukan berarti 404 — <code>ChampionCalculator::participantPages()</code>. Inilah bedanya dengan unduhan portal yang bisa mengembalikan sertifikat PESERTA juga.</td>
+          </tr>
+          <tr>
+            <td><b>Anggota pasukan tanpa baris <code>participants</code></b></td>
+            <td>Sertifikat per sekolah, satu halaman</td>
+            <td>Fallback yang sudah ada di <code>participantPages()</code> — sekolah yang mengisi nama pasukan saja tetap dapat berkasnya.</td>
+          </tr>
+          <tr>
+            <td><b>NISN sama di dua orang berbeda</b></td>
+            <td>Dua blok nama, sertifikat masing-masing</td>
+            <td>Hasil dikelompokkan <b>per pasangan nama + sekolah</b>, bukan dirata-ratakan jadi satu daftar. Panitia yang salah menyalin NISN tidak boleh membuat orang lain kehilangan sertifikatnya.</td>
+          </tr>
+          <tr>
+            <td><b>Satu NISN, banyak pasukan</b> (mis. juara di dua mata lomba)</td>
+            <td>Satu baris per mata lomba</td>
+            <td>Baris = registrasi × mata lomba. Satu PDF per baris, satu halaman per anggota pasukan.</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 6. KEPUTUSAN ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>6 · Keputusan yang perlu Anda putuskan</h2><span class="mode-tag">sebelum saya tulis kodenya</span></div>
+    <div class="slide-grid" style="grid-template-columns:1fr">
+      <div class="notes">
+        <table class="mini">
+          <tr><th style="width:210px">Soal</th><th>Pilihan</th><th style="width:300px">Rekomendasi saya</th></tr>
+          <tr>
+            <td><b>Kredensial</b><br><span style="color:var(--muted);font-size:11.5px">NISN 10 digit itu angka yang bisa ditebak berurutan</span></td>
+            <td>
+              <b>A.</b> NISN saja.<br>
+              <b>B.</b> NISN + tanggal lahir.<br>
+              <b>C.</b> NISN + 4 digit terakhir NPSN/NISN danton.
+            </td>
+            <td>
+              <b>A</b>, dengan alasan tertulis: yang terbuka hanya nama, sekolah, dan gelar — data yang toh diumumkan di papan skor dan halaman <code>/hasil</code> yang sudah publik. B hanya kalau Anda ingin lebih ketat; ongkosnya satu isian lagi di depan dan satu kolom tanggal lahir yang <b>sering kosong</b> di data lama, sehingga orang yang berhak justru tertahan.
+            </td>
+          </tr>
+          <tr>
+            <td><b>Cakupan sertifikat</b></td>
+            <td>
+              <b>A.</b> Semua lomba yang pernah diikuti, di semua event.<br>
+              <b>B.</b> Hanya baris yang sertifikatnya sudah bisa diunduh.
+            </td>
+            <td><b>A</b> — baris terkunci tetap tampil dengan alasannya. Peserta yang lomba satu-satunya belum terbit melihat <i>kenapa</i>, bukan halaman kosong yang membuatnya mengira NISN-nya salah.</td>
+          </tr>
+          <tr>
+            <td><b>Sertifikat PESERTA</b></td>
+            <td>
+              <b>A.</b> Terbit untuk semua peserta.<br>
+              <b>B.</b> Hanya juara yang dapat sertifikat.
+            </td>
+            <td><b>A</b> — sudah jadi perilaku sistem sekarang (<code>participantPages()</code>) dan row UI-nya tinggal ditiru. Kalau Anda pilih B, ini perubahan aturan produk, bukan sekadar halaman baru.</td>
+          </tr>
+          <tr>
+            <td><b>Tautan ke halaman ini</b><br><span style="color:var(--muted);font-size:11.5px">dari mana peserta tahu alamatnya</span></td>
+            <td>
+              <b>A.</b> Hanya alamat publik.<br>
+              <b>B.</b> Kartu “E-Sertifikat” di portal kontingen + kwitansi/surat.<br>
+              <b>C.</b> Keduanya + baris di email tiket.
+            </td>
+            <td><b>C</b> — laman ini tanpa tautan tidak akan ditemukan. Titik sisip termurah: kartu keempat di baris “Dokumen &amp; Unduhan” portal kontingen (di sebelah Formulir, Invoice, Sertifikat) dan tautan di footer email.</td>
+          </tr>
+          <tr>
+            <td><b>Subdomain</b></td>
+            <td>
+              <b>A.</b> <code>e-sertifikat.berbaris.app</code><br>
+              <b>B.</b> <code>sertifikat.berbaris.app</code>
+            </td>
+            <td><b>A</b> seperti permintaan Anda. Catatan: tanda hubungnya membuat label ini tetap sah sebagai subdomain event, jadi <b>wajib</b> ditambahkan ke <code>reservedSubdomain()</code> — kalau tidak, panitia bisa mengklaimnya dan beranda <code>/</code> mereka yang menang. Ini persis jebakan yang dulu menimpa <code>eo</code>.</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ RENCANA TEKNIS ============ -->
+  <div class="slide">
+    <div class="slide-head"><h2>Rencana implementasi</h2><span class="mode-tag">belum dikerjakan</span></div>
+    <div class="slide-grid" style="grid-template-columns:1fr">
+      <div class="notes">
+        <table class="mini">
+          <tr><th style="width:190px">Bagian</th><th>Rencana</th></tr>
+          <tr>
+            <td><b>Host</b></td>
+            <td><code>config/app.php</code>: <code>cert_host = env('CERT_HOST') ?: 'e-sertifikat.' . host(APP_URL)</code>; helper <code>cert_host()</code> + <code>cert_url()</code> di <code>app/Helpers/helpers.php</code>, sejajar <code>eo_host()</code>/<code>eo_url()</code>. Skema dibuang dari config, https dipaksa di luar lokal — polanya sudah ada di <code>judge_entry_url()</code>.</td>
+          </tr>
+          <tr>
+            <td><b>Rute</b></td>
+            <td><code>routes/certificate.php</code>: <code>get('/', CariE_Sertifikat)</code> → <code>cert.home</code>, <code>post('/cari', ...)</code> → <code>cert.search</code>, <code>get('/unduh/{registration}/{category}', ...)</code> → <code>cert.download</code>. Didaftarkan di <code>bootstrap/app.php</code> dengan <code>domain(cert_host())</code> dan <b>SEBELUM</b> grup <code>{subdomain}.*</code>, dengan middleware <code>['web','throttle:30,1']</code> — grup tenant juga punya rute <code>/</code>, jadi urutannya menentukan.</td>
+          </tr>
+          <tr>
+            <td><b>Subdomain dicadangkan</b></td>
+            <td><code>Eventner\Settings\Profile::reservedSubdomain()</code> mengambil label pertama dari <code>judge_entry_host()</code> + <code>eo_host()</code>; <code>cert_host()</code> ditambahkan ke daftar itu. Dijaga tes: mendaftarkan subdomain <code>e-sertifikat</code> harus <b>gagal</b> validasi.</td>
+          </tr>
+          <tr>
+            <td><b>Layout</b></td>
+            <td><code>layouts.certificate</code> — ramping, nol sidebar, nol nav event. Turunkan dari <code>layouts.entry</code> (sudah pola “nol menu”), tapi tanpa <code>no-referrer</code>: di sini tidak ada token di URL.</td>
+          </tr>
+          <tr>
+            <td><b>Komponen</b></td>
+            <td><code>App\Livewire\Public\Consumer\Sertifikat\Cari</code> — satu komponen, dua keadaan (<code>$nisn</code> kosong = beranda, terisi = hasil). Alasan tidak dua halaman: hasil harus tetap ada saat halaman disegarkan orang yang mengirim ke dirinya sendiri, dan <code>POST</code> tanpa session membuat “Cari lagi” jadi dua jalur kode yang mudah menyimpang.</td>
+          </tr>
+          <tr>
+            <td><b>Pencarian</b></td>
+            <td>Satu query, dua sumber: <code>Participant::where('nisn', $n)</code> dan <code>Registration::where('danton_nisn', $n)</code>. Normalisasi <code>trim</code> + buang spasi/titik/tanda hubung; cocokkan string, bukan integer (NISN berawalan nol). <code>Registration</code> difilter <code>status_berkas != 'dibatalkan'</code> + <code>eventner.status = 'approved'</code>, di-eager-load <code>eventner</code>, <code>competitionCategory.parent</code>, <code>participants</code>. Satu NISN biasanya < 10 baris, jadi tidak perlu paginasi.</td>
+          </tr>
+          <tr>
+            <td><b>Perhitungan gelar</b></td>
+            <td>Pakai <code>ChampionCalculator::winners()</code> yang sudah ter-cache 300 dtk — <b>sumber yang sama</b> dengan <code>/hasil</code> dan portal. Hitung sekali per (mata lomba × grup) lalu pakai ulang untuk semua baris; jangan panggil per baris (N+1 yang mahal: satu perhitungan menyentuh seluruh peserta satu mata lomba).</td>
+          </tr>
+          <tr>
+            <td><b>Kredensial unduh</b></td>
+            <td>Session, bukan token di URL. Setelah pencarian berhasil, id registrasi yang boleh diunduh disimpan di session (<code>cert.granted</code>) selama 30 menit; <code>cert.download</code> menolak 403 kalau id-nya tidak ada di daftar. <b>Jangan</b> pakai <code>magic_token</code> di sini: token itu juga membuka portal yang bisa <b>mengubah data pendaftaran</b> — menaruhnya di URL publik berarti membocorkan lebih dari sekadar sertifikat.</td>
+          </tr>
+          <tr>
+            <td><b>Berkas PDF</b></td>
+            <td>Rakit ulang dari <code>CertificateController::downloadCertificateByToken()</code> — jangan salin: ambil bagian penyusunan <code>$pages</code> + render Blade jadi satu method/privat yang dipanggil tiga jalur (portal, laman ini, unduhan panitia). Template PDF yang ada (<code>eventner.certificate.pdf</code>) dipakai apa adanya.</td>
+          </tr>
+          <tr>
+            <td><b>Anti-scraping</b></td>
+            <td>Throttle 30/menit per IP adalah pagar utama — NISN berurutan bisa dienumerasi tanpa itu. Kalau nanti terbukti disalahgunakan, langkah berikutnya tanggal lahir (opsi B di slide 6), bukan CAPTCHA.</td>
+          </tr>
+          <tr>
+            <td><b>Test</b></td>
+            <td>
+              <code>tests/Feature/E_SertifikatTest.php</code>: host benar merender beranda (host lain 404/tenant seperti biasa); NISN ketemu → baris berisi jumlah yang benar; NISN sebagai anggota <b>dan</b> sebagai danton dua-duanya ketemu; angka berawalan nol tidak hilang; baris terkunci muncul saat template kosong / fitur paket mati; pendaftaran <code>dibatalkan</code> tidak tampil; unduh tanpa sesi → 403; unduh id di luar daftar sesi → 403; subdomain <code>e-sertifikat</code> ditolak validasi profil eventner.
+            </td>
+          </tr>
+          <tr>
+            <td><b>Urutan kerja</b></td>
+            <td>1) Helper + config + rute + reservasi subdomain &nbsp;→&nbsp; 2) Layout + beranda pencarian &nbsp;→&nbsp; 3) Pencarian NISN + hasil (termasuk keadaan tepi) &nbsp;→&nbsp; 4) Unduhan via session (refactor jalur PDF darurat) &nbsp;→&nbsp; 5) Tautan masuk dari portal kontingen + email &nbsp;→&nbsp; 6) Test + suite penuh.</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

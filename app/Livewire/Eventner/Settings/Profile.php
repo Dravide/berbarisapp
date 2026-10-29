@@ -128,12 +128,17 @@ class Profile extends Component
      * aturan `not_in:`. Selain `entry`, `eo` juga dipesan: subdomain EO adalah
      * rute tetap (routes/eo.php), jadi event yang memakainya akan menutupi
      * halaman penawaran dan tidak pernah bisa dibuka.
+     *
+     * `e-sertifikat` ikut di sini karena alasannya sama, dengan satu tambahan:
+     * label itu SAH menurut regex di bawah (tanda hubung diizinkan), jadi tanpa
+     * pencadangan ini ia benar-benar bisa diklaim — dan beranda event yang
+     * menang, bukan laman unduh sertifikatnya.
      */
     private function reservedSubdomain(): string
     {
         $subdomain = [];
 
-        foreach ([judge_entry_host(), eo_host()] as $host) {
+        foreach ([judge_entry_host(), eo_host(), cert_host()] as $host) {
             if (!$host) {
                 continue;
             }
@@ -151,7 +156,11 @@ class Profile extends Component
 
         // `entry` tetap dicadangkan walau ENTRY_HOST kosong: tanpa itu, event
         // pertama yang memakai nama "entry" mematikan halaman nilai juri.
+        // Alasan yang sama berlaku untuk `e-sertifikat` — dan di sana taruhannya
+        // lebih besar, karena label itu lolos regex subdomain sehingga bisa
+        // benar-benar diklaim kalau daftar ini kosong.
         $subdomain[] = 'entry';
+        $subdomain[] = 'e-sertifikat';
 
         return implode(',', array_unique($subdomain));
     }
